@@ -1,0 +1,80 @@
+\section{Path-flow balancing and the exact energy characterization}
+\begin{lemma}[Path-flow balancing]
+\label{lem:flow}
+Every finite ReLU network with path variation $P>0$ has an equivalent implementation at the same width and depth such that every internal absolute spectral norm is at most one and
+\begin{equation}
+ \|W^1\|_F^2=P,\qquad \|v\|_2^2=P.
+ \label{eq:balanced-flow}
+\end{equation}
+The path variation is unchanged. If $P=0$, the function is zero.
+\end{lemma}
+\begin{proof}
+Write $A^\ell=|W^\ell|$. Starting from $a^1_i=\|W^1_{i,:}\|_2$, set $a^\ell=A^\ell a^{\ell-1}$. Starting from $b^H=|v|$, set $b^{\ell-1}=(A^\ell)^{\mathsf T}b^\ell$. At every hidden layer,
+\[
+ \sum_j a^\ell_jb^\ell_j=P.
+\]
+Neurons with zero forward or backward mass lie on no nonzero input-to-output path and can be disconnected without changing the function. On the remaining neurons define
+\[
+ s^\ell_j=\sqrt{b^\ell_j/a^\ell_j},\qquad
+ r^\ell_j=\sqrt{a^\ell_jb^\ell_j}.
+\]
+Multiply hidden activation $j$ in layer $\ell$ by $s^\ell_j$ by rescaling its incoming weights and inversely rescaling its outgoing weights. ReLU positive homogeneity preserves the exact function. The transformed internal absolute matrix is
+$\widetilde A^\ell=\operatorname{diag}(s^\ell)A^\ell\operatorname{diag}(s^{\ell-1})^{-1}$, and it satisfies
+\[
+ \widetilde A^\ell r^{\ell-1}=r^\ell,\qquad
+ (\widetilde A^\ell)^{\mathsf T}r^\ell=r^{\ell-1}.
+\]
+Weighted Cauchy--Schwarz gives, for any vector $x$ on the active coordinates,
+\begin{align*}
+ \sum_j\left(\sum_i\widetilde A^\ell_{ji}x_i\right)^2
+ &\le\sum_j r^\ell_j\sum_i\widetilde A^\ell_{ji}\frac{x_i^2}{r^{\ell-1}_i}\\
+ &=\sum_i\frac{x_i^2}{r^{\ell-1}_i}
+                ((\widetilde A^\ell)^{\mathsf T}r^\ell)_i
+ =\sum_i x_i^2.
+\end{align*}
+Thus its operator norm is at most one. The transformed first-row Euclidean norm is $s^1_ja^1_j=r^1_j$, and the transformed readout magnitude is $b^H_j/s^H_j=r^H_j$. Their squared sums are both $P$, proving~\eqref{eq:balanced-flow}. Positive neuron rescaling cancels on every path, so path variation is preserved. If $P=0$, every absolute path product is zero, and $|z_w|\le P$ gives the zero function.
+\end{proof}
+
+\begin{lemma}[Cloning without a width divisibility condition]
+\label{lem:clone}
+A teacher of width $C$ and path variation $P$ has an exact supported implementation at every $N\ge C$ with
+\begin{equation}
+ Q_N=2P,\qquad
+ \sum_{\ell=2}^H\|W^\ell\|_F^2\le(H-1)C.
+ \label{eq:clone}
+\end{equation}
+For the zero function, the all-zero implementation suffices.
+\end{lemma}
+\begin{proof}
+First apply Lemma~\ref{lem:flow}. Put $k=\lfloor N/C\rfloor$, clone every teacher neuron exactly $k$ times, and leave the other neurons disconnected with zero weights. The internal blocks are $W^\ell\otimes(J_k/k)$. Both their absolute spectral norms and their squared Frobenius norms are unchanged. Since a $C$ by $C$ matrix of operator norm at most one has squared Frobenius norm at most $C$, the internal bound follows.
+
+The endpoint energies before the final balancing are $u_N=(k/N)P$ and $q_N=(N/k)P$. Multiply the first layer by $\sqrt{N/k}$ and divide the readout by the same factor. Positive homogeneity again preserves the function, and now $u_N=q_N=P$. This proves~\eqref{eq:clone} exactly, including widths not divisible by $C$.
+\end{proof}
+
+\begin{theorem}[An exact variational path-prior characterization]
+\label{thm:energy-characterization}
+For every supported network,
+\begin{equation}
+ E_N(w)\ge Q_N(w)\ge2P(w).
+ \label{eq:energy-lower}
+\end{equation}
+Conversely, a teacher of width $C$ and path variation $P$ has, at each $N\ge C$, an exact supported implementation with
+\begin{equation}
+ E_N\le2P+\frac{N^\gamma(H-1)C}{\omega}\le2P+\frac CN.
+ \label{eq:energy-upper}
+\end{equation}
+Consequently, for every finite-network-realizable function $f$ at depth $H$,
+\begin{equation}
+ \lim_{N\to\infty}\inf_{\substack{w\text{ supported at width }N\\z_w=f\text{ on }\mathcal X}}E_N(w)
+ =2\VarPath_H(f).
+ \label{eq:energy-limit}
+\end{equation}
+\end{theorem}
+\begin{proof}
+Under the support condition,
+\[
+ P(w)\le\|v\|_2\left(\sum_i\|W^1_{i,:}\|_2^2\right)^{1/2}
+          =\sqrt{u_Nq_N}\le Q_N/2.
+\]
+This proves~\eqref{eq:energy-lower}; Lemma~\ref{lem:clone} proves~\eqref{eq:energy-upper}. The lower bound in~\eqref{eq:energy-limit} holds at every width. For any $\epsilon>0$, choose a finite-width implementation of $f$ with path variation at most $\VarPath_H(f)+\epsilon$. Its width is fixed while $N$ grows, so~\eqref{eq:energy-upper} gives upper limit at most $2\VarPath_H(f)+2\epsilon$. Let $\epsilon$ decrease to zero.
+\end{proof}

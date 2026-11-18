@@ -1,0 +1,78 @@
+\section{Non-log-concave coordinate priors}
+\label{sec:gaussian-mixture-priors}
+The preceding extension does not fundamentally require log-concavity.
+A concrete family with the same guarantee is supplied by finite
+Gaussian mixtures with a common positive component variance.
+
+\begin{corollary}[Independent Gaussian-mixture weights]
+\label{cor:gaussian-mixture-prior}
+Let
+\[
+ P=\sum_{j=1}^r p_jN(\mu_j,\sigma^2),
+ \qquad p_j>0,\quad\sum_jp_j=1,\quad\sigma>0,
+\]
+with $\sum_jp_j\mu_j=0$ and
+$\sigma^2+\sum_jp_j\mu_j^2=1$.
+Use independent copies of this one fixed standardized law, scaled by
+$\sqrt{\nu/d}$, $\sqrt{\nu/N}$, and $\sqrt\nu/N$ in the three
+respective layer types. All conclusions of
+Theorem~\ref{thm:nongaussian-shallow-oracle} and its sample-count
+calibration hold, with constants allowed to depend on the mixture.
+In particular, the sufficient sample count remains
+\[
+ (2+C)^c\exp\{c[\sqrt H+(1-\nu)H]\}
+\]
+at every finite $N\ge C$ and every hidden depth $H\ge1$.
+The mixture is a scalar coordinate law, not a mixture over network
+sizes or architectures. It may be strongly bimodal and need not be
+log-concave.
+\end{corollary}
+\begin{proof}
+Write $X=A+\sigma G$, where $A$ takes the values $\mu_j$ with
+probabilities $p_j$ and $G$ is an independent standard Gaussian.
+Hoeffding's lemma gives a fixed centered sub-Gaussian proxy
+\[
+ K^2=\sigma^2+(\max_j\mu_j-\min_j\mu_j)^2/4.
+\]
+Let $p$ be the positive smooth density and put $V=-\log p$.
+If $m(x)=\E[A\mid X=x]$, direct differentiation gives
+\begin{equation}
+ V'(x)=\frac{x-m(x)}{\sigma^2},
+ \qquad
+ V''(x)=\frac1{\sigma^2}
+              -\frac{\operatorname{Var}(A\mid X=x)}{\sigma^4}
+ \le\frac1{\sigma^2}.
+ \label{eq:mixture-score-curvature}
+\end{equation}
+The score identities follow either by integration by parts or by
+conditioning the latent Gaussian:
+\[
+ \E V'(X)=\E[G/\sigma]=0,\qquad
+ \E[XV'(X)]=\E[(A+\sigma G)G/\sigma]=1.
+\]
+All required moments are finite. The exact-baseline matrix moments
+and the Lindeberg transfer use only isotropy and the fixed
+sub-Gaussian proxy. Rank-one transport and translation entropy use
+only the upper curvature bound in
+\eqref{eq:mixture-score-curvature} and these two score identities;
+no positive lower curvature enters those proofs.
+
+For the first-layer Gaussian replacement and the small-width box
+comparison, retain any one component to obtain
+\[
+ p(x)\ge\frac{p_j}{\sqrt{2\pi\sigma^2}}
+            \exp[-(x-\mu_j)^2/(2\sigma^2)].
+\]
+This provides the same quadratic density lower bound and finite
+Gaussian-comparison entropy, uniformly after the normalization
+$2\nu/N$. Thus every analytic and statistical step of the preceding
+proof remains valid, with changed fixed constants. The strictly
+positive component variance is fixed; no uniform claim is made as
+$\sigma\downarrow0$.
+\end{proof}
+
+For example,
+$\tfrac12N(\sqrt3/2,1/4)+\tfrac12N(-\sqrt3/2,1/4)$ has mean zero
+and variance one, but its negative log density has second derivative
+$-8$ at the origin. It is outside the strongly log-concave class and
+is covered by Corollary~\ref{cor:gaussian-mixture-prior}.

@@ -1,0 +1,89 @@
+\section{A comparator neighborhood with width-independent cost}\label{sec:comparison}
+The main construction is a comparison measure, absolutely continuous with respect to the original product prior. For labels in $[-1,1]$, it will have a controlled expected empirical risk for \emph{every} sample, not only for a high-probability set of samples. The noisy-regression proof applies this bounded-label statement to the reference label $f_0(x)$ and then concentrates the comparison law's relative loss.
+
+\subsection{Small coordinates and isolated large coordinates}
+\begin{lemma}[Truncated Student coordinates]\label{lem:truncation}
+Let $W=F^{-1/\alpha}T$, with $F\ge1$ and $T$ having density~\eqref{eq:student}. For $0<\epsilon\le1$,
+\begin{align}
+ -F\log\Pp(|W|\le\epsilon)&\le C_\alpha\epsilon^{-\alpha},\\
+ \E[W\mid |W|\le\epsilon]&=0,\\
+ F\E[W^2\mid |W|\le\epsilon]&\le C_\alpha\epsilon^{2-\alpha}.
+ \label{eq:truncation}
+\end{align}
+For $|w|\le B+5$, the unconditioned density satisfies
+\begin{equation}
+ p_{F,\alpha}(w)\ge\frac{c'_\alpha}{F(B+6)^{1+\alpha}}.
+ \label{eq:density-lower}
+\end{equation}
+\end{lemma}
+\begin{proof}
+Put $u=F^{1/\alpha}\epsilon$. For $0<u\le1$, the small-ball probability is at least $c'_\alpha u$. Since $F=u^\alpha\epsilon^{-\alpha}$ and $u^\alpha\log(1/(c'_\alpha u))$ is bounded, the first inequality follows in this range. For $u\ge1$, the tail probability is at most $C_\alpha u^{-\alpha}$ and the small-ball probability is bounded below by a positive constant. Consequently $-\log\Pp(|T|\le u)\le C_\alpha u^{-\alpha}$, proving the other range.
+
+Symmetry gives the conditional mean. For $u\le1$, the conditional second moment is at most $\epsilon^2$, and $F\epsilon^2\le\epsilon^{2-\alpha}$. For $u\ge1$, direct integration gives $\E[T^2\mathbf1_{|T|\le u}]\le C_\alpha u^{2-\alpha}$. Divide by the small-ball probability and rescale to obtain~\eqref{eq:truncation}. Finally,
+\[
+ p_{F,\alpha}(w)=\frac{c_\alpha}{F}
+ (F^{-2/\alpha}+w^2)^{-(1+\alpha)/2},
+\]
+which implies~\eqref{eq:density-lower}.
+\end{proof}
+
+We need designated teacher edges to be distinguishable from the truncated background, even when the teacher coefficient vanishes. Deleting small teacher edges would introduce a first-order bias. The following unbiased construction avoids that loss.
+
+\begin{lemma}[Unbiased designated edges]\label{lem:active}
+For every $a\in[-B,B]$ and $0<\epsilon\le1$ there is an absolutely continuous law $Q_a$ such that
+\begin{equation}
+ \E_{Q_a}W=a,\quad \operatorname{Var}_{Q_a}(W)\le17\epsilon^2,
+ \quad Q_a\{|W|>\epsilon\}=1,
+ \label{eq:active-properties}
+\end{equation}
+whose density is bounded by $1/(2\epsilon)$ and whose support lies in $[-B-5,B+5]$. For the fan-in-$F$ prior,
+\begin{equation}
+ \KL(Q_a\|p_{F,\alpha})\le
+ \log\frac{C_\alpha F(B+6)^{1+\alpha}}\epsilon.
+ \label{eq:active-kl}
+\end{equation}
+\end{lemma}
+\begin{proof}
+If $|a|>4\epsilon$, use the uniform law on $[a-\epsilon,a+\epsilon]$. Otherwise mix the uniform laws on $[3\epsilon,5\epsilon]$ and $[-5\epsilon,-3\epsilon]$ with probabilities $(1+a/(4\epsilon))/2$ and $(1-a/(4\epsilon))/2$. The mixture has mean $a$ and variance at most $(16+1/3)\epsilon^2<17\epsilon^2$. The density and support claims are immediate, and~\eqref{eq:active-kl} follows from~\eqref{eq:density-lower}. An ordinary symmetric interval around $a$ has the same KL upper bound, without the separated-support property.
+\end{proof}
+
+\subsection{Unrolling and counting implementations}
+A width-$m$, depth-$H$ network can be unrolled from its scalar readout into a formula: duplicate a hidden neuron whenever its value is used by different parents. The original function is unchanged. The formula has at most
+\[
+ 1+m+\cdots+m^H\le M=(m+1)^H
+\]
+nodes including the scalar root. Each non-root node has exactly one parent. This last property is what allows implementation multiplicity to compensate the probability of a large edge.
+
+Suppose first that $N\ge M$. In each hidden layer, assign every formula-node occurrence a disjoint group of physical indices of size at least $N/(2M)$. Choose one index independently and uniformly from each group. Conditional on this assignment, construct a product comparison law as follows:
+\begin{itemize}
+\item A selected first-layer row has independent uniform coordinates of radius $\epsilon$ around the corresponding teacher row.
+\item In each selected later row, including the scalar readout, designated child edges have the laws $Q_a$ from Lemma~\ref{lem:active}; every other incoming coordinate has its prior law conditioned on $|W|\le\epsilon$.
+\item All unselected rows retain their unconditioned product prior.
+\end{itemize}
+Every coordinate law is absolutely continuous with respect to its prior. The selection of a child's index depends only on the independent assignment variable, not on the incoming weights that compute that child's value.
+
+\begin{lemma}[Disjoint implementation supports]\label{lem:disjoint}
+Distinct complete index assignments give mutually singular comparison components. If $\nu$ is their uniform mixture, then
+\[
+ \KL(\nu\|\mu_N)=\text{average component KL}
+                 -\text{entropy of the index assignment}.
+\]
+\end{lemma}
+\begin{proof}
+The scalar readout has, in each designated child group, exactly one coordinate with magnitude greater than $\epsilon$. It therefore determines the chosen indices in the last hidden layer. The incoming rows at those indices determine the choices one layer earlier by the same rule, and so on. Thus a weight vector in the support decodes a unique complete assignment. On a component support the mixture density is its component density times the assignment probability. Integrating its log density ratio gives the identity.
+\end{proof}
+
+For each designated edge, the active-coordinate cost~\eqref{eq:active-kl} contains $\log N$. Its child-index entropy is at least $\log(N/(2M))$. These terms cancel, leaving at most $\log(2M)$. There is one such cancellation for every non-root formula node. A selected row's background costs at most $C_\alpha\epsilon^{-\alpha}$ by Lemma~\ref{lem:truncation}. First-layer designated coordinates incur their ordinary interval costs, with fan-in $d+1$.
+
+If instead $m\le N<M$, place the original width-$m$ teacher at fixed physical indices. Use the same designated and background coordinate laws, without unrolling or averaging over assignments. Now $\log N\le\log M$ already. There are at most $Hm+1\le M$ selected rows, at most $(H-1)m^2+m\le M$ designated internal and readout edges, and at most $M(d+1)$ designated first-layer coordinates.
+
+Both constructions prove the following bound, uniformly over all $N\ge m$:
+\begin{equation}
+ \KL(\nu_{g,\epsilon,N}\|\mu_N)
+ \le C_\alpha M\left[
+ \epsilon^{-\alpha}+(d+1)
+ \log\frac{C_\alpha M(d+1)(B+6)^{1+\alpha}}\epsilon
+ \right].
+ \label{eq:embedding-kl}
+\end{equation}
+The formula, its index groups and the comparison mixture are proof devices. The learner's prior remains the single dense independent-coordinate prior~\eqref{eq:student}.

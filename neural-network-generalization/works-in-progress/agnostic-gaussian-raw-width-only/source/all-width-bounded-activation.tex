@@ -1,0 +1,206 @@
+\section{The same oracle at every learner width above the teacher}
+\label{sec:all-width-finite-variance}
+A direct cloned comparison and a variable-tolerance squared-norm estimate
+remove the condition $N\lambda\gtrsim1$. The following result applies to
+every learner width at least the comparison width. It keeps the same
+independent Gaussian prior, raw likelihood and raw prediction.
+The activation is bounded, nonconstant, nondecreasing and globally
+Lipschitz, as in (AD1); bounded oscillatory activations are not covered
+by the ridge-class VC argument.
+
+Let the comparison network have width $C\ge1$ and parameters
+$g(x)=\sum_{i=1}^C c_i\phi(\vartheta_i\cdot\widetilde x)$.
+There is no output cap. Put
+\[
+ V=\sum_i|c_i|,\qquad
+ E_g=\frac{a_0}{C}\sum_i\|\vartheta_i\|_2^2
+                       +2C\sum_i c_i^2,\qquad
+ L=\frac{16(M_2+1)}\delta,
+\]
+\[
+ \mathcal A_n(g)=1+E_g+(D+1)
+       \log\{e n(V+1)(\sqrt L+1)\},\qquad
+ b_n=\frac{C_\phi D[\log(e nL)]^4}{n}.                 \tag{AW1}
+\]
+Here $\mathbb E Y^2\le M_2<\infty$, $0<\delta<1/2$, and the other
+model notation is as in the preceding sections. Since
+$V^2\le C\sum_i c_i^2$, both $V^2$ and $\|g\|_\infty^2$ are
+controlled by $C_\phi E_g$. If all coefficients are bounded by $B\ge1$,
+then $E_g\le a_0D B^2+2C^2B^2$.
+
+\begin{lemma}[A cloned comparison at every $N\ge C$]
+\label{lem:all-width-clone}
+On a sample satisfying $\widehat R(g)\le L$, for all $N\ge C$ and
+$0<\nu\le1$ the actual posterior satisfies
+\[
+ e_\lambda+\tfrac12\lambda\Pi_\lambda Q_G
+ \le C_\phi\lambda\mathcal A_n(g)+C_\phi n^{-30},
+ \qquad
+ e_\lambda=\Pi_\lambda\widehat R(f)-\widehat R(g).       \tag{AW2}
+\]
+\end{lemma}
+\begin{proof}
+Let $k=\lfloor N/C\rfloor\ge N/(2C)$. Replace each teacher neuron by
+$k$ clones with the same incoming row and readout coefficient $c_i/k$;
+set all remaining parameter centers to zero. This computes $g$ exactly,
+even when $\phi(0)\ne0$, since the remaining readout centers vanish.
+In pack coordinates $G_j=Nv_j$, the center's normalized energy obeys
+\[
+ Q_{\rm all}(w_*)=\frac{a_0}N\sum_j\|\theta_j^*\|^2
+                         +\frac1N\sum_j(G_j^*)^2
+ \le E_g.
+\]
+Indeed $k/N\le1/C$ and $N/k\le2C$.
+Around this center take independent Gaussian perturbations with each
+native coordinate variance multiplied by $\epsilon^2$, where
+\[
+ \epsilon=\frac{n^{-30}}{C_\phi(V+1)(\sqrt L+1)}.
+\]
+For every input on the cube the incoming perturbation's preactivation
+standard deviation is at most $\sqrt2\epsilon$. Minkowski bounds the
+mean-readout contribution to the output error by
+$C_\phi V\epsilon$. Conditional on incoming perturbations, the centered
+readout-noise variance is at most $K^2\epsilon^2\nu/N$.
+The uniform root-mean-square error is consequently at most
+$r=C_\phi\epsilon(V+1)$. Thus the comparison law $\rho_g$ has
+\[
+ \rho_g\widehat R(f)
+ \le\widehat R(g)+2r\sqrt{\widehat R(g)}+r^2
+ \le\widehat R(g)+C_\phi n^{-30}.
+\]
+There are $(D+1)N$ Gaussian coordinates. The exact Gaussian entropy gives
+\[
+ \operatorname{KL}(\rho_g\Vert\mu)
+ \le\frac\omega2E_g+(D+1)N\log(1/\epsilon)
+ \le C_\phi\omega\mathcal A_n(g),
+\]
+using $N/\omega=\nu\le1$.
+Gibbs optimality bounds its free energy by
+$\widehat R(g)+C_\phi\lambda\mathcal A_n+C_\phi n^{-30}$.
+Finally the readout-only entropy lower bound
+$\operatorname{KL}(\Pi_\lambda\Vert\mu)
+\ge\omega\Pi_\lambda Q_G/4-(N/2)\log2$
+yields (AW2), absorbing the extra $\lambda\nu\log2$ in the resource.
+\end{proof}
+
+\begin{theorem}[All-width finite-variance raw oracle]
+\label{thm:all-width-raw}
+For every fixed finite comparison network $g$, assume
+$\mathbb E Y^2\le M_2$ and
+$\mathcal A_n(g)L b_n\le c_\phi$.
+With probability at least $1-\delta$, simultaneously for every
+$N\ge C$, $0<\nu\le1$, and every $n^{-2}\le\lambda\le1$ satisfying
+$\lambda\ge C_\phi b_n$,
+\[
+ R(\mathbb E_{\Pi_\lambda}f)\le\Pi_\lambda R(f)
+ \le R(g)+C_\phi\left\{\lambda\mathcal A_n(g)
+                             +\frac{L b_n}{\lambda}\right\}
+       +C_\phi(M_2+1)n^{-10}.                          \tag{AW3}
+\]
+There is no condition on $N\lambda$. In particular, choosing
+$\lambda=C_\phi\sqrt{L b_n/\mathcal A_n(g)}$ gives
+\[
+ R(\mathbb E_{\Pi_\lambda}f)\le\Pi_\lambda R(f)
+ \le R(g)+\widetilde O_\phi\left(
+       \sqrt{\frac{(d+1)(M_2+1)\mathcal A_n(g)}{n\delta}}\right).
+                                                               \tag{AW4}
+\]
+No actual output or label is clipped, and the input distribution on the
+cube is arbitrary. This is a confidence guarantee, not an expected-risk
+claim.
+\end{theorem}
+\begin{proof}
+It suffices to consider $R(g)\le R(0)+1\le M_2+1$.
+If not, use the zero network at the same $\lambda$ in the proof;
+its resource is no larger and its risk is smaller.
+The finite-variance weighted feature estimate (FV1), now applied directly
+to $m=g-Y$, gives with failure at most $\delta/4$
+\[
+ Z^2:=\sup_\theta|(P-P_n)[(g-Y)\phi(\theta\cdot\widetilde X)]|^2
+ \le C_\phi D(M_2+1)/(n\delta)\le C_\phi L b_n.         \tag{AW5}
+\]
+Since $g$ and $f$ are signed ridge sums,
+\[
+ |(P-P_n)[(g-Y)(f-g)]|\le(\sqrt{Q_G}+V)Z.
+\]
+Young's inequality therefore bounds twice this multiplier by
+$c\lambda Q_G+C_\phi\lambda\mathcal A_n+C_\phi Lb_n/\lambda$, where
+$c>0$ is as small as needed.
+
+Markov's inequality applied to
+$P_n[(g-Y)^2+Y^2]$ gives another event, of failure at most $\delta/4$,
+on which both $\widehat R(g)\le L$ and $P_nY^2\le L$.
+The same evidence and Gaussian tail calculation as in (FV3) controls
+posterior integrals above $Q_*=C_\phi n^{22}L^2$, uniformly for
+$\lambda\ge n^{-2}$. All relative-risk and empirical-loss integrands
+are bounded by $C_\phi(Q_G+\|g\|_\infty^2+M_2+L+1)$.
+The nontrivial-range assumption bounds $\|g\|_\infty^2$ by
+$C_\phi\mathcal A_n\lesssim n$, so the omitted integrals are negligible.
+
+On a third event, of failure at most $\delta/2$, the SST squared-norm
+inequality for the dyadic signed-hull classes through $Q_*$ gives,
+for every $0<\eta\le1$,
+\[
+ (P_X-P_n)(f-g)^2
+ \le\eta P_n(f-g)^2+\frac{C_\phi b_n}{\eta}(Q_G+V^2+1).
+                                                               \tag{AW6}
+\]
+This is the same nonnegative smooth-loss inequality as (AD6), with
+Young's inequality performed at tolerance $\eta$. It holds for every
+such tolerance on the same event; no additional confidence allocation
+is needed. The hull entropy and its squared envelope are controlled
+by $Q_G+V^2+1$, and the number of energy shells is $O_\phi(\log(e nL))$.
+
+Choose $\eta=K_\phi b_n/\lambda$, with $K_\phi$ large enough that
+the $Q_G$ coefficient in (AW6) is at most $\lambda/16$.
+The stipulated likelihood floor ensures $\eta\le1/8$.
+The remaining part of that term is at most
+$C_\phi\lambda\mathcal A_n$.
+Combining (AW5)--(AW6) with the relative-risk identity, integrating,
+and writing $e=e_\lambda$, gives
+\begin{align*}
+ \Pi_\lambda R(f)-R(g)
+ &\le e+\eta\Pi_\lambda P_n(f-g)^2
+          +\tfrac18\lambda\Pi_\lambda Q_G
+          +C_\phi\lambda\mathcal A_n+C_\phi Lb_n/\lambda
+          +C_\phi(M_2+1)n^{-10}\\
+ &\le(1+2\eta)e+4\eta\widehat R(g)
+          +\tfrac18\lambda\Pi_\lambda Q_G
+          +C_\phi\lambda\mathcal A_n+C_\phi Lb_n/\lambda
+          +C_\phi(M_2+1)n^{-10}.
+\end{align*}
+The second line uses
+$P_n(f-g)^2\le2\widehat R(f)+2\widehat R(g)$.
+Keep the entire expression $(1+2\eta)e$: it is valid even when $e<0$.
+By (AW2), its negative readout-energy contribution absorbs the displayed
+$\lambda\Pi Q_G/8$. Also
+$4\eta\widehat R(g)\le4K_\phi Lb_n/\lambda$.
+Since $\eta\le1/8$, all remaining comparison terms are bounded by
+$C_\phi\lambda\mathcal A_n$. This proves (AW3); Jensen gives the raw
+mean. The three events are common to all claimed widths and scales.
+Balance the two terms for (AW4); the nontrivial-range assumption ensures
+that this scale meets its stated likelihood bounds.
+\end{proof}
+
+\paragraph{One fixed schedule and a growing comparison class.}
+For fixed $d,B,M_2,\delta$, the resource is
+$\widetilde O(C^2)$ for every width-$C$ teacher with entrywise coefficient
+cap $B$. Taking $C=\lfloor n^{1/4}\rfloor$ and $\lambda=n^{-3/4}$ gives
+\[
+ R(\mathbb E_{\Pi_\lambda}f)\le\Pi_\lambda R(f)
+ \le\inf_{g\text{ of width }\le n^{1/4},\,|\text{coefficients}|\le B}
+                  R(g)+\widetilde O(n^{-1/4}),           \tag{AW7}
+\]
+with probability at least $1-\delta$, simultaneously for every
+$N\ge\lfloor n^{1/4}\rfloor$ and $0<\nu\le1$, for sufficiently large
+$n$. The schedule uses neither $M_2$ nor the unknown comparator risk;
+constants and the starting sample size can depend on them.
+The infimum follows by a deterministic population near-minimizer and
+a common deterministic resource upper bound.
+For widths $C\le n^a$ and coefficient caps $B\le n^b$, the same
+substitution gives a vanishing power rate whenever $a+b<1/2$,
+using $\lambda=n^{-1/2-a-b}$ and excess
+$\widetilde O(n^{a+b-1/2})$ at every $N\ge C$.
+The earlier ReLU-to-hardtanh compiler retains its separately stated
+wide-learner guarantee. Its variation resource is not substituted for
+the cloned quadratic resource $E_g$ in this all-width theorem.

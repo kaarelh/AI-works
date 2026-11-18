@@ -1,0 +1,66 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}\usepackage[T1]{fontenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,microtype}
+\usepackage[colorlinks=true]{hyperref}
+\newtheorem{theorem}{Theorem}[section]\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\E}{\mathbb E}
+\title{Width-only approximation guarantees for Bayesian neural networks with heavy-tailed priors}
+\author{ChatGPT-6 Astra \and Claude Opus 5.5 \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{18 November 2026}
+\hypersetup{pdftitle={Width-only approximation guarantees for Bayesian neural networks with heavy-tailed priors},pdfauthor={ChatGPT-6 Astra; Claude Opus 5.5; Kaarel H\"anni; Dmitry Vaintrob}}
+\begin{document}\maketitle
+\begin{abstract}
+We prove coefficient-free approximation guarantees for one Bayesian neural network with a fixed dense architecture. Its independent continuous heavy-tailed weights have tail indices decreasing through the layers. The learner has ReLU hidden activations and a bounded final output used in both its Gaussian likelihood and prediction. On Boolean inputs, every learner width $N\ge C+1$ can compete with arbitrary-real-weight ReLU networks of width $C$, with a constant-factor depth overhead and sample complexity polynomial in $C$ and input dimension at fixed depth. The ordinary posterior mean has squared risk at most the irreducible noise plus $(1+\eta)$ times the best narrow-network approximation error, plus $\varepsilon$. Any accuracy power strictly larger than one is available by a suitable fixed choice of positive tail indices. The conditional mean is assumed to lie in $[-1,1]$; labels may have conditionally sub-Gaussian noise around that mean. A second compiler gives an analogous coefficient-free guarantee on continuous domains satisfying hyperplane anti-concentration, including spheres, again with accuracy power arbitrarily close to one. Two observable scores select one positive likelihood variance; there is no architecture prior or mixture of predictors. Once the learner accommodates a coefficient-controlled implementation, a single fixed observation variance suffices. We also retain a separate same-tail-index tanh result and a narrow tanh implementation of ReLU teachers.
+\end{abstract}
+
+\section*{What the result says}
+A regression function may have no small exact implementation but admit a useful narrow approximation. We ask whether one wider Bayesian network can approach that approximation error without knowing the smaller network's coefficients, width, or attainable risk.
+
+The main theorem answers this question for a specified full-support product prior on one prescribed ReLU architecture. The comparison coefficients are unrestricted. At fixed comparison depth $h$ and learner depth $H$ above a numerical constant times $h+1$, the Boolean-domain guarantee has the form
+\[
+ R(\widehat f)\le R_0+(1+\eta)
+       \inf_{g\in\mathcal G_{C,h}}\|g-f_0\|_{L^2(P_X)}^2+\varepsilon,
+ \qquad N\ge C+1.
+\]
+Here $f_0(x)=\E[Y\mid X=x]$ is assumed to satisfy $|f_0|\le1$, $R_0=\E\operatorname{Var}(Y\mid X)$ is the irreducible noise, and $\mathcal G_{C,h}$ is the ordinary real-weight ReLU comparison class. The factor $1+\eta$ applies only to approximation error, not to the noise floor. The finite-sample bound has leading accuracy power $2/(2-a)$, where $a\in(0,1)$ is the prior's second-layer tail index. This power tends to one as a fixed positive $a$ is chosen smaller. Constants can deteriorate with depth and tail gaps; no practical sample-size estimate or joint polynomial-depth result is asserted.
+
+The learner's bounded final output enters the likelihood itself. The posterior mean is therefore an ordinary mean of these bounded network outputs, rather than a raw heavy-tailed readout with potentially divergent moments. The variance-selection rule uses one posterior at a time. Neither architecture nor temperature is averaged over a prior.
+
+There are two distinct compilation arguments. On the Boolean cube, finite-domain arithmetic replaces arbitrary real coefficients by a wider bounded-coefficient implementation with only logarithmic precision cost. Under continuous-domain slab regularity, a polyhedral compiler instead has a polynomial precision cost. The heavy-tailed prior's coefficient sensitivity can be made sufficiently mild that the latter still gives an accuracy power arbitrarily close to one. The continuous theorem requires no depth overhead beyond $H\ge\max\{h,4\}$, but its teacher-width degree depends on the input dimension.
+
+The native comparison theorem for layerwise heavy-tailed priors is proved separately in~\cite{layerwise}. Its exact interface and resource bound are stated below. We combine it with independently proved coefficient-free compilers~\cite{boolean,regular}, a relative-loss certificate, and a finite-parameter certificate for intermediate learner widths. The proof does not assert efficient compilation, posterior integration, or empirical-risk minimization. All architectures and prior indices are fixed before data; probability bounds are uniform in their prescribed width, rather than one event allowing an unrestricted data-dependent width choice.
+
+\paragraph{Related work.}
+Heavy-tailed Bayesian neural-network priors already have substantial statistical theory. Castillo and Egels~\cite{castillo-egels} prove adaptive posterior-contraction results for dense networks with independent heavy-tailed weights and deterministic architectures, without an architecture or sparsity hyperprior. Their theorems concern prescribed sample-indexed architecture and scaling regimes and structured smoothness classes. Nguyen, Westerhout and Arbel~\cite{nguyen} also construct sample-size-independent shallow ReLU priors with Student and Cauchy options, using a random finite width. The target here is an agnostic comparison with arbitrary narrow-network implementations, uniformly over every prescribed finite learner width above the comparison width, with coordinate scales fixed by fan-in rather than sample size. For Gaussian loss, a fixed fractional likelihood power is equivalent to inflating the observation variance.
+
+\paragraph{Prior coefficient-reduction results.}
+Coefficient reduction is not new to this analysis. Maass~\cite{maass} gives polynomial-bit, same-size representations for fan-out-one networks with Boolean outputs on finite rational input sets. Vardi and Shamir~\cite{vardi-shamir} approximate arbitrary-weight constant-depth ReLU networks by polynomial-weight, polynomial-width networks with a constant-factor depth increase under discrete and regular continuous input assumptions. The purpose here is to track the resources needed by the specified Bayesian prior and turn such approximations into an agnostic learning guarantee at every eligible learner width.
+
+\input{relu-width-only}
+\input{noisy-certificate-selection}
+\input{continuous-layerwise}
+\input{growing-width}
+
+\appendix
+\input{unbounded-mean-transfer}
+\section*{An alternative same-tail-index tanh prior}
+The following results use a different product prior: the same Student tail index in every layer, with bounded tanh hidden activations. They retain a leading-one total-risk oracle for bounded labels and a noise-separated variant, at every $N\ge2C+1$. Their narrow tanh compiler is also useful independently. They are alternatives to the decreasing-tail ReLU theorem, not assumptions needed for it.
+\input{tanh-compiler}
+\input{learning}
+\input{excess-oracle}
+\begin{thebibliography}{99}
+\bibitem{boolean} ChatGPT-6 Astra, Claude Opus 5.5, Kaarel H\"anni and Dmitry Vaintrob. \emph{A width-only approximation guarantee for Bayesian neural networks on Boolean inputs}. Research manuscript, 18 November 2026. Coefficient-free Boolean compiler, including constant-depth integer arithmetic.
+\bibitem{student} ChatGPT-6 Astra, Claude Opus 5.5, Kaarel H\"anni and Dmitry Vaintrob. \emph{Agnostic learning with a fixed heavy-tailed neural-network prior}. Research manuscript, November 2026. Student comparison laws and final-posterior oracle inequalities.
+\bibitem{karpinski} Marek Karpinski and Angus Macintyre. Polynomial bounds for VC dimension of sigmoidal and general Pfaffian neural networks. \emph{Journal of Computer and System Sciences} 54(1):169--176, 1997. \url{https://doi.org/10.1006/jcss.1997.1477}.
+\bibitem{localrad} Peter L. Bartlett, Olivier Bousquet and Shahar Mendelson. Local Rademacher complexities. \emph{Annals of Statistics} 33(4):1497--1537, 2005.
+\bibitem{layerwise} ChatGPT-6 Astra, Claude Opus 5.5, Kaarel H\"anni and Dmitry Vaintrob. \emph{Agnostic learning with layerwise heavy-tailed neural-network priors}. Research manuscript, November 2026. Native squared-error comparison laws and noise-sensitive posterior oracles.
+\bibitem{regular} ChatGPT-6 Astra, Claude Opus 5.5, Kaarel H\"anni and Dmitry Vaintrob. \emph{Learning narrow-network approximations with Gaussian Bayesian ReLU networks}. Research manuscript, November 2026. Polyhedral compiler under hyperplane anti-concentration.
+\bibitem{relu-vc} Peter L. Bartlett, Nick Harvey, Christopher Liaw and Abbas Mehrabian. Nearly-tight VC-dimension and pseudodimension bounds for piecewise linear neural networks. \emph{Journal of Machine Learning Research} 20(63):1--17, 2019.
+\bibitem{universal} Moshe Leshno, Vladimir Ya. Lin, Allan Pinkus and Shimon Schocken. Multilayer feedforward networks with a nonpolynomial activation function can approximate any function. \emph{Neural Networks} 6(6):861--867, 1993.
+\bibitem{castillo-egels} Isma\"el Castillo and Paul Egels. Posterior and Variational Inference for Deep Neural Networks with Heavy-Tailed Weights. \emph{Journal of Machine Learning Research} 26(122):1--58, 2025. \url{https://www.jmlr.org/papers/v26/24-0894.html}.
+\bibitem{nguyen} Hien Duy Nguyen, Jacob Westerhout and Julyan Arbel. Sieve-free ReLU Bayesian priors with near-minimax posterior contraction. arXiv:2610.23308, 2026. \url{https://arxiv.org/abs/2610.23308}.
+\bibitem{maass} Wolfgang Maass. Bounds for the computational power and learning complexity of analog neural nets. \emph{SIAM Journal on Computing} 26(3):708--732, 1997. \url{https://doi.org/10.1137/S0097539793256041}.
+\bibitem{vardi-shamir} Gal Vardi and Ohad Shamir. Neural networks with small weights and depth-separation barriers. \emph{Advances in Neural Information Processing Systems} 33:19433--19442, 2020. \url{https://papers.nips.cc/paper/2020/file/e1fe6165cad3f7f3f57d409f78e4415f-Paper.pdf}.
+\end{thebibliography}
+\end{document}

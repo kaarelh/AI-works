@@ -1,0 +1,155 @@
+\section{A bounded-covariance Gaussian mixture can fail under raw prediction}
+\label{sec:gaussian-mixture-obstruction}
+A fixed Gaussian function prior and a mixture of Gaussian function priors have different raw-output behavior. The following example has a uniformly sub-Gaussian function supremum. Conditional on its latent feature, it is a centered rank-one Gaussian process with kernel diagonal at most one. Nevertheless its ordinary raw posterior mean has divergent population risk at every prescribed fixed likelihood temperature. The example concerns a general function prior; it is not a counterexample for the specific continuous neuron-gate prior constructed elsewhere.
+
+\begin{theorem}[A fixed-prior Gaussian-mixture obstruction]
+\label{thm:gaussian-mixture-obstruction}
+For every fixed $T>0$, there is one prior $\mu_T$ on continuous real-valued functions on $[0,1]$, unchanged with sample size, with the following properties.
+\begin{enumerate}
+ \item Conditional on a latent feature, the function is a centered Gaussian process whose covariance is rank one or zero and whose kernel obeys $K(x,x)\le1$ at every input.
+ \item If $F(f)=\sup_{x\in[0,1]}|f(x)|$, then
+ $\mathbb E_{\mu_T}\exp(F(f)^2/4)\le\sqrt2$.
+ \item The zero function has prior mass $1/2$.
+\end{enumerate}
+There are noiseless laws $P_j$ with labels in $\{0,1\}$ and sample sizes $n_j=2^j$ such that the ordinary posterior
+\[
+ \Pi_S(df)\propto
+       \exp\left\{-\frac1T\sum_{i=1}^{n_j}(f(X_i)-Y_i)^2\right\}\mu_T(df)
+\]
+has raw posterior mean $m_S=\int f\,d\Pi_S$ satisfying, for all sufficiently large $j$,
+\[
+ P_j^{\otimes n_j}\{R_{P_j}(m_S)\ge c_T n_j\}\ge9/10,
+ \qquad R_{P_j}(0)=1/2,
+\]
+where $c_T>0$ depends only on $T$. The expected risk also diverges. All function paths can be chosen smooth, and all finite-sample posterior moments used in the proof exist.
+\end{theorem}
+
+\begin{proof}
+Fix $T>0$ and put
+\[
+ p=\frac1{100(T+1)^2},\qquad n_j=2^j,\qquad M_j=n_j^3.
+\]
+Choose disjoint open intervals $I_j\subset(0,1)$ accumulating only at zero. In each $I_j$, choose $M_j+1$ distinct points $x_{j,0},\ldots,x_{j,M_j}$ and smooth bump functions $\eta_{j,i}$ with pairwise disjoint supports compactly contained in $I_j$, satisfying $0\le\eta_{j,i}\le1$ and $\eta_{j,i}(x_{j,i})=1$.
+For a bit vector $B=(B_1,\ldots,B_{M_j})$, define
+\[
+ \psi_{j,B}(x)=n_j^{-1/2}\eta_{j,0}(x)
+                   +\sum_{i=1}^{M_j}B_i\eta_{j,i}(x).
+\]
+Disjoint supports ensure $0\le\psi_{j,B}\le1$.
+
+Give the zero function prior mass $1/2$. Give branch $j$ mass
+$w_j=2^{-j-1}$. Within that branch draw independent bits
+$B_i\sim\operatorname{Bernoulli}(p)$ and an independent $G\sim N(0,1)$, and set
+$f=G\psi_{j,B}$. These branch masses sum to $1/2$, so this defines one fixed prior. Conditional on $(j,B)$, its covariance is
+$K_{j,B}(x,x')=\psi_{j,B}(x)\psi_{j,B}(x')$, with diagonal at most one. Also $F(f)\le|G|$, proving the uniform exponential moment. Each sampled function is smooth and supported in one interval; no path contains an infinite sum of bumps over the branch index.
+
+Under $P_j$, the common input $x_{j,0}$ has probability $1/2$ and label one. Each of the $M_j$ other inputs has probability $1/(2M_j)$ and label zero. Write $n=n_j$, $M=M_j$. Let $K$ be the number of common observations and let $k_i$ be the number of observations at rare input $i$. Define the event
+\[
+ E_n=\{K\ge n/3\}.
+\]
+Since $K\sim\operatorname{Binomial}(n,1/2)$, Hoeffding's inequality gives
+$\Pr(E_n)\ge1-e^{-n/18}$.
+
+All branches other than $j$ are identically zero on this law's support. Their total likelihood is therefore
+$Z_0=e^{-K/T}$. In the active branch, after averaging each observed bit, the conditional likelihood for $G$ is
+\[
+ e^{-K(G/\sqrt n-1)^2/T}\,L(G),\qquad
+ L(G)=\prod_{i:k_i>0}[(1-p)+p e^{-k_iG^2/T}].
+\]
+There are at most $n$ observed rare coordinates, so
+\begin{equation}
+ (1-p)^n\le L(G)\le1.
+ \label{eq:gp-mixture-bit-tilt}
+\end{equation}
+Set $k=K/n$. Integrating only the common-observation Gaussian factor gives
+\[
+ Z_c=(1+2k/T)^{-1/2}\exp\{-K/(T+2k)\}.
+\]
+Consequently the active-branch to inactive-branch posterior odds are at least
+\begin{align*}
+ \frac{w_j}{1-w_j}\frac{(1-p)^n Z_c}{Z_0}
+ &\ge \frac{w_j}{1-w_j}(1+2/T)^{-1/2}
+       \exp\left\{n\left[
+         \frac{2k^2}{T(T+2k)}+\log(1-p)\right]\right\}.
+\end{align*}
+On $E_n$, $1/3\le k\le1$. The bracket is at least
+\[
+ \frac{2/9-1/50}{(T+1)^2}>0,
+\]
+because $\log(1-p)\ge-2p$ and
+$T(T+2)\le(T+1)^2$. The exponential in $n=2^j$ dominates
+$\log(1/w_j)=O(j)$. Hence the active posterior mass is at least $1/2$ for all sufficiently large $j$, uniformly over samples in $E_n$.
+
+We next bound its posterior mean readout. After conditioning only on the common observations, the readout is Gaussian with
+\[
+ \mu=\frac{2k\sqrt n}{T+2k},\qquad
+ v=\frac T{T+2k}\le1.
+\]
+On $E_n$, $\mu\ge2\sqrt n/[3(T+1)]$ and $\mu\le\sqrt n$.
+The active readout posterior $Q$ is this Gaussian tilted by $L(G)$.
+By \eqref{eq:gp-mixture-bit-tilt} its density ratio is at most
+$(1-p)^{-n}\le e^{2pn}$. Thus
+\[
+ Q\{G\le\mu/2\}
+ \le\exp\left\{-\frac{(1/18-1/50)n}{(T+1)^2}\right\}.
+\]
+The negative contribution is bounded, by Cauchy--Schwarz under the unperturbed Gaussian, by
+\[
+ \mathbb E_Q[(-G)_+]
+ \le\sqrt{n+1}\,
+       \exp\left\{-\frac{(1/9-1/50)n}{(T+1)^2}\right\}.
+\]
+Indeed the Gaussian probability of $G<0$ is at most
+$e^{-\mu^2/(2v)}$, and its second moment is at most $n+1$.
+It follows for large $j$ that
+\[
+ \mathbb E_QG\ge\mu/4\ge\frac{\sqrt n}{6(T+1)}.
+\]
+
+Every unobserved bit remains independent Bernoulli$(p)$ under this active posterior and remains independent of $G$: the likelihood contains no occurrence of that bit. Hence at every unobserved rare input the full posterior mean is at least
+\[
+ \frac12 p\,\mathbb E_QG
+       \ge\frac{p\sqrt n}{12(T+1)}.
+\]
+There are at least $M-n\ge M/2$ such inputs. Their total population probability is at least $1/4$, and their labels are zero. Therefore, on $E_n$,
+\[
+ R_{P_j}(m_S)\ge\frac{p^2 n}{576(T+1)^2}.
+\]
+This proves the theorem with $c_T=p^2/[576(T+1)^2]$, since $\Pr(E_n)\to1$. The zero-function risk is exactly $1/2$. The likelihood is bounded by one, its evidence is positive, and the prior function supremum has every finite moment, so all posterior quantities in the proof exist.
+\end{proof}
+
+\begin{corollary}[One prior for every fixed temperature]
+There is one prior $\mu$, independent of temperature as well as sample
+size, with all three properties of
+Theorem~\ref{thm:gaussian-mixture-obstruction}, such that its conclusion
+holds for every fixed $T>0$. The positive constant and adverse data-law
+sequence may depend on $T$; a single data-law sequence defeating all
+temperatures is not asserted.
+\end{corollary}
+\begin{proof}
+Use pairwise disjoint input intervals $I_{j,k}$ for all integers
+$j,k\ge1$. Give the zero function mass $1/2$ and branch $(j,k)$ mass
+$2^{-j-k-1}$; these branch masses sum to $1/2$. On that branch use the
+preceding smooth-feature construction with $n_j=2^j$, $M_j=n_j^3$,
+and Bernoulli parameter $p_k=2^{-k}/100$. The Gaussian amplitude and
+all supremum and covariance bounds are unchanged. For any fixed
+$T$, choose one fixed $k=k(T)$ with
+$p_k\le1/[100(T+1)^2]$ and support the adverse law on block $(j,k)$.
+All other branches vanish on that block, including those with
+smaller Bernoulli parameters. Every estimate in the preceding proof
+still holds, while the extra prior penalty is only $O(k)$ in
+addition to $O(j)$ and is dominated by the exponential evidence
+advantage. The final constant is
+$c_T=p_{k(T)}^2/[576(T+1)^2]>0$.
+\end{proof}
+
+\begin{corollary}[No covariance-only raw agnostic oracle]
+There is no distribution-uniform oracle bound for the temperature-independent prior $\mu$ above and any fixed $T>0$ of the form
+\[
+ \mathbb E R(m_S)\le C_1\inf_{\rho\ll\mu}
+       \left\{\rho R+\frac{C_2T}{n}\KL(\rho\|\mu)\right\}+o(1),
+\]
+with finite constants $C_1,C_2$, or with any other right side that stays bounded for a fixed-risk, fixed-entropy comparator. Indeed the comparison law concentrated on the zero atom has $\rho R=1/2$ and $\KL(\rho\|\mu)=\log2$.
+\end{corollary}
+
+The adverse laws vary with $j$, whereas the function prior and likelihood variance are fixed. The theorem does not assert inconsistency under one fixed law. It also does not identify the above feature mixture with a finite neural architecture. Its purpose is to isolate a statistical obstruction: a uniform sub-Gaussian raw supremum and bounded conditional Gaussian covariance do not, by themselves, permit the sharp fixed-kernel Gaussian argument to be averaged over learned feature kernels. The latent feature weights can use observed zero labels to switch off training coordinates while leaving an unobserved positive bias.

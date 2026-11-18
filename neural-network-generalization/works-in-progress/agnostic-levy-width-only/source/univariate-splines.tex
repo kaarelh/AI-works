@@ -1,0 +1,182 @@
+\section{A coefficient-free oracle for univariate shallow networks}
+\label{sec:univariate-coefficient-free}
+Let $X\in[-1,1]$ and suppose that, for every interval $I\subseteq[-1,1]$,
+\begin{equation}
+ \Pr(X\in I)\le\kappa |I|^\alpha,
+ \qquad \kappa\ge1,\qquad 0<\alpha\le1.
+ \label{eq:univariate-regularity}
+\end{equation}
+A density bounded by $\kappa$ gives the case $\alpha=1$. The constants
+below do not depend on the original teacher coefficients.
+
+\begin{lemma}[Bounded-slope approximation of a bounded spline]
+\label{lem:bounded-slope-spline}
+Let $f:[-1,1]\to[-1,1]$ be continuous and piecewise affine, with at most
+$K$ interior breakpoints. For every $0<\delta\le1$ there is a continuous
+piecewise-affine $q:[-1,1]\to[-1,1]$ with at most $2K$ interior
+breakpoints and Lipschitz constant at most $2/\delta$ such that
+\begin{equation}
+ \E|q(X)-f(X)|\le6\kappa K\delta^\alpha.
+ \label{eq:spline-approximation}
+\end{equation}
+Moreover, $q$ has a one-hidden-layer ReLU implementation, with a
+constant input, at most $2K+2$ hidden neurons, and every coefficient
+bounded in absolute value by $4/\delta$.
+\end{lemma}
+\begin{proof}
+If $K=0$, take $q=f$. A bounded affine function on $[-1,1]$ has slope
+at most one, and the representation below uses two neurons.
+Otherwise list the actual breakpoints as
+$-1<t_1<\cdots<t_k<1$, with $k\le K$. Partition them into maximal
+consecutive clusters by placing two successive breakpoints in the
+same cluster exactly when their gap is at most $3\delta$.
+For a cluster with first and last breakpoints $a,b$, set
+\[
+ I_{a,b}=[\max\{-1,a-\delta\},\min\{1,b+\delta\}].
+\]
+The resulting intervals are disjoint, and successive such intervals
+are separated by more than $\delta$. Define $q=f$ outside their
+interiors, and interpolate linearly between the two endpoint values
+of $f$ on each interval. This preserves continuity and the bound
+$|q|\le1$. All original breakpoints lie inside these intervals, so
+$q$ has at most two breakpoints per cluster.
+
+Each replacement interval has length at least $\delta$, hence its
+chord has slope at most $2/\delta$. Every complementary interval
+between two replacement intervals has length greater than $\delta$;
+on it, $f$ is affine and bounded, giving the same slope bound.
+If a nonempty complementary interval touches the left endpoint
+$-1$, then the first original breakpoint lies more than $\delta$
+from $-1$. The affine segment extends all the way to that breakpoint,
+so its slope is again at most $2/\delta$ even if the retained
+complementary interval itself is short. The right boundary is
+identical. Thus $q$ is globally $2/\delta$-Lipschitz.
+
+A cluster containing $k_j$ breakpoints has replacement-interval
+length at most
+$3\delta(k_j-1)+2\delta\le3k_j\delta$.
+Since $|q-f|\le2$ and the functions agree elsewhere,
+\[
+ \E|q(X)-f(X)|
+ \le 2\kappa\sum_j(3k_j\delta)^\alpha
+ \le 6\kappa\delta^\alpha\sum_j k_j
+ \le 6\kappa K\delta^\alpha.
+\]
+Here $3^\alpha\le3$ and $k_j^\alpha\le k_j$.
+
+For completeness, if $u_1<\cdots<u_r$ are the new interior
+breakpoints and $s_0,\ldots,s_r$ the slopes, use
+\[
+ q(x)=q(-1)\operatorname{ReLU}(1)
+       +s_0\operatorname{ReLU}(x+1)
+       +\sum_{j=1}^r(s_j-s_{j-1})\operatorname{ReLU}(x-u_j).
+\]
+The identity holds throughout $[-1,1]$. All input coefficients and
+biases are at most one, $|q(-1)|\le1$, $|s_0|\le2/\delta$, and every
+slope jump is at most $4/\delta$. This proves the implementation claim.
+\end{proof}
+
+\begin{corollary}[Compactifying a clipped univariate ReLU network]
+\label{cor:univariate-compiler}
+Let $g$ be any one-hidden-layer univariate ReLU network of width
+$C\ge1$, with arbitrary finite real coefficients and biases. Let $s$
+clip to $[-1,1]$. For every $0<\zeta\le1$ there is a one-hidden-layer
+ReLU network $q$ satisfying
+\begin{equation}
+ |q(x)|\le1\quad(x\in[-1,1]),\qquad
+ \E|q(X)-s(g(X))|\le\zeta,
+ \label{eq:univariate-compiler-error}
+\end{equation}
+whose width and coefficient cap obey
+\begin{equation}
+ m\le6C+6,\qquad
+ B\le4\left(\frac{18\kappa(C+1)}{\zeta}\right)^{1/\alpha}.
+ \label{eq:univariate-compiler-resources}
+\end{equation}
+It has a constant input and no internal biases, and its nonnegative
+hidden features can be relayed by identity matrices through any
+additional hidden layers.
+\end{corollary}
+\begin{proof}
+The original network is affine on at most $C+1$ intervals. Clipping
+can add at most two breakpoints on each such interval, so $s\circ g$
+has at most $K=3C+2$ interior breakpoints. Apply
+Lemma~\ref{lem:bounded-slope-spline} with
+$\delta=[\zeta/(18\kappa(C+1))]^{1/\alpha}\le1$.
+Then $6\kappa K\delta^\alpha\le\zeta$ and
+$2K+2\le6C+6$. A ReLU identity layer preserves the nonnegative
+hidden vector exactly.
+\end{proof}
+
+\begin{theorem}[A sharp continuous-domain width-only oracle]
+\label{thm:univariate-levy-oracle}
+Use the independent-coordinate L\'evy fan-in prior with the fixed small
+intensity required by the stable-padding comparison theorem. Fix one
+learner width $N$, one hidden depth $H\ge1$, ReLU hidden activation,
+and clipping to $[-1,1]$ in both the likelihood and prediction.
+Assume \eqref{eq:univariate-regularity},
+$f_0(x)=\E[Y\mid X=x]\in[-1,1]$, and conditionally centered
+$\sigma^2$-sub-Gaussian label noise. Put $s_\sigma=1+\sigma^2$.
+The ordinary all-data posterior with likelihood
+\[
+ d\Pi_{S_n}(w)\ \propto\
+ \exp\!\left[-\frac1{256s_\sigma}
+          \sum_{i=1}^n(f_w(X_i)-Y_i)^2\right]d\pi_N(w)
+\]
+and posterior mean $\bar f_{S_n}$ satisfies, for a numerical $A$,
+\begin{equation}
+ \E_{S_n}R(\bar f_{S_n})
+ \le
+ \inf_{\substack{C\ge1:\,6C+6\le N}}
+ \left\{\inf_{g\in\mathcal G_C}R(g)
+ +\frac{A s_\sigma(C+1)H}{\alpha(n+1)}
+       \log\!\bigl[e\kappa(C+1)(H+1)(n+1)\bigr]\right\},
+ \label{eq:univariate-width-oracle}
+\end{equation}
+where $\mathcal G_C$ is the class of one-hidden-layer univariate ReLU
+networks of width at most $C$, with no coefficient restriction. The
+same fixed posterior is used for every comparator in this infimum.
+If the displayed index set is empty, the theorem makes no comparator
+claim. No prior over network sizes or posterior averaging over sample
+sizes is used.
+\end{theorem}
+\begin{proof}
+Fix $C$ with $6C+6\le N$ and $g\in\mathcal G_C$.
+Clipping $g$ cannot increase squared risk because $f_0\in[-1,1]$.
+Apply Corollary~\ref{cor:univariate-compiler} with
+$\zeta=(n+1)^{-1}$ to get a bounded width-$m$ comparator $q$.
+For two functions taking values in $[-1,1]$, population squared risks
+differ by at most four times their $L^1(P_X)$ distance; this follows
+by conditioning on $X$ and cancelling the common label-noise variance.
+Consequently
+\[
+ R(q)\le R(g)+\frac4{n+1}.
+\]
+Its one-hidden-layer rooted formula has size at most $m$. Identity
+padding to depth $H$ increases this to at most $mH$. The audited
+stable-padding comparison theorem gives the all-data expectation
+remainder
+\[
+ \frac{A s_\sigma(mH+1)}{n+1}
+ \left[2\log\{A(m+1)(B+8)\}
+       +\log\{A(mH+1)H(B+8)(n+1)\}\right].
+\]
+Substitute \eqref{eq:univariate-compiler-resources} and
+$m\le6C+6$. Since $0<\alpha\le1$, this is bounded by the remainder
+in \eqref{eq:univariate-width-oracle}, after enlarging $A$ to absorb
+$4/(n+1)$. Every comparison law is deterministic given the comparator
+and input distribution. The expectation oracle holds separately for
+every such law and uses the same posterior, so one may take the
+infimum over all $C$ and $g$ without a confidence union or a size prior.
+\end{proof}
+
+\paragraph{Interpretation.}
+For a bounded-density one-dimensional input law and fixed learner
+depth, the excess-risk cost is $\widetilde O((1+\sigma^2)C/n)$,
+independent of the original teacher coefficients and the learner
+width. Additional learner depth costs only a factor $H$ and logarithms.
+The anti-concentration assumption matters: the proof permits changes
+on short intervals around tightly packed breakpoints, and controls
+their probability through \eqref{eq:univariate-regularity}. The theorem
+is an expectation bound for the ordinary final posterior mean. It
+does not claim that a single posterior draw has the same guarantee.

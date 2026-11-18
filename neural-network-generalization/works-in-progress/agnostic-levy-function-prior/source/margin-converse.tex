@@ -1,0 +1,40 @@
+\section{An exact Boolean sign prior under an all-input margin condition}
+\label{sec:levy-margin-converse}
+The compression theorem also applies directly to a margin sign event. It does not require the raw output to stay near a prescribed amplitude or to have an upper bound.
+
+\begin{theorem}[Circuit complexity from margin-sign prior mass]
+\label{thm:margin-sign-converse}
+Use ReLU and a prescribed Boolean input set $\mathcal X\subseteq\{-1,1\}^d$. Let $f:\mathcal X\to\{-1,1\}$ and $\kappa>0$. If
+\[
+ p=\mu_N\{f(x)z_w(x)\ge\kappa\text{ for every }x\in\mathcal X\}>0,
+\]
+put $\tau=\min\{1/2,\kappa/2\}$ and $L_p=H+1+\log(1/(p\tau))$. Then a rational ReLU formula of size at most
+$[CL_p\log(eL_p)]^{H+2}$ and coefficient bit length at most $CL_p^3$ has sign exactly $f$ on $\mathcal X$. Consequently $f$ has a Boolean circuit of size polynomial in $d$, that formula size, $H$, and the coefficient bit length.
+
+The same conclusion holds for the prior conditioned on the all-input margin event
+\[
+ M_\kappa=\{|z_w(x)|\ge\kappa\text{ for every }x\in\mathcal X\},
+\]
+if $\log(1/p)$ in $L_p$ is replaced by $\log(1/p)+Q_0$. Here $p$ is the conditional probability of sign function $f$, and a bound independent of learner width is
+\begin{align*}
+ Q_0\le C(d+1)(H+1)\big[&H+\log(d+H+2)\\
+ &+(H+2)\log(1+\kappa)+\log(1+\kappa^{-1})\big].
+\end{align*}
+At fixed hidden depth and margin, both conclusions are polynomial circuit-complexity bounds in input dimension and negative log function-prior mass.
+\end{theorem}
+\begin{proof}
+Apply Theorem~\ref{thm:levy-prior-compression} with failure probability $p/2$ and approximation error $\tau$. Its good set intersects the margin sign event. At a network in that intersection, the approximating formula $g$ satisfies
+\[
+ f(x)g(x)\ge\kappa-\tau\ge\kappa/2>0.
+\]
+This proves exact sign agreement. The rational ReLU-to-Boolean conversion was detailed after Corollary~\ref{cor:levy-prior-complexity-converse}; it does not require values of $g$ to be bounded above.
+
+For the conditioned prior, a width-one ReLU chain computes the constant $2\kappa$: its first-layer bias is one, all later hidden weights are one, and its readout coefficient is $2\kappa$. It has $H$ hidden occurrences and coefficient bound $B_0=\max\{1,2\kappa\}$. A uniform raw neighborhood of radius $t_0=\min\{1,\kappa/2\}$ around this function lies in $M_\kappa$, even on the whole input cube. Theorem~\ref{thm:uniform-mass} gives
+\[
+ \mu_N(M_\kappa)\ge e^{-Q_0}
+\]
+with the displayed bound after expanding its constants and logarithms. In particular this event has positive probability at every finite width. If its conditional sign mass is $p$, the original joint margin sign event has mass
+$p\mu_N(M_\kappa)\ge p e^{-Q_0}$. Apply the first part with this lower bound.
+\end{proof}
+
+Conversely, a ReLU formula implementing a Boolean target with margin at least $2\kappa$ has a uniform neighborhood contained in its correct-sign margin event. Theorem~\ref{thm:uniform-mass} bounds the negative log probability of that event. Conditioning on $M_\kappa$ can only increase its probability. Thus the all-input-margin convention also has two directions: small margin formulas receive controlled prior mass, and sign functions with appreciable conditional prior mass have small Boolean circuits at fixed depth. An unrestricted sign event without a positive margin is not covered by this converse.

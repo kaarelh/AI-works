@@ -1,0 +1,117 @@
+\section{Exponential learner-depth cost at inverse-polynomial accuracy}
+\label{sec:finite-depth-rate}
+The preceding fixed-depth asymptotics can be made uniform as the learner depth grows. The resulting sample lower bound is exponential in learner depth even though the target remains a single shallow neuron. The requested excess accuracy decreases only polynomially with depth.
+
+\begin{theorem}[An explicit depth lower bound]
+\label{thm:finite-depth-rate}
+Fix a finite covariance bound $M$ for the optional independent Gaussian affine output component. There are constants $c,C>0$ and an integer $H_0$, depending at most on $M$, such that the following holds for every integer $H\ge H_0$. Put
+\[
+ d=4H+2,\qquad n=4\cdot256^H.
+\]
+There is a uniform $n$-atom input law on the unit sphere in $\R^d$, with covariance smallest eigenvalue at least $1/(64H)$, for which
+\[
+ Y=\tanh(X_1)+G/4,\qquad G\sim N(0,1)\text{ independent of }X.
+\]
+With probability at least $9/10$ over $n$ IID training observations, every well-defined data-dependent probability mixture of ordinary raw posterior means over all
+\[
+ N\ge e^{CH},\qquad 0<\sigma^2\le1/N,\qquad \lambda>0
+\]
+has population squared loss at least
+\[
+ \frac1{16}+cH^{-6}.
+\]
+The optional affine output component is allowed throughout. The target has a width-one, one-hidden-layer implementation with unit coefficients, and an exact width-two implementation with coefficient cap four at every hidden depth on the data support.
+\end{theorem}
+\begin{proof}
+Take the uniform law from Theorem~\ref{thm:simple-teacher-rate}, with nuisance dimension $D=4H$ and grid resolution $J=4$. Thus $T$ is uniform on $\{\pm1/4,\pm3/4\}$, the nuisance coordinates are independent midpoint grid values in $[-1/(2\sqrt D),1/(2\sqrt D)]$, and
+\[
+ X=(T,z,\sqrt{1-T^2-\|z\|_2^2}).
+\]
+There are exactly $n=4J^D=4\cdot256^H$ atoms. The previous covariance calculation gives diagonal coordinate variances at least $5/16$, $1/(16D)$, and $1/64$ respectively. The true target is $g_*(x)=\tanh(x_1)$, and its population residual from affine input functions is the positive absolute constant
+\[
+ r_* =\frac{\{(3/4)\tanh(1/4)-(1/4)\tanh(3/4)\}^2}
+                  {2\{(1/4)^2+(3/4)^2\}}.
+\]
+The deep width-two implementation was established in Corollary~\ref{cor:shallow-teacher-rate}.
+
+We first make the Fourier comparison constants explicit enough to track depth. For any prescribed grid values in $[-1,1]$, the discrete Fourier expansion has coefficient absolute sum at most $\sqrt n$. Its frequencies can be chosen with $T$-coordinate magnitude at most $3\pi$ and each nuisance-coordinate magnitude at most $6\pi\sqrt D$. Consequently
+\[
+ K_\omega\le100H,\qquad
+ |\omega\cdot x+\phi|\le100H+\pi\le102H
+\]
+for $H\ge3$. Take the fixed constants
+\[
+ a=1/4,\qquad t=a/1000,\qquad
+ R=10^6,\qquad U=1000H,
+\]
+and apply Lemma~\ref{lem:fourier-native} with tolerance $t/2$. Here
+\[
+ A=4U\sqrt n=8000H\,16^H,\qquad
+ \eta=\frac{t/2}{36H^2R^{H-1}}.
+\]
+The required lower bound on $R$ holds uniformly for $H\ge3$. Indeed
+\[
+ A^{2/H}=256(8000H)^{2/H}
+ \le256(24000)^{2/3}<3\cdot10^5<R^2,
+\]
+and $768/(t/2)=6{,}144{,}000<R^2$.
+The truncation requirement also holds uniformly: its left side is at most
+\[
+ \sqrt n\,C_0e^{-2(1000H-102H)}
+       =2C_0\exp\{H\log16-1796H\},
+\]
+which is less than $\eta/4$ for every $H\ge3$. This follows directly by taking logarithms, using $\log R<14$, $\log C_0<6$, and $\log H\le H$.
+
+The mean energy in Lemma~\ref{lem:fourier-native} is therefore at most
+\[
+ d\{(100H)^2+(1000H+3\pi/2)^2\}+(4H+1)10^{12}
+ \le C_0' H^3
+\]
+for an absolute constant $C_0'$. Its required width is at most
+\[
+ C_1 H^7(256\cdot10^{12})^H\le e^{C_2H}
+\]
+for an absolute $C_2$ and all sufficiently large $H$. This follows by substituting $A$ and $\eta$ into the displayed width conditions of that lemma; the logarithmic factors there are $O(H)$.
+
+Given the sample, clip each empirical atom mean to $[-2,2]$. Apply this Fourier construction to half of those clipped values, and double only the comparison mean readout as in Corollary~\ref{cor:gaussian-noise-rate}. Its mean energy increases by at most four and its output RMS against clipped means is at most $t$. If an affine Gaussian output component is present, shrink its covariance by the fixed factor
+\[
+ s=\min\{1,t^2/(2M)\}.
+\]
+Because $\|(1,x)\|^2=2$, its output RMS is at most $t$. Its relative entropy is at most
+$\tfrac12(d+1)(s-1-\log s)=O_M(H)$, also for singular covariance by working on its support. Since $\sigma^2\le1/N\le1$, its normalized variational penalty is absorbed into a deterministic bound
+\[
+ K_H=C_3(M)H^3\ge1.
+\]
+This bound is uniform over every allowed width and scale.
+
+Lemma~\ref{lem:gaussian-clipped-comparison}, now with $b=n$, bounds the empirical clipping cost by $a^2/400$ except on probability $e^{-n/2000}$. The total comparison empirical RMS against the original atom means is at most $a/20+2t$. Put
+\[
+ \tau_H=\frac{a^2}{100K_H}=c_M H^{-3}.
+\]
+At every $\lambda\le\tau_H$, the variational comparison gives posterior expected empirical residual against atom means less than $a^2/50$.
+
+We record the probabilities needed for the remaining argument uniformly in $H$. A sample of size $n$ from $n$ equal-probability atoms has at least $n/3$ singleton atoms except on probability $e^{-c_0n}$, by bounded differences and $\E S=n(1-1/n)^{n-1}\ge n/e$. Its weighted count statistic is at most four except on probability $2/n$, by Lemma~\ref{lem:weighted-occupancy}. Conditional on inputs with enough singletons, their noise-square sum is at least $a^2n/6$ except on probability $e^{-c_1n}$. Thus every small-temperature posterior mean has empirical squared distance from $g_*$ at least $a^2/20$.
+
+For the affine residual, the population augmented input Gram matrix has smallest eigenvalue at least $1/(128H)$ and dimension at most $5H$. Bound all its empirical entries, all empirical target-feature moments, and the empirical target second moment to within $c_*H^{-3}$ of their population values, where $c_*>0$ is a sufficiently small absolute constant depending only on $r_*$. The matrix inverse perturbation identity and the formula for the least-squares Schur complement then give
+\[
+ \|P_Sg_*(S)\|_2^2/n\ge r_*/2.
+\]
+For completeness, if $A$ is the population Gram matrix, $\lambda_0=1/(128H)$, and its dimension is $q\le5H$, an entry tolerance $r_*\lambda_0^2/(1000q)$ suffices. It gives $\|\widehat A-A\|\le r_*\lambda_0^2/1000$, hence $\|\widehat A^{-1}-A^{-1}\|\le r_*/500$; the target moments have norm at most two, and their changes and the target-second-moment change leave the Schur complement within $r_*/2$. Hoeffding and a union bound give failure probability at most
+\[
+ C_4H^2\exp[-c_2 n/H^6].
+\]
+The Gaussian noise-target alignment has variance at most $a^2/n$, so
+$|\Delta_S|\le r_*\tau_H/8$ fails with probability at most $2\exp[-c_M'n/H^6]$.
+
+The projected-sector argument now provides one common separator
+\[
+ \frac1n(y-2g_*(S))^{\mathsf T}(f(S)-g_*(S))\ge r_*\tau_H/8
+\]
+for every temperature, width, scale, and allowed affine covariance. The Gaussian witness lemma bounds the squared population norm of this separator by seven, with additional failure at most $e^{-\sqrt n}$. It survives arbitrary data-dependent mixing. Cauchy--Schwarz yields
+\[
+ R(F)-R(g_*)\ge\frac{r_*^2\tau_H^2}{448}=cH^{-6}.
+\]
+The sum of all failure probabilities tends to zero as $H\to\infty$, because $n=4\cdot256^H$. Choosing $H_0$ large enough makes their sum at most $1/10$. Increase the width constant $C$ if necessary to cover all stated comparison conditions. This proves the theorem.
+\end{proof}
+
+For excess accuracy smaller than a fixed multiple of $H^{-6}$, these distributions defeat the allowed learners after $4\cdot256^H$ observations, despite a shallow width-one regression function and Gaussian noise of fixed variance. This is an exponential-in-learner-depth sample obstruction at inverse-polynomial accuracy, with input dimension linear in depth and learner width at least exponential in depth. The theorem does not assert exponential sample requirements at one fixed positive accuracy or at fixed input dimension as depth grows. The separate fixed-law results above keep dimension fixed once depth is chosen and show slow rates along one infinite data stream.

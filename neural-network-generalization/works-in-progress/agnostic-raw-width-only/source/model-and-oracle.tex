@@ -1,0 +1,118 @@
+\section{One dense prior and raw Gaussian regression}
+\label{sec:raw-model}
+Let $X\in[-1,1]^d$ and let $Y$ be real valued.  The observations are iid,
+and $R(f)=\E(f(X)-Y)^2$ denotes squared test risk.  Fix a hidden width $N$
+and hidden depth $H$ before observing the sample.  All hidden activations
+are tanh.  Fix $0<\vartheta\le1$ and a centered Student law of more than two
+degrees of freedom.  The first-layer weights and all hidden biases have
+this Student law.  For $2\le\ell\le H$, set
+\[
+ h_i^\ell(x)=\tanh\left(b_i^\ell+
+             \sum_{j=1}^N S_{\ell-1,j}G_{\ell,ij}h_j^{\ell-1}(x)\right),
+ \qquad S_{\ell-1,j}\sim\operatorname{Gamma}(\vartheta/N,1),
+\]
+where the $G_{\ell,ij}$ have the same Student law.  All these latent
+variables are independent.  At the readout take a separate symmetric
+Dirichlet vector and independent standard Gaussian factors:
+\begin{equation}\label{eq:normalized-raw-prior}
+ P\sim\operatorname{Dirichlet}(\vartheta/N,\ldots,\vartheta/N),\qquad
+ z_w(x)=G_0+\sum_{j=1}^N\sqrt{P_j}\,G_jh_j^H(x).
+\end{equation}
+This is a continuous full-support prior on one dense architecture.  Hidden
+outgoing weights share a continuous multiplier, and the readout shares a
+variance allocation; its weight coordinates are not independent.  No
+network size is sampled.  Its scalar distributions do not change with
+sample size.  Their displayed fan-in dependence defines the prior family
+as $N$ varies.
+
+For a deterministic temperature $T_n$, the posterior and prediction are
+\begin{equation}\label{eq:raw-posterior}
+ \Pi_S(dw)=\frac{e^{-\sum_{i=1}^n(z_w(X_i)-Y_i)^2/T_n}}{Z_S}\mu_{N,H}(dw),
+ \qquad \widehat f_S(x)=\int z_w(x)\,\Pi_S(dw).
+\end{equation}
+The physical Gaussian observation variance is $T_n/2$.  There is no
+output clipping, output saturation, label truncation, holdout selection, or averaging
+across sample sizes in this learner.  The posterior mean is the ordinary
+mean after all $n$ observations.  Computing it efficiently is not part of
+the guarantee.
+
+We state explicitly the raw-network oracle used below.  It is proved in
+the companion paper on raw priors\cite{rawprior}; the following explanation
+also identifies its two quantitative inputs.  Write $L_q$ for the absolute
+sum of the comparator's readout coefficients and $b_q$ for its output bias.
+For a tanh comparator $q$ with the same depth $H$, width at most $m\le N$,
+and hidden coefficient cap $B\ge1$, set
+\begin{align}
+ P_m&=(d+1)(m+1)+(H+1)(m+1)^2,\notag\\
+ Q_m&=P_m+(H+1)(m+1)+H+1,\notag\\
+ \mathcal K_n(q)&=Q_m\left[(H+2)\log\{c(d+m+2)(B+2)\}
+       +\log\{c(H+2)(m+1)(B+2)(n+1)\}\right]\notag\\
+ &\hspace{12mm}+L_q^2+b_q^2+1.\label{eq:raw-comparison-resource}
+\end{align}
+The count includes every position in the selected dense blocks, including
+zero coefficients.  It is not a count only of nonzero edges.
+
+\begin{proposition}[Raw network comparison oracle, imported]\label{prop:raw-network-oracle}
+Suppose $\E\exp(Y^2/K_Y^2)\le2$ for a fixed finite $K_Y$.
+There are constants $t_0,c>0$, depending only on the fixed prior laws and
+$K_Y$, such that the single deterministic choice $T_n=t_0\sqrt n$ gives
+\[
+ \E_S R(\widehat f_S)\le R(q)+c n^{-1/2}\mathcal K_n(q)+c(n+1)^{-2}
+\]
+for every raw tanh comparator $q$ and every $N\ge m$.  The constants are
+independent of learner depth, learner width, input dimension and comparator
+resources.  No output bound on $q$ is required.
+\end{proposition}
+
+Two facts explain the role of this prior.  First, its raw supremum has a
+width- and depth-independent Gaussian tail.  Indeed
+$\sup_x|z_w(x)|\le|G_0|+\sum_j\sqrt{P_j}|G_j|$.
+If $S_j\sim\operatorname{Gamma}(\vartheta/N,1)$ and $U=\sum_jS_j$, then
+$U$ is independent of $P_j=S_j/U$, and
+\[
+ \sum_j\sqrt{S_j}|G_j|=\sqrt U\sum_j\sqrt{P_j}|G_j|.
+\]
+Each $\sqrt{S_j}G_j$ is a difference of two gamma variables.  The absolute
+sum on the left is dominated by a gamma variable of fixed total shape;
+its $p$th norm is $O(p)$, whereas $\|\sqrt U\|_p\ge c\sqrt p$.
+Division proves $\|\sup_x|z_w(x)|\|_p\le c\sqrt p$.
+
+Second, small comparator implementations have useful prior neighborhoods
+at every larger width.  There is a comparison law $\rho_r$ satisfying
+\[
+ \E_{\rho_r}\|z_w-q\|_\infty^2\le r,
+ \qquad
+ \operatorname{KL}(\rho_r\|\mu_{N,H})
+ \le cQ_m\log\frac{c(m+1)(B+2)W}{r}
+          +c(L_q^2+b_q^2),
+\]
+where $W=(H+2)[c(d+m+2)(B+2)]^{H+2}$.
+The comparison puts selected gates near nonzero values and suppresses the
+sum of the others.  Its selected-gate entropy contains $\log N$ terms;
+averaging placements among the $N$ neurons cancels those terms.  Student
+coefficient neighborhoods cost logarithmically in $B$, while allocating
+readout variance in proportion to coefficient magnitudes costs $O(L_q^2)$.
+These are comparison measures, not changes to the learner or a prior over
+architectures.
+
+The proof of Proposition~\ref{prop:raw-network-oracle} truncates the prior
+only for analysis, applies the all-data bounded-prediction exponential-
+weights oracle, and transfers back using the native Gaussian supremum
+tail.  Balancing that tail against the posterior normalizer gives
+$T_n\asymp\sqrt n$.  The final posterior and its mean in
+\eqref{eq:raw-posterior} remain unrestricted.  The companion gives the
+full latent-coordinate construction and tail-transfer proof.
+
+We also use its supported-comparison form.  There is an analytical cutoff
+$U_n=c_0 n^{1/4}$ such that every sample-independent law $\rho$ supported
+on $\{\sup_x|z_w(x)|\le U_n\}$ obeys
+\begin{equation}\label{eq:raw-supported-oracle}
+ \E_S R(\widehat f_S)\le \int R(z_w)\,\rho(dw)
+   +\frac{T_n\operatorname{KL}(\rho\|\mu_{N,H})}{n+1}
+   +c(n+1)^{-2}.
+\end{equation}
+This follows by using $\rho$ directly in the proof-only bounded-prior
+oracle: conditioning the prior to contain its support can only decrease
+its KL cost.  The raw-prior transfer is unchanged.  This form permits a
+comparison accurate in population $L^2$, rather than uniformly on the
+whole input domain.  No such cutoff is imposed on the actual posterior.

@@ -1,0 +1,71 @@
+\section{Using the true Gaussian observation variance}
+\label{sec:raw-matched-variance}
+If the observation noise is exactly Gaussian with a known variance, even
+the variance inflation in \eqref{eq:compiler-fixed-T} can be removed.
+This uses a finite-dictionary testing argument and has a larger
+complexity polynomial.
+
+\begin{corollary}[Exactly matched Gaussian likelihood]
+\label{cor:raw-compiler-matched}
+Assume the input and realizable-conditional-mean conditions of
+Theorem~\ref{thm:raw-realizable-compiler}, but now
+$Y\mid X\sim N(f_0(X),\sigma^2)$ for a fixed known $\sigma>0$.
+Use the same prior and the ordinary raw posterior at temperature
+$T=2\sigma^2$, so its Gaussian observation variance is exactly
+$\sigma^2$.  Let $K=\max\{\mathcal D_n,1+B^2\}$ and define
+\[
+ \overline K=K+c_\sigma(1+49B^2)\log(16/\delta),\qquad
+ q=c\left[\overline K+\log\frac{n+2}{\delta}+1\right],
+\]
+\[
+ e_n=\min\{n^{-2},\sigma/(4\sqrt n)\},\qquad
+ L=H+q+1+\log\frac{d+1}{e_n}.
+\]
+At every eligible compiled width and depth, with probability at least
+$1-\delta$, the posterior-averaged raw risk and the risk of its ordinary
+mean are at most
+\begin{equation}\label{eq:raw-compiler-matched-bound}
+ \sigma^2+\frac{c(1+q)}n
+   \left[\overline K+dHL^2+H^2L^3+\log\frac{n+2}{\delta}\right].
+\end{equation}
+The constants depend on the fixed scalar prior laws and $\sigma$.
+An expected-risk bound is given by the same expression with
+$\delta=n^{-8}/16$, plus $c(1+B^2)n^{-3}$.
+
+In particular, at fixed $d,h,B,\sigma$ and input regularity, put
+\[
+ C_n=\lfloor n^{1/(24bh)}\rfloor,\qquad
+ H\le n^{1/12},\qquad N\ge n,
+\]
+with the same lower learner-depth thresholds as before.  The expected
+excess above $\sigma^2$ is $\widetilde O(n^{-1/2})$.  For every fixed
+confidence $0<\delta<1/2$ the same rate holds with probability
+$1-\delta$; the displayed bound retains the dependence for varying
+confidence.  The prior family and likelihood variance are fixed.  The architecture
+may follow any prescribed schedule in these ranges; once it is prescribed,
+the prior has no additional sample-size dependence.
+\end{corollary}
+\begin{proof}
+The comparison law from Theorem~\ref{thm:raw-realizable-compiler} has
+entropy at most $K$, pointwise mean squared discrepancy at most $49B^2$,
+and population discrepancy at most $n^{-4}$.  These are exactly the
+population-comparison hypotheses of the matched-Gaussian-likelihood
+theorem in~\cite{rawprior}.  The normalized readout supplies a native
+Gaussian supremum tail, and the Student-hidden dictionary has logarithmic
+cardinality at most $c(dHL^2+H^2L^3)$.  The cited theorem combines a
+comparison lower bound on evidence, Gaussian likelihood-ratio tests on
+this finite dictionary, and the exact likelihood-ratio expectation
+identity to control the prior-sieve tail.  It gives
+\eqref{eq:raw-compiler-matched-bound} for the actual untruncated posterior.
+Its expectation version uses conditional Gaussian-process regression at
+the readout to bound the failure-event raw risk, as stated there.
+
+For the growing-class substitution,
+$K=\widetilde O(C_n^{2bh}+H)=\widetilde O(n^{1/12})$.
+At fixed confidence, or at the displayed polynomially small confidence
+used for expectation, $q,L=\widetilde O(n^{1/12})$.
+Thus $(1+q)H^2L^3=\widetilde O(n^{1/2})$, and the other numerator terms
+are smaller.  Division by $n$ proves the rate.  This is a noisy-realizable
+result for the regression function and an exactly matched Gaussian noise
+variance; it is not an agnostic fixed-variance oracle.
+\end{proof}

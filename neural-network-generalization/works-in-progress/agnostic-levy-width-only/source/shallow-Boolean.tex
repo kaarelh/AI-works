@@ -1,0 +1,86 @@
+\section{A quadratic-width oracle for shallow Boolean-input teachers}
+\label{sec:shallow-Boolean}
+A one-hidden-layer ReLU teacher admits a stronger coefficient reduction. Its bounded function on the Boolean cube has an exact implementation with uniformly bounded coefficient magnitudes and the same number of nonconstant neurons. This removes the compiled-width threshold entirely.
+
+\begin{lemma}[A bounded point in an integer polyhedron]
+\label{lem:bounded-polyhedron}
+Let a nonempty finite system of linear equalities and inequalities in $P\ge1$ real variables have coefficient entries in $\{-1,0,1\}$ and right-hand sides in $[-1,1]$. It has a feasible point $z$ satisfying
+\[
+ \|z\|_\infty\le(2P)^{2P}.
+\]
+The right-hand sides may be arbitrary real numbers, and the number of constraints does not enter the bound.
+\end{lemma}
+\begin{proof}
+Choose a feasible point of minimum Euclidean norm. Existence follows by restricting the closed feasible set to the closed ball determined by any one feasible point. Include every equality and every tight inequality in its active system. For a vector $v$ in the nullspace of the active rows, both sufficiently small perturbations $z\pm t v$ remain feasible: every inactive inequality has positive slack, and there are finitely many constraints. Minimality therefore implies $z\cdot v=0$. Thus $z$ belongs to the row span of its active coefficient matrix.
+
+Choose $r\le P$ linearly independent active rows and write the resulting matrix as $A$. If $r=0$, then $z=0$. Otherwise $Az=b$ and
+\[
+ z=A^\top(AA^\top)^{-1}b.
+\]
+The Gram matrix is an invertible integer matrix, so its determinant is an integer at least one in absolute value. Its entries have magnitude at most $P$. Cofactor expansion and the permutation formula bound every entry of its adjugate by $(r-1)!P^{r-1}$. Since $|b_i|\le1$ and $|A_{ij}|\le1$,
+\[
+ |z_j|\le r^2(r-1)!P^{r-1}\le(2P)^{2P}.
+\]
+The displayed point is the already feasible minimum-norm point, so no further feasibility argument is needed.
+\end{proof}
+
+\begin{lemma}[Exact shallow compactification]
+\label{lem:shallow-exact-compactification}
+Let
+\[
+ g(x)=s\left(b+\sum_{j=1}^C v_j
+                    \operatorname{ReLU}(w_j\cdot\bar x)\right),
+ \qquad x\in\{-1,1\}^d,\quad\bar x=(1,x),
+\]
+with arbitrary finite real coefficients. Put $P=C(d+1)+1$ and $B_P=(2P)^{2P}$.
+There are coefficients $a_j\in[-B_P,B_P]^{d+1}$, $b'\in[-B_P,B_P]$, and signs $s_j\in\{-1,1\}$ such that
+\[
+ g(x)=s\left(b'+\sum_{j=1}^C s_j
+                   \operatorname{ReLU}(a_j\cdot\bar x)\right)
+ \quad\text{for every }x\in\{-1,1\}^d.
+\]
+One constant hidden neuron implements $b'$ in a linear readout. If the original affine readout has zero bias and the output bias is constrained to remain zero, the same conclusion holds without the extra neuron.
+\end{lemma}
+\begin{proof}
+For each nonzero $v_j$, positive homogeneity gives
+$v_j\operatorname{ReLU}(w_j\cdot\bar x)
+ =\operatorname{sign}(v_j)\operatorname{ReLU}(|v_j|w_j\cdot\bar x)$.
+For zero $v_j$, use the zero incoming vector and choose sign $+1$. Fix these readout signs and the original activation mask at each Boolean input.
+
+The unknowns are the $C(d+1)$ incoming coefficients and one output bias. For an originally active unit impose $a_j\cdot\bar x\ge0$; for an inactive unit impose $a_j\cdot\bar x\le0$. On these closed constraints, the raw output equals the linear expression
+\[
+ L_x=b'+\sum_{j:\,\text{originally active at }x}
+                     s_j(a_j\cdot\bar x).
+\]
+If $-1<g(x)<1$, impose $L_x=g(x)$. If $g(x)=1$, impose $L_x\ge1$; if $g(x)=-1$, impose $L_x\le-1$. This system is nonempty because the normalized original implementation satisfies it. Every coefficient is $0$ or $\pm1$, and every right-hand side belongs to $[-1,1]$. Lemma~\ref{lem:bounded-polyhedron} gives the desired magnitude cap.
+
+Strict activation inequalities are unnecessary. If a previously active preactivation becomes zero, both its affine expression and its ReLU value are zero. Hence all prescribed output constraints still imply exact equality of the clipped functions. A neuron computing $\operatorname{ReLU}(1)=1$ supplies the output bias. If the output bias must be zero, impose that additional equality in the linear system; no constant neuron is then needed.
+\end{proof}
+
+\begin{corollary}[A fixed-temperature quadratic-width expectation bound]
+\label{cor:shallow-quadratic-oracle}
+Let the learner have one ReLU hidden layer and the L\'evy fan-in prior of \eqref{eq:fanin-prior}. Let the input law be arbitrary on the Boolean cube, the conditional mean lie in $[-1,1]$, and the centered observation noise be conditionally sub-Gaussian with proxy $\sigma^2$. Use the single fixed Gaussian observation variance $128(1+\sigma^2)$ and all $n$ observations. For every prescribed $N\ge C+1$,
+\[
+ \E R(\bar f_{S_n})
+ \le\inf_{g\in\mathcal G_{C,1}}R(g)
+ +\frac{C_0(1+\sigma^2)}{n+1}
+ \left[P^2\log(2P)+P\log(e(n+1))\right],
+ \qquad P=C(d+1)+1.
+\]
+Here $\mathcal G_{C,1}$ consists of clipped shallow ReLU functions with arbitrary finite coefficients and affine readout. The numerical constant $C_0$ is independent of $C,d,N,n$. At fixed input dimension, the width cost is quadratic, up to logarithms. With zero output bias, the same guarantee holds at every $N\ge C$.
+\end{corollary}
+\begin{proof}
+The exact compactification has width at most $C+1$, depth one, coefficient cap $B_P$, and a formula with at most $C+1$ hidden occurrences. In the native comparison interface,
+\[
+ K_0\le C_1(d+1)(C+2)\le C_2P,
+ \qquad \log K_1\le C_3P\log(2P).
+\]
+Apply the sharp all-data expectation theorem and its logarithmic-comparison corollary at temperature $T=256(1+\sigma^2)$. Their prediction uses the same bounded output and every observation. Taking the infimum over deterministic original teachers is legitimate because the resource bound is uniform in their coefficients. The constant-wire-free case is identical.
+\end{proof}
+
+At a larger prescribed learner depth $H$, identity padding adds only $H(C+1)$ formula occurrences. The stable-padding comparison \eqref{eq:stable-padding-interface} yields the sharper resource
+\[
+ C_0(1+\sigma^2)\left[
+ HP^2\log(2P)+HP\log(e(H+1)(n+1))\right]/(n+1),
+\]
+with the same all-width threshold. Thus the learner-depth dependence in this shallow-teacher result is nearly linear without a robustness restriction. The primary quadratic-width statement already holds at one hidden layer.

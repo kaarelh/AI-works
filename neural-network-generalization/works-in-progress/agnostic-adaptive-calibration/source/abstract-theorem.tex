@@ -1,0 +1,216 @@
+\section{A Gaussian free-energy oracle theorem}
+\label{sec:abstract}
+We first isolate the statistical argument. It applies to a family of learners, indexed by $i$, whose outputs are $z_{i,w}$ and whose nonnegative energy functions are $Q_i$. Under the prior $\mu_i$, assume $Q_i/s_i$ has a chi-square distribution with $D_i$ degrees of freedom, and
+\begin{equation}
+ 0<s_i\le1,\qquad s_iD_i\le D_0,
+ \qquad \E_{\mu_i}\widehat R_S(z_{i,w})\le M.
+ \label{eq:abstract-prior}
+\end{equation}
+The last bound is required for every allowed sample, with the same finite $M$. We will use $M=2$ for both neural-network activations. A full Gaussian quadratic energy satisfies this assumption, as does the energy of a Gaussian coordinate block when other parameter coordinates have an independent, possibly restricted prior. Only the stated energy law, amplitude bound, and capacity bound are used below.
+
+Fix an integer $r\ge1$. Assume the energy-ball union
+$\mathcal Z_q=\bigcup_i\{z_{i,w}:Q_i(w)\le q\}$ has a countable determining subclass and, on every list of $n$ inputs,
+\begin{equation}
+ |z_{i,w}(x)|\le V(1+Q_i(w))^{r/2},\qquad
+ \Rad_n(\mathcal Z_q)\le\frac{\kappa_n(1+q)^{r/2}}{\sqrt n}.
+ \label{eq:abstract-capacity}
+\end{equation}
+Here $V\ge1$ and $\kappa_n$ are independent of the learner index. Width unions are therefore allowed.
+
+We use the following smooth-loss inequality~\cite[Theorem~1]{sst}. For a class $\mathcal F$ on which a nonnegative $s_0$-smooth loss is bounded by $b$, with probability at least $1-\eta$, simultaneously for $f\in\mathcal F$,
+\begin{align}
+ R(f)-\widehat R_S(f)\le C_{\rm sm}\bigg[&\sqrt{\widehat R_S(f)}
+ \left(\sqrt{s_0}\log^{3/2}(2n)\Rad_n(\mathcal F)
+       +\sqrt{b\log(1/\eta)/n}\right)\notag\\
+ &+s_0\log^3(2n)\Rad_n(\mathcal F)^2+b\log(1/\eta)/n\bigg],
+ \label{eq:sst}
+\end{align}
+where $C_{\rm sm}\ge1$ is universal and $\Rad_n$ denotes worst-case empirical Rademacher complexity. For raw square loss $s_0=2$.
+
+Define the deterministic constants
+\begin{align}
+ B_r&=2^rV^2+2,&M_r&=1+(2D_0+4r)^r,\notag\\
+ K_n&=2D_0\log2+4\log(B_rM_rn^4)+1,&
+ c_0&=\frac18+\frac{D_0\log2}{4},\label{eq:tail-constants}\\
+ J_n&=\left\lceil\log_2(2Mn+K_n+2)\right\rceil,&
+ \ell_n&=\max\left\{1,\log\frac{2(J_n+1)}\delta\right\},\notag\\
+ a_n&=\max\left\{\frac1{\sqrt n},\,
+ 2^{r/2}C_{\rm sm}\left[
+ \frac{\sqrt2\kappa_n\log^{3/2}(2n)}{\sqrt n}
+ +(V+1)\sqrt{\frac{\ell_n}n}\right]\right\}.\label{eq:an}
+\end{align}
+The confidence parameter here is the failure probability allocated to the common capacity event. Later, half the desired failure probability is allocated to that event.
+
+\begin{lemma}[One statistical event]
+\label{lem:stat-event}
+With probability at least $1-\delta$, simultaneously for all learner indices and all parameters with $Q_i(w)\le2Mn+K_n+1$,
+\begin{equation}
+ R(z_{i,w})-\widehat R_S(z_{i,w})
+ \le a_n\sqrt{\widehat R_S(z_{i,w})}(1+Q_i(w))^{r/2}
+       +a_n^2(1+Q_i(w))^r.
+ \label{eq:stat-event}
+\end{equation}
+\end{lemma}
+\begin{proof}
+Apply \eqref{eq:sst} to $\mathcal Z_{2^j}$, $0\le j\le J_n$, with failure probability $\delta/(J_n+1)$. The square-loss bound on that class is $(V+1)^2(1+2^j)^r$. For $Q\le1$ use $j=0$; otherwise use the least $j$ with $Q\le2^j$. In either case $1+2^j\le2(1+Q)$. Substitution of \eqref{eq:abstract-capacity} into \eqref{eq:sst} and the definition of $a_n$ give \eqref{eq:stat-event}. The cross term in the square defining $a_n^2$ is nonnegative, so that square dominates the sum of the two quadratic terms. A finite union bound proves the claim.
+\end{proof}
+
+For the rest of this section, suppress the learner index and write $s,Q,D,\mu,F,\Pi_\lambda$ for one member of the family. All deterministic estimates remain uniform over its members.
+
+\begin{lemma}[Weighted objective tails]
+\label{lem:joint-tail}
+For every sample, every $\lambda>0$, and every $u>0$,
+\begin{equation}
+ \int(1+Q^r)\one_{\{\widehat R_S+\lambda Q>u\}}d\Pi_\lambda
+ \le M_r\exp\left[\frac{F(\lambda)}{2\lambda s}
+                   -\frac{u}{4\lambda s}+\frac{D\log2}{2}\right].
+ \label{eq:joint-tail}
+\end{equation}
+For $u=2F(\lambda)+\lambda K_n$, the raw-risk integral on this tail is at most $n^{-4}$.
+\end{lemma}
+\begin{proof}
+Put $J=\widehat R_S+\lambda Q$. On $J>u$,
+\[
+ e^{-\widehat R_S/(2\lambda s)}
+ =e^{-J/(2\lambda s)+Q/(2s)}
+ \le e^{-u/(4\lambda s)}e^{Q/(4s)},
+\]
+after dropping the remaining nonnegative empirical loss. The normalizer is $e^{-F/(2\lambda s)}$. Exponentially tilting the chi-square law by $e^{Q/(4s)}$ doubles its scale and contributes the factor $2^{D/2}$. Under that tilted law,
+\[
+ \E Q^r=(2s)^r\prod_{j=0}^{r-1}(D+2j)
+ \le(2D_0+4r)^r.
+\]
+This proves \eqref{eq:joint-tail}, even when $Q$ describes only a Gaussian block of the full prior. Square loss is at most
+$2V^2(1+Q)^r+2\le B_r(1+Q^r)$.
+At the specified $u$, the exponent in \eqref{eq:joint-tail} is at most
+$-[K_n-2D_0\log2]/(4s)\le-\log(B_rM_rn^4)$.
+Multiply by $B_r$ to obtain the raw-risk assertion.
+\end{proof}
+
+\begin{lemma}[Relative entropy pays quadratic energy]
+\label{lem:entropy}
+For every law $\rho$ relative to $\mu$,
+\begin{equation}
+ \int Qd\rho\le4s\KL(\rho\Vert\mu)+2D_0\log2.
+ \label{eq:entropy}
+\end{equation}
+Also $\int\widehat R_Sd\Pi_\lambda\le F(\lambda)\le M$.
+\end{lemma}
+\begin{proof}
+The exact Gaussian moment is $\E_\mu e^{Q/(4s)}=2^{D/2}$. The entropy inequality gives
+$\KL(\rho\Vert\mu)\ge\int Qd\rho/(4s)-(D/2)\log2$.
+The remaining statements follow from the variational identity for $F$, nonnegativity of relative entropy, and the choice $\rho=\mu$.
+\end{proof}
+
+\begin{lemma}[The root is unique and measurable]
+\label{lem:root}
+For $r\ge2$, equation \eqref{eq:root-calibration} has one positive solution. It obeys
+\begin{equation}
+ \lambda_S\ge256a_n^2(K_n+1)^{r-1}\ge1/n.
+ \label{eq:root-floor}
+\end{equation}
+The solution is a measurable function of the sample; for continuous network outputs it is continuous.
+\end{lemma}
+\begin{proof}
+The variational formula makes $F$ finite, increasing, and concave on $(0,\infty)$, hence continuous. Directly from its Laplace representation, $F(\lambda)/\lambda$ is decreasing. Therefore
+\[
+ \Psi(\lambda)=\frac{\lambda^r}{[2F(\lambda)+\lambda(K_n+1)]^{r-1}}
+ =\frac{\lambda}{[2F(\lambda)/\lambda+K_n+1]^{r-1}}
+\]
+is continuous and strictly increasing. Its limit at zero is zero, since it is at most $\lambda/(K_n+1)^{r-1}$. Its limit at infinity is infinity, since $F\le M$. Thus it crosses $256a_n^2$ exactly once. Its upper bound at small $\lambda$ gives \eqref{eq:root-floor}.
+For each fixed $t>0$, $\{\lambda_S<t\}=\{\Psi_S(t)>256a_n^2\}$ is measurable. If empirical loss is continuous in the sample, bounded convergence makes the Laplace integral jointly continuous in sample and positive $\lambda$. Continuity of the strictly monotone root follows from its crossing property.
+\end{proof}
+
+\begin{theorem}[Deep free-energy calibration]
+\label{thm:deep-abstract}
+Let $r\ge2$. On the event of Lemma~\ref{lem:stat-event}, simultaneously for every learner in the family, the posterior with calibration \eqref{eq:root-calibration} satisfies
+\begin{equation}
+ \int R(z_w)d\Pi_{\lambda_S}\le F(\lambda_S)+c_0\lambda_S+n^{-4}.
+ \label{eq:freeenergy-certificate}
+\end{equation}
+The ordinary posterior mean has the same risk bound.
+Suppose, on this sample, a comparison gives
+$F(\lambda_S)\le u+\lambda_S A$, with $u,A\ge0$, and put
+$\mathcal B=2A+K_n+1+c_0$. Then for a constant $C_r$ depending only on $r$,
+\begin{equation}
+ \int R(z_w)d\Pi_{\lambda_S}
+ \le u+C_r\left[\mathcal B u^{1-1/r}a_n^{2/r}
+                         +\mathcal B^r a_n^2\right]+n^{-4}.
+ \label{eq:deep-empirical-oracle}
+\end{equation}
+All valid comparisons may be made on this same event.
+\end{theorem}
+\begin{proof}
+Write $\lambda=\lambda_S$ and $G=2F(\lambda)+\lambda(K_n+1)$. On the complement of the tail in Lemma~\ref{lem:joint-tail},
+\[
+ \widehat R_S\le G,\qquad 1+Q\le G/\lambda,
+ \qquad Q\le2M/\lambda+K_n\le2Mn+K_n.
+\]
+The last inequality uses \eqref{eq:root-floor}; thus the fixed statistical event applies. Since $r\ge2$, its two terms obey
+\begin{align*}
+ a_n\sqrt{\widehat R_S}(1+Q)^{r/2}
+ &\le\lambda(1+Q)\frac{a_nG^{(r-1)/2}}{\lambda^{r/2}}
+ =\frac{\lambda(1+Q)}{16},\\
+ a_n^2(1+Q)^r
+ &\le\lambda(1+Q)\frac{a_n^2G^{r-1}}{\lambda^r}
+ =\frac{\lambda(1+Q)}{256}.
+\end{align*}
+Their sum is at most $\lambda(1+Q)/8$. Integrate, extend the nonnegative empirical-loss and energy terms to the whole parameter space, and add the weighted tail. Lemma~\ref{lem:entropy} gives
+\begin{align*}
+ \int Rd\Pi_\lambda
+ &\le\int\widehat R_Sd\Pi_\lambda+\frac\lambda8\int Qd\Pi_\lambda
+                  +\frac\lambda8+n^{-4}\\
+ &\le F(\lambda)+\lambda\left(\frac18+\frac{D_0\log2}{4}\right)+n^{-4}.
+\end{align*}
+The posterior has finite raw second moments, so Jensen gives its mean prediction.
+
+For the comparison, set $p=(r-1)/r$ and $v=256a_n^2$. The root and the assumed free-energy bound give
+\[
+ \lambda\le v^{1/r}[2u+(2A+K_n+1)\lambda]^p
+ \le v^{1/r}(2u)^p+v^{1/r}(2A+K_n+1)^p\lambda^p.
+\]
+If the first term is at least $\lambda/2$, it bounds $\lambda$ directly. Otherwise the second is at least $\lambda/2$, yielding
+$\lambda\le2^rv(2A+K_n+1)^{r-1}$. Combining the cases gives
+\[
+ \lambda\le C_r\left[a_n^{2/r}u^{1-1/r}
+                  +a_n^2(2A+K_n+1)^{r-1}\right].
+\]
+Substitute this in \eqref{eq:freeenergy-certificate} and use
+$A+c_0\le\mathcal B$ to obtain \eqref{eq:deep-empirical-oracle}.
+\end{proof}
+
+\begin{theorem}[Calibration for square-root norm capacity]
+\label{thm:shallow-abstract}
+Let $r=1$. On the event of Lemma~\ref{lem:stat-event}, simultaneously for every learner and every $\lambda\ge16a_n^2$,
+\begin{equation}
+ \int R(z_w)d\Pi_\lambda
+ \le F(\lambda)(1+4a_n^2/\lambda)+c_0\lambda+n^{-4}.
+ \label{eq:shallow-certificate}
+\end{equation}
+Choose the smallest minimizer of the right side without $n^{-4}$, as in \eqref{eq:shallow-calibration}. This selection is measurable. If a comparison satisfies
+$F(\lambda)\le u+\lambda A$ throughout the interval, where $u,A\ge0$, and $\mathcal B=A+c_0$, then the selected posterior obeys
+\begin{equation}
+ \int R(z_w)d\Pi_{\lambda_S}
+ \le u+4a_n\sqrt{\mathcal B u}+20a_n^2\mathcal B+n^{-4}.
+ \label{eq:shallow-empirical}
+\end{equation}
+Again the same bound holds for its ordinary raw posterior mean, and all comparisons can be made on the same event.
+\end{theorem}
+\begin{proof}
+The interval has $\lambda\ge16/n\ge1/n$, so the good-objective region is covered by the same statistical event. Write $U=\int\widehat R_Sd\Pi_\lambda$ and $T=1+\int Qd\Pi_\lambda$. Integrating \eqref{eq:stat-event} on that region and using Cauchy--Schwarz bounds its two contributions by
+\[
+ a_n\sqrt{UT}+a_n^2T
+ \le\frac\lambda8T+\frac{4a_n^2}{\lambda}U.
+\]
+Here Young's inequality gives the first $\lambda T/16$, and $\lambda\ge16a_n^2$ gives the second. Apply the entropy inequality to $\lambda\int Q/8$, use $U\le F$, and add the raw-risk tail to obtain \eqref{eq:shallow-certificate}.
+
+The certificate is continuous and at least $c_0\lambda$, while at $\lambda_0=16a_n^2$ it is at most $5M/4+c_0\lambda_0$. Every minimizer therefore lies in the deterministic compact interval $[\lambda_0,\lambda_0+5M/(4c_0)]$. It attains a minimum there. For every fixed $t$ in this interval, the event that its smallest minimizer is at most $t$ is the equality of the minimum over the interval ending at $t$ and the minimum over the full interval. These minima are measurable, since they equal infima over countable dense sets. This proves measurability.
+
+For any allowed $\lambda$, the teacher comparison bounds the certificate by
+\[
+ u+\mathcal B\lambda+4a_n^2u/\lambda+4a_n^2A.
+\]
+Choose $\lambda=\max\{16a_n^2,2a_n\sqrt{u/\mathcal B}\}$, interpreting the square-root term as zero when $u=0$. The bound
+$\lambda\le16a_n^2+2a_n\sqrt{u/\mathcal B}$ controls the linear term, while
+$4a_n^2u/\lambda\le2a_n\sqrt{\mathcal B u}$. This proves \eqref{eq:shallow-empirical}. Jensen gives the mean-prediction statement.
+\end{proof}

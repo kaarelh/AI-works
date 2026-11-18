@@ -1,0 +1,98 @@
+\section{Ordinary spectral gains: a more permissive prior in fixed input dimension}
+\label{sec:ordinary-spectral-variant}
+Absolute matrix norms control path variation but discard cancellation between positive and negative entries. A closely related prior can use ordinary spectral norms instead. Its guarantee depends more strongly on input dimension, while its dependence on depth is only logarithmic once the teacher's spectral product is controlled. Ordinary spectral gains are the quantities constrained by spectral normalization in neural-network training~\cite{spectral-normalization}; the theorem below is a Bayesian guarantee for the explicitly stated prior, not a claim that ordinary training automatically yields a bounded gain product.
+
+Define
+\[
+ G_{\mathrm{sp}}(W)=\prod_{\ell=2}^H\max\{1,\|W^\ell\|_{\op}\}.
+\]
+Replace $G$ by $G_{\mathrm{sp}}$ in the prior~\eqref{eq:prior}, leaving the Gaussian base scales and $\omega=N(d+1)+(H-1)N^{\gamma+1}$ unchanged. Denote this full-support prior by $\pi_{\mathrm{sp}}$ and its endpoint energy by
+\[
+ Q_{\mathrm{sp}}=G_{\mathrm{sp}}(u_N+q_N).
+\]
+For a ReLU implementation define its spectral product complexity
+\begin{equation}
+ S(w)=\|W^1\|_F\,\|v\|_2\prod_{\ell=2}^H\|W^\ell\|_{\op}.
+ \label{eq:spectral-product}
+\end{equation}
+Every represented function vanishes at the origin and has Lipschitz constant and unit-ball amplitude at most $S(w)\le Q_{\mathrm{sp}}/2$. The origin need not belong to the actual input domain; the network extends to the whole ambient unit ball.
+
+\begin{lemma}[Spectral-product comparison]
+\label{lem:spectral-comparison}
+For every width-$C$, depth-$H$ ReLU teacher $g$ with spectral product $S$, every $N\ge C$, every $\gamma\ge1$, and $0<\eta<1$, a comparison law for $\pi_{\mathrm{sp}}$ satisfies
+\[
+ \frac2\omega\KL(\rho\|\pi_{\mathrm{sp}})
+ \le3S+1+2\log(1/\eta),\qquad
+ \left(\E_\rho\|z_w-g\|_{\infty,\mathcal X}^2\right)^{1/2}
+ \le6(H+1)(S+1)\eta.
+\]
+Moreover $\omega Q_{\mathrm{sp}}$ has the chi-square law with $N(d+1)$ degrees of freedom under the prior, and its internal gain obeys $\E G_{\mathrm{sp}}^2\le2$.
+\end{lemma}
+\begin{proof}
+If $g$ is zero, use its all-zero implementation. Otherwise all factors in~\eqref{eq:spectral-product} are positive. Divide each internal matrix by its spectral norm and multiply the readout by the product of those norms. ReLU homogeneity preserves the function and leaves every internal norm equal to one. Clone neurons into $k=\lfloor N/C\rfloor$ equal groups, leaving the remaining coordinates zero. The internal clone of a matrix $A$ is $A\otimes(J_k/k)$, so its spectral norm is unchanged and its squared Frobenius norm is at most $C$. The cloned endpoint energies have product $S^2$. Scaling the first layer by a positive scalar and the readout by its reciprocal therefore makes both endpoint energies equal to $S$, again preserving the function.
+
+The proof of Lemma~\ref{lem:gain-moment} uses only positive homogeneity and monotonicity of the factors $\max(1,\|W\|)$ under scalar contraction. It applies to $G_{\mathrm{sp}}$ without a change. Conditional endpoint covariance normalization gives the same chi-square identity as before.
+
+For the comparison, transport the actual internal tuple toward the normalized cloned teacher by $T_\eta X=(1-\eta)A+\eta X$. Convexity of ordinary spectral norm gives
+$G_{\mathrm{sp}}(T_\eta X)\le1+\eta(G_{\mathrm{sp}}(X)-1)\le G_{\mathrm{sp}}(X)$.
+Thus both internal gain-potential differences in the exact log-density ratio are nonpositive. The teacher internal Frobenius cost is at most $C/N\le1$ after normalization, and the endpoint mean cost is at most $2\sqrt2S\le3S$. All dimension factors are unchanged, proving the entropy bound. Finally the uniform-error proof of Lemma~\ref{lem:comparison} uses only ordinary operator norms, endpoint energies, and the moment $\E G^2\le2$. The same telescoping calculation therefore gives the displayed tube estimate with $S$ in place of $P$.
+\end{proof}
+
+\begin{lemma}[Capacity of a Lipschitz ball]
+\label{lem:Lipschitz-capacity}
+Let $s_d=\max\{d,2\}$. There is a finite constant $C_d$, depending only on $d$, such that the class $\mathcal L_t$ of real functions on the Euclidean unit ball with $f(0)=0$ and Lipschitz constant at most $t$ satisfies
+\[
+ \Rad_n(\mathcal L_t)\le C_dt\,\log^2(en)\,n^{-1/s_d}
+\]
+on every sample. In particular the same bound holds for the union over all widths of $Q_{\mathrm{sp}}\le t$ networks, with an inessential factor of two of slack.
+\end{lemma}
+\begin{proof}
+Scale to $t=1$. Such functions are bounded by one. An $\varepsilon/4$-net of the input ball has at most $(C\sqrt d/\varepsilon)^d$ points. Quantizing function values on that net to multiples of $\varepsilon/2$ gives a sup-norm cover with
+\[
+ \log\mathcal N(\varepsilon,\mathcal L_1,\|\cdot\|_\infty)
+ \le(C\sqrt d/\varepsilon)^d\log(C/\varepsilon)
+ \qquad(0<\varepsilon<1).
+\]
+Indeed two functions with the same quantized values differ by at most $\varepsilon$ everywhere; choose one function from each nonempty code class. The truncated Rademacher entropy integral then bounds the complexity by
+\[
+ C_d\inf_{0<r<1}\left\{r+\frac1{\sqrt n}
+        \int_r^1\varepsilon^{-d/2}\sqrt{\log(C/\varepsilon)}\,d\varepsilon\right\}.
+\]
+For $d=1$ the integral converges as $r$ tends to zero. For $d=2$, take $r=n^{-1/2}$, giving at most $C_2n^{-1/2}\log^{3/2}(en)$. For $d\ge3$, take $r=n^{-1/d}$, giving at most $C_dn^{-1/d}\sqrt{\log(en)}$. The displayed common bound follows, including small $n$ after increasing $C_d$. The entropy-integral inequality itself follows by chaining successive covers at dyadic scales, applying the finite-class Rademacher bound to their increments, and stopping at radius $r$; the remaining increments have empirical norm at most $r$.
+\end{proof}
+
+\begin{theorem}[A spectral-product oracle in fixed input dimension]
+\label{thm:spectral-oracle}
+Assume any IID law on $\mathcal X\times[-1,1]$. For the prior $\pi_{\mathrm{sp}}$, use the same observed free-energy root~\eqref{eq:calibration}, with $D_0=1$ and with
+\[
+ a_{n,d}=\max\left\{n^{-1/2},\
+ 2C_*\left[\sqrt2 C_d\log^2(en)n^{-1/s_d}\log^{3/2}(2n)
+                 +2\sqrt{t_n/n}\right]\right\}
+\]
+in place of $a_n$. Here $t_n$ and all other constants remain as in~\eqref{eq:stat-constants}. The ordinary raw posterior mean then satisfies, for every fixed width-$C$ teacher $g$ with spectral product $S$, with probability at least $1-\delta$, simultaneously for all $N\ge C$ and $\gamma\ge1$,
+\[
+ R(\widehat f)\le R(g)+25a_{n,d}\mathcal B_g\sqrt{R(g)}
+                         +280a_{n,d}^2\mathcal B_g^2+n^{-4},
+\]
+where
+\[
+ \eta_n=[64n(H+1)(S+1)^2]^{-1},\qquad
+ T_g=6+3S+2\log(1/\eta_n),\qquad
+ \mathcal B_g=2T_g+K_n+1+c_0.
+\]
+The learner uses neither the teacher resources nor its risk.
+\end{theorem}
+\begin{proof}
+The pointwise amplitude bound is $|z|\le Q_{\mathrm{sp}}/2$, and Lemma~\ref{lem:Lipschitz-capacity} replaces Lemma~\ref{lem:capacity}. Apply the smooth-loss inequality and dyadic energy peeling exactly as in Lemma~\ref{lem:stat-event}; the stated $a_{n,d}$ gives its identical conclusion. The chi-square energy law, normalized endpoint dimension, and prior second-moment bound are unchanged, so the weighted empirical-objective tail and entropy lemmas apply verbatim. The root argument therefore gives the same observable certificate and empirical oracle. Lemma~\ref{lem:spectral-comparison} supplies the free-energy comparison with $S$ in place of $P$. Finally $|g|\le S$ gives the same fixed-comparator Bernstein step and the stated constants 25 and 280.
+\end{proof}
+
+At fixed input dimension, a sufficient sample count is
+\begin{equation}
+ n=\widetilde O_d\left((1+S)^{s_d}
+       \left\{\frac{R_*^{s_d/2}}{\varepsilon^{s_d}}
+                        +\frac1{\varepsilon^{s_d/2}}\right\}\right).
+ \label{eq:spectral-samples}
+\end{equation}
+Depth appears only through logarithms once $S$ is held fixed. If first-row Euclidean norms are at most $B_1$, readout coefficients are at most $B_2$, and the product of ordinary internal spectral norms is at most one, then $S\le CB_1B_2$. In dimensions one and two the result is therefore quadratic in teacher width, up to logarithms, without polynomial depth cost. In larger fixed dimension it remains polynomial, with width exponent $d$ and the displayed accuracy powers.
+
+This variant does not give a polynomial jointly in input dimension and teacher width: both the exponent and the constants in~\eqref{eq:spectral-samples} deteriorate with dimension. Its purpose is different. It replaces absolute spectral gain by the ordinary Lipschitz amplification of the hidden layers, retains cancellation between signed weights, and shows precisely what the more permissive prior can guarantee without the path-variation capacity argument.

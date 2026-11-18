@@ -1,0 +1,261 @@
+\section{A linear learner-depth cost is necessary}
+\label{sec:linear-depth-lower}
+A bounded-output Gaussian likelihood cannot quickly undo exponential shrinkage of prior function differences. This gives a linear-depth lower bound for the sparse priors at a fixed sufficiently small variance, even with native biases at every layer. It is a fixed-temperature obstruction, not an all-temperature impossibility theorem.
+
+\begin{lemma}[From shrinking increments to a sample lower bound]
+\label{lem:increment-learning-lower}
+Let a prior on functions $f_w:\mathcal X\to[-1,1]$ satisfy
+\[
+ \E_\pi|f_w(x_+)-f_w(x_-)|^2\le K r^H,
+ \qquad K>0,\quad0<r<1.
+\]
+Let $X$ be uniform on the two fixed points $x_+,x_-$ and set
+$Y=a$ at $x_+$ and $Y=-a$ at $x_-$, where $0<a\le1$.
+Use the ordinary posterior with likelihood
+$\exp[-\sum_i(f_w(X_i)-Y_i)^2/T]$, $T>0$.
+For every realized sample,
+\[
+ |\bar f_S(x_+)-\bar f_S(x_-)|\le
+       e^{4n/T}\sqrt K\,r^{H/2}.
+\]
+Whenever the right side is at most $a$, one has $R(\bar f_S)\ge a^2/4$.
+In particular, for all sufficiently large $H$, depending only on $K,r,a$, this holds if
+\[
+ n\le\frac{TH\log(1/r)}{16}.
+\]
+\end{lemma}
+\begin{proof}
+Every squared training loss is at most four, so the normalizer is at least $e^{-4n/T}$ and the likelihood is at most one. Apply this density bound and Cauchy--Schwarz to the prior increment. If the two posterior-mean values are $u,v$, their risk is
+\[
+ \tfrac12[(u-a)^2+(v+a)^2]
+ =\left(\frac{u+v}{2}\right)^2+
+       \left(a-\frac{u-v}{2}\right)^2.
+\]
+This is at least $a^2/4$ when $|u-v|\le a$. The specified sample count leaves the increment bound at most $\sqrt K r^{H/4}$, which is eventually at most $a$.
+\end{proof}
+
+\begin{proposition}[Independent small-variance weights]
+\label{prop:linear-depth-lower}
+Consider a width-$N$ network with $H\ge1$ hidden layers, a globally $A$-Lipschitz activation, a linear or affine raw readout, and a final one-Lipschitz link into $[-1,1]$. Weight coordinates are independent and centered. A weight in a row of fan-in $F$ has variance at most $v/F$, where $F$ is at least the number of nonbias inputs. Biases may be present at every layer and may have any fixed independent law. If
+\[
+ A^2v<1,
+\]
+then, for $x_\pm=\pm e_1\in[-1,1]^d$,
+\[
+ \E|f_w(x_+)-f_w(x_-)|^2\le4v(A^2v)^H.
+\]
+Consequently the noiseless two-input problem of Lemma~\ref{lem:increment-learning-lower} has an $\Omega(TH)$ sample lower bound, uniform in every finite learner width. Neither its input distribution nor its two target values depend on $H,n,$ or $N$.
+
+For ReLU and symmetric weights and biases, the stronger bound is
+\[
+ \E|f_w(x_+)-f_w(x_-)|^2\le4v(v/2)^H,
+\]
+so only $v<2$ is needed. In particular, at $v=1/8$, $a=1/2$, every $H\ge1$ and every
+$n\le TH\log16/16$ give $R(\bar f_S)\ge1/16$.
+With a final clip, the target is the width-two, one-hidden-layer bounded-coefficient ReLU function
+$\tfrac12[\operatorname{ReLU}(x_1)-\operatorname{ReLU}(-x_1)]$.
+\end{proposition}
+\begin{proof}
+Biases cancel from preactivation differences. Conditional on the previous layer, centered independent incoming weights eliminate cross terms. Thus if the largest preceding mean-square feature difference is $D_{\ell-1}$, the next preactivation difference has second moment at most $vD_{\ell-1}$, and Lipschitzness gives
+$D_\ell\le A^2vD_{\ell-1}$.
+At the first layer the two inputs differ in one coordinate by two, giving $D_1\le4A^2v$. The readout contributes one further factor $v$; a final one-Lipschitz link does not increase the difference. This proves the first estimate without any symmetry requirement or zero-at-zero activation assumption.
+
+For ReLU, condition on the previous features. The pair of preactivations $(U,V)$ is jointly centrally symmetric. Since
+$\operatorname{ReLU}(u)=(u+|u|)/2$, central symmetry cancels the cross term and gives
+\[
+ \E[\operatorname{ReLU}(U)-\operatorname{ReLU}(V)]^2
+ =\tfrac14\E[(U-V)^2+(|U|-|V|)^2]
+ \le\tfrac12\E(U-V)^2.
+\]
+This remains valid whenever the increment is square integrable, because the absolute-value increment is bounded by $|U-V|$. The same layer recursion now uses $v/2$. With $v=1/8$ and the stated sample count, Lemma~\ref{lem:increment-learning-lower} bounds the posterior-mean difference by
+$2\sqrt{1/8}\,16^{-H/4}=2^{-H}/\sqrt2<1/2$.
+\end{proof}
+
+The L\'evy fan-in prior with intensity
+$\mathfrak n(du)=(1/8)|u|^{-1}(1+|u|)^{-3}du$
+has variance exactly $1/(8F)$ in a time-$1/F$ coordinate, because
+$2\int_0^\infty u(1+u)^{-3}du=1$.
+It therefore satisfies this lower bound. Signed beta-prime fan-in laws satisfy it too when their fixed shape constant is small enough. A bound on first absolute moments alone does not imply the required variance bound; the second moment must be checked for the chosen scalar family.
+
+\paragraph{The neuron-gated prior.}
+The same criterion applies to the hierarchical gamma-gate model in its contractive variance regime. Let $\mu_2=\E G^2$ for its centered independent edge factors, and use $S_j\sim\operatorname{Gamma}(\kappa/N,1)$. Own-layer gates are independent of their incoming features, and centered factors eliminate cross terms, so the internal mean-square gain is at most
+\[
+ v_*=N\E S_j^2\,\mu_2
+      =\kappa(1+\kappa/N)\mu_2
+      \le\kappa(1+\kappa)\mu_2.
+\]
+The first-layer feature difference has second moment at most $4A^2\mu_2$; the raw readout adds a factor $v_*$. Hence the bounded output increment is at most
+$4A^2\mu_2v_*(A^2v_*)^{H-1}$ for a one-Lipschitz output link. A fixed sufficiently small $\kappa$ makes $A^2v_*<1$, uniformly in $N$, and gives the same linear-depth lower bound. With a fixed output-link Lipschitz constant, multiply the displayed bound by its square. This statement concerns that variance regime; it is not asserted for every gate/factor parameter choice.
+
+\paragraph{A raw-likelihood version without native internal biases.}
+For ReLU with symmetric independent small-variance coordinates, no native internal or readout bias, and a constant input in the first layer (counted in its fan-in, so $F\ge d+1$), one also has
+$\E z_w(x)^2\le v(v/2)^H$ uniformly on the cube.
+Take the constant noiseless target $Y=1/2$. For the raw Gaussian likelihood, Jensen gives
+\[
+ Z_S\ge\exp\{-n[1/4+v(v/2)^H]/T\}.
+\]
+Thus the posterior mean of $|z_w(x)|$ is bounded by this inverse normalizer times $\sqrt v(v/2)^{H/2}$, and again constant error persists for $n\le cTH$ at fixed $v<2$. The same bound applies to posterior means of individually clipped draws and to clipping the raw posterior mean. The absence of native internal/readout biases is needed for this absolute-output decay argument, whereas the bounded-likelihood increment result above allows biases.
+
+\begin{proposition}[Raw likelihood and prediction, including native biases]
+\label{prop:raw-increment-depth-lower}
+Let a prior on real-valued functions satisfy, at the same two fixed inputs,
+\[
+ \E_\pi z_w(x_\pm)=0,\qquad
+ \E_\pi z_w(x_\pm)^2\le C_0,\qquad
+ \E_\pi|z_w(x_+)-z_w(x_-)|^2\le K r^H,
+ \qquad 0<r<1.
+\]
+Use the raw Gaussian likelihood
+$\exp[-\sum_i(z_w(X_i)-Y_i)^2/T]$ and its raw posterior mean.
+For the noiseless labels $Y=\pm a$ above, every realized sample satisfies
+\[
+ |\bar z_S(x_+)-\bar z_S(x_-)|
+ \le \exp\!\left(\frac{n(C_0+a^2)}{T}\right)\sqrt K\,r^{H/2}.
+\]
+Consequently, for sufficiently large $H$, risk is at least $a^2/4$
+whenever
+\[
+ \frac nT\le
+ \frac{H\log(1/r)}{4(C_0+a^2)}.
+\]
+There is no bounded-output link and no restriction excluding native biases.
+\end{proposition}
+\begin{proof}
+The expected squared training loss at each observed point is at most
+$C_0+a^2$. Jensen's inequality therefore gives
+$Z_S\ge\exp[-n(C_0+a^2)/T]$.
+The likelihood is at most one, so the raw posterior has finite first
+moments and its mean increment is bounded by this inverse normalizer
+times the prior mean absolute increment. Cauchy--Schwarz gives the stated
+inequality. Under the displayed sample condition it is at most
+$\sqrt K r^{H/4}$, eventually at most $a$; the same two-point risk identity
+used in Lemma~\ref{lem:increment-learning-lower} finishes the proof.
+\end{proof}
+
+\begin{corollary}[Continuous cube and sphere laws]
+\label{cor:continuous-raw-depth-lower}
+Fix a probability input law $D$ and a bounded noiseless target $g$,
+with $|g|\le a$ and $\operatorname{Var}_D(g)=v_g>0$.
+Suppose the raw prior is centered pointwise, has
+$\sup_x\E_\pi z_w(x)^2\le C_0$, and satisfies
+\[
+ \E_\pi\operatorname{Var}_D(z_w)\le K r^H,\qquad 0<r<1.
+\]
+For every realized sample, its raw posterior mean obeys
+\[
+ \left\|\bar z_S-\E_D\bar z_S\right\|_{L^2(D)}
+ \le e^{n(C_0+a^2)/T}\sqrt K\,r^{H/2}.
+\]
+Hence $R(\bar z_S)\ge v_g/4$ for all sufficiently large $H$ whenever
+$n/T\le H\log(1/r)/[4(C_0+a^2)]$.
+
+The independent and neuron-gated tanh priors in the examples below
+satisfy the variance premise on every fixed compact input law,
+in the same contractive variance regimes. In particular one may use
+uniform measure on $[-1,1]^d$ or on the unit sphere, at any fixed
+$d\ge2$, and the exact width-one, one-hidden-layer tanh target
+$g(x)=a\tanh(x_1)$. Its variance is a positive constant.
+The linear target $g(x)=a x_1$, implemented by two ReLU hidden units,
+also gives the conclusion.
+\end{corollary}
+\begin{proof}
+Let $\mathcal C f=f-\E_D f$ be the centering operator on $L^2(D)$.
+The same Jensen lower bound for the normalizer holds because all
+observed labels have absolute value at most $a$.
+Minkowski's inequality and Cauchy--Schwarz give
+\[
+ \|\mathcal C\bar z_S\|_2
+ \le\E_{\Pi_S}\|\mathcal C z_w\|_2
+ \le Z_S^{-1}\E_\pi\sqrt{\operatorname{Var}_D(z_w)}
+ \le e^{n(C_0+a^2)/T}\sqrt K\,r^{H/2}.
+\]
+The moment assumptions justify the integrals and centering operation.
+Risk decomposes into the squared difference of means and a centered
+squared distance. If the last bound is at most $\sqrt{v_g}/2$,
+the reverse triangle inequality gives $R(\bar z_S)\ge v_g/4$.
+The sample condition makes that bound at most $\sqrt K r^{H/4}$.
+
+For the specified priors the same first-layer calculation for two
+arbitrary inputs gives a factor bounded by
+$C\|x-x'\|_2^2$, followed by the stated contraction in each hidden
+layer and a fixed final-readout factor. Consequently
+\[
+ \E_\pi\operatorname{Var}_D(z_w)
+ =\tfrac12\E_{X,X'\sim D}\E_\pi|z_w(X)-z_w(X')|^2
+ \le K_D r^H
+\]
+on any fixed compact domain, after changing the constant $K_D$.
+The chosen targets are nonconstant under the uniform cube and sphere
+laws, which proves their strictly positive variance.
+\end{proof}
+
+\paragraph{Examples with bounded tanh hidden features.}
+For the independent variance-gamma fan-in prior, take
+$W_F=L_{1/F}$ with
+$L_t=\Gamma(ct,1)-\Gamma(ct,1)$, and let native internal and output biases
+have the time-one law. Then
+$\operatorname{Var}(W_F)=2c/F$,
+$\E z_w(x)^2\le4c$, and
+\[
+ \E|z_w(x_+)-z_w(x_-)|^2\le4(2c)^{H+1}.
+\]
+Thus every fixed $c<1/2$ supplies the raw lower bound with native biases,
+uniformly over all learner widths. The same conclusion holds with a
+different independent hidden-weight law of centered fan-in variance
+$v/F$, $v<1$, and any independent centered readout law of total variance
+bounded uniformly in width.
+
+For the normalized Gaussian readout, let
+\[
+ z=G_0+\sum_j\sqrt{P_j}G_jh_j^H,
+ \qquad P\sim\operatorname{Dirichlet}(\kappa/N,\ldots,\kappa/N).
+\]
+Its raw second moment is at most two. Suppose the hidden edge factors
+have variance $\mu_2$, the hidden gamma gates have shape $\kappa/N$,
+and set $r=\kappa(1+\kappa)\mu_2<1$.
+The first-layer difference is at most $4\mu_2$ and each subsequent hidden
+layer contracts it by at most $r$. The normalized readout contributes
+a factor one, since its proportions are independent of their incoming
+features and $\E P_j=1/N$. Therefore
+\[
+ \E|z_w(x_+)-z_w(x_-)|^2
+ \le4\mu_2r^{H-1}.
+\]
+This verifies all hypotheses of Proposition~\ref{prop:raw-increment-depth-lower};
+one may take $K=4\mu_2/r$.
+The unnormalized Gaussian neuron-gate readout also has uniformly bounded
+raw second moment and satisfies the same criterion, with its final
+variance factor included.
+
+These are fixed, simple target problems: for tanh, the two labels are
+implemented by the width-one, one-hidden-layer function
+$g(x)=a\tanh(x_1)/\tanh(1)$.
+If a chosen likelihood schedule obeys $T_n\ge c_T n^\theta$ with
+$0\le\theta<1$, the necessary sample count for vanishing risk along
+increasing depths is
+\[
+ n=\Omega\!\left(H^{1/(1-\theta)}\right).
+\]
+In particular $T_n$ proportional to $\sqrt n$ incurs a quadratic-depth
+obstruction for that schedule, while $T_n$ proportional to $n^{2/3}$
+incurs a cubic-depth obstruction. This is not a lower bound over all
+temperature choices or all prior intensities.
+
+The same conclusion covers the power-readout family
+$z=G_0+\sum_jP_j^{1-1/p}G_jh_j^H$, with factor density proportional
+to $e^{-|G|^p}$ and fixed $p>1$.
+Indeed, for $a_N=\kappa/N$ and $q=2-2/p>0$,
+\[
+ \E\sum_jP_j^q=
+ N\frac{\Gamma(a_N+q)\Gamma(\kappa)}
+         {\Gamma(a_N)\Gamma(\kappa+q)}
+ \le C_{\kappa,p}.
+\]
+The raw second moment and final increment gain are therefore uniformly
+bounded in width. With the same contractive hidden-gate regime, its
+prescribed schedule $T_n\asymp n^{2/(p+2)}$ needs
+$n=\Omega(H^{1+2/p})$ for small risk on this fixed shallow target.
+Constants may depend on $p$; this is again a statement about that
+particular schedule.
+
+At fixed likelihood variance the main lower bound is $\Omega(H)$, matching up to logarithms the additive learner-depth upper bounds for shallow teachers. It requires no increasing input dimension, label noise, or complicated target. It does not preclude a depth-dependent likelihood temperature that tends to zero.

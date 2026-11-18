@@ -1,0 +1,89 @@
+\section{A raw comparison law at every learner width}
+\label{sec:raw-comparison}
+Let the comparator have the same hidden depth and activation, widths
+$m_\ell\le m\le N$, and coefficients bounded by $B\ge1$. Write
+\[
+ V_g=\sum_{\ell=1}^Hm_\ell,\quad
+ P_g=(d+1)m_1+\sum_{\ell=2}^Hm_\ell(m_{\ell-1}+1)+m_H+1,
+ \quad Q_g=P_g+V_g+H.
+\]
+Zero coefficients inside a selected block are included in $P_g$.
+
+\begin{lemma}[Raw uniform approximation and entropy]
+\label{lem:raw-ard-comparison}
+Put $D=C(1+A+|\phi(0)|)(d+m+2)(B+2)$ and
+$W=(H+2)D^{H+2}$. For every $0<r\le1$ and every $N\ge m$, there is
+one sample-independent law $\rho_r$ with
+\[
+ \E_{\rho_r}\|z_w-g\|_\infty^2\le r,
+ \qquad
+ \KL(\rho_r\Vert\mu_N)
+ \le C Q_g\log\frac{C(m+1)(B+2)W}{r}+C P_gB^2.
+ \label{eq:raw-ard-comparison}
+\]
+The constants depend only on the fixed activation and gate
+concentration, not on learner width or depth.
+\end{lemma}
+\begin{proof}
+Partition each learner layer into $m_\ell$ labelled groups of size at
+least $\lfloor N/m_\ell\rfloor$, and choose one vertex uniformly
+from each group. At scalar precision $0<\eta\le1/4$, put the selected
+gates uniformly on $[1-\eta,1+\eta]$, condition all inactive gates in
+that layer to have total mass at most $\eta$, and put each factor and
+bias in the selected computation uniformly within $\eta$ of its
+comparison coefficient. All other factors retain their native Gaussian
+laws.
+
+The gamma density gives selected-gate cost
+$\log N+C\log(C/\eta)$. The inactive total has a gamma shape at most
+$\kappa$, so its conditioning cost is $C\log(C/\eta)$, uniformly
+in $N$. A Gaussian coefficient interval about $|a|\le B$ costs at
+most $C[\log(C/\eta)+B^2]$. Distinct placements have disjoint latent
+supports, identified by selected gates exceeding $3/4$ and inactive
+gates at most $1/4$. Consequently the uniform mixture subtracts the
+logarithm of the number of placements from relative entropy.
+The $V_g\log N$ costs cancel up to $V_g\log(2m)$, giving
+\[
+ \KL(\rho_\eta\Vert\mu_N)
+ \le C Q_g\log[C(m+1)/\eta]+CP_gB^2.
+\]
+This computation is on latent gates and factors. Pushing it to actual
+weights or functions cannot increase entropy.
+
+For completeness, the approximation estimate uses uniform $L^2$
+feature magnitudes, not a maximum over all random neurons. Conditional
+on placement, let $R_\ell$ be the largest, over neuron indices, of
+those $L^2$ magnitudes, let $T_\ell$ be the largest deterministic
+comparison magnitude, and let $e_\ell$ be the largest selected
+feature error. Gates leaving a layer are independent of that layer's
+features. Weighted Cauchy--Schwarz bounds the inactive contribution to
+any next row by $\eta R_\ell$ in uniform $L^2$. Selected coefficients
+have absolute value at most $2(B+1)$ and error at most
+$\eta(B+2)$. The Lipschitz recurrence therefore gives
+\[
+ R_\ell,T_\ell\le D^{\ell+1},\qquad
+ e_\ell\le\eta(\ell+1)D^{\ell+1}.
+\]
+For example the internal error recurrence is bounded by
+\[
+ e_\ell\le A\{\eta+2m(B+1)e_{\ell-1}
+         +m\eta(B+2)T_{\ell-1}+\eta R_{\ell-1}\}.
+\]
+The first-layer error is at most $A(d+1)\eta$. The linear readout
+has the same estimate without the activation factor, so its uniform
+RMS error is at most $\eta W$. These estimates hold for each
+placement separately. Set $\eta=\sqrt r/[C(m+1)(B+2)W]$ and absorb
+fixed factors into the entropy bound. No output link is used.
+\end{proof}
+
+\paragraph{Student hidden factors.}
+The same comparison construction works when hidden factors and hidden
+biases have a fixed Student law of more than two degrees of freedom,
+while the readout remains Gaussian. A uniform interval about $|a|\le B$
+then costs only $C\log[C(B+2)/\eta]$ in a hidden coordinate. Its native
+second moment is a fixed constant, so the displayed stability induction
+changes only the fixed coefficient in $D$. Thus the hidden quadratic
+penalty disappears; the readout coefficient cost remains quadratic.
+This extension is used only with bounded hidden activations in the
+normalized-readout theorem. It does not import the Gaussian-factor
+compression lemma into a Student-factor model.

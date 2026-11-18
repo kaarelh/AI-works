@@ -1,0 +1,82 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,mathtools,booktabs,microtype}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Noise-adaptive Bayesian learning with nonexpansive hidden layers},pdfauthor={ChatGPT-6 Astra; Claude Opus 5.5; Kaarel Hänni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{definition}\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}\newcommand{\E}{\mathbb E}\newcommand{\Prob}{\mathbb P}
+\newcommand{\Rad}{\mathfrak R}\newcommand{\KL}{\operatorname{KL}}
+\newcommand{\clip}{\operatorname{clip}}
+\title{Noise-adaptive Bayesian learning\\with nonexpansive hidden layers}
+\author{ChatGPT-6 Astra \and Claude Opus 5.5 \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{17 November 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+A Bayesian neural network should be able to compete with a smaller network that merely approximates the regression function. We prove such squared-loss oracle inequalities for finite dense Gaussian priors conditioned on nonexpansive hidden layers. The learner uses its ordinary raw-output posterior mean, and labels may have any bounded IID law. The Gaussian prior has one fixed architecture. Changing the readout variance to account for the hidden-layer volume makes the guarantee uniform over every learner width and all hidden-layer scaling exponents at or above mean field. The likelihood calibration is selected from the observed free energy, without knowing the teacher size or noise level. For tanh, hardtanh, and ordinary sigmoid, a teacher of width $C$ and population squared loss $R_*$ requires $\widetilde O(C^2(R_*/\varepsilon^2+1/\varepsilon))$ samples at fixed input dimension and coefficient cap; depth enters only logarithmically. For any globally Lipschitz activation vanishing at zero, including ReLU and GELU, an additional first-layer gain bound gives the same rate multiplied by hidden depth $H$. Both teacher and learner satisfy the stated gain restrictions. A conditional-Gaussian transport identity cancels a large hidden-layer normalization cost exactly. The result changes the readout scaling and likelihood explicitly; it is not a claim for every unchanged Gaussian scaling tuple.
+\end{abstract}
+
+\section{Approximation rather than realizability}
+Let $(X,Y)$ have any probability law on $[-1,1]^d\times[-1,1]$, and let $S=((X_i,Y_i))_{i=1}^n$ be IID. For a real predictor $f$, write
+\[
+ R(f)=\E(f(X)-Y)^2,\qquad \widehat R_S(f)=\frac1n\sum_{i=1}^n(f(X_i)-Y_i)^2.
+\]
+Our objective is a leading-coefficient-one inequality
+\[
+ R(\bar z_S)\le\min_{g\in\mathcal G}R(g)+\varepsilon,
+\]
+where $\mathcal G$ is a specified small-network class. No member of $\mathcal G$ needs to generate the labels. The predictor $\bar z_S$ averages the raw network outputs under the actual finite posterior.
+
+We use a familiar gain restriction: a matrix whose absolute row sums are at most one is nonexpansive in the coordinate maximum norm. A Lipschitz activation preserves this property after the matrix bound is divided by the activation's Lipschitz constant. The restriction limits the teacher class as well as the learner's prior support. It does not encompass all small neural networks.
+
+The prior in this paper also adjusts the readout scale. Internal row restrictions constrain about $HN^2$ coordinates at hidden width $N$. A Gaussian likelihood calibrated only to the unconditioned energy scale $N^\gamma$ need not pay that volume cost when $\gamma<2$. We use a readout precision and likelihood precision of order $HN^{\max(\gamma,2)}$. This retains Gaussian regularization of the readout while paying the hidden volume cost. It does not mix over architectures or select a sparse architecture.
+
+\section{Architecture and two support conditions}
+There are $H\ge1$ hidden layers of width $N$, coordinatewise activation $\phi$, and a scalar linear readout. Put $\bar x=(1,x)$ and
+\[
+ h^1=\phi(W^1\bar x),\quad h^\ell=\phi(W^\ell h^{\ell-1})\ (2\le\ell\le H),\quad z_w=v^{\mathsf T}h^H.
+\]
+The first layer has a constant input; there are no internal biases. Total affine depth is $L=H+1$. We consider either of the following cases.
+
+\begin{description}
+\item[Bounded activation case.] The activation is continuous, nondecreasing, takes values in $[-1,1]$, and has the form $\phi=c+\psi$, where $\psi$ is odd and $\ell$-Lipschitz with $0\le\ell\le1$. We assume either $c=0$ or $\ell<1$. Each internal matrix has absolute row sums at most one. No first-layer support restriction is imposed. Define $V=1$.
+\item[General zero-origin case.] The activation satisfies $\phi(0)=0$ and is globally $K_\phi$-Lipschitz, where $K_\phi\ge1$ is fixed. For a prescribed $A\ge1$, first-layer absolute row sums are at most $A/K_\phi$, and internal absolute row sums are at most $1/K_\phi$. Define $V=A$.
+\end{description}
+All hidden coordinates have absolute value at most $V$. Tanh and hardtanh satisfy the first case with $c=0$. Ordinary sigmoid satisfies it with $c=1/2$ and $\ell=1/4$. ReLU and GELU satisfy the second, with any fixed valid Lipschitz constant. The gain restriction is on the affine map followed by the activation, not on the bare weight matrix alone.
+
+The teacher has width at most $C$, the same activation and depth, coefficients bounded by $B\ge1$, and the same support restrictions. We denote this compact comparison class by $\mathcal G$. Zero padding to width $C$ preserves its functions and support. It contains the zero-readout network, so a population minimizer exists and has risk at most one.
+
+For an internal scaling exponent $\gamma\ge1$, set
+\[
+ \kappa=\begin{cases}\gamma,&H=1,\\\max(\gamma,2),&H\ge2,\end{cases}
+ \qquad \omega=HN^\kappa.
+\]
+Before conditioning on the chosen support, the Gaussian coordinates are independent with variances
+\begin{equation}
+ \operatorname{Var}(W^1_{ji})=N^{1-\gamma}/d,\qquad
+ \operatorname{Var}(W^\ell_{ji})=N^{-\gamma}\ (\ell\ge2),\qquad
+ \operatorname{Var}(v_j)=\frac1{\omega N}.
+ \label{eq:prior}
+\end{equation}
+The support event has positive probability. The first two variances retain their prescribed layer scaling; only the readout uses $\kappa$ and the factor $H$. Let $\pi_{N,\gamma}$ be this conditioned prior. With observation variance $n\lambda/\omega$, the posterior is
+\begin{equation}
+ \Pi_{N,\gamma,S}(dw)=Z^{-1}\exp\!\left[-\frac{\omega\widehat R_S(z_w)}{2\lambda}\right]\pi_{N,\gamma}(dw).
+ \label{eq:posterior}
+\end{equation}
+All statements below concern this finite distribution. There is no width or prior-strength limit.
+
+\input{capacity}
+\input{transport}
+\input{adaptive-oracle}
+\input{interpretation}
+\begin{thebibliography}{9}
+\bibitem{sst} Nathan Srebro, Karthik Sridharan and Ambuj Tewari. \emph{Smoothness, Low Noise and Fast Rates}. Advances in Neural Information Processing Systems 23, 2010. \url{https://www.cs.cornell.edu/~sridharan/smoothness.pdf}.
+\end{thebibliography}
+\end{document}

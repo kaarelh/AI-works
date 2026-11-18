@@ -1,0 +1,59 @@
+\section{The sharp population bound}
+\begin{proof}[Proof of Theorem~\ref{thm:main}]
+Put $\beta=1/T$, $\Delta_f=(f-Y)^2-(g-Y)^2$, and
+$D_f=(f-g)^2$. Apply Lemma~\ref{lem:transfer} to the actual posterior at precision $\epsilon=n^{-2}$. All source, target, and midpoint predictions lie in $[-1,1]$. Therefore the squared-loss midpoint identity gives
+\[
+ \E_{Q_g}\widehat R(F')\le\tfrac12\E_Q\widehat R(F)
+ +\tfrac12\widehat R(g)-\tfrac14\E_Q P_nD_F+\varepsilon_S,
+ \quad
+ \varepsilon_S\le2(1+P_n|Y|)(3V/N+n^{-2}).
+\]
+Gibbs variational optimality and additive KL transfer imply
+\begin{equation}
+ \E_QP_n\Delta_F\le-\tfrac12\E_QP_nD_F
+        +2\varepsilon_S+2T\mathcal J(n^{-2})/n.
+ \label{eq:deep-offset}
+\end{equation}
+
+We give the relative-loss probability argument to make the statistical quantifiers explicit. For fixed bounded $f,g$, write $d_f=f-g$ and
+$B_f=d_f(f+g-2f_0)$. Then $\Delta_f=B_f-2\xi d_f$,
+$B_f^2\le16D_f$, and $D_f\le4$. For $\kappa=1/8$ and $0<\lambda\le1/(1024s)$,
+\begin{equation}
+ \E\exp\{\lambda[P\Delta_f-\Delta_f-\kappa D_f]\}\le1.
+ \label{eq:deep-mgf}
+\end{equation}
+Indeed conditional integration of sub-Gaussian noise leaves
+$W=-B_f-\kappa D_f+2\lambda\sigma^2D_f$ inside the exponential. We have $|W|\le6|d_f|$ and $|\lambda W|\le1$, so $e^z\le1+z+z^2$ gives
+\[
+ \E e^{\lambda W}\le1-\lambda PB_f-\lambda\kappa PD_f
+          +\lambda^2(2\sigma^2+36)PD_f\le e^{-\lambda PB_f}.
+\]
+This proves \eqref{eq:deep-mgf}. At $\lambda=2\beta$, IID multiplication, prior integration, and Markov's inequality give, with probability at least $1-\delta/2$,
+\[
+ \int e^{2\beta n[P\Delta_f-P_n\Delta_f-\kappa P_nD_f]}
+                d\pi_{N,H}(f)\le2/\delta.
+\]
+The conditional sub-Gaussian bound $\E e^{t|\xi|}\le2e^{\sigma^2t^2/2}$ also gives, with probability at least $1-\delta/2$,
+\[
+ P_n|Y|\le1+\sigma\sqrt{2[\log2+\log(2/\delta)/n]}.
+\]
+If $\log(2/\delta)>n$, the desired theorem follows by increasing its constant, since $R(f)-R(g)\le4$. Otherwise $1+P_n|Y|\le C\sqrt s$ on this event.
+
+Use Lemma~\ref{lem:localization} at precision $n^{-2}$. Its empirical excess is at most $2(1+P_n|Y|)n^{-2}$, and its KL is at most $\mathcal J(n^{-2})$. Consequently the shifted normalizer
+$Z_g=\int e^{-\beta nP_n\Delta_f}\,d\pi_{N,H}(f)$ satisfies
+\[
+ -\log Z_g\le\mathcal J(n^{-2})+C=:L_g.
+\]
+Rewrite the preceding exponential event using
+$dQ/d\pi_{N,H}=e^{-\beta nP_n\Delta_f}/Z_g$ and apply Jensen. It yields
+\[
+ \E_QP\Delta_f\le\tfrac12\E_QP_n\Delta_f
+ +\kappa\E_QP_nD_f+\frac T{2n}[L_g+\log(2/\delta)].
+\]
+Substitute \eqref{eq:deep-offset}; the coefficient of the empirical distance is $-1/4+\kappa=-1/8$, which can be discarded. The resulting bound is
+\[
+ \E_QR(f)\le R(g)+\varepsilon_S+
+ \frac Tn[\mathcal J(n^{-2})+L_g/2+\tfrac12\log(2/\delta)].
+\]
+Insert the stated bounds, use $Q_0\ge V$, and absorb fixed factors and the $n^{-2}$ remainder. Jensen's inequality gives the posterior-mean assertion. The sole probability events were obtained for this fixed architecture and deterministic teacher; the posterior itself never used the teacher or its resources.
+\end{proof}

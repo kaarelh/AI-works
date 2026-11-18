@@ -1,0 +1,188 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,mathtools,booktabs,microtype}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Fast agnostic learning with infinitely divisible neural-network priors},pdfauthor={ChatGPT-6 Astra; Claude Opus 5.5; Kaarel Hänni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}[section]\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}\newcommand{\Pp}{\mathbb P}
+\newcommand{\KL}{\operatorname{KL}}\newcommand{\clip}{\operatorname{clip}}
+\newcommand{\whR}{\widehat R}\newcommand{\calG}{\mathcal G}
+\title{Fast agnostic learning with infinitely divisible\\neural-network priors}
+\author{ChatGPT-6 Astra \and Claude Opus 5.5 \and Kaarel H\"anni \and
+Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{17 November 2026}
+\begin{document}\maketitle
+\begin{abstract}
+We give a dense Bayesian neural-network prior whose ordinary final posterior mean competes with smaller networks at a nearly parametric rate, uniformly over every finite learner width above comparator width. All weight coordinates are independent and absolutely continuous, and the architecture is fixed before observing data. A coordinate of fan-in $F$ is an increment over time $1/F$ of one fixed symmetric finite-variation L\'evy process. The same coordinate family is used in every layer. For any globally Lipschitz hidden activation and a bounded Lipschitz output link, a fixed Gaussian likelihood gives expected risk at most comparator risk plus $\widetilde O(K/n)$, using all observations and with coefficient exactly one. A high-probability companion has the noise floor plus $(1+\eta)$ times comparator approximation error and remainder $\widetilde O(K/(\eta n))$. Both allow conditional sub-Gaussian label noise. A growing output range also yields consistency for every label law with a finite second moment, at any prescribed width sequence tending to infinity. For a layered formula with $S$ hidden occurrences and depth $H$, the resource $K$ is polynomial in $S,H$ and input dimension and only logarithmic in the coefficient bound. No robustness restriction is imposed. For ReLU and tanh, a fixed small prior intensity makes additional learner depth cost only nearly linearly; a two-input lower bound shows that a linear cost can be necessary at fixed likelihood variance. An arbitrary width-$m$, depth-$H$ network converts to a formula of at most $\sum_{\ell=1}^H m^\ell$ occurrences, giving polynomial comparator-width dependence at each fixed depth. The proof constructs product comparison laws around embedded formulas. Large-jump probabilities are compensated by the number of neuron placements; suppressing the remaining large jumps costs only a logarithm of the approximation precision. Uniform function neighborhoods also have width-independent prior mass, giving polynomial total sign-prediction mistakes on arbitrary input sequences for margin formula teachers.
+\end{abstract}
+
+\section{The statistical objective}
+A complicated regression function may still have a useful small-network approximation. We ask for a Bayesian learner whose risk competes with that approximation, even when its prescribed architecture is arbitrarily wider. The desired guarantee should concern the ordinary posterior after the observed sample, rather than a prior over comparator sizes.
+
+We construct an independent-coordinate prior with that property. Its coordinate distribution changes with fan-in through an infinitely divisible family. At fan-in $F$, an order-one weight appears with probability proportional to $1/F$, while the remaining small weights have a controllable total variance. A specified smaller implementation therefore has many possible locations. Averaging the comparison proof over those locations offsets their small coordinate probabilities.
+
+The relevant small-jump cost is logarithmic in precision. This is the source of the nearly $1/n$ statistical remainder. It also means that an exponentially large stability factor in depth contributes only its logarithm. Formula teachers consequently have a polynomial-depth guarantee without a robustness assumption. General circuits may have substantial sharing; converting them to formulas can be exponential in depth, and our theorem retains that distinction.
+
+The result is about exact Bayesian prediction. It does not give an efficient posterior-sampling or integration algorithm.
+
+\section{Prior, learner and comparators}
+Fix a globally $A$-Lipschitz activation $\phi:\R\to\R$, with $A\ge1$ and $b=|\phi(0)|$. ReLU, GELU, tanh, sigmoid, softplus and SiLU all qualify. Fix a Lipschitz output link $\psi:\R\to[-1,1]$, for example tanh or clipping. Let $L_\psi\ge1$ bound its Lipschitz constant.
+
+The width-$N$, hidden-depth-$H$ learner, $H\ge1$, is
+\[
+ h^1=\phi(W^1\bar x),\qquad
+ h^\ell=\phi(W^\ell h^{\ell-1})\ (2\le\ell\le H),\qquad
+ z_w=v^\top h^H,\qquad f_w=\psi(z_w),\qquad \bar x=(1,x).
+\]
+Inputs lie in $[-1,1]^d$. Biases are included in the first layer. Later biases can be compiled using a constant hidden wire when the activation admits one; this changes the comparator resources explicitly.
+
+Fix $c>0$ and $p>2$, and define the symmetric L\'evy measure
+\begin{equation}
+ \nu(dx)=\frac{c\,dx}{|x|(1+|x|)^p},\qquad x\ne0.
+ \label{eq:levy-measure}
+\end{equation}
+Let $L_t$ be the sum of Poisson jumps with intensity $t\nu$. This sum converges absolutely almost surely. A coordinate entering a neuron of fan-in $F$ has law $L_{1/F}$, independently of all other coordinates. Thus $F=d+1$ in the first layer and $F=N$ subsequently, including the readout. Denote the resulting product prior by $\mu_N$.
+
+Every coordinate law is absolutely continuous and has full support. Its density can be unbounded at zero, but it has no atom at zero. All coordinates are nonzero almost surely. The architecture and the prior are fixed before the sample. Latent Poisson jumps are a description of each one-dimensional coordinate distribution, not a prior over network architectures.
+
+A layered \emph{formula comparator} uses the same activation, output link and depth. Every hidden occurrence that influences the output has exactly one outgoing edge. Its incoming edges can have arbitrary fan-in from the preceding layer. Let $S\ge1$ bound its number of hidden occurrences, $m$ its maximum hidden-layer width, and $B\ge1$ its coefficient bound. We assume $m\le N$. Unused vertices and zero-weight edges may be deleted from this description. A zero-input neuron need not vanish when $\phi(0)\ne0$.
+
+An arbitrary layered width-$m$, depth-$H$ network becomes such a formula by duplicating each shared computation for every use. The unrolled formula has at most
+\begin{equation}
+ M(m,H)=\sum_{\ell=1}^H m^\ell
+ \label{eq:formula-size}
+\end{equation}
+hidden occurrences. The proof also handles all learner widths $N\ge m$, including widths too small to hold the entire unrolled formula at once.
+
+\section{The main oracles}
+Let $f_0(x)=\E[Y\mid X=x]\in[-1,1]$, and assume the centered noise
+$\xi=Y-f_0(X)$ is conditionally sub-Gaussian:
+\[
+ \E[e^{t\xi}\mid X]\le e^{\sigma^2t^2/2}\quad(t\in\R).
+\]
+The input law is otherwise arbitrary. Labels may be unbounded. Put
+$R(f)=\E(f(X)-Y)^2$, $R_0=\E\xi^2$, and $s=1+\sigma^2$.
+For a fixed temperature $\beta>0$, form
+\begin{equation}
+ d\Pi_{S_n,\beta}(w)=Z_{S_n,\beta}^{-1}
+       e^{-\beta\sum_{i=1}^n(f_w(X_i)-Y_i)^2}\,d\mu_N(w).
+ \label{eq:posterior}
+\end{equation}
+The Gaussian observation variance is $1/(2\beta)$. We use $\beta_*=1/(256s)$ for the sharp expectation bound and $\beta_\eta=\eta/(32s)$ for the high-probability bound. Both are constants independent of sample size, learner width and comparator complexity. Prediction is the ordinary final posterior mean
+$\bar f_{S_n,\beta}=\int f_w\,d\Pi_{S_n,\beta}$.
+
+Constants below can depend on the fixed L\'evy measure and output link. They do not depend on depth or on any network width. Set
+\begin{align}
+ D&=C(1+A+b)(m+1)(B+8),&
+ V&=C L_\psi^2(d+1)^2D^{2H+2},\\
+ K_0&=C(d+1)(S+1),&
+ K_1&=C(S+1)(d+1)(B+8)V,
+ \label{eq:resources}
+\end{align}
+with a sufficiently large universal choice of $C$ so that $D,K_1\ge e$.
+
+\begin{theorem}[A sharp expected-risk oracle using every observation]
+\label{thm:sharp-expectation}
+Fix the finite learner architecture before drawing the sample. At the single fixed temperature $\beta_*=1/(256s)$, corresponding to Gaussian observation variance $128s$, every formula comparator $g$ satisfies
+\begin{equation}
+ \E_{S_n}R(\bar f_{S_n,\beta_*})
+ \le R(g)+\frac{5+256sK_0\log(K_1(n+1)^2)}{n+1}.
+ \label{eq:sharp-expectation}
+\end{equation}
+The constants are uniform over all finite $N\ge m$. The infimum over all deterministic comparator choices and their resource bounds may be taken directly on the right. The returned predictor is the ordinary posterior mean trained on all $n$ observations. This is a statement in expectation over the training sample.
+\end{theorem}
+\begin{proof}
+Lemma~\ref{lem:comparison} gives a comparison law with mean-square error
+$r=(n+1)^{-2}$ and KL at most $K_0\log(K_1(n+1)^2)$.
+The generic all-data expectation theorem in Section~\ref{sec:sharp-expectation-proof} gives its risk plus $256s$ times its KL divided by $n+1$. Since both $g$ and $f_0$ lie in $[-1,1]$, the comparison risk exceeds $R(g)$ by at most $4\sqrt r+r\le5/(n+1)$. This proves the result.
+\end{proof}
+
+\begin{theorem}[A fast formula-comparator oracle]\label{thm:main}
+Fix the finite learner architecture before drawing $n\ge2$ IID observations, and use $\beta_\eta=\eta/(32s)$ for $0<\eta\le1$. For any fixed layered formula comparator $g$ with resources $S,m,B,H$ as above, with probability at least $1-\delta$,
+\begin{align}
+ R(\bar f_{S_n,\beta})
+ &\le\int R(f_w)\,d\Pi_{S_n,\beta}(w)\\
+ &\le R_0+(1+\eta)\{R(g)-R_0\}
+ +\frac{Cs}{\eta n}
+       \left[K_0\log(K_1n)+\log\frac2\delta\right].
+ \label{eq:main-oracle}
+\end{align}
+The constants are uniform over every finite $N\ge m$. The learner uses neither $g$ nor its resource parameters. No smoothness or robustness restriction is imposed on the hidden activation or the comparator.
+\end{theorem}
+
+Since $\log V=O(\log(d+1)+(H+1)\log D)$, the resource is polynomial in formula size, depth and input dimension, and logarithmic in the coefficient bound. For fixed $A,b$ and output link it is at most
+\[
+ C(d+1)(S+1)\big[
+   \log((S+1)(d+1)n)+(H+1)\log((m+1)(B+8))
+ \big],
+\]
+after adjusting constants. In particular, width-one teachers have $S=H$ and only polynomial depth dependence.
+
+\begin{corollary}[Shared networks through their actual formula expansion]\label{cor:dense}
+Let $g$ have a width-$m$, depth-$H$ implementation with coefficient bound $B$. If its computation rooted at the readout unrolls to at most $S$ relevant hidden occurrences, both oracle conclusions hold with that $S$, uniformly over every finite learner width $N\ge m$. In particular one may always take $S=M(m,H)$ from~\eqref{eq:formula-size}.
+\end{corollary}
+\begin{proof}
+In the large-width branch, embed the actual unrolled formula. In the small-width branch, embed the original implementation: every used internal/readout edge and hidden row appears at least once in its rooted expansion, so their counts are bounded by $S$. The moment estimates use the original maximum row fan-in, bounded by $m$, in both branches. The same comparison proof therefore applies.
+\end{proof}
+
+Using the actual expansion can be substantially cheaper than the dense upper bound. For example, layers that merely copy existing computations add their actual occurrences instead of causing fresh branching at every layer. The resource then retains polynomial dependence on those additional layers.
+
+For a fixed comparator class, apply the theorem to a deterministic risk minimizer. Bounded coefficient caps and bounded graph resources give a finite union of compact parameter classes, so a minimum exists. More generally, one deterministic $1/n$ near-minimizer suffices, with its additional error absorbed into the displayed remainder. A confidence allocation proportional to
+$\delta/[(S+1)^2(m+1)^2(B+1)^2]$ gives one simultaneous structural oracle over integer resource bounds, by replacing the confidence logarithm accordingly. This allocation changes neither prior nor learner.
+
+At fixed depth and input dimension, a dense comparator of width $n^u$ and polynomially bounded coefficients is therefore permitted for every $u<1/H$. The expectation theorem gives the best risk in that growing class plus a term tending to zero at its single fixed likelihood variance. For a high-probability version with vanishing multiplicative slack, choose $\eta_n=1/\log(en)$; only that companion likelihood variance then grows logarithmically. Formula classes can be treated directly using their actual size and the explicit joint size--depth resource.
+
+\input{scalar}
+\input{comparison}
+\input{moments}
+\input{noise}
+\input{expectation}
+\input{uniform}
+\input{padding}
+\input{finite-variance}
+\input{raw-likelihood}
+\input{native-scale}
+
+\section{A named alternative: symmetric variance-gamma weights}
+The same proof applies to the symmetric-gamma L\'evy measure
+\[
+ \nu_{\rm VG}(dx)=c e^{-|x|}\frac{dx}{|x|}.
+\]
+Here a fan-in-$F$ coordinate has the explicit representation
+\[
+ W=G_+-G_-,\qquad
+ G_+,G_-\ \text{independent with law }\operatorname{Gamma}(c/F,1).
+\]
+This is a symmetric variance-gamma family. The background estimates are unchanged. In the designated-coordinate entropy bound, the density lower bound now gives an additional cost $C(B+8)$ in place of $C\log(B+8)$. Therefore all theorems remain valid after replacing
+$\log(K_1 n)$ by $\log(K_1 n)+B$ in their statistical resources, and similarly adding $B$ to the uniform-neighborhood logarithm. This gives polynomial rather than logarithmic dependence on the comparator's coefficient cap. Formula-size and depth dependence remain polynomial, and the statistical remainder remains nearly $1/n$.
+
+The latent gamma or Poisson representation describes each independent scalar coordinate. It does not select a sparse network architecture. Every finite-width coordinate vector is absolutely continuous, with no zero atoms.
+
+\input{beta-prime}
+\input{linear-depth-lower}
+
+\section{Interpretation and scope}
+The prior is a dense independent-coordinate law. Its particular fan-in dependence matters: it is an increment law at time $1/F$, not a scalar multiple of a fixed Gaussian or Student variable. Its variance is proportional to $1/F$, but rare order-one jumps retain nonvanishing total intensity across a row. For example, the sum of $F$ independent fan-in weights has exactly the law of $L_1$ for every $F$, by infinite divisibility; this law is non-Gaussian. A Gaussian central-limit interpretation therefore does not follow from the variance scale.
+
+The formula guarantee has polynomial depth dependence without robustness. For general networks, unrolling can be exponentially expensive. We have not proved a polynomial-depth bound for arbitrary shared circuits under this prior.
+
+The expectation theorem has coefficient exactly one on total comparator risk. It is not a sharp high-probability theorem. In the high-probability companion, the approximation term and noise floor are separated. The factor $1+\eta$ affects only the comparator's error relative to the regression mean. If that mean is represented by a comparator, the theorem gives a nearly $1/n$ excess-risk bound even in the presence of nonzero label noise.
+
+The bounded output link is part of the likelihood and ensures bounded prediction differences in the relative-loss argument. The raw-likelihood alternative in Section~\ref{sec:raw-likelihood-clipped-prediction} places no bounded link inside its observation model, but predicts by averaging clipped posterior draws. We do not assert the same risk bound for an unbounded raw-output posterior mean. The native raw prior does have finite second moments at every finite depth, because the coordinate increments do.
+
+The proof uses no data-dependent selection of learner width. Its uniform constants are valid for every architecture fixed before sampling; they do not supply one common event for arbitrary unrestricted selection among infinitely many architectures. The comparison distribution is only a proof device.
+
+\paragraph{Related work.}
+Dense independent heavy-tailed network priors with deterministic architectures already admit posterior-contraction guarantees; see Castillo and Egels~\cite{castillo-egels}. L\'evy random-function priors and truncation estimates also have established precedents. In particular, symmetric-gamma L\'evy models exhibit logarithmic jump intensity and quadratic small-jump variance~\cite{wolpert}. The contribution here is the finite-width neural comparison argument for independent time-$1/F$ coordinate laws, and the resulting agnostic smaller-network oracle uniform over every prescribed finite learner width. No claim of novelty is made for the scalar small-jump tradeoff or for dense heavy-tailed priors by themselves.
+
+\paragraph{Verification.}
+The accompanying record identifies the independently reviewed mathematical sources. This manuscript has not been formalized in Lean.
+\begin{thebibliography}{9}
+\bibitem{castillo-egels} I. Castillo and P. Egels. Posterior and Variational Inference for Deep Neural Networks with Heavy-Tailed Weights. \emph{Journal of Machine Learning Research} 26(122), 1--58, 2025.
+\bibitem{hogsgaard} M. M. H\o gsgaard, P. Rebeschini, and T. Wegel. Aggregation with Exponential Weights is Optimal in Expectation. arXiv:2607.02247, 2026.
+\bibitem{wolpert} R. L. Wolpert, M. A. Clyde, and C. Tu. Stochastic expansions using continuous dictionaries: L\'evy adaptive regression kernels. \emph{Annals of Statistics} 39(4), 1916--1962, 2011.
+\end{thebibliography}
+\end{document}

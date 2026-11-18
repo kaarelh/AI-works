@@ -1,0 +1,75 @@
+\section{Logarithmic dependence on the feature-encoding norm}
+\label{sec:quantitative-encoding}
+The preceding construction requires depth large enough that a small initial signal can be encoded in a unit direction. A short extra amplification stage replaces the quadratic dependence on the encoding norm in that threshold by a logarithmic one.
+
+\begin{theorem}[Quantitative fixed-function comparison]
+\label{thm:quantitative-echo}
+Fix $d$. Suppose a function on the unit sphere has a bounded Gaussian-feature representation
+\[
+ g_0(x)=\E[\psi(W)\tanh(W^{\mathsf T}(1,x))],\quad
+ W\sim N(0,I/d),\quad \|\psi\|_\infty\le Q,\quad
+ \|g_0\|_\infty\le G.
+\]
+Choose $\mathcal B\ge1+G$ with $C_dG^3/\mathcal B^2\le\varepsilon/4$, and set
+\[
+ D=\log\{e+C_dQ/\mathcal B\}.
+\]
+There are constants depending only on $d$ such that, whenever
+\[
+ H\ge C_dD,\qquad
+ N\ge C_d(1+\mathcal B/\varepsilon)^{C_d}H^{C_d}e^{C_dD},
+\]
+for every $0<\nu\le1$ there is a comparison with pointwise mean-square error at most $\varepsilon^2$ from $g_0$ and
+\begin{align*}
+ 2s\KL(\rho\|\mu_{H,N,s})
+ \le {}&(H+d)\kappa(\nu)+\mathcal B^2+C_d\\
+ &+C_d\left\{\beta[D+\log(H+1)]+D^2/H\right\},
+ \qquad s=\nu/N.
+\end{align*}
+In particular this cost is at most $C_d[1+\mathcal B^2+\beta^2H+D^2/H]$.
+\end{theorem}
+\begin{proof}
+Put $M=\lfloor(H-1)/3\rfloor$. Use $M$ effective-native burn transitions, then $M$ transitions with effective directional factor
+\[
+ W_*=e^{2D/M},\qquad \alpha_*=W_*-1,
+\]
+then the $M$ reverse factors from the preceding construction. Append at most two effective-native transitions. The depth hypothesis makes $\alpha_*\le C_dD/H$ a fixed small constant. The middle block has exact correlation gain $W_*^{M/2}=e^D$ before the tanh derivative factors. The zero-signal baseline still obeys $b'=F(\nu b)$, so
+\[
+ c_de^D\sqrt H\le L_H\le C_de^DH.
+\]
+The remaining-response ratio in the reverse block is unchanged. At a state in the middle block with $j$ middle transitions still remaining,
+\[
+ \frac{L_\ell}{L_H}\le\frac{C_d}{H W_*^{j/2}}.
+\]
+This follows because the full reverse product is comparable to $H$, and all remaining baseline derivative factors have a product bounded below by a positive constant: the burn has already reduced the baseline variance to $O_d(1/H)$.
+
+The excess-variance argument for the burn and reverse blocks is unchanged. For the middle block, the contribution of its $\beta$ term to the sum of later excess variances is at most $\sum r_\ell^2=O_d(s_0^2/H)$, using the geometric persistence bound when $\beta>0$. Its extra-spike contribution is at most
+\[
+ C_dH\alpha_*\frac{s_0^2}{H^2}
+                 \sum_{j=0}^{M-1}W_*^{-j}
+ \le\frac{C_ds_0^2}{H},
+\]
+because $\alpha_*/(1-W_*^{-1})=W_*$ is bounded. Thus the final distortion remains $|r_H-s_0|\le C_d|s_0|^3$, uniformly in $D,H,\nu$ in the stated range.
+
+The initial direction uses $a_i=\psi(W_i)/(\mathcal B L_H\sqrt N)$. The definition of $D$, after increasing its dimension-dependent coefficient, guarantees $\|a\|\le1/2$. Its feature-average summands are bounded after multiplication by $1/(\mathcal B L_H)$, so their concentration constants can be chosen independent of $Q$. Random orthogonal completion works as before.
+
+The burn and reverse blocks amplify finite-width state errors polynomially in $H$. Throughout the middle block the exact variance is $O_d(1/H)$: its new excess-variance contribution at a given time is at most $C_ds_0^2/H^2$, while the burn contribution is $O_d(s_0^2/H)$. For its derivative estimate one may use the larger envelope
+\[
+ b_*=(D+1)/H,
+\]
+so that $\alpha_*\le C_db_*$ and the weighted norm from the prefactor proof gives growth at most $1+C_db_*$ per step. The entire middle block therefore contributes $e^{C_dD}$. Changes of weighted norms at its two boundaries have polynomial cost in $H$; $1\le D\le C_dH$ makes their ratios polynomially bounded. The same first-exit and conditional concentration argument gives the displayed width threshold and pointwise mean-square accuracy.
+
+The middle block adds normalized action at most
+\[
+ M\{\beta\alpha_*+\alpha_*^2/2\}
+ \le C_d(\beta D+D^2/H)
+\]
+beyond its ordinary depth baseline. First-layer inflation, the other internal layers, and the readout have exactly the costs already calculated. The two appended native transitions add only their baseline. Summing proves the entropy bound. The final simplification follows from $\kappa(\nu)\le\beta^2$, $\beta D\le(\beta^2H+D^2/H)/2$, and the corresponding bound for $\beta\log(H+1)$.
+\end{proof}
+
+For a width-$C$ shallow teacher with all coefficients bounded by $B_{\rm teach}$, the Gaussian-feature balls can be chosen so that, at any fixed approximation accuracy,
+\[
+ \log(e+Q)\le C_d\{1+B_{\rm teach}^2+
+                   \log[2+C B_{\rm teach}/\varepsilon]\}.
+\]
+This follows by using radius proportional to $\varepsilon/(1+C B_{\rm teach})$ and lower-bounding the Gaussian density uniformly on the balls. If the teacher's function is bounded independently of $C$, the readout factor $\mathcal B$ in the comparison can also be chosen independently of $C$. Thus the encoding part of the cost depends only logarithmically on teacher width, and its finite-width requirement is polynomial in that width at fixed dimension, coefficient bound, and accuracy. The theorem still imposes the displayed logarithmic minimum depth; it is not a claim about arbitrary shallow learners at that same sharp cost.

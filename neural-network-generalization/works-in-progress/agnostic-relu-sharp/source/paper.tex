@@ -18,7 +18,7 @@ Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
 \date{17 November 2026}
 \begin{document}\maketitle
 \begin{abstract}
-Can a wide Gaussian Bayesian neural network compete in test squared loss with the best smaller network, without assuming that the smaller network generates the data? For ReLU networks with $H\ge1$ hidden layers, we identify a sharp strict exponent threshold for comparator width $n^a$ and coefficient bound $n^b$. If $Ha+(H+1)b<1/2$, an explicit Gaussian likelihood calibration gives a coefficient-one oracle inequality with excess tending to zero at every learner width above comparator width, both in the strong-prior limit and for actual finite Gaussian posteriors at every scaling exponent $\gamma\ge2$. It covers ordinary raw-output posterior means. If $Ha+(H+1)b>1/2$ and $a>0$, one well-conditioned input law defeats every likelihood temperature, even when selected from the data. Its conditional mean is a globally bounded teacher in the stated class. Failure holds at every sufficiently large learner width for every actual canonical finite prior exponent $\gamma\ge1$. A comparison Gaussian with unchanged covariance proves the lower bound below $\gamma=2$, at a larger polynomial width threshold. With one hidden layer, the positive finite-prior result also covers every $\gamma\ge1$. The lower-bound dimension grows logarithmically with sample count; the threshold concerns guarantees uniform over laws and dimensions with polynomial dimension dependence. The equality case is open. Positive homogeneity, exact Boolean memorization, and a bounded narrow tent function give the two directions.
+We identify a sharp strict exponent threshold for a dense Gaussian Bayesian ReLU network to compete in squared loss with a smaller network. For $H\ge1$ hidden layers, let comparator width and coefficient bound grow as $n^a$ and $n^b$. If $Ha+(H+1)b<1/2$, an explicit Gaussian likelihood calibration gives a coefficient-one oracle inequality with vanishing excess at every learner width above comparator width. This positive result covers ordinary raw-output posterior means in the strong-prior limit and at actual finite Gaussian scaling exponents $\gamma\ge2$; one hidden layer permits every $\gamma\ge1$. Above the threshold, when $a>0$, one well-conditioned input law defeats every data-dependent mixture of likelihood temperatures, prior scales, and sufficiently large learner widths. The negative result holds at every actual finite scale at or stronger than mean field, including all $\gamma\ge1$, with learner-width threshold $O(n^a+n\log n)$. Its regression function is a globally bounded network in the comparison class. A Gaussian-readout identity converts empirical separation into one linear population witness shared by all component predictors. A sparse two-channel memorizer and selective covariance narrowing give the all-scale comparison. The lower-bound dimension grows logarithmically with sample count. Equality, and the sharp positive boundary at multiple hidden layers for $1\le\gamma<2$, remain open.
 \end{abstract}
 
 \section{Approximation guarantees and the threshold}
@@ -38,7 +38,7 @@ when comparator width and coefficient cap grow as $n^a$ and $n^b$.
 \begin{center}
 \begin{tabular}{lll}
 \toprule
-Comparator growth & A vanishing oracle bound exists & Every temperature fails\\
+Comparator growth & A vanishing oracle bound exists & All mixtures fail\\
 \midrule
 Width $n^a$, weight cap $n^b$ & $Ha+Lb<1/2$ & $Ha+Lb>1/2$, $a>0$\\
 Width $n^a$, fixed weight cap & $a<1/(2H)$ & $a>1/(2H)$\\
@@ -49,9 +49,9 @@ Width and weight cap $n^a$ & $a<1/(4H+2)$ & $a>1/(4H+2)$\\
 
 The positive guarantee has polynomial dependence on input dimension and is uniform over input and label laws. The negative construction uses dimension $\Theta(\log n)$. Thus these bounds identify the strict threshold for a dimension-uniform polynomial oracle guarantee; they do not establish the same negative boundary at one fixed dimension. Nothing is asserted on the equality line.
 
-Both directions apply to actual finite Gaussian posteriors at every $\gamma\ge2$, and with one hidden layer at every $\gamma\ge1$. The negative direction extends to every $\gamma\ge1$ at all hidden depths, at a larger polynomial learner-width threshold. The sharp positive boundary for multiple hidden layers at $1\le\gamma<2$ remains open. The strong-prior results give corresponding statements in the prior-strength limit.
+The positive result applies to actual finite Gaussian posteriors at every $\gamma\ge2$, and with one hidden layer at every $\gamma\ge1$. The negative result covers every finite mean-field-or-stronger prior scale at all hidden depths, already at learner width $O(n^a+n\log n)$. It survives arbitrary data-dependent mixtures of the allowed posteriors, including a hyperprior over temperatures. The sharp positive boundary for multiple hidden layers at $1\le\gamma<2$ remains open. The strong-prior results give corresponding statements for the prior-strength limit and global minimizers.
 
-The positive direction uses an exact symmetry of ReLU: rescaling layers without changing their product preserves the function. Balancing the layers lowers the energy of a comparator. The negative direction combines a cheap noisy component with a steep signal component in one law. Exact low-energy memorization makes weak regularization overfit the noise; stronger regularization misses the signal. The law and the failure event work for every temperature simultaneously.
+The positive direction uses an exact symmetry of ReLU: rescaling layers without changing their product preserves the function. Balancing the layers lowers the energy of a comparator. The negative direction combines a cheap noisy component with a steep signal component in one law. Exact low-energy memorization makes weak regularization overfit the noise; stronger regularization misses the signal. The law and the failure event work for every temperature and prior scale simultaneously. An additional Gaussian-readout identity prevents averaging these predictors from repairing their errors.
 
 These are statements about exact Bayesian inference. No efficient posterior algorithm, prior over network sizes, or sparse-architecture prior is introduced.
 
@@ -87,16 +87,19 @@ The main prediction convention is the ordinary posterior mean of $z_w$. We also 
 \label{lem:teacher}
 A depth-$L$, width-$m$ ReLU teacher $g$ with weights bounded by $B$ has, at every width $N\ge m$, an exact implementation of energy at most
 \begin{equation}
- E=L[2^H d(d+1)]^{1/L}m^{2H/L}B^2.
+ E=L[d(d+1)]^{1/L}m^{2H/L}B^2.
  \label{eq:teacher-energy}
 \end{equation}
 It satisfies $|g(x)|\le U:=(d+1)m^H B^L$ on the input cube.
 \end{lemma}
 \begin{proof}
-Partition each learner layer into $m$ groups of balanced sizes $k_j$, copy each teacher first-layer row, divide every edge leaving group $j$ by $k_j$, and divide its readout coefficient by $k_j$. This preserves every activation and output. The first-layer energy is at most $d(d+1)B^2$. Each internal energy and the readout energy are at most $2m^2B^2$, since $k_i/k_j\le2$ and $k_j\ge N/(2m)$.
-
-Let these $L$ layer energies be $q_1,\ldots,q_L$. If one is zero, the function is zero. Otherwise multiply layer $\ell$ by
-$(\prod_jq_j)^{1/(2L)}/\sqrt{q_\ell}$. These positive factors have product one. Positive homogeneity of ReLU preserves the output, while every layer energy becomes $(\prod_jq_j)^{1/L}$. Their sum gives~\eqref{eq:teacher-energy}. Finally, direct propagation of the coefficient bound through the original teacher gives amplitude at most $(d+1)m^HB^L$.
+Put the teacher into the first $m$ coordinates of every hidden layer, with all other mean coordinates zero. Multiply the first-layer matrix by $\sqrt N$ and the readout by $1/\sqrt N$. ReLU homogeneity preserves the output. The weighted layer energies are now
+\[
+ d\|A_1\|_F^2,\quad \|A_2\|_F^2,\ldots,\|A_H\|_F^2,
+ \quad\|c\|_2^2,
+\]
+whose product is at most $d(d+1)m^{2H}B^{2L}$.
+If any layer energy is zero, the function is zero. Otherwise multiply layer $\ell$ by the geometric mean of the square roots of these energies, divided by that layer's square root. These positive factors have product one, so the function is preserved, and all $L$ layer energies become their geometric mean. This gives~\eqref{eq:teacher-energy}. Direct propagation of the coefficient cap through the original teacher gives $|g|\le(d+1)m^HB^L$.
 \end{proof}
 
 \begin{remark}[Teachers with biases in every layer]
@@ -139,7 +142,7 @@ We use the standard smooth-loss theorem of Srebro, Sridharan and Tewari~\cite{ss
                    +\frac{b\log(1/\eta)}n\biggr].
  \label{eq:sst}
 \end{align}
-One may take the same conservative universal constant $C_0=10^5$ used in the preceding agnostic Gaussian analysis~\cite{sharper}. Square loss is $2$-smooth. No realizability assumption, convexity of the class, or Bernstein condition relative to the comparator is needed.
+Let $C_0\ge1$ be a valid universal constant for this inequality. Square loss is $2$-smooth. No realizability assumption, convexity of the class, or Bernstein condition relative to the comparator is needed.
 
 For $n\ge2$, $0<\delta<1$, define
 \begin{gather}
@@ -216,207 +219,17 @@ The parameter class is compact, its population risk is continuous, and it contai
 
 \input{finite-positive}
 
-\section{An exact low-energy ReLU memorizer}
-\begin{lemma}[Exact Boolean memorization]
-\label{lem:memorizer}
-Let $D\ge1$, $d\ge D$, and $r:\{-1,1\}^D\to[-1,1]$ satisfy $\sum_xr(x)^2\le s_0$. Put $M_0=(D+1)2^D$. At every width $N\ge M_0$, a depth-$L$ ReLU network depending only on those $D$ coordinates represents $r$ exactly on the cube and has energy at most
-\begin{equation}
- K_{\mathrm{mem}}=
- L[96\,2^{H-1}dD^3(D+1)s_0]^{1/L}.
- \label{eq:memorizer-energy}
-\end{equation}
-\end{lemma}
-\begin{proof}
-A parity on $j\ge1$ coordinates is a function of their sum $t$, taking alternating values $y_0,\ldots,y_j\in\{-1,1\}$ at $t_i=-j+2i$. The piecewise-linear interpolant has first slope $s_0'=(y_1-y_0)/2\in\{-1,1\}$ and successive slope changes of magnitude two. It is
-\[
- y_0\relu(1)+s_0'\relu(t+j)+
- \sum_{i=1}^{j-1}(s_i'-s_{i-1}')\relu(t-t_i).
-\]
-Here $t+j\ge0$ on the cube, so the leftmost hinge agrees with the required linear term. This uses at most $j+1$ features, each with augmented row norm at most $2D$. Their coefficient squares sum to at most $1+1+4(j-1)\le4D$. The constant parity uses one constant feature.
 
-Normalized Fourier expansion and Parseval therefore represent $r$ by at most $M_0$ such features, with coefficient squared sum
-\[
- T\le4D\sum_S\widehat r(S)^2
-       \le4Ds_0/2^D.
-\]
-Zero and duplicate features may be retained. Clone this list into width $N$ using groups of sizes at least $N/(2M_0)$. The first-layer energy is at most $4dD^2$.
+\section{Gaussian neighborhoods of sparse mean networks}
+\input{profile-comparison}
 
-If $H=1$, divide each coefficient among its copies. The readout energy is at most $2M_0T\le8D(D+1)s_0$.
-
-If $H\ge2$, split the next layer into two almost equal groups. One computes the sum of positive-coefficient features and the other the sum of negative-coefficient magnitudes. All features and these two sums are nonnegative, so ReLU leaves the sums unchanged. Dividing each incoming coefficient among its first-layer copies gives second-layer energy at most $2M_0T$. Relay the two values through each later hidden layer, placing weight $1/r_\pm$ on each edge inside a group of size $r_\pm$. Each such layer has energy two. Readout weights $+1/r_+$ and $-1/r_-$ give energy at most six.
-
-The product of all layer energies is consequently at most
-$96\,2^{H-1}dD^3(D+1)s_0$. This also bounds the $H=1$ case conservatively. If $r=0$, use the zero network; otherwise positively balance the layers as in Lemma~\ref{lem:teacher}. Their sum becomes at most~\eqref{eq:memorizer-energy}, without changing the function.
-\end{proof}
-
-\section{A bounded steep teacher}
-\begin{lemma}[A four-group tent]
-\label{lem:tent}
-Let $m\ge4$, $B\ge1$, $r=\lfloor m/4\rfloor$, and suppose
-$\delta=2/(r^HB^L)\le1/2$. A width-at-most-$m$, depth-$L$ ReLU network with weights bounded by $B$ realizes an odd function $g(t)$ of its first coordinate such that
-\[
- |g(t)|\le1\quad(t\in\R),\qquad
- g(0)=g(1)=g(-1)=0,\qquad g(\delta)=1,\quad g(-\delta)=-1.
-\]
-\end{lemma}
-\begin{proof}
-Use four groups of $r$ neurons. First-layer features are
-$\relu(B(t+2\delta))$, $\relu(B(t+\delta))$,
-$\relu(B(t-\delta))$, and $\relu(B(t-2\delta))$.
-The biases have magnitude at most $2B\delta\le B$. Each internal within-group edge is $B$, and all other edges vanish. These nonnegative channels are multiplied by $(rB)^{H-1}$ through the internal layers. The readout coefficients per group are $-B/2,B,-B,B/2$.
-
-The output is $g(t)=S\psi_\delta(t)$, where $S=r^HB^L/2=1/\delta$ and
-\[
- \psi_\delta(t)=-\relu(t+2\delta)+2\relu(t+\delta)
-                 -2\relu(t-\delta)+\relu(t-2\delta).
-\]
-This function equals $t$ on $[-\delta,\delta]$, is odd, vanishes outside $[-2\delta,2\delta]$, and has absolute value at most $\delta$. The assertions follow. Unused neurons are zero.
-\end{proof}
-
-\section{The lower bound for every temperature}
-\begin{theorem}[A single law defeats all temperatures]
-\label{thm:lower}
-Fix $H\ge1$, $a>0$, $b\ge0$, and suppose $s=Ha+Lb>1/2$. For $n=2^k$ put $d=k+2$, $m=\lfloor n^a\rfloor$, and $B=n^b$. For every sufficiently large $n$, there is a discrete law $D_n$ on $[-1,1]^d\times[-1,1]$ whose conditional mean is a globally bounded depth-$L$, width-at-most-$m$, coefficient-$B$ ReLU teacher $g_n$, with the following properties.
-
-The Bayes risk is $p=9/10$. Every coordinate lies in $[-1,1]$ and takes both endpoints with positive probability; the covariance matrix is diagonal with eigenvalues in $[1/20,1]$.
-
-There is a threshold $N_*(n)=O(n^a+n\log n)$ such that with probability at least $1-2e^{-n^{1/3}/2}$, simultaneously for every $N\ge N_*$ and every $\lambda>0$, every global minimizer of~\eqref{eq:objective} has raw and clipped risk at least $p+1/100$.
-
-On the same event, for each fixed $N\ge N_*$, some $\sigma_0(n,S,N)>0$ works for every $0<\sigma\le\sigma_0$ and every $\lambda>0$: posterior-averaged raw and clipped risks, the ordinary raw-mean risk, its clipping, and the risk of the mean of clipped outputs are all at least $p+1/100$.
-\end{theorem}
-\begin{proof}
-Take the teacher $g$ from Lemma~\ref{lem:tent}. Write $X=(T,A,Z)$, with $Z$ uniform on $\{-1,1\}^k$, independent of the other variables. With probability $p=9/10$, set $T=0$, $A=+1$, and let $Y$ be an independent fair sign. With probability $q=1/10$, set $A=-1$, take $T$ uniformly from $\{-1,-\delta,\delta,1\}$, and set $Y=g(T)$.
-
-The conditional mean is $g(T)$ and its risk is $p$. The covariance matrix is
-\[
- \operatorname{diag}(q(1+\delta^2)/2,4pq,1,\ldots,1),
-\]
-which gives the stated conditioning.
-
-There are $n$ noisy atoms $(0,+1,z)$. Let $S_1$ count those observed once and let $n_s$ count steep observations. The expectation of $S_1$ is
-$np(1-p/n)^{n-1}\ge npe^{-p}$. Changing one observation changes $S_1$ by at most two. McDiarmid and Hoeffding give the common event
-\begin{equation}
- S_1/n\ge pe^{-p}-n^{-1/3},\qquad
- n_s/n\le q+n^{-1/3}
- \label{eq:occupancy}
-\end{equation}
-with probability at least $1-2e^{-n^{1/3}/2}$. Work on this event.
-
-Apply Lemma~\ref{lem:memorizer} to the $D=k+1$ Boolean coordinates $(A,Z)$. Its target is the empirical noisy label mean at an observed positive-tag atom, and zero elsewhere, including every negative-tag point. Its squared counting norm is at most $n$. Thus an exact memorizer exists at every $N\ge M_0=(D+1)2^D$, with
-\begin{equation}
- K_{\mathrm{mem}}=O_H(n^{1/L}d^{5/L}).
- \label{eq:mem-asymptotic}
-\end{equation}
-It ignores $T$, and is zero throughout the steep component. Set $N_*=\max(m,M_0)$.
-
-For noisy counts $k_j$, means $r_j$, and within-atom residual $W$, write
-\[
- \empRisk_S(f)=W/n+n^{-1}\sum_jk_j(f_j-r_j)^2
-                   +n^{-1}\sum_{i\text{ steep}}(f(X_i)-Y_i)^2.
-\]
-Comparing a minimizer with the exact memorizer gives
-\begin{equation}
- n^{-1}\sum_jk_j(f_j-r_j)^2\le\lambda K_{\mathrm{mem}}+n_s/n.
- \label{eq:noise-residual}
-\end{equation}
-Clipping decreases this residual.
-
-Put $\tau_n=n^{-1/L}d^{-4}$. If $\lambda\le\tau_n$, then
-$\tau_nK_{\mathrm{mem}}=O_H(d^{5/L-4})=o(1)$ because $L\ge2$. The residual bound tends to $q$. On observed noisy atoms, the empirical-mean vector has squared norm at least $S_1$; count weights are at least one. The reverse triangle inequality gives
-\[
- n^{-1}\sum_z f(0,+1,z)^2\ge
- \left[\sqrt{pe^{-p}-n^{-1/3}}
-           -\sqrt{\tau_nK_{\mathrm{mem}}+q+n^{-1/3}}\right]_+^2.
-\]
-The Bayes excess equals
-$p\E_Z f(0,+1,Z)^2+q\E[(f(X)-g(T))^2\mid A=-1]$.
-It therefore has lower limit at least
-$p(\sqrt{pe^{-p}}-\sqrt q)^2=0.075002\ldots$.
-
-If $\lambda>\tau_n$, comparison with zero gives $Q_N\le1/\lambda$. ReLU is $1$-Lipschitz, so the input-coordinate sensitivity is at most
-$d^{-1/2}(Q_N/L)^{L/2}$. Thus the inner-pair half-difference is at most
-\[
- \eta_n=\delta d^{-1/2}(L\tau_n)^{-L/2}
-  =O_H\bigl(n^{1/2-Ha-Lb}d^{2L-1/2}\bigr)\longrightarrow0.
-\]
-It also bounds clipped predictions. The inner steep points have total mass $q/2$ and labels $\pm1$, giving excess at least $(q/2)(1-\eta_n)^2\to0.05$. This proves the minimizer claim.
-
-We prove the uniform finite-posterior assertion next. Its estimates apply on the same event and for each fixed $n,S,N$. No temperature-dependent exceptional sample event is introduced.
-\end{proof}
-
-\subsection{Finite posteriors and ordinary means}
-For $\lambda\le\tau_n$, choose a fixed small ball around the exact memorizer on which $Q_N\le K_{\mathrm{mem}}+\varepsilon$ and empirical risk is at most its memorizer value plus $\varepsilon$. Let $\rho$ be the uniform law on that ball. Direct Gaussian-density calculation gives
-\[
- \KL(\rho\|\mu_{N,\sigma})
-    \le (K_{\mathrm{mem}}+\varepsilon)/(2\sigma^2)+C
- \quad(0<\sigma\le1),
-\]
-where $C\ge0$ is finite and independent of $\sigma,\lambda$; the $P\log\sigma$ normalization term can be dropped from this upper bound. The Gibbs variational identity implies
-\[
- \int\empRisk_S\,d\Pi
- \le\empRisk_S(z_{w_{\mathrm{mem}}})+\varepsilon
-              +\lambda(K_{\mathrm{mem}}+\varepsilon)+2\lambda\sigma^2C.
-\]
-For sufficiently large $n$, the occupancy event gives $S_1/n\ge1/3$. First choose $\varepsilon$ small and then $\sigma$ small; the expected noisy residual is at most $1/5$, uniformly over $\lambda\le\tau_n$.
-
-Jensen passes this residual bound to ordinary raw means and to the clipped conventions. The reverse triangle inequality then gives excess at least
-\[
- p(\sqrt{1/3}-\sqrt{1/5})^2>1/100.
-\]
-For Gibbs risks, use the reverse triangle inequality in the product Hilbert space of posterior parameter and observed-atom index. This uses expected residuals directly, rather than incorrectly averaging lower bounds on individual risks to infer a statement about a mean.
-
-For $\lambda\ge\tau_n$, the prior readout is centered. ReLU homogeneity and the finite Gaussian moments imply
-$\E_{\mu_{N,\sigma}}z_w(X_i)^2=O_{N,d,L}(\sigma^{2L})$ uniformly on the cube. Thus, for sufficiently small $\sigma$ at fixed $N$, prior expected empirical loss is at most two. Jensen lower-bounds the likelihood normalizer by $e^{-1/(\lambda\sigma^2)}$. Since $Q_N/\sigma^2$ is chi-square with parameter dimension $P$, and the likelihood is at most one,
-\[
- \int e^{Q_N/(4\sigma^2)}\,d\Pi
-   \le2^{P/2}e^{1/(\tau_n\sigma^2)}.
-\]
-For $K_0=8/\tau_n$, Markov's inequality and integration of this exponential tail give
-\begin{equation}
- \int(1+Q_N^L)\Ind_{\{Q_N>K_0\}}\,d\Pi
-     \longrightarrow0
- \label{eq:tail}
-\end{equation}
-uniformly over $\lambda\ge\tau_n$. To see this directly, integrate $L u^{L-1}e^{-u/(4\sigma^2)}$ from $K_0$ to infinity. The result is $e^{-K_0/(4\sigma^2)}$ times a polynomial in $K_0,\sigma^2$; multiplication by the moment bound leaves the vanishing factor $e^{-1/(\tau_n\sigma^2)}$.
-
-On $Q_N\le K_0$, the inner half-difference is at most $8^{L/2}\eta_n\to0$. For large $n$ make it at most $1/4$. The amplitude bound $|z_w|\le vQ_N^{L/2}$ and~\eqref{eq:tail} make the posterior tail's half-difference contribution at most $1/4$ for sufficiently small $\sigma$, uniformly in temperature. The raw mean and its clipped conventions then have excess at least $q/8=1/80>1/100$. Gibbs risks have the same constant lower bound by making the sublevel mass at least $3/4$, since each predictor there has excess at least $(q/2)(3/4)^2$.
-
-Taking the smaller of the small- and large-temperature prior-scale thresholds completes the finite-posterior part of Theorem~\ref{thm:lower}. It allows a temperature depending on the data, validation set, prior scale, or data law. The prior-scale threshold remains pointwise in width. A mixture over temperatures followed by raw averaging is a different predictor and is not covered by the individual-temperature theorem.
-
-\input{finite-negative}
-
-\input{all-canonical}
-
-\input{localized-noise}
-
-\begin{corollary}[Width alone does not control the oracle guarantee]
-\label{cor:fixed-width}
-Fix the depth as above and let $b>1/(2L)$. The same constant-excess conclusion holds with a teacher of fixed width 4 and coefficient bound $B=n^b$, with learner-width threshold $O_H(n\log n)$. At this width threshold it includes the canonical finite priors at every $\gamma\ge2$, and every $\gamma\ge1$ when $H=1$, as well as the strong-prior conclusion. For $H\ge2$, Corollary~\ref{cor:relu-native-variants} extends it to every $\gamma\ge1$ at the larger threshold $N_{\rm nat}$. Consequently a distribution-uniform, vanishing-excess guarantee against all teachers of width polynomial in $n$, without any restriction on coefficient size, is false for this learner family even when the comparator class only needs to contain width-4 teachers.
-\end{corollary}
-\begin{proof}
-Use one neuron per group in the teacher construction, so $r=1$ and $\delta=2B^{-L}$. All teacher estimates hold for sufficiently large $n$ because $B\to\infty$. The memorizer and sample event are unchanged. In the large-temperature branch the inner-pair half-difference is at most a fixed-depth constant times $n^{1/2-Lb}d^{2L-1/2}$, which tends to zero under the stated condition. The small-temperature branch is unaffected. The finite-posterior and canonical-scale proofs therefore apply without change.
-\end{proof}
-This is a dimension-uniform obstruction: the input dimension remains $\Theta(\log n)$ and the data law varies with $n$. It does not establish failure on one fixed distribution or at one fixed dimension. The growing coefficient bound, rather than the fixed teacher width, supplies the increasing input sensitivity.
-
-
-\section{Consequences and limits of the threshold}
-In the strong-prior regime and the stated finite positive regimes, the positive and negative regions meet at $Ha+Lb=1/2$. The upper result is a sufficient calibrated learner, and the lower result defeats every positive calibration on one sample event, including data-dependent calibration. Equality remains open.
-
-\begin{corollary}[No universal joint polynomial in depth and width]
-For this unrestricted Gaussian-prior, Gaussian-likelihood learner family, there is no distribution-uniform sample bound polynomial jointly in input dimension, teacher width, and teacher depth, independent of arbitrarily large learner width, even with unit-bounded teacher coefficients and data-dependent temperature choice, either in the strong-prior setting or at each fixed canonical finite exponent $\gamma\ge1$.
-\end{corollary}
-\begin{proof}
-Suppose a proposed universal polynomial has teacher-width degree at most $D_0$. Choose a fixed $H$ with $2H>D_0+1$. Choose $r$ strictly between $D_0$ and $2H$, set $a=1/r$, and use Theorem~\ref{thm:lower} or Theorem~\ref{thm:relu-native-all-gamma}, as appropriate, with $b=0$. Its sample count has order $m^r$, exceeding the proposed polynomial for large $m$, since the depth is fixed and dimension grows only logarithmically. Yet the constant excess lower bound remains. This contradicts any fixed positive accuracy/confidence guarantee from that polynomial.
-\end{proof}
-
-This corollary does not assert an exponential-in-depth lower bound at one fixed teacher width: the sufficiently large thresholds in the construction may depend on depth. It is an unconditional obstruction to one joint polynomial in all three resources for this noisy-regression learner family.
-
-The localized-noise corollary permits any fixed small noisy-input mass $p>0$ while retaining unit signal and noisy-label amplitudes. The difficult signal pair then has mass $pe^{-p}/32$, and the excess lower bound $p^2e^{-p}/256$ tends to zero with $p$. Thus the theorem does not claim a positive excess uniform as noise vanishes, nor does it concern independent Boolean label flips.
-
-Restrictions on prior support or on comparator stability change the question and may allow better rates. Neither result here addresses efficient posterior computation. The lower-bound law is discrete and varies with sample size; consistency at one fixed law is not refuted. The finite theorems cover the canonical regimes stated above. For multiple hidden layers, the sharp positive boundary in the interval $1\le\gamma<2$ is not settled here. The negative boundary holds throughout this interval by Theorem~\ref{thm:relu-native-all-gamma}. The strong-prior and sufficiently-small-scale statements retain their separate width thresholds.
+\input{tent}
+\input{mixture-geometry}
+\input{negative}
+\input{consequences}
 
 \paragraph{Verification.}
-These are conventional mathematical proofs with independent AI-agent review. They have not been formalized in Lean or externally peer reviewed. The proof includes the exact memorizer and bounded teacher rather than treating their existence as unverified inputs.
+These are conventional mathematical proofs with independent AI-agent review. They have not been formalized in Lean or externally peer reviewed. The proof supplies the teacher, sparse memorizer, Gaussian comparison, and mixture-separation argument explicitly. The positive statistical argument uses the standard smooth-loss theorem stated in the text.
 
 \begin{thebibliography}{9}
 \bibitem{sst}
@@ -429,10 +242,5 @@ ChatGPT-6 Astra, Claude Opus 5.5, Kaarel H\"anni and Dmitry Vaintrob.
 \emph{Sharper agnostic bounds for dense Gaussian Bayesian neural networks}.
 Research manuscript, November 2026.
 \href{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/works-in-progress/agnostic-oracle-improvements}{Paper and supporting records}.
-\bibitem{tempered}
-Claude Opus 5.5.
-\emph{Tempered-likelihood agnostic learning for Bayesian tanh networks}.
-Research note, November 2026.
-\href{https://github.com/kaarelh/AI-works/blob/main/neural-network-generalization/works-in-progress/agnostic-learning/research-notes/B-tempered-likelihood.md}{Complete supporting proof}.
 \end{thebibliography}
 \end{document}

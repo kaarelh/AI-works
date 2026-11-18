@@ -1,0 +1,45 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}\usepackage{lmodern,amsmath,amssymb,amsthm,microtype}
+\usepackage[colorlinks=true]{hyperref}
+\newtheorem{theorem}{Theorem}[section]\newtheorem{lemma}[theorem]{Lemma}\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}
+\title{A width-only approximation guarantee for Bayesian neural networks on Boolean inputs}
+\author{ChatGPT-6 Astra \and Claude Opus 5.5 \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{18 November 2026}
+\hypersetup{pdftitle={A width-only approximation guarantee for Bayesian neural networks on Boolean inputs},pdfauthor={ChatGPT-6 Astra; Claude Opus 5.5; Kaarel H\"anni; Dmitry Vaintrob}}
+\begin{document}\maketitle
+\begin{abstract}
+Can one fixed Bayesian neural network compete with all substantially narrower networks, without bounding their coefficient magnitudes? We prove such an approximation guarantee for Boolean inputs and bounded, possibly noisy labels. The learner has independent centered Gaussian weights, hidden ReLU activations, and a fixed saturation after its scalar readout. The Gaussian likelihood uses that bounded output, and prediction is its ordinary posterior mean. For every prior exponent $\gamma\ge1$ and every learner width at least the teacher width plus a constant wire, polynomially many samples suffice to approach the best risk among arbitrary-weight teachers of a specified width. The polynomial depends on the fixed depths and input dimension, and a constant-factor learner-depth overhead is required. Neither the prior nor the data-dependent likelihood-variance rule uses the teacher width, coefficients, or risk. The key construction compiles a real-weight teacher into a bounded-path implementation using Boolean activation decisions and constant-depth integer arithmetic. Its precision cost is only logarithmic, so it also preserves faster oracle rates when the best comparison risk is small. No prior over network sizes or regularity assumption on the Boolean input distribution is used.
+\end{abstract}
+
+\section*{Overview}
+Squared-risk approximation by narrow neural networks is useful even when no narrow network predicts every label correctly. The question studied here is whether a single, potentially much wider Bayesian network can achieve the best narrow-network risk plus a small error. A coefficient bound would exclude narrow networks with sharp transitions or large cancellations; we impose no such bound on the comparison class.
+
+Theorem~\ref{thm:boolean-width-oracle} gives the statistical result. At fixed teacher depth $h$ and learner depth $H$ above a numerical constant times $h+1$, the sample bound is polynomial in the teacher width, input dimension, and inverse accuracy, uniformly over all larger learner widths. Two features of the learner are explicit: its final activation bounds its output in $[-1,1]$, and its likelihood variance is chosen from the data using valid risk certificates. These choices are part of the theorem, not conclusions about every Gaussian-likelihood Bayesian model.
+
+The proof has three components. First, on Boolean inputs an arbitrary real-weight ReLU teacher admits a bounded-path approximation whose width and coefficient cost depend polynomially on its width, rather than on its original coefficient magnitudes. Its hidden activation decisions are threshold functions of Boolean path features; small integer representations and standard threshold arithmetic encode those decisions. Second, a Gaussian comparison distribution around that implementation gives a cheap free-energy bound at every sufficiently large learner width. Third, at the intermediate widths where the compiled implementation does not fit, a finite-parameter certificate applies directly to the original teacher. The learner compares the two certificates and returns one posterior, without knowing which implementation justifies the bound.
+
+The coefficient-free compiler is proved in Sections~\ref{sec:boolean-compiler} and~\ref{sec:constant-depth-compiler}. The statistical proof states its imported Gaussian oracle theorems explicitly, so the observation model, calibration, and additional assumptions can be checked without reading the companion manuscripts.
+
+\paragraph{Prior coefficient-reduction results.}
+Coefficient reduction is not new to this analysis. Maass~\cite{maass} gives polynomial-bit, same-size representations for fan-out-one networks with Boolean outputs on finite rational input sets. Vardi and Shamir~\cite{vardi-shamir} approximate arbitrary-weight constant-depth ReLU networks by polynomial-weight, polynomial-width networks with a constant-factor depth increase under discrete and regular continuous input assumptions. The purpose here is to track the resources needed by the specified Bayesian prior and turn such approximations into an agnostic learning guarantee at every eligible learner width.
+
+\input{learning}
+\input{extensions}
+\input{compiler}
+\input{constant-depth}
+\begin{thebibliography}{99}
+\bibitem{adaptive} ChatGPT-6 Astra, Claude Opus 5.5, Kaarel H\"anni and Dmitry Vaintrob. \emph{Bayesian neural networks adapt to approximation error}. Research manuscript, 18 November 2026. Full-energy free-energy calibration and the Gaussian comparison oracle.
+\bibitem{direct} ChatGPT-6 Astra, Claude Opus 5.5, Kaarel H\"anni and Dmitry Vaintrob. \emph{Agnostic oracle bounds for Gaussian neural networks with Lipschitz activations}. Research manuscript, November 2026. Direct finite-program Gaussian compression.
+\bibitem{localized} ChatGPT-6 Astra, Claude Opus 5.5, Kaarel H\"anni and Dmitry Vaintrob. \emph{A localized oracle from Gaussian compression}. Technical proof module, 18 November 2026. The finite-dictionary evidence calibration theorem, including its bounded-output specialization.
+\bibitem{softpath} ChatGPT-6 Astra, Claude Opus 5.5, Kaarel H\"anni and Dmitry Vaintrob. \emph{A full-support path-variation prior for Bayesian ReLU networks}. Research manuscript, November 2026. Adaptive path-variation oracle for a softly reweighted Gaussian prior.
+\bibitem{vapnik} Vladimir N. Vapnik. \emph{Statistical Learning Theory}. Wiley, 1998. Relative uniform-convergence bounds for VC classes.
+\bibitem{bartlettvc} Peter L. Bartlett, Nick Harvey, Christopher Liaw and Abbas Mehrabian. Nearly-tight VC-dimension and pseudodimension bounds for piecewise linear neural networks. \emph{Journal of Machine Learning Research} 20(63):1--17, 2019. \url{https://jmlr.org/papers/v20/18-910.html}.
+\bibitem{hab} William Hesse, Eric Allender and David A. Mix Barrington. Uniform constant-depth threshold circuits for division and iterated multiplication. \emph{Journal of Computer and System Sciences} 65(4):695--716, 2002.
+\bibitem{muroga} Saburo Muroga. \emph{Threshold Logic and Its Applications}. Wiley--Interscience, 1971. Integer representations of threshold functions.
+\bibitem{brentkung} Richard P. Brent and H. T. Kung. A regular layout for parallel adders. \emph{IEEE Transactions on Computers} C-31(3):260--264, 1982. \url{https://doi.org/10.1109/TC.1982.1675982}.
+\bibitem{maass} Wolfgang Maass. Bounds for the computational power and learning complexity of analog neural nets. \emph{SIAM Journal on Computing} 26(3):708--732, 1997. \url{https://doi.org/10.1137/S0097539793256041}.
+\bibitem{vardi-shamir} Gal Vardi and Ohad Shamir. Neural networks with small weights and depth-separation barriers. \emph{Advances in Neural Information Processing Systems} 33:19433--19442, 2020. \url{https://papers.nips.cc/paper/2020/file/e1fe6165cad3f7f3f57d409f78e4415f-Paper.pdf}.
+\end{thebibliography}
+\end{document}

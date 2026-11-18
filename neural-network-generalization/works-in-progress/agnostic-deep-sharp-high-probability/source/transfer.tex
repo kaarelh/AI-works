@@ -1,0 +1,105 @@
+\section{Finite-width posterior transfer}
+\label{sec:transfer}
+All density estimates below are pointwise bounds, so they apply to arbitrary source posteriors, without independence assumptions on their coordinates.
+
+\begin{lemma}[Scalar estimates]
+\label{lem:scalar}
+For sufficiently small $r>0$, uniformly in fan-in $F$, the law $\lambda_F$ satisfies
+\[
+ -\log\Pr(|W|\le r)\le\frac C F\log(C/r),\qquad
+ \E[|W|\mid |W|\le r]\le Cr/F.
+\]
+For any $|a|\le B$ there is a designated-coordinate law supported on $|W|>r$ and $|W-a|\le12r$, whose density ratio to $\lambda_F$ is at most
+$F\exp\{C\log[C(B+8)/r]\}$.
+Finally, the density of $W/2$ is at most $2^{c_0/F}$ times the native density.
+\end{lemma}
+\begin{proof}
+Put $\alpha=c_0/F$. Integrating the beta-prime density and using
+$(1+t)^{-\alpha-p}\ge1-(\alpha+p)t$ gives
+\[
+ \Pr(|W|\le r)\ge\frac{r^\alpha}{\alpha\mathrm B(\alpha,p)}
+ \left[1-\frac{(\alpha+p)\alpha r}{\alpha+1}\right].
+\]
+The bracket is at least $1/2$ for a fixed small cutoff, and
+$|\log[\alpha\mathrm B(\alpha,p)]|\le C\alpha$, by smooth extension at zero. This proves the logarithmic probability bound. Divide the bound $r^{\alpha+1}/[(\alpha+1)\mathrm B(\alpha,p)]$ for the truncated first moment by this lower probability to obtain the mean bound.
+
+If $|a|>4r$, use a uniform interval of radius $r$ about $a$; otherwise use a suitable mixture of uniform intervals $[5r,7r]$ and $[-7r,-5r]$. The latter can have mean $a$, although only its support bounds are needed. On these intervals the native signed density is at least $c/[F(B+8)^{p+2}]$. The prescribed density is at most $1/r$, proving the ratio bound. For the last assertion, the exact signed density $f_\alpha$ satisfies
+\[
+ \frac{2f_\alpha(2w)}{f_\alpha(w)}
+ =2^\alpha\left(\frac{1+|w|}{1+2|w|}\right)^{\alpha+p}
+ \le2^\alpha.
+\]
+\end{proof}
+
+\begin{lemma}[Capped-row insertion]
+\label{lem:row}
+Consider a teacher row with $k$ designated entries and absolute sum at most one. For $0<r\le c/(k+1)$, with a sufficiently small fixed $c>0$, it has a comparison law supported on the same row cap. Every designated entry has magnitude greater than $r$, and the row's action on any vector in $[-1,1]^F$ differs from the teacher's by at most $C(k+1)r$. The density ratio to the native capped row is at most
+\[
+ F^k\exp\{C(k+1)\log(C/r)\}.
+\]
+\end{lemma}
+\begin{proof}
+Shrink designated centers to $(1-\eta)a_j$, with
+$\eta=C_0(k+1)r\le1/2$, and use Lemma~\ref{lem:scalar}. Condition all background coordinates on magnitude at most $r$. Their total conditional mean absolute sum is at most $Cr$. Further condition that sum to be at most $C_1r$; with $C_1$ large, this event has probability at least $1/2$. Take $C_0$ large enough that $\eta\ge12kr+C_1r$. The resulting row is capped. Its deterministic discrepancy is at most $\eta+12kr+C_1r$.
+
+The background density ratio is at most $2\exp\{C\log(C/r)\}$, and the designated ratios multiply to the stated bound. Converting from the native product row to its conditioned law multiplies this ratio by the row-cap probability, which is at most one. This introduces no normalization cost.
+\end{proof}
+
+For an uncapped first row, apply the scalar placement law to its $D$ entries at precision $r/(12D)$. Its feature error is at most $r$ and its density ratio is at most
+$\exp\{CD\log[CD(B+8)/r]\}$. For a capped first row use Lemma~\ref{lem:row} with $F=D$, absorbing its coordinate factors in the same bound.
+
+Define
+\[
+ \mathcal J(\epsilon)=J\log N+
+ C Q_0\log\{CD(B+8)Q_0/\epsilon\}.
+\]
+\begin{lemma}[Additive-KL midpoint transfer]
+\label{lem:transfer}
+For every probability law $Q\ll\pi_{N,H}$ of finite KL and every $0<\epsilon\le1$, there is a law $Q_g$ and a coupling of $F\sim Q$, $F'\sim Q_g$ such that
+\[
+ \KL(Q_g\|\pi_{N,H})\le\KL(Q\|\pi_{N,H})+\mathcal J(\epsilon),
+ \qquad
+ \|F'-(F+g)/2\|_\infty\le3V/N+\epsilon.
+\]
+\end{lemma}
+\begin{proof}
+For fixed source parameters define downstream influences
+\[
+ p_H=|v|,\qquad p_\ell=|W^{\ell+1}|^T p_{\ell+1}.
+\]
+The row caps imply $\sum_jp_{\ell,j}\le1$. Independently choose an ordered $m_\ell$-tuple of distinct slots uniformly in each layer. The expected total selected influence is at most $V/N$. Condition the tuple law, for each fixed source, on this total being at most $2V/N$. Markov's inequality makes its probability at least $1/2$. This preserves the source marginal and costs at most $\log2$ relative to the source times the unconditioned tuple law.
+
+Overwrite every selected hidden row with its teacher insertion law. Use local precision $r=c\epsilon/Q_0$. Selected teacher features approximate their intended values inductively: each intended row has absolute sum at most one, background absolute mass is bounded by $C_1r$, and all actual features are bounded by one. The accumulated error is at most $CQ_0r$.
+
+Halve source readout entries outside the selected final slots. In the selected slots insert designated coefficients centered at $(1-\eta_\mathrm{out})v^g_j/2$, with $\eta_\mathrm{out}\ge24m_Hr$. Their total norm plus the surviving half-readout is at most one. Their teacher contribution approximates $g/2$ to error $CQ_0r$.
+
+To bound the source contribution, overwrite selected hidden layers in increasing order while temporarily keeping the original readout. Each selected feature changes by at most two, and all later layers at that step still have their original weights. Its output effect is therefore bounded by twice the corresponding original influence. Half this changed source output differs from $F/2$ by at most the total selected influence. Deleting the selected final readout slots adds at most half their original influence. The total is at most $3V/N$ on the selected event. Choosing $c$ sufficiently small proves the function bound.
+
+It remains to bound KL. Apply the same overwrite kernel to the reference prior times the unconditioned uniform tuple law, and call its output law $R$. Data processing gives
+$\KL(Q_g\|R)\le\KL(Q\|\pi_{N,H})+\log2$.
+For a fixed placement, the erased old hidden rows are independent of the surviving rows under the reference. Their replacements have the row density bounds above. In the readout, marginalizing erased coordinates costs at most the inverse original cap normalizer. Halving surviving coordinates costs at most $2^{c_0}$ by Lemma~\ref{lem:scalar}. Inserting the teacher coefficients costs $N^{m_H}$ times precision factors. Because the resulting readout is capped, conversion to the target capped density cancels the old normalizer. Thus the output density for one placement is bounded by
+\[
+ C N^E\exp\{CQ_0\log[CD(B+8)/r]\}
+\]
+times the prior density.
+
+Average over placements. Their number is
+$\prod_\ell(N)_{m_\ell}\ge(N/2)^V$, since $N\ge2\max m_\ell$.
+At any realized output, every capped parent row has at most $1/r$ coordinates of magnitude greater than $r$. Every designated teacher edge has this magnitude. Starting at the readout, explore the fixed teacher graph backwards. Each relevant hidden vertex is reached; repeated shared children must agree on their index. At most $r^{-E}$ ordered edge choices can specify compatible placements. This bound also applies if there are extra marked native coordinates. Hence
+\[
+ \left\|\frac{dR}{d\pi_{N,H}}\right\|_\infty
+ \le C N^{E-V}\exp\{CQ_0\log[CD(B+8)Q_0/\epsilon]\}.
+\]
+The KL chain rule proves the assertion after increasing its fixed constant.
+\end{proof}
+
+\begin{lemma}[Direct teacher localization]
+\label{lem:localization}
+For every $0<\epsilon\le1$ there is a data-independent law $\rho_{g,\epsilon}$ supported on $\|f-g\|_\infty\le\epsilon$, with
+$\KL(\rho_{g,\epsilon}\|\pi_{N,H})\le\mathcal J(\epsilon)$.
+\end{lemma}
+\begin{proof}
+Choose unconditioned uniform teacher placements. Replace selected hidden rows by the same insertion laws, leave every unselected hidden row native, and replace the entire readout by Lemma~\ref{lem:row} with the full teacher readout as its target. Background readout mass is then at most $C_1r$, so it contributes at most $C_1r$ to the output. The previous induction yields uniform error at most $CQ_0r$; take $r=c\epsilon/Q_0$.
+
+For each placement the density bound is the same $N^E$ bound, now with no survivor scaling. Every designated parent row is capped and every designated edge is marked. The same backward decoding and placement count leave $N^{E-V}$ and the precision factor. This is an upper density bound relative to the prior, so its logarithm bounds the KL. The construction depends on the teacher and precision, not on the sample.
+\end{proof}

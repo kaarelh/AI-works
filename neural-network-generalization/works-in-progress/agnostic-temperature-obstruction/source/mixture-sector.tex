@@ -1,0 +1,88 @@
+\section{Arbitrary mixtures of temperatures also fail}
+\label{sec:mixtures}
+Individual risk lower bounds need not survive averaging predictors. Here an additional geometric property of Gaussian readout posteriors gives a common linear witness, so they do survive.
+
+\begin{lemma}[The Gaussian-readout sector]
+\label{lem:sector}
+Fix a training sample with label vector $y\in\R^n$. Suppose the readout has an independent centered Gaussian prior, conditional on all preceding parameters, and the likelihood is Gaussian with any positive scalar observation variance. The ordinary posterior mean's training prediction vector $f$ satisfies
+\[
+ y^{\mathsf T}f\ge\|f\|_2^2,\qquad \|f\|_2\le\|y\|_2.
+\]
+Arbitrary mixtures of such prediction vectors satisfy the same inequalities. If $|y_i|\le1$, coordinatewise clipping $f$ to $[-1,1]$ also preserves the first inequality.
+\end{lemma}
+\begin{proof}
+Conditional on the hidden features, let $K$ be the training covariance induced by the Gaussian readout and let $\nu>0$ be the likelihood variance. The conditional posterior mean prediction is $Sy$, where
+\[
+ S=K(K+\nu I)^{-1},\qquad 0\preceq S\preceq I.
+\]
+Thus $y^{\mathsf T}Sy\ge\|Sy\|_2^2$. Averaging over the posterior of hidden parameters preserves the inequality by Jensen; it also preserves $f=Ay$ for a matrix $0\preceq A\preceq I$, proving the norm bound. The same argument applies to any further mixture. For clipping, each coordinate with $|f_i|>1$ increases the quantity $y_if_i-f_i^2$ by
+\[
+ (|f_i|-1)(|f_i|+1-y_i\operatorname{sign}f_i)\ge0.
+\]
+\end{proof}
+
+\begin{lemma}[A common separator for mixtures]
+\label{lem:separator}
+Let $D_X$ have finite support, with atom probabilities $p_x>0$, and let $g$ be a regression function on that support. Fix a training sample and suppose its target vector $g_S=(g(X_i))_i$ obeys $y^{\mathsf T}g_S=\|g_S\|_2^2$. Let a family of predictors $f_\theta$ satisfy the sector inequality of Lemma~\ref{lem:sector} and
+\[
+ \frac1n\|f_\theta(S)-g_S\|_2^2\ge c>0
+ \qquad\text{for every }\theta.
+\]
+Define
+\[
+ h(x)=\frac1{np_x}\sum_{i:X_i=x}\bigl(Y_i-2g(x)\bigr),\qquad V=\|h\|_{L^2(D_X)}^2.
+\]
+Then every probability mixture $F=\int f_\theta\,d\pi(\theta)$ has
+\[
+ \|F-g\|_{L^2(D_X)}^2\ge c^2/V.
+\]
+The mixing measure may depend arbitrarily on the sample. The prediction integral is automatically finite at observed atoms; any extension to unobserved atoms preserves the lower bound.
+\end{lemma}
+\begin{proof}
+The sector inequality and the assumption on $g_S$ give
+\[
+ \|f_\theta(S)-g_S\|_2^2
+ \le(y-2g_S)^{\mathsf T}(f_\theta(S)-g_S).
+\]
+Dividing by $n$ expresses the right side as $\langle h,f_\theta-g\rangle_{L^2(D_X)}$. It is therefore at least $c$ for every $\theta$, and averaging preserves that linear inequality. Integrability on observed atoms follows from the common training norm bound. Since $h$ vanishes on unobserved atoms, their predictions do not affect the inequality. Cauchy--Schwarz now gives the result; in particular $V>0$ whenever the hypotheses hold. If a proposed extension has infinite squared risk, the lower bound is immediate.
+\end{proof}
+
+The separator lemma only uses a finite-support target and a training-vector property. It does not rely on tanh, Gaussian hidden weights, or a particular likelihood temperature. It also accommodates an approximate identity $y^{\mathsf T}g_S-\|g_S\|_2^2\le n\Delta$: replace $c$ in the conclusion by $c-\Delta>0$.
+
+\begin{corollary}[Failure of arbitrary raw-posterior mixtures]
+\label{cor:mixtures}
+Under Theorem~\ref{thm:main}, for sufficiently large even $n$, with probability at least
+\[
+ 1-2e^{-n^{1/3}/2}-2e^{-n/320}-1/n,
+\]
+every probability mixture of the ordinary raw posterior means over the allowed widths, prior scales, and likelihood temperatures has excess risk at least $1/200000$. The mixing measure may be chosen after seeing the data. The conclusion also holds when each component prediction is clipped to $[-1,1]$ before mixing, or when the mixture includes both raw and individually clipped components.
+\end{corollary}
+\begin{proof}
+Add two conditions to the occupancy event \eqref{eq:occupancy}: the two inner signal atoms each occur at least $qn/8$ times, and the noisy atom counts satisfy $\sum_j k_j^2\le4n$. Each inner count has mean $qn/4$, so a multiplicative Chernoff bound gives total extra failure at most $2e^{-nq/32}=2e^{-n/320}$.
+
+For the second condition, let $C=\sum_j\binom{k_j}{2}$ count pairs at the same noisy atom. Then $\sum_jk_j^2\le n+2C$ and $\E C\le p^2n/2\le n/2$. Disjoint collision indicators are independent. Indicators sharing one observation have covariance $p^3(1-p)/n^2$, so
+\[
+ \operatorname{Var}(C)\le n\{p^2/2+p^3(1-p)\}<n.
+\]
+Consequently $\Pp(\sum_jk_j^2>4n)\le\Pp(C-\E C>n)\le1/n$ by Chebyshev.
+
+Every allowed raw mean has empirical squared error against $g$ at least $n/160$. In the small-temperature branch, its weighted noisy prediction norm is at least
+\[
+ n\left(\sqrt{1/3}-\sqrt{1/5}\right)^2>n/160.
+\]
+The teacher is zero there. In the large-temperature branch, the inner-pair half-difference is at most $1/2$, so the sum of the two squared errors is at least $1/2$. Each atom occurs at least $qn/8$ times, giving empirical total at least $qn/16=n/160$. Both arguments also apply to each individually clipped raw mean.
+
+Here $y^{\mathsf T}g_S=\|g_S\|_2^2$ holds coordinatewise: the teacher is zero on noise atoms and equals the observed label on signal atoms. For the separator in Lemma~\ref{lem:separator}, the noise contribution to $V$ is
+\[
+ \frac1{pn}\sum_j\left(\sum_{i:X_i=(0,z_j)}Y_i\right)^2
+ \le\frac1{pn}\sum_jk_j^2\le4/p.
+\]
+The signal contribution is at most
+\[
+ \frac4{n^2q}\sum_{j\text{ signal}}k_j^2g_j^2
+ \le\frac{4n_s^2}{n^2q}\le16q,
+\]
+using $|g_j|\le1$ and $n_s\le2qn$ for sufficiently large $n$. Thus $V\le4/p+16q<7$. The separator lemma with $c=1/160$ gives excess at least $1/(25600\cdot7)=1/179200>1/200000$. Lemma~\ref{lem:sector} justifies the individually clipped components too. Since $g$ is the true conditional mean, squared prediction distance is exactly excess squared risk.
+\end{proof}
+
+This covers, in particular, a Bayesian hyperprior over likelihood temperature followed by its ordinary posterior mean, provided the component networks stay within the stated width and prior-scale ranges. It also covers arbitrary validation-based choices of mixture weights. It does not assert the same sector property for the mean of individually clipped posterior \emph{draws}; that is a distinct prediction convention.

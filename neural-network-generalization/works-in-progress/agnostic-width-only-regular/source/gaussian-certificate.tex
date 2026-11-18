@@ -1,0 +1,137 @@
+\section{A bounded output used in likelihood and prediction}
+\label{sec:saturated-specialization}
+This section gives a separate learner convention. Put
+\[
+ c(t)=\max\{-1,\min\{t,1\}\},\qquad f_w(x)=c(z_w(x)),
+\]
+where $z_w$ is the ReLU network with $H$ hidden layers and total affine depth $L=H+1$, evaluated at $\xi=(1,x)/\sqrt D$, $D=d+1$. The output $f_w$, rather than $z_w$, is used in both the Gaussian likelihood and prediction. At width $N$, keep independent centered Gaussian variances $\tau^2/D$, $\tau^2/N$, and $\tau^2/N^2$ in the first, internal, and linear readout layers. Here $0<\tau\le1$ and $\omega=N/\tau^2$. For labels $|Y|\le1$, define
+\[
+ \Pi_{S,\lambda}(dw)=Z_S(\lambda)^{-1}
+ e^{-\omega\widehat R_S(f_w)/(2\lambda)}\mu_{N,\tau}(dw),
+ \qquad
+ F_S(\lambda)=-\frac{2\lambda}{\omega}\log Z_S(\lambda).
+\]
+Thus the Gaussian observation variance is $n\lambda/\omega$. The prediction is the ordinary posterior mean of the bounded network output,
+\[
+ \widehat f_S(x)=\int f_w(x)d\Pi_{S,\lambda}(w).
+\]
+This is generally different from clipping the posterior mean of the unsaturated $z_w$.
+
+Set the activation constant $A=1$ and define the operator-norm quantity
+\[
+ K(w)=\max\{128,\|W^1\|_F^2/N,\|W^2\|_{\rm op}^2,\ldots,
+                 \|W^H\|_{\rm op}^2,N\|v\|^2\}.
+\]
+The elementary Gaussian estimates give
+\[
+ \mu(K>k)\le(H+1)e^{-\omega k/16},\qquad
+ \log\E_\mu e^{\omega K/32}\le\omega B_H,
+ \quad B_H=4+\log(H+2),
+\]
+for $k\ge128$. Here is a direct derivation. The first-layer quantity has law $\chi^2_{ND}/(D\omega)$, and the readout quantity has law $\chi^2_N/\omega$. Gaussian chi-square Chernoff bounds, with $N/\omega\le1$, give exponential tails at these thresholds. For an internal matrix, the Gaussian spectral-norm inequality
+\[
+ \Pr\{\|W^\ell\|_{\rm op}>(2\sqrt N+t)/\sqrt\omega\}
+ \le2e^{-t^2/2}
+\]
+gives the same tail after taking $t=\sqrt{\omega k}-2\sqrt N$. A union bound and $k\ge128$ yield the displayed bound with its safe constants. Integrating this tail against $(\omega/32)e^{\omega k/32}$, with the deterministic lower cutoff $128$, gives the exponential-moment bound and the stated $B_H$.
+
+Every raw network in the norm ball has input Lipschitz constant at most $k^{L/2}$: multiply the first Frobenius norm, the internal operator norms, and the readout norm; the factors $\sqrt N$ and $1/\sqrt N$ cancel. The fixed feature map has Lipschitz constant at most one. Its saturated output has the same Lipschitz bound and amplitude at most one. A grid on $Q$ of mesh $a/(4\sqrt d\,k^{L/2})$, with function values quantized in steps $a/2$, therefore yields the deterministic uniform-cover bound
+\begin{equation}
+ \log\mathcal N(a,\{f_w:K(w)\le k\},\|\cdot\|_\infty)
+ \le C_{d,H,A} k^{dL/2}a^{-d}\log\frac{C_{d,H,A}k}a.
+ \label{eq:saturated-cover}
+\end{equation}
+Nearest-grid-point extensions of the quantized values give centers in $[-1,1]$, and their squared losses are bounded by four. Conditional symmetry of the centered Gaussian readout and oddness of $c$ give $\E_\mu f_w(x)=0$. Hence
+\[
+ \E_\mu\widehat R_S(f_w)\le2,\quad
+ \E_\mu R(f_w)\le2,\quad R(f_w)^2\le16.
+\]
+
+Put
+\[
+ \rho_d=(d+2)/2,\qquad
+ p=\max\{d+2,dL/2\},\qquad q=p-\rho_d,\qquad r=p/\rho_d\ge2,
+\]
+\[
+ b_n=\max\{16,4\log[(2+4\sqrt{H+1})n^3]\},\qquad
+ \theta_n=C_{d,H,A}\log^6(2n/\delta)/n.
+\]
+The constant is fixed sufficiently large before sampling. When
+$\theta_n b_n^p5^q\le1$, select the unique positive root
+\begin{equation}
+ \lambda_S^p=\theta_n[2F_S(\lambda_S)+\lambda_S b_n]^q.
+ \label{eq:saturated-calibration}
+\end{equation}
+Otherwise use the deterministic fallback $\lambda_S=2\omega$.
+
+\begin{theorem}[A saturated Gaussian posterior certificate]
+\label{thm:saturated-certificate}
+On one event of probability at least $1-\delta/2$, simultaneously for every $N\ge1$ and every $0<\tau\le1$, whenever the root branch is used,
+\begin{equation}
+ R(\widehat f_S)\le\int R(f_w)d\Pi_{S,\lambda_S}(w)
+ \le F_S(\lambda_S)+2B_H\lambda_S+n^{-3}.
+ \label{eq:saturated-certificate}
+\end{equation}
+This right side is observable from the specified prior and data. On the fallback branch the deterministic certificate $2e^{1/2}$ is valid instead. Neither branch uses teacher resources or risk.
+\end{theorem}
+\begin{proof}
+The root argument uses only $0\le F\le2$ and monotonicity of $F/\lambda$, so it gives a unique measurable root with $1/n\le\lambda\le1/b_n$. Put $u=2F(\lambda)+\lambda b_n$; then $16\lambda\le u\le5$.
+
+For $J=\widehat R_S(f_w)+\lambda K(w)/16$, the event $J>u$ lies in $\{\widehat R_S>u/2\}\cup\{K>8u/\lambda\}$. The prior risk bound handles the first set and Cauchy--Schwarz with $R^2\le16$ and the Gaussian norm tail handles the second. After dividing by the posterior normalizer, their total raw bounded-output risk is at most
+\[
+ (2+4\sqrt{H+1})\exp[\omega F/(2\lambda)-\omega u/(4\lambda)]
+ \le n^{-3}.
+\]
+
+For completeness, the statistical exponent changes because the loss range is now constant. Prebuild dyadic norm shells $k$ through $160n$ and dyadic cover accuracies through a sufficiently small constant times $1/n$. Apply finite-class Bernstein to every deterministic cover in \eqref{eq:saturated-cover}, allocating total failure $\delta/2$. On $J\le u$, choose $K\le k\le2K\le32u/\lambda$ and an accuracy within a factor two of $a_*=c\lambda k/\sqrt u$. All such choices lie in the prebuilt finite list, for a sufficiently small fixed $c>0$.
+
+The cover center has empirical risk at most a constant times $u$. Its leading Bernstein deviation and the population/empirical root-risk transfer are at most $\lambda k/32$ provided
+\[
+ n\ge C_{d,H,A}\log^6(2n/\delta)\,
+ u^{\rho_d}\lambda^{-2\rho_d}k^{dL/2-2\rho_d}.
+\]
+The linear Bernstein term is absorbed using $\lambda k\le32u$. If $dL/2\ge2\rho_d$, maximize at $k\le32u/\lambda$; otherwise use $k\ge128$. The resulting condition is exactly
+$n\ge C_{d,H,A}\log^6(2n/\delta)u^q\lambda^{-p}$, which follows from \eqref{eq:saturated-calibration}. Thus every network in the good-objective region satisfies
+$R(f_w)\le\widehat R_S(f_w)+\lambda K(w)/16$ on the same event for all widths and scales.
+
+Integrate this inequality, extend its nonnegative empirical-plus-norm terms to all parameters, and add the tail. Gaussian entropy duality gives
+\[
+ \lambda\E_\Pi K/16\le(2\lambda/\omega)\operatorname{KL}(\Pi\Vert\mu)+2B_H\lambda.
+\]
+The variational identity for $F$ proves \eqref{eq:saturated-certificate}, and Jensen gives the posterior-mean claim. On the fallback branch, prior risk at most two gives $Z\ge e^{-1/2}$ and posterior-average risk at most $2e^{1/2}$.
+\end{proof}
+
+\begin{corollary}[Comparison with bounded outputs of small networks]
+\label{cor:saturated-oracle}
+Let $g$ be any fixed bounded-output comparison network. Suppose a deterministic resource $A_{g,n}\ge1$ satisfies, for every data set and every $\lambda\ge1/n$,
+\[
+ F_S(\lambda)\le\widehat R_S(g)+\lambda A_{g,n}
+\]
+throughout the eligible widths and prior scales. The selective Gaussian measure of Section~\ref{sec:selective-standalone} supplies exactly this comparison. Define
+\[
+ \mathcal B_{g,n}=(A_{g,n}+b_n+2B_H+1)[1+\log(8/\delta)].
+\]
+Then, on one event of probability at least $1-\delta$, simultaneously for every eligible width and scale,
+\begin{equation}
+ R(\widehat f_S)\le R(g)+C_{d,H,A}\left[
+ \mathcal B_{g,n}R(g)^{1-1/r}\theta_n^{1/p}
+ +\mathcal B_{g,n}^r\theta_n^{1/\rho_d}\right]+n^{-3}.
+ \label{eq:saturated-oracle}
+\end{equation}
+The event is uniform over every width and scale for which the deterministic comparison holds. At bounded comparison risk, a sufficient sample count for excess $\varepsilon\in(0,1)$ is
+$\widetilde O((\mathcal B_{g,n}/\varepsilon)^p)$.
+\end{corollary}
+\begin{proof}
+The proof uses the stated free-energy comparison.
+
+The root equation, split according to which of $2\widehat R(g)$ and $(2A_{g,n}+b_n)\lambda$ is larger, yields
+\[
+ \lambda\le C_{d,H,A}\left[
+ \theta_n^{1/p}\widehat R(g)^{1-1/r}
+ +\theta_n^{1/\rho_d}(2A_{g,n}+b_n)^{r-1}\right].
+\]
+Substitute in the certificate. Bernstein for the bounded teacher loss, followed by
+$\sqrt{RD}\le R^{1-1/r}D^{1/r}+D$ with $D=\mathcal B_{g,n}^r\theta_n^{1/\rho_d}$, gives \eqref{eq:saturated-oracle} with leading coefficient one. To see the absorption explicitly, Bernstein gives $\widehat R(g)\le R(g)+c\sqrt{R(g)D}+cD$, because $D$ dominates the scalar concentration term. The displayed inequality absorbs its square root into the two oracle remainders. Also $\widehat R(g)\le2R(g)+cD$, so raising it to $1-1/r$ and multiplying by $D^{1/r}$ gives only those same two remainders. The leading coefficient on $R(g)$ remains one.
+
+If the root branch's condition fails, $\mathcal B_{g,n}^r\theta_n^{1/\rho_d}>5^{-q/\rho_d}$, so enlarging the fixed constant absorbs the fallback certificate. The sample claim follows because $p=r\rho_d\ge2\rho_d$: $n$ of order $(\mathcal B/\varepsilon)^p$ controls the first term and also the second, whose requirement is only $n$ of order $\mathcal B^p\varepsilon^{-\rho_d}$, up to logarithms.
+\end{proof}

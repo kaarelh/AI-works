@@ -1,0 +1,147 @@
+\section{Growing comparison range under marginal sub-Gaussian labels}
+\label{sec:asinh-growing-range}
+The readout restriction in Corollary~\ref{cor:asinh-neural} can also be
+used through a bounded-output compiler. The compiler's range may grow
+slowly with the sample count, without changing the native prior.
+
+\begin{lemma}[Readout comparison at a prescribed range]
+\label{lem:asinh-growing-comparison}
+In the asinh-readout model, let a same-depth tanh comparator have
+width at most $m\le N$, hidden coefficient cap $B\ge1$, final hidden
+width $k$, readout variation at most $M$, and output bias at most $M$,
+where $M\ge1$. For every $0<r\le1$ there is a sample-independent
+comparison law supported on $\{\|z_w\|_\infty\le6M\}$ with
+uniform squared approximation error at most $r$ and entropy at most
+\[
+ C Q_g\log\frac{C(m+1)(B+2)(M+1)W}{r}
+             +C(k+1)\exp[C(M+1)],
+\]
+where
+\[
+ W=(H+2)\{C(d+m+2)(B+2)\}^{H+2}.
+\]
+All constants are independent of $N,H,d,m,B,M,r$.
+The same readout replacement applies to a comparison obtained from a
+compiler whose hidden features already satisfy the required
+population-error bound and are bounded by one.
+\end{lemma}
+\begin{proof}
+Put $L=\sum_j|v_j|$. If $L>0$, choose selected latent gate centers
+$w_j=(|v_j|+L/k)/(2L)$; if $L=0$, use $w_j=1/k$.
+Then $w_j\ge1/(2k)$ and $|v_j|/w_j\le2M$.
+Use the same gate and marker construction as in
+Lemma~\ref{lem:asinh-comparison}, with inactive normalized mass at
+most $C\eta^2$. Selected factor centers are in $[-2M,2M]$ and the
+bias center is in $[-M,M]$. On their intervals of radius $\eta\le1$,
+\[
+ -\log r(u)\le C\exp[C(M+1)].
+\]
+Thus their entropy costs add at most
+$C(k+1)\{\log(C/\eta)+\exp[C(M+1)]\}$.
+The selected effective coefficient sum is at most
+$L+C\eta(L+1)$, and the bias magnitude is at most $M+\eta$.
+
+Before any further conditioning, the expected inactive uniform
+absolute contribution is at most $C\eta^2$, since
+$|h_j^H|\le1$ and $\E|U_j|<\infty$.
+Condition this contribution's upper bound
+$\sum_{j\,\mathrm{inactive}}P_j|U_j|$ to be at most $\eta$.
+For sufficiently small fixed $\eta$, this event has comparison
+probability at least one half. The conditioned raw output is bounded
+by $2M+C\eta(M+1)+\eta\le6M$.
+If a law $\rho$ is conditioned on an event of probability $a\ge1/2$,
+the entropy partition identity gives
+\[
+ \KL(\rho(\cdot\mid E)\|\mu)
+ \le\{\KL(\rho\|\mu)+\log2\}/a
+ \le2\KL(\rho\|\mu)+2\log2.
+\]
+Its integrated squared approximation error increases by at most two.
+Choose $\eta=\sqrt r/[C(m+1)(M+1)(B+2)W]$.
+The selected hidden-feature errors, final coefficient discrepancies,
+and inactive contribution then give the stated uniform error.
+Substituting this precision proves the entropy bound. The argument
+also works with a population-error hidden compiler: all final
+coefficients are controlled uniformly and the same last-layer error
+estimate can be integrated over the input distribution.
+\end{proof}
+
+\begin{lemma}[Clipping a comparator only for the proof]
+\label{lem:asinh-proof-clipping}
+For any squared-integrable labels, write $f_0(X)=\E[Y\mid X]$.
+For every real predictor $g$ and range $M>0$,
+\[
+ R(\operatorname{clip}_{[-M,M]}g)
+ \le R(g)+\E(|f_0(X)|-M)_+^2
+ \le R(g)+\E(|Y|-M)_+^2.
+\]
+If $\E e^{Y^2/K_Y^2}\le2$ and
+$M=\max\{1,K_Y\sqrt{12\log(n+2)}\}$, the final term is at most
+$C_{K_Y}(n+1)^{-10}$.
+\end{lemma}
+\begin{proof}
+For any real $a,t$,
+\[
+ (\operatorname{clip}_{[-M,M]}t-a)^2-(t-a)^2
+       \le(|a|-M)_+^2.
+\]
+For $t>M$ the left side is a concave quadratic in $t$ with maximum
+$(a-M)_+^2$ on that half-line; the case $t<-M$ is symmetric, and
+inside the interval it is zero. Integrate this inequality at
+$a=f_0(X)$; the conditional label variance cancels exactly.
+The function $a\mapsto(|a|-M)_+^2$ is convex, so conditional Jensen
+gives the second inequality. Finally
+\[
+ \E[Y^2\mathbf1_{\{|Y|>M\}}]
+       \le2(M^2+K_Y^2)e^{-M^2/K_Y^2},
+\]
+by the exponential-square hypothesis and tail integration.
+This proves the asserted bound, including bounded small sample counts
+by enlarging the constant.
+\end{proof}
+
+\begin{corollary}[Marginal labels and bounded-output compilation]
+\label{cor:asinh-growing-compiler}
+Assume only $\E e^{Y^2/K_Y^2}\le2$ and use the fixed asinh-readout
+prior with its raw temperature $T_n\asymp\log^2(n+2)$.
+Let $M=\max\{1,K_Y\sqrt{12\log(n+2)}\}$.
+Suppose a deterministic comparison law $\rho_{n,g}$ is supported
+on raw outputs of magnitude at most $6M$, has entropy at most
+$\mathcal B_n(M)$, and satisfies
+\[
+ \E_X\E_{\rho_{n,g}}
+   [z_w(X)-\operatorname{clip}_{[-M,M]}g(X)]^2
+              \le(n+1)^{-8}.
+\]
+Then, after fixing a sufficiently large temperature constant depending
+only on the native prior and $K_Y$,
+\[
+ \E R(\bar z_{S_n})\le R(g)
+      +\frac{C\log^2(n+2)}{n+1}\mathcal B_n(M)
+      +C(n+1)^{-2}.
+\]
+In particular an additive readout-comparison cost
+$k\exp(CM)$ is $k n^{o(1)}$ at fixed label envelope. This yields an
+$n^{-1+o(1)}$ statistical factor whenever the remaining compiler
+resource is polynomial in width and logarithmic precision.
+The actual learner neither clips labels nor clips outputs; clipping
+occurs only in constructing the deterministic comparison.
+\end{corollary}
+\begin{proof}
+Increasing the fixed constant $c$ in the raw log-moment theorem makes
+its analytical cutoff $M_n=eA\log(e+c(n+1))$ at least $6M$ for
+all $n$. This is possible since a logarithm eventually dominates its
+square root, and the constant covers the remaining finite range.
+Use the supported-comparison clause of
+Theorem~\ref{thm:logmoment-raw-oracle}.
+Cauchy--Schwarz gives
+\[
+ \rho_{n,g}R-R(\operatorname{clip}_{[-M,M]}g)
+ \le(n+1)^{-8}
+       +2(n+1)^{-4}\sqrt{R(\operatorname{clip}_{[-M,M]}g)}
+ \le C_{K_Y}(n+1)^{-2},
+\]
+since the clipped comparator has magnitude at most $M=O(\sqrt{\log(n+2)})$.
+Apply Lemma~\ref{lem:asinh-proof-clipping} to finish.
+Finally $\exp(CM)=\exp[O_{K_Y}(\sqrt{\log(n+2)})]=n^{o(1)}$.
+\end{proof}

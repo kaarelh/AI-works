@@ -1,0 +1,56 @@
+\section{A growing output range for sub-Gaussian labels}
+\label{sec:unbounded-mean-transfer}
+The main theorems keep the conditional mean in a known bounded interval and permit unbounded observation noise. A different normalization removes that uniform mean bound when the labels have a known marginal sub-Gaussian tail. It preserves the polynomial sample exponents, while allowing the output range and likelihood variance to grow logarithmically.
+
+Assume only
+\[
+ \Pr(|Y|>t)\le2e^{-t^2/(2s_Y^2)}\quad(t\ge0)
+\]
+for a known $s_Y>0$. Define
+\[
+ T_n=\max\{1,s_Y\sqrt{8\log(8n/\delta)}\},
+ \qquad u_n=2s_Y(\delta/(8n))^2.
+\]
+Keep the same weight prior. Use the network mean $T_ns(z_w)$ in the likelihood and in posterior prediction. Run the bounded-label two-score procedure on the normalized observations $Y_i/T_n$ and normalized mean $s(z_w)$, with noise proxy one. This is a specified likelihood and output normalization; the mean is no longer clipped to a fixed range. The implicit branch's actual Gaussian observation variance is $32T_n^2/\eta$.
+
+\begin{corollary}[Unbounded conditional means]
+\label{cor:unbounded-mean-width}
+Let either the Boolean-input assumptions or the continuous slab assumptions hold. Let
+\[
+ f_0=\E[Y\mid X],\quad R_0=\E(Y-f_0)^2,
+ \quad A_* =\inf_{g\in\mathcal G_{C,h}}\E(g-f_0)^2.
+\]
+There is no uniform bound on $f_0$ in this corollary. Apply the corresponding main sample theorem at normalized accuracy $\varepsilon/T_n^2$, normalized noise proxy one, and failure probability $\delta/2$. Then the normalized learner above satisfies, with probability at least $1-\delta$,
+\[
+ R(\widehat f_S)\le B+6u_n\sqrt B+9u_n^2,
+ \qquad B=R_0+(1+\eta)A_*+\varepsilon.
+\]
+At fixed $s_Y$, the theorem has the same polynomial exponents in comparison width and inverse accuracy as its bounded-mean counterpart, up to logarithmic factors. The prescribed architecture and its independent-coordinate weight prior are unchanged.
+\end{corollary}
+\begin{proof}
+For the proof only, let $Y_T=s_{[-T_n,T_n]}(Y)$ and $f_{0,T}=\E[Y_T\mid X]$. Tail integration gives
+$\|Y-Y_T\|_2\le u_n$, and a union bound shows that the original and clipped training samples coincide with probability at least $1-\delta/2$.
+On that event their normalized free energies, both scores, selected variance and posterior are exactly equal.
+
+The normalized clipped label $Y_T/T_n$ lies in $[-1,1]$, so its centered conditional noise is sub-Gaussian with proxy at most one. Its mean is also bounded by one. The relevant main theorem applies. Scaling a ReLU teacher's readout by $1/T_n$ does not change its width or depth, and no original coefficient bound is imposed. Multiplying normalized risks by $T_n^2$ therefore gives
+\[
+ R_T(\widehat f_S)\le R_{0,T}+(1+\eta)A_{*,T}+\varepsilon,
+\]
+where $R_T$ is risk against $Y_T$, $R_{0,T}=\E(Y_T-f_{0,T})^2$, and $A_{*,T}$ is the best comparison-class squared distance to $f_{0,T}$.
+
+Conditional expectation is an orthogonal projection in $L^2$. Both it and its complementary projection are contractions, so
+\[
+ \|f_0-f_{0,T}\|_2\le u_n,
+ \qquad |\sqrt{R_0}-\sqrt{R_{0,T}}|\le u_n,
+ \qquad \sqrt{A_{*,T}}\le\sqrt{A_*}+u_n.
+\]
+The last inequality follows by taking a deterministic sequence approaching the approximation infimum. Combining the two nonnegative risk components by the Euclidean triangle inequality gives
+\[
+ \sqrt{R_T(\widehat f_S)}
+ \le\sqrt{R_0+(1+\eta)A_*+\varepsilon}
+          +\sqrt{2+\eta}\,u_n.
+\]
+A final $L^2$ triangle inequality changes the test label from $Y_T$ back to $Y$, at cost at most $u_n$. Since $1+\sqrt{2+\eta}<3$, squaring proves the result. The two exceptional events total at most $\delta$.
+
+Finally $T_n^2=O_{s_Y}(\log(n/\delta))$. Replacing the normalized accuracy by $\varepsilon/T_n^2$ adds only powers of logarithms to the displayed sample bounds. On the Boolean domain it also changes the compiler precision logarithm only by $O(\log T_n)$; on the continuous domain its explicit precision power contributes another logarithmic factor. No exponent in comparison width or inverse accuracy changes.
+\end{proof}

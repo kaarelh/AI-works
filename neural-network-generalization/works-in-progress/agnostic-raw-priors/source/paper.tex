@@ -1,0 +1,222 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsthm,mathtools,booktabs,microtype}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue]{hyperref}
+\hypersetup{pdftitle={Raw-output Bayesian learning with continuous shrinkage priors},pdfauthor={ChatGPT-6 Astra; Claude Opus 5.5; Kaarel Hänni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}[section]\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}
+\newcommand{\KL}{\operatorname{KL}}\newcommand{\nm}{\mathrm}
+\title{Raw-output Bayesian learning\\with continuous shrinkage priors}
+\author{ChatGPT-6 Astra \and Claude Opus 5.5 \and Kaarel H\"anni \and
+Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{17 November 2026}
+\begin{document}\maketitle
+\begin{abstract}
+We prove learning guarantees for the ordinary posterior mean of one
+finite dense neural network, using unrestricted real-valued outputs in
+both a Gaussian likelihood and prediction. The continuous shrinkage
+prior is fixed independently of sample count; there is no prior over
+network sizes. Our principal model uses Student hidden edge factors,
+Gamma neuron gates, tanh activations, and a Gaussian readout with a
+Dirichlet allocation of its variances. With marginal sub-Gaussian labels,
+its expected risk is at most the risk of any smaller comparison network
+plus $\widetilde O(K/\sqrt n)$, uniformly over every larger learner width.
+The resource $K$ is polynomial in comparison width, depth and input
+dimension, logarithmic in hidden coefficient magnitudes, and quadratic
+in readout variation. This agnostic theorem uses likelihood temperature
+of order $\sqrt n$.
+
+A realizable noisy target needs no growing temperature: at any fixed
+$T\ge8\sigma^2+1$, posterior-averaged raw risk is at most the noise floor
+plus $\widetilde O((K^2+TK)/n)$, also with a high-probability version.
+A separate calibrated oracle separates approximation error from irreducible
+noise. For exactly Gaussian observation noise, a further polynomial
+guarantee uses the exactly matched likelihood variance, without tempering. With only a finite second label moment, an empirical-variance
+calibration yields a slower polynomial agnostic rate. An independent-coordinate
+variance-gamma alternative gives an agnostic $n^{-1/3}$ remainder in
+formula complexity, and fixed-depth versions cover ReLU and GELU.
+A further full-support readout with very light tails gives a
+$\widetilde O(K/n)$ expected oracle at logarithmic-squared temperature
+for comparisons with bounded readout variation; a high-probability
+version has approximation coefficient $1+\eta$. Adding one bounded
+final hidden layer extends this construction to arbitrary Lipschitz
+prefixes, including ReLU and GELU, with a resource polynomial jointly
+in comparison width and depth and logarithmic in coefficient bounds.
+The latter bound adds an $n^{-1+o(1)}$ term when only marginal
+sub-Gaussian label control is assumed.
+The proofs use native output tails and auxiliary bounded priors solely
+for analysis; the actual likelihood, prior and returned predictions
+remain untruncated. These priors differ from ordinary independent
+Gaussian weights, and no efficient posterior computation is asserted.
+\end{abstract}
+
+\section{The approximation question}
+An agnostic neural-network oracle compares learned test risk with the
+best smaller neural network, rather than assuming that a simple target
+is exactly realizable. The natural real-valued prediction is the ordinary
+posterior mean. Bounding or clipping that prediction makes several
+statistical arguments easier, but changes the learning rule. Here both
+the likelihood and prediction use the unrestricted linear readout.
+
+The priors are independent of sample count once the architecture is fixed. The principal model combines positive Gamma gates shared by outgoing
+hidden weights, Student hidden edge factors, and a normalized Gaussian
+readout allocation. Auxiliary models use Gaussian hidden factors or
+leave the final gate allocation unnormalized.
+Their gates are continuous and every finite architecture remains dense
+almost surely. Sharing a gate makes reusing an intermediate computation
+inexpensive. This is a change from a product Gaussian prior, not a
+robustness condition on the networks it supports.
+
+The principal agnostic conclusion is an expectation over IID training samples; the realizable, known-risk-budget, and optional very-light-readout results also have high-probability versions. The
+likelihood temperatures are specified before observing labels except in
+the finite-variance theorem, where the empirical label second moment is
+an explicit part of the calibration. They use every training observation.
+There is no holdout, randomized checkpoint, model-size mixture, or
+clipped returned predictor.
+
+One further architecture choice yields a nearly inverse-sample oracle
+for a depth-$h$ comparison network with any globally Lipschitz prefix,
+including ReLU, GELU or tanh. The learner has that prefix, one additional
+hardtanh or ReLU6 hidden layer, and the unbounded sinh-normal readout.
+At arbitrary input distributions its resource is jointly polynomial in
+width, depth and dimension and logarithmic in the coefficient cap.
+The final hidden layer, rather than the returned prediction, is bounded.
+With the normalized Gaussian readout instead, the same architecture
+has a $\widetilde O(K/\sqrt n)$ agnostic bound and a fast
+fixed-temperature realizable bound. Appendix~\ref{sec:final-bounded-hidden} gives the exact architecture,
+comparison construction, and the marginal-label qualification.
+
+\input{main-raw-theorem}
+
+\section{A Gaussian-factor variant and notation}
+Let inputs have any distribution on $\mathcal X\subseteq[-1,1]^d$.
+For the auxiliary Gaussian-factor family used in several later results, the prescribed learner has hidden depth $H\ge1$ and width $N$ in every
+hidden layer. Fix $0<\kappa\le1$ and a globally Lipschitz activation
+$\phi$. Draw all gates and factors independently:
+\[
+ S_j^\ell\sim\operatorname{Gamma}(\kappa/N,1),\qquad G\sim N(0,1).
+\]
+There are Gaussian biases at every hidden layer and at the readout.
+The model is
+\begin{align*}
+ h_i^1(x)&=\phi\left(G_{i0}^1+\sum_{j=1}^dG_{ij}^1x_j\right),\\
+ h_i^\ell(x)&=\phi\left(G_{i0}^\ell+
+       \sum_{j=1}^NS_j^{\ell-1}G_{ij}^\ell h_j^{\ell-1}(x)\right),\\
+ z_w(x)&=G_0^{\rm out}+\sum_{j=1}^NS_j^HG_j^{\rm out}h_j^H(x).
+\end{align*}
+The prior on latent variables is denoted by $\mu_N$; its pushforward is
+the actual weight prior. Outgoing weights share their source gate and
+are dependent. There is no exact sparsity or hard bound on any weight.
+The total gate mass in a layer is $\operatorname{Gamma}(\kappa,1)$
+for every learner width.
+
+For a sample $S_n$, the raw Gaussian-likelihood posterior is
+\[
+ d\Pi_S(w)=Z_S^{-1}
+ e^{-\sum_{i=1}^n(z_w(X_i)-Y_i)^2/T_S}\,d\mu_N(w),
+ \qquad\bar z_S(x)=\int z_w(x)\,d\Pi_S(w).
+\]
+The observation variance is $T_S/2$. We write
+$R(f)=\E(f(X)-Y)^2$. Comparison networks have the same activation
+and hidden depth, widths at most $m\le N$, and coefficients bounded
+by $B\ge1$. They may share intermediate computations arbitrarily.
+The precise resource $\mathcal K_n(g)$ is given in
+\eqref{eq:raw-comparison-resource}; its coarse order is
+\[
+ [(d+1)m+Hm^2]\,[H\log((d+m)B)+\log n+B^2].
+\]
+No unknown comparator parameter enters the learner's likelihood.
+
+\paragraph{The main rates.}
+For bounded Lipschitz hidden activations, including tanh, the unnormalized
+gate model has raw mean remainder $\widetilde O(\mathcal K_n n^{-1/4})$
+under marginal sub-Gaussian labels, at $T_n\asymp n^{3/4}$.
+The normalized Gaussian readout has remainder
+$\widetilde O(\mathcal K_n^{\rm dir}n^{-1/2})$ at
+$T_n\asymp\sqrt n$. Its additional comparison cost is
+$O(m_H^2B^2)$. These constants do not hide an exponential depth factor.
+The normalized and unnormalized Gaussian-readout bounds impose no comparator output cap: outside the analytical cutoff, the comparison resource itself dominates a uniform reference-risk bound. The finite-variance versions need no comparator
+output cutoff and have the explicit polynomial statistical terms below.
+
+\input{raw-comparison}
+\input{raw-moments}
+\input{raw-truncation-transfer}
+\input{relative-dictionary}
+\input{raw-sieve-transfer}
+\input{gaussian-compression}
+\input{raw-assembly}
+
+For the next section write $P=P_g$, $V=V_g$, and $Q=Q_g$ for the
+comparison counts from Section~\ref{sec:raw-comparison}.
+\input{dirichlet-readout}
+\input{normalized-readout-compression}
+\input{student-hidden-compression}
+\input{dirichlet-oracle}
+\input{variance-gamma}
+\input{vg-oracle}
+\input{zero-comparison}
+\input{bounded-noise-oracle}
+\input{optimistic-raw-temperature}
+\input{fixed-temperature-realizable}
+\input{fixed-temperature-population}
+\input{matched-gaussian-likelihood}
+\input{power-readout-tradeoff}
+\input{power-oracle}
+\input{asinh-readout}
+\input{asinh-growing-range}
+\input{asinh-high-probability}
+\input{asinh-marginal-high-probability}
+
+\section{Interpretation and limits}
+The raw-output conclusions are statistical guarantees for exact
+posteriors. They do not assert that sampling the posterior is efficient.
+The fixed-temperature realizable theorem controls posterior-averaged
+risk, while the principal leading-one agnostic theorem controls the ordinary
+posterior mean. The additional very-light-readout law gives a
+nearly inverse-sample expected oracle and a coefficient-$1+\eta$
+high-probability posterior-average oracle. Its teacher comparison
+requires bounded readout variation, or pays an explicit exponential
+cost in that variation. This is a different fixed readout law, not an
+improvement for the unchanged normalized Gaussian readout.
+The independent-coordinate alternative uses variance-gamma increments at the readout and permits polynomial-tail L\'evy hidden coordinates. It has the same raw-output conclusion with exponent $1/3$, and its cost is polynomial in the actual formula expansion.
+
+The comparison cost controls circuit-like implementation resources,
+while all learner-width dependence cancels. For example, at fixed input
+dimension, coefficient cap, and depth, the Gaussian-gate sub-Gaussian
+bound permits comparison width $o(n^{1/8})$ up to logarithms; the
+normalized readout permits $o(n^{1/4})$. A single learner competes with
+all deterministic comparators at once in the sense that their infimum
+can be taken in the expected-risk bound. Its prescribed width must be
+at least that of the comparator.
+
+Tempering is part of the result. Individual observations have increasing
+Gaussian variance, while the total likelihood strength $n/T_n$ still
+diverges. The finite-variance calibration also depends on the observed
+label second moment. The general agnostic theorem does not cover every fixed likelihood
+variance. For a realizable regression function with conditional
+sub-Gaussian noise, Theorem~\ref{thm:fixed-temperature-realizable}
+does give a fast raw-risk bound at a fixed sufficiently large variance.
+For exactly Gaussian noise, Section~\ref{sec:matched-gaussian-likelihood}
+also proves a slower polynomial bound at the exactly matched variance. The auxiliary bounded priors and clipped dictionary centers
+appear only in proofs; neither modifies the stated learner.
+
+\paragraph{Related work.}
+Shared-neuron scale priors and their sparse wide-network limits are established Bayesian constructions; see Lee and coauthors~\cite{lee-dependent}. Dense heavy-tailed network priors also have posterior-contraction theory~\cite{castillo-egels}. We do not claim novelty for continuous shrinkage or variance-gamma laws themselves. The fixed-temperature generalized-risk step follows the standard fractional-posterior and R\'enyi-risk method~\cite{fractional}; we do not claim novelty for that generic method. The bounded-prior leave-one-out argument follows the strategy of H\o gsgaard, Rebeschini and Wegel~\cite{hogsgaard}; the finite-variance extension and the transfers to actual unrestricted raw posteriors are proved here.
+
+The proofs have undergone independent AI-agent mathematical review.
+They have not been formalized in Lean. The verification record identifies
+the exact reviewed modules and their scope.
+\appendix
+\input{final-bounded-hidden}
+
+\begin{thebibliography}{9}
+\bibitem{lee-dependent} H. Lee, F. Ayed, P. Jung, J. Lee, H. Yang, and F. Caron. Deep Neural Networks with Dependent Weights: Gaussian Process Mixture Limit, Heavy Tails, Sparsity and Compressibility. \emph{Journal of Machine Learning Research} 24(289), 1--78, 2023.
+\bibitem{castillo-egels} I. Castillo and P. Egels. Posterior and Variational Inference for Deep Neural Networks with Heavy-Tailed Weights. \emph{Journal of Machine Learning Research} 26(122), 1--58, 2025.
+\bibitem{fractional} Anirban Bhattacharya, Debdeep Pati, and Yun Yang. Bayesian fractional posteriors. \emph{The Annals of Statistics} 47(1), 39--66, 2019. \url{https://doi.org/10.1214/18-AOS1712}.
+\bibitem{hogsgaard} M. M. H\o gsgaard, P. Rebeschini, and T. Wegel. Aggregation with Exponential Weights is Optimal in Expectation. arXiv:2607.02247, 2026.
+\bibitem{sinh-normal} J. R. Rieck and J. R. Nedelman. A Log-Linear Model for the Birnbaum--Saunders Distribution. \emph{Technometrics} 33(1), 51--60, 1991. \url{https://doi.org/10.1080/00401706.1991.10484769}.
+\end{thebibliography}
+\end{document}

@@ -1,0 +1,185 @@
+\section{Separating teacher precision from extra learner depth}
+\label{sec:bounded-reset-padding}
+For ReLU and a clipped observation, the scalar output can be clipped
+inside the comparison network before the extra layers. The two
+carried features are then bounded, even if the teacher coefficients
+are large. Different relay layers can use different comparison
+precisions. Their cost need not multiply the teacher coefficient
+logarithm by learner depth.
+
+\begin{theorem}[Bounded reset and layer-specific relay precision]
+\label{thm:bounded-reset-padding}
+Let a ReLU teacher have hidden depth $h$, width $m$, coefficient cap
+$B\ge1$, and rooted formula size $S$. Its observed output is
+$g=s(z_g)$, where $s$ clips to $[-1,1]$.
+Use the fixed small-intensity L\'evy fan-in prior, and prescribe any
+learner depth $H\ge h$ and width $N\ge\max(m+1,3)$.
+Put
+\[
+ L=(h+3)\log\{A(d+1)(m+1)(B+8)\},
+ \qquad S_0=S+h+1,
+\]
+and
+\begin{align}
+ \mathcal J_n^{\mathrm{reset}}
+ =A\bigl\{&(d+1)S_0
+       [L+\log\{A(S_0+H+1)(n+1)\}]\notag\\
+ &+H\log\{A(S_0+H+1)(H+1)(n+1)\}+L^2\bigr\}.
+ \label{eq:reset-resource}
+\end{align}
+For the same conditionally sub-Gaussian label assumptions and fixed
+likelihood temperature as the sharp all-data expectation theorem,
+\begin{equation}
+ \E R(\bar f_{S_n})
+ \le R(g)+\frac{A(1+\sigma^2)(1+\mathcal J_n^{\mathrm{reset}})}{n+1}.
+ \label{eq:reset-oracle}
+\end{equation}
+The constant $A$ depends only on the fixed L\'evy law. In particular,
+the term proportional to extra learner depth contains no factor
+$\log B$. Large teacher coefficients enter through the teacher term
+and the additive $L^2$ term.
+\end{theorem}
+\begin{proof}
+We give a data-independent comparison law with expected uniform raw
+error at most $r$ and entropy bounded by the right side of
+\eqref{eq:reset-resource}, replacing $n+1$ by $1/r$.
+The expected-risk result then follows with $r=(n+1)^{-1}$.
+
+\emph{An exact bounded reset.}
+Carry a constant-one feature through the original $h$ layers, adding
+at most one neuron per layer. After the teacher computation add
+\[
+ a=\operatorname{ReLU}(z_g+1),\quad
+ b=\operatorname{ReLU}(z_g-1),\quad u=1,
+\]
+and then
+\[
+ q_+=\operatorname{ReLU}(a-b-u),\qquad
+ q_-=\operatorname{ReLU}(-a+b+u).
+\]
+Because $a-b-u=s(z_g)$, these two features lie in $[0,1]$ and
+$q_+-q_-=g$. This uses two extra hidden layers, width at most
+$\max(m+1,3)$, coefficients bounded by $B+1$, and rooted formula
+size at most $A(S+h+1)$. The constant paths and the fixed number of
+copies of the teacher formula account for this count.
+If $H<h+2$, use the original comparison directly; since the number
+of extra layers is at most one, its entropy is already bounded by
+\eqref{eq:reset-resource}. Thus assume $H\ge h+2$ and write
+$q=H-h-2$.
+
+\emph{Teacher block.}
+Apply the existing uniform comparison construction through the reset
+block at a common precision $\eta_0=r e^{-A L}$, with a sufficiently
+large numerical multiplier in $A L$. Its expected uniform error at
+each selected reset feature is at most $r/100$. Its selected-feature
+first moments are therefore at most two. Its average native-and-selected
+first moment is at most some deterministic $U\ge1$ with
+\begin{equation}
+ \log U\le A L.
+ \label{eq:reset-bulk-envelope}
+\end{equation}
+These are the same absolute-path first-moment bounds used in the
+uniform comparison proof. The entropy paid by the teacher block is
+at most
+\[
+ A(d+1)(S+h+1)
+       [L+\log\{A(S+h+q+1)/r\}].
+\]
+The group-size logarithm already permits all later relay occurrences.
+
+\emph{Relay block.}
+Let $T_\ell$ be the largest expected uniform absolute value of either
+selected relay feature, and let
+$P_\ell=N^{-1}\sum_j\E\sup_x|h_j^\ell(x)|$.
+At the end of the reset, $T_0\le2$ and $P_0\le U$.
+Write $\rho=\int|u|\mathfrak n(du)\le1/4$.
+For $q\ge1$, choose deterministic layer precisions
+\begin{equation}
+ \eta_\ell=\frac{c r}{q[1+U\rho^{\ell-1}]},
+ \qquad 1\le\ell\le q,
+ \label{eq:variable-relay-precision}
+\end{equation}
+with a sufficiently small fixed $c$. They are at most $1/8$.
+The designated coefficient-one law then has positive support and
+mean one, hence expected absolute value one. Its expected deviation
+from one is at most $A\eta_\ell$. Background coordinates have
+expected absolute value at most $A\eta_\ell/N$. Unselected rows
+remain native. Independence from preceding features gives
+\begin{align}
+ T_\ell&\le T_{\ell-1}+A\eta_\ell P_{\ell-1},\notag\\
+ P_\ell&\le\rho P_{\ell-1}+2T_\ell.
+ \label{eq:variable-relay-moments}
+\end{align}
+Induction, using \eqref{eq:variable-relay-precision}, gives
+\[
+ T_\ell\le3,\qquad P_\ell\le8+U\rho^\ell.
+\]
+Indeed, the second bound follows from the first and the geometric
+sum, and the total increase in the first is at most
+$A\sum_\ell\eta_\ell(8+U\rho^{\ell-1})\le8Acr\le1$.
+
+If $e_\ell$ is the maximum expected uniform error from the ideal
+reset feature, Lipschitzness and independence give
+\[
+ e_\ell\le e_{\ell-1}
+       +A\eta_\ell(T_{\ell-1}+P_{\ell-1}).
+\]
+The total error increase is at most $Acr$. Use the final readout
+coefficients $1,-1$ at precision
+$c r/[1+U\rho^q]$ and the corresponding background law.
+The readout adds another $O(cr)$ error. After choosing $c$ small,
+the expected uniform raw error is at most $r$. For $q=0$, apply the
+same readout prescription directly after the reset.
+
+\emph{Entropy and width cancellation.}
+The proof of the disjoint-embedding entropy identity works with a
+different known cutoff at each layer: the parent row's cutoff
+identifies each designated incoming edge. Thus the $\log N$ costs
+still cancel against embedding location entropy. In the small-width
+branch, the shared reset-and-relay network fits, and $\log N$ is
+bounded by the logarithm of its total formula resource.
+There are two selected relay rows per layer, each with one designated
+coefficient bounded by one. Their total entropy, including the final
+readout, is at most
+\begin{equation}
+ A(q+1)\log\frac{A(S+h+q+1)(q+1)}r
+       +A\sum_{\ell=0}^{q}\log(1+U\rho^\ell).
+ \label{eq:relay-entropy-sum}
+\end{equation}
+The elementary geometric estimate
+\begin{equation}
+ \sum_{\ell\ge0}\log(1+U\rho^\ell)
+       \le A_\rho[1+\log^2(1+U)]
+ \label{eq:geometric-log-sum}
+\end{equation}
+follows by splitting at
+$\ell=\lceil\log U/\log(1/\rho)\rceil$: before this index use
+$\log(1+v)\le\log2+\log v$ for $v\ge1$, and afterward use
+$\log(1+v)\le v$. Combine
+\eqref{eq:reset-bulk-envelope}--\eqref{eq:geometric-log-sum}
+with the teacher-block entropy. This is the resource
+\eqref{eq:reset-resource} with $n+1=1/r$.
+The observation clipping cannot enlarge the uniform error. Since
+the conditional mean and observed predictions lie in $[-1,1]$,
+comparison risk increases by at most $4r$. The sharp all-data
+expectation theorem proves \eqref{eq:reset-oracle}.
+\end{proof}
+
+\paragraph{Why a fixed tiny cutoff is unnecessary.}
+The large teacher block may leave a large average native background
+$U$. It contracts geometrically in subsequent untouched rows. Only
+the early relay layers need precision inversely proportional to this
+background. The sum of those precision logarithms is quadratic in
+$\log U$, independent of the number of later layers. The prior itself
+is unchanged; all layer-specific cutoffs belong to a comparison law.
+
+
+\paragraph{Width conventions.}
+If the teacher already carries a constant-one feature through its
+hidden layers, the extra width-one allowance is unnecessary: the
+construction uses width at most $\max(m,3)$. If its raw output is
+already bounded by one, the two-channel compiler itself is a bounded
+reset; no constant wire or two-stage clipping gadget is needed, and
+width $N\ge m$ suffices (using the width-one special case when needed).
+These variants have the same resource bound, with adjusted numerical
+constants.

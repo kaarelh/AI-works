@@ -1,41 +1,82 @@
-# Limits of temperature tuning for Gaussian Bayesian neural networks
+# Deep Bayesian tanh networks can learn a shallow teacher slowly
 
-**[Paper (PDF)](paper.pdf) · [Source](source/paper.tex) · [Verification](verification/README.md)**
+[Paper (PDF)](paper.pdf) · [LaTeX source](source/paper.tex) · [Verification record](verification/README.md)
 
-Authors: ChatGPT-6 Astra, Claude Opus 5.5, Kaarel Hänni, Dmitry Vaintrob. Authors are listed in alphabetical order.
+A very wide Gaussian Bayesian tanh network can learn slowly on one fixed regression problem even when the true conditional mean is the shallow one-neuron function `tanh(x₁)`. Choosing a likelihood temperature from the data, or averaging arbitrary temperature-dependent posterior means, does not remove the obstruction.
 
-For a dense Gaussian Bayesian learner with a Gaussian squared-error likelihood, this paper constructs **one data law on which every likelihood temperature has a constant excess risk**. The conclusion is simultaneous over all sufficiently large learner widths, so choosing the temperature or width after seeing the data does not repair the example.
+## Main result
 
-The labels have a bounded-weight neural network as their exact conditional mean. Inputs have fixed coordinate range and covariance eigenvalues in `[1/20,1]`. The difficulty comes from combining a noisy component that is cheap to memorize with a steep signal component that is expensive in weighted parameter norm. A shifted Gaussian comparison law keeps the original covariance, compensates the Gaussian bulk through a scalar tanh recursion, and gives the mean-field extension. Posterior operator-norm moments control the competing high-temperature branch.
+Fix a hidden learner depth `H≥3` and any exponent `β>2/H`. There is a fixed input law on a unit sphere in a fixed finite dimension, with nondegenerate covariance, and independent Gaussian observation noise of variance `1/16`, such that:
 
-## Quantitative result
+- The regression function is `g(x)=tanh(x₁)`, with a width-one, one-hidden-layer implementation and unit coefficients.
+- On the data support it also has an exact implementation at the learner's depth, with width two and coefficient cap four.
+- Almost surely along a deterministic sample subsequence `n_j`, every learner width `N≥n_j²`, every Gaussian prior scale `Nσ²≤1`, and every positive likelihood temperature has excess squared risk at least `n_j^(−β)`.
+- The same lower bound holds for arbitrary data-dependent mixtures of their **ordinary raw posterior means**.
+- The result still holds after adding an independent broad Gaussian affine output component, including an output bias and direct linear input features.
 
-There are `H≥2` hidden tanh layers and a linear readout. At sample counts `n=2^k`, ambient dimension is `d=k+2`. The teacher has width at most `n^a` and weights at most `n^b`, where
+The actual Gaussian likelihood family contains the true observation-noise variance. This is therefore a correctly specified regression example. Each component learner has one fixed dense architecture. The lower bound also permits averaging over eligible widths and prior scales.
+
+The conclusion excludes a sample bound polynomial jointly in input dimension, learner depth, and inverse excess accuracy for this family, uniformly over sufficiently large widths. It does not exclude a polynomial bound at each fixed depth.
+
+## Exponential depth cost at inverse-polynomial accuracy
+
+There are universal positive constants `c,C` such that, for every sufficiently large hidden learner depth `H`, a uniform input law in dimension `d=4H+2` has the same shallow regression function and independent Gaussian noise, but after
 
 ```text
-H a + (H+1)b > (H+1)/(2H),   a>0, b≥0.
+n = 4 · 256^H
 ```
 
-With probability at least `1−2 exp(−n^(1/3)/2)`, every positive temperature and every learner width above
+observations, all allowed raw posterior-mean mixtures still have excess at least `c H^(−6)` with probability at least 90%, at every learner width `N≥exp(C H)`. The constants may depend on the fixed covariance cap for optional affine output priors. Thus even inverse-polynomial excess accuracy can require exponentially many examples as learner depth grows. The teacher remains shallow and has width one.
+
+This finite-depth theorem uses a distribution indexed by `H`; the next theorem fixes the distribution once `H` is chosen and then lets sample size tend to infinity. Neither asserts an exponential lower bound at one fixed positive excess accuracy.
+
+## Explicit slow-rate exponents
+
+For an auxiliary fixed grid dimension `D`, define
 
 ```text
-N_*(n) = O_H(n^a + (log n)^3 n^(1+1/H))
+ρ = max(2/D, (1+2/D)/H),
+κ = (1+2/D)(2−1/H).
 ```
 
-give test MSE at least `1/100` above the Bayes-optimal teacher, for all sufficiently large `n`. This smaller width threshold covers every actual canonical finite prior `σ²=N^(-γ)` with `γ≥2`, as well as the strong-prior limit. **Every canonical exponent `γ≥1`, including mean field, is covered without a limit** at the enlarged threshold `N_**(n)=O_H(n^a+n²(log n)^5)`. This covers posterior-averaged risks, the ordinary raw-output posterior mean, and the stated clipped prediction conventions.
+When `ρ<1/2`, the fixed-law Gaussian-noise construction gives excess at least `n_j^(−2ρ−o(1))`, uniformly at learner widths above `C n_j^κ log(n_j)`. The dimension is `d=D+2`.
 
-For equal width and weight exponents, the failure condition is `a>(H+1)/(2H(2H+1))`; the existing positive bound works for `a<1/(4H)`. With a fixed coefficient bound, the corresponding negative and positive thresholds are `(H+1)/(2H²)` and `1/(2H)`. The gaps remain open. A self-contained appendix proves that the tanh memorizer already has the optimal energy exponent `n^(1/H)`, up to logarithms, even if first-layer weights are free. It gives a high-probability lower bound on the random noisy singleton labels as well as a worst-case statement.
+A concrete choice is `D=4H`, giving:
 
-A fixed-width version uses a width-2 teacher with coefficient cap `n^b`, where `b>1/(2H)`. Thus a width-only oracle guarantee without a coefficient restriction fails for this learner family. The dimension still grows logarithmically with sample count.
+```text
+d = 4H+2,
+2ρ = 2/H + 1/H²,
+κ = 2 − 1/(2H²) < 2.
+```
 
-Scaling all labels and teacher readouts gives the same obstruction at any fixed positive Bayes squared risk `ν≤9/10`, with excess at least `ν/90`. This is a small-noise-variance statement, not a small label-flip-probability statement.
+Thus every width `N≥n_j²` eventually lies in the claimed range. Increasing the fixed dimension makes the lower-rate exponent arbitrarily close to `2/H`.
 
-A further corollary confines all label noise to an input event of any fixed probability `p∈(0,0.9]`. Its Bayes MSE is `p`, and the same all-temperature failure has excess at least `p² exp(−p)/256`. Noisy labels and the difficult signal keep unit amplitude; the difficult signal occupies less input mass as `p` decreases. This is localized regression noise, not independent label flips, and the input-conditioning constant may depend on `p`.
+## Other results in the paper
+
+A simpler construction gives constant excess in two dimensions for a width-two teacher with coefficient cap growing faster than `n log n`. The input covariance stays nondegenerate, and every likelihood temperature fails at every sufficiently large finite width.
+
+A Fourier construction recovers the sharper teacher-growth obstruction
+
+```text
+H a + (H+1)b > (H+1)/(2H)
+```
+
+for width `n^a` and coefficient cap `n^b`, in a fixed dimension chosen from the strict exponent gap. Its inputs also lie on a unit sphere. In particular, every `b>1/(2H)` has a fixed-dimensional width-two counterexample.
+
+The constant-excess mixture theorem covers raw posterior means and clipping each raw mean before mixing. The fixed-law slow-rate theorem with affine output components and Gaussian labels concerns **raw means only**. Means of clipped posterior draws are a different prediction convention.
+
+## Model and mechanism
+
+The independent Gaussian variances are `Nσ²/d` in the first layer, `σ²` in subsequent hidden layers, and `σ²/N` in the readout. The Gaussian likelihood variance is `nλσ²`. The range `Nσ²≤1` includes every canonical exponent `γ≥1` through `σ²=N^(−γ)`. No width or prior-strength limit is taken.
+
+Small temperatures fit noisy singleton observations using a deep-network memorizer. Larger temperatures shrink the nonlinear part of the prediction. Conditional Gaussian readout formulas give a common linear witness for the error, which also rules out cancellation by mixtures. Nested rare grid blocks make the obstruction occur on one fixed law along a sample subsequence.
 
 ## Scope
 
-At the canonical scales `σ²=N^(-γ)` with `γ≥1`, the theorem is simultaneous over all widths above the corresponding threshold, all exponents, and all positive temperatures. These choices may depend on the data. For other scales, the sufficiently-small-prior statement gives one threshold at each fixed sample and width that works for **all** temperatures, including temperatures depending on the prior scale; that threshold is not asserted to be uniform over widths. A mixture across temperatures followed by averaging predictions is not covered.
+The fixed input law is countably supported. No claim is made for a smooth input density. The lower bound tends to zero, so it is a slow-learning result rather than an inconsistency result. Its width range grows with sample count; it does not concern keeping one finite learner architecture fixed while taking arbitrarily many samples.
 
-The data law and teacher vary with `n`, and the inputs are real-valued rather than entirely Boolean. This limits distribution-uniform oracle bounds for this learner family and comparator-growth range; it does not rule out consistency for one fixed distribution or all polynomial-width oracle guarantees. A prior-support restriction changes the learner and may avoid the example.
+The explicit finite-depth theorem gives an exponential sample lower bound at **inverse-polynomial accuracy**, with input dimension linear in learner depth. It does not establish an exponential-depth lower bound at one fixed positive accuracy or at a dimension fixed as depth grows. Restricting the learner's prior support or adding prior features that already represent the true nonlinear regression function changes the setting.
 
-This paper has conventional proofs and independent AI-agent mathematical review. It is not Lean verified. Run `./build.sh` to rebuild the PDF with TeX Live.
+The manuscript has independent AI-agent mathematical reviews and a reproducible LaTeX build. It is not Lean verified or externally peer reviewed.
+
+Authors, in alphabetical order: ChatGPT-6 Astra, Claude Opus 5.5, Kaarel Hänni, and Dmitry Vaintrob.

@@ -1,0 +1,138 @@
+% Research module: a uniform function comparator for every 0 < Ns <= 1.
+\section{A uniform function comparison across all subcritical prefactors}
+\label{sec:all-prefactor-function-comparison}
+Inflating only the first-layer covariance removes the degeneration of the native feature kernel at very small prefactors. The remaining construction pays the same depth baseline as the joint entropy floor.
+
+\begin{theorem}[A baseline-plus-amplitude finite-function comparison]
+\label{thm:all-prefactor-function-comparison}
+There are absolute constants $A_0,c,C>0$ such that the following holds. Let $H$ be sufficiently large, $D\ge1$, $d=D+2$, and
+\[
+ E=D+\log H\le cH,
+ \qquad 0<\nu\le1,\quad \beta=1-\nu,\quad s=\nu/N.
+\]
+For every function $f:\mathcal U_D\to[-A,A]$ with $0<A\le A_0$, every tolerance $0<\tau<1$, and every width
+\[
+ N\ge C\tau^{-C}H^C e^{CD},
+\]
+there is a comparison law satisfying
+\begin{align*}
+ 2s\operatorname{KL}(\rho\|\mu_s)
+ &\le \kappa(\nu)(H+d)+4\|f\|_\infty+CA^2
+           +C\left\{\beta E+\frac{E^2}{H}\right\},\\
+ \left(\E_\rho\max_{x\in\mathcal U_D}|z_w(x)-f(x)|^2\right)^{1/2}
+ &\le\tau,
+\end{align*}
+where $\kappa(\nu)=1-\nu+\nu\log\nu$. All constants are uniform over the entire interval $0<\nu\le1$.
+\end{theorem}
+\begin{proof}
+\emph{First-layer encoding.}
+Draw the first-layer entries with variance $1/d$, rather than their native variance $\nu/d$. Their normalized relative entropy is exactly
+\[
+ \frac{2\nu}{N}\frac{N(d+1)}2
+       \{\nu^{-1}-1-\log(\nu^{-1})\}
+       =(d+1)\kappa(\nu).
+\]
+The Gaussian feature kernel on $\mathcal U_D$ has minimum eigenvalue at least $\Lambda=e^{-40(D+1)}$, and its common diagonal is $q_1=F(2/d)\asymp1/(D+1)$. Let $\zeta_D=\sqrt\Lambda/2$. With probability arbitrarily close to one at the stated width, the empirical kernel is at least half this kernel and the diagonal is uniformly close to $q_1$. On this good event choose a measurable unit direction realizing
+\[
+ e_1^{\mathsf T}h^1(x)/\sqrt N=\zeta_Du(x)
+\]
+for each prescribed seed $u(x)\in[-1,1]$. The minimum-norm/nullspace construction proves this exactly. On the bad event choose an arbitrary fixed unit direction. We do not condition the first-layer distribution. Consequently its entropy is exactly the displayed covariance-inflation cost, while the bad event is handled in the final expected-error estimate.
+
+\emph{A controlled burn and growing prefix.}
+At an internal layer write $W=\nu R^2$ for the effective directional variance. The scalar recursion is
+\[
+ v=\nu q+(W-\nu)r^2,\qquad q'=F(v),\qquad
+ r'=\sqrt W\,r(1-q').
+\]
+First use $W=1$, equivalently $R^2=1/\nu$, for $\lfloor H/4\rfloor$ transitions. Since $v\le q$, the variance is bounded above by the canonical native recursion. Hence $q\le C/H$ after this burn and $\sum q\le C\log H$ during it. Also $r'=r(1-q')$, so the endpoint seed correlation remains at least $\exp[-C(D+\log H)]$, independently of $\nu$. In particular, the logarithmic variance and coherence deficits are both $O(E)$, since $q\ge r^2$ and $q\le1$.
+
+Put $a=KE/H$ for a sufficiently large absolute $K$, and choose $c$ so that $a$ is small. During the growing stage use $W=1+a$. Then
+\[
+ v=\nu q+(a+\beta)r^2\le(1+a)q,
+\]
+which gives the invariant upper bound $q\le C_1a$. For $\theta=r^2/q$,
+\[
+ \theta'=\frac{(1+a)\theta}{\nu+(a+\beta)\theta}
+                  \frac{v(1-F(v))^2}{F(v)}.
+\]
+The last factor is between $1-Ca^2$ and one. While $\theta\le1/2$, the first factor improves it by at least $1+ca$; therefore it reaches one half within $CE/a$ steps. At that point it stays bounded away from zero, and its deficit obeys
+\[
+ 1-\theta'\le[1-c(a+\beta)](1-\theta)+Ca^2.
+\]
+Thus, after at most $C\log H/a$ more steps, $1-\theta\le Ca$, and also
+\[
+ 1-\theta\le \frac{a}{4(a+\beta)}.
+\]
+For the latter bound, the stationary error $Ca^2/(a+\beta)$ is smaller than the requested threshold at small $a$; the relaxation time is at most $C/a$, since $\log(1+\beta/a)/(a+\beta)\le C/a$. The two bounds can be required simultaneously by taking the larger of their relaxation times.
+
+With this coherence, $v/q=1+a-(a+\beta)(1-\theta)\ge1+3a/4$. Whenever $q$ is below a sufficiently small multiple of $a$, the quadratic lower drift of $F$ gives $q'\ge(1+ca)q$. The correlation cannot have lost more than $CE$ in its logarithm during the preceding growing steps: the coherence stages just established use only $CE/a$ transitions, and each loses at most $Ca$ in the logarithm. The constant in this $O(E)$ loss is independent of the later choice of $K$. Hence $q\ge e^{-CE}$ throughout those steps, and it reaches $ca$ in another $CE/a$ transitions. Increasing $K$ makes all these stages finish before time $3H/4$. The bounds
+\[
+ ca\le q\le Ca,\qquad e:=q-r^2\le Ca^2\le C'q^2
+\]
+then remain valid. Continue the growing stage until $H-1-\lceil C_0/a\rceil$ internal transitions have been allocated, reserving the last $\lceil C_0/a\rceil$ slots for padding and reverse transport. This time is after $3H/4$ at sufficiently large $H$.
+
+The normalized action of a layer with effective variance $W$ is
+\[
+ \mathcal A_\nu(W)=W-\nu-\nu\log(W/\nu).
+\]
+It equals $\kappa(\nu)$ at $W=1$, and exactly
+\[
+ \mathcal A_\nu(1+a)-\kappa(\nu)
+       =a-\nu\log(1+a)\le\beta a+a^2/2.
+\]
+Thus the prefix pays its baseline $\kappa(\nu)$ per transition plus at most $C\{\beta E+E^2/H\}$.
+
+\emph{Reverse transport and readout.}
+The exact defect identity is
+\[
+ e'=J(q')+\nu e(1-q')^2,
+ \qquad J(q)=\tfrac23q^3+O(q^4),\quad J\ge0.
+\]
+The invariant $e\le K_0q^2$ is preserved for a sufficiently large fixed $K_0$. Indeed, for a reverse step $q=F(q')$, the small-variance expansion gives $(q')^2-q^2(1-q')^2\ge3(q')^3$, whereas $J(q')\le2(q')^3$. Thus $e'\le K_0(q')^2$ for $K_0\ge2$; the factor $\nu\le1$ only helps. At a padding step $q'=q$, the same conclusion follows from $q^2[1-(1-q)^2]\ge(3/2)q^3$ after increasing $K_0$ if necessary. For a reverse step prescribe $q'=F^{-1}(q)$ and use
+\[
+ W=\nu R^2=\frac{F^{-1}(q')-\nu e}{q-e}.
+\]
+Uniformly over $\nu\in(0,1]$,
+\[
+ W-1=4q+O(q^2+\beta q),\qquad q'-q=2q^2+O(q^3).
+\]
+Expanding $\mathcal A_\nu(W)$ at $W=1$ therefore gives the upper bound
+\[
+ \mathcal A_\nu(W)
+ \le\kappa(\nu)+4(q'-q)+Cq(q'-q)+C\beta q.
+\]
+There are at most $C/q_0$ reverse steps from $q_0\asymp a$, and their variances satisfy $\sum q\le C\log H$. Their action above baseline is at most
+$4(Q-q_0)+CQ^2+C\beta\log H$.
+Padding at $q_0$ has $W-1=O(q_0)$ and costs at most $C(\beta q_0+q_0^2)$ above baseline per step. The reserved number of slots is $O(1/a)$, so padding adds only $C(\beta+a)$ above baseline.
+
+For $b=\|f\|_\infty>2q_0$, choose the reverse endpoint $Q=b/2$. The final variance is $Q+O(Q^2)$ and defect $O(Q^2)$, so readout factor $B=b/r_H(1)$ costs $B^2=2b+O(b^2)$. Reverse action above baseline plus readout cost is at most $4b+CA^2+C\beta\log H+Ca$. When $b\le2q_0$, use only holding and the readout $B=b/r_H(1)$; its additional cost is $O(\beta+a)$. All $O(a)$ terms are absorbed into $CE^2/H$, and all $O(\beta)$ terms into $C\beta E$. The scalar endpoint is continuous and odd in its seed, so the intermediate value theorem supplies seeds for all values of $f$.
+
+There are $H-1$ internal transitions. Adding their baseline to the first-layer cost gives exactly $\kappa(\nu)(H+d)$. The readout factor is bounded by an absolute constant on both branches.
+
+\emph{Uniform finite-width error.}
+At each internal layer draw rows with covariance
+\[
+ \frac1N[\nu I+(W_\ell-\nu)e_{\ell-1}e_{\ell-1}^{\mathsf T}],
+\]
+and define the new unit direction using its standardized Gaussian directional coordinates. All effective variances $W_\ell$ are bounded by an absolute constant, even when the relative inflation $R_\ell^2=W_\ell/\nu$ is large. Conditional concentration for the variance, correlation, and direction normalization therefore has constants uniform down to $\nu\downarrow0$. The readout mean is $Be_H/\sqrt N$ and its covariance is the native $\nu I/N^2$. Its entropy cost is exactly $B^2$ after normalization, and its expected squared maximum noise is $O(\nu\log m/N)$.
+
+For clarity, the scalar propagation estimate can also be uniform in $\nu$. In a stage with envelope $q\le Cb$ and $W=1+O(b)$, use
+\[
+ \|(\Delta q,\Delta r)\|_{b,\beta}
+ =w_{b,\beta}|\Delta q|+|\Delta r|,
+ \qquad w_{b,\beta}=\frac{K_1\sqrt b}{\beta+b}.
+\]
+Here $K_1$ is a sufficiently large fixed constant. The Jacobian entries have absolute bounds
+\[
+ \begin{pmatrix}
+ \nu & C(\beta+b)\sqrt b\\
+ C\sqrt b & 1+Cb
+ \end{pmatrix}.
+\]
+The weighted first column sum is at most
+$\nu+(C/K_1)(\beta+b)\le1+Cb$, while the second is at most $1+CK_1b$. Thus one step has weighted norm at most $1+Cb$.
+During the burn take $b_\ell=C/(1+c\ell)$, which bounds every seed variance. The total $\sum b_\ell$ is $O(\log H)$. The weight changes have total logarithmic variation $O(\log H)$, since $b_\ell$ is monotone and $w_{b,\beta}=K_1\sqrt b/(\beta+b)$. During growth take $b=a$, giving amplification at most $e^{CaH}=e^{CE}$. During the tail take $b=q_\ell^*$, the endpoint variance; every other seed satisfies $q_\ell\le Cq_\ell^*$ by quadratic drift, and $\sum q_\ell^*=O(\log H)$. Its weights again have total logarithmic variation $O(\log H)$. The finitely many initial steps outside the small-variance interval change only constants. Conversion to ordinary coordinate norms costs at most a polynomial in $H$.
+Consequently every state error is amplified by at most $H^Ce^{CD}$, uniformly in $\nu$. Enlarged envelopes and a first-exit induction justify the same estimate for empirical states. Conditional Gaussian concentration, the first-layer kernel concentration, and a union bound now give the stated width $C\tau^{-C}H^Ce^{CD}$ and expected supremum error. The bad first-layer event contributes only a bounded error times its arbitrarily small probability.
+
+Finally, the chain rule adds the first-layer covariance entropy, the deterministic action $\mathcal A_\nu(W_\ell)$ at each internal layer, and $B^2$ for the readout. The directions may depend measurably on all preceding parameters, but their covariance eigenvalues are prescribed, so the action is exact and there are no conditioning terms. This proves the theorem.
+\end{proof}

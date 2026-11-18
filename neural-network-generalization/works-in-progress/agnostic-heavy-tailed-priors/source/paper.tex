@@ -1,0 +1,232 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,mathtools,booktabs,microtype}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Agnostic learning with a fixed heavy-tailed neural-network prior},pdfauthor={ChatGPT-6 Astra; Claude Opus 5.5; Kaarel Hänni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}[section]\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}\newcommand{\Pp}{\mathbb P}
+\newcommand{\KL}{\operatorname{KL}}\newcommand{\clip}{\operatorname{clip}}
+\newcommand{\whR}{\widehat R}\newcommand{\calG}{\mathcal G}
+\title{Agnostic learning with a fixed heavy-tailed\\neural-network prior}
+\author{ChatGPT-6 Astra \and Claude Opus 5.5 \and Kaarel H\"anni \and
+Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{17 November 2026}
+\begin{document}\maketitle
+\begin{abstract}
+We prove an agnostic learning guarantee for one dense Bayesian neural network with independent heavy-tailed weights and a fixed Gaussian likelihood. The architecture is fixed, every coordinate has a continuous density, and there is no prior over network sizes. For a Student-family tail index $0<\alpha<2$, a row of fan-in $F$ uses weight scale $F^{-1/\alpha}$. Hidden activations are bounded with bounded first and second derivatives, and the linear readout is passed through a bounded output link, such as tanh or clipping. At every finite learner width above comparator width, the ordinary final posterior mean achieves the noise floor plus $(1+\eta)$ times the best smaller network's excess risk, with remainder of order $n^{-(2-\alpha)/2}$ for any fixed $\eta>0$. This allows arbitrary conditional sub-Gaussian label noise. An all-data expectation theorem has coefficient exactly one on comparator risk at the same sample-size rate. Independent Cauchy weights give $n^{-1/2}$; tail index $\alpha=1/2$ gives $n^{-3/4}$. Constants are independent of learner width and polynomial in comparator width, coefficient bound and input dimension at fixed depth. A complementary bounded-label theorem has leading coefficient exactly one, with a slower general-risk rate and an observable temperature calibration. The proof shows that the multiplicity of possible small-network implementations compensates the width-dependent probability of each designated large weight, while truncated background coordinates cancel in mean square.
+\end{abstract}
+
+\section{The question and the guarantee}
+A useful agnostic guarantee would say that, after $n$ examples, a Bayesian neural network predicts almost as well as the best smaller network whose complexity is polynomially controlled by $n$. Such a result should continue to hold when the learner is much wider than that comparator, and when the true regression function is not itself a small network.
+
+This paper gives such a guarantee for independent heavy-tailed coordinates. The learner has one dense architecture, fixed before seeing the observations. Every coordinate has an ordinary continuous prior density. The output is passed through a fixed bounded link; tanh and clipping are both allowed. Fixed Gaussian likelihood variances give two guarantees: an exact coefficient-one oracle in expectation, and a high-probability oracle with an arbitrarily small multiplicative factor on approximation error above the noise floor. For bounded labels, a separate calibrated theorem has coefficient one with high probability, at a slower general-risk rate.
+
+There are two relevant features of the prior. First, a row with $N$ coordinates offers $N$ opportunities for an order-one weight, each with probability of order $1/N$. Second, after removing those large weights, the remaining centered coordinates have a controlled sum of variances. These facts produce a neighborhood of any bounded-weight comparator with prior mass bounded below independently of learner width. Standard PAC--Bayes inequalities then suffice; no separate capacity bound for the full dense network is needed.
+
+The result is statistical. It makes no assertion that exact posterior inference, the partition function, or the temperature selection can be computed efficiently. Its dependence on teacher depth can be large. The proof uses an unrolled computation tree, whose size may be exponential in depth.
+
+\paragraph{Related work.}
+Castillo and Egels~\cite{castillo-egels} prove adaptive posterior contraction for dense ReLU networks with independent heavy-tailed weights and deterministic architectures, under prescribed architecture and shrinkage regimes. Thus dense independent heavy-tailed priors without an architecture or sparsity hyperprior are already an established approach. Our target here is a finite-sample agnostic oracle against arbitrary smaller bounded-weight networks, with constants uniform over every prescribed finite learner width above comparator width and fan-in normalization that does not depend on sample size. The model-specific step is the width-uniform function-neighborhood calculation. The distinction is not between an ordinary and a fractional Gaussian likelihood: tempering a Gaussian likelihood is equivalent to increasing its observation variance.
+
+\section{Model and main result}
+Fix input dimension $d\ge1$, hidden depth $H\ge1$, and a function $\phi\in C^2(\R)$ satisfying
+\begin{equation}
+ |\phi(t)|\le1,\qquad |\phi'(t)|\le A,\qquad
+ |\phi''(t)|\le J,\qquad A\ge1.
+ \label{eq:activation}
+\end{equation}
+Tanh is an example. Fix an output link $\psi:\R\to[-1,1]$, either $\clip_{[-1,1]}$ or a continuously differentiable function with $|\psi'|\le L_\psi$ and a $J_\psi$-Lipschitz derivative, where $L_\psi\ge1$. Thus tanh can be used in every layer. Put
+\[
+ B_\psi=\begin{cases}5,&\psi=\clip_{[-1,1]},\\
+ 4L_\psi+L_\psi^2+2J_\psi,&\text{for a smooth output link}.
+ \end{cases}
+\]
+Inputs lie in $[-1,1]^d$. For the main theorem, the Borel input-label law has regression function $f_0(x)=\E[Y\mid X=x]$ in $[-1,1]$ and conditionally centered sub-Gaussian noise $\xi=Y-f_0(X)$ with proxy $\sigma^2$: $\E[e^{t\xi}\mid X]\le e^{\sigma^2t^2/2}$ for all real $t$. Write $R_0=\E\xi^2$ for the noise floor and $R(f)=\E_D(f(X)-Y)^2$. The sample $S=((X_i,Y_i))_{i=1}^n$ is IID from $D$, with $n\ge2$. The complementary calibrated theorem below assumes bounded labels $Y\in[-1,1]$; this is a special case of the main setup with $\sigma^2=1$.
+
+For $\bar x=(1,x)$ and a fixed hidden width $N$, the dense learner is
+\begin{equation}
+ h^1=\phi(W^1\bar x),\qquad
+ h^\ell=\phi(W^\ell h^{\ell-1})\ (2\le\ell\le H),\qquad
+ z_w=v^\top h^H,\qquad f_w=\psi(z_w).
+ \label{eq:network}
+\end{equation}
+All matrices are fully connected. Biases occur in the first layer through the constant input. Section~\ref{sec:biases} discusses other biases.
+
+Fix $\alpha\in(0,2)$ and let
+\begin{equation}
+ p_\alpha(t)=c_\alpha(1+t^2)^{-(1+\alpha)/2},\qquad
+ c_\alpha=\frac{\Gamma((1+\alpha)/2)}{\sqrt\pi\,\Gamma(\alpha/2)}.
+ \label{eq:student}
+\end{equation}
+The prior $\mu_N$ makes all coordinates independent. A coordinate in a row of fan-in $F$ has law $F^{-1/\alpha}T$, where $T$ has density~\eqref{eq:student}. Thus $F=d+1$ in the first layer, and $F=N$ in internal layers and the readout. For $\alpha=1$ these are independent Cauchy weights with scales $1/(d+1)$ and $1/N$.
+
+For $\beta>0$, the posterior and its ordinary mean are
+\begin{equation}
+ d\Pi_{S,\beta}(w)=Z_{S,\beta}^{-1}
+ e^{-\beta\sum_{i=1}^n(f_w(X_i)-Y_i)^2}\,d\mu_N(w),
+ \qquad \bar f_{S,\beta}(x)=\int f_w(x)\,d\Pi_{S,\beta}(w).
+ \label{eq:posterior}
+\end{equation}
+The observation variance of this Gaussian likelihood is $1/(2\beta)$. At a given temperature it has no learner-width rescaling. The chosen output link is part of the mean in the likelihood, not merely a transformation applied after inference.
+
+Let $\calG_{m,B}$ be the class of networks with the same depth, activation, first-layer bias convention and output link, hidden width $m$, and all coefficients of absolute value at most $B\ge1$. We require $m\le N$. Set
+\begin{equation}
+ q=\frac\alpha{2-\alpha},\quad M=(m+1)^H,\quad
+ S_{m,B}=C_\alpha(1+A^2+J)(d+1)(1+AmB)^{2H},
+ \label{eq:resources}
+\end{equation}
+where the constant is sufficiently large that $S_{m,B}\ge1$, and define the explicit upper resource
+\begin{align}
+ K_{m,B}=C_\alpha M\bigg[&(B_\psi S_{m,B})^q+1\\[-2mm]
+ &+(d+1)\left\{\log\!\big(C_\alpha M(d+1)(B+6)^{1+\alpha}\big)
+ +\frac{\log(B_\psi S_{m,B})+1/q}{2-\alpha}+1\right\}\bigg].
+ \label{eq:complexity}
+\end{align}
+Increase constants so that $K_{m,B}\ge1$. At fixed $H,\alpha,A,J$, this is polynomial in $d,m,B$, up to logarithms.
+
+\begin{theorem}[A fixed-likelihood oracle above the noise floor]\label{thm:fast-oracle}
+Fix the learner width $N$ before drawing the sample, comparator width $m\le N$, coefficient cap $B\ge1$, confidence $0<\delta<1$, and approximation factor $0<\eta\le1$. Use the single fixed temperature
+\[
+ \beta=\frac{\eta}{32(1+\sigma^2)},
+ \qquad \text{Gaussian observation variance }\frac1{2\beta}
+                   =\frac{16(1+\sigma^2)}\eta.
+\]
+Put $A_* =\min_{g\in\calG_{m,B}}\{R(g)-R_0\}$. With probability at least $1-\delta$,
+\begin{align}
+ R(\bar f_{S,\beta})
+ &\le\int R(f_w)\,d\Pi_{S,\beta}(w)\\
+ &\le R_0+(1+\eta)A_*
+ +C_\alpha\left(
+ \frac{(1+\sigma^2)\{K_{m,B}+\log(2/\delta)\}}{\eta n}
+ \right)^{\frac{2-\alpha}{2}}.
+ \label{eq:fast-oracle}
+\end{align}
+The prior and likelihood are independent of $n,m,B$ and the unknown regression function. The constants are uniform over every finite $N\ge m$ and may depend on the fixed output link.
+\end{theorem}
+
+\begin{corollary}[A simultaneous structural oracle]\label{cor:structural-oracle}
+The same fixed prior and fixed likelihood satisfy~\eqref{eq:fast-oracle} simultaneously for every integer $1\le m\le N$ and integer cap $B\ge1$, after replacing $\log(2/\delta)$ by $\log(CmB/\delta)$ and increasing the constant. Consequently one may take the infimum of these bounds over all such comparator classes.
+\end{corollary}
+\begin{proof}
+Apply Theorem~\ref{thm:fast-oracle} with failure probabilities proportional to $\delta/(m^2B^2)$ and take a union bound. This is only a proof allocation: the learner has the same prior, likelihood and posterior for every comparator class.
+\end{proof}
+
+The factor $1+\eta$ multiplies approximation error above the noise floor, not irreducible label noise. In particular, if the conditional mean itself is a smaller bounded-weight network, the ordinary final posterior has excess risk of order $n^{-(2-\alpha)/2}$ even with nonzero label noise. Choosing a smaller fixed $\eta$ makes the factor as close to one as desired, at the displayed cost in sample size.
+
+\begin{theorem}[A sharp expected-risk oracle using all observations]
+\label{thm:expected-oracle}
+Keep the same prior and use the fixed temperature
+$\beta_*=1/[256(1+\sigma^2)]$, with Gaussian observation variance
+$128(1+\sigma^2)$. For every fixed comparator $g\in\calG_{m,B}$,
+\[
+ \E_{S_n}R(\bar f_{S_n,\beta_*})
+ \le R(g)+C_\alpha
+ \left(\frac{(1+\sigma^2)K_{m,B}}{n+1}\right)^{(2-\alpha)/2}.
+\]
+The constants are uniform over all finite $N\ge m$. One may take the infimum over deterministic comparators and resource classes directly. This is the ordinary final posterior trained on all observations; the guarantee is in expectation over the sample.
+\end{theorem}
+\begin{proof}
+For each $0<r\le1$, Lemma~\ref{lem:comparison} applied with bounded reference label $f_0(x)$ gives a data-independent law with risk at most $R(g)+r$ and KL at most $K_{m,B}r^{-q}$. The generic all-data expectation theorem proved in Section~\ref{sec:sharp-expectation-proof} gives
+\[
+ \E R(\bar f_{S_n,\beta_*})
+ \le R(g)+r+\frac{256(1+\sigma^2)K_{m,B}r^{-q}}{n+1}.
+\]
+Choose $r$ of order $\{(1+\sigma^2)K_{m,B}/(n+1)\}^{1/(q+1)}$ when this is at most one. Otherwise the deterministic excess-risk bound $R(f)-R_0\le4$ proves the conclusion after enlarging the constant.
+\end{proof}
+
+The exact coefficient one in this expectation theorem does not replace the high-probability scope of Theorem~\ref{thm:fast-oracle}. Both use a fixed physical likelihood variance and allow conditionally sub-Gaussian labels.
+
+\paragraph{A complementary coefficient-one guarantee.}
+For bounded labels, a different calibration gives leading coefficient exactly one, while retaining the same faster rate when comparator risk vanishes. Its general-risk rate is slower. Define the observable normalized free energy
+
+\[
+ F_{S,\beta}=-\frac1{\beta n}\log Z_{S,\beta},
+\]
+and the grid
+\[
+ \mathcal B_n=\{2^{-j}:3\le j\le\lceil\log_2(64n)\rceil\},
+ \qquad c_\beta=\frac{1-e^{-4\beta}}{4\beta}.
+\]
+Given $0<\delta<1$, let $J_n=|\mathcal B_n|$ and select any minimizer
+\begin{equation}
+ \widehat\beta\in\arg\min_{\beta\in\mathcal B_n}
+ \frac{F_{S,\beta}+\log(2J_n/\delta)/(\beta n)}{c_\beta}.
+ \label{eq:calibration}
+\end{equation}
+Ties can be broken by the grid order.
+
+\begin{theorem}[A width-uniform agnostic oracle]\label{thm:oracle}
+Assume $Y\in[-1,1]$. Fix the learner width $N$ before drawing the sample, and fix $m\le N$, $B\ge1$. Put $R_* =\min_{g\in\calG_{m,B}}R(g)$ and $T_{m,B}=K_{m,B}+\log(2J_n/\delta)$. For the prior~\eqref{eq:student} and posterior~\eqref{eq:posterior}, with probability at least $1-\delta$,
+\begin{align}
+ R(\bar f_{S,\widehat\beta})
+ &\le\int R(f_w)\,d\Pi_{S,\widehat\beta}(w)\\
+ &\le R_*+C_\alpha\left[
+ \left(\frac{T_{m,B}R_*}{n}\right)^{\frac{2-\alpha}{4-\alpha}}
+ +\left(\frac{T_{m,B}}n\right)^{\frac{2-\alpha}2}
+ \right].
+ \label{eq:main-oracle}
+\end{align}
+The constants contain no learner-width factor. The same calibration rule applies at every fixed width, using that learner's partition function; it does not use $m,B$, or the unknown law $D$.
+\end{theorem}
+
+The comparator minima exist: the parameter cube is compact, prediction is bounded and continuous in the coefficients, and the label law has a finite second moment. The probability statement holds for each finite architecture fixed before the data; it does not assert one common event for unrestricted data-dependent selection of infinitely many learner widths.
+
+For Cauchy weights, suppressing logarithms and fixing $H,A,J$, the resource can be taken of order
+\begin{equation}
+ K_{m,B}=\widetilde O_H\!\left((d+1)(m+1)^H(1+AmB)^{2H}\right).
+ \label{eq:cauchy-poly}
+\end{equation}
+For the fixed-likelihood theorem, $n\gtrsim (1+\sigma^2)K_{m,B}/(\eta\varepsilon^2)$ suffices for remainder $\varepsilon$. For the coefficient-one bounded-label theorem, $n\gtrsim K_{m,B}(R_*\varepsilon^{-3}+\varepsilon^{-2})$ suffices to compete within $\varepsilon$ with the best comparator. At bounded coefficients this is a width degree $3H$, up to logarithms. The theorem does not claim this dependence is optimal. The oracle statements give the following rates (logarithms and confidence terms are suppressed). The first two rate columns allow conditional sub-Gaussian labels and use fixed temperatures; the last assumes bounded labels and uses the specified calibration:
+\begin{center}
+\begin{tabular}{cccc}\toprule
+Tail index & \shortstack{Expectation\\factor one} & \shortstack{High probability\\factor $1+\eta$} & \shortstack{High probability\\factor one}\\\midrule
+$\alpha=1$ (Cauchy)&$n^{-1/2}$&$n^{-1/2}$&$n^{-1/3}$\\
+$\alpha=1/2$&$n^{-3/4}$&$n^{-3/4}$&$n^{-3/7}$\\
+$0<\alpha<2$&$n^{-(2-\alpha)/2}$&$n^{-(2-\alpha)/2}$&$n^{-(2-\alpha)/(4-\alpha)}$\\\bottomrule
+\end{tabular}
+\end{center}
+The dependence of $K$ and all constants on $\alpha$ remains relevant when comparing priors. We fix $\alpha$; no uniform assertion is made as $\alpha\downarrow0$ or $\alpha\uparrow2$.
+
+\begin{corollary}[An explicit exponential depth upper bound]\label{cor:depth-upper}
+Fix $\alpha,A,J,d,m,B,\eta,\sigma^2$, a positive remainder accuracy $\varepsilon$, and confidence $1-\delta$. There is a constant $C$ depending only on these fixed quantities such that, at every hidden depth $H\ge1$ and learner width $N\ge m$, at most $e^{C(H+1)}$ samples suffice for the remainder in~\eqref{eq:fast-oracle} to be at most $\varepsilon$.
+\end{corollary}
+\begin{proof}
+The constant in $S_{m,B}$ is independent of $H$, as the moment induction below shows. The explicit resource~\eqref{eq:complexity} is therefore bounded by $e^{C(H+1)}$ when the other quantities are fixed. Theorem~\ref{thm:fast-oracle} then gives the assertion.
+\end{proof}
+
+
+\input{comparison}
+\input{perturbation}
+\input{noise}
+\input{expectation}
+\input{statistics}
+\input{uniform-online}
+\input{extensions}
+
+\section{Scope and consequences}\label{sec:biases}
+\paragraph{Approximation and noise.}
+The main theorem allows arbitrary conditional sub-Gaussian noise around a bounded regression function, including unbounded Gaussian labels. The target need not be a network, and the comparator need not interpolate the observations. Its approximation error is retained up to a freely chosen factor $1+\eta$, while irreducible noise has coefficient exactly one. The expectation theorem has coefficient exactly one on total comparator risk at a fixed temperature. The complementary bounded-label theorem~\eqref{eq:main-oracle} has coefficient one with high probability after calibration.
+
+\paragraph{What is fixed.}
+The prior is a single dense product distribution, with independent continuous coordinates. The learner width and depth are fixed before the sample. The comparison proof averages over embeddings of a small computation tree, but that averaging changes neither the prior nor the architecture. The sharp expectation theorem and near-sharp high-probability theorem use fixed temperatures. The separate bounded-label, coefficient-one high-probability theorem selects a temperature from the specified grid; this is its only data-dependent model choice.
+
+\paragraph{Why the output is bounded.}
+The raw readout of a Cauchy-weight network need not have a first or second moment. A fixed bounded output makes the posterior mean well defined and controls the relative-loss exponential moments used in the main proof. It also permits the bounded-loss argument for the complementary theorem. The perturbation proof nevertheless controls the raw comparison network in mean square. A semiconcavity property of squared loss after the output link controls the perturbation. For clipping, it also covers teachers whose raw outputs lie exactly on a clipping threshold. For a smooth link such as tanh, the same estimate follows from its bounded derivative and Lipschitz derivative.
+
+\paragraph{Biases beyond the first layer.}
+For a nonzero activation, choose a fixed $b_0$ with $c_0=\phi(b_0)\ne0$. A constant hidden wire can be generated from the first-layer constant input and propagated by a coefficient $b_0/c_0$. An affine offset $b$ into a later neuron is then represented by an incoming coefficient $b/c_0$ from that wire. This increases width by one and changes the coefficient cap by a fixed activation-dependent factor. A readout bias is handled in the same way. The theorem therefore includes bounded biased comparators after this explicit compilation, when the learner has room for the added constant wire. If $\phi\equiv0$, this compilation is unavailable; the bias-free statement remains valid.
+
+\paragraph{Depth and activation restrictions.}
+Unrolling width $m$ over depth $H$ uses $(m+1)^H$ nodes, and the stability factor contains $(1+AmB)^{2H}$. These are substantial depth costs. The sharper dependence on the approximation factor uses two derivatives. The bounded-Lipschitz extension also gives the same sample-size power for every bounded Lipschitz hidden activation, with a weaker dependence on that factor. Neither statement establishes the same oracle for unbounded ReLU activations under this same-index heavy-tailed prior. The bounded-activation assumption is useful for an additional reason: even unselected background neurons remain uniformly bounded despite heavy-tailed incoming weights.
+
+\paragraph{Verification.}
+The probabilistic construction, perturbation calculation and oracle inequality have received independent AI-agent mathematical reviews. This paper has not been formalized in Lean. The accompanying verification directory records the reviewed sources and build.
+\begin{thebibliography}{9}
+\bibitem{zolotarev} V. M. Zolotarev. \emph{One-dimensional Stable Distributions}. Translations of Mathematical Monographs, vol. 65. American Mathematical Society, 1986.
+\bibitem{hogsgaard} M. M. H\o gsgaard, P. Rebeschini, and T. Wegel. Aggregation with Exponential Weights is Optimal in Expectation. arXiv:2607.02247, 2026.
+\bibitem{castillo-egels} I. Castillo and P. Egels. Posterior and Variational Inference for Deep Neural Networks with Heavy-Tailed Weights. \emph{Journal of Machine Learning Research} 26(122), 1--58, 2025.
+\end{thebibliography}
+\end{document}

@@ -1,0 +1,180 @@
+\section{Every learner width: a Bayesian model with a bounded output}
+\label{sec:all-width-saturation}
+Write $Q=[-1,1]^d$, let $U_Q$ be its uniform probability measure, and assume $|Y|\le1$ and $dP_X/dU_Q\le\kappa$. Squared population risk means $R(f)=\mathbb E(f(X)-Y)^2$. The class $\mathcal G_{C,h}$ consists of width-at-most-$C$, hidden-depth-$h$ ReLU networks with arbitrary finite real coefficients and biases and a linear readout. Put $H_d=2\lceil\log_2 d\rceil+2$.
+
+The approximation theorem in Section~\ref{sec:width-only-regular} uses a wider network than the original comparison network. A second statistical certificate removes this width gap. It uses ordinary finite-parameter generalization at smaller widths, and the implicit-prior certificate at larger widths. Both certificates evaluate posteriors on the same fixed architecture; the learner selects one positive likelihood variance.
+
+For this section, apply the fixed scalar activation
+\[
+ s(z)=\max\{-1,\min\{1,z\}\}
+\]
+after the linear readout. The Gaussian likelihood and the posterior prediction both use the bounded network output $s(z_w(x))$. Thus the prediction is the ordinary posterior mean of this network's output. This is a different observation model from a Gaussian likelihood on an unbounded readout followed only by clipping at prediction time.
+
+The learner has $H$ hidden ReLU layers, each of width $N$, a scalar linear readout, and the final saturation. It has a constant input feature and no internal biases. Let $\pi_N$ be the fixed-architecture Gaussian prior below, with inverse scale $\omega_N$. Define
+\[
+ \widehat R_S(w)=\frac1n\sum_{i=1}^n(s(z_w(X_i))-Y_i)^2,
+ \qquad
+ \Pi_{S,\lambda}(dw)=
+ \frac{e^{-\omega_N\widehat R_S(w)/(2\lambda)}}{Z_S(\lambda)}\pi_N(dw),
+\]
+so the physical Gaussian observation variance is $n\lambda/\omega_N$. The free energy is
+\[
+ F_S(\lambda)=-\frac{2\lambda}{\omega_N}\log Z_S(\lambda)
+ =\inf_{\rho}\left\{\mathbb E_\rho\widehat R_S+
+                   \frac{2\lambda}{\omega_N}\operatorname{KL}(\rho\Vert\pi_N)\right\}.
+\]
+The likelihood normalizer, which is independent of the network weights, is omitted in this definition. No prior over $N$ is used.
+
+\subsection{A finite-parameter certificate at a positive temperature}
+Let $\mathcal F_{N,H}$ be the class of saturated ReLU networks of hidden width $N$, hidden depth $H$, and the prescribed input features. Put
+\[
+ \widehat r_N(S)=\inf_{f\in\mathcal F_{N,H}}\frac1n\sum_i(f(X_i)-Y_i)^2.
+\]
+The parameter prior has every function in this class in their support on any finite input list. For the unrestricted Gaussian prior this follows from positive density at every finite parameter vector and continuity of the prediction map.
+
+Consequently,
+\[
+ \lim_{\lambda\downarrow0}F_S(\lambda)=\widehat r_N(S).
+\]
+For example, the lower bound is immediate from the defining exponential integral. For the upper bound, any neighborhood with empirical loss at most $\widehat r_N+\eta$ has positive prior probability, so its contribution gives
+$F_S(\lambda)\le\widehat r_N+\eta-2\lambda\log\pi_N(\text{neighborhood})/\omega_N$; first let $\lambda$ decrease and then let $\eta$ decrease.
+
+Choose the first integer $j\ge0$ for which
+\begin{equation}
+ F_S(2^{-j})\le\widehat r_N(S)+1/n,
+ \qquad \lambda_{\mathrm{par}}(S)=2^{-j}.
+ \label{eq:parameter-temperature}
+\end{equation}
+This always exists and is strictly positive. Countable rational parameter approximations show that $\widehat r_N$ is measurable; continuity of the finite-data likelihood gives the same property for $F_S(2^{-j})$. The selected temperature is therefore measurable. This is an exact mathematical learning rule, with no computational-efficiency assertion.
+
+A bounded real-valued class of pseudodimension $v$ obeys a relative uniform-convergence inequality for squared loss:
+\begin{equation}
+ R(f)\le\widehat R_S(f)+c\sqrt{\widehat R_S(f)a_N}+ca_N
+ \quad\text{for every }f\in\mathcal F_{N,H},
+ \qquad
+ a_N=\frac{v\log(en)+\log(c(N+1)^2/\delta)}n,
+ \label{eq:relative-parameter-bound}
+\end{equation}
+on one event of probability at least $1-\delta$ for all integer widths, for a numerical constant $c$. Allocate failure probability proportional to $\delta/(N+1)^2$ at width $N$. To obtain the real-loss form from the classical relative VC inequality~\cite{vapnik}, apply that inequality simultaneously to the superlevel sets of the bounded loss, then integrate their levels over $[0,4]$. The layer-cake identity gives the mean loss, and Cauchy--Schwarz bounds the integrated square-root term by twice the square root of empirical mean loss. The loss class has the same parameter-count bound, up to numerical or logarithmic factors, by adding a final subtraction and squaring gate.
+
+For ReLU networks with saturation, if $D_N$ is their number of adjustable weights, one may take
+\[
+ v\le c D_N(H+2)\log(eD_N),\qquad
+ D_N=N(d+2)+(H-1)N^2.
+\]
+Here the input has the original $d$ coordinates and a constant feature; changing its fixed normalization does not affect pseudodimension. These are the usual piecewise-linear neural-network parameter-count bounds~\cite{bartlettvc}. The final squaring in the loss changes only the fixed polynomial degree and a constant depth. In particular, at fixed $d,H$, $a_N=\widetilde O_{d,H}(N^2/n)$.
+
+Integrate \eqref{eq:relative-parameter-bound} against any sample-dependent posterior and use concavity of the square root. Since its posterior empirical risk is at most its free energy, the observable quantity
+\begin{equation}
+ B_{\mathrm{par}}(S)=F_S(\lambda_{\mathrm{par}})
+ +c\sqrt{F_S(\lambda_{\mathrm{par}})a_N}+ca_N
+ \label{eq:parameter-certificate}
+\end{equation}
+is an upper bound on its posterior-average population risk. Jensen's inequality gives the same upper bound for its ordinary posterior mean.
+
+\subsection{Selecting between two valid certificates}
+Suppose the prior also has an implicit-complexity certificate: a measurable positive temperature $\lambda_{\mathrm{imp}}(S)$ and observable bound $B_{\mathrm{imp}}(S)$ on posterior-average risk, with a high-probability event on which this bound holds. The adaptive free-energy constructions supply exactly such a certificate, of the form $F_S(\lambda)+c_0\lambda$ plus a negligible tail term. For the saturated model they continue to hold: saturation is 1-Lipschitz, bounds outputs by one, does not increase comparison error to a bounded teacher, and only improves the moment and tail estimates.
+
+Choose whichever of
+\[
+ (\lambda_{\mathrm{par}},B_{\mathrm{par}}),\qquad
+ (\lambda_{\mathrm{imp}},B_{\mathrm{imp}})
+\]
+has smaller certificate, breaking a tie deterministically. The learner returns the ordinary mean of the single posterior at the selected temperature. On the intersection of the two certificate events its risk is at most
+\begin{equation}
+ \min\{B_{\mathrm{par}}(S),B_{\mathrm{imp}}(S)\}.
+ \label{eq:minimum-certificates}
+\end{equation}
+This selection does not mix temperatures, functions, or architectures.
+
+For a fixed comparison network $g$ representable in the width-$N$ class, Bernstein concentration of its bounded squared loss, \eqref{eq:parameter-temperature}, and \eqref{eq:parameter-certificate} give
+\begin{equation}
+ B_{\mathrm{par}}(S)
+ \le R(g)+\widetilde O\left(\sqrt{R(g)D_N(H+2)/n}
+                          +D_N(H+2)/n\right)
+ \label{eq:parameter-comparison}
+\end{equation}
+on a further high-probability event. Here $g$ may itself be the saturated output of an arbitrary-weight ReLU network. Its original raw squared risk can replace $R(g)$ as an upper bound.
+
+\subsection{The original independent Gaussian priors}
+The two-certificate argument applies to the unrestricted Gaussian prior. For definiteness, write $D=d+1$, let the input feature be $\xi=(1,x)/\sqrt D$, and use independent centered coordinates with variances
+\begin{equation}
+ \operatorname{Var}(W^1_{ji})=N^{1-\gamma}/D,
+ \qquad \operatorname{Var}(W^\ell_{ji})=N^{-\gamma}\ (2\le\ell\le H),
+ \qquad \operatorname{Var}(v_j)=N^{-\gamma-1},
+ \label{eq:width-only-Gaussian-prior}
+\end{equation}
+where $\gamma\ge1$ and $\omega_N=N^\gamma$. There is no restriction on the support of these weights. The weighted energy is
+\[
+ Q_N=\frac DN\|W^1\|_F^2+\sum_{\ell=2}^H\|W^\ell\|_F^2+N\|v\|_2^2.
+\]
+
+Here is the implementation bound needed to use the Gaussian comparison theorem. A width-$m$ ReLU network of path variation $P$ can be rescaled, without changing its function, so that every internal absolute spectral norm is at most one and the first and last squared Frobenius norms are both $P$. The path-flow proof is as follows. With forward masses $a^1_j=\|W^1_{j,:}\|_2$ and $a^\ell=|W^\ell|a^{\ell-1}$, and backward masses $b^H=|v|$, $b^{\ell-1}=|W^\ell|^{\mathsf T}b^\ell$, every layer has $\sum_j a_jb_j=P$. Remove neurons on no nonzero path and rescale neuron $j$ by $\sqrt{b_j/a_j}$. The transformed nonnegative internal matrices send $r^{\ell-1}$ to $r^\ell$ and their transposes send $r^\ell$ back, where $r_j=\sqrt{a_jb_j}$. Weighted Cauchy--Schwarz gives operator norm at most one. The endpoint squared norms are $\sum_jr_j^2=P$.
+
+Zero-pad this implementation to width $N\ge m$. Multiply every hidden activation by $\sqrt N/D^{1/4}$, which rescales only the first matrix and readout. Its weighted energy is then bounded by
+\begin{equation}
+ E\le2\sqrt D\,P+(H-1)m.
+ \label{eq:path-to-Gaussian-energy}
+\end{equation}
+The internal bound uses squared Frobenius norm at most rank times squared operator norm. These support properties are used to construct one comparison implementation; the Gaussian learner's prior remains unrestricted.
+
+The selective Gaussian comparison in Section~\ref{sec:selective-standalone} shrinks only incoming rows of active teacher neurons, and the readout. Its normalized entropy cost is
+\begin{equation}
+ A=\widetilde O_{d,H}(1+P+m),
+ \label{eq:Gaussian-path-resource}
+\end{equation}
+using \eqref{eq:path-to-Gaussian-energy}. The logarithmic factors include $n$, the depth, and this energy. This is the all-$\gamma\ge1$ selective comparison, so shrinking an $N$-dimensional readout or an active incoming row does not introduce an uncontrolled $N$ factor after division by $\omega_N=N^\gamma$.
+
+The finite-dimensional saturated-output Gaussian certificate, proved in Section~\ref{sec:saturated-specialization}, has
+\begin{equation}
+ p=\max\{d+2,d(H+1)/2\},\qquad \rho=(d+2)/2,
+ \label{eq:saturated-exponents}
+\end{equation}
+and, for a bounded teacher of risk $R_*$, gives
+\begin{equation}
+ B_{\mathrm{imp}}\le R_*+
+ \widetilde O_{d,H}\left(
+       A R_*^{1-\rho/p}n^{-1/p}+A^{p/\rho}n^{-1/\rho}\right).
+ \label{eq:saturated-Gaussian-certificate}
+\end{equation}
+In the operator-norm cover proof, the cover logarithm has size $k^{d(H+1)/2}a^{-d}$, while saturation makes the loss envelope independent of $k$. The common free-energy root is
+$\lambda^p=\theta_n(2F_S(\lambda)+\lambda b_n)^{p-\rho}$.
+The same finite-cover and weighted-tail argument therefore gives \eqref{eq:saturated-Gaussian-certificate}; it is precisely the bounded-output specialization of the all-$\gamma$ Gaussian oracle. For bounded $R_*$, $n=\widetilde O_{d,H}((A/\varepsilon)^p)$ is sufficient for excess $\varepsilon$.
+
+\begin{theorem}[Width-only oracle at every eligible learner width]
+\label{thm:all-width-regular-Gaussian}
+Assume $|Y|\le1$ and $dP_X/dU_Q\le\kappa$. Fix $C,h\ge1$ and a learner hidden depth $H\ge\max\{h,H_d\}$. Use the independent Gaussian prior \eqref{eq:width-only-Gaussian-prior}, final saturation in both likelihood and prediction, and the two-certificate calibration above. Then, on one event of probability at least $1-\delta$, simultaneously for every $\gamma\ge1$ and every $N\ge C+1$, the ordinary posterior mean satisfies
+\[
+ R(\widehat f_n)\le\inf_{g\in\mathcal G_{C,h}}R(g)+\varepsilon
+\]
+whenever
+\begin{equation}
+ n\ge\widetilde O_{d,H}\left(
+   \kappa^{dp}(C+1)^{h(d+1)p}\varepsilon^{-(d+1)p}\right),
+ \qquad p=\max\{d+2,d(H+1)/2\}.
+ \label{eq:all-width-regular-sample}
+\end{equation}
+The comparison class has no coefficient bound. The extra neuron in $N\ge C+1$ carries the constant needed to compile arbitrary internal biases. If that constant wire is already included in the stated teacher width, $N\ge C$ suffices. The prior and calibration use none of $C,h,\kappa$, or the comparator's coefficients.
+\end{theorem}
+\begin{proof}
+Choose a deterministic comparator within $\varepsilon/8$ of the risk infimum. Apply the hierarchical approximation theorem with a dyadic mesh $\Delta$ within a factor two below $\varepsilon/[64\kappa d(C+1)^h]$. Its interpolant $p_g$ has risk at most $R(g)+\varepsilon/8$, width
+\[
+ m=O_d(\Delta^{-d}),
+\]
+and path variation $P=O_d((C+1)^h\Delta^{-d})$. Pad by identity layers to depth $H$. Thus \eqref{eq:Gaussian-path-resource} is bounded by
+\[
+ A=\widetilde O_{d,H}\left(
+      \kappa^d(C+1)^{h(d+1)}\varepsilon^{-d}\right).
+\]
+If $N\ge m$, the implicit certificate applied to this fixed interpolant is at most $R(g)+\varepsilon/2$ under \eqref{eq:all-width-regular-sample}.
+
+If $C+1\le N<m$, compile the original comparator itself, including its biases, at width $N$ and depth $H$. Its saturated output belongs to $\mathcal F_{N,H}$ and has risk no larger than the original raw comparator. The parameter certificate gives excess at most $\varepsilon/2$ when
+\[
+ n\ge\widetilde O_{d,H}(m^2/\varepsilon^2)
+ =\widetilde O_{d,H}(\kappa^{2d}(C+1)^{2dh}\varepsilon^{-(2d+2)}).
+\]
+This is implied by \eqref{eq:all-width-regular-sample}, because $p\ge d+2\ge2$, $\kappa\ge1$, $C+1\ge1$, and $\varepsilon\le1$. The selected posterior obeys the smaller certificate in either case. Allocate confidence among the uniform certificates and the two fixed-comparator concentration bounds; their union gives the claim. The parameter certificate uses a summable allocation over learner widths. Its additional logarithm of $N$ is bounded by a logarithm of $m$ in the only branch where that certificate is needed, and therefore introduces no learner-width dependence in the final sample bound.
+\end{proof}
+
+At fixed $d,H,\kappa$, the theorem competes with width $n^a$ for any $a<1/[h(d+1)p]$, with a vanishing additive error. The distribution may have arbitrary bounded label noise and the best comparison risk need not vanish. The restrictions doing work here are regularity of the input law and the fixed bounded output activation, not a coefficient bound or a prior on architecture sizes.
+

@@ -1,0 +1,255 @@
+\section{An optimistic raw oracle separated from the label-noise floor}
+\label{sec:optimistic-raw-temperature}
+This section gives an optional optimistic version of the raw-output oracle. Its temperature uses prescribed complexity and approximation-risk budgets, not a risk estimate computed from the same sample. The learner is the ordinary raw posterior mean using all observations. A truncated prior appears only in the proof.
+
+Suppose a function prior $\mu$ satisfies, for fixed $A,r>0$,
+\begin{equation}
+ \mu\{\|f\|_\infty>Aq^r\}\le A e^{-q}
+                  \qquad(q\ge1).
+ \label{eq:optimistic-native-tail}
+\end{equation}
+The supremum is over the input domain. Let $Y=f_0(X)+\xi$, where $\|f_0\|_\infty\le B_0$ and the conditional noise has mean zero and is $\sigma^2$-sub-Gaussian:
+\[
+ \mathbb E[e^{t\xi}\mid X]\le e^{\sigma^2t^2/2}
+                         \qquad(t\in\mathbb R).
+\]
+Write $R(f)=\mathbb E(f(X)-Y)^2$ and
+$\mathcal A(f)=\mathbb E(f(X)-f_0(X))^2$.
+At a deterministic temperature $T>0$, the full-data raw learner is
+\[
+ \Pi_{S,T}(df)=\frac{\exp\{-\sum_{i=1}^n(f(X_i)-Y_i)^2/T\}}{Z_{S,T}}\mu(df),
+ \qquad m_{S,T}=\int f\,d\Pi_{S,T}.
+\]
+The Gaussian observation variance is $T/2$.
+
+\begin{lemma}[A comparison controls the expected posterior density]
+\label{lem:optimistic-posterior-density}
+Let $\rho\ll\mu$ be sample-independent with $\KL(\rho\|\mu)\le K$. Put
+\[
+ a_\rho(x)=\mathbb E_\rho(f(x)-f_0(x))^2,\qquad
+ b_\rho(x)=\mathbb E_\rho(f(x)-f_0(x)),\qquad
+ \mathcal A_\rho=\mathbb E_Xa_\rho(X).
+\]
+Suppose $a_\rho(x)\le V$ on the input domain. If
+$T\ge\max\{8\sigma^2,V\}$, then every nonnegative measurable function $W$ of the network obeys
+\begin{equation}
+ \mathbb E_S\int W(f)\,\Pi_{S,T}(df)
+       \le \exp\{K+C n\mathcal A_\rho/T\}\int W(f)\,\mu(df).
+ \label{eq:optimistic-posterior-density}
+\end{equation}
+The constant is numerical. No bound on the candidate function $f$ is required.
+\end{lemma}
+\begin{proof}
+Divide the likelihood by its value at the true regression function. For a fixed candidate write $e(x)=f(x)-f_0(x)$. The relative likelihood is
+\[
+ L_f/L_{f_0}=\exp\left\{\frac1T\sum_i[-e(X_i)^2+2\xi_i e(X_i)]\right\}.
+\]
+The variational lower bound for its normalizer, using $\rho$, is
+\[
+ Z_{S,T}/L_{f_0}\ge
+ \exp\left\{-K+\frac1T\sum_i[-a_\rho(X_i)+2\xi_i b_\rho(X_i)]\right\}.
+\]
+Therefore its density with respect to $\mu$ is bounded pointwise by
+\[
+ \exp\left\{K+\sum_i\left[
+   \frac{a_\rho(X_i)-e(X_i)^2}{T}
+       +\frac{2\xi_i(e(X_i)-b_\rho(X_i))}{T}\right]\right\}.
+\]
+Condition on the input sample and average over the independent noises. Their moment generating functions add
+$2\sigma^2(e-b_\rho)^2/T^2$ to each exponent. Since
+$b_\rho^2\le a_\rho$ and $(e-b_\rho)^2\le2e^2+2a_\rho$, the resulting summand is at most
+\[
+ \frac{a_\rho-e^2}{T}
+       +\frac{4\sigma^2(e^2+a_\rho)}{T^2}
+ \le \frac{3a_\rho}{2T}-\frac{e^2}{2T}
+ \le \frac{3a_\rho}{2T}.
+\]
+This is the cancellation that removes the irreducible label-noise floor from the bound. Because $0\le a_\rho/T\le1$,
+\[
+ \mathbb E_X e^{3a_\rho(X)/(2T)}
+ \le 1+(e^{3/2}-1)\mathcal A_\rho/T
+ \le e^{C\mathcal A_\rho/T}.
+\]
+Average over the iid inputs and integrate $W$ by Tonelli's theorem. This gives \eqref{eq:optimistic-posterior-density}.
+\end{proof}
+
+\begin{theorem}[A known-approximation-budget raw oracle]
+\label{thm:optimistic-raw-temperature}
+Let $n\ge2$ and $K\ge1$. Suppose a deterministic comparator $g$ with $\|g\|_\infty\le U$ and a sample-independent comparison law $\rho$ satisfy
+\[
+ \KL(\rho\|\mu)\le K,
+ \qquad \mathbb E_\rho\|f-g\|_\infty^2\le n^{-4},
+ \qquad \mathcal A(g)\le\mathcal A_0.
+\]
+Put
+\[
+ J=K+\log(n+2)+1+(B_0+U+1)^{1/r}.
+\]
+There is a constant $C$, depending only on $A,r$, such that the deterministic choice
+\begin{equation}
+ T=C\left[\sigma^2+J^{2r}
+                  +(n\mathcal A_0)^{2r/(2r+1)}\right]
+ \label{eq:optimistic-temperature-choice}
+\end{equation}
+gives
+\begin{align}
+ \mathbb E_S R(m_{S,T})
+ &\le R(g)+\frac{C K(\sigma^2+J^{2r})}{n}
+      +C K\mathcal A_0^{2r/(2r+1)}n^{-1/(2r+1)}
+      +\frac{C(B_0+U+1)}{n^2}.
+ \label{eq:optimistic-raw-oracle}
+\end{align}
+The coefficient of comparator risk is exactly one. The result is uniform over all comparators meeting the same prescribed budgets. If $g=f_0$, take $\mathcal A_0=0$: the fast remainder is $CK(\sigma^2+J^{2r})/n$ even when the label noise is nonzero. The theorem does not claim data-dependent temperature selection.
+\end{theorem}
+
+\begin{proof}
+We use the bounded-output all-data exponential-weights oracle: for a prior supported on $[-M,M]$, bounded conditional mean $|f_0|\le B_0\le M$, and conditional $\sigma^2$-sub-Gaussian noise, a fixed temperature $T\ge C(M^2+\sigma^2)$ gives
+\begin{equation}
+ \mathbb E R(m_{S,T})\le\nu R+\frac{T\KL(\nu\|\mu)}{n+1}
+ \label{eq:optimistic-bounded-oracle}
+\end{equation}
+for every comparison law $\nu$. This is Lemma~\ref{lem:bounded-noise-oracle}. It will be applied to a fixed truncated prior at the given sample size, so the leave-one-out argument uses the same prior throughout.
+
+Write $\eta=n^{-2}$. The uniform comparison assumption implies
+\[
+ a_\rho(x)\le(U+B_0+\eta)^2,
+ \qquad
+ \mathcal A_\rho\le(\sqrt{\mathcal A(g)}+\eta)^2
+                        \le2\mathcal A_0+2\eta^2.
+\]
+Choose the auxiliary cutoff
+\[
+ q=C_0\left[J+\frac{n\mathcal A_0}T\right],\qquad M=Aq^r,
+\]
+with a sufficiently large constant $C_0$ depending only on $A,r$. Let $E=\{\|f\|_\infty\le M\}$ and $\mu_M=\mu(\cdot\mid E)$. Constants can be chosen so that $M\ge2(U+B_0+1)$ and $\mu(E)>0$. Integrating the native tail gives
+\begin{equation}
+ \int_{E^c}(\|f\|_\infty+M)^2\,\mu(df)
+                  \le C q^{2r}e^{-q/2}.
+ \label{eq:optimistic-tail-second-moment}
+\end{equation}
+
+Let $m^M_{S,T}$ be the mean for the proof-only prior $\mu_M$. Its posterior is exactly the normalized restriction of the actual posterior to $E$. Weighted Cauchy--Schwarz gives
+\[
+ \|m_{S,T}-m^M_{S,T}\|_\infty^2
+ \le \int_{E^c}(\|f\|_\infty+M)^2\,\Pi_{S,T}(df).
+\]
+Apply Lemma~\ref{lem:optimistic-posterior-density} with the integrand on the right. The final choice of temperature below satisfies its hypotheses. We obtain
+\[
+ \mathbb E\|m_{S,T}-m^M_{S,T}\|_\infty^2
+ \le Cq^{2r}\exp\{-q/2+K+C n\mathcal A_0/T+C\}.
+\]
+By increasing $C_0$, the negative exponential absorbs every fixed power of $q$ and the positive terms in the exponent. Since $q$ also dominates $\log(n+2)$, this yields
+\[
+ 2(M+B_0)\sqrt{\mathbb E\|m_{S,T}-m^M_{S,T}\|_\infty^2}
+       +\mathbb E\|m_{S,T}-m^M_{S,T}\|_\infty^2
+ \le n^{-2}.
+\]
+For independent test data the noise cancels from the risk difference:
+$R(m)-R(m^M)=\mathcal A(m)-\mathcal A(m^M)$.
+The last display therefore bounds the expected risk difference by $n^{-2}$, despite the unbounded labels.
+
+It remains to apply the bounded-output theorem without changing the comparator-risk coefficient. Since $M\ge U+1$, the comparison law gives $p_\rho:=\rho(E)\ge1-\eta^2$. The relative-entropy chain rule implies
+\[
+ \KL(\rho(\cdot\mid E)\|\mu_M)\le K/p_\rho\le2K.
+\]
+Its uniform approximation second moment is at most $\eta^2/p_\rho$. Since the test noise has mean zero,
+\[
+ \rho(\cdot\mid E)R
+ \le R(g)+2\eta\sqrt{\mathcal A(g)/p_\rho}+\eta^2/p_\rho
+ \le R(g)+C(B_0+U+1)n^{-2}.
+\]
+Thus whenever $T\ge C(M^2+\sigma^2)$,
+\[
+ \mathbb E R(m^M_{S,T})
+ \le R(g)+\frac{2TK}{n+1}+C(B_0+U+1)n^{-2}.
+\]
+
+Finally the explicit deterministic choice \eqref{eq:optimistic-temperature-choice}, with a sufficiently large constant, meets all temperature requirements without circularity. Indeed
+\[
+ q^{2r}\le C_r\left[J^{2r}+
+                 (n\mathcal A_0/T)^{2r}\right].
+\]
+The first term is controlled by $T\ge CJ^{2r}$, and the second by
+$T\ge C(n\mathcal A_0)^{2r/(2r+1)}$.
+Also $J^{2r}\ge(B_0+U+1)^2$. Together with $T\ge C\sigma^2$, these bounds ensure both the posterior-density lemma and the bounded-output oracle apply. Substituting $T$ and adding the tail-transfer error proves \eqref{eq:optimistic-raw-oracle}.
+\end{proof}
+
+\paragraph{Examples.}
+If the comparison budget dominates $(B_0+U+1)^{1/r}$, then $J$ is of order $K+\log n$. For a normalized Gaussian readout, $r=1/2$, so the remainder is
+\[
+ \widetilde O\left(\frac{K^2+K\sigma^2}{n}
+                          +K\sqrt{\frac{\mathcal A_0}{n}}\right).
+\]
+In particular its fast rate holds for a realizable target with Gaussian or other sub-Gaussian observation noise. Unnormalized Gamma gates with Gaussian factors and bounded hidden features have $r=3/2$, giving fast term $\widetilde O((K^4+K\sigma^2)/n)$. A power-$p$ normalized readout has $r=1/p$, giving fast term $\widetilde O((K^{1+2/p}+K\sigma^2)/n)$ and approximation term $K\mathcal A_0^{2/(p+2)}n^{-p/(p+2)}$. These are statements for prescribed deterministic budgets and temperatures, not an adaptive procedure whose validity is inferred without proof.
+
+\begin{corollary}[A high-probability raw oracle]
+\label{cor:optimistic-raw-high-probability}
+Under the assumptions of Theorem~\ref{thm:optimistic-raw-temperature}, fix $0<\eta\le1/2$ and $0<\delta<1/2$, and put
+\[
+ J_\delta=K+\log\frac{n+2}{\delta}+1+(B_0+U+1)^{1/r}.
+\]
+Choose the deterministic temperature
+\[
+ T=\frac C\eta\left[\sigma^2+J_\delta^{2r}
+                      +(n\mathcal A_0)^{2r/(2r+1)}\right].
+\]
+Then, with probability at least $1-\delta$,
+\begin{align*}
+ R(m_{S,T})\le \mathbb E\xi^2+(1+\eta)\mathcal A(g)
+ &+\frac{C[K+\log(4/\delta)]}{\eta n}
+     \left[\sigma^2+J_\delta^{2r}
+                      +(n\mathcal A_0)^{2r/(2r+1)}\right]\\
+ &+\frac{C(B_0+U+1)^2}{\eta n^2}.
+\end{align*}
+In particular, for the normalized Gaussian readout and a realizable target, the remainder is
+$\widetilde O((K+\log(1/\delta))^2/(\eta n)+(K+\log(1/\delta))\sigma^2/(\eta n))$.
+The learner uses raw outputs in both its likelihood and its posterior-mean prediction.
+\end{corollary}
+\begin{proof}
+Use the cutoff $q=C_0[J_\delta+n\mathcal A_0/T]$ and $M=Aq^r$ from the preceding proof. The posterior-density lemma and Markov's inequality, with constants enlarged, give an event of probability at least $1-\delta/3$ on which
+\[
+ |\mathcal A(m_{S,T})-\mathcal A(m^M_{S,T})|\le n^{-2}.
+\]
+Indeed the expected squared supremum difference is exponentially small in $q$, and $q$ dominates $K+n\mathcal A_0/T$, $\log((n+2)/\delta)$, and every logarithm of the polynomial factor $M+B_0+1$.
+
+For completeness, the bounded-output high-probability interface used for $\mu_M$ is the ordinary relative-loss PAC--Bayesian inequality. At $\beta=1/T$, conditional sub-Gaussianity and $|f-f_0|\le2M$ imply
+\[
+ \mathbb E e^{-\beta[(f-Y)^2-(f_0-Y)^2]}
+ \le e^{-\beta c\mathcal A(f)},\qquad
+ c=\frac{1-e^{-4M^2\beta(1-2\beta\sigma^2)}}{4M^2\beta}
+       \ge1-2\beta(M^2+\sigma^2).
+\]
+Prior integration, Markov's inequality and the entropy variational identity give, simultaneously for all posterior laws $\pi$, with failure at most $\delta/3$,
+\[
+ c\,\pi\mathcal A(f)\le
+ \pi[\widehat R(f)-\widehat R(f_0)]
+       +\frac{T[\KL(\pi\|\mu_M)+\log(3/\delta)]}{n}.
+\]
+The truncated posterior minimizes the empirical-risk-plus-entropy objective.
+
+Use as comparator $\rho_E=\rho(\cdot\mid E)$. Its entropy is at most $2K$. Its comparison-averaged excess loss has the form
+$v(X)-2\xi b(X)$, where $b^2\le v$, and
+\[
+ 0\le v(x)\le V_g:=C(B_0+U+1)^2.
+\]
+The same one-observation moment-generating-function calculation, now with positive exponent, gives the fixed-comparison Bernstein bound. With failure at most $\delta/3$,
+\[
+ \rho_E[\widehat R(f)-\widehat R(f_0)]
+ \le(1+\eta/16)\rho_E\mathcal A(f)
+       +\frac{C(V_g+\sigma^2)\log(3/\delta)}{\eta n}.
+\]
+One may obtain this directly from
+$\mathbb E\exp[t(v-2\xi b)]\le\mathbb E\exp[(t+2\sigma^2t^2)v]$
+with $t$ a sufficiently small multiple of $\eta/(V_g+\sigma^2+1)$.
+The conditioned approximation gives
+\[
+ \rho_E\mathcal A(f)
+ \le(1+\eta/16)\mathcal A(g)+C\eta^{-1}n^{-4}.
+\]
+
+The stated temperature, by the same algebra as in the theorem, obeys
+$T\ge C(M^2+\sigma^2)/\eta$ and
+$T\ge C(V_g+\sigma^2+1)/\eta$.
+Thus $c\ge1-\eta/16$, the two comparison factors divided by $c$ are at most $1+\eta$, and all entropy/confidence remainders are bounded by
+$CT[K+\log(4/\delta)]/n$ plus the displayed negligible term. Apply Jensen's inequality to the truncated posterior mean, add the raw-versus-truncated risk difference, and union bound the three failure events. The irreducible noise risk is added exactly once and is not multiplied by $1+\eta$.
+\end{proof}

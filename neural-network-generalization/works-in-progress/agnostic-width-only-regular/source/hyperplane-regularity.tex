@@ -1,0 +1,101 @@
+\section{Hyperplane anti-concentration in place of a density bound}
+\label{sec:hyperplane-regularity}
+The interpolation argument uses regularity relative to volume. A different compiler uses only anti-concentration near affine hyperplanes. This includes some distributions supported on a lower-dimensional surface, and gives a different tradeoff between comparison width and approximation accuracy.
+
+Assume $X\in Q=[-1,1]^d$ and, for some $\kappa\ge1$ and $0<\alpha\le1$,
+\begin{equation}
+ \Pr\{|u^{\mathsf T}X-t|\le s\}\le\kappa s^\alpha
+ \quad\text{for every }\|u\|_2=1,\ t\in\mathbb R,\ s>0.
+ \label{eq:hyperplane-anticoncentration}
+\end{equation}
+In particular every affine hyperplane has probability zero. A bounded density relative to the uniform cube implies this condition with $\alpha=1$ and slab constant at most $\sqrt d$ times its density bound: choose a coordinate of the unit normal of magnitude at least $1/\sqrt d$ and integrate that coordinate first. The uniform law on the unit sphere in $\mathbb R^d$, $d\ge3$, also satisfies \eqref{eq:hyperplane-anticoncentration} with $\alpha=1$ and a constant of order $\sqrt d$. For the circle in $\mathbb R^2$, exponent $\alpha=1/2$ suffices. These follow directly from the one-coordinate marginal densities of the sphere. No density in the ambient cube is required.
+
+\begin{theorem}[A compiler under hyperplane anti-concentration]
+\label{thm:hyperplane-compiler}
+Let $g$ be a width-$C$, hidden-depth-$h$ ReLU network with arbitrary coefficients and biases. Put
+\[
+ M=(C+1)^{dh},\qquad T=M(Ch+1).
+\]
+Under \eqref{eq:hyperplane-anticoncentration}, for every $0<\varepsilon\le1$ there is a four-hidden-layer ReLU network $p$, with augmented input $\xi=(1,x)/\sqrt{d+1}$ and no internal biases, such that
+\begin{align}
+ \operatorname{width}(p)&\le3T,\notag\\
+ |p(x)|&\le1\quad(x\in Q),\notag\\
+ R(p)&\le R(g)+\varepsilon/4,\label{eq:hyperplane-compiler-risk}\\
+ P(p)&\le80(d+1)64^{1/\alpha}
+       \kappa^{1/\alpha}T^{1+1/\alpha}\varepsilon^{-1/\alpha}.
+ \label{eq:hyperplane-compiler-path}
+\end{align}
+Identity padding gives the same statement at every hidden depth $H\ge4$.
+\end{theorem}
+\begin{proof}
+A ReLU network is affine on each of its full-dimensional activation cells. At one layer, $C$ hyperplanes cut any preceding convex cell into at most $\sum_{j=0}^d\binom Cj\le(C+1)^d$ cells. Induction gives at most $M$ full-dimensional cells. Each is described by at most $Ch$ affine inequalities, one for each hidden activation along its activation pattern. Assign an identically zero preactivation one fixed activation convention, so that the cells form a disjoint polyhedral partition rather than duplicated sign patterns. Degenerate identically zero constraints can then be removed. The complement of the cell interiors is contained in a finite union of affine hyperplanes and has probability zero by \eqref{eq:hyperplane-anticoncentration}.
+
+Write $R_Q=\sqrt d$ and $D=d+1$. Normalize the nonconstant inequalities defining a cell as
+$u_j^{\mathsf T}x-t_j\ge0$ with $\|u_j\|_2=1$. If $t_j<-R_Q$, the inequality is strict everywhere on $Q$ and can be removed. If $t_j>R_Q$, the cell does not meet $Q$ and can be discarded. All retained offsets satisfy $|t_j|\le R_Q$. Let $r$ be the number retained in a particular cell, so $r\le Ch$.
+
+For a scale $0<\delta\le1$, define
+\[
+ a_j(x)=\operatorname{ReLU}((u_j^{\mathsf T}x-t_j)/\delta)
+       -\operatorname{ReLU}((u_j^{\mathsf T}x-t_j)/\delta-1),
+ \qquad
+ b(x)=\operatorname{ReLU}\left(\sum_{j=1}^r a_j(x)-(r-1)\right).
+\]
+Every $a_j$ lies in $[0,1]$, as does $b$. The gate $b$ is zero outside the cell interior, equals one when all its retained inequalities have slack at least $\delta$, and is one identically when $r=0$. Gates from different cell interiors cannot be positive at the same point. Values on a shared facet are zero, so this disjointness also ensures the boundedness assertion below on all of $Q$.
+
+On the cell, the teacher output has the affine form $\ell(x)=a^{\mathsf T}x+b_0$. We next replace its saturation by a saturated affine function with a controlled slope. Fix $B\ge1$. If $\|a\|_2\le B$, retain $\ell$ unless it already has constant saturated sign on $Q$, in which case use that constant. Its retained bias can be bounded by $BR_Q+1$: a larger absolute bias would force a constant saturated sign. If $\|a\|_2>B$, write $\ell=\|a\|_2(u^{\mathsf T}x-t)$ and replace its slope by $B$. If $|t|>R_Q+1/B$, both saturated functions are the same constant on $Q$; otherwise the new bias is at most $BR_Q+1$ in absolute value. Denote the resulting saturated affine output by $\phi(x)\in[-1,1]$. Its coefficients have slope norm at most $B$ and bias magnitude at most $BR_Q+1$. It differs from $s(\ell(x))$ only in a slab of width $1/B$, and its absolute difference there is at most two.
+
+Combine the region output with its gate by the exact ReLU mask
+\[
+ m(x)=\operatorname{ReLU}(\phi(x)+b(x)-1)
+      -\operatorname{ReLU}(-\phi(x)+b(x)-1).
+\]
+It equals $\phi$ when $b=1$, is zero when $b=0$, and has absolute value at most $b$. Sum these masks over the retained cells to obtain $p$. At most one gate is positive on $Q$, so $|p|\le1$.
+
+Except on the union of the facet slabs of width $\delta$ and the output slabs of width $1/B$, the resulting function equals $s(g)$. There are at most $MCh$ of the former and at most $M$ of the latter. Thus
+\[
+ \mathbb E|p(X)-s(g(X))|
+ \le2\kappa\left[MCh\,\delta^\alpha+MB^{-\alpha}\right].
+\]
+Take
+\[
+ \delta=\left(\frac{\varepsilon}{64\kappa T}\right)^{1/\alpha},
+ \qquad B=\left(\frac{64\kappa M}{\varepsilon}\right)^{1/\alpha}.
+\]
+The last display is at most $\varepsilon/16$. Squared loss between bounded predictions and labels changes by at most four times prediction difference, and clipping the original teacher cannot hurt its risk. This proves \eqref{eq:hyperplane-compiler-risk}.
+
+Here is an explicit depth and path count. At the first hidden layer, compute the two hinges of each $a_j$, the two hinges representing
+\[
+ \phi=\operatorname{ReLU}(\ell'+1)-\operatorname{ReLU}(\ell'-1)-1,
+\]
+and one constant feature. At the second layer compute the $a_j$ and the positive and negative parts of $\phi$, carrying the constant. At the third layer compute $b$ and pass those parts and the constant. The fourth layer computes the two mask hinges. This uses at most $\max\{4,2r+3\}\le3(Ch+1)$ neurons per cell and no internal biases.
+
+In the augmented input coordinates, the first row norm of a facet hinge is at most $3D/\delta$, and that of an output hinge is at most $4DB$. The constant row has norm $\sqrt D$. Absolute path budgets therefore give at most $6D/\delta$ for $a_j$, at most $9DB$ for either part of $\phi$, and at most $7D(Ch+1)/\delta$ for the gate. Each of the two final mask hinges has budget at most $19DB+7D(Ch+1)/\delta$. The cell's total contribution is at most
+\[
+ 40D\left(B+(Ch+1)/\delta\right).
+\]
+Since $B\le1/\delta$, summing the $M$ cells gives at most
+$80DT/\delta$, which is \eqref{eq:hyperplane-compiler-path}. This also proves the claimed width and depth.
+\end{proof}
+
+\begin{corollary}[An all-width Gaussian oracle under slab regularity]
+\label{cor:hyperplane-oracle}
+Assume $|Y|\le1$ and \eqref{eq:hyperplane-anticoncentration}. Fix a comparison width $C$, comparison hidden depth $h$, and learner hidden depth $H\ge\max\{h,4\}$. The same unrestricted Gaussian prior, final saturation, and two-certificate learner satisfy, simultaneously for all $\gamma\ge1$ and $N\ge C+1$,
+\[
+ R(\widehat f_n)\le\inf_{g\in\mathcal G_{C,h}}R(g)+\varepsilon
+\]
+with probability at least $1-\delta$ as soon as
+\begin{equation}
+ n\ge\widetilde O_{d,H,\alpha}\left(
+ \kappa^{p/\alpha}
+ \bigl[(Ch+1)(C+1)^{dh}\bigr]^{p(1+1/\alpha)}
+ \varepsilon^{-p(1+1/\alpha)}\right),
+ \qquad p=\max\{d+2,d(H+1)/2\}.
+ \label{eq:hyperplane-sample}
+\end{equation}
+\end{corollary}
+\begin{proof}
+The Gaussian path-to-energy comparison applies to the compiler of Theorem~\ref{thm:hyperplane-compiler}, whose width is $m\le3T$ and whose resource is of order
+$\kappa^{1/\alpha}T^{1+1/\alpha}\varepsilon^{-1/\alpha}$, up to logarithms. At $N\ge m$, the Gaussian implicit certificate therefore gives the claimed sample bound. At $C+1\le N<m$, the parameter certificate needs only $\widetilde O_{d,H}(T^2/\varepsilon^2)$ samples. This is dominated by \eqref{eq:hyperplane-sample}, since $p\ge2$, $0<\alpha\le1$, and $\kappa,T\ge1$. Select a fixed comparator arbitrarily close to the infimum and allocate confidence exactly as in Theorem~\ref{thm:all-width-regular-Gaussian}.
+\end{proof}
+
+For bounded-density laws, one may use either compiler. The multiscale compiler gives a better power of comparison width, while this polyhedral compiler gives a better power of approximation accuracy when $d>1$ and $\alpha=1$. The latter also needs only four hidden layers for its comparison implementation. The actual calibration rule does not need to know which argument is applicable.

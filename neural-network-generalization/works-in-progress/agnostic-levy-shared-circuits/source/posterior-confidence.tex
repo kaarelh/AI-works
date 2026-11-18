@@ -1,0 +1,35 @@
+\section{Posterior risk and sign confidence}
+\label{sec:posterior-confidence}
+The expected oracle also controls posterior spread, rather than only the error of its mean. Put $R_0=\E(Y-f_0(X))^2$.
+
+\begin{corollary}[An expected Gibbs-risk oracle]
+\label{cor:Gibbs-oracle}
+Under the model of the sharp all-data theorem, fix $0<\eta\le1/2$ and $T\ge128(1+\sigma^2)/\eta$. Then
+\[
+ \E_{S_n}\int[R(f_w)-R_0]d\Pi_{S_n}(w)
+ \le\frac1{1-\eta}\inf_{\rho\ll\mu_N}
+ \left\{\int[R(f_w)-R_0]d\rho(w)
+            +\frac{T\KL(\rho\|\mu_N)}{n+1}\right\}.
+\]
+At $T=256(1+\sigma^2)$ the multiplier is two. A larger fixed observation variance makes it arbitrarily close to one. All circuit-comparison resources established above may be substituted on the right.
+\end{corollary}
+\begin{proof}
+In \eqref{eq:one-step-pointwise}, the averaged subtracted coefficient is at most $128(1+\sigma^2)/T\le\eta$. Retain the resulting variance term in the leave-one-out argument. It gives
+\[
+ \E\left[R(\bar f_{S_n})-R_0
+       +(1-\eta)\E_X\operatorname{Var}_{\Pi_{S_n}}(f_w(X))\right]
+ \le\int[R(f_w)-R_0]d\rho+\frac{T\KL(\rho\|\mu_N)}{n+1}.
+\]
+The left-hand side is at least $1-\eta$ times the expected Gibbs excess risk, by the variance decomposition and the nonnegativity of $R(\bar f_{S_n})-R_0$. Take the infimum over deterministic comparison laws.
+\end{proof}
+
+\begin{corollary}[Posterior sign confidence]
+Suppose additionally $|f_0(X)|\ge a>0$ almost surely. The expected test probability of the event
+\[
+ \Pi_{S_n}\{w:f_0(X)f_w(X)>0\}\le2/3
+\]
+is at most $3/a^2$ times the Gibbs excess-risk bound in Corollary~\ref{cor:Gibbs-oracle}. More generally, replace $2/3$ by $\theta\in(0,1)$ and the factor three by $1/(1-\theta)$.
+\end{corollary}
+\begin{proof}
+A wrong sign, including zero, has squared distance to $f_0(X)$ at least $a^2$. At a point failing the displayed confidence criterion, posterior expected squared error is therefore at least $a^2/3$. Integrate over inputs and training samples. No all-input margin restriction on the prior is used in this regression conclusion.
+\end{proof}

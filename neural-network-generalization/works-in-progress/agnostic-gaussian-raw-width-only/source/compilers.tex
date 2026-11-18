@@ -1,0 +1,116 @@
+\section{Compilers whose actual outputs remain bounded}
+\subsection{Boolean inputs}
+\begin{lemma}\label{lem:raw-Boolean-tanh}
+There is a numerical $b\ge2$ such that the following holds.  Let $g$ be any
+ReLU network of width $C\ge1$ and hidden depth $h\ge1$, with arbitrary
+finite real coefficients and affine biases.  On $\{-1,1\}^d$, for every
+$0<\epsilon<1$ and every $H\ge b(h+1)$ there is a tanh network $q$ of
+hidden depth $H$, with a linear raw readout, satisfying
+\[
+ \sup_x|q(x)-\operatorname{clip}(g(x),[-1,1])|\le\epsilon,
+ \qquad |q(x)|\le1+\epsilon,
+\]
+and
+\[
+ m,B\le\left[4(d+1)(C+1)^h
+              +\lceil\log_2(32/\epsilon)\rceil+2\right]^b.
+\]
+The coefficient and width bounds do not grow with the additional learner
+depth $H$.  On the entire input cube the same raw implementation satisfies
+$|q|\le4$, because its signed-bit readout has coefficient sum below two
+and constant offset of magnitude below two.
+\end{lemma}
+\begin{proof}
+Use the coefficient-free unweighted-majority circuit compiler of~\cite{boolean}.  Its depth
+is $O(h+1)$, its size including wires is polynomial in the bracketed
+quantity, and a linear readout of its output bits, with absolute
+coefficient sum less than four, approximates the clipped target to
+$\epsilon/2$.  For a threshold gate with $r$ inputs and threshold $j$,
+the signed-bit affine input is
+\[
+ \ell(\sigma)=\sum_{i=1}^r\sigma_i-(2j-r-1).
+\]
+It has margin at least one on exact signs.  If the circuit size is $S$,
+choose $\delta=\min\{\epsilon/16,1/[8(S+1)]\}$ and
+$k=\log(2/\delta)$.  Replacing each gate by $\tanh(k\ell)$ preserves
+signed-bit error at most $\delta$ at every layer: incoming error changes
+$\ell$ by at most $1/8$, and $2e^{-7k/4}\le\delta$.
+Copying signed bits with $\tanh(k\sigma)$ restores the same accuracy, so
+arbitrary further depth causes no accumulation.
+
+An exact constant $c_0=\tanh(1)$ is initialized from the input
+constant and carried by the weight $1/c_0$. Every later affine offset
+is an edge from this wire; the learner has no native internal biases.
+Converting the Boolean readout to signed bits gives a nonconstant
+coefficient sum less than two, so its raw reconstruction error is at
+most $2\delta$.  The triangle inequality proves the claimed raw output
+error before any clipping.  The width is $S+1$, gate coefficients are
+at most $k$, and bias/constant-wire coefficients at most $(S+1)k/c_0$.
+Enlarging a numerical exponent $b$ gives all bounds.
+\end{proof}
+
+\subsection{A raw continuous tanh compiler}
+Assume $P_X$ has density at most $\kappa$ relative to Lebesgue measure on
+$[-1,1]^d$, and write $\bar\kappa=\max\{1,\kappa\}$.
+\begin{lemma}\label{lem:raw-continuous-tanh}
+Let $g$ be a width-$C$, hidden-depth-$h$ ReLU network with arbitrary
+coefficients and biases.  For $0<\zeta<1$, put
+$Q_0=\bar\kappa(C+1)^h/\zeta$ and $r_d=\max\{d,2\}$.
+At every prescribed hidden depth $H\ge2$ there is a tanh network $q$
+with raw linear readout such that
+\[
+ \E|q(X)-\operatorname{clip}(g(X),[-1,1])|\le c_d\zeta,
+ \qquad \sup_{[-1,1]^d}|q|\le2^d+1,
+\]
+and
+\[
+ m\le c_d Q_0^d,\qquad
+ B\le c_d Q_0^{r_d}\log(c_dQ_0/\zeta).
+\]
+The constants are independent of $H$ and of the original coefficients.
+\end{lemma}
+\begin{proof}
+The clipped target has variation at most $2(C+1)^h$ on each coordinate
+line.  A randomly shifted grid of mesh
+$\Delta=c_d^{-1}\zeta/[\bar\kappa(C+1)^h]$ therefore has a deterministic
+shift for which the boxwise-constant approximation $p$ has
+$\E|p(X)-\operatorname{clip}(g(X))|\le\zeta/8$.
+This is the coordinate bounded-variation translation inequality followed
+by averaging the grid shift.  There are at most
+$M_0\le c_dQ_0^d$ relevant boxes.  Choose a boundary-strip width
+$w=c_d^{-1}\zeta\Delta/\bar\kappa\le\Delta/4$, so the total strip
+probability is at most $\zeta/32$ and $1/w\le c_dQ_0^2$.
+
+For each box $B_0=\prod_j[a_j,b_j)$, first form signed membership values
+$\tanh(k(x_j-a_j))$ and $\tanh(k(b_j-x_j))$, with
+$k=(2w)^{-1}\log(32d)$.  Their signed-AND input is their sum minus
+$2d-1$.  Applying a second tanh at gain
+$\ell=c\log(32M_0/\zeta)$ gives a signed indicator $v_{B_0}$;
+write $I_{B_0}=(1+v_{B_0})/2$.  Away from all boundary strips the raw
+readout $q=\sum_{B_0}p(B_0)I_{B_0}$ differs from $p$ by at most
+$\zeta/32$.
+
+A global raw envelope is also available.  If $x$ lies outside the box
+expanded by $w$ in each coordinate, at least one membership value is
+at most $-1+1/(16d)$.  Since all other values are at most one, the AND
+input is at most $-1+1/(16d)$.  Thus
+$I_{B_0}(x)\le\zeta/(16M_0)$ after enlarging $c$.  At most $2^d$
+expanded grid boxes contain a given point because $w\le\Delta/4$.
+Consequently $\sum_{B_0}I_{B_0}(x)\le2^d+\zeta/16$ everywhere, which
+proves the stated raw envelope.  The bounded bad-set probability and
+the grid's $L^1$ error now give the displayed $L^1$ bound, and also a
+squared-error bound of the same order, with a constant
+depending only on $d$.
+
+The first-layer coefficients are $O_d(1/w)$, second-layer coefficients
+are $O_d(\log(M_0/\zeta))$, and the constant readout coefficient is at
+most $M_0/(2c_0)$ when implemented by the exact wire $c_0=\tanh(1)$.
+All affine offsets, including the constant readout term, use this
+exact wire. These give the displayed cap. To reach any larger $H$, copy the signed
+box indicators with $\tanh(\ell v)$.  Outside a box's expanded region
+its negative sign remains accurate, and away from boundary strips all
+signs remain accurate.  Errors are restored at each copy, not accumulated.
+The global envelope and approximation bounds therefore persist at every
+padded depth.
+\end{proof}
+

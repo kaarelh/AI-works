@@ -1,0 +1,236 @@
+\section{An existence result with deterministic all-width calibration}
+\label{sec:deterministic-all-width}
+
+The general-depth expectation theorem above requires enough learner width to
+contain a coefficient-controlled compilation.  A deterministic likelihood
+schedule removes this width allowance.  The additional argument uses finite
+parameter complexity at smaller widths, and may prescribe an extremely small,
+nonexplicit observation variance there.  It is therefore an existence result,
+not a refinement of the fixed-likelihood claim.
+
+\begin{theorem}[All realizable widths with a prescribed likelihood schedule]
+\label{thm:deterministic-all-width}
+Fix input dimension $d\ge1$ and teacher hidden depth $h\ge1$.  Consider either
+arbitrary input laws on $\{-1,1\}^d$, or laws on $[-1,1]^d$ satisfying the slab
+condition with fixed $\kappa,\alpha$.  Fix a learner hidden depth $H$ large
+enough for the corresponding compiler: $H\ge b(h+1)$ in the Boolean case,
+and $H\ge\max\{h,4\}$ in the continuous case.  Here $b$ is the numerical
+Boolean compiler constant used in Section~\ref{sec:compiler-resources}.
+There is a deterministic positive temperature schedule $T_{n,N}$, depending
+only on $n,N,H,d$ and the stated input-regularity constants, with the following
+property.  Use the fixed L\'evy parameter-prior family of Section~\ref{sec:levy-model-compilers},
+output $f_{w,n}=M_n\operatorname{clip}(z_w,[-1,1])$ with $M_n=n^{1/8}$, and
+\[
+ d\Pi_{n,N}(w)\ \propto\
+ \exp\!\left[-T_{n,N}^{-1}\sum_{i=1}^n
+              (f_{w,n}(X_i)-Y_i)^2\right]d\pi_N(w).
+\]
+The observation variance is $T_{n,N}/2$.  No training label is changed.
+Put $a=2b(b+1)$ and choose
+\[
+ u=\frac1{16a h(h+1)}\quad\text{on Boolean inputs},\qquad
+ u=\frac1{16(dh+1)}\quad\text{under slab regularity},\qquad
+ C_n=\lfloor n^u\rfloor.
+\]
+For every input--label law in the stated class with $\E Y^2<\infty$, every
+sufficiently large $n$, and every prescribed $N\ge C_n+1$, the ordinary
+posterior mean trained on all $n$ observations obeys
+\begin{equation}\label{eq:deterministic-all-width-oracle}
+ \E R(\bar f_{n,N})\le
+ \inf_{\substack{g\text{ a raw ReLU network}\\
+          \text{hidden depth }h,\ \text{width}\le C_n}}R(g)
+ +O\!\left(n^{-1/8}\log^2(en)\right)
+ +5\E\!\left[Y^2\mathbf1_{\{|Y|>n^{1/8}\}}\right].
+\end{equation}
+The comparison networks have arbitrary real coefficients and affine biases.
+The constant in $O(\cdot)$ may depend on $d,h,H,\kappa,\alpha$ and
+$\E Y^2$, but not on $N$ or comparison coefficients.  The schedule uses
+neither the data nor a label-moment bound.
+\end{theorem}
+
+The schedule equals $256M_n^2$ when $N>\lfloor n^{1/8}\rfloor$.  At smaller
+widths it is fixed before observing data through the finite covering argument
+below.  No useful numerical lower bound on that small-width variance is
+claimed.  There is still one architecture, one prior, one
+posterior trained on all data, and no validation or architecture mixture.
+The finite-variance shallow theorem has the stronger feature that its
+simple variance schedule works at every realizable width.
+
+\subsection{Uniform prior comparisons at a fixed finite architecture}
+Let $\mathcal F_{N,H}$ denote the normalized bounded predictions
+$\operatorname{clip}(z_w,[-1,1])$ at the specified architecture.  The input
+family $\mathfrak P$ is either all laws on the Boolean cube or all laws
+with the stated slab constants.  Define
+\[
+ d_{\mathfrak P}(f,g)=\sup_{P_X\in\mathfrak P}\E_{P_X}|f(X)-g(X)|.
+\]
+\begin{lemma}[Finite uniform covers and finite prior cost]
+\label{lem:finite-architecture-prior-cost}
+For every fixed $N,H,d$ and $0<\epsilon<1$, there are finitely many
+parameter-space open balls $B_1,\ldots,B_J$ of positive $\pi_N$-mass such
+that every $g\in\mathcal F_{N,H}$ has some $j$ for which
+\[
+ \sup_{w\in B_j}d_{\mathfrak P}
+       (\operatorname{clip}(z_w,[-1,1]),g)\le\epsilon.
+\]
+Consequently, a finite deterministic number $K_{N,H,d,\epsilon}\ge1$
+exists such that every such $g$ has a comparison measure $\rho_g$ satisfying
+\[
+ \KL(\rho_g\Vert\pi_N)\le K_{N,H,d,\epsilon},\qquad
+ \sup_{P_X\in\mathfrak P}\E_{\rho_g,P_X}|f_w(X)-g(X)|\le\epsilon.
+\]
+No polynomial bound on $K_{N,H,d,\epsilon}$ is asserted.
+\end{lemma}
+\begin{proof}
+On a finite Boolean cube, quantize the finitely many output values into
+bins of length $\epsilon/4$.  There are finitely many realized bin patterns;
+choose one implementing parameter vector for each.  Networks in the same
+pattern differ uniformly by at most $\epsilon/4$.
+
+For continuous inputs, the clipped prediction of a depth-$H$, width-$N$
+ReLU network is affine on each cell of a finite polyhedral partition.
+The number of hidden activation regions is at most
+$(N+1)^{dH}$.  Every activation boundary is contained in the zero set of
+one of the corresponding affine preactivations, and final clipping adds
+at most two affine boundaries per region.  Thus all changes of affine
+formula are contained in a union of at most
+\[
+ J_0=(HN+2)(N+1)^{dH}
+\]
+affine hyperplanes; identically zero expressions add no boundary.
+Use the rational grid of mesh $2/Q$ on $[-1,1]^d$ and quantize prediction
+values at its vertices into bins of length $\epsilon/4$.
+Choose one network for each realized finite pattern.  For a network and
+its chosen representative, discard every closed grid cell meeting one
+of their at most $2J_0$ boundary hyperplanes.  Each discarded cell lies
+within distance $2\sqrt d/Q$ of a corresponding hyperplane, so its total
+probability under any $P_X\in\mathfrak P$ is at most
+$2\kappa J_0(2\sqrt d/Q)^\alpha$.  On any remaining cell both predictions
+are affine and differ at every vertex by at most $\epsilon/4$; the same
+bound holds throughout that cell.  Hence their $d_{\mathfrak P}$ distance
+is at most
+\[
+ \epsilon/4+4\kappa J_0(2\sqrt d/Q)^\alpha.
+\]
+Choose the finite integer $Q$ so that the second term is at most
+$\epsilon/4$.  This produces a finite $\epsilon/2$-cover with centers in
+the original architecture.  No wider compiler was used.
+
+For every chosen finite parameter vector, continuity of the network
+jointly in parameters and in the compact input domain supplies an open
+parameter ball whose predictions differ uniformly from the center by
+at most $\epsilon/2$.  Each ball has positive mass because the coordinate
+prior has full support.  Set
+$K_{N,H,d,\epsilon}=\max\{1,\max_j\log(1/\pi_N(B_j))\}$ and take
+$\rho_g=\pi_N(\cdot\mid B_j)$.  Then
+$\KL(\rho_g\Vert\pi_N)=\log(1/\pi_N(B_j))$.
+All choices depend only on the prescribed function class and regularity
+constants, before any data or comparison network is selected.
+\end{proof}
+
+\subsection{Expected uniform convergence with finite-variance labels}
+\begin{lemma}[Bounded predictions, unbounded square-integrable labels]
+\label{lem:finite-variance-vc-expectation}
+Let $\mathcal F\subset[-M,M]^{\mathcal X}$ be a pointwise separable class
+of pseudodimension at most $V\ge1$, and let $\E Y^2<\infty$.  For iid
+samples and a numerical constant $c$,
+\[
+ \E\sup_{f\in\mathcal F}
+ \left|(P_n-P)\bigl[f(X)^2-2f(X)Y\bigr]\right|
+ \le c\bigl(M^2+M\sqrt{\E Y^2}\bigr)
+             \sqrt{\frac{V\log(en)}n}.
+\]
+This controls squared-loss differences without requiring $\E Y^4<\infty$.
+\end{lemma}
+\begin{proof}
+Symmetrize the two terms separately.  Uniform $L^2$ covering bounds for
+bounded VC-subgraph classes give
+$\log\mathcal N(\epsilon M,\mathcal F,L^2(Q))
+\le cV\log(c/\epsilon)$ for every probability measure $Q$.
+The map $t\mapsto t^2$ is $2M$-Lipschitz on $[-M,M]$, so the squared term
+has expected Rademacher supremum at most $cM^2\sqrt{V\log(en)/n}$.
+For the multiplier term, condition on the sample and apply the same
+entropy bound with the weighted empirical measure
+\[
+ Q_Y=\frac{\sum_iY_i^2\delta_{X_i}}{\sum_iY_i^2},
+\]
+when its denominator is positive.  The Rademacher increment metric is
+$\sqrt{\sum_iY_i^2}/n$ times the $L^2(Q_Y)$ metric.  Dudley's entropy
+integral therefore bounds its conditional supremum by
+\[
+ cM\sqrt{V\log(en)}\,\frac{\sqrt{\sum_iY_i^2}}n.
+\]
+The zero-denominator case contributes zero.  Jensen's inequality gives
+the stated expectation.
+For neural networks, rational parameter vectors form a countable
+pointwise dense class, and dominated convergence extends the estimate
+to all parameters.
+\end{proof}
+
+\subsection{Construction and proof of the schedule}
+For $N\le\lfloor n^{1/8}\rfloor$, choose the finite cost in
+Lemma~\ref{lem:finite-architecture-prior-cost} at $\epsilon_n=n^{-8}$ and set
+\begin{equation}\label{eq:small-width-deterministic-temperature}
+ T_{n,N}=\frac{n^{-3}}{1+K_{N,H,d,\epsilon_n}}.
+\end{equation}
+The prior used to define this cost is exactly the prescribed width-$N$
+prior.  In the continuous case its dependence on $\kappa,\alpha$ is
+understood.  For larger $N$, set $T_{n,N}=256n^{1/4}$.
+
+Write $\mathcal F^M_{N,H}=M\mathcal F_{N,H}$ and
+$\widehat R(f)=P_n(f-Y)^2$.  Gibbs' variational identity gives, for each
+sample and every comparison measure $\rho$,
+\[
+ \E_{\Pi}\widehat R(f)
+ \le \E_\rho\widehat R(f)+\frac{T_{n,N}}n\KL(\rho\Vert\pi_N).
+\]
+Since $\widehat R(f)-\widehat R(0)$ equals
+$P_n[f^2-2fY]$, Lemma~\ref{lem:finite-variance-vc-expectation} and
+Jensen's inequality imply
+\begin{align*}
+ \E R(\bar f_{n,N})
+ &\le \E_\rho R(f)+\frac{T_{n,N}}n\KL(\rho\Vert\pi_N)\\
+ &\quad+c(M_n^2+M_n\sqrt{\E Y^2})
+           \sqrt{V_{N,H,d}\log(en)/n}.
+\end{align*}
+The common term $P_nY^2-\E Y^2$ cancels after expectation; no fourth moment is used.
+Here $V_{N,H,d}\le c_{d,H}(N+1)^2\log(e(N+1))$ by the usual ReLU
+pseudodimension bound~\cite{pdim}; saturation and multiplication by
+$M_n$ preserve this upper bound.
+
+Take any raw comparison network $g$ of width at most $C_n$ and hidden
+depth $h$.  If $N\ge C_n+1$, a constant wire and nonnegative ReLU
+identity relays embed it at depth $H$ and width $N$.
+Thus $\operatorname{clip}(g/M_n,[-1,1])\in\mathcal F_{N,H}$.
+The comparison measure from Lemma~\ref{lem:finite-architecture-prior-cost}
+has squared $L^2(P_X\times\rho)$ error at most $2M_n^2\epsilon_n$
+relative to $\operatorname{clip}(g,[-M_n,M_n])$.  Cauchy--Schwarz bounds
+its risk increase by
+\[
+ 2(M_n+\sqrt{\E Y^2})M_n\sqrt{2\epsilon_n}
+       +2M_n^2\epsilon_n.
+\]
+The entropy term under~\eqref{eq:small-width-deterministic-temperature}
+is at most $n^{-4}$.  Since $N\le n^{1/8}$ and $M_n=n^{1/8}$,
+the uniform-convergence remainder is
+$O(n^{-1/8}\log(en))$, uniformly over these widths.
+The projection inequality in Appendix~\ref{sec:finite-variance-transfer}
+adds at most $\E[Y^2\mathbf1_{\{|Y|>M_n\}}]$ when the clipped
+comparison risk is replaced by $R(g)$.
+
+At larger widths, apply the finite-variance expectation theorem and the
+coefficient-free compilers to the normalized teacher $g/M_n$.
+Use normalized precision $O((n+1)^{-4}(1+M_n)^{-4})$.
+For the choices of $u$ in Theorem~\ref{thm:deterministic-all-width}, both
+the compiled width and its logarithmic-prior resource are
+$O(n^{1/16}\log^{c_{d,h,H}}(en))$.  Consequently the compiled width is
+at most $n^{1/8}$ for all sufficiently large $n$.
+The all-data expected cost is
+$O(M_n^2n^{1/16}\log^{c_{d,h,H}}(en)/n)
+=O(n^{-11/16}\log^{c_{d,h,H}}(en))$, together with the five-fold label-tail
+term from Appendix~\ref{sec:finite-variance-transfer}.
+At fixed $d,h,H$, this smaller remainder is absorbed by
+$O(n^{-1/8}\log^2(en))$.  The two branches therefore prove
+\eqref{eq:deterministic-all-width-oracle} uniformly over every
+$N\ge C_n+1$.  Taking deterministic comparison near-minimizers and
+then an infimum does not change the learner or its schedule.

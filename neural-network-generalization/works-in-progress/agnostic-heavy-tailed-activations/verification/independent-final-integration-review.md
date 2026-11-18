@@ -1,0 +1,11 @@
+Independent mathematical and statement-correspondence review by /root/agnostic_proof_audit, 18 November 2026.
+
+Scope: all seven included TeX sources, including the final L2-only fixed-temperature oracle, the coefficient-one calibrated oracle, growing-comparator and risk-consistency corollaries, and the raw-readout limitation. The checked statements match their proofs. This is mathematical review, not Lean verification.
+
+The conditional adaptive truncation construction is a proof comparison law, not a change to the learner's product prior. Its fractional-moment induction, disjoint embedding entropy cancellation, selected-row count, refined U and V resources, and mean-square comparison exponent q=a/(2-a) were checked. The squared triangle inequality and relative-loss PAC--Bayes proof yield the stated n^(-1+a/2) remainder for every globally Lipschitz hidden activation and bounded Lipschitz output link, with eta^(-1). Smoothness only sharpens eta dependence. The fixed-temperature result covers conditionally sub-Gaussian labels and has coefficient one on irreducible noise.
+
+The observable finite-grid score gives the separate coefficient-one bounded-label inequality R*+C(sqrt(R*u)+u). The minimum grid point is sufficient, and the source is actually included. The growing-class statement uses a deterministic width schedule, a summable confidence allocation, and strict resource-growth exponent below one. Universal consistency uses an explicitly assumed dense comparator union and countable Borel--Cantelli; the ReLU examples satisfy this assumption. The exact-sign online corollary has a separate observation convention and correctly requires the next query to precede fresh randomized prediction. The raw ReLU posterior-mean obstruction uses a positive-probability neuron that is dead on every training point and active at the test point; both predictive first moments diverge.
+
+Quantifier caveat retained: each architecture is prescribed before data; uniform constants in width do not assert one common event for arbitrary sample-dependent width selection. Tail-index gaps and fixed depth may affect constants. No polynomial-depth or computational guarantee is asserted.
+
+Reviewed files: 7. Exact SHA-256 values are in the adjacent JSON record.

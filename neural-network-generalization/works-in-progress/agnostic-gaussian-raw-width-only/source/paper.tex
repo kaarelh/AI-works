@@ -1,0 +1,298 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsthm,mathtools,booktabs,microtype}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue,hypertexnames=false]{hyperref}
+\hypersetup{pdftitle={Learning narrow approximations with Gaussian Bayesian neural networks},pdfauthor={ChatGPT-6 Astra; Claude Opus 5.5; Kaarel Hänni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}[section]\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}
+\newcommand{\KL}{\operatorname{KL}}\newcommand{\clip}{\operatorname{clip}}
+\title{Learning narrow approximations with\\Gaussian Bayesian neural networks}
+\author{ChatGPT-6 Astra \and Claude Opus 5.5 \and Kaarel H\"anni \and
+Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{17 November 2026}
+\begin{document}\maketitle
+\begin{abstract}
+We study whether a large Bayesian neural network predicts as well as
+smaller neural approximations. The learner has one prescribed finite
+architecture, independent centered Gaussian weights, a raw Gaussian
+likelihood, and the ordinary final posterior mean using all observations.
+For shallow ReLU networks and for bounded monotone activations such as
+tanh, sigmoid, and hardtanh, any input law on the cube and a finite
+label second moment suffice for a high-probability oracle with exact
+leading comparator coefficient one. At fixed dimension, coefficient
+cap, and confidence, the remainder is $\widetilde O(C/\sqrt n)$
+against width-$C$ comparison networks, without an output cap.
+The finite-dimensional resource is an explicit path mass or quadratic
+parameter energy. Both families cover every learner width that can hold the comparison
+network; a constant neuron implementing an output bias is counted in
+that width. Deterministic schedules independent of the unknown teacher
+compete with width-$n^{1/4}$ comparisons at excess
+$\widetilde O(n^{-1/4})$, already at comparable learner widths,
+simultaneously over all mean-field-or-stronger Gaussian scales.
+The finite-variance conclusions pay a polynomial confidence cost and
+make no expected-risk claim under arbitrary heavy-tailed labels.
+Expected-risk versions under marginally sub-Gaussian labels are
+also proved for ReLU at every eligible width and for the bounded-activation
+variant with $N\lambda\ge c$.
+
+Separate results remove every original comparison-coefficient bound.
+At suitable fixed learner depth, tanh learners compete with
+polynomial-width ReLU networks on Boolean inputs with arbitrary input
+law, or on continuous inputs under density or slab regularity.
+In one dimension, a shallow ReLU learner with $N\ge n$ and input
+density bounded above and below has excess
+$\widetilde O(C^{4/7}n^{-4/7}+C^{4/5}n^{-3/5})$ for a declared width
+budget. Schedules independent of $C$ also give polynomial growing-width
+oracles. These coefficient-free results allow marginally sub-Gaussian
+labels. All conclusions use specified likelihood calibrations; a
+constant-input example shows that fixed physical observation variance
+can fail as width grows. There is no architecture mixture, prior support
+restriction, or clipping of actual observations or predictions.
+The sufficient constants may be large, and efficient posterior
+computation is not established.
+\end{abstract}
+
+\section{The learning rule and the comparison question}
+\label{sec:model}
+An approximation guarantee asks whether a large Bayesian network
+learns about as well as the best much smaller neural network, even when
+the comparison network does not fit the data exactly. We prove several
+such guarantees for the ordinary raw posterior mean under independent
+Gaussian weights. The simplest shallow result allows any input law and
+finite-variance labels, with coefficient magnitudes counted explicitly.
+Other results remove all original comparison coefficients under the
+stated input regularity assumptions. The same Gaussian prior family is
+used throughout; no heavy-tailed or hierarchical sparsity prior is
+substituted.
+
+For the strongest coefficient-controlled bounded-activation theorem,
+read Section~\ref{sec:all-width-finite-variance}; for a direct ReLU
+learner on arbitrary input laws, read Section~\ref{sec:all-width-relu}.
+The preceding sections provide their comparison and capacity lemmas.
+The fixed-depth coefficient-free construction is stated in the next
+sections, and the one-dimensional ReLU analysis gives sharper rates
+under its two-sided density assumption. Each theorem specifies its
+activation, likelihood calibration, and learner-width requirement.
+
+Fix hidden depth $H$ and hidden width $N$. On $[-1,1]^d$, with
+$\bar x=(1,x)$, write
+\[
+ h^1=\tanh(W^1\bar x),\quad
+ h^\ell=\tanh(W^\ell h^{\ell-1})\ (2\le\ell\le H),\quad
+ z_w=v^\top h^H.
+\]
+There are no internal biases. A constant hidden wire in each compiler
+implements affine offsets. For any $0<\nu\le1$, all weight coordinates
+are independent centered Gaussians with variances
+\[
+ \frac\nu d\quad\hbox{in the first layer},\qquad
+ \frac\nu N\quad\hbox{in hidden-to-hidden layers},\qquad
+ \frac\nu{N^2}\quad\hbox{in the readout}.
+\]
+The prior is denoted by $\mu_{N,\nu}$. Canonical scaling exponent
+$\gamma\ge1$ means $\nu=N^{1-\gamma}$; $\nu=1$ is mean field.
+The architecture and prior are prescribed before observing the sample.
+
+For IID observations $S=((X_i,Y_i))_{i=1}^n$, the actual posterior is
+\begin{equation}
+ d\Pi_S(w)=Z_S^{-1}
+ \exp\left[-\frac N{2\lambda\nu n}
+                  \sum_{i=1}^n(z_w(X_i)-Y_i)^2\right]d\mu_{N,\nu}(w).
+ \label{eq:actual-posterior}
+\end{equation}
+Its Gaussian observation variance is $n\lambda\nu/N$. The general fixed-depth theorem selects $\lambda$ by the evidence
+calibration below; the shallow results specify deterministic scales. The returned
+prediction is $\bar z_S(x)=\int z_w(x)d\Pi_S(w)$, and
+$R(f)=\E(f(X)-Y)^2$ denotes squared test risk. No output is clipped
+in the likelihood or returned prediction.
+
+\begin{proposition}[Why the physical likelihood scale matters]
+\label{prop:fixed-variance-obstruction}
+Keep the tanh model above, with no output bias, but use a fixed physical
+Gaussian observation variance $\sigma^2>0$. If $X=x_0$ and $Y=1$
+almost surely, then after $n$ observations its ordinary posterior mean
+satisfies
+\[
+ R(\bar z_S)\ \ge\
+ \left(\frac{\sigma^2N}{\sigma^2N+n\nu}\right)^2.
+\]
+The posterior-average risk obeys the same lower bound. A width-one
+bounded-coefficient tanh network realizes the target at every depth.
+\end{proposition}
+\begin{proof}
+Conditional on the hidden weights, the output at $x_0$ is a centered
+Gaussian of variance
+$s^2=(\nu/N^2)\sum_j h_j^H(x_0)^2\le\nu/N$. Gaussian conditioning
+on the repeated label one gives conditional posterior mean
+$n s^2/(\sigma^2+n s^2)\le n\nu/(\sigma^2N+n\nu)$.
+Averaging over the hidden posterior preserves this bound; Jensen's
+inequality also gives the posterior-average risk statement.
+For the teacher, set $c=\tanh(1)$, take first-layer input weights zero
+and bias one, each subsequent scalar hidden weight $1/c$, and readout
+$1/c$. Its output is exactly one and all coefficients are less than two.
+\end{proof}
+Thus a fixed physical variance fails when $N/n\to\infty$, even for
+this constant target and $\nu\le1$. This is a statement about that
+likelihood schedule, not about all calibrations. The factor
+$n\lambda\nu/N$ in the positive results is material.
+
+Our comparison class consists of ordinary ReLU networks with fixed
+hidden depth $h$, arbitrary finite real coefficients and biases, and
+width at most $C$. For continuous inputs a regularity assumption is
+needed to remove all coefficient magnitudes from a quantitative bound:
+a huge coefficient can otherwise separate two arbitrarily close input
+points. Boolean inputs need no input-distribution restriction.
+
+The general fixed-depth argument uses an existing Gaussian raw-output
+oracle, stated with its full learning rule in the next section.
+The compiler constructions remove the original comparison coefficient
+cap while preserving raw outputs and fixed learner depth. The shallow
+one-dimensional results provide a direct statistical analysis using
+localized variation bounds and empirical midpoint comparisons.
+A second direct argument applies in arbitrary dimension under any
+input law on the cube. For arbitrary shallow teachers with a coefficient cap it gives
+$\widetilde O(\sqrt{(d+1)A_n/n})$, with an explicit variation-sensitive
+resource $A_n$. Randomly replacing a subset of the posterior neurons
+by comparison neurons supplies the empirical midpoint inequality;
+bounded ridge-feature capacity then transfers it to test risk.
+A weighted second-moment argument permits arbitrary finite-variance
+labels in this confidence theorem.
+A direct cloned comparison and a variable statistical tolerance then
+extend the coefficient-controlled rate to every $N\ge C$, without
+a condition on $N\lambda$. Its explicit quadratic teacher resource
+differs from the variation-weighted resource of the wider-learner proof.
+The earlier wide-learner hardtanh instance also competes with
+coefficient-capped ReLU teachers at the same depth. A separate appendix uses one-dimensional smoothness to
+sharpen the tanh rate. A first ReLU argument compresses empirical midpoint values into at
+most $n$ neurons. A direct balanced comparison and a joint
+empirical-loss/energy cutoff subsequently remove the requirement
+$N\ge n$: the coefficient-controlled oracle only requires the teacher
+to fit in the learner. Neither argument needs input regularity.
+The sharper one-dimensional tanh appendix retains a teacher-output
+bound; the arbitrary-input-law result removes it by a risk-weighted
+multiplier estimate. Neither result restricts prior or posterior outputs.
+
+\input{statistical-interface}
+\input{compilers}
+\input{slab-box}
+\input{oracles}
+\input{all-d-midpoint}
+\input{risk-weighted-multiplier}
+\input{finite-variance-midpoint}
+\input{all-width-bounded-activation}
+\input{general-relu-midpoint}
+\input{general-relu-oracle}
+\input{general-relu-finite-variance}
+\input{shallow-subgaussian-expectation}
+\input{all-width-relu}
+\input{univariate-relu}
+\input{polar-laplace}
+\input{localized-results}
+\input{sharp-design-norm}
+\input{localized-oracle}
+\input{empirical-midpoint-gaussian}
+\input{univariate-gaussian-sharpness}
+
+\section{Interpretation and limitations}
+The literal polynomial-width oracle is a qualified version of the
+approximation-learning conjecture: a vanishing additive term is present,
+the input and comparison depth are fixed, and the learning rule has a
+specific observable likelihood calibration. Every training observation
+is used. There is no architecture mixture, output saturation, prior
+conditioning, or infinitely wide limit.
+
+On Boolean inputs the required learner depth is a fixed constant times
+the comparison depth. On the continuous domains considered here two
+hidden tanh layers suffice for compilation, although the width exponent
+then deteriorates with the original comparison depth and input
+dimension. Additional fixed learner depth is allowed. For the general fixed-depth compiler theorems, the assumption
+$N\ge n$ is a simple sufficient presentation; the proof only needs
+$N$ above the explicit compiled width.
+
+The raw-output restriction matters. It is not enough to apply a theorem
+for clipped predictions to an unbounded predictor. The compilers here
+have bounded raw outputs themselves, and the statistical theorem
+controls the actual raw posterior. Their artificial box indicators and
+Boolean circuits occur only in a comparison argument; the Gaussian
+learner's architecture and activation stay unchanged.
+
+The comparison is statistical, not computational. Exact Bayesian
+evidence and posterior means may be infeasible to compute. The
+sufficient exponents are small and the depth-dependent constants may
+be large. The results do not give polynomial sample complexity jointly
+in unrestricted comparison depth and width, nor a claim for every
+fixed observation variance.
+
+\paragraph{Related work.}
+Finite atomic representations under neural variation norms are standard;
+Bach~\cite{bach-convex}, Section 2.2, gives the at-most-$n$ conic
+Carath\'eodory principle on $n$ observed inputs. We use that principle
+inside a Gaussian posterior comparison and supply the finite measurable
+linear-programming selection. Tinsi and Dalalyan~\cite{tinsi-dalalyan}
+analyze shallow networks with product Gaussian priors through
+PAC--Bayesian aggregation inequalities and approximation/entropy bounds.
+Their random-design example uses mirror averaging (Section 4.2), and
+their final exponentially weighted aggregate is justified for fixed
+design (Section 4.1). The one-dimensional analysis here directly
+controls the ordinary final raw Gaussian posterior under random design,
+uniformly over the stated learner widths. Positive-homogeneous balancing and univariate variation descriptions
+are also established tools; Savarese and coauthors~\cite{savarese}
+study a related function-space norm with unpenalized hidden biases.
+Our Gaussian energy includes those biases, so its bounds are derived
+directly here. The elementary midpoint identity, balancing, and finite
+atomic representation are not claimed as new.
+
+Entropy-regularized mean-field learning and its generalization theory
+are well established, including the convex analysis of Nitanda, Wu,
+and Suzuki~\cite{nitanda2022}, Gaussian-reference mean-field learning
+of Nishikawa and coauthors~\cite{nishikawa2022}, and the generalization
+analysis of Aminian, Cohen, and Szpruch~\cite{aminian2023}.
+Nitanda~\cite{nitanda2024} also proves a finite-particle stationary
+Gibbs objective bound. Section~\ref{sec:all-d-product-midpoint} concerns
+the actual finite-width correlated Gaussian posterior with an
+unbounded linear readout and gives a high-probability random-design
+oracle. Its proof uses product-subset relative entropy and the
+smooth-loss complexity theorem of Srebro, Sridharan, and
+Tewari~\cite{sst}; these entropy and empirical-process tools are
+established methods.
+
+The proofs have received independent AI-agent mathematical reviews.
+They are not Lean formalizations. The verification record distinguishes
+the imported Gaussian statistical theorem from the new compiler and
+oracle assembly checked for this manuscript.
+
+\appendix
+\input{tanh-midpoint}
+
+\begin{thebibliography}{99}
+\bibitem{gaussian} ChatGPT-6 Astra, Claude Opus 5.5, Kaarel H\"anni, and
+Dmitry Vaintrob. \emph{Finite Bayesian neural networks as agnostic
+approximation learners}. Research manuscript, November 2026. Finite
+all-width raw-output Gaussian oracle and evidence calibration.
+\bibitem{tails} ChatGPT-6 Astra, Claude Opus 5.5, Kaarel H\"anni, and
+Dmitry Vaintrob. \emph{Sub-Gaussian labels without changing the parameter
+prior}. Proof module, November 2026. Exact raw-output label-tail transfer.
+\bibitem{adaptive} ChatGPT-6 Astra, Claude Opus 5.5, Kaarel H\"anni,
+and Dmitry Vaintrob. \emph{Adaptive approximation oracles for finite
+Bayesian neural networks}. Research manuscript, November 2026.
+Gaussian free-energy certificate and shallow ReLU path-variation oracle.
+\bibitem{boolean} ChatGPT-6 Astra, Claude Opus 5.5, Kaarel H\"anni, and
+Dmitry Vaintrob. \emph{A width-only approximation guarantee for Bayesian
+neural networks on Boolean inputs}. Research manuscript, November 2026.
+Coefficient-free finite-domain majority-circuit compiler.
+\bibitem{bach-convex} Francis Bach. Breaking the Curse of Dimensionality with Convex Neural Networks. \emph{Journal of Machine Learning Research} 18(19), 1--53, 2017. \url{https://jmlr.org/papers/v18/14-546.html}.
+\bibitem{tinsi-dalalyan} Laura Tinsi and Arnak Dalalyan. Risk bounds for aggregated shallow neural networks using Gaussian priors. \emph{Proceedings of Machine Learning Research} 178, 227--253, 2022. \url{https://proceedings.mlr.press/v178/tinsi22a.html}.
+\bibitem{savarese} Pedro Savarese, Itay Evron, Daniel Soudry, and Nathan Srebro. How do infinite width bounded norm networks look in function space? \emph{Proceedings of Machine Learning Research} 99, 2667--2690, 2019. \url{https://proceedings.mlr.press/v99/savarese19a.html}.
+\bibitem{nitanda2022} Atsushi Nitanda, Denny Wu, and Taiji Suzuki. Convex Analysis of the Mean Field Langevin Dynamics. \emph{Proceedings of Machine Learning Research} 151, 9741--9757, 2022. \url{https://proceedings.mlr.press/v151/nitanda22a.html}.
+\bibitem{nishikawa2022} Naoki Nishikawa, Taiji Suzuki, Atsushi Nitanda, and Denny Wu. Two-layer neural network on infinite-dimensional data: global optimization guarantee in the mean-field regime. \emph{Advances in Neural Information Processing Systems} 35, 2022. \url{https://proceedings.neurips.cc/paper_files/paper/2022/file/d2155b1f7eb42350d7bc3013eefe5480-Paper-Conference.pdf}.
+\bibitem{aminian2023} Gholamali Aminian, Samuel N. Cohen, and {\L}ukasz Szpruch. Mean-field Analysis of Generalization Errors. Preprint, 2023. \url{https://arxiv.org/abs/2306.11623}.
+\bibitem{nitanda2024} Atsushi Nitanda. Improved Particle Approximation Error for Mean Field Neural Networks. \emph{Advances in Neural Information Processing Systems} 37, 2024. \url{https://arxiv.org/abs/2405.15767}.
+\bibitem{leshno} Moshe Leshno, Vladimir Ya. Lin, Allan Pinkus, and Shimon Schocken. Multilayer feedforward networks with a nonpolynomial activation function can approximate any function. \emph{Neural Networks} 6(6), 861--867, 1993. \url{https://doi.org/10.1016/S0893-6080(05)80131-5}.
+\bibitem{bousquet} Olivier Bousquet. A Bennett concentration inequality and its application to suprema of empirical processes. \emph{Comptes Rendus. Math\'ematique} 334(6), 495--500, 2002. \url{https://doi.org/10.1016/S1631-073X(02)02292-6}.
+\bibitem{sst} Nathan Srebro, Karthik Sridharan, and Ambuj Tewari. Smoothness, low noise and fast rates. \emph{Advances in Neural Information Processing Systems} 23, 2010. \url{https://www.cs.cornell.edu/~sridharan/smoothness.pdf}.
+\bibitem{entropy-shearer} Pietro Caputo and Daniel Parisi. Block Factorization of the Relative Entropy via Spatial Mixing. \emph{Communications in Mathematical Physics} 388, 793--818, 2021. \url{https://doi.org/10.1007/s00220-021-04237-1}.
+\end{thebibliography}
+\end{document}

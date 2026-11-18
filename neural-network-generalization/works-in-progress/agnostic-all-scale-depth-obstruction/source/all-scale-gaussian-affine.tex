@@ -1,0 +1,106 @@
+\section{Correctly specified Gaussian noise with affine output skips}
+\label{sec:all-scale-gaussian-affine}
+The all-scale affine result also holds when the observation-noise family is correctly specified. Only a proof comparison is clipped; the learner uses the original Gaussian labels.
+
+\begin{corollary}[Gaussian-noise obstruction with arbitrary affine covariance]
+\label{cor:all-scale-gaussian-affine}
+Replace the labels in Theorem~\ref{thm:all-scale-affine-likelihood} by
+\[
+ Y=g(X)+aG,\qquad G\sim N(0,1)\text{ independent of }X,
+ \qquad g(X)=\frac a4(2+\tanh X_1).
+\]
+After adjusting its absolute constants and replacing its excess lower bound by $2^{-64}a^2$, all its conclusions hold for ordinary raw posterior means and their arbitrary data-dependent mixtures. In particular the same sample event covers every width $N\ge n^C$, every $0<s\le1/N$, every positive likelihood temperature, and every independent centered Gaussian affine-output covariance. The likelihood family contains the true Gaussian observation variance $a^2$.
+\end{corollary}
+
+\begin{lemma}[A bounded comparison for an unbounded label vector]
+\label{lem:clipped-affine-prox-comparison}
+Let $B$ be any positive definite contraction preserving the atom-constant subspace, let $b$ belong to that subspace, and put $b_A=\operatorname{clip}(b,[-A,A])$. For $c,\lambda>0$ define
+\[
+ J_b(u)=\|B^{1/2}(b-u)\|_n^2+\lambda c\|u\|_\infty,
+ \qquad u_b=\arg\min J_b,
+\]
+and define $u_A$ using $b_A$ in place of $b$. Then
+\[
+ \|u_A\|_\infty\le A,
+ \qquad
+ J_b(u_A)-J_b(u_b)\le\|B^{1/2}(b-b_A)\|_n^2.
+\]
+\end{lemma}
+\begin{proof}
+The cap bound follows by comparing with $u=b_A$. Strong convexity of $J_{b_A}$ gives
+\[
+ J_{b_A}(u_A)-J_{b_A}(u_b)
+                \le-\|B^{1/2}(u_A-u_b)\|_n^2.
+\]
+Expanding the two squared losses after replacing $b_A$ by $b$ changes their difference by
+$-2\langle B^{1/2}(b-b_A),B^{1/2}(u_A-u_b)\rangle_n$. If $r=\|B^{1/2}(b-b_A)\|_n$ and $d=\|B^{1/2}(u_A-u_b)\|_n$, the resulting upper bound is $-d^2+2rd\le r^2$.
+\end{proof}
+
+\begin{proof}[Proof of Corollary~\ref{cor:all-scale-gaussian-affine}]
+Use the same input law and let $b$ denote the empirical atom means. All constants below are fixed independently of depth and prior parameters.
+
+\emph{Sample bounds and clipping error.}
+With probability tending to one, the empirical squared Gaussian-noise average is at most $2a^2$. Since $|g|<3a/4$, this gives
+\[
+ \|y\|_n\le3a,\qquad \|b\|_n\le3a,
+ \qquad \|b-2g(S)\|_n\le3a.
+\]
+The occupancy events from the previous proof continue to give at least $n/3$ singleton inputs and $n^{-1}\sum_xk_x^2\le4$.
+Set $A=32a$ and $b_A=\operatorname{clip}(b,[-A,A])$. Conditional on the inputs, an atom of count $k\ge1$ has mean $b_x=g(x)+aZ_x/\sqrt k$ with independent standard Gaussians $Z_x$. Therefore
+\[
+ k(b_x-b_{A,x})^2\le a^2(|Z_x|-31)_+^2.
+\]
+For $W=(|Z|-31)_+^2$, Gaussian tails give
+$\Pr(W>u)\le2e^{-31^2/2}e^{-u/2}$ and $\E e^{W/4}\le1+2e^{-31^2/2}$. Adding independent dummy variables for unobserved atoms and applying exponential Markov yields, for all sufficiently large $n$,
+\[
+ \|b-b_A\|_n^2\le2^{-80}a^2
+\]
+except on probability at most $\exp(-2^{-83}n)$.
+
+\emph{The posterior reference.}
+Integrate the affine Gaussian block and use the same matrix $B$ as in Theorem~\ref{thm:all-scale-affine-likelihood}. Apply Lemma~\ref{lem:clipped-affine-prox-comparison}. The bounded function $u_A$, extended by zero off observed atoms, admits the uniform neural comparison with amplitude cap $32a$. Its entropy is bounded by
+\[
+ B_0+4\|u_A\|_\infty+e_2,
+\]
+where $B_0=\kappa(\nu)(H-1)$ is the depth baseline and $e_2$ has exactly the previous form, with a larger absolute coefficient on $a^2$. Its expected empirical loss differs from the loss of $u_A$ by at most $70a\varepsilon+\varepsilon^2$ at RMS accuracy $\varepsilon$.
+
+Use this bounded comparison in the baseline-plus-amplitude proof, but retain the original proximal minimizer $u_b$ as the reference. The preceding lemma adds at most $2^{-80}a^2$ to its objective comparison. Explicitly, the low-temperature approximation error in the $B$ norm is at most
+\[
+ u+\sqrt{6au+s+2^{-80}a^2+\zeta+
+             \lambda\{32a(4-c_\nu)+e_0+e_2\}}.
+\]
+Here $u$ is the fixed high-output threshold, $c_\nu=2\nu t$, and $\zeta=70a\varepsilon+\varepsilon^2$. This follows from the same two-comparison cancellation: the high-output quadratic gap is taken around $u_b$, while the comparison objective at $u_A$ is within the stated clipping error of that minimum.
+
+All parameter estimates for the single cutoff
+$\lambda_0=\Lambda a^2/(B_0+a)$ remain valid; only fixed numerical coefficients have increased. At high temperatures the zero comparison is at most $9a^2+s$, and the $B$-norm second-moment estimate is at most $40a^2$ after enlarging the width threshold. The indicator and amplitude branches therefore work exactly as before. Choose the constants and comparison tolerance so that the full posterior mean is within $2^{-31}a$ in training norm of a convex combination of the pure affine ridge reference and
+\[
+ f_b=(I-B)b+Bu_b.
+\]
+The original proximal minimizer may have a large cap, but its capped-affine representation and sector inequality remain valid for this finite Gaussian sample. No uniform cap on $u_b$ is required.
+
+\emph{Uniform reference error and the common witness.}
+The small-cap branch of Lemma~\ref{lem:capped-affine-error} is unchanged because the input Gram matrix and the target are unchanged. For its large-cap branch, use singleton Gaussian noises whose sign matches $\operatorname{sgn}(h-g)$ and whose magnitude is at least $a/2$. Each fixed sign pattern has this property at each singleton with probability at least one quarter. A Chernoff bound and the same hyperplane-pattern union bound give at least $n/24$ such singletons simultaneously for every affine $h$. At cap $t\ge a/1024$, each gives error at least $a/1024$. Consequently every capped-affine reference has squared empirical error at least $2^{-26}a^2$.
+The Gaussian alignment obeys
+\[
+ |\langle b-g(S),g(S)\rangle_n|\le2^{-29}a^2
+\]
+with probability tending to one, since its conditional variance is at most $a^4/n$. The sector identity now yields the common reference witness at least $2^{-27}a^2$. The posterior approximation reduces it by at most $3\cdot2^{-31}a^2$, leaving
+\[
+ \langle b-2g(S),f-g(S)\rangle_n\ge2^{-28}a^2.
+\]
+This witness is common to every covariance and other learner parameter, so it survives arbitrary mixtures.
+
+Finally, conditional on the input counts, the population witness
+$h_S(x)=\sum_{i:X_i=x}(Y_i-2g(x))$ is
+$a\sqrt{k_x}Z_x-k_xg(x)$. On the occupancy event,
+\[
+ \frac1n\sum_x k_xZ_x^2\le2
+\]
+with probability tending to one: its conditional mean is one and its variance is $2\sum_xk_x^2/n^2\le8/n$. Thus
+\[
+ \|h_S\|_{L^2(P_X)}^2
+ \le\frac{2a^2}{n}\sum_xk_xZ_x^2
+       +\frac2n\sum_xk_x^2g(x)^2\le12a^2<16a^2.
+\]
+The empirical-to-population witness identity is unchanged. Cauchy--Schwarz gives excess at least $2^{-60}a^2$, leaving slack for the displayed $2^{-64}a^2$. Increase the depth threshold so that the total sample failure is below one tenth. The actual learner always conditions on the original Gaussian labels; the clipping is used solely to construct its variational comparison.
+\end{proof}

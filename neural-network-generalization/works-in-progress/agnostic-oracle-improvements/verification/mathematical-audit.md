@@ -12,15 +12,15 @@ There is a provenance issue: the PDF cites `statement/tempered-learner.pdf` and 
 
 Set H=L−1, s=log(1/δ),
 
-E*=d(d+1) B² + 2H m²B²,
+`E*=d(d+1) B² + 2H m²B²`,
 
-P_a=2(E*+1)+16(d+1)+8H+[4+(mB+1)²](1+s).
+`P_a=2(E*+1)+16(d+1)+8H+[4+(mB+1)²](1+s)`.
 
 Then the uploaded part (a) is true with P_a in place of `poly(...)`. Indeed, (2/H)^(H/2)≤sqrt(2), log(n+1)≥log 2, and the confidence term has n^(−1/2)≤n^(−1/(L+1)). The constants above safely dominate the factors needed to put all terms over sqrt(log(n+1)).
 
 For part (b), set
 
-P_b=2d(d+1)+4L+16(d+1)+8H+8(1+s).
+`P_b=2d(d+1)+4L+16(d+1)+8H+8(1+s)`.
 
 This safely dominates the coefficient Xi_n in B Corollary 8.1 after factoring out sqrt(log(n+1)). Neither polynomial depends on α. For H≥2 and 0<α<1/(4H), the exponent β=(1−4Hα)/(H+2) is positive and θ=(1+8α)/(H+2)<1/H. The extra comparator Hoeffding term is dominated because α≤H/16; the latter follows from α<1/(4H) for H≥2.
 

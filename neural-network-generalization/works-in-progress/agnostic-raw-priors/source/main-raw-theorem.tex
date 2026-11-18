@@ -1,0 +1,114 @@
+\section{The strongest Gaussian-readout statement}
+\label{sec:main-raw-statement}
+Here is the principal teacher-resource oracle before the more general
+transfer arguments. Fix $\kappa\in(0,1]$ and a Student distribution
+with more than two degrees of freedom. The architecture has hidden
+depth $H$ and hidden width $N$. Every hidden edge factor and hidden
+bias has this fixed Student law. At each hidden vertex, an independent
+$\operatorname{Gamma}(\kappa/N,1)$ gate multiplies all its outgoing
+hidden-layer edge factors. The first layer is an ordinary affine
+Student row. Hidden activations are tanh.
+
+At the final hidden layer, independently draw
+\[
+ P\sim\operatorname{Dirichlet}(\kappa/N,\ldots,\kappa/N),
+ \qquad G_0,G_1,\ldots,G_N\stackrel{\rm iid}{\sim}N(0,1),
+\]
+and use the unrestricted raw readout
+\[
+ z(x)=G_0+\sum_{j=1}^N\sqrt{P_j}G_j h_j^H(x).
+\]
+All distributions are fixed once $H,N$ are prescribed; none depends on
+sample count. The readout is a continuous random allocation of a
+Gaussian variance budget. It neither clips the output nor bounds it
+deterministically, and the actual weight prior has full support.
+
+A comparator $g$ has the same hidden depth and tanh activation, widths
+$m_\ell\le m\le N$, coefficient cap $B\ge1$, and raw readout
+$g=b_g+\sum_jv_jh_{g,j}^H$. Define
+\[
+ P_g=(d+1)m_1+\sum_{\ell=2}^Hm_\ell(m_{\ell-1}+1)+m_H+1,
+ \quad Q_g=P_g+\sum_{\ell=1}^Hm_\ell+H,
+ \quad L_g=\sum_j|v_j|.
+\]
+The parameter count is for the full selected blocks, including zero
+coefficients; sparsity of the teacher graph does not remove those
+positions from this bound.
+
+\begin{theorem}[A raw posterior-mean approximation oracle]
+\label{thm:main-raw-oracle}
+Assume IID observations on $[-1,1]^d\times\R$ and
+$\E e^{Y^2/K_Y^2}\le2$. For constants $t_0,C$ depending only on
+$\kappa$, the fixed Student law and $K_Y$, use the raw posterior
+\[
+ d\Pi_{S_n}(w)\propto
+ \exp\left[-\frac1{t_0\sqrt n}
+       \sum_{i=1}^n(z_w(X_i)-Y_i)^2\right]d\mu_{H,N}(w).
+\]
+Its ordinary final mean, trained on all $n$ observations, satisfies
+\begin{align*}
+ \E R(\bar z_{S_n})\le R(g)+\frac C{\sqrt n}
+ \Big(&Q_g\big[(H+2)\log\{C(d+m+2)(B+2)\}\\
+ &+\log\{C(H+2)(m+1)(B+2)(n+1)\}\big]
+       +L_g^2+b_g^2+1\Big)+\frac C{(n+1)^2}.
+\end{align*}
+This holds for every prescribed finite $N\ge m$. The constants are
+independent of learner width, learner depth, input dimension, and
+comparator resources. There is no comparator output cap and no
+restriction on the input distribution. The infimum over deterministic
+comparators can be taken on the right.
+\end{theorem}
+The proof is given by the normalized-readout comparison and raw-tail
+transfer below, including the cutoff-removal argument. For a width-$m$
+comparator of bounded coefficients, the principal resource has order
+$[(d+1)m+Hm^2]H$ up to logarithms. In particular it is polynomial in
+both width and depth, independently of the potentially much larger
+learner width. This is an expected-risk theorem; it is not a simultaneous
+high-probability statement for data-dependent choices of architectures.
+
+
+\begin{corollary}[The same prior at one fixed likelihood variance]
+\label{cor:main-raw-fixed-temperature}
+In the same model, suppose $Y=g(X)+\xi$, where $g$ is one of the
+comparison networks above and, conditionally on $X$, the centered noise
+is $\sigma^2$-sub-Gaussian. Fix any $T\ge8\sigma^2+1$, independently of
+sample count, and use $e^{-\sum_i(z_w(X_i)-Y_i)^2/T}$ as the likelihood.
+Let $K_n=\mathcal K_n^{\rm dir}(g)$ be the comparison resource in
+Section~\ref{sec:dirichlet-raw-oracle}, with its constant chosen from
+the prior comparison bound alone, independently of the label envelope.
+Then
+\[
+ \E\Pi_{S_n}R(z)\le\E\xi^2+
+             \frac{C K_n(T+K_n+\log(n+2))}{n}.
+\]
+The ordinary raw posterior mean satisfies the same bound. With
+probability at least $1-\delta$, the corresponding bound is
+\[
+ \Pi_{S_n}R(z)\le\E\xi^2+
+ \frac{C[K_n+\log(4/\delta)]
+       [T+K_n+\log((n+2)/\delta)]}{n}.
+\]
+All constants depend only on the fixed prior laws. In particular the
+learner need not know $K_n$, the teacher width, or its coefficients to
+choose this fixed temperature.
+\end{corollary}
+\begin{proof}
+The raw comparison law has uniform squared error at most $n^{-4}$ and
+entropy at most $CK_n$. The readout variation term gives
+$\|g\|_\infty^2\le C K_n$. Apply
+Theorem~\ref{thm:fixed-temperature-realizable} with $r=1/2$.
+\end{proof}
+This realizable conclusion allows genuinely noisy labels: the noise
+floor is $\E\xi^2$, while the excess-risk term tends to zero. Its
+fixed-temperature claim is distinct from the agnostic approximation
+oracle above, which does not assume a correct finite comparison network.
+
+
+For exactly Gaussian observation noise with known variance $\sigma^2$,
+the same prior also admits the true likelihood variance $\sigma^2$
+($T=2\sigma^2$). Section~\ref{sec:matched-gaussian-likelihood} proves a
+separate polynomial bound for that posterior. At fixed depth and input
+dimension its Student-hidden excess is $\widetilde O(K_n^4/n)$;
+the full joint depth and dimension dependence is displayed there.
+This weaker rate is a proof bound, not a claim that matching the
+likelihood necessarily worsens learning.

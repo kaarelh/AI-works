@@ -1,0 +1,136 @@
+\section{Separating approximation error from irreducible label noise}
+\label{sec:excess-oracle}
+The preceding leading-one oracle uses total comparison risk. A second calibration distinguishes approximation error from irreducible noise. Let
+\[
+ f_0(x)=\E[Y\mid X=x],\qquad
+ R_0=\E(Y-f_0(X))^2,\qquad
+ A(f)=R(f)-R_0=\E(f(X)-f_0(X))^2.
+\]
+Neither $f_0$ nor $R_0$ is supplied to the learner.
+
+\subsection{Two scores with one common unknown offset}
+Fix $0<\eta\le1$, put $\beta_0=\eta/32$ and $c=1-4\beta_0$. For any bounded predictor $f$, define the excess loss
+$h_f(X,Y)=(f(X)-Y)^2-(f_0(X)-Y)^2$.
+Conditional Hoeffding's lemma gives
+\[
+ \E[e^{-\beta_0h_f}\mid X]
+ \le e^{-\beta_0(1-2\beta_0)(f(X)-f_0(X))^2}.
+\]
+Indeed the conditional noise $Y-f_0(X)$ has mean zero and lies in an interval of length two. Since $(f-f_0)^2\le4$, the bounded-interval chord inequality then gives
+\[
+ \E e^{-\beta_0h_f}\le e^{-\beta_0cA(f)}.
+\]
+The exact available coefficient is
+$(1-e^{-4\beta_0(1-2\beta_0)})/(4\beta_0)$, which is at least $1-4\beta_0=c$.
+
+The PAC--Bayes variational argument consequently gives, with probability at least $1-\delta/4$, simultaneously for all posterior laws $\rho$,
+\[
+ c\E_\rho A(f_w)\le\E_\rho\widehat R_S(f_w)-\widehat R_S(f_0)
+              +\frac{\operatorname{KL}(\rho\Vert\pi_N)+\log(8/\delta)}{\beta_0 n}.
+\]
+At the Gibbs posterior with inverse temperature $\beta_0$, define the observable score
+\begin{equation}
+ J_{\rm imp}=F_S(\beta_0)+\frac{\log(8/\delta)}{\beta_0 n}.
+ \label{eq:Student-excess-implicit-score}
+\end{equation}
+It satisfies $c\E_\Pi A\le J_{\rm imp}-\widehat R_S(f_0)$. This is a risk certificate with a common unknown offset; the score itself is observable.
+
+For the parameter branch we use the standard localized VC Bernstein inequality~\cite{localrad}. Its precise form needed here is: for a separable bounded regression class of pseudodimension $V$, with probability at least $1-\delta/4$,
+\begin{equation}
+ A(f)\le\widehat R_S(f)-\widehat R_S(f_0)
+              +C\sqrt{A(f)v_n}+Cv_n\quad\text{for every }f,
+ \qquad v_n=\frac{C[V\log(en)+\log(8/\delta)]}{n}.
+ \label{eq:localized-VC-excess}
+\end{equation}
+Here constants are numerical. To check its hypotheses, $|h_f|\le4$, $\E h_f=A(f)$, and $\E h_f^2\le16A(f)$; the sharper constant eight also follows by conditioning. Moreover $h_f$ is 4-Lipschitz in $f$, so the uniform empirical $L^2$ covering entropy is $O(V\log(C/\epsilon))$. Localizing by $A(f)$ and applying the VC Bernstein bound gives \eqref{eq:localized-VC-excess}; its fixed point is $O(V\log(en)/n)$. This is the standard signed-excess fast-rate theorem, not a use of the relative nonnegative-loss inequality on a signed loss.
+
+Young's inequality absorbs $C\sqrt{A v_n}$ into $4\beta_0 A+C v_n/\beta_0$. Thus
+\[
+ cA(f)\le\widehat R_S(f)-\widehat R_S(f_0)+C v_n/\beta_0.
+\]
+Integrate against the positive-temperature empirical-minimum posterior $\Pi_{S,\beta_{\rm par}}$ from the preceding section. Its posterior empirical loss is at most $F_S(\beta_{\rm par})$, so the observable score
+\begin{equation}
+ J_{\rm par}=F_S(\beta_{\rm par})+C v_n/\beta_0
+ \label{eq:Student-excess-parameter-score}
+\end{equation}
+satisfies the same inequality $c\E_\Pi A\le J_{\rm par}-\widehat R_S(f_0)$.
+The learner selects whichever of \eqref{eq:Student-excess-implicit-score} and \eqref{eq:Student-excess-parameter-score} is smaller, and returns that one posterior mean. The unknown offset is identical for both scores and cancels from their comparison. This rule is distinct from the leading-one total-risk calibration in the preceding section; it uses the supplied approximation slack $\eta$, but no noise or teacher parameter.
+
+\begin{theorem}[A noise-sensitive width-only oracle]
+\label{thm:Student-Boolean-excess}
+Under the architecture and distribution assumptions of Theorem~\ref{thm:Student-Boolean-width}, let
+\[
+ A_* =\inf_{g\in\mathcal G_{C,h}}[R(g)-R_0].
+\]
+For any $0<\eta,\varepsilon\le1$, the score selection above gives, with probability at least $1-\delta$,
+\begin{equation}
+ R(\widehat f_S)\le R_0+(1+\eta)A_*+\varepsilon
+ \label{eq:Student-Boolean-excess-conclusion}
+\end{equation}
+provided
+\begin{equation}
+ n\ge\widetilde O_{\alpha,H}\left(
+       \frac{\mathcal J_\varepsilon}{\eta\varepsilon^{q+1}}\right),
+ \qquad q=\frac\alpha{2-\alpha},
+ \label{eq:Student-Boolean-excess-samples}
+\end{equation}
+with the coefficient-free polynomial $\mathcal J_\varepsilon$ from \eqref{eq:Student-Boolean-samples}, after enlarging its numerical constants. The statement holds for every prescribed $N\ge2C+1$, with constants independent of $N$. The input law and bounded label noise remain arbitrary.
+\end{theorem}
+\begin{proof}
+Choose a deterministic ReLU comparator $g$ within $\varepsilon/64$ of the approximation-risk infimum. Clipping does not increase its risk. Apply the bounded-coefficient Boolean tanh compiler with tolerance small enough that its clipped output $q_g$ has
+$A(q_g)\le A(g)+\varepsilon/32$. Its width and coefficient cap obey the same $Q_\varepsilon^b$ bounds as before.
+
+If $N$ accommodates that width, apply the native Student comparison at precision $r$ to the fixed-$\beta_0$ score. On the two score events,
+\[
+ c\E_\Pi A(f_w)\le
+ \widehat R_S(q_g)-\widehat R_S(f_0)
+       +r+\frac{K_{m,B}r^{-q}+\log(8/\delta)}{\beta_0n}.
+\]
+For the fixed comparison function, bounded excess-loss Bernstein gives
+\[
+ \widehat R_S(q_g)-\widehat R_S(f_0)
+ \le A(q_g)+C\sqrt{A(q_g)\log(8/\delta)/n}
+                       +C\log(8/\delta)/n.
+\]
+Young's inequality, followed by division by $c=1-\eta/8$, makes the coefficient on $A(q_g)$ at most $1+\eta$ and contributes
+$O(\log(8/\delta)/(\eta n))$. Optimize
+$r+K_{m,B}r^{-q}/(\beta_0n)$ over $0<r\le1$.
+The resulting remainder is
+\[
+ C_q\left(\frac{K_{m,B}+\log(8/\delta)}{\eta n}\right)^{1/(q+1)}.
+\]
+When the optimizing scale exceeds one, bounded risk gives the same bound after enlarging the constant.
+
+If $2C+1\le N<m$, the narrow approximation lemma gives
+$F_S(\beta_{\rm par})\le\widehat R_S(s(g))+1/n$.
+Use the parameter score and the same fixed-comparator excess-loss concentration. Its remainder is $O(v_n/\eta)$, after increasing the coefficient on $A(g)$ to at most $1+\eta$. The resource $\mathcal J_\varepsilon$ dominates the corresponding polynomial pseudodimension bound at width $m$. Since $q+1>1$ and $\varepsilon\le1$, \eqref{eq:Student-Boolean-excess-samples} makes this remainder at most the allocated fraction of $\varepsilon$ as well.
+
+The score selection inherits whichever branch applies. Jensen bounds the excess risk of the ordinary posterior mean by its posterior average. Allocate the remaining confidence to the fixed-comparator Bernstein events, and absorb the compiler and near-infimum errors by choosing their displayed numerical tolerances smaller if needed. This proves \eqref{eq:Student-Boolean-excess-conclusion}.
+\end{proof}
+
+If the conditional mean itself is approximable arbitrarily well by the prescribed ReLU class, then $A_*=0$, regardless of the irreducible label noise $R_0$. Cauchy coordinates give sample accuracy power $\varepsilon^{-2}$, and tail index $\alpha=1/2$ gives $\varepsilon^{-4/3}$, up to the stated teacher polynomial and logarithms. More generally the multiplicative factor applies only to approximation error, not to irreducible noise.
+
+For widths above the coefficient-controlled compiler width, the parameter score can be omitted. The same proof then uses the single fixed inverse temperature $\beta_0=\eta/32$, so its Gaussian observation variance is the constant $16/\eta$, independent of sample size and learner width. The all-width extension selects between that posterior and the empirical-minimum posterior; its selected observation variance may depend on the data.
+
+\subsection{Competing with polynomially growing width}
+The bounds imply a direct version of a polynomial-width approximation oracle. Fix $d,h,H,\alpha$ with the stated depth overhead, and let
+\[
+ \kappa=b h[H(1+4q)+8].
+\]
+At these fixed depths the resource in the theorem is
+$\mathcal J_\varepsilon=\widetilde O(C^\kappa)$, with logarithmic dependence on $1/\varepsilon$. Hence, for any positive $a,\zeta$ satisfying
+\[
+ a\kappa+(q+2)\zeta<1,
+\]
+the leading-one learner has, for all sufficiently large $n$,
+\[
+ R(\widehat f_n)\le
+    \inf_{g\in\mathcal G_{\lfloor n^a\rfloor,h}}R(g)+n^{-\zeta},
+\]
+up to increasing a numerical constant on the vanishing term. This holds at every architecture fixed before the data with
+$N\ge2\lfloor n^a\rfloor+1$. No coefficient restriction is imposed on the comparison class.
+
+With a fixed approximation slack $\eta>0$, the noise-separated learner instead needs only
+$a\kappa+(q+1)\zeta<1$ and gives
+$R_0+(1+\eta)\inf_{g\in\mathcal G_{\lfloor n^a\rfloor,h}}A(g)+O(n^{-\zeta})$.
+The strict inequalities absorb all logarithms. The exponents are conservative and can be very small; the statement establishes a positive polynomial-width regime rather than a practical network-size estimate.

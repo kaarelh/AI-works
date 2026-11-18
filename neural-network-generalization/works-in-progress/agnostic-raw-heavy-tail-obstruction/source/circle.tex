@@ -1,0 +1,107 @@
+\section{The same raw-mean obstruction on the unit circle}
+\label{sec:raw-student-circle}
+The preceding example does not rely on different input norms. A fixed two-dimensional sphere already permits the same divergence.
+
+\begin{corollary}[A unit-norm input counterexample]
+\label{cor:raw-student-circle}
+The raw-mean obstruction holds for the one-neuron network
+\[
+ f_{v,w_1,w_2,\gamma}(x)=v\tanh(w_1x_1+w_2x_2+\gamma),
+\]
+with four independent coordinates of density $q_p$, when every input lies on the unit circle. The prior, architecture and Gaussian likelihood variance remain fixed. There are noiseless bounded-label laws for which the raw posterior mean has squared test risk at least $c n^{1/3}$ with fixed positive probability, while the zero comparator has risk at most $n^{-1/3}$.
+\end{corollary}
+\begin{proof}
+Retain $b=n^{-1/6}$, $R=e^{c n^{2/3}}$, and $a=b/R$ from the scalar construction, with its sufficiently small fixed $c$. Put $r=\sqrt{1-a^2}$. Replace the common inputs by
+\[
+ x_+=(a,r),\qquad x_-=(-a,r),
+\]
+with labels $b,-b$ and probabilities $(1-1/n)/2$ each. The rare input is $x_*=(1,0)$, with label zero and probability $1/n$. Every input has norm one. For large $n$, $r\in[1/2,1]$.
+
+On the no-rare, balanced-count event, the training likelihood depends on $w_2,\gamma$ only through $h=rw_2+\gamma$. The joint density of $(h,\gamma)$ is
+\[
+ j_r(h,\gamma)=q_p(\gamma)q_p((h-\gamma)/r)/r.
+\]
+Its marginal $q_r(h)=\int j_r(h,\gamma)d\gamma$ is a probability density, is bounded above uniformly in $r\in[1/2,1]$, and is bounded below by a positive constant on $|h|\le1$, uniformly in that range. The upper bound follows from convolution with a bounded density. For the lower bound, integrate over $|\gamma|\le1$ and use the positive minima of $q_p$ on fixed compact intervals.
+
+Consequently the evidence upper bound from the scalar construction applies unchanged, with $h$ replacing the hidden bias: the saturation estimate uses only that its density integrates to one, and the linear-region estimate uses only a uniform density upper bound. Thus
+\[
+ Z_{S_n}\le C Z_*,\qquad Z_*=R^{-p}/(bn).
+\]
+The same global sign symmetry permits restriction to $v>0$.
+
+It remains to check the signed numerator at $x_*$. Define
+\[
+ I_r(w,h)=\int\tanh(w+\gamma)j_r(h,\gamma)d\gamma.
+\]
+On the good-fit rectangle, $w=w_1>0$ and $|h|<aw$, so $w+h>0$. Pair the integral around $\gamma=-w$. For $t>0$, monotonicity of $q_p$ in absolute value gives
+\begin{align*}
+ q_p(-w+t)&\ge q_p(-w-t),\\
+ q_p((h+w-t)/r)&\ge q_p((h+w+t)/r).
+\end{align*}
+Both inequalities use positive centers, $w>0$ and $h+w>0$. Therefore
+\[
+ I_r(w,h)=\int_0^\infty\tanh(t)
+       [j_r(h,-w+t)-j_r(h,-w-t)]dt\ge0.
+\]
+Thus the full good-fit region has no negative contribution after integrating the latent bias decomposition.
+
+Moreover, there are fixed $W_0,c_0>0$ such that
+\[
+ I_r(w,h)\ge c_0\qquad(w\ge W_0,\ |h|\le1,\ 1/2\le r\le1).
+\]
+To verify this, use only the paired terms with $\gamma=-w+t\in[-1,1]$. Their positive density $j_r(h,\gamma)$ is bounded below by an absolute positive constant. The reflected density at $-2w-\gamma$ is at most $Cw^{-2p-2}$, uniformly in $h,r$. For sufficiently large fixed $W_0$ it is at most half the positive lower bound, while $\tanh(t)\ge1/2$. Integration over this interval proves the claim; all omitted paired terms are nonnegative.
+
+In the scalar lower-numerator region, replace $1\le v\le R/100$ by
+$1\le v\le R/(100W_0)$. Then $w\ge W_0$, $|h|\le1$, and the same Jacobian and Student bounds apply. The integrated prediction factor is now $v I_r(w,h)\ge c_0v$. Hence the positive numerator is at least $cZ_*\log R$, since shortening the upper endpoint by a fixed factor changes the logarithm only by a constant. The bad-fit contribution is still at most
+$\mathbb E|v|e^{-n^{2/3}/(12T)}=o(Z_*\log R)$ in absolute value.
+Therefore the raw posterior mean at $x_*$ is at least $c\log R$, and its rare-input risk is at least $c n^{1/3}$. The event probability and zero-comparator risk are unchanged.
+\end{proof}
+
+This unit-norm version still uses input laws whose two common atoms approach one another exponentially fast. It does not satisfy a fixed uniform anti-concentration condition. The conclusion is a distribution-uniform failure, not inconsistency for a single fixed input law.
+
+\begin{corollary}[Smooth atomless input distributions]
+The input laws in Corollary~\ref{cor:raw-student-circle} can instead
+have $C^\infty$ densities with respect to arc length on the unit
+circle. Labels remain noiseless and bounded. The same risk lower
+bound, up to a fixed constant factor, and the same zero-comparator
+risk upper bound hold. No uniform bound on the input densities or
+their derivatives is asserted.
+\end{corollary}
+\begin{proof}
+Fix $n$ and its three-point construction. For every parameter vector,
+$f_\theta(x)$ is continuous in $x$ on the circle. The posterior
+normalizer is continuous in the training inputs and labels, by
+dominated convergence with the integrable bound one. The prediction
+numerator is jointly continuous in the training data and test input,
+by dominated convergence with the integrable bound $|v|$.
+The normalizer is strictly positive everywhere. On the compact set
+of circle-valued training inputs, labels in $[-1,1]$, and a
+circle-valued test input, it therefore has a positive minimum.
+Consequently the raw posterior prediction is jointly continuous
+and uniformly continuous on this compact set. These statements are
+for each fixed $n$ and its positive temperature; no uniform modulus
+in $n$ is needed.
+
+Replace each of the three input atoms by a normalized smooth bump
+supported in a sufficiently small arc around that atom, retaining
+its original mixture probability. Choose the three arcs disjoint,
+and retain the constant label $b,-b,0$ on the respective arcs.
+Couple each perturbed observation with its original cluster center.
+For sufficiently small arc radii, uniform continuity ensures that
+the perturbed posterior prediction, at every test input in the rare
+arc, differs from the original posterior prediction at $x_*$ by
+at most one, simultaneously for every training cluster assignment.
+On the original no-rare, balanced-count event, the original
+prediction is at least $c n^{2/3}$. The perturbed prediction is
+therefore at least $(c/2)n^{2/3}$ for all sufficiently large $n$.
+The event probability is unchanged because it depends only on the
+cluster assignments. The rare arc still has probability $1/n$ and
+label zero, so it contributes at least $(c^2/4)n^{1/3}$ to risk.
+The zero-comparator risk remains exactly $(1-1/n)b^2$.
+The finite mixture of the three smooth bump densities is smooth
+and atomless, proving the claim.
+\end{proof}
+
+The arc radii may depend arbitrarily strongly on $n$. This smoothing
+does not give a counterexample under a fixed density bound or a
+fixed quantitative anti-concentration condition.

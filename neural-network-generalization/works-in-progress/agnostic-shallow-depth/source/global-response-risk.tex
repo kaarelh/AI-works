@@ -1,0 +1,91 @@
+\section{Global state stability and risk comparison without an output cap}
+\label{sec:global-response-risk}
+A finite-width approximation need not follow a large teacher output outside the label range. The covariance construction gives a same-sign attenuation there. A global stability estimate makes this observation quantitative without any bound on the teacher's output that is independent of its width.
+
+\begin{lemma}[A nonexpansive moment projection]
+\label{lem:moment-projection}
+Let $\xi,\zeta$ be independent standard Gaussians, let $W\ge\nu>0$, and put
+\[
+ Y_{r,\sigma}=\tanh(\sqrt W\,r\xi+\sqrt\nu\,\sigma\zeta),
+ \qquad
+ T_{W,\nu}(r,\sigma)=
+ \left(\E\xi Y_{r,\sigma},
+   \sqrt{\E Y_{r,\sigma}^2-(\E\xi Y_{r,\sigma})^2}\right).
+\]
+Then $T_{W,\nu}$ is globally $\sqrt W$-Lipschitz in the Euclidean norm on $(r,\sigma)$, for $\sigma\ge0$.
+\end{lemma}
+\begin{proof}
+Projection in $L^2$ onto the unit vector $\xi$ gives an orthogonal decomposition $Y=r'\xi+Y_\perp$. The map
+$Y\mapsto(r',\|Y_\perp\|_2)$ is one-Lipschitz by Pythagoras and the reverse triangle inequality. Also
+\[
+ \|Y_{r,\sigma}-Y_{\widetilde r,\widetilde\sigma}\|_2^2
+ \le W(r-\widetilde r)^2+\nu(\sigma-\widetilde\sigma)^2
+ \le W\|(r,\sigma)-(\widetilde r,\widetilde\sigma)\|_2^2.
+\]
+Compose the two maps.
+\end{proof}
+
+\begin{lemma}[Finite-width propagation for arbitrary intended signals]
+\label{lem:global-state-propagation}
+For each covariance schedule at hidden depth $H\ge2$ used in the preceding comparison constructions, its exact scalar state may be written as $(r,\sigma)$ with $\sigma=\sqrt{q-r^2}$. Suppose the schedule has
+$\prod_l\sqrt{W_l}\le C_d(H+1)e^D$, and its initial Gaussian-feature encoding satisfies $\|\psi\|_\infty/(\mathcal B L_H)\le1/2$.
+Then, at width
+\[
+ N\ge C_d(1+\mathcal B/\eta)^{C_d}(H+1)^{C_d}e^{C_dD},
+\]
+the actual comparison law approximates its deterministic bounded response
+$f(x)=\mathcal B r_H(x)$ with
+$\sup_x\E_\rho|z_w(x)-f(x)|^2\le\eta^2$.
+This holds regardless of the magnitude of the intended signal $g_0(x)/\mathcal B$. The relative-entropy costs of the constructions are unchanged.
+\end{lemma}
+\begin{proof}
+For an empirical transition write $h_i=\tanh(\sqrt W\,r\xi_i+\sqrt\nu\,\sigma\zeta_i)$, where the Gaussian pairs are independent. The next empirical state is
+\[
+ \widehat r=\frac{N^{-1}\sum_i\xi_i h_i}
+                  {\sqrt{N^{-1}\sum_i\xi_i^2}},\qquad
+ \widehat q=N^{-1}\sum_i h_i^2,\qquad
+ \widehat\sigma=\sqrt{\widehat q-\widehat r^2}.
+\]
+The radicand is nonnegative by empirical Cauchy--Schwarz. Conditional concentration of the bounded squares, the sub-Gaussian products $\xi_i h_i$, and the chi-square normalization gives errors at most $u^2$ in these three moments except on probability $Ce^{-cNu^4}$. Hence the $(r,\sigma)$ state error is at most $Cu$: use $|\sqrt a-\sqrt b|\le\sqrt{|a-b|}$ only at this single empirical step. The constants are uniform in the state and the factors $W_l$ because $|h_i|\le1$ and $|\xi_i h_i|\le|\xi_i|$.
+
+The initial Gaussian-feature average and random unit-direction completion obey the same state concentration, because their scaled coefficient density is bounded by $1/2$. Apply Lemma~\ref{lem:moment-projection} after each empirical error. Taking
+$u=c\eta/[\mathcal B(H+1)^2e^D]$ makes their total propagated readout error at most $\eta/4$. A union bound and the displayed polynomial width make the bad-event probability at most $c\eta^2/\mathcal B^2$. Both the comparison readout mean and the deterministic response have magnitude at most $\mathcal B$ at every input; the native readout noise has conditional variance at most $1/N$. These facts give the pointwise mean-square conclusion.
+
+The next unit direction is still the normalized standardized Gaussian coordinate vector, exactly as in the earlier constructions. Thus this argument changes no comparison law or entropy computation. It replaces only the error-propagation estimate. The fourth power in the local concentration rate changes a polynomial width exponent, rather than iterating a square-root loss through depth.
+\end{proof}
+
+At hidden depth $H\ge2$, for every admissible intended signal $s=g_0(x)/\mathcal B$, the scalar comparison response satisfies
+\begin{equation}
+ 0\le\frac{r_H(s)}s\le1\quad(s\ne0),\qquad
+ r_H(0)=0,
+ \qquad |r_H(s)-s|\le C_d|s|^3.
+ \label{eq:response-attenuation}
+\end{equation}
+The first assertion follows from the exact correlation product: the actual variance is at least its zero-signal baseline, so every ratio of derivative factors lies in $[0,1]$. The cubic estimate follows from the same cumulative excess-variance calculation already given; that calculation bounds the perturbation by $C_ds^2$ and does not require an upper bound on $|s|$. The high-gain schedules have the same estimate because their geometric sum cancels their individual large factors. The encoding guarantees admissibility even for large $g_0$, through its bounded unit-direction norm.
+
+\begin{lemma}[Attenuation is an adequate squared-loss comparison]
+\label{lem:attenuation-loss}
+Fix $T\ge1$ and $\epsilon>0$. Choose $\mathcal B$, depending only on $d,T,\epsilon$, sufficiently large. For the bounded response $f(x)=\mathcal B r_H(g_0(x)/\mathcal B)$,
+\begin{equation}
+ (f(x)-y)^2-(g_0(x)-y)^2
+ \le\epsilon+y^2\mathbf1_{\{|y|>T\}}
+ \label{eq:attenuation-loss}
+\end{equation}
+for every $x,y$ and every schedule covered by \eqref{eq:response-attenuation}.
+\end{lemma}
+\begin{proof}
+If $|y|\le T$ and $|g_0|\ge2T$, squared loss is no larger at zero than at $g_0$. Convexity therefore makes every same-sign attenuation between those endpoints no worse than $g_0$. If $|g_0|\le2T$, the cubic estimate gives
+$|f-g_0|\le C_d(2T)^3/\mathcal B^2$. Choose $\mathcal B$ so large that this changes squared loss by at most $\epsilon$ for $|y|\le T$.
+For arbitrary $y$, convexity on the interval from zero to $g_0$ gives
+$(f-y)^2-(g_0-y)^2\le\max\{y^2-(g_0-y)^2,0\}\le y^2$.
+Combine the cases.
+\end{proof}
+
+For bounded labels take $T=1$. For a fixed marginal sub-Gaussian envelope, choose a fixed $T$ so that $\E Y^2\mathbf1_{\{|Y|>T\}}$ is a prescribed small fraction of the accuracy. A single Bernstein event controls the empirical average of this tail variable and the empirical first and second label moments. The loss comparison \eqref{eq:attenuation-loss} is then uniform over all widths and all prefactors, even though the deterministic response itself may vary with the prefactor.
+
+To compare a shallow teacher $g$ with coefficient cap $B_{\rm teach}$ to its Gaussian-feature approximation $g_0$, choose uniform approximation error of order
+$\epsilon/(1+CB_{\rm teach}+S)$, where $S$ denotes a fixed label envelope or moment bound. This controls the empirical loss difference on the common label-moment event. The required Gaussian-feature balls have inverse radii polynomial in $C$, so their coefficient density still satisfies
+\[
+ \log(e+Q)\le C_{d,B_{\rm teach},\epsilon,S}[1+\log(2+C)].
+\]
+The response readout factor $\mathcal B$ from Lemma~\ref{lem:attenuation-loss} is independent of teacher width. Combining global state propagation with this risk comparison therefore removes the uniform teacher-output-envelope assumption from the polynomial-width oracle.

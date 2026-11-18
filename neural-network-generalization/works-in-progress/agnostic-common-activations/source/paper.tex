@@ -1,0 +1,160 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,mathtools,booktabs,microtype}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Agnostic oracle bounds for Gaussian neural networks with Lipschitz activations},pdfauthor={ChatGPT-6 Astra; Claude Opus 5.5; Kaarel Hänni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}[section]\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}\newcommand{\Pp}{\mathbb P}
+\newcommand{\KL}{\operatorname{KL}}\newcommand{\op}{\mathrm{op}}
+\newcommand{\clip}{\operatorname{clip}}\newcommand{\dist}{\operatorname{dist}}
+\newcommand{\whR}{\widehat R}\newcommand{\calF}{\mathcal F}
+\newcommand{\calG}{\mathcal G}
+\title{Agnostic oracle bounds for Gaussian neural networks\\with Lipschitz activations}
+\author{ChatGPT-6 Astra \and Claude Opus 5.5 \and Kaarel H\"anni \and
+Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{17 November 2026}
+\begin{document}\maketitle
+\begin{abstract}
+A small neural network may approximate a data distribution well even when no small network fits it exactly. We prove a coefficient-one agnostic oracle inequality for the ordinary posterior mean of a single dense Gaussian neural network. The activation can be any fixed globally Lipschitz function, including tanh, ReLU, GELU, sigmoid and softplus; it need not vanish at zero. Inputs have an arbitrary distribution on a cube, labels are bounded, and the likelihood is Gaussian. The guarantee holds at every finite learner width above comparator width and every Gaussian scale at or stronger than mean field. A data-dependent likelihood temperature is selected from a scalar free-energy equation, without knowing the comparator. For $H\ge2$ hidden layers, the excess-risk terms have rates $n^{-1/[2H(H+1)]}$ times a power of the comparator risk, and $n^{-1/(2H)}$ when that risk vanishes, with polynomial dependence on comparator width, coefficient bound and input dimension at fixed depth. The proof compresses typical Gaussian networks into finite dictionaries. It tracks low-rank feature coordinates together with a residual standard deviation, preserving a Lipschitz error recursion even for ReLU. These dictionaries are only proof devices: the learner retains one fixed dense architecture and independent Gaussian weights, with no prior over network sizes.
+\end{abstract}
+
+\section{What the guarantee says}
+For squared loss, write $R(f)=\E(f(X)-Y)^2$. We seek a guarantee
+\[
+ R(\bar f_S)\le\inf_{g\in\calG_{m,B}}R(g)+\varepsilon
+\]
+after polynomially many observations, where $\calG_{m,B}$ consists of smaller networks of width $m$ and bounded coefficients. The learner itself may have arbitrarily larger width. The leading coefficient one matters: the claim preserves the approximation error achieved by the best comparator.
+
+Our result applies to the actual finite Gaussian posterior, not only a zero-temperature or infinite-width limit. It covers arbitrary label noise and model misspecification. A coefficient bound is essential for this kind of distribution-uniform statement: width alone does not control the steepness of a real-valued network. The result is statistical and makes no claim that exact posterior inference or its free energy can be computed efficiently.
+
+The proof has two parts. A neighborhood of a cloned comparator has sufficiently large Gaussian prior mass. Separately, with exponentially high prior probability, the learner can be approximated by one of finitely many functions whose number is controlled independently of learner width. The second step is the main issue near mean-field scaling: typical dense Gaussian matrices have Frobenius energy proportional to width, even though their operator norms stay bounded.
+
+\section{Model and statement}
+Fix input dimension $d\ge1$, hidden depth $H\ge1$, and total depth $L=H+1$. Let $\phi:\R\to\R$ be globally $A$-Lipschitz, where we take $A\ge1$, and put $\beta=|\phi(0)|$. All constants denoted $C$ or $c$ below may depend on $H,A,\beta$; different occurrences need not denote the same constant. Their dependence on $d,m,B,n,N$ is displayed or bounded polynomially.
+
+Inputs lie in $[-1,1]^d$, labels in $[-1,1]$, and their joint Borel law $D$ is arbitrary. For $\bar x=(1,x)$ the width-$N$ learner is
+\[
+ h^1=\phi(W^1\bar x),\qquad
+ h^\ell=\phi(W^\ell h^{\ell-1})\ (2\le\ell\le H),\qquad
+ z_w=v^\top h^H.
+\]
+The activation is coordinatewise. Define
+\[
+ Q_N(w)=\frac dN\|W^1\|_F^2+\sum_{\ell=2}^H\|W^\ell\|_F^2
+                  +N\|v\|_2^2.
+\]
+The prior $\mu_{N,\sigma}$ has density proportional to
+$e^{-Q_N/(2\sigma^2)}$. Its coordinate variances are $N\sigma^2/d$ in the first layer, $\sigma^2$ internally and $\sigma^2/N$ in the readout. We assume
+\begin{equation}
+ 0<\sigma^2\le1/N,\qquad \tau^2=N\sigma^2,\qquad \omega=1/\sigma^2=N/\tau^2.
+ \label{eq:scales}
+\end{equation}
+This includes every $\sigma^2=N^{-\gamma}$ with $\gamma\ge1$, at every finite $N$.
+
+For an IID sample $S$ of size $n$, put $\whR_S(f)=n^{-1}\sum_i(f(X_i)-Y_i)^2$. With $\lambda>0$, use the posterior
+\begin{equation}
+ d\Pi_\lambda(w)=Z_\lambda^{-1}
+ e^{-\whR_S(z_w)/(2\lambda\sigma^2)}\,d\mu_{N,\sigma}(w).
+ \label{eq:posterior}
+\end{equation}
+Equivalently, the observation likelihood is Gaussian with variance $n\lambda\sigma^2$ and mean $z_w(X)$. Prediction is the raw posterior mean $\bar f_\lambda=\int z_w\,d\Pi_\lambda$. Define its normalized free energy
+\begin{equation}
+ F_\lambda=-2\lambda\sigma^2\log Z_\lambda.
+ \label{eq:freeenergy}
+\end{equation}
+
+The comparator class $\calG_{m,B}$ uses the same activation and hidden depth, width $m$, first-layer biases, no other biases, and coefficients of absolute value at most $B\ge1$. Section~\ref{sec:teacher} explains how to include biases in every layer.
+
+Set
+\[
+ q_H=\begin{cases}3,&H=1,\\4H-2,&H\ge2,\end{cases}
+ \qquad \rho_H=(q_H+2)/2,\qquad v_H=L\rho_H.
+\]
+For $H\ge2$, these are $\rho_H=2H$ and $v_H=2H(H+1)$.
+For $H=1$, they are $5/2$ and $5$.
+
+The calibration uses only the sample, fixed learner and confidence level.
+Let $M\ge1$ be a depth- and activation-dependent upper bound on the native prior's mean squared loss, valid for every sample; Lemma~\ref{lem:moments} supplies it. There are sufficiently large constants $C,c$ depending only on $H,A,\beta$ for which the following choices work:
+\begin{align}
+ b_n&=C(d+1)^c+4\log\!\bigl(C(d+1)^c n^3\bigr),\\
+ \theta_n&=\frac{C(d+1)^c[\log(C(d+1)n/\delta)]^c}{n},
+ \qquad U_0=2M+1.
+ \label{eq:calibration-data}
+\end{align}
+Their deliberately conservative dimension factors absorb the dictionary and norm-tail constants.
+
+If $\theta_n b_n^{v_H}U_0^{v_H-\rho_H}\le1$, select the unique positive solution of
+\begin{equation}
+ \lambda_S^{v_H}
+ =\theta_n[2F_{\lambda_S}+b_n\lambda_S]^{v_H-\rho_H}.
+ \label{eq:root}
+\end{equation}
+Otherwise use $\lambda_S=\omega M$. We call these the root and fallback branches. The fallback handles sample counts below the quantitative threshold; it does not use a different prior or architecture.
+
+\begin{theorem}[An observable risk certificate]
+\label{thm:certificate}
+The calibration is measurable and well defined. On the root branch,
+$1/n\le\lambda_S\le1/b_n$. With probability at least $1-\delta$, simultaneously for every learner width $N\ge1$ and scale~\eqref{eq:scales},
+\begin{equation}
+ R(\bar f_{\lambda_S})
+ \le\int R(z_w)\,d\Pi_{\lambda_S}(w)
+ \le F_{\lambda_S}+B_d\lambda_S+n^{-3},
+ \label{eq:certificate}
+\end{equation}
+where $B_d\le C(d+1)^c$ is a known constant from the proof.
+On the fallback branch the deterministic certificate is $e^{1/2}M$.
+\end{theorem}
+
+\begin{theorem}[A risk-adaptive coefficient-one oracle]
+\label{thm:oracle}
+For each comparator width $m$ and cap $B$, let
+\[
+ R_*=\min_{g\in\calG_{m,B}}R(g).
+\]
+The explicit resource $\mathcal A_{m,B,n}$ in~\eqref{eq:fixed-resource} is polynomial in $d,m,B$ at fixed $H$, with only logarithmic dependence on $n$. Put
+$\overline{\mathcal A}=\mathcal A_{m,B,n}+b_n+B_d+1+\log(4/\delta)$.
+With probability at least $1-\delta$, simultaneously at every $N\ge m$ and every scale~\eqref{eq:scales}, the calibrated raw posterior mean satisfies
+\begin{equation}
+ R(\bar f_{\lambda_S})\le R_*+
+ C\left\{\overline{\mathcal A}\,R_*^{\,1-1/L}\theta_n^{1/v_H}
+       +\overline{\mathcal A}^{\,L}\theta_n^{1/\rho_H}\right\}
+ +n^{-3}.
+ \label{eq:oracle}
+\end{equation}
+The same bound holds for posterior-averaged raw risk.
+The likelihood calibration does not use $m$, $B$ or $R_*$.
+\end{theorem}
+
+\begin{corollary}[Polynomial sample complexity]
+At every fixed depth, a sample count polynomial in comparator width, coefficient bound, input dimension and inverse target excess suffices, uniformly over every finite $N\ge m$ and every $\gamma\ge1$. For $H\ge2$, the general-risk term decays as $n^{-1/[2H(H+1)]}$, and the zero-comparator-risk term as $n^{-1/(2H)}$, up to logarithms and the displayed polynomial resources. For one hidden layer the corresponding exponents are $1/5$ and $2/5$. These conservative exponents are not claimed optimal.
+\end{corollary}
+
+The posterior-averaged raw-risk bound also controls clipping the posterior mean, the average risk of clipped posterior draws, and the mean of clipped draws. The main prediction convention remains the ordinary raw mean.
+
+A likelihood schedule fixed before seeing the data also gives a polynomial oracle with the same general-risk exponent; Appendix~\\ref{sec:fixed-calibration} proves this corollary. The evidence-based calibration improves adaptation to the comparator risk.
+
+\input{sampling}
+\input{dictionary}
+\input{teacher}
+\input{moments}
+\input{localized}
+
+\section{Scope and remaining quantitative gaps}
+The result gives a common argument for bounded and unbounded Lipschitz activations. It does not require a margin on every possible input, a robustness restriction on the prior, a prior over smaller architectures, or exact interpolation of noisy labels. It is an agnostic squared-loss theorem with a calibrated Gaussian likelihood.
+
+The sample exponent has quadratic dependence on hidden depth, and the constants need not have polynomial dependence on depth. This is not a polynomial-in-depth theorem. The resulting width and coefficient polynomials are also far from sharp. ReLU homogeneity can lower the comparator energy, while stronger Gaussian scales admit much sharper capacity arguments. The present theorem's purpose is to cover the entire mean-field-or-stronger regime with one proof, including arbitrary globally Lipschitz activations and nonzero $\phi(0)$.
+
+\input{fixed-calibration}
+
+\begin{thebibliography}{9}
+\bibitem{tropp}
+J. A. Tropp. User-friendly tail bounds for sums of random matrices.
+\emph{Foundations of Computational Mathematics} 12 (2012), 389--434.
+\bibitem{gaussian}
+M. Ledoux. \emph{The Concentration of Measure Phenomenon}.
+American Mathematical Society, 2001.
+\end{thebibliography}
+\end{document}

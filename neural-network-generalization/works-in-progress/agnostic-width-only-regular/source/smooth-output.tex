@@ -1,0 +1,43 @@
+\section{A smooth bounded output: final tanh}
+\label{sec:smooth-output}
+The bounded output need not have corners. The same polynomial bound holds with a final tanh in both likelihood and posterior prediction, provided the all-width comparison class uses that same output convention.
+
+Let $\mathcal T_{C,h}$ consist of functions $f=\tanh(g)$, where $g$ is an arbitrary-coefficient width-$C$, hidden-depth-$h$ ReLU network with a scalar affine readout. Use an unrestricted Gaussian ReLU learner with the same final tanh. All preceding posterior-certificate arguments remain valid: tanh is odd, bounded by one, and 1-Lipschitz. These three properties give, respectively, the prior mean-zero bound, the bounded-loss estimates, and the same covering and Gaussian-perturbation estimates. Its monotonicity also preserves the parameter-count bound: a threshold on $\tanh(z_w(x))$ is a threshold on $z_w(x)$ with the threshold value transformed by $\operatorname{arctanh}$. Squared-loss superlevel sets are unions of at most two such threshold sets.
+
+\begin{theorem}[The same width polynomial with a final tanh]
+\label{thm:smooth-output-oracle}
+Assume $|Y|\le1$, $dP_X/dU_Q\le\kappa$, and $H\ge\max\{h,H_d\}$. Use a final tanh in both Gaussian likelihood and prediction, with the same independent Gaussian priors and two-certificate calibration. Simultaneously for all $\gamma\ge1$ and $N\ge C+1$, with probability at least $1-\delta$,
+\[
+ R(\widehat f_n)\le\inf_{f\in\mathcal T_{C,h}}R(f)+\varepsilon
+\]
+under the same sample polynomial \eqref{eq:all-width-regular-sample}, with additional logarithmic factors only.
+\end{theorem}
+\begin{proof}
+A function $f\in\mathcal T_{C,h}$ is monotone on each affine interval of its raw network along a coordinate line. There are at most $R_0=(C+1)^h$ such intervals, so its total variation on that line is at most $2R_0$.
+
+Fix $0<\eta<1/2$ and define
+\[
+ F(x)=\operatorname{arctanh}((1-\eta)f(x)),\qquad
+ A_\eta=\operatorname{arctanh}(1-\eta)
+       \le\tfrac12\log(2/\eta).
+\]
+This transformed target is bounded by $A_\eta$. It is still monotone on each of the same intervals and hence has coordinate-line total variation at most $2A_\eta R_0$. The interpolation proof only used these amplitude and variation facts. Applying the hierarchical construction to $F/A_\eta$ and multiplying its readout by $A_\eta$ gives a raw ReLU network $q$ with
+\[
+ \operatorname{width}(q)=O_d(\Delta^{-d}),\quad
+ P(q)=O_d(A_\eta R_0\Delta^{-d}),\quad
+ \int_Q|q-F|\,dU_Q\le2A_\eta dR_0\Delta.
+\]
+The resulting bounded output satisfies
+\[
+ |\tanh(q(x))-f(x)|\le|q(x)-F(x)|+\eta.
+\]
+Take $\eta=\varepsilon/32$ and a dyadic $\Delta$ within a factor two below $\varepsilon/[128\kappa A_\eta dR_0]$. Density domination gives a population squared-loss increase below $\varepsilon/4$. The compiler's path variation is
+\[
+ \widetilde O_d(\kappa^d R_0^{d+1}\varepsilon^{-d}),
+\]
+where the suppressed factors are powers of $A_\eta=O(\log(1/\varepsilon))$. Its width has the same polynomial bound as before, again up to logarithms.
+
+At widths that fit this compiler, the Gaussian implicit certificate gives the same sample polynomial. At smaller widths $N\ge C+1$, the original comparison function belongs to the learner's tanh-output class, after compiling biases into a constant wire and padding identity hidden layers. The finite-parameter certificate therefore completes the same all-width argument. The two certificate events, comparison concentration, and width-confidence allocation are unchanged.
+\end{proof}
+
+There is a necessary distinction between comparison classes. A tanh-output width-$C$ network need not represent the same functions as a raw-readout width-$C$ network. The theorem above compares with networks sharing the learner's final tanh. For comparison with arbitrary raw ReLU teachers, the transformed-interpolation argument still applies after first clipping that teacher, but it only directly proves the guarantee once learner width fits the resulting compiler. The all-width theorem for raw teachers uses the hard saturation of Theorem~\ref{thm:all-width-regular-Gaussian}.

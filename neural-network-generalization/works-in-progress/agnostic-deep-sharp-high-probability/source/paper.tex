@@ -1,0 +1,83 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,mathtools}
+\usepackage[margin=1in]{geometry}
+\usepackage{microtype}
+\usepackage[colorlinks=true,allcolors=blue]{hyperref}
+\hypersetup{pdftitle={Sharp high-probability Bayesian oracles for row-contractive deep networks},pdfauthor={ChatGPT-6 Astra; Claude Opus 5.5; Kaarel H\"anni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\E}{\mathbb E}
+\newcommand{\KL}{\operatorname{KL}}
+\title{Sharp high-probability Bayesian oracles\\for row-contractive deep networks}
+\author{ChatGPT-6 Astra \and Claude Opus 5.5 \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{18 November 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+We prove a coefficient-one, high-probability squared-risk oracle for one ordinary Bayesian posterior trained on all observations, at a fixed likelihood variance. The learner can have arbitrarily many hidden layers. Its independent power-law coordinate prior is conditioned separately on each internal row and the readout having absolute row sum at most one. For bounded Lipschitz activations, including tanh, the first layer is unrestricted; for ReLU the first layer has the same row restriction. A same-depth teacher satisfies these restrictions too. If it has $V$ relevant hidden vertices and $E$ internal/readout edges, the remainder is $O(\sqrt{1+\sigma^2}\,V/N)$ plus a term of order
+$ (1+\sigma^2)[(E-V)\log N+Q\log(Q(B+8)n)+\log(1/\delta)]/n$,
+where $Q$ counts its edges, vertices, and first-layer coefficients, and $B$ bounds its first-layer coefficients. The guarantee controls posterior-average risk and therefore the posterior mean. There is no architecture mixture, validation split, or temperature selection. The row restriction is substantive: it bounds predictions and prevents perturbations of inserted neurons from accumulating across depth. For ReLU, every teacher of absolute path variation at most one can be rescaled into the comparison class.
+\end{abstract}
+
+\section{Model and guarantee}
+Fix $p>2$ and $0<c_0\le\min\{1,(p-1)/8\}$. For fan-in $F$, let $\lambda_F$ be the symmetric signed beta-prime law whose magnitude has density
+\[
+ q_{c_0/F}(t)=\frac{t^{c_0/F-1}(1+t)^{-c_0/F-p}}{\mathrm B(c_0/F,p)},\qquad t>0.
+\]
+All scalar parameters are fixed independently of width, depth, and sample count. Put $D=d+1$ and $\bar x=(1,x)$ for $x\in[-1,1]^d$. The architecture has $H\ge1$ hidden layers, common width $N$, no internal biases, and a scalar linear readout. Initially each first-layer coordinate has law $\lambda_D$, and each internal/readout coordinate has law $\lambda_N$, independently. Condition every internal row and the readout separately on having $\ell^1$ norm at most one. Different rows remain independent. We allow either of the following activation conventions:
+\begin{itemize}
+\item $\phi$ is one-Lipschitz and $|\phi|\le1$. First-layer rows are not conditioned.
+\item $\phi$ is one-Lipschitz and $\phi(0)=0$, for example ReLU. First-layer rows are also conditioned on $\ell^1$ norm at most one.
+\end{itemize}
+In both cases every hidden feature and the raw readout $f_w$ lie in $[-1,1]$. There is no final clipping in the likelihood or prediction. Write $\pi_{N,H}$ for this fixed prior. Its conditioning events have probability at least $7/8$ separately, because $F\E_{\lambda_F}|W|=c_0/(p-1)\le1/8$. We do not multiply their inverse probabilities in the proof.
+
+A deterministic teacher $g$ has the same activation and hidden depth, layer widths $m_\ell$, and the same row restrictions. Remove every vertex without a path of nonzero edges to the readout. Write
+\[
+ \begin{gathered}
+ V=\sum_{\ell=1}^H m_\ell,\qquad
+ E=\#\{\text{nonzero internal and readout edges}\},\\
+ J=E-V\ge0,\qquad Q_0=1+V+E+Dm_1.
+ \end{gathered}
+\]
+Each relevant hidden vertex has an outgoing edge, explaining $J\ge0$. In the bounded-activation convention let $B\ge1$ bound the teacher's first-layer coefficients; in the zero-at-zero convention take $B=1$. A zero teacher is handled by empty selected sets.
+
+Let the data be IID, with $f_0(x)=\E[Y\mid X=x]\in[-1,1]$ and conditionally centered $\sigma^2$-sub-Gaussian noise. Put $s=1+\sigma^2$, $R(f)=\E(f(X)-Y)^2$, and $T=2048s$. Use the ordinary all-data posterior
+\[
+ d\Pi_S(w)=Z_S^{-1}\exp\{-n\widehat R_S(f_w)/T\}\,d\pi_{N,H}(w).
+\]
+The Gaussian observation variance is $T/2$. The architecture and prior are fixed before observing the sample.
+
+\begin{theorem}[Sharp all-data deep oracle]
+\label{thm:main}
+For $n\ge2$, $0<\delta<1$, and every prescribed width $N\ge2\max_\ell m_\ell$, with probability at least $1-\delta$,
+\[
+ \begin{aligned}
+ \int R(f_w)\,d\Pi_S(w)\le R(g)
+ &+C\sqrt{s}\,\frac VN\\
+ &+\frac{Cs}{n}\left[J\log N+
+ Q_0\log\{CD(B+8)Q_0n\}+\log\frac4\delta\right].
+ \end{aligned}
+\]
+Here $C$ depends only on the fixed scalar family, and not on depth. The posterior mean satisfies the same bound. If $N\ge n$, the first remainder is absorbed by the second. The coefficient of the teacher's risk is exactly one.
+\end{theorem}
+
+For a dense width-$C$ teacher, $V\le CH$ and $E\le C^2(H-1)+C$, so the statistical resource is polynomial jointly in teacher width and depth, with an explicit logarithmic learner-width term for shared computations. The theorem is a claim about this row-conditioned prior, not about an unrestricted independent-coordinate prior. It makes no computational-efficiency claim.
+
+\input{transfer}
+\input{statistics}
+
+\section{ReLU path variation}
+For ReLU define the absolute path variation by
+\[
+ a_{0,i}=1,\qquad a_{\ell,j}=\sum_i|W^\ell_{ji}|a_{\ell-1,i},
+ \qquad P=\sum_j|v_j|a_{H,j}.
+\]
+If $P\le1$, delete zero-path vertices and rescale hidden feature $j$ by $a_{\ell,j}^{-1}$. Positive homogeneity preserves the represented function. Its new incoming weights are
+$W^\ell_{ji}a_{\ell-1,i}/a_{\ell,j}$, with absolute row sum one, and its readout has absolute sum $P$. Thus every such teacher satisfies the comparison restrictions after rescaling, with no increase in depth, width, or number of edges. This gives a natural path-variation interpretation of the teacher class. Internal biases can be represented by a constant ReLU wire if its vertices and paths are counted explicitly.
+
+\paragraph{Scope of verification.}
+The argument is an analytic proof. It has not been formalized in Lean. The prior restriction and the finite-width remainder are part of the theorem, not proof artifacts.
+\end{document}

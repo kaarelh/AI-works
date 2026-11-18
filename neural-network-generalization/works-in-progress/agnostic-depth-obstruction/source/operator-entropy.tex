@@ -1,0 +1,86 @@
+\section{Gaussian operator norms and relative entropy}
+\label{sec:operator-entropy}
+The entropy lower bound need not pay for every Gaussian parameter. Operator norms give the same output-energy floor while their Gaussian cost depends only linearly on learner width.
+
+For the normalized matrices
+\[
+ A_1=\sqrt{d/N}\,W^1,\quad A_\ell=W^\ell\ (2\le\ell\le H),
+ \quad A_{H+1}=\sqrt N\,v^{\mathsf T},
+\]
+define
+\[
+ Q_{\mathrm{op}}(w)=\sum_{\ell=1}^{H+1}\|A_\ell\|_{\mathrm{op}}^2.
+\]
+The Frobenius energy $Q_N$ is the same sum with Frobenius norms. Under the original independent Gaussian prior, every entry of every normalized block has variance $s=\sigma^2$.
+
+\begin{lemma}[Gaussian operator-norm exponential moment]
+\label{lem:operator-mgf}
+If $G$ is an $r$ by $c$ matrix with independent standard Gaussian entries, then, for $0<\eta<1$,
+\[
+ \log\E\exp\{(1-\eta)\|G\|_{\mathrm{op}}^2/2\}
+ \le\frac12\log(1/\eta)
+       +\frac{1-\eta}{2\eta}(\sqrt r+\sqrt c)^2.
+\]
+For a Gaussian vector the second term may use its dimension instead of $(\sqrt r+\sqrt c)^2$.
+\end{lemma}
+\begin{proof}
+The operator norm is one-Lipschitz for the Euclidean norm of all matrix entries. Gaussian concentration in exponential-moment form gives, for all real $t$,
+\[
+ \E e^{t(\|G\|_{\mathrm{op}}-m)}\le e^{t^2/2},
+ \qquad m=\E\|G\|_{\mathrm{op}}.
+\]
+With an independent standard Gaussian $Z$ and $a=1-\eta$, the Gaussian exponential identity and Tonelli yield
+\begin{align*}
+ \E e^{a\|G\|_{\mathrm{op}}^2/2}
+ &=\E_Z\E_G e^{\sqrt aZ\|G\|_{\mathrm{op}}}\\
+ &\le\E_Z e^{\sqrt aZm+aZ^2/2}
+ =\eta^{-1/2}\exp\{a m^2/(2\eta)\}.
+\end{align*}
+Finally $m\le\sqrt r+\sqrt c$ by the Gaussian matrix comparison bound, while a Gaussian vector has expected norm at most the square root of its dimension. One derivation of the matrix bound compares the centered processes $u^{\mathsf T}Gv$ and $g^{\mathsf T}u+h^{\mathsf T}v$ on pairs of unit vectors: their increment variances are respectively $2-2\langle u,u'\rangle\langle v,v'\rangle$ and $4-2\langle u,u'\rangle-2\langle v,v'\rangle$, and their difference is $2(1-\langle u,u'\rangle)(1-\langle v,v'\rangle)\ge0$. Gaussian comparison then gives $\E\|G\|_{\mathrm{op}}\le\E\|g\|+\E\|h\|\le\sqrt r+\sqrt c$.
+\end{proof}
+
+\begin{lemma}[Linear-width entropy cost]
+\label{lem:operator-entropy}
+For any probability law $\rho$ absolutely continuous with respect to the Gaussian neural prior $\mu_s$,
+\[
+ 2s\KL(\rho\|\mu_s)
+ \ge(1-\eta)\E_\rho Q_{\mathrm{op}}-s\mathcal B_\eta(H,N,d),
+\]
+where
+\[
+ \mathcal B_\eta(H,N,d)
+ =(H+1)\log(1/\eta)
+ +\frac{1-\eta}{\eta}\{(4H-1)N+2(d+1)\}.
+\]
+In particular $\mathcal B_\eta=O_\eta(H(N+d))$.
+\end{lemma}
+\begin{proof}
+The normalized Gaussian blocks are independent. Apply Lemma~\ref{lem:operator-mgf} to each block and add their logarithmic moment bounds. The first block contributes at most $2(N+d+1)$ to the sum of squared expected norm bounds, the $H-1$ internal blocks contribute at most $4(H-1)N$, and the vector readout contributes at most $N$. Their sum is $(4H-1)N+2(d+1)$. The entropy variational inequality with test function $(1-\eta)Q_{\mathrm{op}}/(2s)$ gives the result, including by truncation if an expectation is infinite.
+\end{proof}
+
+\begin{corollary}[A posterior objective bound at every super-mean-field exponent]
+\label{cor:operator-posterior-objective}
+For the exact Gaussian-likelihood posterior $\Pi$ at parameter $\lambda>0$, let
+$F=-2\lambda s\log\E_{\mu_s}\exp[-\widehat R/(2\lambda s)]$.
+Then
+\[
+ \E_\Pi[\widehat R+\lambda(1-\eta)Q_{\mathrm{op}}]
+ \le F+\lambda s\mathcal B_\eta(H,N,d).
+\]
+The output-energy floor is unchanged: for every zero-origin one-Lipschitz activation and every input,
+\[
+ |z_w(x)|\le\frac{\|(1,x)\|}{\sqrt d}
+       \left(\frac{Q_{\mathrm{op}}(w)}{H+1}\right)^{(H+1)/2}.
+\]
+For the support $\mathcal X_D$ the leading factor is $\sqrt{2/d}\le1$. In particular, if the empirical prediction norm exceeds a fixed $t>0$, then
+\[
+ Q_{\mathrm{op}}(w)\ge(H+1)t^{2/(H+1)}=H+O_t(1).
+\]
+For every fixed $\gamma>1$, every fixed $\eta>0$, and a bounded likelihood-temperature range $0<\lambda\le\Lambda$, the objective error $\lambda s\mathcal B_\eta$ can be made arbitrarily small uniformly at all $s\le N^{-\gamma}$ and all $N\ge e^{C_\gamma H}$, with $d=O(H)$.
+\end{corollary}
+\begin{proof}
+The exact Gibbs variational identity is
+$F=\E_\Pi\widehat R+2\lambda s\KL(\Pi\|\mu_s)$.
+Combine it with Lemma~\ref{lem:operator-entropy}. The deterministic output bound follows by applying the activation's one-Lipschitz, zero-origin property at each layer, using the normalized operator norms, and applying arithmetic--geometric mean to their squares. The last assertion follows from
+$s\mathcal B_\eta=O_\eta(H(N+d)N^{-\gamma})$, which tends to zero uniformly over the stated widths after increasing $C_\gamma$ and the depth threshold.
+\end{proof}

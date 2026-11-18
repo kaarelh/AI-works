@@ -1,0 +1,706 @@
+              Sharp high-probability Bayesian neural-network oracles
+                         with bounded output variation
+          ChatGPT-6 Astra                Claude Opus 5.5           Kaarel Hänni        Dmitry Vaintrob∗
+
+                                                    18 November 2026
+
+
+
+                                                        Abstract
+              We prove a coefficient-one, high-probability squared-risk oracle for one ordinary Bayesian
+          neural-network posterior using all observations. The learner has one prescribed hidden layer with
+          bounded Lipschitz activation, such as tanh. Its incoming weights have independent Lévy fan-in
+          laws; its readout has a signed beta-prime product law conditioned on ℓ1 norm at most one. This
+          norm restriction makes the raw predictions bounded, with no final clipping. Against a width-C
+          teacher with the same readout variation bound and incoming coefficients bounded by B, the
+                         e + σ 2 )C(d + 1) log(B + 2)/n) + O(C/N 2 ), uniformly over every prescribed finite
+          remainder is O((1                                                                     √
+          width N ≥ 8C. The width term is absorbed into the fast statistical rate when N ≥ n. Labels
+          may have conditionally sub-Gaussian noise. The likelihood variance is fixed, and no validation,
+          architecture mixture, or averaging over sample sizes is used.
+              The proof moves an arbitrary posterior approximately halfway toward a teacher at additive
+          KL cost independent of learner width. It merges pairs of small readout terms without changing
+          their conditional mean, inserts the teacher in the freed slots, and cancels the insertion cost by
+          hiding its locations. The midpoint improvement in squared loss then yields the sharp high-
+          probability bound. For tanh, same-width feature compactification removes all incoming coefficient
+                                                         2
+          restrictions: the statistical costs are O((1+σ
+                                                  e        )Cd2 /n) on Boolean inputs and O((1+σ
+                                                                                          e      2
+                                                                                                   )Cd/(αn))
+                                                                                      2
+          under slab anticoncentration with exponent α, with the same O(C/N ) term. A convex-hull
+          bound gives the same posterior a slower vanishing oracle at every width N ≥ C. The readout
+          variation restriction remains essential to these statements.
+
+
+1        Introduction
+A sharp approximation oracle compares a learner’s risk with the risk of a small approximating network
+with coefficient exactly one. This matters when approximation error is nonzero: a multiplicative loss
+on that error can dominate the statistical remainder. We obtain such an oracle with high probability
+for the final ordinary Bayesian posterior at one fixed architecture and one fixed likelihood variance.
+    Our learner is a bounded linear combination of bounded hidden features. The prior conditions
+the readout coefficients to have ℓ1 norm at most one, and the teacher obeys the same variation
+bound. These are substantive restrictions. They ensure bounded predictions without clipping and
+supply the counting argument that makes the result uniform in learner width. The prior retains
+continuous coordinates and is dense almost surely inside this support. Incoming coefficients are
+unrestricted under the prior. The learner has one hidden layer; no claim is made here for raw ReLU
+features or an unrestricted multilayer clipped-output prior.
+    ∗
+        Authors are listed in alphabetical order.
+
+
+
+
+                                                           1
+    The formal result, Theorem 2.1, controls the posterior average of population squared risk and
+therefore also the risk of its mean. For a teacher with width C and incoming coefficient cap B, it
+gives, with probability at least 1 − δ,
+           R(f¯S ) ≤ R(g) + KC/N 2
+                       K(1 + σ 2 )                                                       4
+                                                                                        
+                     +             (1 + C(d + 1)) log{e(d + 1)(B + 8)(C + 1)n} + log        .
+                           n                                                             δ
+Here K depends only on the fixed scalar prior, and the inequality holds for every prescribed N ≥ 8C.
+                                       √
+In the fast-rate regime N ≥ max{8C, n}, the width term is absorbed into the statistical remainder.
+Writing R(g) = R0 + A(g), where R0 is the irreducible noise and A(g) the approximation error,
+both terms retain coefficient one. The Gaussian observation variance is 1024(1 + σ 2 ); the noise
+proxy is used to set it. The comparator, its width, and its coefficients are used only in the analysis.
+    The key geometric fact is the squared-loss midpoint identity. Moving a function halfway toward
+a teacher improves average loss by one quarter of their squared distance. To exploit that identity at
+a fixed width, the prior must permit movement of an arbitrary posterior, rather than only put mass
+near the teacher. We construct precisely this transfer. A readout with ℓ1 norm at most one has
+many small coefficients. Randomly merging pairs preserves their conditional mean and incurs total
+variance only O(C/N 2 ). After scaling the survivors, the freed slots hold a slightly shrunken teacher.
+The inserted coefficients are distinguishable from zero, so the readout norm bounds how many
+locations could have been used. Averaging over their locations cancels the apparent logarithmic
+learner-width cost. A relative-loss exponential inequality then converts the empirical midpoint
+improvement into a sharp population oracle.
+    For tanh, Section 7 removes the incoming coefficient cap without adding neurons. On the
+Boolean cube, inverse-tanh interpolation reduces each feature to an integer linear system. On a
+continuous cube, slab anticoncentration permits capping a feature’s normalized slope because both
+original and capped features are saturated outside a small slab. The output variation bound makes
+the approximation errors add without a factor C. These refinements yield coefficient-free width-only
+guarantees within the same restricted teacher class.
+    The same posterior also has a slower guarantee at every realizable width N ≥ C, including
+N = C. Every function with readout variation at most one lies p   in the absolute convex hull of single
+tanh features. Its uniform relative-loss deviation is therefore O( (1 + σ 2 )(d + 1)/n), independently
+                                                                e
+of network width. Combined with direct prior localization, Theorem 8.2 gives a coefficient-one oracle
+with this deviation term and the same logarithmic comparison cost divided by n. The learner-width
+condition distinguishes the faster rate; it is not needed for a vanishing approximation oracle.
+
+Related work. Sharp high-probability aggregation inequalities are established results; for example,
+Lecué and Rigollet [1] prove them for Q-aggregation. Ordinary exponential weighting has different
+behavior: Lecué and Mendelson [2] give probability lower bounds for general finite dictionaries, while
+Høgsgaard, Rebeschini and Wegel [3] prove a sharp expectation bound for the final exponential-
+weights aggregate at a sufficiently large fixed temperature. Our proof uses the additional approximate-
+midpoint structure of this particular neural prior to obtain a high-probability statement for its
+ordinary posterior. It is not a general upgrade of arbitrary-prior exponential weighting.
+   The output-variation viewpoint is also established in convex neural-network theory; Bach [4]
+studies output-norm regularization and generalization for single-hidden-layer models. Our all-width
+Rademacher argument uses the familiar convex-hull reduction. The faster fixed-posterior result
+additionally needs the prior-specific transfer.
+   Dense heavy-tailed neural priors also have substantial precedent. Castillo and Egels [5] establish
+posterior and variational contraction with independent heavy-tailed weights on deterministic dense
+
+                                                  2
+architectures. The Lévy fan-in construction and its scalar placement estimates are developed in
+a companion analysis [6]; the finite-width scalar ingredients needed here are proved below. The
+present result uses a different, signed beta-prime readout prior conditioned on its ℓ1 norm, and
+establishes a width-uniform agnostic comparison through posterior transfer. No claim of first-ever
+sharp Bayesian or aggregation bounds is needed.
+
+
+2    The fixed prior and the main guarantee
+Put D = d + 1 and x̄ = (1, x) for x ∈ [−1, 1]d . The learner has one prescribed hidden width N and
+functions
+                                                         N
+                                                         X
+                                           fa,u (x) =          ai ϕ(ui · x̄),
+                                                         i=1
+where ϕ is 1-Lipschitz and |ϕ| ≤ 1. Tanh is the main example. There is no final output link. The
+prior is supported on ∥a∥1 ≤ 1, so every raw output belongs to [−1, 1].
+    Fix p > 2 and 0 < c0 ≤ min{1, (p − 1)/8}. For incoming feature coordinates, use the symmetric
+finite-variation Lévy measure
+                                                   c0 dz
+                                       ν(dz) =               .
+                                               |z|(1 + |z|)p
+Let ϑF = L(L1/F ) be its zero-drift Poisson increment law. All incoming coordinates independently
+have law ϑD . Before the readout norm conditioning, the readout coordinates independently have
+the signed beta-prime law λN : its sign is fair and its independent magnitude has density
+                                     ta−1 (1 + t)−a−p
+                        qa (t) =                      ,            t > 0,         a = c0 /N.
+                                          B(a, p)
+       0 for this product parameter prior and define
+Write πN
+                                                        0                             0
+                   AN = {∥a∥1 ≤ 1},               pN = πN (AN ),                πN = πN (· | AN ).
+Because EλN |ai | = c0 /[N (p − 1)], pN ≥ 1 − c0 /(p − 1) ≥ 7/8. Incoming features remain independent
+of the conditioning. The readout coordinates become dependent, but remain nonzero almost surely.
+Their unconditioned variance is a(a + 1)/[(p − 1)(p − 2)], of order 1/N . These beta-prime readout
+laws are not asserted to be Lévy increments. All scalar constants are fixed independently of sample
+size and architecture; only fan-in changes their prescribed coordinate laws.
+    A teacher has the form
+                           C
+                           X                        X
+                  g(x) =         bj ϕ(vj · x̄),           |bj | ≤ 1,      ∥vj ∥∞ ≤ B,      B ≥ 1.
+                           j=1                       j
+
+The incoming cap is removed for tanh in Section 7. The readout variation restriction remains part
+of both the learner and teacher models.
+    Let (Xi , Yi ) be IID, with Xi ∈ [−1, 1]d , f0 (x) = E[Y | X = x] ∈ [−1, 1], and conditionally
+centered σ 2 -sub-Gaussian noise. Put s = 1 + σ 2 and R(f ) = E(f (X) − Y )2 . Fix T = 2048s and use
+the ordinary posterior
+                                          n
+                                 (                                )
+                                       1X
+                                                                                               Z
+          dQS (w) = ZS−1 exp         −       (fw (Xi ) − Yi )2 dπN (w),               f¯S =        fw dQS (w).
+                                       T i=1
+
+Every observation enters this likelihood, whose Gaussian variance is T /2 = 1024s. Architecture and
+prior are fixed before observing data.
+
+                                                          3
+Theorem 2.1 (Sharp high-probability all-data oracle). For every deterministic teacher as above,
+n ≥ 2, 0 < δ < 1, and every prescribed finite N ≥ 8C, with probability at least 1 − δ,
+                                                    C
+             Z
+                     R(fw ) dQS (w) ≤ R(g) + K
+                                                    N2
+                                           Ks                                       4
+                                                                                               
+                                         +    (1 + CD) log{eD(B + 8)(C + 1)n} + log   .             (1)
+                                           n                                        δ
+Here K depends only on c0 , p. The final posterior mean satisfies the same bound. If N ≥
+       √
+max{8C, n}, the C/N 2 term is absorbed into the statistical remainder.
+
+   The theorem makes no computational-efficiency claim. There is no selection over architectures,
+holdout, temperature selection, or averaging over sample sizes. Its comparison law and all precision
+choices below are proof devices, not changes to the learner.
+
+
+3    Scalar laws and feature placement
+The Lévy measure has infinite total mass but finite first and second absolute moments. Its Poisson
+sum is absolutely convergent. Each ϑF is absolutely continuous: for every cutoff r > 0, the large-
+jump sum has a density conditional on at least one jump, and the probability of no such jump tends
+to zero as r ↓ 0. Full support follows by prescribing one jump near any desired value and requiring
+the independent small-jump remainder to be small. Thus the incoming prior has full support and
+continuous coordinates.
+    For F ≥ 1, |b| ≤ B, and 0 < r ≤ 1, there is a law qF,b,r ≪ ϑF such that
+
+                                                                                 C0 (B + 8)
+                       |W − b| ≤ 12r,         KL(qF,b,r ∥ϑF ) ≤ log F + C0 log              .       (2)
+                                                                                      r
+When |b| > 4r, the stronger support bound |W − b| ≤ r holds. For completeness, split the Poisson
+process at r/κ, with fixed large κ. Prescribe exactly one large jump, uniform on [b − r/2, b + r/2]
+if |b| > 4r. Otherwise use a mixture of uniforms on [5r, 7r] and [−7r, −5r] with mean b. Retain
+the original small-jump process conditioned on its sum having magnitude at most r/2. Its failure
+probability is O(1/F ) by its variance, so this conditioning costs O(1/F ). The prescribed jump
+has density at most 1/r, and the original Levy density on its support is at least a constant times
+(B + 8)−p−1 . The entropy on Poisson space is
+
+                                       F q(z)      ν{|z| > r/κ}
+                        Z
+                            q(z) log          dz +              − log Pr{|Sr/κ | ≤ r/2},
+                                        ν(z)             F
+
+which gives (2); summing the jumps decreases KL. The support bounds follow directly from the
+displayed jump intervals. The small-b mixture can be chosen with mean b because |b| ≤ 4r < 6r.
+    In particular, every feature with ∥v∥∞ ≤ B has a comparison law ζv,ϵ relative to its native
+product incoming prior such that
+
+                                                                                    C0 D(B + 8)
+             sup |ϕ(U · x̄) − ϕ(v · x̄)| ≤ ϵ,            KL(ζv,ϵ ∥ϑ⊗D
+                                                                   D ) ≤ C0 D log               .   (3)
+                 x                                                                       ϵ
+Apply (2) independently with r = ϵ/(12D) and use Lipschitzness.
+
+
+
+
+                                                           4
+3.1   Scaling, placement, and merging of scalar coordinates
+For 0 < s < 1, direct density division gives
+
+                                    L(sW ) ≤ s−a λN ,            W ∼ λN .                            (4)
+
+Indeed the density ratio is s−a [(1 + |w|)/(1 + |w|/s)]a+p ≤ s−a . For 0 < a ≤ c0 ≤ 1, the quantity
+aB(a, p) is bounded above and below by fixed positive constants. Also
+
+                     ta−1 (1 + t)−a−p = (t/(1 + t))a−1 (1 + t)−p−1 ≥ (1 + t)−p−1 .
+
+Therefore a uniform distribution on [b − r, b + r], with |b| ≤ 1 and 0 < r ≤ 1, has density relative to
+λN at most Cp N/r. It has mean b and lies within r of its center. The incoming-feature placement
+law from (3) is unchanged.
+   The positive density qa is decreasing because a ≤ 1. Hence
+                                                      Z t/2
+                          (qa ∗ qa )(t) ≤ 2qa (t/2)           qa (u) du ≤ 2p+2 qa (t).               (5)
+                                                       0
+
+The last inequality uses qa (t/2)/qa (t) ≤ 2p+1 . Thus the symmetric law whose magnitude is the sum
+of two independent native magnitudes has density at most 2p+2 times the native signed law.
+    For any fixed parameter pair (ai , ui ), (aj , uj ), put L = |ai | + |aj |. Choose feature ui with
+probability |ai |/L and feature uj otherwise. In the first slot place the chosen feature and coefficient
+sign(achosen )L; erase the second slot. At L = 0 use any choice and coefficient zero. This operation
+preserves the pair’s ℓ1 norm pointwise and its function in conditional expectation. At every x its
+conditional variance is
+
+                       |ai aj |{sign(ai )ϕ(ui · x̄) − sign(aj )ϕ(uj · x̄)}2 ≤ 4|ai aj |.             (6)
+
+Under the unconditioned product reference, the copied feature retains its native law and is indepen-
+dent of the new coefficient: the choice depends only on readout magnitudes, the two features are
+iid, and the chosen sign is fair independently of those magnitudes. Thus a fixed pair merge has
+precisely the scalar domination (5); no orientation factor is required because the retained position is
+always the first slot.
+
+
+4     A finite-width midpoint transfer
+Lemma 4.1 (Unbiased finite-width midpoint transfer). Let N ≥ 8C, 0 < ϵ ≤ 1, and let g obey the
+same teacher width, incoming coefficient and readout variation restrictions as stated above. For
+every finite-KL Q ≪ πN there is a law Qg ≪ πN coupled with source and output functions F, H,
+such that
+
+                                                   KL(Qg ∥πN ) ≤ KL(Q∥πN ) + J(C, B, ϵ),             (7)
+               |E[H(x) − (F (x) + g(x))/2 | F parameters]| ≤ ϵ,                                      (8)
+                                             2                                  2        2
+              E[|H(x) − (F (x) + g(x))/2| | F parameters] ≤ Cp C/N + Cp ϵ .                          (9)
+
+The last two inequalities hold uniformly in x, and one may take J = Cp [1 + CD log{eCp D(B +
+8)(C + 1)/ϵ}]. The same conditional bounds hold after fixing the selected slot indices.
+
+
+
+                                                       5
+Proof. Set r = ϵ/[64(C + 1)], γ = 4Cr, and retain teacher coefficients with magnitude greater than
+16r, leaving k ≤ C terms. At every old readout vector of ℓ1 norm at most one there are at least N/2
+slots with |ai | ≤ 2/N . Choose an ordered tuple of 2k distinct indices uniformly among such slots
+and group consecutive entries into k pairs. Relative to a uniform tuple among all (N )2k possibilities,
+this conditional choice costs at most 2k log 4 in KL: at each draw there are at least N/2 − 2C ≥ N/4
+permitted remaining indices.
+      Independently merge each pair as above, always retaining its first position. The resulting function
+F m has conditional mean F , and, because the merge choices are independent and each pair has
+|ai |, |aj | ≤ 2/N ,
+                                 E[|F m (x) − F (x)|2 | W, I] ≤ 16k/N 2 .
+Its readout ℓ1 norm equals the old one. Halve all remaining readout coefficients and use the freed
+second position in pair j for a feature from (3) and a uniform coefficient within r of (1 − γ)bj /2.
+The new readout norm is at most 12 + 12 (1 − γ) + Cr ≤ 1, and every inserted magnitude exceeds r.
+Relative to g/2, discarded teacher terms cost at most 8Cr, shrinkage costs at most 2Cr, readout
+perturbations at most Cr, and feature perturbations at most ϵ/2. Thus the inserted teacher function
+differs uniformly from g/2 by at most 11Cr + ϵ/2 ≤ ϵ. This insertion error is independent of the
+merge choices. Its conditional mean is bounded by ϵ and its second moment by ϵ2 . Halving the
+merging error and using its zero conditional mean proves (8) and (9), with a numerical enlargement
+of Cp .
+    Here is an explicit density proof of the KL bound. Augment the source law with the selected
+tuple. Relative to πN times a uniform tuple, its KL is at most KL(Q∥πN ) + 2k log 4. Apply the
+same randomized merging and insertion kernel to both laws; data processing bounds the output KL
+relative to the transformed reference by this number.
+    For a fixed tuple, the unconditioned reference after merging has native independent features,
+native readout coordinates outside the retained positions, and k merged readout laws dominated
+by 2p+2 λN . The merged magnitude exactly preserves the old ℓ1 norm. Consequently conditioning
+the old prior on its norm can be bounded by the same unconditioned reference divided by its old
+normalizer. Halving all N − k retained coefficients costs at most 2c0 by (4). Inserting the k teacher
+coefficients costs at most (Cp N/r)k , while inserting their features costs at most
+
+                                     exp{Cp kD log(Cp D(B + 8)/ϵ)}.
+
+For this last density claim, the feature placement construction also has an L-infinity density bound of
+the displayed order: its prescribed one-jump Poisson density and its small-jump conditioning density
+are pointwise bounded by the same factors used in the entropy estimate. Taking a pushforward
+preserves an upper density bound.
+    The output is supported on the same ℓ1 ball, so dividing by the target conditioned prior cancels
+the old conditioning normalizer exactly. At a realized output, at most 1/r slots have readout
+magnitude greater than r. Thus the k inserted positions have at most r−k possible ordered choices.
+The k retained first positions have at most N k choices. Averaging over all (N )2k tuples bounds the
+transformed reference density relative to πN by
+
+                                   N 2k −k
+                    2c0 2(p+2)k          r exp{Cp kD log(Cp D(B + 8)(C + 1)/ϵ)}.
+                                  (N )2k
+
+Since N ≥ 8C ≥ 8k, N 2k /(N )2k ≤ (4/3)2k . The logarithm of this density bound, plus the selection
+cost, is at most J(C, B, ϵ). Combining it with data processing proves (7) without multiplying the
+source KL by a constant. The argument does not assume independence of the source posterior.
+
+
+                                                   6
+5    Direct localization at every realizable width
+We use the signed beta-prime readout prior and the same incoming feature laws and ℓ1 conditioning
+fixed in Section 2.
+
+Lemma 5.1 (Small beta-prime backgrounds). There are constants r0 , K > 0 depending only on
+c0 , p such that, for a = c0 /N and 0 < r ≤ r0 , a native readout magnitude V satisfies
+
+                      − log Pr(V ≤ r) ≤ Ka log(K/r),         E[V | V ≤ r] ≤ 2ar.
+
+Proof. Put pr = Pr(V ≤ r). Since (1 + t)−a−p ≥ 1 − (a + p)t,
+
+                                          ra        (a + p)ar
+                                                                 
+                                   pr ≥          1−           .
+                                        aB(a, p)      a+1
+
+Choose fixed r0 so the bracket is at least 1/2. The function log[aB(a, p)] extends smoothly to a = 0
+with value zero; its derivative is bounded on [0, c0 ]. Thus its absolute value is at most Ka, while the
+negative logarithm of the bracket is at most Kar. This proves the first bound. For the conditional
+mean, the numerator is at most ra+1 /[(a + 1)B(a, p)]. Divide by the preceding lower bound and use
+its bracket at least 1/2.
+
+Lemma 5.2 (Width-uniform sup-norm comparison). For every N ≥ C, 0 < ϵ ≤ 1, and every teacher
+g of width C, incoming cap B ≥ 1, and readout variation at most one, there is a data-independent
+law ρg,ϵ ≪ πN such that
+
+                    ρg,ϵ {∥f − g∥∞ ≤ ϵ} = 1,
+                                                            eKD(B + 8)(C + 1)
+                           KL(ρg,ϵ ∥πN ) ≤ K(1 + CD) log                      .                    (10)
+                                                                   ϵ
+The constant is independent of N .
+
+Proof. Choose a sufficiently large fixed K0 and set r = ϵ/[K0 (C + 1)] ≤ r0 . Discard teacher readout
+coefficients with magnitude at most 16r, leaving k ≤ C terms. Center the retained coefficient laws
+at (1 − ϵ/2)bj , with uniform radius r. The centers have magnitude at least 8r, so these inserted
+coefficients have magnitude greater than r. Approximate each retained feature uniformly to ϵ/8
+using the incoming placement law.
+    For any fixed selection of k distinct slots, condition every other native readout coordinate to
+have magnitude at most r, and then condition their total ℓ1 norm to be at most ϵ/8. By Lemma 5.1,
+their conditional expected total norm is at most 2c0 r. For large enough K0 , the second conditioning
+therefore has probability at least 1/2. The joint background law has density relative to its native
+product reference at most
+                                    2p−(N
+                                      r
+                                          −k)
+                                              ≤ exp{K log(K/r)},
+uniformly in N .
+    Every resulting readout has norm at most 1 − ϵ/2 + Cr + ϵ/8 ≤ 1. The uniform function
+error consists of at most 16Cr from discarded coefficients, ϵ/2 from shrinkage, Cr from coefficient
+perturbations, ϵ/8 from feature approximation, and ϵ/8 from the background. For K0 ≥ 128, their
+sum is at most ϵ.
+    It remains to cancel the cost of selecting the slots. When k ≥ 1, partition the N slots into k
+deterministic groups, each of size at least ⌊N/k⌋ ≥ N/(2k), and choose one slot uniformly from each
+group for its designated teacher term. For a fixed choice, the readout insertion densities cost at
+
+                                                   7
+most (KN/r)k , and the feature insertion densities cost at most exp{KkD log(KD(B + 8)/ϵ)}. All
+other readouts have magnitude at most r, whereas each inserted readout has magnitude greater
+than r. The realized weights therefore identify the chosen position in each group. In the mixture
+density, at most one placement contributes; its uniform mixing weight cancels N k up to (2k)k .
+    Combining these density bounds gives an upper density ratio of exp{K(1 + CD) log(eKD(B +
+8)(C + 1)/ϵ)} relative to the unconditioned product prior. The comparison is supported on the l1
+ball, so converting the denominator to the conditioned prior multiplies this ratio by pN ≤ 1. Its KL
+is bounded by the logarithm of the displayed ratio. For k = 0, use only the background law; the
+same bounds hold without groups or insertion costs.
+
+
+6    From midpoint transfer to a sharp population oracle
+Proof of Theorem 2.1. Write β = 1/T and ∆f = (f − Y )2 − (g − Y )2 . Use Lemma 4.1 with ϵ = n−2
+and J = J(C, B, n−2 ). Conditional on the source parameters, expand squared loss about the
+midpoint M = (F + g)/2. The conditional mean error and second-moment bounds in that lemma
+give
+
+                     EQg R(H)
+                         b            b ) + 1 R(g)
+                              ≤ 21 EQ R(F   2
+                                              b    − 41 EQ Pn (F − g)2 + εS ,
+                             εS ≤ KC/N 2 + K(1 + Pn |Y |)n−2 .
+
+Gibbs variational optimality, together with the additive KL transfer, therefore implies
+
+                          EQ Pn ∆F ≤ − 12 EQ Pn (F − g)2 + 2εS + 2T J/n.                        (11)
+
+   We prove the needed relative-loss exponential inequality explicitly. For fixed bounded f, g, write
+df = f − g, Df = d2f , and Bf = df (f + g − 2f0 ). Then ∆f = Bf − 2ξdf , Bf2 ≤ 16Df , and 0 ≤ Df ≤ 4.
+For κ∗ = 1/8 and 0 < λ ≤ 1/(1024s),
+
+                                 E exp{λ[P ∆f − ∆f − κ∗ Df ]} ≤ 1.                              (12)
+
+Indeed, conditional integration of the noise leaves W = −Bf − κ∗ Df + 2λσ 2 Df inside eλW . At these
+constants, |W | ≤ 6|df | and |λW | ≤ 1. Since ez ≤ 1 + z + z 2 for |z| ≤ 1,
+
+                  EeλW ≤ 1 − λP Bf − λκ∗ P Df + λ2 (2σ 2 + 36)P Df ≤ e−λP Bf .
+
+This proves (12). Take λ = 2β, use independence, integrate over the prior, and apply Markov. With
+probability at least 1 − δ/2,
+                             Z
+                                 e2βn[P ∆f −Pn ∆f −κ∗ Pn Df ] dπN (f ) ≤ 2/δ.                   (13)
+
+                                                                                2 2
+    Put L = log(2/δ). The conditional sub-Gaussian inequality Eet|ξ| ≤ 2eσ t /2 and independence
+give, with probability at least 1 − δ/2,
+                                                   q
+                                   Pn |Y | ≤ 1 + σ 2(log 2 + L/n).
+
+If L > n, the theorem follows from R(f ) − R(g) ≤ 4 by enlarging K. Otherwise this event implies
+               √
+1 + Pn |Y | ≤ K s.
+    Use the direct comparison law of Lemma 5.2 at accuracy n−2 . Its uniform approximation gives
+                                                             √
+                             Eρ Pn ∆f ≤ 2(1 + Pn |Y |)n−2 ≤ K s/n2 .
+
+                                                    8
+                                                                                  R −βnP ∆
+Its KL is at most Jloc = K(1 + CD) log{eKD(B + 8)(C + 1)n}. For Zg =               e    n f dπ (f ), the
+                                                                                              N
+variational inequality therefore yields
+
+                                        − log Zg ≤ Jloc + K =: Lg .                                  (14)
+
+This comparison law does not depend on the observed sample.
+   Rewrite (13) using dQS /dπN = e−βnPn ∆f /Zg , and apply Jensen. Together with (14), this gives
+                                                                 T
+                       EQ P ∆f ≤ 21 EQ Pn ∆f + κ∗ EQ Pn Df +        {Lg + log(2/δ)}.
+                                                                 2n
+Insert (11). The coefficient of the empirical distance is −1/4 + κ∗ = −1/8, so this term can be
+dropped. Consequently
+                                                        T
+                        Z
+                            R(f ) dQS ≤ R(g) + εS +       {J + Lg /2 + 12 log(2/δ)}.
+                                                        n
+Substitute the bounds on εS , Lg and the displayed expression for J(C, B, n−2 ). This is (1). Jensen
+proves the posterior-mean claim.
+
+Simultaneous comparison classes. For deterministic countably many teacher classes with
+uniform resources (Cj , Bj ) and 8Cj ≤ N , choose weights wj > 0 summing to at most one. In each
+class choose a deterministic teacher within 1/n of its population-risk infimum, apply the theorem
+with confidence δwj , and union bound. The same single posterior then obeys the infimum of (1) over
+those classes, with log(4/δ) replaced by log(4/(δwj )) and an absorbed 1/n error. These confidence
+weights are proof devices and are not supplied to the learner. Dyadic incoming bounds compare
+arbitrary finite teacher coefficients with their corresponding resources.
+
+
+7    Removing the incoming coefficient bound for tanh
+These refinements keep the same number of hidden neurons and the same readout coefficients. In
+particular the readout ℓ1 restriction remains unchanged. Only the original incoming coefficient
+bound is removed.
+Lemma 7.1 (Boolean compactification of one tanh ridge). Let D = d + 1, 0 < τ ≤ 1/2, and
+h(x) = tanh(v · x̄) on {−1, 1}d , with arbitrary finite v. There is v ′ with
+
+                                     ∥v ′ ∥∞ ≤ (2D)2D arctanh(1 − τ )
+
+such that supx | tanh(v ′ · x̄) − h(x)| ≤ τ .
+Proof. Put M = arctanh(1 − τ ) > 0. At inputs with |h(x)| ≤ 1 − τ , impose v ′ · x̄ = arctanh h(x).
+At the remaining inputs impose v ′ · x̄ ≥ M or v ′ · x̄ ≤ −M according to the sign. The original vector
+is feasible. In variables z = v ′ /M , this is a finite closed polyhedron with coefficients in {−1, 1} and
+right-hand sides in [−1, 1].
+     Its minimum-norm feasible point lies in the span of its active rows: every null direction admits
+both sufficiently small feasible perturbations. Select r ≤ D independent active rows A, with
+right-hand side b. The point is A⊤ (AA⊤ )−1 b. The integer Gram matrix has determinant at least one
+and entries at most D in magnitude; its adjugate entries are bounded by (r − 1)!Dr−1 . Therefore
+every coordinate has magnitude at most r2 (r − 1)!Dr−1 ≤ (2D)2D . If there are no active rows, the
+point is zero. The output values are exact at nonsaturated inputs; at a saturated input both values
+lie in the same interval of length τ .
+
+                                                    9
+Lemma 7.2 (Continuous compactification of one tanh ridge). Suppose the input law on [−1, 1]d
+satisfies
+
+        PX {|u · X − t| ≤ r} ≤ κrα       (∥u∥2 = 1, t ∈ R, 0 < r ≤ 1),       κ ≥ 1,   0 < α ≤ 1.
+
+For 0 < τ ≤ 1/2 and any finite v = (b, w) there is v ′ with
+
+                  E| tanh(v ′ · X̄) − tanh(v · X̄)| ≤ τ,
+                                                       √
+                                           ∥v ′ ∥∞ ≤ ( d + 2) 12 log(4/τ )(4κ/τ )1/α .
+
+Proof. Set M = 12 log(4/τ ), δ = (τ /(4κ))1/α ≤ 1, and R = M/δ. The elementary bound 1 −
+tanh M ≤ 2e−2M = τ /2 √   will be used. Write r = ∥w∥2 .          √
+    If r ≤ R and |b| ≤ R d + M , retain v. If r ≤ R but |b| > R d + M , the original preactivation
+has constant sign and magnitude exceeding M everywhere; replace it by the constant sign(b)M .
+This changes the output by at most τ /2. Both cases have the asserted coefficient bound.√
+    If r > R, write u = w/r and t = −b/r, so the preactivation is r(u · x − t). When |t| > d + δ, its
+sign is constant and its magnitude
+                               √         √ rδ > M throughout the cube. Replace it by the constant
+                                    exceeds
+− sign(t)M . Otherwise√|t| ≤ d + δ ≤ d + 1; replace the preactivation by R(u · x − t). This has
+coefficients at most R( d + 1). Outside the slab |u · x − t| ≤ δ, both preactivations have the same
+sign and magnitude at least M , so their tanh values differ by at most τ /2. The slab has probability
+at most κδ α = τ /4, where the output difference is at most two. Thus the expected difference is at
+most τ .
+
+    For a teacher g = C                 j |bj | ≤ 1, apply either lemma separately to every feature.
+                      P                      P
+                        j=1 bj hj with
+The resulting same-width teacher gτ satisfies ∥g − gτ ∥∞ ≤ τ in the Boolean case, or E|g − gτ | ≤ τ
+in the continuous case. Since both functions and f0 lie in [−1, 1],
+
+                                             R(gτ ) ≤ R(g) + 4τ.
+
+The noise floor cancels in this comparison.
+Corollary 7.3 (Coefficient-free shallow tanh classes). Use the same posterior as in Theorem 2.1,
+and fix N ≥ 8C, n ≥ 2. The comparison class consists of width-at-most-C tanh teachers with
+arbitrary finite incoming coefficients and readout ℓ1 norm at most one. With probability at least
+1 − δ, its final posterior mean satisfies the following bounds. For arbitrary Boolean-input laws, put
+D = d + 1; then
+
+                  R(f¯S ) ≤ inf R(g) + C9 C/N 2
+                              g
+                                  C9 s
+                              +        [CD{D log(2D) + log(e(C + 1)n)} + log(4/δ)] .
+                                   n
+Under the slab assumption of Lemma 7.2,
+
+                R(f¯S ) ≤ inf R(g) + C9 C/N 2
+                          g
+                              C9 s                     1
+                                                                                      
+                         +         CD log(eD(C + 1)n) + log(eκn) + log(4/δ) .
+                               n                       α
+               √
+If also N ≥ n, the C/N 2 term is absorbed into the statistical remainder. Constants depend
+only on the fixed scalar prior. No regularity or teacher-complexity parameter is supplied to the
+learner. Countably many width or regularity classes can be compared simultaneously by the confidence
+allocation already stated after the main theorem.
+
+                                                     10
+Proof. Fix a deterministic teacher within 1/n of the class risk infimum and compactify with τ = 1/n.
+In the Boolean case,
+                            log(Bτ + 8) ≤ C10 {D log(2D) + log log(en)}.
+In the continuous case,
+                                          n                                             o
+                    log(Bτ + 8) ≤ C10 log(2D) + log log(en) + α−1 log(eκn) .
+
+Substitute these bounds in Theorem 2.1 and absorb the 4/n compactification error and 1/n near-
+minimizer error. The compactified teacher is deterministic and uses the same width and readout
+variation as the original one.
+
+
+8    One posterior at every width above the teacher width
+For this section take ϕ = tanh. Let H be the class of single tanh features on the cube and let F be
+their absolute convex hull: all finite sums j aj hj with j |aj | ≤ 1. Every learner width and every
+                                            P            P
+
+teacher under consideration lies in F. Monotonicity of tanh turns each subgraph test into a linear
+threshold test after applying inverse tanh; hence the pseudodimension of H is at most D. The same
+argument also works for hardtanh.
+
+Lemma 8.1 (Uniform relative losses over the variation class). Under the conditional sub-Gaussian
+assumptions, with probability at least 1 − δ,
+                                                       s
+                                                            s[D log(en) + log(4/δ)]
+                          sup |AbS (f ) − A(f )| ≤ K                                ,
+                          f ∈F                                        n
+
+where A(f ) = R(f ) − R(f0 ) and AbS (f ) = Pn [(f − Y )2 − (f0 − Y )2 ]. The bound is independent of
+the number of terms in f .
+
+Proof. On any fixed input sample, quantizing the evaluation vectors of H in maximum norm at
+mesh n−2 gives a net with log cardinality at most KD log(en). Indeed there are O(n3 ) input and
+threshold pairs, and the subgraph growth bound controls their label patterns. Use actual function
+representatives from a countable pointwise-dense subclass, choosing the first one in each nonempty
+quantization cell; the net is measurable and depends only on inputs.
+   The empirical Rademacher complexity of an absolute convex hull equals that of its signed
+generating class. The finite-net bound for bounded vectors therefore gives, uniformly over the
+observed inputs,
+                                                                 q
+                                 Eε sup n−1
+                                              X
+                                                  εi f (Xi ) ≤ K D log(en)/n.
+                                   f ∈F       i
+
+Symmetrization and the contraction inequality for t 7→ (t − f0 (Xi ))2 on [−1, 1], whose Lipschitz
+constant is four, bound the expected supremum of |(Pn − P )(f − f0 )2 | by the same order. The
+                                                     √
+harmless fixed-function offset contributes
+                                  p        at most K/  n. Since these squared discrepancies lie in
+[0, 4], bounded differences adds K log(4/δ)/n with the required confidence.
+     For the noise term, condition on the inputs and apply sub-Gaussian concentration to the
+preceding finite net. It gives
+                                                   q
+                                 sup |Pn ξh| ≤ Kσ [D log(en) + log(4/δ)]/n
+                             h∈H
+
+
+
+                                                       11
+after increasing constants and extending from the net. The extension error is at most n−2 Pn |ξ|;
+                           2 2
+the inequality Eet|ξ| ≤ 2eσ t /2 controls it by the same displayed order. A separate conditional
+sub-Gaussian bound controls |Pn ξf0 |. By ℓ1 duality, supf ∈F |Pn ξf | = suph∈H |Pn ξh|. Combine
+these bounds with
+                               AbS (f ) = Pn (f − f0 )2 − 2Pn ξ(f − f0 )
+and allocate the failure probabilities to sum to δ. Continuity in the ridge parameters, rational
+coefficients, and bounded pointwise approximation justify all suprema through a countable separable
+subclass; no measurable-selection assumption on the unknown conditional mean is needed.
+
+Theorem 8.2 (A width-uniform slow oracle for the same fixed posterior). Use exactly the tanh
+learner, conditioned prior, and fixed-temperature all-data posterior of Theorem 2.1, with n ≥ 2 and
+0 < δ < 1. On one event of probability at least 1 − δ, simultaneously for every teacher width C ≤ N ,
+incoming cap B ≥ 1, and teacher g with these resources,
+                                                    s
+                                                 s[D log(en) + log(4/δ)]
+                    Z
+                        R(f ) dQS (f ) ≤ R(g) + K
+                                                           n
+                                         Ks(1 + CD)
+                                       +            log{eD(B + 8)(C + 1)n}.                      (15)
+                                              n
+The same conclusion holds for the posterior mean. The architecture is fixed before observing its data;
+neither the posterior nor its temperature depends on the teacher’s resources.
+
+Proof. Work on the common event of Lemma 8.1, with right-hand side Un . For any comparator law
+ρ, Gibbs variational optimality and the nonnegative posterior KL imply
+
+ EQ A(f ) ≤ EQ AbS (f ) + Un ≤ Eρ AbS (f ) + T KL(ρ∥πN )/n + Un ≤ Eρ A(f ) + T KL(ρ∥πN )/n + 2Un .
+
+For each teacher choose the direct comparison law at accuracy n−2 . Its population risk is at most
+R(g) + 4/n2 , and its KL is bounded by (10). Substitute these bounds. The uniform event and the
+pathwise variational inequality work for all such teachers and laws simultaneously; no confidence
+allocation is required.
+
+   For tanh teachers with unrestricted incoming coefficients, compactify each feature at tolerance
+1/n using the Boolean or slab-regular lemma. In (15), replace the logarithmic resource by
+
+                                   CD{D log(2D) + log(e(C + 1)n)}
+
+on Boolean inputs, or by
+                               CD{log(eD(C + 1)n) + α−1 log(eκn)}
+under slab regularity, and absorb the 4/n approximation error. This gives a vanishing coefficient-one
+approximation oracle at every prescribed N ≥ C whenever the displayed statistical resources vanish.
+At larger widths the merged theorem supplies the faster near-1/n remainder. Both statements
+concern the same all-data posterior, with the same fixed likelihood variance.
+
+Growing comparison widths. At fixed dimension and regularity, the coefficient-free all-width
+oracle has vanishing remainder whenever Nn ≥ Cn and its displayed comparison resource is o(n).
+For example, in the continuous case it is enough that
+                               n                                       o
+                    Cn (d + 1) log(e(d + 1)(Cn + 1)n) + α−1 log(eκn) = o(n).
+
+                                                    12
+The width may remain fixed when the comparison width is fixed. The faster merged bound applies
+at Nn ≥ 8Cn and has the additional term Cn /Nn2 ; this term vanishes for a growing Cn with a
+                                                                                           √
+constant-factor width enlargement, and is absorbed into the fast statistical rate when Nn ≥ n.
+These statements concern the same ordinary posterior within the readout variation class.
+
+
+References
+[1] Guillaume Lecué and Philippe Rigollet. Optimal learning with Q-aggregation. Annals of Statistics
+    42(1):211–224, 2014. https://doi.org/10.1214/13-AOS1190.
+
+[2] Guillaume Lecué and Shahar Mendelson. On the optimality of the aggregate with exponen-
+    tial weights for low temperatures. Bernoulli 19(2):646–675, 2013. https://doi.org/10.3150/
+    11-BEJ408.
+
+[3] Mikael Møller Høgsgaard, Patrick Rebeschini, and Tobias Wegel. Aggregation with exponen-
+    tial weights is optimal in expectation. arXiv:2607.02247, 2026. https://arxiv.org/abs/2607.
+    02247.
+
+[4] Francis Bach. Breaking the curse of dimensionality with convex neural networks. Journal of
+    Machine Learning Research 18(19):1–53, 2017. https://www.jmlr.org/papers/v18/14-546.
+    html.
+
+[5] Ismaël Castillo and Paul Egels. Posterior and variational inference for deep neural networks
+    with heavy-tailed weights. Journal of Machine Learning Research 26(122):1–58, 2025. https:
+    //www.jmlr.org/papers/v26/24-0894.html.
+
+[6] ChatGPT-6 Astra, Claude Opus 5.5, Kaarel Hänni, and Dmitry Vaintrob. Bayesian neural
+    networks with Lévy fan-in priors. 2026. https://github.com/kaarelh/AI-works/tree/main/
+    neural-network-generalization/works-in-progress/agnostic-levy-fanin.
+
+
+
+
+                                                13
+

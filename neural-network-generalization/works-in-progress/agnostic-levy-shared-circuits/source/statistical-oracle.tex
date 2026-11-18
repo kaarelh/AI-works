@@ -1,0 +1,66 @@
+\section{A circuit oracle for one fixed posterior}
+\label{sec:dag-oracle}
+Write $g=\psi(z_g)$ for the bounded output of a comparator, and retain
+$V,E,E_1,J,Q,k,B$ from Section~\ref{sec:shared-dag}. Define
+\begin{align}
+ \mathcal K_n(g;N)
+ ={}&1+J\log N+E_1\log(d+1)\notag\\
+ &+C Q\left[\log\{C(n+1)(V+1)(B+8)L_\psi\}
+                  +(H+1)\log D\right],
+ \label{eq:dag-resource}
+\end{align}
+where $D=C(1+A+b)(k+1)(B+8)$ and $L_\psi\ge1$ bounds the Lipschitz constant of the final link. Constants depend only on the fixed activation, link and scalar prior. Under the stable-teacher hypotheses of Section~\ref{sec:stable-dag}, replace this resource by
+\begin{align}
+ \mathcal K^{\rm st}_n(g;N)
+ ={}&1+J\log N+E_1\log(d+1)\notag\\
+ &+C Q\log\{C(n+1)(V+1)(k+1)(B+8)(R+1)(H+1)L_\psi\}.
+ \label{eq:stable-dag-resource}
+\end{align}
+
+\begin{theorem}[Sharp expected circuit oracle]
+\label{thm:dag-statistical}
+Let $X\in[-1,1]^d$, $f_0(x)=\E[Y\mid X=x]\in[-1,1]$, and suppose $Y-f_0(X)$ is conditionally sub-Gaussian with proxy $\sigma^2$. Use the product prior of Section~\ref{sec:model}, one prescribed width $N$, depth $H$, and Gaussian observation variance $128(1+\sigma^2)$. For every comparator of hidden depth $H$ and width at most $N$,
+\[
+ \E_{S_n} R(\bar f_{S_n})
+ \le R(g)+\frac{C(1+\sigma^2)\mathcal K_n(g;N)}{n+1}.
+\]
+The stable resource \eqref{eq:stable-dag-resource} may be used whenever its stated teacher assumptions hold. The same posterior satisfies the infimum of these bounds over all deterministic comparators and either valid resource.
+\end{theorem}
+\begin{proof}
+Choose the comparison law from Lemmas~\ref{lem:dag-entropy} and~\ref{lem:dag-uniform-error} at
+$\epsilon=[4L_\psi W(n+1)]^{-1}$. Both $f_w$ and $g$ lie in $[-1,1]$, so conditional centering of the label noise gives
+\[
+ \int R(f_w)\,dQ_\epsilon-R(g)
+ =\E_X\int[(f_w-f_0)^2-(g-f_0)^2]dQ_\epsilon
+ \le4\E_{Q_\epsilon}\|f_w-g\|_\infty
+ \le\frac1{n+1}.
+\]
+The entropy is bounded by \eqref{eq:dag-resource}. Apply the sharp all-data inequality of Theorem~\ref{thm:all-data}. For stable teachers use the smaller precision cutoff in Lemma~\ref{lem:stable-dag-error}; its entropy is \eqref{eq:stable-dag-resource}. All comparison laws are deterministic functions of the comparator, the architecture and the sample size, and not of the observed sample. Taking their infimum therefore preserves the conclusion.
+\end{proof}
+
+\paragraph{Dense and sparse comparators.}
+For a dense width-$C$ comparator of depth $H$,
+\[
+ V\le CH,\quad E\le C^2(H-1)+C,\quad
+ E_1\le C(d+1),\quad Q=O(C^2H+Cd).
+\]
+For fixed coefficient and activation bounds, suppressing logarithms, the expected excess-risk numerator is therefore
+\[
+ O\big((C^2H+Cd)H+(C^2H+Cd)\log N\big).
+\]
+Under stable teacher rows it is instead
+$\widetilde O((C^2H+Cd)(1+\log N))$.
+The learner prior is identical in the two cases; the latter conclusion simply uses a better comparison implementation. Sparse circuits pay their actual edge count rather than the dense parameter count, and their used input coordinates cost $E_1\log(d+1)$.
+
+\paragraph{Width independence for formulas.}
+For a formula $J=0$, the bound is independent of learner width. More generally, unroll a shared comparator into a layered formula with $S$ hidden occurrences. Each occurrence has one outgoing edge, so its internal/readout edge count is $S$ and its used first-layer input count is at most $kS$. Its row gain and coefficient caps remain unchanged. At widths $N\ge2(S+1)$, apply the formula comparison directly. At smaller widths apply the original shared comparison, using $E\le S$, $V\le S$, and $\log N\le\log(2(S+1))$. Thus every $N$ that realizes the original circuit has a second resource
+\[
+ \mathcal K^{\rm form}_n
+ \le C(k+1)(S+1)
+ \left[\log\{C(n+1)(d+1)(S+1)(B+8)L_\psi\}
+                         +(H+1)\log D\right].
+\]
+The posterior can use the smaller of this width-independent formula resource and the shared-circuit resource \eqref{eq:dag-resource}. The same reasoning applies to the stable variant. Unrolling can be exponential in depth, so the two alternatives are materially different.
+
+\paragraph{Growing comparator and learner sizes.}
+For fixed input dimension and coefficient cap, suppose $N$ grows polynomially with $n$, while $C=n^u$ and $H=n^v$. The general dense bound tends to the comparison risk whenever $2u+2v<1$, and the stable-teacher bound does so whenever $2u+v<1$. If instead $\log N=O(n^a)$, impose also $2u+v+a<1$. These statements use a single architecture and posterior for each sample size, fixed before its data are observed. The expected theorem does not assert a simultaneous high-probability event over every architecture.

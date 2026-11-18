@@ -1,0 +1,90 @@
+\section{Only a finite second label moment is needed for a vanishing oracle}
+\label{sec:raw-finite-variance}
+The qualitative comparison with a growing width class does not require a
+label-tail bound.  The same prior also works under only $\E Y^2<\infty$,
+with a slower rate and a variance calibrated from the observed labels.
+Neither the labels nor network outputs are clipped.
+
+\begin{theorem}[A raw width oracle with finite-variance labels]
+\label{thm:raw-finite-variance-width}
+Fix $d,h$ and one of the input settings in
+Theorem~\ref{thm:raw-width-oracle}, with its regularity constants fixed.
+Assume only $\E Y^2<\infty$.  Retain the same Student-hidden,
+normalized-Gaussian-readout prior.  On each sample use
+\[
+ T_S=n^{5/6}\left(1+\frac1n\sum_{i=1}^nY_i^2\right)
+\]
+in the raw posterior \eqref{eq:raw-posterior}.  Put
+\[
+ C_n=\lfloor n^{1/(24bh)}\rfloor.
+\]
+For all sufficiently large $n$, every prescribed $N\ge n$, and every
+prescribed learner depth satisfying the previous lower threshold and
+$H\le n^{1/36}$,
+\begin{align}
+ \E_S R(\widehat f_S)
+ &\le\E_S\int R(z_w)\,\Pi_S(dw)\notag\\
+ &\le\inf_{g\in\mathcal G_{C_n,h}}R(g)
+   +\widetilde O\big((1+\E Y^2)n^{-1/12}\big)
+   +\E\left[Y^2\mathbf1_{\{|Y|>n^{1/24}\}}\right].
+ \label{eq:finite-variance-growing-raw}
+\end{align}
+The lower learner-depth threshold is $O(h)$ on Boolean inputs and
+$c_{d,h,\kappa,\alpha}\log(n+2)$ in the continuous cases.
+The tilde hides powers of logarithms and constants depending on the fixed
+prior laws, input dimension, teacher depth and input regularity.
+The last term tends to zero for every fixed finite-variance label law.
+The variance rule uses no unknown label moment or teacher resource.
+\end{theorem}
+\begin{proof}
+The raw finite-variance sieve theorem for this prior\cite{rawprior}
+holds for every deterministic comparison law $\rho$ of finite risk and KL:
+\begin{align*}
+ \E_S\Pi_S R(z_w)
+ &\le\rho R(z_w)+(1+\E Y^2)n^{-1/6}\KL(\rho\|\mu_{N,H})\\
+ &\quad+c(1+\E Y^2)(D_n+D_n^2+(n+1)^{-2}),\qquad
+ D_n=(d+H+1)^3n^{-1/6}.
+\end{align*}
+For clarity, this interface comes from a deterministic finite dictionary
+covering all but exponentially small prior mass.  The prior is centered,
+its pointwise variance is bounded, and its raw supremum has a Gaussian
+tail.  The chosen $T_S$ gives a deterministic posterior-density ceiling
+$\exp(O(n^{1/6}))$.  Centering the loss as $f^2-2fY$ removes the $Y^2$
+term; its dictionary symmetrization requires only $\E Y^2$, not a fourth
+moment.  The final variational inequality contributes exactly
+$\E(T_S/n)\KL=(1+\E Y^2)n^{-1/6}\KL$.
+This is the arbitrary-comparison-law form of the imported theorem, so
+population approximation suffices.
+
+Fix $g\in\mathcal G_{C_n,h}$ and put $M=n^{1/24}$.  Apply
+Lemma~\ref{lem:stable-compiler-resource} to the raw target $g$, range $M$,
+and precision $\epsilon=(n+2)^{-8}$.  Its compiled width is
+$\widetilde O(n^{1/24})$, hence at most $N$ for all sufficiently large
+$n$.  Its comparison entropy is
+\[
+ \KL(\rho\|\mu_{N,H})
+ =\widetilde O(C_n^{2bh}+H+M^2)
+ =\widetilde O(n^{1/12}).
+\]
+The law approximates $\operatorname{clip}_M g$ in squared population
+norm to $cM^2\epsilon$.  The pointwise projection inequality from the
+main proof and Cauchy--Schwarz give
+\[
+ \rho R(z_w)\le R(g)
+  +\E[Y^2\mathbf1_{\{|Y|>M\}}]
+  +c(1+\E Y^2)n^{-2}.
+\]
+Since $H\le n^{1/36}$ and $d$ is fixed,
+$D_n=O(n^{-1/12})$; its square is smaller.  Substituting these estimates
+in the imported interface and taking population near-minimizers proves
+\eqref{eq:finite-variance-growing-raw}.  Jensen gives the mean-prediction
+bound.  Finally the tail expectation tends to zero by dominated
+convergence, using $\E Y^2<\infty$.
+\end{proof}
+
+The temperature in this section is data dependent, so it is a specified
+variance-calibrated Bayesian procedure rather than a fixed-variance
+Gaussian generative model.  The prior and architecture remain fixed
+before the data, and a single posterior uses all observations.  This
+should be distinguished both from the deterministic $T_n\asymp\sqrt n$
+agnostic theorem and the fixed-temperature noisy-realizable theorem.

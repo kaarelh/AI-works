@@ -1,0 +1,227 @@
+\section{The shallow ReLU oracle at every width above the comparison width}
+\label{sec:all-width-relu}
+The preceding ReLU oracle can be strengthened from $N\ge n$ to
+every width that can hold the comparison network. The proof uses an
+ordinary Gaussian neighborhood of a balanced teacher and a joint
+empirical-loss/energy cutoff. It does not require the midpoint LP.
+Keep the original independent Gaussian prior and normalized path
+mass of the preceding sections. Inputs have any law on $[-1,1]^d$.
+
+\begin{lemma}[A balanced comparison at every eligible width]
+Let $g$ be implemented by $k$ shallow ReLU neurons, and let $N\ge k$.
+Suppose $\mathbb P_nY^2\le L$, $L\ge1$, $P_g\le n^4$, and
+$n^{-2}\le\lambda\le1$. Then
+\[
+ e+\tfrac12\lambda\Pi Q
+ \le2\lambda P_g+C\lambda\nu(d+2)
+           \log((n+1)(d+L+1))+Cn^{-10},                 \tag{GA1}
+\]
+where $e=\Pi\widehat R(z)-\widehat R(g)$ and $\Pi$ is the
+actual raw posterior.
+\end{lemma}
+\begin{proof}
+Write $g=\sum_{j=1}^k c_jd^{-1/2}(\theta_j\cdot\bar x)_+$,
+with unit directions, so $\sum_j|c_j|=P_g$.
+At learner width $N$, implement each term by
+\[
+ \bar w_j=\sqrt{N|c_j|/d}\,\theta_j,\qquad
+ \bar v_j=\operatorname{sign}(c_j)\sqrt{|c_j|/N},
+\]
+and pad all unused positions with zeros. Positive homogeneity
+preserves the function exactly and gives $Q(\bar w)=2P_g$.
+Around this center use native Gaussian variances multiplied by
+$\epsilon^2$, where $\epsilon=((n+1)(d+L+1))^{-30}$.
+The normalized Gaussian relative entropy is at most
+\[
+ \frac{2\lambda}{\omega}\KL(\rho\|\mu)
+ \le2\lambda P_g+2\lambda\nu(d+2)\log(1/\epsilon).
+\]
+The balanced perturbation estimate (GM3) gives uniform RMS function
+error $C\epsilon\sqrt{\nu P_g}+C\epsilon^2\nu$.
+Empirical Cauchy--Schwarz and $\mathbb P_nY^2\le L$ consequently give
+$\rho\widehat R\le\widehat R(g)+Cn^{-10}$.
+On the other hand, the Gaussian energy identity implies
+\[
+ \KL(\Pi\|\mu)\ge\tfrac14\omega\Pi Q
+                       -\tfrac12(d+2)N\log2.
+\]
+Compare the posterior variational objective to $\rho$ and substitute
+these two entropy bounds. This is (GA1).
+\end{proof}
+
+\begin{lemma}[A joint cutoff uniform even at narrow widths]
+There is a numerical $C$ such that, on $\mathbb P_nY^2\le L$, put
+\[
+ K=C(d+2)\log(\mathrm e(n+1)(d+L+1)),\qquad
+ J=\widehat R(z)+\lambda Q,\qquad
+ u=2(L+1)+\lambda K.
+\]
+For every $N\ge1$, $0<\nu\le1$, and $\lambda>0$,
+\[
+ \Pi[(1+Q^2)\mathbf1_{\{J>u\}}]\le n^{-40}.             \tag{GA2}
+\]
+\end{lemma}
+\begin{proof}
+The centered native output has variance at most $\nu^2/N\le1$,
+so $Z\ge\exp[-\omega(L+1)/(2\lambda)]$.
+On $J>u$,
+\[
+ e^{-\omega\widehat R/(2\lambda)}
+ \le e^{-\omega u/(4\lambda)}e^{\omega Q/4}.
+\]
+Writing $D=N(d+2)$, exponential tilting of $\omega Q\sim\chi_D^2$
+therefore gives
+\begin{align*}
+ \Pi[(1+Q^2)\mathbf1_{J>u}]
+ &\le C[1+(d+2)^2]
+ \exp\left\{\frac{\omega(L+1)}{2\lambda}
+             -\frac{\omega u}{4\lambda}+\frac{D\log2}{2}\right\}.
+\end{align*}
+Indeed the tilted second moment is $4D(D+2)/\omega^2$ and
+$D/\omega=\nu(d+2)\le d+2$.
+Use $\omega=N/\nu\ge1$ and increase $C$ in $K$.
+No lower bound $N\ge n$ is used.
+\end{proof}
+
+\begin{theorem}[An all-width, finite-variance raw Gaussian oracle]
+\label{thm:all-width-relu}
+Let $\mathbb EY^2\le M_2<\infty$ and $0<\delta<1/2$. Set
+\begin{align*}
+ L&=8(M_2+1)/\delta,\\
+ b&=c_0\log^4(\mathrm e(n+1)(d+L+1)/\delta)/n,\\
+ K&=c_2(d+2)\log(\mathrm e(n+1)(d+L+1)),\\
+ \lambda&=c_1\{\sqrt{(L+1)b}+K b\},
+\end{align*}
+with sufficiently large fixed numerical constants, and assume
+$\lambda\le1$. For every deterministic $k$-neuron shallow ReLU
+comparison $g$, with probability at least $1-\delta$,
+simultaneously for every $N\ge k$ and $0<\nu\le1$,
+\[
+ R(\bar z_\lambda)\le\Pi_\lambda R(z)
+ \le R(g)+C\lambda(P_g+K+1).                            \tag{GA3}
+\]
+Labels, outputs and prediction are unchanged. The actual Gaussian
+observation variance is $n\lambda\nu/N$. The schedule uses neither
+comparison width nor coefficient magnitudes nor approximation risk.
+\end{theorem}
+\begin{proof}
+Markov's inequality gives $\mathbb P_nY^2\le L$ except with
+probability $\delta/8$. Lemma (GF1), applied only to the common
+multiplier $Y$, gives, except with probability $\delta/8$,
+\[
+ Z_Y:=\sup_{a\in\mathcal H_d}
+       |(\mathbb P_n-\mathbb P)[Ya]|\le C\sqrt{M_2/(n\delta)}.
+                                                               \tag{GA4}
+\]
+Apply the smooth-square bound once to the unit path ball, and
+rescale each nonzero $f$ by its own path mass. This gives one event
+of failure probability $\delta/4$ on which
+\[
+ \mathbb E f^2-\mathbb P_nf^2
+ \le C\sqrt{\mathbb P_nf^2}\,P_f\sqrt b
+                         +CbP_f^2                            \tag{GA5}
+\]
+for every finite shallow function. The zero function is immediate.
+This is a function-class event, independent of learner width and
+energy; no energy shells or label moment enter this step.
+
+On the joint-good set $J\le u$ of (GA2),
+\[
+ Q\le u/\lambda,\qquad
+ \mathbb P_n z^2\le2\widehat R(z)+2\mathbb P_nY^2
+                       \le C(L+1+\lambda K).
+\]
+Since $P\le Q/2$, the chosen scale obeys
+\[
+ \sqrt{(L+1+\lambda K)b}\le c\lambda,
+ \qquad b(u/\lambda+1)\le c\lambda,
+ \qquad Z_Y\le c\lambda,
+\]
+with $c$ as small as needed by increasing $c_1$.
+Using (GA4)--(GA5), the exact cancellation of the $Y^2$ term gives
+\begin{align*}
+ R(z)-R(0)
+ &\le\widehat R(z)-\widehat R(0)
+         +\tfrac14\lambda Q+C\lambda.                    \tag{GA6}
+\end{align*}
+All path radii used here are polynomial in $n$: $\lambda\le1$
+implies $d,L\le Cn$ and $u/\lambda\le Cn$.
+
+Integrate (GA6) on $J\le u$. To replace its empirical integral by
+the full one, use that its integrand is bounded below by
+$-\widehat R(0)\ge-L$. On the complement,
+$R(z)\le C Q^2+2M_2$. Thus (GA2) controls both tail corrections.
+Combining with (GA1) yields
+\[
+ \Pi R(z)-R(0)
+ \le\widehat R(g)-\widehat R(0)
+                 +C\lambda(P_g+K+1)+Cn^{-10}.             \tag{GA7}
+\]
+First suppose $R(g)\le R(0)+1$ and $\lambda(P_g+1)\le cL$.
+Then $\mathbb Eg^2\le C(M_2+1)$ and $|g|\le\sqrt2P_g$.
+Bernstein's inequality for the bounded variable $g(X)^2$ gives,
+except with probability $\delta/4$,
+\[
+ |(\mathbb P_n-\mathbb P)g^2|
+ \le CP_g\sqrt{(M_2+1)\log(8/\delta)/n}
+                 +CP_g^2\log(8/\delta)/n.
+\]
+The $Yg$ discrepancy is at most $P_gZ_Y$ by absolute convexity.
+Consequently
+\[
+ \widehat R(g)-\widehat R(0)
+ \le R(g)-R(0)+C\lambda P_g,
+\]
+where the quadratic comparator term is absorbed using
+$bP_g^2\le cLbP_g/\lambda\le C\lambda P_g$.
+Also $P_g\le n^4$, as required in (GA1).
+This proves (GA3) in the nontrivial comparison range.
+
+The same argument with $g=0$ gives a bound by $R(0)+C\lambda(K+1)$
+at every $N\ge1$. It covers comparisons with $R(g)>R(0)$ directly,
+and covers $\lambda(P_g+1)>cL$ since $R(0)\le M_2\le L$.
+Finally Jensen gives the posterior-mean claim.
+\end{proof}
+
+\paragraph{Interpretation and growing comparisons.}
+An affine-output width-$C$ teacher with coefficient cap $B\ge1$
+has an implementation with at most $C+1$ neurons and
+$P_g\le2d(C+1)B^2$. Thus at fixed $d,M_2,B,\delta$, (GA3) gives
+$\widetilde O((C+1)B^2/\sqrt n)$ at every $N\ge C+1$.
+If no output bias is present, $N\ge C$ suffices.
+There is no input-regularity assumption.
+For each declared compact budget class choose a deterministic
+population minimizer; (GA3) then compares to its best risk.
+The common multiplier $Y$ is used only once, and polynomially many
+chosen minimizers can share the event by a Bernstein union bound
+with logarithmic cost. Classes whose displayed resource bound is
+already larger than $L$ are covered by zero.
+
+For each fixed dimension, moment-finite label law and confidence,
+the universal schedule
+$\lambda_n=\log^8(n+2)/\sqrt n+(d+2)\log^8(n+2)/n$
+eventually satisfies all the required inequalities without a supplied
+moment bound. At fixed $B$, width $\lfloor n^{1/4}\rfloor$
+comparisons then have gap $\widetilde O(n^{-1/4})$ already for every
+$N\ge\lfloor n^{1/4}\rfloor+1$.
+The onset may depend on the unknown law; this is not a uniform
+finite-sample bound over all finite-second-moment laws.
+
+\paragraph{Sub-Gaussian confidence and expectation.}
+Under a marginal sub-Gaussian envelope, take the proof-only label
+cutoff $M_n$ from (GG1) and physical scale $M_n^2\lambda'_n$, with
+the normalized scale chosen below.
+For the normalized bounded labels, use $L=1$ deterministically and
+bounded-process Bernstein for the common $Y$ multiplier, giving
+$Z_Y\le C\sqrt b$. Thus one may choose
+$\lambda'_n=C(\sqrt b+Kb)$ with only logarithmic confidence
+dependence; the finite-variance $\delta^{-1}$ Markov factor is not
+used. The normalized-output argument is
+unchanged: the actual prior and the physical balanced teacher center
+are retained. Thus the same all-width oracle has only logarithmic
+confidence dependence and the same polynomial sample rates.
+The deterministic raw energy moment bound used in the preceding
+expectation section is uniform for every $N\ge1$; taking
+$\delta=n^{-20}$ therefore also gives the all-width expected-risk
+oracle under sub-Gaussian labels. Only the finite-variance version
+remains confidence-only.

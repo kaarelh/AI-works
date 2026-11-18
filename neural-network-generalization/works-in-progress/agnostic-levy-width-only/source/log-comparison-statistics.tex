@@ -1,0 +1,179 @@
+\section{Logarithmic comparison entropy and a sharp holdout oracle}
+\label{sec:log-comparison-statistics}
+This section is conditional on one explicit prior-comparison property. It contains no prior over architectures. Let the prescribed network have bounded output $f_w\in[-1,1]$, a full-support parameter prior $\pi_N$, and a continuous parameter-to-prediction map. Labels have conditional mean $f_0\in[-1,1]$ and centered conditional sub-Gaussian noise of proxy $\sigma^2$. Write $s_0=1+\sigma^2$, $R_0=\E(Y-f_0)^2$, and $A(f)=R(f)-R_0$.
+
+\begin{lemma}[A uniform relative-loss inequality]
+\label{lem:subgaussian-VC-excess}
+Let $\mathcal F\subset[-1,1]^{\mathcal X}$ be a pointwise separable class of pseudodimension at most $V\ge1$. Define
+\[
+ t_n=\frac{C[V\log(en)+\log(8/\delta)]}{n},
+ \qquad v_n=(1+\sigma^2)t_n.
+\]
+With probability at least $1-\delta$, simultaneously for all $f\in\mathcal F$,
+\[
+ A(f)\le\widehat A_S(f)+C\sqrt{A(f)v_n}+Cv_n.
+\]
+The constants are numerical and do not depend on $f_0$.
+\end{lemma}
+\begin{proof}
+Write $D_n(f)=n^{-1}\sum_i(f(X_i)-f_0(X_i))^2$. Relative uniform convergence for bounded nonnegative VC-subgraph classes gives, on one event,
+\[
+ |D_n(f)-A(f)|\le C\sqrt{A(f)t_n}+Ct_n\qquad(f\in\mathcal F).
+\]
+The squared-discrepancy class has the required entropy: shifting by the fixed function $f_0$ preserves every evaluation-cover radius, and squaring on $[-2,2]$ is 4-Lipschitz. Equivalently, its subgraph patterns are determined by the two threshold tests $f(x)>f_0(x)+\sqrt u$ and $f(x)<f_0(x)-\sqrt u$, whose VC growth is controlled by that of $\mathcal F$.
+
+Condition on the observed inputs. First restrict to a countable pointwise-dense subclass, and quantize its evaluation vectors in the maximum norm at mesh $n^{-2}$. The pseudodimension growth bound on the $O(n^3)$ input-threshold pairs gives a net with logarithmic cardinality at most $C V\log(en)$. Choose actual function representatives from this subclass. One first-index representative for each nonempty quantization cell makes the selection measurable and dependent only on the inputs.
+
+For any such representative $f$, conditional sub-Gaussian concentration gives
+\[
+ \left|\frac1n\sum_i\xi_i(f(X_i)-f_0(X_i))\right|
+ \le C\sigma\sqrt{D_n(f)t_n}
+\]
+on the union-bound event. The event
+$\max_i|\xi_i|\le\sigma\sqrt{2\log(8n/\delta)}$ handles passage from the net to all functions, at error at most
+$\sigma n^{-2}\sqrt{2\log(8n/\delta)}\le C(1+\sigma^2)t_n$.
+The same mesh changes $\sqrt{D_n(f)}$ by at most $n^{-2}$. Thus, uniformly,
+\[
+ \left|\frac1n\sum_i\xi_i(f(X_i)-f_0(X_i))\right|
+ \le C\sigma\sqrt{D_n(f)t_n}+C(1+\sigma^2)t_n.
+\]
+Use the first display to replace $D_n(f)$ by $A(f)$ in the square root. Finally
+$\widehat A_S(f)=D_n(f)-2n^{-1}\sum_i\xi_i(f(X_i)-f_0(X_i))$.
+The claimed result follows by the triangle inequality, with the allocated failure probabilities summing to $\delta$. Pointwise density and boundedness extend the result from the countable subclass to the whole class. If $t_n$ is larger than a fixed constant, the same bounds follow after enlarging constants; no large-sample assumption is needed.
+\end{proof}
+
+Suppose a deterministic bounded comparator $g$ has, for every $0<r\le1$, a data-independent comparison law satisfying
+\begin{equation}
+ \E_\nu\|f_w-g\|_{L^2(P_X)}^2\le r,
+ \qquad \operatorname{KL}(\nu\|\pi_N)\le K\log(eV/r),
+ \qquad K,V\ge1.
+ \label{eq:logarithmic-comparison-interface}
+\end{equation}
+The same bounds may hold pointwise in the input, which is sufficient for this assumption.
+
+\begin{lemma}[A fixed-temperature noise-sensitive oracle]
+\label{lem:log-comparison-fixed-temperature}
+For $0<\eta\le1$, let $\beta=\eta/(32s_0)$ and use the ordinary Gaussian posterior with density proportional to $e^{-\beta n\widehat R_S(f_w)}$ relative to $\pi_N$. With probability at least $1-\delta$,
+\[
+ \int R(f_w)d\Pi_{S,\beta}
+ \le R_0+(1+\eta)A(g)
+      +\frac{C s_0[K\log(eVn)+\log(8/\delta)]}{\eta n}.
+\]
+The same bound holds for the ordinary posterior mean.
+\end{lemma}
+\begin{proof}
+For completeness, let $c=1-\eta/8$. For every deterministic bounded $f$, conditional noise concentration gives
+\[
+ \E[e^{-\beta\{(f-Y)^2-(f_0-Y)^2\}}\mid X]
+ \le e^{-\beta(1-2\beta\sigma^2)(f-f_0)^2}.
+\]
+The chord bound on $(f-f_0)^2\in[0,4]$ and $\beta=\eta/(32s_0)$ make the unconditional expectation at most $e^{-\beta c A(f)}$. Independence, Markov's inequality after integrating over the prior, and the variational inequality therefore give, simultaneously for every comparison measure $\rho$,
+\[
+ c\E_\rho A(f_w)\le\E_\rho\widehat A_S(f_w)
+       +\frac{\operatorname{KL}(\rho\|\pi_N)+\log(4/\delta)}{\beta n}.
+\]
+At the Gibbs posterior the empirical-risk and KL terms combine to its free energy, leaving the common offset $-\widehat R_S(f_0)$. This is the required relative-loss PAC--Bayes certificate. Apply \eqref{eq:logarithmic-comparison-interface} at $r=1/n$. The squared-triangle inequality gives
+$\E_\nu A(f_w)\le(1+\eta/8)A(g)+C/(\eta n)$.
+For the fixed comparison law, its averaged relative loss has the form
+$a(X)-2\xi b(X)$ with $0\le a\le4$, $b^2\le a$, and $\xi=Y-f_0(X)$. Conditional sub-Gaussian concentration and bounded Bernstein give variance proxy $Cs_0\E a$. Absorb its square-root term into another fixed fraction of $\eta\E a$ plus $Cs_0\log(8/\delta)/(\eta n)$. The KL term is at most $32s_0K\log(eVn)/(\eta n)$. Division by $c$ leaves the coefficient on $A(g)$ at most $1+\eta$, since $(1+\eta/8)^2/(1-\eta/8)\le1+\eta$ for $0<\eta\le1$. Jensen proves the mean statement.
+\end{proof}
+
+Validation can select the likelihood variance without knowing the approximation error, comparison resource, or noise proxy, and obtain a coefficient-one oracle. This changes the allocation of observations: the returned posterior is trained on one half, while the other half chooses its variance. It remains the mean of one posterior, not a mixture of predictors.
+
+For $n\ge4$, split the IID observations deterministically into a training part of size $m=\lfloor n/2\rfloor$ and a validation part of size $k=n-m$. Put
+\[
+ J=\lceil\log_2(128n)\rceil,
+ \qquad \beta_j=2^{-j}\quad(0\le j\le J).
+\]
+On the training sample compute the posterior mean $f_j$ at each $\beta_j$. Also compute the empirical-minimum-temperature posterior: with training free energy $F_T$, choose the first nonnegative integer $\ell$ for which
+\[
+ F_T(2^\ell)\le\inf_w\widehat R_T(f_w)+1/m,
+ \qquad\beta_{\rm par}=2^\ell.
+\]
+Full support and continuity make this finite. Add its ordinary mean $f_{\rm par}$ to the candidates. Select a candidate with the smallest validation squared loss, using a fixed tie rule, and return that candidate's training posterior mean. The candidates and selection use no comparison resource, comparator risk, or noise-scale upper bound.
+
+\begin{lemma}[Finite-candidate validation above the noise floor]
+\label{lem:validation-relative-oracle}
+Conditional on the training sample, let $\mathcal H$ be any finite set of bounded predictors. With probability at least $1-\delta$ over the validation sample, empirical squared-loss minimization over $\mathcal H$ satisfies
+\[
+ A(\widehat f)\le\min_{f\in\mathcal H}A(f)
+   +C\sqrt{\min_{f\in\mathcal H}A(f)\,v}+Cv,
+ \qquad v=\frac{s_0\log(4|\mathcal H|/\delta)}k.
+\]
+\end{lemma}
+\begin{proof}
+For each candidate, the relative loss is
+$(f-f_0)^2-2\xi(f-f_0)$. Its bounded first term and conditional sub-Gaussian second term yield, on a union-bound event,
+\[
+ |\widehat A_V(f)-A(f)|\le C\sqrt{A(f)v}+Cv
+ \qquad(f\in\mathcal H).
+\]
+Here $\widehat A_V(f)=\widehat R_V(f)-\widehat R_V(f_0)$, and the common unobserved offset cancels in empirical minimization. Comparing the selected candidate with one minimizing population risk gives
+\[
+ A(\widehat f)\le A_*+
+       C[\sqrt{A(\widehat f)}+\sqrt{A_*}]\sqrt v+Cv.
+\]
+Completing the square first gives
+$\sqrt{A(\widehat f)}\le\sqrt{A_*}+C\sqrt v$, then the displayed bound. The conditional argument is legitimate because the candidate set depends only on training observations.
+\end{proof}
+
+\begin{theorem}[A sharp agnostic oracle for one selected posterior]
+\label{thm:log-comparison-holdout}
+Under \eqref{eq:logarithmic-comparison-interface}, define
+\[
+ D_g=\frac{C s_0[K\log(eVn)+\log(8(J+2)/\delta)]}{n}.
+\]
+The split-sample learner above satisfies, with probability at least $1-\delta$,
+\begin{equation}
+ R(\widehat f)\le R(g)+C\sqrt{A(g)D_g}+CD_g.
+ \label{eq:sharp-log-comparison-holdout}
+\end{equation}
+If instead $g$ lies in the uniform closure of a learner class of pseudodimension $V_N$, the same statement holds with
+\[
+ D_g=\frac{C s_0[V_N\log(en)+\log(8(J+2)/\delta)]}{n}.
+\]
+Thus the same variance-selection algorithm can use either a cheap prior comparison or a finite-parameter guarantee, without knowing which is useful. The output is the mean of one posterior trained on $m$ observations; validation observations are used only for the variance choice.
+\end{theorem}
+\begin{proof}
+Apply Lemma~\ref{lem:log-comparison-fixed-temperature} only to grid values satisfying $\beta_j\le1/(32s_0)$, with associated slack $\eta_j=32s_0\beta_j$ and failure probability $\delta/[4(J+1)]$. Unsafe temperatures need no training guarantee; they remain bounded predictors covered by validation. If $D_g\ge1$, bounded excess risk makes the conclusion immediate after increasing constants. Otherwise put
+$\eta_* =\min\{1,\sqrt{D_g/A(g)}\}$, taking it to be one when $A(g)=0$, and $\beta_*=\eta_* /(32s_0)$. The fixed numerical constant in $D_g$ is chosen sufficiently large. Since $K\log(eVn)+\log(8(J+2)/\delta)\ge1$, the condition $D_g<1$ implies $s_0\le n/C$. If $\eta_*=1$, then $\beta_*\ge C/(32n)$. Otherwise $A(g)\le4$ gives $\beta_*\ge C/(64n)$ after decreasing the fixed constant $C$ if necessary. Hence the dyadic grid contains a value in $[\beta_*/2,\beta_*]$. Its associated slack is within a factor two of $\eta_*$. At this point,
+\[
+ A(f_j)\le A(g)+C\sqrt{A(g)D_g}+CD_g.
+\]
+The algorithm does not need to identify this point in advance.
+
+For the parameter alternative, Lemma~\ref{lem:subgaussian-VC-excess} gives
+$A(f)\le\widehat A_T(f)+C\sqrt{A(f)v_N}+Cv_N$
+for every network, with $v_N=Cs_0[V_N\log(em)+\log(8/\delta)]/m$.
+Integrate over the empirical-minimum-temperature posterior, use
+$\E_\Pi\widehat R_T\le F_T\le\widehat R_T(g)+1/m$, and apply fixed-comparator relative-loss concentration to $g$. Jensen for the square root gives
+\[
+ \E_\Pi A(f_w)\le A(g)+
+ C[\sqrt{\E_\Pi A(f_w)}+\sqrt{A(g)}]\sqrt{v_N}+Cv_N.
+\]
+The same square-completion argument yields the claimed bound for the parameter candidate's mean.
+
+In either case, one candidate has the displayed training oracle. Apply Lemma~\ref{lem:validation-relative-oracle}. Its $v$ is at most a fixed multiple of $D_g$. Substituting the candidate bound and using
+$A(g)^{1/4}D_g^{3/4}\le[\sqrt{A(g)D_g}+D_g]/2$
+absorbs the extra validation square root. The total failure probability is at most $\delta$.
+\end{proof}
+
+\begin{corollary}[Simultaneous comparison with countably many resource classes]
+\label{cor:log-comparison-class-oracle}
+Let $\mathcal G_j$ be deterministic comparison classes, and choose deterministic weights $w_j>0$ with $\sum_jw_j\le1$. Suppose each class has uniform logarithmic-comparison resources $K_j,V_j$, or a parameter-branch resource $P_j$ as above. Put
+\[
+ A_j=\inf_{g\in\mathcal G_j}A(g),\qquad
+ D_j=\frac{C s_0}{n}\left[
+ \max\{K_j\log(eV_jn),P_j\log(en)\}
+ +\log\frac{8(J+2)}{\delta w_j}\right],
+\]
+where an unused branch may be omitted. Then the same noise-adaptive holdout learner satisfies
+\[
+ R(\widehat f)\le R_0+
+ \inf_j\{A_j+C\sqrt{A_jD_j}+CD_j\}
+\]
+with probability at least $1-\delta$, provided the applicable comparison or parameter guarantee holds for each stated class. The weights are only confidence-allocation devices in the proof; they are not a prior over classes or architectures and are not supplied to the learner.
+\end{corollary}
+\begin{proof}
+For each class choose a deterministic comparator within $1/n$ of its approximation-risk infimum, and allocate its training comparison events probability at most $\delta w_j/2$. The finite-candidate validation event is common to all classes and uses the remaining confidence. Union bound the training events and apply the theorem on their intersection. Since $D_j\ge c/n$, the near-minimizer error and its square-root contribution are absorbed into $CD_j$. No additional candidates or architecture choices are introduced.
+\end{proof}

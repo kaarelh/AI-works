@@ -1,0 +1,95 @@
+\section{Consequences and prediction conventions}
+
+\begin{corollary}[Individual posteriors and clipped draws]
+For the law in Theorem~\ref{thm:relu-mixture-failure}, at all
+sufficiently large sample counts and on the occupancy event alone,
+every allowed individual posterior has excess risk at least $1/100$
+for each of the following conventions: posterior-average raw risk,
+ordinary raw posterior mean, clipping that mean, posterior-average
+clipped risk, and the mean of individually clipped posterior outputs.
+The sample probability is at least $1-2e^{-n^{1/3}/2}$.
+\end{corollary}
+\begin{proof}
+In the low-temperature branch, the expected noisy fitting residual
+is at most $q+o(1)$. Jensen gives the same residual bound for the
+raw mean and the mean of clipped outputs; clipping a raw mean also
+decreases the residual. On distinct observed noisy atoms, the vector
+of empirical label means has unweighted squared norm at least $S_1$,
+while the unweighted fitting residual is no greater than the weighted
+one. Since there are $J<2n$ equiprobable noisy atoms, the population
+excess for each of these mean predictions has lower limit at least
+\[
+ \frac p2(\sqrt{pe^{-p}}-\sqrt q)^2>0.037>1/100.
+\]
+In the high-temperature branch, the expected absolute inner-pair
+half-difference is $o(1)$, by the operator-norm estimate. The raw
+mean, its clipping, and the mean of clipped outputs therefore each
+have signal-component excess at least $(q/2)(1-o(1))^2$, whose limit
+is $1/20$. These bounds imply the assertion at sufficiently large
+$n$. Jensen gives the corresponding raw and clipped posterior-average
+risks. The constants and thresholds are uniform over all allowed
+widths, scales, and temperatures.
+\end{proof}
+
+For the localized-noise variant, the same argument gives the
+individual-posterior excess $p^2e^{-p}/256$. In its low-temperature
+branch the lower bound is at least
+$(p/2)pe^{-p}(1/\sqrt2-1/4)^2$, and in its high-temperature branch it
+is at least $pe^{-p}/128$. Both exceed the stated constant for
+$0<p\le9/10$. The mixture statement is weaker numerically but covers
+arbitrary averaging of the raw posterior means.
+
+\begin{corollary}[Width alone does not control approximation]
+Fix $H\ge1$ and $b>1/[2(H+1)]$. The mixture conclusion of
+Theorem~\ref{thm:relu-mixture-failure} holds with a teacher of width
+four and coefficient cap $B=n^b$, at learner widths
+$N\ge O_H(n\log n)$. It is simultaneous over every
+$0<\sigma^2\le1/N$ and every likelihood temperature.
+\end{corollary}
+\begin{proof}
+Use one neuron per group in the tent construction, so
+$\delta=2B^{-L}$. The memorizer and sample event are unchanged.
+The high-temperature half-difference is now
+$O_H(n^{1/2-Lb}\operatorname{polylog}n)=o(1)$.
+All other arguments apply without change.
+\end{proof}
+
+The coefficients are a necessary part of a quantitative approximation
+class: a distribution-uniform width-only oracle guarantee fails even
+with constant comparator width. The input dimension here is
+$\Theta(\log n)$ and the law varies with sample count. This does not
+refute consistency for every fixed law.
+
+\begin{corollary}[No universal joint sample polynomial]
+For the unrestricted ReLU Gaussian-prior learner family considered
+here, there is no distribution-uniform sample bound polynomial jointly
+in input dimension, comparator width, and comparator depth, independent
+of arbitrarily large learner width, even with unit-bounded comparator
+coefficients and arbitrary data-dependent mixtures of the allowed
+prior scales, likelihood temperatures, and widths.
+\end{corollary}
+\begin{proof}
+Suppose a proposed polynomial has width degree at most $D_0$.
+Choose fixed hidden depth $H$ and a real $r$ with
+$D_0<r<2H$. Take $a=1/r$ and $b=0$ in
+Theorem~\ref{thm:relu-mixture-failure}. Its sample count is of order
+$m^r$, which eventually exceeds that polynomial because depth is
+fixed and dimension grows only logarithmically. Nevertheless the
+excess risk stays above a positive constant, contradicting the
+claimed guarantee for a smaller fixed accuracy and failure
+probability. The same argument applies to strong-prior minimizers.
+\end{proof}
+
+This conclusion is about noisy real-valued regression. It does not
+settle whether an exponential depth dependence is necessary for
+Boolean classification, or prove exponential depth dependence at one
+fixed comparator width. Restrictions on prior support or on comparator
+stability change the question and may permit better rates.
+
+The positive and negative strict exponents match for actual finite
+$\gamma\ge2$, and at all $\gamma\ge1$ with one hidden layer. The
+negative theorem includes all $\gamma\ge1$ at every depth. For
+multiple hidden layers the matching positive boundary throughout
+$1\le\gamma<2$ remains open; equality on the boundary is also open.
+All statements concern exact inference and do not provide an efficient
+sampling or optimization algorithm.

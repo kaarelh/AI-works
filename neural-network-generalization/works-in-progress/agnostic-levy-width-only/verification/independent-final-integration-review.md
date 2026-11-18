@@ -1,0 +1,12 @@
+# Independent final integration review
+All ten included sources have been checked for mathematical correspondence and model/statistical scope. No gap found.
+
+The fixed independent increment prior has M1=M2=1/8, so the previously audited stable-padding theorem applies. The Boolean compiler's formula bound and the continuous compiler's linear-in-cell/facet formula count give the displayed resources. The expectation theorem uses one fixed observation variance, all observations, and a prior fixed before data; the auxiliary n+1 posterior in its leave-one-out proof has that same architecture. Its coefficient-one result is only an expectation guarantee.
+
+The exact shallow Boolean compactification uses integer active-row Gram matrices with real bounded right sides; coefficient caps are independent of their number. The continuous shallow grid module was independently reviewed by fresh_reader_approximation and oracle_calibration (see their exact-source records); the present reviewer authored that module and does not count its own inspection as independent. The copied univariate spline theorem and nearby-input obstruction match their independently reviewed originals. The newly added atomless obstruction is also valid: averaging the pairwise prior difference inequality gives 9/64 as the squared interval-mean separation bound, and Jensen forces the same 1/16 population risk. Its density bound grows with n, consistently with the positive theorem.
+
+The all-width selected-posterior theorem has the correct separate scope: train on half the sample, select one likelihood variance by independent validation, and do not claim the bound after refitting. The parameter branch's pseudodimension bound safely covers learner widths below compiled width. The new relative-loss proof has a conditional input-only quantization net, controlled VC growth, and conditional sub-Gaussian multiplier concentration; measurability is handled by countable first-index representatives. The common unknown empirical noise-floor offset cancels correctly. Confidence allocations cover countably many deterministic teacher classes without introducing an architecture prior.
+
+The explicit growing-class exponents fit the compiled-width requirement N>=n and give the stated O(n^{-1/2}) expected remainder. Final saturation is present in likelihood and prediction throughout the main results. Conditional mean is bounded; observations may be conditionally sub-Gaussian and unbounded.
+
+This is an independent mathematical review, not a Lean verification.

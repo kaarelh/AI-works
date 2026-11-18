@@ -1,0 +1,198 @@
+\section{Exponential, rather than superexponential, dependence on depth}
+\label{sec:normalized-depth}
+This section tracks depth in the independent-Gaussian ReLU oracle. Fix input dimension $d$, teacher width $C$, coefficient cap $B\ge1$, accuracy $\varepsilon>0$, and confidence $\delta>0$. Only depth and learner width vary. Inputs lie in $[-1,1]^d$ and labels in $[-1,1]$; their joint law is otherwise arbitrary. A constant input coordinate is included, and internal biases, if desired, are counted through one additional constant wire. The comparison networks have at most $H$ hidden layers; identity padding makes their hidden depth exactly $H$ without increasing the coefficient cap.
+
+Put $D=d+1$, $L=H+1$, and let the learner have hidden ReLU width $N\ge C$. Use independent centered Gaussian coordinates with variances
+\[
+ \operatorname{Var}(W^1_{ji})=N^{1-\gamma}/D,
+ \quad \operatorname{Var}(W^\ell_{ji})=N^{-\gamma},
+ \quad \operatorname{Var}(v_j)=N^{-\gamma-1},
+ \qquad \gamma\ge2.
+\]
+The final output is $f_w=s(v^{\mathsf T}h^H)$, where $s$ clips to $[-1,1]$. It is used in both the Gaussian likelihood and prediction. Write $\omega=N^\gamma$ and
+\[
+ Q=\frac DN\|W^1\|_F^2+\sum_{\ell=2}^H\|W^\ell\|_F^2+N\|v\|_2^2,
+ \qquad q=Q/L.
+\]
+For a positive parameter $\mu$, let
+\[
+ d\Pi_{S,\mu}=Z^{-1}\exp[-\omega L\widehat R_S(f_w)/(2\mu)]\,d\pi_N,
+ \qquad F_S(\mu)=-\frac{2\mu}{\omega L}\log Z.
+\]
+Thus the ordinary Gaussian observation variance is $n\mu/(\omega L)$. This is a reparametrization of likelihood scale, not a change in prior.
+
+\begin{theorem}[An all-width exponential-depth bound]
+\label{thm:exp-depth-ReLU}
+There is a data-dependent positive likelihood-variance rule, using only the fixed model, sample size and confidence, with the following property. For every fixed $d,C,B,\varepsilon,\delta$ there is a finite $a=a(d,C,B,\varepsilon,\delta)$, independent of $H,N,\gamma$, such that
+\[
+ n\ge\exp(a(H+1))
+\]
+implies, with probability at least $1-\delta$, simultaneously for all $N\ge C$ and $\gamma\ge2$,
+\[
+ R\left(\int f_w\,d\Pi_{S,\widehat\mu}\right)
+ \le\inf_{g\in\mathcal G_{C,B,H}}R(s(g))+\varepsilon.
+\]
+Here $\mathcal G_{C,B,H}$ is the depth-at-most-$H$, width-at-most-$C$ ReLU comparison class with coefficients bounded by $B$ and the stated constant-wire convention. The learner chooses one posterior, not a mixture of widths or likelihoods.
+\end{theorem}
+
+The proof uses the same two-certificate method as the width-only oracle: an energy certificate at large widths and a parameter-count certificate at smaller widths. The new point is to normalize energy by depth before making tail and capacity estimates. Replacing a product of layer norms by $Q^{L/2}$, or discarding the Gaussian scale before taking a moment, would introduce an unnecessary $L^L$.
+
+\subsection{Capacity retains the product of the layer energies}
+Let $q_1=(D/N)\|W^1\|_F^2$, $q_\ell=\|W^\ell\|_F^2$ internally, and $q_L=N\|v\|_2^2$. Define the coordinate-first-layer path variation
+\[
+ P_1(w)=|v|^{\mathsf T}|W^H|\cdots|W^2|r^1,
+ \qquad r^1_j=\sum_{k=0}^d|W^1_{jk}|.
+\]
+Cauchy--Schwarz at the first layer and spectral norm bounded by Frobenius norm internally give
+\[
+ |z_w(x)|\le P_1(w)\le\prod_{\ell=1}^L\sqrt{q_\ell}
+             \le(Q/L)^{L/2}=q^{L/2}.
+\]
+The factors of $N$ and $D$ cancel exactly. ReLU homogeneity and exponential scalar contraction give the standard path-variation bound
+\begin{equation}
+ \widehat{\mathfrak R}_n(\{z_w:q(w)\le t\})
+ \le\frac{k_H t^{L/2}}{\sqrt n},\qquad
+ k_H=1+\sqrt{2\log(2D)}+\sqrt{2H\log2}.
+ \label{eq:depth-capacity}
+\end{equation}
+For clarity, normalize each hidden feature by its forward absolute path mass. Each normalized feature lies in the iterated absolute convex hull of ReLU images of the coordinate atoms. Exponential contraction increases the moment-generating bound by at most a factor two at each layer. The initial coordinate maximum has Gaussian or Rademacher exponential bound with logarithm $\log(2D)$; optimizing the exponential parameter gives the displayed $k_H$. Multiplying by the final path mass proves the estimate. Saturation is a contraction, so the same bound applies to $f_w$.
+
+\subsection{The normalized Gaussian tail has a depth-independent cutoff}
+The exact prior law is
+\[
+ \omega Lq\sim\chi^2_{D_N},\qquad
+ D_N=N(D+1)+(H-1)N^2,
+ \qquad \frac{D_N}{\omega L}\le d_0:=D+1.
+\]
+The normalized Gaussian scale is at most $1/L$, rather than merely at most one. Set
+\begin{equation}
+ K_n=2d_0\log2+\frac4L\log(4n^4)+1,
+ \qquad c_0=\frac18+\frac{d_0\log2}4.
+ \label{eq:depth-tail-cutoff}
+\end{equation}
+For every sample and $\mu>0$, the posterior population-risk integral on
+$\{\widehat R_S+\mu q>2F_S(\mu)+\mu K_n\}$ is at most $n^{-4}$.
+Indeed, on $\widehat R_S+\mu q>u$,
+\[
+ e^{-\omega L\widehat R_S/(2\mu)}
+ \le e^{-\omega Lu/(4\mu)}e^{\omega Lq/4}.
+\]
+The prior exponential moment is exactly $2^{D_N/2}$, and bounded population risk is at most four. After dividing by $Z=e^{-\omega LF_S/(2\mu)}$, the tail risk is bounded by
+\[
+ 4\exp\left(\frac{\omega LF_S}{2\mu}-\frac{\omega Lu}{4\mu}
+                                     +\frac{D_N\log2}2\right).
+\]
+Substitute $u=2F_S+\mu K_n$, use $D_N\le\omega Ld_0$ and $\omega\ge1$, and obtain $n^{-4}$. Also entropy duality gives
+\begin{equation}
+ \E_\rho q\le\frac4{\omega L}\operatorname{KL}(\rho\Vert\pi_N)+2d_0\log2.
+ \label{eq:depth-entropy}
+\end{equation}
+Prior symmetry and bounded outputs give $F_S\le2$.
+
+\subsection{An observable normalized-energy certificate}
+Let $C_{\rm sm}$ be a universal constant in the smooth-loss Rademacher inequality. Put
+\[
+ J_n=\left\lceil\log_2(4n+K_n+2)\right\rceil,
+ \quad t_n=\max\{1,\log(4(J_n+1)/\delta)\},
+\]
+\begin{equation}
+ a_n=\max\left\{n^{-1/2},\,
+ 2^{L/2}C_{\rm sm}\left[
+ \frac{\sqrt2k_H\log^{3/2}(2n)}{\sqrt n}
+                   +2\sqrt{t_n/n}\right]\right\}.
+ \label{eq:depth-statistical-constant}
+\end{equation}
+Increase $C_{\rm sm}$ by a fixed numerical factor if needed. Apply the smooth squared-loss bound to dyadic normalized-energy balls using \eqref{eq:depth-capacity}. On one event of probability at least $1-\delta/2$, simultaneously for all widths and exponents and all $q\le4n+K_n+1$,
+\[
+ R(f_w)-\widehat R_S(f_w)
+ \le a_n\sqrt{\widehat R_S(f_w)}(1+q)^{L/2}
+                            +a_n^2(1+q)^L.
+\]
+The factor $2^{L/2}$ pays for rounding a radius upward to its containing dyadic shell. There is no factor $L^{L/2}$.
+
+Select the unique positive solution of
+\begin{equation}
+ \mu^L=256a_n^2[2F_S(\mu)+(K_n+1)\mu]^{L-1}.
+ \label{eq:depth-root}
+\end{equation}
+Continuity and monotonicity of $F_S(\mu)/\mu$ prove existence, uniqueness and measurability. The root is at least $1/n$. Write $U=2F_S+\mu(K_n+1)$. Off the weighted-objective tail, $\widehat R_S\le U$ and $1+q\le U/\mu$. The two statistical error terms are at most $\mu(1+q)/16$ and $\mu(1+q)/256$, respectively. Integrating and using \eqref{eq:depth-entropy} absorbs their energy cost in the relative-entropy term of $F_S$. Thus
+\begin{equation}
+ \E_{\Pi_{S,\mu}}R(f_w)\le F_S(\mu)+c_0\mu+n^{-4}
+                         =:B_{\rm imp}(S).
+ \label{eq:depth-certificate}
+\end{equation}
+Jensen gives the same certificate for the ordinary posterior mean.
+
+If $F_S(\mu)\le u+\mu T$ for all $\mu\ge1/n$, set
+$\mathcal B=2T+K_n+1+c_0$. Splitting the root according to whether $\mu(2T+K_n+1)$ is at least $2u$ gives the explicit bound
+\begin{equation}
+ B_{\rm imp}\le u+
+ 4\mathcal B(256a_n^2)^{1/L}u^{1-1/L}
+       +256a_n^2(2\mathcal B)^L+n^{-4}.
+ \label{eq:depth-empirical-oracle}
+\end{equation}
+All numerical constants here are independent of depth.
+
+\subsection{The exact selective comparison cost}
+Let the teacher width be $C$ and its coefficient cap $B\ge1$. Positive-homogeneous layer balancing gives an implementation, padded to any width $N\ge C$, whose individual weighted layer energies are at most
+\[
+ e=D^2C^2B^2.
+\]
+To verify this, initially multiply all hidden states by $\sqrt N$ and divide the readout by $\sqrt N$. The product of the $L$ weighted layer energies is at most $D^2C^{2H}B^{2L}$. Equalizing nonzero layer energies by successive positive rescalings proves the claim; the zero-function case is immediate.
+
+Use the selective Gaussian comparison that narrows only coordinates entering the $C$ active rows and the readout. Its narrowed coordinate count is
+\[
+ D_{\rm nar}=CD+(H-1)CN+N.
+\]
+With standard deviations multiplied by $r\le1$, the exact entropy bound is
+\[
+ \frac2{\omega L}\operatorname{KL}(\nu_r\Vert\pi_N)
+ \le e+\frac{2D_{\rm nar}}{\omega L}\log(1/r).
+\]
+Keeping the individual layer bound $e$ in the perturbation recurrence gives output RMS error at most
+\[
+ rK_e,\qquad K_e=\sqrt2(H+1)(e+1)^{H/2}.
+\]
+For example, normalized hidden second moments are at most $2(e+1)^\ell$, and active-row RMS errors obey
+$\Delta_\ell\le\sqrt e\Delta_{\ell-1}+\sqrt2r(e+1)^{(\ell-1)/2}$.
+This is the same Gaussian comparison recursion as usual, with the per-layer energy retained rather than replaced by total energy $Le$.
+
+Choose $r=(8nK_e)^{-1}$. Bounded-output squared loss is 4-Lipschitz in prediction, so
+\begin{equation}
+ F_S(\mu)\le\widehat R_S(s(g))+1/(2n)+\mu T_N,
+ \quad
+ T_N=e+\frac{2D_{\rm nar}}{\omega L}\log(8nK_e).
+ \label{eq:depth-teacher-cost}
+\end{equation}
+If $N^{\gamma-1}\ge L$, then
+\[
+ \frac{D_{\rm nar}}{\omega L}
+ \le\frac{C+(D+1)/L}{N^{\gamma-1}}
+ \le\frac{C+D+1}{L}.
+\]
+Consequently, with $t=(\log n)/L$,
+\begin{equation}
+ T_N\le c_{d,C,B}(1+t),\qquad
+ K_n\le c_d(1+t),\qquad
+ \mathcal B\le c_{d,C,B}(1+t).
+ \label{eq:depth-linear-log}
+\end{equation}
+These constants do not depend on depth or learner width.
+
+\subsection{Finishing the all-width bound}
+For $n=e^{tL}$ with $t\ge1$, \eqref{eq:depth-statistical-constant} gives
+\[
+ a_n^2\le c_{d,\delta}\,2^L(1+t)^4L^5e^{-tL}.
+\]
+The harmless fifth power allows all confidence and peeling logarithms. Since $L^{5/L}$ is uniformly bounded for $L\ge2$, \eqref{eq:depth-empirical-oracle} and \eqref{eq:depth-linear-log} show that its two excess terms tend to zero as $t\to\infty$, uniformly over all $L\ge2$. For instance the first is bounded by a fixed polynomial in $1+t$ times $e^{-t}$, and the second by
+$c_{d,\delta}(1+t)^4L^5[c_{d,C,B}(1+t)e^{-t}]^L$.
+A sufficiently large fixed $t\ge a(d,C,B,\varepsilon,\delta)$ therefore makes the excess less than $\varepsilon/3$. Bounded-loss concentration for one deterministic near-minimizing teacher adds less than $\varepsilon/3$, uniformly in $L$, after increasing $a$. This proves the desired bound whenever $N^{\gamma-1}\ge L$.
+
+If $N^{\gamma-1}<L$, then $N<L$ because $\gamma\ge2$. The parameter count is at most $c_dL^3$ and its ReLU pseudodimension is at most $c_dL^4\log(eL)$. The positive-temperature parameter certificate uses the first dyadic $\mu$ for which $F_S(\mu)$ is within $1/n$ of the empirical loss infimum. Full support guarantees such a positive value. Relative uniform convergence gives an excess bounded by
+\[
+ c_d\sqrt{\frac{L^4\log(eL)\log(en)+\log((N+1)^2/\delta)}n}
+ +c_d\frac{L^4\log(eL)\log(en)+\log((N+1)^2/\delta)}n.
+\]
+The prescribed teacher fits at every $N\ge C$. The sample budget $e^{aL}$ dominates this polynomial for a sufficiently large constant $a$. A summable width-confidence allocation gives a common event, and the logarithm involving $N$ is at most $\log L$ in this branch.
+
+Finally choose the smaller observable certificate. The rule does not use $C$, $B$, the desired accuracy, or the population risk. The analysis alone splits the widths at $N^{\gamma-1}=L$. Allocating confidence among the common energy event, parameter event, and fixed-teacher concentration completes the proof of Theorem~\ref{thm:exp-depth-ReLU}.

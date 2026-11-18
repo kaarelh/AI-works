@@ -1,0 +1,101 @@
+\subsection{The same obstruction with Gaussian observation noise}
+\label{sec:gaussian-noise-rate}
+The slow-rate conclusion also holds for correctly specified Gaussian observation noise, without changing the energy or width exponents. The comparison distribution may fit a bounded approximation to the empirical atom means even though the learner uses the original, unbounded labels.
+
+\begin{lemma}[Bounded comparison targets for Gaussian labels]
+\label{lem:gaussian-clipped-comparison}
+Suppose $Y_i=g(X_i)+aG_i$, where $|g|\le3/4$, $a=1/4$, and the $G_i$ are independent standard Gaussians. Conditional on input counts $k_x$, let $r_x$ be the empirical label mean at an observed atom. For any set $B$ of at most $b$ atoms,
+\[
+ \Pp\left(\sum_{x\in B}k_x(r_x-\clip_{[-2,2]}r_x)^2
+       >a^2b/400\ \middle|\ X_1,\ldots,X_n\right)
+ \le e^{-b/2000}.
+\]
+For unobserved atoms the summand is defined as zero. If all observed atoms have probabilities $p_x\ge1/n$ and
+\[
+ V=\frac1{n^2}\sum_x\frac{k_x^2}{p_x}\le4,
+\]
+then the population witness
+\[
+ h(x)=\frac1{np_x}\sum_{i:X_i=x}(Y_i-2g(x))
+\]
+has $\|h\|_{L^2(D_X)}^2\le7$ except on conditional probability at most $e^{-\sqrt n}$.
+\end{lemma}
+\begin{proof}
+For an observed atom, $r_x=g(x)+aZ_x/\sqrt{k_x}$ with independent standard Gaussians $Z_x$. Since $2-|g(x)|\ge5a$,
+\[
+ k_x(r_x-\clip_{[-2,2]}r_x)^2
+ \le a^2(|Z_x|-5\sqrt{k_x})_+^2
+ \le a^2W_x,\qquad W_x=(|Z_x|-5)_+^2.
+\]
+The elementary Gaussian tail gives
+$\Pp(W_x>u)\le2e^{-25/2}e^{-u/2}$. Integration of this tail yields
+$\E e^{W_x/4}\le1+2e^{-25/2}$. Add independent dummy copies if there are fewer than $b$ observed atoms. Markov's inequality gives a failure bound
+\[
+ \exp\{b\log(1+2e^{-25/2})-b/1600\}\le e^{-b/2000}.
+\]
+
+In the orthonormal atom coordinates of $L^2(D_X)$, the witness is a deterministic vector of norm at most $(3/4)\sqrt V\le3/2$, plus a centered Gaussian vector with coordinate variances
+\[
+ s_x^2=\frac{a^2k_x}{n^2p_x}.
+\]
+The sum of these variances is at most $a^2V\le1/4$, since $k_x\le k_x^2$ for nonzero counts. Moreover $k_x^2/(n^2p_x)\le4$ and $p_x\ge1/n$ imply
+\[
+ \max_xs_x^2\le\frac{2a^2}{n\sqrt{p_x}}\le\frac{2a^2}{\sqrt n}.
+\]
+The Gaussian norm therefore has mean at most $1/2$ and, by Gaussian concentration for a Euclidean Lipschitz function, exceeds one with probability at most
+$\exp[-(1/2)^2/(2\max_xs_x^2)]\le e^{-\sqrt n}$.
+The total witness norm is then at most $5/2$, whose square is less than seven.
+\end{proof}
+
+\begin{corollary}[Fixed-law slow rates with Gaussian labels]
+\label{cor:gaussian-noise-rate}
+The fixed input law and teacher in Theorem~\ref{thm:fixed-law-rate} also admit the following version. Replace the independent fair-sign noise by independent Gaussian noise $N(0,1/16)$. The same sufficient learner-width threshold
+\[
+ N\ge C n_m^{(1+2/D)(2-1/H)}\log n_m
+\]
+and the same excess lower bound
+\[
+ R(F)-R(g_H)\ge c n_m^{-2\rho_D-\epsilon_m}
+                 =n_m^{-2\rho_D-o(1)}
+\]
+hold almost surely for all sufficiently large $m$, simultaneously for every well-defined data-dependent mixture of the allowed ordinary raw posterior means. The optional broad Gaussian affine output component is still allowed. The label law is a correctly specified Gaussian regression model for the neural architecture; the conclusion ranges over every positive likelihood variance, including the true one.
+\end{corollary}
+\begin{proof}
+Use the notation and common input events of Theorem~\ref{thm:fixed-law-rate}. At sample count $n_m$, each old atom in $G_{m-1}$ has probability at least $1/n_{m-1}$. Also $n_m\ge n_{m-1}^4$, because $p_m\le n_{m-1}^{-4}$. Chernoff and a union bound show that every old atom has count at least $n_m/(2n_{m-1})$ except on probability
+\[
+ M_{m-1}\exp[-n_m/(8n_{m-1})].
+\]
+On this count event, a Gaussian tail bound makes every old empirical atom mean lie in $[-2,2]$ except on probability at most
+$2M_{m-1}\exp[-c n_m/n_{m-1}]$. These failure probabilities are summable.
+
+Apply Lemma~\ref{lem:gaussian-clipped-comparison} to the current block $B_m$. Since $|B_m|\le n_mp_m$, with an additional summable failure probability $e^{-|B_m|/2000}$ the empirical mean-square cost of clipping all observed atom means to $[-2,2]$ is at most $a^2p_m/400$. There are no future-block observations on the earlier common event.
+
+Apply the Fourier comparison construction to these clipped means divided by two, with tolerance $t_m/2$, where $t_m=a\sqrt{p_m}/1000$. Multiply only the comparison \emph{mean} readout weights by two and retain the original readout covariance. This gives RMS error at most $t_m$ against the clipped means. Indeed, writing $F_0$ for the mean-readout output before scaling and $\xi_v$ for the independent centered readout noise,
+\begin{align*}
+ \E|2F_0+\xi_v^{\mathsf T}h-r|^2
+ &=4\E|F_0-r/2|^2+\E|\xi_v^{\mathsf T}h|^2\\
+ &\le4\E|F_0+\xi_v^{\mathsf T}h-r/2|^2\le t_m^2.
+\end{align*}
+The mean energy increases by at most four and the width requirement only by a fixed factor. The optional affine covariance shrink again contributes output RMS at most $t_m$. Thus, including clipping error, the comparison empirical RMS against the original atom means is at most
+\[
+ a\sqrt{p_m/400}+2t_m=(1/20+1/500)a\sqrt{p_m}.
+\]
+A valid deterministic energy bound is still $K_m\le C M_m^{\rho_D}$, with width $N\ge C n_m^{\kappa_D}\log n_m$.
+
+Split at $\tau_m=a^2p_m/(100K_m)$. If $\lambda\le\tau_m$, the variational comparison bounds the posterior expected empirical residual against the original atom means by
+\[
+ \{(1/20+1/500)^2+1/100\}a^2p_m<a^2p_m/50.
+\]
+Conditional on inputs, the noises on the current-block singleton observations are independent Gaussians. Their squared norm is at least $a^2n_mp_m/6$ except on probability $\exp(-c n_mp_m)$, by the chi-square lower tail and the earlier singleton-count event. Reverse triangle therefore gives empirical error against $g_H$ at least
+\[
+ a^2p_m(\sqrt{1/6}-\sqrt{1/50})^2>a^2p_m/20.
+\]
+The noise-target alignment is conditionally Gaussian with variance at most $a^2/n_m$, so $|\Delta_S|\le r_H\tau_m/8$ fails with probability at most $2\exp(-c_Hn_m\tau_m^2)$. The projected-sector proof is valid for every real label vector and gives the same common separator $r_H\tau_m/8$ at every temperature. Lemma~\ref{lem:gaussian-clipped-comparison} and weighted occupancy now bound its population witness norm squared by seven. Every allowed mixture consequently has excess at least
+\[
+ \frac{r_H^2\tau_m^2}{448}
+ \ge c n_m^{-2\rho_D-\epsilon_m}.
+\]
+All additional failure probabilities are summable. Borel--Cantelli proves the asserted almost-sure statement.
+\end{proof}
+
+The same bounded-comparison argument applies directly to the uniform $n$-atom laws in Theorem~\ref{thm:simple-teacher-rate}, with $p_m=1$ and without the old-block step. It gives the same $n^{-2\rho_D}$ lower bound and width threshold for independent Gaussian labels. These conclusions use ordinary raw posterior means; no clipping convention is imposed on the learner or the predictions.

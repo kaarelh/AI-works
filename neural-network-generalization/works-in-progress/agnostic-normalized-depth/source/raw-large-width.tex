@@ -1,0 +1,65 @@
+\section{Unbounded readouts at sufficiently large widths}
+\label{sec:raw-large-width-depth}
+The normalized-energy argument also gives an exponential-depth upper bound for a Gaussian likelihood on the raw ReLU readout. The only missing part of the preceding all-width proof is its small-width parameter certificate, which used bounded outputs. We therefore state the raw-output extension with an explicit additional width condition.
+
+\begin{theorem}[Raw ReLU readouts above a depth-dependent width]
+\label{thm:raw-large-width-depth}
+Fix $\kappa,C,B,\varepsilon,\delta$. Use the same independent Gaussian prior and input convention, but let the likelihood and prediction use the raw readout $z_w$, with no final saturation. There is a finite constant $a$, depending only on those fixed quantities, such that for $d\le\kappa(H+1)$ and $n\ge e^{a(H+1)}$, the normalized-energy root below gives, with probability at least $1-\delta$,
+\[
+ R\left(\int z_w\,d\Pi_{S,\widehat\mu}\right)
+ \le\inf_{g\in\mathcal G_{C,B,H}}R(g)+\varepsilon,
+\]
+simultaneously for all $\gamma\ge2$ and widths satisfying
+\[
+ N\ge C,\qquad N^{\gamma-1}\ge H+1.
+\]
+The Gaussian observation variance is $n\widehat\mu/[N^\gamma(H+1)]$. One ordinary raw posterior mean is used.
+\end{theorem}
+\begin{proof}
+Retain $L=H+1$, $q=Q/L$, and $d_0=1+d/L\le1+\kappa$.
+The capacity and amplitude bound are
+\[
+ \widehat{\mathfrak R}_n(\{z_w:q\le t\})\le k_Ht^{L/2}/\sqrt n,
+ \qquad |z_w|\le q^{L/2}.
+\]
+Under the centered Gaussian prior, each ReLU layer halves the corresponding centered Gaussian second moment. Since $N/N^\gamma\le1$, the normalized hidden second moments are at most $2^{-\ell}$ and the output second moment is at most one. Readout symmetry therefore gives prior squared risk at most two, so $F_S\le2$ as before.
+
+The raw loss obeys $R(z_w)\le2(1+q^L)$. Exponential tilting of the exact chi-square law gives
+\begin{align*}
+ \E_\pi[(1+q^L)e^{\omega Lq/4}]
+ &=2^{D_N/2}\left[1+
+       \left(\frac2{\omega L}\right)^L
+                         \prod_{j=0}^{L-1}(D_N+2j)\right]\\
+ &\le2^{D_N/2}M_L,
+ \qquad M_L=1+(2d_0+4)^L.
+\end{align*}
+The last bound retains $1/(\omega L)$ rather than replacing it by one. Define
+\[
+ K_n^{\rm raw}=2d_0\log2+\frac4L\log(2M_Ln^4)+1.
+\]
+The weighted-objective proof now bounds raw posterior tail risk by $n^{-4}$. Its cutoff remains
+$O_\kappa(1+\log n/L)$ because $\log M_L=O_\kappa(L)$.
+
+On normalized-energy shells the raw squared-loss envelope is bounded by $4(1+q)^L$. The same smooth-loss argument therefore gives the statistical inequality used earlier, with the same form of $a_n$ after enlarging its numerical constant. Use $K_n^{\rm raw}$ in the peeling cutoff and in the unique positive root
+\[
+ \mu^L=256a_n^2[2F_S(\mu)+(K_n^{\rm raw}+1)\mu]^{L-1}.
+\]
+The entropy calculation is unchanged, so its raw posterior-average risk is bounded by $F_S+c_0\mu+n^{-4}$ and obeys the empirical oracle \eqref{eq:depth-empirical-oracle}.
+
+The balanced teacher has per-layer energy
+$e=D^{2/L}C^{2H/L}B^2=O_{\kappa,C,B}(1)$ and amplitude at most
+$U=e^{L/2}$. Its selective comparison has output RMS error at most $rK_e$, with $K_e=\sqrt2(H+1)(e+1)^{H/2}$. Choose
+\[
+ r=[16n(U+1)K_e]^{-1}.
+\]
+The comparison's raw empirical-risk increment is at most
+$2(U+1)rK_e+(rK_e)^2\le1/(2n)$.
+Moreover $\log(1/r)=\log n+O_{\kappa,C,B}(L)$. The exact entropy count therefore still gives
+$T_N=O_{\kappa,C,B}(1+\log n/L)$ whenever $N^{\gamma-1}\ge L$.
+
+The comparison class includes the zero function, so choose one deterministic near-minimizer with population risk at most $1+\varepsilon/10$. Its bounded range is at most $(U+1)^2\le4(e+1)^L$. Scalar Bernstein concentration shows that its empirical risk differs from its population risk by at most $\varepsilon/10$ once $n\ge e^{aL}$ for a sufficiently large constant $a$. In particular the empirical comparator term is bounded by a constant independent of $L$. The two terms in the empirical root oracle now vanish uniformly in $L$ as $\log n/L$ grows, exactly as in the bounded-output proof. Increasing $a$ completes the stated risk bound.
+
+Every raw posterior moment used here exists: the prior is Gaussian at fixed finite architecture, the ReLU output grows polynomially in its parameters, and the likelihood is bounded by one with a positive normalizer. Jensen therefore applies to the ordinary raw posterior mean. No small-width parameter argument is invoked.
+\end{proof}
+
+The additional condition is modest in the stronger Gaussian regimes: at $\gamma=2$ it is $N\ge H+1$, and for larger fixed exponents it is $N\ge(H+1)^{1/(\gamma-1)}$. It remains separate from the all-width bounded-output theorem; that theorem does not supply a raw-output conclusion below this threshold.

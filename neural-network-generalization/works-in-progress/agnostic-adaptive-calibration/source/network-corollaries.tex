@@ -1,0 +1,116 @@
+\section{Simultaneous neural-network oracle inequalities}
+\label{sec:network-corollaries}
+Fix $d,H$, and a desired failure probability $0<\delta<1$. In the constants of Section~\ref{sec:abstract}, use confidence $\delta/2$, $D_0=d+H+1$, $M=2$, and the capacity parameters of Lemma~\ref{lem:tanh-capacity} or Lemma~\ref{lem:relu-capacity}. The calibration is completely specified by these choices and the learner's empirical free energy.
+
+For positive integers $m,b$, let $\mathcal G_{m,b}$ be the comparison networks of hidden width at most $m$, depth $L$, and coefficients bounded in absolute value by $b$. Zero padding represents this as a compact finite-dimensional parameter set. Population square loss is continuous on it, because inputs are bounded and network outputs have a common finite bound. Thus a deterministic minimizer $g_{m,b}$ exists. Write
+\[
+ R_{m,b}=\min_{g\in\mathcal G_{m,b}}R(g)\le1.
+\]
+The last inequality holds because the zero network belongs to the class.
+
+Use $E_{m,b},U_{m,b}$ from Lemma~\ref{lem:teacher-implementation}, and define the completely explicit comparison costs
+\begin{align}
+ K_{m,b}&=\sqrt2L(\sqrt{E_{m,b}}+1)^H,\notag\\
+ A_{m,b,n}&=E_{m,b}+1+2D_0\log[4K_{m,b}(U_{m,b}+1)n],\notag\\
+ T_{m,b,n}&=2A_{m,b,n}+K_n+1+c_0,\label{eq:simultaneous-cost}\\
+ \ell_{m,b}&=\log\frac{32(m+1)^2(b+1)^2}\delta,\qquad
+ \mathcal A_{m,b,n}=T_{m,b,n}\ell_{m,b}.\notag
+\end{align}
+These costs occur only in the guarantee. The learner does not receive $m$, $b$, $R_{m,b}$, or their minimizing teacher.
+
+\begin{theorem}[Adaptive comparison with all smaller networks]
+\label{thm:network-main}
+For tanh with $H\ge2$, set $r=H$; for ReLU with $H\ge1$, set $r=L$. Use the root calibration \eqref{eq:root-calibration}. With probability at least $1-\delta$, simultaneously for every learner width $N$ and every $\gamma\ge2$, the actual finite posterior satisfies
+\begin{align}
+ \int R(z_w)d\Pi_{S,\lambda_S}
+ \le\inf_{\substack{1\le m\le N\\b\in\N,\ b\ge1}}
+ \bigg\{R_{m,b}+C_r\big[&\mathcal A_{m,b,n}R_{m,b}^{1-1/r}a_n^{2/r}
+                  +\mathcal A_{m,b,n}^ra_n^2\big]\bigg\}+n^{-4}.
+ \label{eq:network-main}
+\end{align}
+With one hidden ReLU layer the same assertion holds for every $\gamma\ge1$. The ordinary raw posterior mean obeys the same bound.
+
+For one hidden tanh layer, use the certificate minimization \eqref{eq:shallow-calibration}. With the same probability and simultaneously for every width $N$ and every $\gamma\ge1$,
+\begin{align}
+ \int R(z_w)d\Pi_{S,\lambda_S}
+ \le\inf_{\substack{1\le m\le N\\b\in\N,\ b\ge1}}
+ \left\{R_{m,b}+32\left[
+ a_n\sqrt{\mathcal A_{m,b,n}R_{m,b}}
+       +a_n^2\mathcal A_{m,b,n}\right]\right\}+n^{-4}.
+ \label{eq:network-shallow}
+\end{align}
+Again the ordinary posterior mean satisfies the same bound.
+\end{theorem}
+\begin{proof}
+The Gaussian moment, capacity, and comparison lemmas verify the abstract hypotheses simultaneously over the claimed widths and scales. Take the common capacity event with failure probability $\delta/2$. For each integer pair $(m,b)$, Bernstein's inequality for the fixed population minimizer $g_{m,b}$ gives, except on probability
+$\delta/[8(m+1)^2(b+1)^2]$,
+\begin{equation}
+ \widehat R_S(g_{m,b})\le R_{m,b}
+ +(U_{m,b}+1)\sqrt{\frac{2R_{m,b}\ell_{m,b}}n}
+ +\frac{2(U_{m,b}+1)^2\ell_{m,b}}{3n}.
+ \label{eq:teacher-bernstein}
+\end{equation}
+Indeed its square loss is at most $(U+1)^2$ and its variance at most $(U+1)^2R_{m,b}$. The sum of the allocated probabilities is less than $\delta/2$. There is therefore one measurable event on which the statistical inequality and every comparison concentration statement hold. No union over the real scale parameter is needed: the statistical event concerns only the common function classes, and the comparison inequalities are deterministic for each posterior.
+
+Fix a pair $(m,b)$ with $m\le N$, write $R=R_{m,b}$, $u=\widehat R_S(g_{m,b})$, and first take $r\ge2$. Set
+$D=a_n^2\mathcal A_{m,b,n}^r$.
+The explicit implementation budgets imply
+\[
+ U_{m,b}^2\le E_{m,b}^r,
+ \qquad (U_{m,b}+1)^2\ell_{m,b}/n\le4D.
+\]
+For ReLU, the first inequality follows by raising \eqref{eq:intro-relu-energy} to power $L$ and comparing with \eqref{eq:teacher-amplitudes}; for tanh it follows from $E\ge2Hm^2b^2$ and $E\ge1$. The second uses $a_n^2\ge1/n$ and $\ell_{m,b}\ge1$. Thus \eqref{eq:teacher-bernstein} gives
+\begin{equation}
+ u\le R+\sqrt{8RD}+\tfrac83D\le(\sqrt R+2\sqrt D)^2.
+ \label{eq:bernstein-D}
+\end{equation}
+Apply \eqref{eq:deep-empirical-oracle} with $A=A_{m,b,n}$ and enlarge its comparison cost from $T_{m,b,n}$ to $\mathcal A_{m,b,n}$. With $p=1-1/r\ge1/2$, its remainder is bounded by
+$C_r[D^{1/r}u^p+D]$.
+Equation \eqref{eq:bernstein-D} gives
+$D^{1/r}u^p\le C_r(R^pD^{1/r}+D)$.
+Also $\sqrt{RD}\le R^pD^{1/r}+D$, by splitting into $R\ge D$ and $R<D$. Substitution proves the bound in \eqref{eq:network-main} for this pair. Since every pair is valid on the same event, take the indicated infimum.
+
+For shallow tanh, put $D=a_n^2\mathcal A_{m,b,n}$. The same Bernstein argument gives \eqref{eq:bernstein-D}. The empirical oracle is bounded by
+$u+4\sqrt{Du}+20D+n^{-4}$.
+Using $u-R\le\sqrt{8RD}+8D/3$ and $\sqrt u\le\sqrt R+2\sqrt D$ makes this at most
+$R+32[\sqrt{RD}+D]+n^{-4}$.
+Take the infimum over the common countable set of cap pairs. Jensen gives both ordinary-mean statements.
+\end{proof}
+
+\begin{remark}[Ordinary biases and noninteger coefficient caps]
+Any finite coefficient cap is covered by its integer ceiling. A tanh teacher with arbitrary internal and readout biases compiles into the stated architecture at one extra constant neuron per hidden layer and coefficient cap $2B$. Keep that neuron at value $1/2$: its first bias is $\operatorname{arctanh}(1/2)$ and its later self-edge is $2\operatorname{arctanh}(1/2)=\log3$. Each desired bias $b$ is supplied by an edge of weight $2b$ from the preceding constant neuron. For ReLU, a constant neuron of value one gives the same construction at unchanged cap $B\ge1$. These are comparison constructions only; the learner prior remains the specified dense Gaussian. Thus an ordinarily biased width-$m$ teacher requires $N\ge m+1$.
+\end{remark}
+
+\subsection{Rates and the role of approximation error}
+At fixed $d,H,\delta$, one has $a_n^2=\widetilde O(1/n)$ and
+$\mathcal A_{m,b,n}=\widetilde O(E_{m,b})$, with logarithms in sample count and teacher resources retained by \eqref{eq:simultaneous-cost}. The resulting remainders are
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Activation and depth & General comparison risk $R$ & Exactly fitting teacher \\
+\midrule
+Tanh, $H\ge2$ & $\widetilde O(E R^{1-1/H}n^{-1/H}+E^H/n)$ & $\widetilde O(E^H/n)$ \\
+ReLU, $H\ge1$ & $\widetilde O(E R^{1-1/L}n^{-1/L}+E^L/n)$ & $\widetilde O(E^L/n)$ \\
+Tanh, $H=1$ & $\widetilde O(\sqrt{ER/n}+E/n)$ & $\widetilde O(E/n)$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+The first two rows have $\gamma\ge2$, with the shallow ReLU extension to all $\gamma\ge1$; the last row permits all $\gamma\ge1$. The calibration is defined at every sample count $n\ge2$ and uses no teacher width, coefficient cap, or risk; a bound larger than the trivial loss scale is simply uninformative.
+
+For a requested excess $\varepsilon$, the first two rows give the sufficient sample form
+\begin{equation}
+ n=\widetilde O\left(E^r\left[\frac{R^{r-1}}{\varepsilon^r}
+                                      +\frac1\varepsilon\right]\right),
+ \label{eq:adaptive-sample}
+\end{equation}
+while shallow tanh gives
+$\widetilde O(E[R/\varepsilon^2+1/\varepsilon])$.
+The teacher costs and dimensional factors are explicit above; the tilde suppresses only logarithms at fixed dimension and depth.
+
+Let $f_0(x)=\E[Y\mid X=x]$ and $\nu=\E\operatorname{Var}(Y\mid X)$. Then
+\[
+ R(g)=\nu+\|g-f_0\|_{L^2(P_X)}^2.
+\]
+Consequently \eqref{eq:network-main} also bounds the learner's squared error relative to $f_0$ by the best teacher approximation error plus the displayed penalty evaluated at $\nu$ plus that approximation error. No exactly realizable network or correct Gaussian noise model is required.
+
+At a fixed coefficient cap, all the displayed learners compete with every teacher width $m\le n^\alpha$ for any fixed $\alpha<1/(2H)$. For tanh with both width and cap $n^\alpha$, the range is $\alpha<1/(4H)$, including the shallow case. For ReLU with both resources $n^\alpha$, the range is $\alpha<1/(4H+2)$. These follow directly from the energy formulas and are attained by the same calibration for every admissible exponent and class; the learner is not told $\alpha$. The stronger conclusion is the entire simultaneous oracle inequality, rather than one selected polynomial-width comparison.

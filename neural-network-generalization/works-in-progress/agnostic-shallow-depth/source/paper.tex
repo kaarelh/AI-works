@@ -1,0 +1,154 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsthm,mathtools,booktabs,microtype}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue]{hyperref}
+\hypersetup{pdftitle={Shallow comparison oracles for deep Bayesian networks},pdfauthor={ChatGPT-6 Astra; Claude Opus 5.5; Kaarel Hänni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}[section]\newtheorem{lemma}[theorem]{Lemma}\newtheorem{proposition}[theorem]{Proposition}\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}\newcommand{\KL}{\operatorname{KL}}\newcommand{\op}{\mathrm{op}}
+\title{Shallow comparison oracles for\\deep Bayesian networks}
+\author{ChatGPT-6 Astra \and Claude Opus 5.5 \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{17 November 2026}
+\begin{document}\maketitle
+\begin{abstract}
+We study one finite dense tanh network with independent weight coordinates, a calibrated Gaussian likelihood, and raw-output squared loss. The prior may be Gaussian, a fixed smooth strongly log-concave coordinate law with bounded curvature, or a fixed finite Gaussian-mixture coordinate law with common positive component variance, under the same variance scalings. At every learner depth, its sample complexity for competing with a shallow comparison network is polynomial in comparison width. At canonical mean field, the depth factor is $\exp(O(\sqrt H))$; at variance prefactor $\nu\le1$ it is $\exp(O(\sqrt H+(1-\nu)H))$. The polynomial degree and constants fix input dimension, comparison coefficient cap, accuracy, and confidence. The guarantee holds at every learner width at least as large as the comparison width, for arbitrary bounded IID labels on the unit sphere. A corollary permits a fixed sub-Gaussian label envelope, including Gaussian noise, without changing the observations or likelihood. The bound has leading coefficient one on the best comparison risk and includes the ordinary raw posterior mean. No output-envelope assumption is imposed on the comparison functions, and the prior has no robustness restriction or mixture over architectures. The proof combines Gaussian Jacobian moments, a covariance construction that transports a weak feature through many layers, and finite-parameter covers at smaller widths. Same-sign attenuation of large comparison outputs is enough for squared-loss comparison. A deterministic choice of the comparison-width cap from sample count gives a single calibrated learner competing with width $\operatorname{poly}(n)$ shallow networks at fixed dimension and depth. For non-Gaussian coordinates, an exact-baseline matrix moment estimate and a quantitative conditional central limit argument preserve the same depth and width bounds. The Gaussian-mixture extension includes genuinely non-log-concave priors. These are statistical guarantees for exact posteriors, not efficient posterior-sampling algorithms.
+\end{abstract}
+
+\section{Model and main result}
+Increasing learner depth need not preserve a Bayesian approximation guarantee. Even a shallow target can become difficult when the prior's native signals contract through many layers. We give a quantitative upper bound for this situation. The teacher has one hidden layer, while the learner may have arbitrarily many; these depths are not identified. We first prove the Gaussian case, then extend the same guarantee to smooth non-Gaussian independent coordinate priors in Theorem~\ref{thm:nongaussian-shallow-oracle}.
+
+Let inputs lie on the unit sphere $\mathbb S^{d-1}\subset[-1,1]^d$, with $\bar x=(1,x)$, and let labels lie in $[-1,1]$. Their joint distribution $D$ is arbitrary and the training sample is IID. Write
+\[
+ R(f)=\E_D(f(X)-Y)^2,\qquad
+ \widehat R_S(f)=n^{-1}\sum_{i=1}^n(f(X_i)-Y_i)^2.
+\]
+The width-$N$, hidden-depth-$H$ learner is
+\[
+ h^1=\tanh(W^1\bar x),\quad
+ h^l=\tanh(W^lh^{l-1})\ (2\le l\le H),\quad
+ z_w=v^\top h^H.
+\]
+There are no hidden bias parameters beyond the first-layer constant coordinate. For $0<\nu\le1$, the independent centered Gaussian prior variances are
+\[
+ \nu/d\text{ in }W^1,\qquad \nu/N\text{ internally},\qquad
+ \nu/N^2\text{ in }v.
+\]
+Put $\omega=N/\nu$, $s=1/\omega=\nu/N$, and $\tau=\sqrt\nu$. The posterior is
+\begin{equation}
+ d\Pi_{H,N,\nu,S}(w)=Z^{-1}
+       e^{-\omega\widehat R_S(z_w)/(2\lambda)}d\mu_{H,N,\nu}(w).
+ \label{eq:posterior}
+\end{equation}
+This is a Gaussian likelihood with variance $n\lambda/\omega$. Both likelihood and prediction use the raw real-valued output. The ordinary posterior mean is $\bar z(x)=\int z_w(x)d\Pi(w)$.
+
+Let $\mathcal G_{C,B}$ be the shallow class
+\[
+ g(x)=\sum_{j=1}^C c_j\tanh(a_j^\top\bar x),
+ \qquad |c_j|,|a_{jk}|\le B.
+\]
+There is no additional output-envelope restriction: the automatic bound is $|g|\le CB$. Zero padding makes these classes nested in $C$.
+
+\begin{theorem}[An all-depth shallow comparison oracle]
+\label{thm:main-shallow}
+Fix $d\ge1$, $B\ge1$, and $0<\epsilon,\delta<1$. There are constants $a,c>0$ and $0<\ell_-,\ell_0,\ell_+<1$, depending only on these fixed resources, with the following property. For every comparison width $C\ge1$ and every hidden depth $H\ge1$, put
+\[
+ D_C=1+\log(2+C),\qquad
+ N_0=\left\lceil(2+C)^a(H+1)^a\right\rceil,
+ \qquad
+ T_{H,C,\nu}=1+(1-\nu)^2H+D_C^2/H,
+\]
+and $j_{H,C,\nu}=\lceil\log_2 T_{H,C,\nu}\rceil$. Use the likelihood calibration
+\[
+ \lambda_{H,N,\nu}=
+ \begin{cases}
+ \ell_- (2+C)^{-a}(H+1)^{-a},&N<N_0,\\
+ \ell_0[H\exp(aD_C/H)]^{-1},&N\ge N_0,\ H<aD_C,\\
+ \ell_+2^{-j_{H,C,\nu}},&N\ge N_0,\ H\ge aD_C.
+ \end{cases}
+\]
+For every sample count $n$, one event of probability at least $1-\delta$ gives
+\begin{equation}
+ \int R(z_w)d\Pi_{H,N,\nu,S}
+ \le\inf_{g\in\mathcal G_{C,B}}R(g)+\epsilon
+ \label{eq:main-shallow}
+\end{equation}
+simultaneously for every $N\ge C$ and every $0<\nu\le1$ satisfying
+\begin{equation}
+ n\ge(2+C)^c\exp\{c[\sqrt H+(1-\nu)H]\}.
+ \label{eq:main-shallow-budget}
+\end{equation}
+The same inequality holds for $R(\bar z)$.
+\end{theorem}
+
+At $\nu=1$, the sample bound is polynomial in comparison width times $\exp(O(\sqrt H))$. The depth factor stays of this order when $1-\nu=O(H^{-1/2})$. For any fixed smaller prefactor it is exponential in $H$. A power-law scaling $\nu=N^{1-\gamma}$ with $\gamma\ge1$ is a special case, although the theorem permits arbitrary prefactors. The polynomial degrees and constants may be large and depend on dimension; we do not claim joint polynomial dependence on all teacher resources.
+
+\begin{corollary}[A sample-count calibration without knowing teacher width]
+\label{cor:sample-cap}
+Fix a learner architecture and prefactor, and let $c$ be as in Theorem~\ref{thm:main-shallow}. If the following set is nonempty, define
+\[
+ C_n=\max\{1\le C\le N:
+          (2+C)^c e^{c[\sqrt H+(1-\nu)H]}\le n\}.
+\]
+Use the theorem's single likelihood calibration with $C=C_n$. Its risk is at most
+$\inf_{g\in\mathcal G_{C_n,B}}R(g)+\epsilon$ with probability at least $1-\delta$. At fixed $d,H,B,\epsilon,\delta,\nu$, the eligible comparison width grows as a positive power of sample count until it reaches $N$.
+\end{corollary}
+
+The cap is a deterministic function of sample count and known model quantities, chosen before observing the data. This corollary introduces no prior over comparison widths: there is one fixed Gaussian prior on the learner's weights and one calibrated likelihood. The comparison networks have one hidden layer; the statement does not assert the same width exponent for arbitrary-depth comparison MLPs.
+
+\section{Basic variational and Gaussian estimates}
+The finite posterior obeys the exact variational identity
+\begin{equation}
+ F_S(\lambda):=-\frac{2\lambda}{\omega}\log Z
+ =\inf_\rho\left\{\int\widehat R_S(z)d\rho
+                     +\frac{2\lambda}{\omega}\KL(\rho\Vert\mu)\right\}.
+ \label{eq:variational}
+\end{equation}
+In particular posterior empirical risk is at most $F_S(\lambda)$. Bounded tanh features and the independent Gaussian readout give
+\[
+ \E_\mu R(z)\le2,\qquad \E_\mu R(z)^2\le24,
+ \qquad Z\ge e^{-\omega/\lambda}.
+\]
+The first two follow by conditioning on hidden features, where the output is centered Gaussian with variance at most $\nu/N\le1$; Jensen gives the evidence bound.
+
+Define total operator energy
+\[
+ Q_{\rm op}=\|W^1\|_F^2/N+
+             \sum_{l=2}^H\|W^l\|_\op^2+N\|v\|^2.
+\]
+For absolute $c_0,C_0>0$,
+\begin{equation}
+ \E_\mu e^{c_0\omega Q_{\rm op}}\le e^{C_0N(H+1)}.
+ \label{eq:relu-total-op-mgf}
+\end{equation}
+The first and last factors are chi-square moment generating functions. For each internal standardized Gaussian matrix $G$, the Gaussian tail
+$\Pr(\|G\|_\op>2\sqrt N+t)\le e^{-t^2/2}$ gives
+$\E e^{c_0\|G\|_\op^2}\le e^{C_0N}$ for small $c_0$. Its scaling cancels against $\omega=N/\nu$. Independence multiplies the factors. These estimates hold at every finite width.
+
+\input{sobolev}
+\input{scalar-preliminaries}
+\input{continuous-echo}
+\input{prefactor-echo}
+\input{quantitative-encoding}
+\input{high-gain-encoding}
+\input{global-response-risk}
+\input{risk-comparison}
+\input{amgm}
+\input{small-width}
+\input{assembly}
+\input{subgaussian-labels}
+\input{moments-and-entropy}
+\input{finite-width-transfer}
+\input{oracle-extension}
+\input{gaussian-mixtures}
+
+\input{hermite-encoder}
+\input{dimension-uniform-schedule}
+\input{dimension-sobolev}
+\input{dimension-oracle}
+
+\section{Scope and verification}
+The comparison covariance changes only construct a law used in the variational proof. They do not replace or condition the learner's independent prior, whether Gaussian or one of the smooth non-Gaussian laws in the extension. The statistical event is applied to fixed function dictionaries; auxiliary prior-good sets may differ by width and scale. Every learner in the theorem is a finite network.
+
+The proofs have undergone independent AI-agent mathematical review. They have not been formalized in Lean. The accompanying verification record identifies the exact reviewed sources and any qualifications. These results are statistical statements about exact posteriors and do not establish efficient computation.
+
+\end{document}

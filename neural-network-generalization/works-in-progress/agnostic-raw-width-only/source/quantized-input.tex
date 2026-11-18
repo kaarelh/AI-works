@@ -1,0 +1,166 @@
+\section{Continuous inputs without a power-of-accuracy width cost}
+\label{sec:quantized-input}
+A continuous input can first be converted to binary digits.  Applying a
+Boolean-network compiler to those digits avoids a separate neuron for every
+small grid box.  The price is logarithmic additional depth.  This section
+concerns only a comparison network used in a proof; the Bayesian learner
+continues to use its raw output in both the likelihood and prediction.
+
+\begin{lemma}[A tanh binary quantizer]\label{lem:tanh-quantizer}
+Let $Q=2^t$, $t\ge1$, and $0<\rho<1/(4Q)$.  Let
+$0<\delta\le\rho/[10^6Q(t+1)]$.  There is a tanh network of width at most
+$d(t+2)+1$ and hidden depth $1+2t$ which, for every
+$y\in[0,1]^d$ satisfying
+\[
+ \operatorname{dist}(y_j,Q^{-1}\mathbb Z)\ge\rho
+ \quad(1\le j\le d),
+\]
+returns all $dt$ signed binary digits of $\lfloor Qy_j\rfloor$, each with
+error at most $\delta$.  Its coefficients have absolute value at most
+\[
+ C\rho^{-1}\sqrt{Q(t+1)/\rho}\log(4/\delta).
+\]
+The output digits always lie in $[-1,1]$, including outside the displayed
+set.  Arbitrary further layers can copy the digits while preserving their
+error, with coefficient cap $C\log(4/\delta)$.
+\end{lemma}
+\begin{proof}
+It suffices to process one coordinate in parallel with the others.  The
+exact binary algorithm starts at $z_0=y$ and iterates
+\[
+ b_j=\mathbf 1\{z_j\ge1/2\},\qquad z_{j+1}=2z_j-b_j
+ \quad(0\le j<t).
+\]
+Every threshold encountered is a dyadic grid boundary.  Therefore
+$|z_j-1/2|\ge\rho$ under the stated hypothesis.  Choose
+\[
+ \tau^2=\frac{\rho}{10^6Q(t+1)},\qquad
+ k=\frac4\rho\log(4/\delta),
+\]
+and initialize $u_0=\tanh(\tau y)$.  One physical layer computes
+\[
+ v_j=\tanh(u_j),\qquad
+ s_j=\tanh\big(k(u_j/\tau-1/2)\big),
+\]
+and the next computes
+\[
+ u_{j+1}=\tanh\big(2v_j-\tfrac\tau2(1+s_j)\big).
+\]
+At each of these layers every previously stored signed bit is replaced by
+$\tanh(k s)$; thus copies are restored rather than accumulated linearly.
+Constants can be supplied by affine biases.  An exact constant wire of value
+$\tanh(1)$ is an alternative if the model omits intermediate biases.
+
+Write $e_j=|u_j/\tau-z_j|$.  As long as $e_j\le\rho/8$, the decision
+input has margin at least $7\rho/8$, so
+$|s_j-(2b_j-1)|\le\delta$.  The elementary bound
+$|\tanh v-v|\le |v|^3/3$ gives
+\[
+ e_0\le\tau^2/3,\qquad
+ e_{j+1}\le2e_j+100\tau^2+\delta/2.
+\]
+Here $|u_j|\le2\tau$ and the next preactivation has magnitude at most
+$5\tau$, so the numerical constant $100$ is sufficient.  Consequently
+$e_j\le102Q\tau^2+Q\delta/2<\rho/8$ for every $j\le t$;
+induction justifies the temporary hypothesis.  A stored bit has magnitude
+at least $1-\delta\ge7/8$, so its copy has error at most
+$2e^{-7k/4}\le\delta$.  The displayed width, depth, and coefficient cap
+follow from these formulas.  The same restoring copy proves the final claim.
+\end{proof}
+
+\begin{lemma}[Quantized-input raw tanh compilation]
+\label{lem:quantized-raw-compiler}
+There is a numerical exponent $b\ge2$ with the following property.  Let
+$g$ be an arbitrary-real-coefficient ReLU network of hidden width $C\ge1$
+and depth $h\ge1$.  Suppose $P_X$ has density at most $\kappa$ relative to the uniform
+probability measure on $[-1,1]^d$, and put $\bar\kappa=\max\{1,\kappa\}$.  For
+$0<\epsilon<1/4$, define
+\[
+ J=\left\lceil\log_2\frac{c\bar\kappa d(C+1)^h}{\epsilon}\right\rceil,
+ \qquad
+ K=4(dJ+1)(C+1)^h+\lceil\log_2(32/\epsilon)\rceil+2.
+\]
+At every prescribed depth $H\ge2J+b(h+1)+3$, there is a tanh network $q$
+with raw affine readout (using the native output bias) such that
+\[
+ \E|q(X)-\operatorname{clip}(g(X),[-1,1])|^2\le c\epsilon,
+ \qquad \sup_{x\in[-1,1]^d}|q(x)|\le4,
+\]
+and
+\[
+ m\le c K^b,\qquad
+ \log(B+2)\le c\big[J+\log(d\bar\kappa/\epsilon)+\log(K+2)\big].
+\]
+The raw readout has absolute coefficient sum plus absolute bias at most
+four.  These resource bounds are independent of additional learner depth.
+The constants do not depend on any coefficient of $g$.
+\end{lemma}
+\begin{proof}
+Write $f=\operatorname{clip}(g,[-1,1])$ and $R=(C+1)^h$.
+On every coordinate line, a depth-$h$, width-$C$ ReLU network has at most
+$R$ affine intervals.  Clipping each affine interval is monotone, so the
+one-dimensional total variation of $f$ on any segment is at most $2R$.
+
+Take $Q=2^J$ and mesh $\Delta=4/Q$.  For a grid shift
+$a\in[0,\Delta)^d$, let
+\[
+ y=(x-a+2\mathbf 1)/4,\qquad
+ x_a=a-2\mathbf 1+4Q^{-1}\lfloor Qy\rfloor.
+\]
+For $J$ sufficiently large, $y\in[0,1]^d$ whenever
+$x\in[-1,1]^d$.  Averaging over $a$ and using the coordinate translation
+bound for functions of bounded variation gives
+\[
+ \mathbb E_a\int_{[-1,1]^d}|f(x)-f(x_a)|\,2^{-d}dx\le c dR/Q.
+\]
+For completeness, replace the coordinates one at a time.  In one
+coordinate the randomized rounding displacement lies in $[0,\Delta]$;
+Fubini and
+$\int|u(t+s)-u(t)|dt\le |s|\operatorname{TV}(u)$
+bound its average contribution by $2R\Delta$, times the volume of the
+other coordinates in the slightly enlarged cube.  After the factor $2^{-d}$,
+this volume contributes at most $(1+\Delta)^d\le e$, because the numerical
+constant in $J$ ensures $Q\ge8d$.  Sum the $d$ bounds.
+Multiplying by the density bound shows that some fixed shift $a$ has
+\[
+ \E|f(X)-f(X_a)|\le c\bar\kappa dR/Q\le c\epsilon.
+\]
+The chosen shift is part of the proof's comparison network, not an input
+to the learner.
+
+Set $\rho=\epsilon/(c\bar\kappa dQ)$, increasing the numerical constant
+$c$ if necessary.
+The union of the original-coordinate strips for
+$\operatorname{dist}(y_j,Q^{-1}\mathbb Z)<\rho$ has probability at most
+$c\bar\kappa dQ\rho\le\epsilon$.  On its complement use
+Lemma~\ref{lem:tanh-quantizer}.  The exact bits describe $X_a$ as an affine
+function of $dJ$ signed Boolean variables.  Composing this affine decoding
+with the first layer of $g$ gives a width-$C$, depth-$h$ ReLU network on
+that Boolean cube.  The coefficient-free majority-circuit compiler used
+in Lemma~\ref{lem:raw-Boolean-tanh} has size $S\le K^b$, depth
+at most $b(h+1)$, and signed-bit readout variation plus offset below four.
+It approximates $f(X_a)$ to $\epsilon/4$.
+
+Choose the quantizer bit tolerance to be
+\[
+ \delta=\min\left\{\frac{\rho}{10^6Q(J+1)},
+                    \frac1{100(S+1)},\frac\epsilon{100}\right\}.
+\]
+The majority gates have integer margin at least one.  Replacing each
+by tanh with gain $\log(4/\delta)$ restores bit error at most $\delta$,
+because its incoming perturbation is at most $S\delta\le1/100$.
+The raw readout therefore adds at most $4\delta$ error.  Insert as many
+restoring signed-bit layers as necessary before the readout to attain the
+prescribed $H$.  This does not increase the error or coefficient cap.
+
+On the good quantizer set, $|q-f(X_a)|\le\epsilon/2$.  Everywhere,
+$|q|\le4$, because the last hidden coordinates lie in $[-1,1]$ and the
+readout has variation plus offset below four.  Thus its squared error
+against $f$ is bounded by $25$ on the bad set.  On the good set use
+$|f-f(X_a)|^2\le2|f-f(X_a)|$ and the preceding translation estimate.
+This proves the claimed mean-square error.  The quantizer and Boolean
+compiler widths are bounded by $cK^b$.  Their coefficient logarithms
+are $O(J+\log(d\bar\kappa/\epsilon)+\log(K+2))$, directly from the
+quantizer formulas and the majority-gate gains.  No inverse precision
+appears as a power in the width.
+\end{proof}

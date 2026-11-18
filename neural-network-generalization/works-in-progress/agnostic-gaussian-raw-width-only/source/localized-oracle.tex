@@ -1,0 +1,328 @@
+\section{Localized losses and the Gaussian posterior}
+\label{sec:localized-proof}
+This section uses the common design-norm event in Section~\ref{sec:sharp-design}.
+The statements below use bounded labels $|Y|\le1$ and a density on
+$[-1,1]$ bounded above and below by positive constants. Put
+$f_0(x)=\mathbb E[Y\mid X=x]$, $A(f)=P_X(f-f_0)^2$,
+and $\xi=Y-f_0(X)$. In particular $|\xi|\le2$.
+
+\paragraph{A self-contained entropy bound.}
+For $P\ge1$, let $\mathcal V_P$ contain continuous functions with
+supremum, Lipschitz constant and total variation of their distributional
+second derivative all at most $cP$, where $c$ is an absolute constant.
+Then
+\[
+ \log N_\infty(\varepsilon,\mathcal V_P)
+ \le C\sqrt{P/\varepsilon}\log(CP/\varepsilon),
+ \qquad 0<\varepsilon\le P. \tag{E}
+\]
+Here and below an extra universal logarithm may be inserted without
+changing the conclusions. To see (E), partition the interval both by
+a uniform grid with $k$ bins and by quantiles of the second-derivative
+variation measure with at most $k$ internal cuts. The common
+refinement has at most $2k+1$ intervals. On each open interval its
+length is at most $2/k$ and its variation measure is at most $cP/k$;
+atoms at endpoints do not affect linear interpolation. The linear
+interpolant therefore differs uniformly from the original function
+by at most $CP/k^2$. Choose $k=C\sqrt{P/\varepsilon}$.
+Snap the interpolant's knots to an $\varepsilon/(CP)$ grid and
+its values to an $\varepsilon/C$ grid. Its Lipschitz constant is
+at most $cP$, so snapping and merging colliding knots changes the
+uniform error by at most $C\varepsilon$. The number of resulting
+descriptions proves (E). The affine part is included by the
+supremum and Lipschitz bounds.
+
+\paragraph{Two multiplier estimates.}
+Fix a deterministic bounded comparator $g$, with $|g|\le1$ and
+path variation $P_g$. For any shallow ReLU output $f$, write
+$h=f-g$ and $P=1+P_f+P_g$. Both $h$ and the possible values of $f$
+belong to a constant enlargement of $\mathcal V_P$.
+For $0<\eta<\eta_0$, where $\eta_0>0$ depends only on the two density bounds, with probability at least $1-\delta$,
+simultaneously over all $f$,
+\begin{align}
+ |P_n\xi h|
+ &\le \eta P_nh^2+
+ C\eta^{-3/5}P^{2/5}n^{-4/5}\mathcal L^C
+ +C\eta^{-1}n^{-1}\mathcal L^C, \tag{M1}\\
+ |(P_n-P_X)((f_0-g)h)|
+ &\le \eta P_Xh^2+
+ C\eta^{-3/5}P^{2/5}n^{-4/5}\mathcal L^C
+ +CPn^{-13/8}\mathcal L^C\\
+ &\quad+C\eta^{-1/2}P^{1/2}n^{-3/2}\mathcal L^C
+ +C\eta^{-1}n^{-1}\mathcal L^C. \tag{M2}
+\end{align}
+Here $\mathcal L=1+\log(n/\delta)+\log(P+1)$; one can replace its
+$P$ dependence on dyadic shells by the corresponding shell logarithm.
+Both events depend only on the function classes, not on learner
+width or Gaussian scale.
+
+For (M1), condition on the inputs. The process $P_n\xi h$ is
+sub-Gaussian for the empirical $L^2$ metric, with variance proxy
+$C/n$. On $P_nh^2\le r^2$, Dudley's chaining bound and (E) give
+\[
+ \mathbb E_\xi\sup |P_n\xi h|
+ \le C n^{-1/2}P^{1/4}r^{3/4}\mathcal L^C.
+\]
+The usual sub-Gaussian chaining tail adds
+$Cr\sqrt{t/n}$. Peel in $P$ and $r$ and use Young's inequality.
+Terminate the radius peeling at $r=1/n$. For the smaller terminal
+class, $|P_n\xi h|\le2r\le2/n$ directly. For the design
+multiplier use the localized estimate at $r=1/n$. Thus no infinite
+peeling or uncontrolled small-radius limit is needed.
+
+For (M2), localize first to $P_Xh^2\le r^2$. Apply the design-norm
+lemma at a fixed tolerance, say $1/4$, and failure $n^{-10}\delta$.
+It bounds all empirical radii by
+\[
+ C r+C P\{\log(Cn/\delta)/n\}^{3/2}.
+\]
+Conditional Rademacher chaining using (E), with the bounded
+multiplier $f_0-g$, gives expected supremum at most
+\[
+ C n^{-1/2}P^{1/4}r^{3/4}\mathcal L^C
+       +CPn^{-13/8}\mathcal L^C.
+\]
+The exceptional design event contributes at most $CPn^{-10}\delta$.
+The exponent $13/8$ follows by inserting the additional empirical
+radius $P n^{-3/2}$ in $n^{-1/2}P^{1/4}r^{3/4}$.
+
+The lower density bound supplies a localized envelope:
+\[
+ \|h\|_\infty\le C\{r+P^{1/3}r^{2/3}\}.
+\]
+Indeed, if $|h(x_0)|=A$, a one-sided interval of length
+$c\min(1,A/P)$ has $|h|\ge A/2$. Hence
+$r^2\ge c A^2\min(1,A/P)$, proving the two alternatives.
+Bousquet's inequality therefore adds
+\[
+ Cr\sqrt{t/n}+C(r+P^{1/3}r^{2/3})t/n,
+\]
+using variance at most $4r^2$. Its square-root term involving the
+expected supremum is absorbed by that expectation and the displayed
+envelope term. The population localization makes this envelope
+deterministic on the whole class. Young's inequality bounds
+$P^{1/3}r^{2/3}/n$ by
+$\eta r^2+C\eta^{-1/2}P^{1/2}n^{-3/2}$.
+Dyadic peeling and the same terminal radius $1/n$ prove (M2).
+No independence of $f_0(X)-g(X)$ and $X$ is assumed.
+
+\paragraph{A relative squared-loss inequality.}
+Let
+\[
+ \widehat R(f)=P_n(f-Y)^2,\qquad
+ D_n=C\eta^{-5}\{\log(Cn/\delta)/n\}^{3}.
+\]
+Combine (M1), (M2), and the two directions of the design-norm lemma:
+\begin{equation}
+ \begin{aligned}
+ |(\widehat R(f)-\widehat R(g))-(A(f)-A(g))|
+ \le{}& C\eta\{A(f)+A(g)\}
+ +C\eta^{-3/5}P^{2/5}n^{-4/5}\mathcal L^C\\
+ &+CPn^{-13/8}\mathcal L^C
+ +C\eta^{-1/2}P^{1/2}n^{-3/2}\mathcal L^C\\
+ &+C\eta^{-1}n^{-1}\mathcal L^C+D_nP^2.
+ \end{aligned}\tag{L}
+\end{equation}
+Indeed the empirical/population quadratic-norm difference for
+$h$ is at most $C\eta P_Xh^2+D_nP^2$, and
+$P_Xh^2\le2A(f)+2A(g)$. The multiplier (M1) initially involves
+$P_nh^2$, which the reverse norm inequality controls by the same
+quantity. Constants in the fine-tolerance design lemma can be
+absorbed by replacing its input tolerance by a fixed multiple of
+$\eta$.
+
+\paragraph{The actual Gaussian posterior.}
+Use the original shallow independent Gaussian prior
+\[
+ a_j,b_j\sim N(0,\nu),\quad v_j\sim N(0,\nu/N^2),
+ \quad \omega=N/\nu,\quad 0<\nu\le1,
+\]
+and define
+\[
+ Q=N^{-1}\sum(a_j^2+b_j^2)+N\sum v_j^2,\quad
+ \Pi_\lambda(dw)\propto
+ e^{-\omega\widehat R(z_w)/(2\lambda)}\mu(dw).
+\]
+Then $P(z_w)\le Q/2$, $\omega Q\sim\chi^2_{3N}$, and the physical
+Gaussian observation variance is $n\lambda\nu/N$.
+The Gibbs identity and the Gaussian exponential moment imply
+\[
+ \Pi_\lambda[\widehat R(z)+(\lambda/2)Q]
+ \le F_\lambda+3\lambda\log2,\qquad
+ F_\lambda=-\frac{2\lambda}{\omega}\log Z_\lambda. \tag{G}
+\]
+In fact
+$\operatorname{KL}(\Pi_\lambda\Vert\mu)
+ \ge\omega\Pi_\lambda Q/4-(3N/2)\log2$ and $N/\omega\le1$.
+
+For $0<\lambda\le1$ there is also the deterministic bound
+\[
+ \Pi_\lambda Q^2\le C(1+\lambda^{-2}). \tag{T}
+\]
+The prior empirical risk is at most two for every unit-bounded
+sample, so Jensen gives $F_\lambda\le2$. A chi-square Chernoff
+bound gives $\mu(Q>u)\le e^{-c\omega u}$ above a fixed universal
+threshold. Since $Z_\lambda\ge e^{-\omega/\lambda}$,
+the posterior tail is at most
+$\min(1,e^{\omega/\lambda-c\omega u})$; integrate it and use
+$\omega\ge1$ to obtain (T).
+
+For the following uniform statistical bound assume $P_g\le n^4$.
+Truncate posterior energy at $Q\le n^{20}/\lambda$; the tail estimate
+used in (T) bounds every omitted risk or quadratic-energy integral
+by $O(n^{-10})$. On the retained range all shell logarithms are
+$O(\log(n/\delta))$ when $n^{-2}\le\lambda\le1$.
+For any $P\ge1$ and $a>0$,
+\[
+ C\eta^{-3/5}P^{2/5}n^{-4/5}\mathcal L^C
+ \le a\lambda P+
+ C_a\eta^{-1}n^{-4/3}\lambda^{-2/3}\mathcal L^C. \tag{Y}
+\]
+For the additional sublinear term in (M2), Young gives
+\[
+ C\eta^{-1/2}P^{1/2}n^{-3/2}\mathcal L^C
+ \le a\lambda P+C_a\eta^{-1}\lambda^{-1}n^{-3}\mathcal L^C.
+\]
+The linear term $Pn^{-13/8}$ is absorbed provided
+\[
+ \lambda\ge C n^{-13/8}\log^k(n/\delta)
+\]
+for one sufficiently large fixed $k$. The Gaussian tail truncation
+above makes every retained shell logarithm $O(\log(n/\delta))$;
+the discarded posterior risk is negligible uniformly in $N,\nu$.
+
+A balanced Gaussian comparison around $g$ gives, for every
+$N$ above the width of $g$,
+\[
+ F_\lambda\le\widehat R(g)
+       +C/n+\lambda C[P_g+\log(n(P_g+1))].
+\]
+Choose $a$ in (Y) small enough that the resulting coefficient
+of $Q$ in (L) is at most $\lambda/2$, and integrate (L).
+Using (G), (T), and the comparison gives
+\begin{align}
+ \Pi_\lambda A(z)
+ \le &(1+C\eta)A(g)
+ +C\lambda[P_g+\log(n(P_g+1))]
+ +C\eta^{-1}n^{-4/3}\lambda^{-2/3}\mathcal L_n^C\\
+ &+C\eta^{-1}\lambda^{-1}n^{-3}\mathcal L_n^C
+ +C\eta^{-5}n^{-3}\mathcal L_n^C
+       [\,\lambda^{-2}+(P_g+1)^2\,]+C\eta^{-1}n^{-1}\mathcal L_n^C, \tag{O}
+\end{align}
+where $\mathcal L_n$ contains only logarithms in
+$n,1/\delta,P_g+1$. Jensen gives the same bound for the ordinary
+raw posterior mean. All events are shared by every eligible
+finite width and every $0<\nu\le1$.
+
+\paragraph{A universal comparison-width guarantee.}
+Take $\lambda=n^{-3/2}\log^K(n/\delta)$ with one sufficiently large
+fixed $K$, and put $\eta=1/\log n$. Restrict to the nontrivial
+comparison widths $(C+1)\sqrt\lambda\le1$.
+The bounded spline compiler applied to a clipped width-$C$ univariate
+shallow ReLU function has width at most $6C+6$, risk increment
+$O(Ct)$ and path variation $P_g\le C'(C+1)/t$.
+Use $t=\sqrt\lambda$ in (O). The compiler and comparison penalty
+are $\widetilde O((C+1)n^{-3/4})$. The noise remainder is
+$\widetilde O(n^{-1/3})$, and the new envelope remainder is
+$\widetilde O(n^{-3/2})$.
+The posterior design term is
+\[
+ C\eta^{-5}n^{-3}\mathcal L_n^c\lambda^{-2}
+ \le C\log^{c+5-2K}(n/\delta)\le C/\log n
+\]
+after increasing $K$. Its comparator-energy term is this quantity
+times $O((C+1)^2\lambda)$, and is therefore no larger in the
+stated range. Thus
+\[
+ R(\bar z_\lambda)\le\Pi_\lambda R(z)
+ \le R_0+\{1+O(1/\log n)\}
+       \inf_{g\in\mathcal G_C}\{R(g)-R_0\}
+ +\widetilde O((C+1)n^{-3/4}+n^{-1/3})+O(1/\log n).
+ \tag{C}
+\]
+Clipping a proof comparator to $[-1,1]$ cannot increase its squared
+risk for unit-bounded labels, and creates at most $3C+2$ breakpoints.
+The actual posterior remains raw and unchanged.
+The same deterministic schedule works for all qualifying $C$.
+A summable confidence allocation over integer comparison widths is
+a proof union, not a prior over widths. In particular it permits
+every fixed growth $C_n=n^u$ with $u<3/4$.
+The logarithmic additive term is explicit: this universal schedule
+is not the polynomial-accuracy bound of the declared-budget schedule
+below. The conditions on $\eta,\lambda,P_g$ hold for sufficiently
+large $n$; a bounded-risk fallback handles smaller samples.
+
+\paragraph{Two coefficient-one schedules.}
+The sharper design lemma yields two genuine coefficient-one
+consequences, not only the coefficient-$1+o(1)$ interpretation.
+All the following displays suppress fixed powers of logarithms;
+these can be realized by enlarging the indicated tolerances and
+likelihood scales by fixed logarithmic factors.
+
+First take the universal schedule
+\[
+ \lambda=n^{-3/5},\qquad \eta=c n^{-3/10},
+ \qquad t=\sqrt\lambda=n^{-3/10}.
+\]
+The likelihood schedule does not use $C$. Since $A(g)\le4$ for the
+bounded proof comparator, its multiplicative slack is absorbed
+additively. Substituting in (O) gives, for every $1\le C\le n$,
+\[
+ R(\bar z_\lambda)\le\inf_{g\in\mathcal G_C}R(g)
+ +\widetilde O\left((C+1)n^{-3/10}
+                   +(C+1)^2n^{-9/10}\right). \tag{U}
+\]
+The multiplier remainder has order $n^{-19/30}$ and the direct
+$n^{-1}\eta^{-1}$ remainder has order $n^{-7/10}$; both are smaller
+than the first displayed term. The design remainder from the
+posterior energy is $n^{-3/10}$, and its comparator-energy term is
+$(C+1)^2n^{-9/10}$. The hypotheses $\lambda\ge\widetilde C n^{-13/8}$ and
+$n\eta^2\ge C\log(Cn/\delta)$ hold for sufficiently large $n$.
+The constants depend on the two density bounds.
+
+Second, if a comparison-width budget $C$ is declared, put
+\[
+ \varepsilon_{n,C}
+ =\widetilde C(C+1)^{2/5}n^{-3/10},\qquad
+ \eta=c\varepsilon_{n,C},\quad
+ \lambda=c'\left(\frac{\varepsilon_{n,C}}{C+1}\right)^2,\quad
+ t=c''\frac{\varepsilon_{n,C}}{C+1}.
+\]
+Choose the fixed constants and logarithmic powers in this order
+so that the inequalities used above hold. For the nontrivial regime
+$\varepsilon_{n,C}\le\varepsilon_0$, this yields
+\[
+ R(\bar z_\lambda)\le\inf_{g\in\mathcal G_C}R(g)
+ +\widetilde O\left((C+1)^{2/5}n^{-3/10}\right). \tag{B}
+\]
+The learner uses $n,C$ and the confidence allocation to choose
+one likelihood variance; it does not mix widths, priors or
+temperatures. It still uses the same prior and any prescribed
+finite learner width $N\ge6C+6$.
+
+For the algebra, the compiler and penalty terms are $O(\varepsilon)$.
+The strongest design requirement is
+\[
+ (C+1)^4 n^{-3}\varepsilon^{-9}\le C\varepsilon,
+\]
+which is exactly $\varepsilon\gtrsim(C+1)^{2/5}n^{-3/10}$.
+The new envelope remainder requires only
+$\varepsilon\gtrsim(C+1)^{1/2}n^{-3/4}$ and is weaker.
+The noise multiplier asks only for
+$\varepsilon\gtrsim(C+1)^{2/5}n^{-2/5}$, also weaker.
+The comparator-energy design term is smaller than the posterior
+one by a factor $O(\varepsilon^2)$.
+In the nontrivial regime $\varepsilon_{n,C}\le\varepsilon_0$,
+one has $C+1\lesssim n^{3/4}$ and hence
+$\lambda\gtrsim n^{-3/2}$ with logarithmic slack. This exceeds
+$n^{-13/8}\log^k(n/\delta)$ for sufficiently large $n$.
+The other conditions $P_g\le n^4$ and
+$n\eta^2\ge C\log(Cn/\delta)$ also hold.
+Thus a sufficient sample size for excess $\varepsilon$ is
+\[
+ n\ge\widetilde O\left(
+ (C+1)^{4/3}\varepsilon^{-10/3}\right). \tag{SC}
+\]
+Consequently every prescribed comparison width $C_n=n^u$, $u<3/4$,
+has a vanishing power-rate remainder, at the deterministic scale
+$\lambda_n=\widetilde\Theta(n^{-3/5-6u/5})$.

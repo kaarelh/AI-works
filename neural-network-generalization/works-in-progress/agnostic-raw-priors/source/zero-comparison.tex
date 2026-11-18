@@ -1,0 +1,116 @@
+\section{Removing the analytical comparator cutoff}
+\label{sec:zero-comparison}
+The cutoff used in the auxiliary-prior proof need not remain an
+assumption on the final neural-network oracle. A uniform zero-function
+comparison deals with the complementary resource range.
+
+\begin{lemma}[A width-independent zero small ball]
+\label{lem:raw-zero-smallball}
+For the Gaussian neuron-gated model with bounded hidden activation,
+and for the normalized Dirichlet Gaussian readout, there are constants
+$c,C>0$, independent of dimension, depth, and learner width, such that
+\[
+ \mu_N\{\|z\|_\infty\le\epsilon\}\ge c\epsilon^C,
+ \qquad0<\epsilon\le1.
+\]
+For a general globally Lipschitz hidden activation in the unnormalized
+model, the same assertion holds with constants allowed to depend on
+fixed $d,H$. It also holds for the independent variance-gamma readout
+with bounded hidden activations described below.
+\end{lemma}
+\begin{proof}
+For the unnormalized Gaussian-gate readout, write the final gates as
+$S_j=T P_j$, with $T\sim\operatorname{Gamma}(\kappa,1)$ independent
+of the Dirichlet proportions, hidden features, and final Gaussian
+factors. If $R_j=\sup_x|h_j(x)|$, then
+\[
+ \|z\|_\infty\le|G_0|+T Z,
+ \qquad Z=\sum_jP_j|G_j|R_j.
+\]
+The expectation of $Z$ is bounded uniformly in width. For bounded
+activations it is also independent of dimension and depth; for a
+Lipschitz activation use the uniform first-feature moments already
+proved. The event $Z\le2\E Z+1$ has probability at least $1/2$.
+Independently require $T\le c\epsilon/(1+\E Z)$ and
+$|G_0|\le\epsilon/2$. The gamma and Gaussian small-ball bounds prove
+the assertion.
+
+For the normalized readout, introduce a size-biased index $I$ with
+$\Pr(I=j\mid P)=P_j$. When $N\ge2$, its mass has distribution
+$P_I\sim\operatorname{Beta}(1+\kappa/N,\kappa-\kappa/N)$.
+Direct integration near one gives
+\[
+ \Pr(P_I\ge1-\delta)\ge c_\kappa\delta^\kappa
+ \qquad(0<\delta\le1/2),
+\]
+uniformly in $N$. Given this mass and index, the remaining normalized
+proportions have their usual Dirichlet law. Their gamma-ratio moment
+formula yields
+\[
+ \E\left[\sum_{j\ne I}\sqrt{P_j}|G_j|
+                       \mid P_I\right]
+       \le C_\kappa\sqrt{1-P_I}.
+\]
+Choose $\delta=c\epsilon^2$, require the inactive weighted sum to be
+at most $\epsilon/[4(1+M_\phi)]$, and require both $|G_I|$ and
+$|G_0|$ to be at most the same threshold. Markov's inequality gives
+conditional probability at least $1/2$ for the weighted-sum event;
+the two independent Gaussian intervals contribute at least
+$c\epsilon^2$. The resulting raw output is at most $\epsilon$.
+For $N=1$ only the two Gaussian intervals are needed. Introducing the
+auxiliary index does not change the marginal prior, so this proves its
+small-ball lower bound.
+
+For variance-gamma readout increments, their total absolute Poisson
+jump mass has a fixed-shape gamma distribution, independently of width.
+The same is true after adding a fixed-intensity readout bias. Since
+hidden features are bounded, conditioning this total variation to be
+at most a constant times $\epsilon$ proves the claim.
+\end{proof}
+
+\begin{proposition}[A general cutoff-removal rule]
+\label{prop:raw-cutoff-removal}
+Suppose the raw-tail oracle has native moment exponent $r$, a uniform
+zero small ball as above, and a comparison resource satisfying
+\[
+ K_n(g)\ge c\{1+\|g\|_\infty^{1/r}\}.
+\]
+Then, after enlarging the oracle constant, its bound
+$R(g)+C n^{-1/(2r+1)}K_n(g)+C(n+1)^{-2}$ holds for every comparator,
+without the condition $\|g\|_\infty\le M_n/2$.
+\end{proposition}
+\begin{proof}
+Condition the native prior on the zero small ball at radius
+$(n+1)^{-2}$. Its KL is $O(\log(n+1))$ and its uniform squared error
+from zero is at most $(n+1)^{-4}$. Theorem~\ref{thm:raw-tail-oracle} with
+comparison zero therefore gives
+\[
+ \E R(\bar z)\le\E Y^2+C n^{-1/(2r+1)}\log(n+1)+C(n+1)^{-2}
+                  \le C_{K_Y}.
+\]
+If $\|g\|_\infty>M_n/2$, the displayed resource lower bound and
+$M_n=c n^{r/(2r+1)}$ imply
+$n^{-1/(2r+1)}K_n(g)\ge c'>0$.
+Increasing its coefficient makes the desired oracle inequality follow
+from the uniform risk bound and $R(g)\ge0$. The complementary case
+is exactly the original raw-tail theorem.
+\end{proof}
+
+For bounded hidden activations, the unnormalized Gaussian comparison
+resource dominates $1+\|g\|_\infty$, and hence also
+$1+\|g\|_\infty^{2/3}$. The normalized readout resource dominates
+the square of the total readout variation, including the bias, and
+therefore dominates $\|g\|_\infty^2$. The variance-gamma resource is
+linear in an upper bound for readout variation and dominates
+$\|g\|_\infty$. Thus the cutoff-removal proposition applies to all
+three principal raw oracles.
+
+For the fixed-depth general Lipschitz comparison,
+\[
+ \|g\|_\infty\le C_{d,H}(m+1)^H(B+1)^{H+1},
+ \qquad r=(3H+1)/2.
+\]
+Both exponents $H/r$ and $(H+1)/r$ are at most one. Hence its
+Gaussian comparison resource also dominates
+$1+\|g\|_\infty^{1/r}$, with a fixed $d,H$ constant. Its raw
+sub-Gaussian-label oracle can likewise omit the comparator cutoff.

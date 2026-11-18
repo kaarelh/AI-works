@@ -1,0 +1,131 @@
+\section{Near-baseline energy with native covariance up to mean field}
+\label{sec:native-near-baseline}
+The preceding deterministic memorizer can be strengthened to keep the full Gaussian covariance even when $N\sigma^2$ does not tend to zero. A fixed large readout suppresses nonlinear transport error, while the native hidden variance decays with depth.
+
+\begin{lemma}[Harmonic decay of the zero-mean variance]
+\label{lem:native-variance-decay}
+There is an absolute $c_0>0$ such that, for every $0\le\nu\le1$ and every $b_1\in[0,1]$, the recursion
+\[
+ b_\ell=\E\tanh^2(\sqrt{\nu b_{\ell-1}}G),\qquad
+ a_\ell=1-b_\ell\quad(\ell\ge2)
+\]
+satisfies
+\[
+ b_\ell\le\frac1{1+c_0(\ell-1)},\qquad
+ a_\ell^{-2}\le1+2\nu b_{\ell-1},\qquad
+ \sum_{\ell=2}^H a_\ell^{-2}\le H+C\log(2H)
+\]
+for an absolute $C$.
+\end{lemma}
+\begin{proof}
+On $|u|\le1$ one has $u^2-\tanh^2u\ge u^4/4$. For example, concavity gives $\tanh u\ge(\tanh1)u\ge3u/4$ on $[0,1]$, so the derivative of $u-u^3/6-\tanh u$ is nonnegative; squaring the resulting upper bound gives the asserted inequality. Therefore, for $0\le q\le1$,
+\[
+ q-\E\tanh^2(\sqrt qG)\ge
+ \frac{q^2}4\E[G^4\mathbf1_{|G|\le1}]=:c_0q^2,
+\]
+where $0<c_0<1/2$. It follows that
+\[
+ b_{\ell-1}-b_\ell
+ \ge(1-\nu)b_{\ell-1}+c_0\nu^2 b_{\ell-1}^2
+ \ge c_0b_{\ell-1}^2.
+\]
+The last inequality uses $b_{\ell-1}\le1$ and $1-\nu+c_0\nu^2\ge c_0$. Taking reciprocals yields the harmonic upper bound, with zero values handled directly. Finally $\log\cosh u\le u^2/2$ gives
+\[
+ a_\ell=\E\operatorname{sech}^2(\sqrt{\nu b_{\ell-1}}G)
+ \ge(1+2\nu b_{\ell-1})^{-1/2}.
+\]
+Sum the resulting bound on $a_\ell^{-2}$ and the harmonic series.
+\end{proof}
+
+\begin{theorem}[A native Gaussian memorizer with nearly minimal depth energy]
+\label{thm:native-near-baseline}
+For every $\delta,A_0,t>0$, there are constants $\eta,C>0$ and $H_0$ such that, whenever
+\[
+ H\ge H_0,\qquad 1\le D\le\eta H,\qquad
+ N\ge e^{CH},\qquad 0<N\sigma^2\le1,
+\]
+every function $r:\mathcal X_D\to[-A_0,A_0]$ admits a Gaussian mean shift retaining the original prior covariance, with
+\[
+ Q_N(w_0)\le(1+\delta)H,
+ \qquad
+ \sup_{x\in\mathcal X_D}\left(\E|z_{w_0+\xi}(x)-r(x)|^2\right)^{1/2}\le t.
+\]
+Its relative entropy is exactly $Q_N(w_0)/(2\sigma^2)$. The constants are uniform over all allowed widths and scales, including the canonical mean-field value $N\sigma^2=1$.
+\end{theorem}
+\begin{proof}
+It suffices to consider $t\le1$. Choose a fixed $R>1$ with $R^2\le1+\delta/4$, and put $K=2(A_0+1)$. Choose a fixed $B\ge1$ so large that
+\[
+ \frac{K^3}{B^2(1-R^{-2})^2}\le t/16.
+\]
+Set $\nu=N\sigma^2$ and use the Gaussian feature kernel at smoothing variance $2\nu/d$. The first native Gaussian preactivation variance is indeed $2\nu/d$ on $\mathcal X_D$, since $\|(1,x)\|^2=2$. Lemma~\ref{lem:finite-gaussian-features} gives first-layer rows $a_i$ and coefficients $c_i$ with
+\[
+ r(x)=\frac1N\sum_i c_i\E_G\tanh(a_i\cdot(1,x)+\sqrt{2\nu/d}G),
+\]
+\[
+ \frac1N\sum_i\|a_i\|^2\le2,\qquad
+ \frac1N\sum_i c_i^2\le2\Lambda_D^{-1}A_0^2,
+ \qquad |c_i|\le2\Lambda_D^{-1}A_0.
+\]
+The average expected first squared activation can simultaneously be made arbitrarily close to the constant
+$b_1=\E\tanh^2(\sqrt{2(1+\nu)/d}G)$.
+Use the variance recursion and factors $a_\ell$ from Lemma~\ref{lem:native-variance-decay}.
+Give every second-layer row the mean weights
+$c_i/(Na_2BR^{H-2})$, every later hidden matrix the constant entries $R/(Na_\ell)$, and the mean readout the constant entries $B/N$.
+
+We give the error estimate explicitly. Let
+\[
+ \zeta=\frac{t}{16\{1+KH^2+BR^H/(R-1)\}}.
+\]
+Choose the first deterministic rows so that their average expected square is within $\zeta/2$ of $b_1$. Conditional Gaussian row independence, Hoeffding, and a union bound over layers imply the following event at each fixed input, with failure at most
+\[
+ 4H\exp[-N\zeta^2/(C_1\max\{1,\Lambda_D^{-2}A_0^2\})].
+\]
+On this event the first weighted average $\widehat F=N^{-1}\sum_i c_i h_i^1$ is within $\zeta$ of $r(x)$; the first average square is within $\zeta$ of $b_1$; and every later empirical mean and square is within $\zeta$ of its conditional expectation. This event and the deterministic finite-feature requirements hold at every width $N\ge e^{CH}$ after taking $C$ large enough: $\Lambda_D^{-1}=e^{O(D)}$ and $\zeta^{-1}=e^{O(H)}$.
+
+Write $M_\ell=N^{-1}\sum_i h_i^\ell$, $S_\ell=N^{-1}\sum_i(h_i^\ell)^2$, and $j_\ell=H-\ell$. Conditional on earlier layers the current rows have law
+\[
+ \tanh(u_\ell+\sqrt{\nu S_{\ell-1}}G),\quad
+ u_2=\widehat F/(a_2BR^{H-2}),\quad
+ u_\ell=RM_{\ell-1}/a_\ell\ (\ell\ge3).
+\]
+Set $Y_\ell=BR^{j_\ell}M_\ell$. As long as the preceding scaled mean is within one of $r(x)$, we have
+$|u_\ell|\le K/(BR^{j_\ell})$, because $a_\ell^{-2}\le3$.
+For
+$\psi(q,u)=\E\tanh(u+\sqrt qG)$ and
+$V(q,u)=\E\tanh^2(u+\sqrt qG)$, the derivative bounds $|\tanh'''|\le2$ and $|(\tanh^2)''|\le2$ give
+\[
+ |\psi(q,u)-a(q_0)u|\le |u||q-q_0|+|u|^3/3,
+ \qquad |V(q,u)-V(q_0,0)|\le|q-q_0|+u^2.
+\]
+These follow from Gaussian differentiation in $q$ and Taylor expansion in $u$.
+Thus, on the good event, with $E_\ell=|S_\ell-b_\ell|$,
+\[
+ E_\ell\le E_{\ell-1}+u_\ell^2+\zeta
+ \le H\zeta+\frac{K^2R^{-2j_\ell}}{B^2(1-R^{-2})}.
+\]
+At a mean step the scaled error increases by at most
+\[
+ K E_{\ell-1}+\frac{K^3R^{-2j_\ell}}{3B^2}
+                        +BR^{j_\ell}\zeta.
+\]
+At the first such step use $\widehat F$ as the preceding scaled mean and include its error at most $\zeta$. Summing all geometric series bounds the accumulated error by
+\[
+ \frac{K^3}{B^2(1-R^{-2})^2}
+       +\{1+KH^2+BR^H/(R-1)\}\zeta
+ \le t/8<1.
+\]
+This closes the induction and gives $|BM_H-r(x)|\le t/8$.
+Outside the good event this difference is at most $B+A_0$. Increasing $C$ makes the event's failure probability at most $t^2/[8(B+A_0)^2]$, uniformly at every fixed input. The independent readout noise has output variance at most $\sigma^2\le1/N$. Taking $N\ge8/t^2$ then proves the required RMS bound.
+
+It remains to check the energy. The first layer costs at most $2d$. The second layer costs at most
+\[
+ \frac{2\Lambda_D^{-1}A_0^2}{a_2^2 B^2R^{2H-4}}
+ \le\frac{6\Lambda_D^{-1}A_0^2}{B^2R^{2H-4}}.
+\]
+Choose $\eta$ so small that $40\eta<2\log R$ and $2\eta\le\delta/4$. This term is then uniformly bounded for $D\le\eta H$. By Lemma~\ref{lem:native-variance-decay}, all later hidden layers together cost at most $R^2H+C_2R^2\log(2H)$. The readout costs the fixed number $B^2$. Therefore
+\[
+ Q_N(w_0)\le(1+\delta/2)H+O_{\delta,A_0,t}(\log(2H))
+                 \le(1+\delta)H
+\]
+for all sufficiently large $H$. The exact Gaussian shift entropy finishes the proof.
+\end{proof}

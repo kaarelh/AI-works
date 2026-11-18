@@ -1,0 +1,186 @@
+\section{Two comparison functions force one common prediction obstruction}
+For vectors on a training sample of size $n$, write
+$\langle u,v\rangle_n=n^{-1}\sum_i u_iv_i$ and $\|u\|_n^2=\langle u,u\rangle_n$.
+Let $\mathcal B$ be the subspace of vectors constant on repeated copies of each training input. Put
+\[
+ b=P_{\mathcal B}y,\qquad r_0=\|y-b\|_n^2,\qquad D_S=\|b\|_n^2.
+\]
+Every function prediction $f\in\mathcal B$ has empirical loss $r_0+\|f-b\|_n^2$.
+
+\begin{lemma}[A segment bound from two objective comparisons]
+\label{lem:segment}
+Suppose $Q\ge0$ is an implementation energy and $q,K,t>0$ satisfy $q\le K$ and
+\[
+ \|f\|_n>t\ \Longrightarrow\ Q\ge q.
+\]
+Let $\rho$ be any distribution over implementations, with finite relevant moments, for which
+\begin{equation}
+ \mathbb E_\rho[\widehat R(f)+\lambda Q]
+ \le\min\{r_0+D_S,r_0+\zeta+\lambda K\}+e,
+ \qquad \lambda>0,\quad \zeta,e\ge0.
+ \label{eq:objective-comparisons}
+\end{equation}
+Then, for some $p\in[0,1]$, its mean $m=\mathbb E_\rho f$ satisfies
+\begin{equation}
+ \|m-pb\|_n\le t+
+ \sqrt{D_S(1-q/K)+2t\sqrt{D_S}+\zeta+e}.
+ \label{eq:segment}
+\end{equation}
+\end{lemma}
+\begin{proof}
+Set $A=\{\|f\|_n>t\}$ and $p=\rho(A)$. On $A^c$,
+$\|f-b\|_n^2\ge D_S-2t\sqrt{D_S}$. Therefore
+\begin{align*}
+ \mathbb E_\rho[\|f-b\|_n^2\mathbf1_A]
+ &\le\min\{D_S,\zeta+\lambda K\}
+       -(1-p)(D_S-2t\sqrt{D_S})-\lambda qp+e\\
+ &\le pD_S(1-q/K)+2t\sqrt{D_S}+\zeta+e.
+\end{align*}
+For the last step, the minimum of
+$pD_S-\lambda qp$ and $\lambda(K-qp)-(1-p)D_S$
+is at most their value at their intersection $\lambda=D_S/K$.
+Their slopes are respectively nonpositive and nonnegative because $q\le K$.
+The inequality $\min(D_S,\zeta+\lambda K)\le\min(D_S,\lambda K)+\zeta$ accounts for $\zeta$.
+Finally,
+\[
+ \|m-pb\|_n
+ \le\mathbb E[\|f\|_n\mathbf1_{A^c}]
+       +\mathbb E[\|f-b\|_n\mathbf1_A]
+ \le t+\sqrt{p\,\mathbb E[\|f-b\|_n^2\mathbf1_A]}.
+\]
+Dropping $p\le1$ gives the stated bound.
+\end{proof}
+
+\begin{lemma}[A witness preserved by mixing]
+\label{lem:witness}
+Let $g\in\mathcal B$, set $\xi=b-g$, $w=b-2g$, and $\Delta=\langle\xi,g\rangle_n$.
+If $\|m-pb\|_n\le u$ for some $p\in[0,1]$, then
+\begin{equation}
+ \langle w,m-g\rangle_n
+ \ge\min\{\|g\|_n^2,\|\xi\|_n^2\}-|\Delta|-\|w\|_n u.
+ \label{eq:witness}
+\end{equation}
+In particular, any positive lower bound common to a family of predictions survives arbitrary probability mixtures of them.
+\end{lemma}
+\begin{proof}
+Direct expansion gives
+\[
+ \langle w,pb-g\rangle_n
+ =p\|\xi\|_n^2+(1-p)\|g\|_n^2+(1-2p)\Delta.
+\]
+Apply Cauchy--Schwarz to $m-pb$. The final assertion uses linearity of the same witness, not a claim about averaging inaccurate predictions.
+\end{proof}
+
+\section{Energy floors and finite Gaussian posteriors}
+\label{sec:finite-posterior}
+For our inputs, $\|(1,x)\|_2^2=2\le d$. Normalize the $L=H+1$ matrices by
+\[
+ A_1=\sqrt{d/N}\,W^1,\quad A_\ell=W^\ell\ (2\le\ell\le H),
+ \quad A_L=\sqrt N\,v^{\mathsf T}.
+\]
+Then $Q_{\mathrm{op}}=\sum_\ell\|A_\ell\|_{\mathrm{op}}^2$. Since tanh vanishes at zero and is 1-Lipschitz,
+\begin{equation}
+ |z_w(x)|\le\prod_{\ell=1}^L\|A_\ell\|_{\mathrm{op}}
+            \le(Q_{\mathrm{op}}(w)/L)^{L/2}.
+ \label{eq:amgm-floor}
+\end{equation}
+Thus $\|z_w(S)\|_n>t$ implies
+\begin{equation}
+ Q_{\mathrm{op}}(w)\ge q_L(t):=L t^{2/L}.
+ \label{eq:floor}
+\end{equation}
+For every fixed $t>0$, $q_L(t)/H\to1$ as $H\to\infty$.
+The implication remains true if the prediction is clipped to $[-1,1]$ before taking its empirical norm.
+
+Lemma~\ref{lem:operator-entropy} gives, for $0<a<1$,
+\begin{equation}
+ 2s\operatorname{KL}(\rho\Vert\mu_{N,s})
+ \ge(1-a)\mathbb E_\rho Q_{\mathrm{op}}-s\mathcal B_a(H,N,d).
+ \label{eq:entropy-floor}
+\end{equation}
+Its error grows only linearly with width. The comparison distributions below still pay their exact Frobenius mean energy through Gaussian relative entropy.
+
+Define the finite free energy
+\[
+ F_S(\lambda)=-2\lambda s\log\mathbb E_\mu
+       e^{-\widehat R_S(z_w)/(2\lambda s)}
+ =\inf_\rho\{\mathbb E_\rho\widehat R_S+2\lambda s\operatorname{KL}(\rho\Vert\mu)\}.
+\]
+The posterior attains the infimum. Its independent centered Gaussian readout gives prior mean zero and pointwise prior variance at most $s$, so
+\begin{equation}
+ F_S(\lambda)\le\widehat R_S(0)+s=r_0+D_S+s.
+ \label{eq:zero-comparison}
+\end{equation}
+If a mean shift with unchanged covariance has mean energy at most $K$ and expected empirical loss at most $r_0+\zeta$, its exact Gaussian relative entropy gives
+\begin{equation}
+ F_S(\lambda)\le r_0+\zeta+\lambda K.
+ \label{eq:memo-comparison}
+\end{equation}
+Combining these inequalities yields
+\begin{equation}
+ \mathbb E_\Pi[\widehat R_S(z_w)+\lambda(1-a)Q_{\mathrm{op}}]
+ \le\min\{r_0+D_S,r_0+\zeta+\lambda K\}
+       +s+\lambda s\mathcal B_a(H,N,d).
+ \label{eq:finite-objective}
+\end{equation}
+For labels in $[-1,1]$, replacing $z_w$ by its clipped prediction in the loss only decreases the left side. Consequently Lemma~\ref{lem:segment} applies both before and after clipping posterior draws.
+
+\begin{lemma}[Large temperatures give a small training prediction]
+\label{lem:large-temperature}
+For every sample and every $\lambda,s>0$, the raw posterior mean $m$ and the mean $m_c$ of posterior outputs clipped to $[-1,1]$ obey
+\[
+ \|m(S)\|_n\le\frac{\|y\|_n}{1+\lambda},\qquad
+ \|m_c(S)\|_n\le\frac{\|y\|_n}{1+\lambda}+\sqrt s.
+\]
+\end{lemma}
+\begin{proof}
+Condition on all hidden weights. If $V$ is the $n$ by $N$ hidden-feature matrix, put $K=VV^{\mathsf T}/N$. The conditional posterior mean training vector is
+$K(K+n\lambda I)^{-1}y$. Since $K$ is positive semidefinite and has diagonal at most one, $\|K\|_{\rm op}\le n$ and the displayed shrinkage matrix has norm at most $1/(1+\lambda)$. Averaging over hidden weights proves the first assertion.
+The conditional readout covariance is bounded by its prior covariance $sI/N$, so the average conditional prediction variance on the training sample is at most $s$. Jensen and Minkowski bound the conditional expected training norm by the norm of the conditional mean plus $\sqrt s$. Clipping decreases that norm. Average once more to prove the second assertion.
+\end{proof}
+
+\section{From an empirical witness to population loss}
+\label{sec:population}
+Consider a uniform law on $M$ distinct inputs and take $n=M$ IID observations. Let $k_x$ be the count of input $x$, and let $S_1$ be the number of singleton inputs. Then
+\begin{equation}
+ \Pr(S_1<M/3)\le e^{-cM},\qquad
+ \Pr\left(\frac1M\sum_x k_x^2>4\right)\le\frac2M
+ \label{eq:occupancy}
+\end{equation}
+for an absolute $c>0$ and all sufficiently large $M$.
+For the first bound use $\mathbb E S_1=M(1-1/M)^{M-1}\ge M/e$ and bounded differences: changing one observation changes $S_1$ by at most two.
+For the second, write $\sum_x k_x^2=M+2\sum_{i<j}\mathbf1_{X_i=X_j}$.
+Different pair indicators are uncorrelated, even when they share one index, because inputs are uniform. Hence the mean of $M^{-1}\sum_xk_x^2$ is $2-1/M$ and its variance is at most $2/M$. Chebyshev gives the stated, conservative bound.
+
+Let $g(x)=\tanh(T)$ on $\mathcal X_D$, and let $Y=g(X)+\epsilon/4$ with independent uniform signs $\epsilon\in\{-1,1\}$. Then $|Y|<1$, and $\|g(S)\|_n^2\ge1/32$ for every sample. On the singleton event,
+\[
+ \|b-g(S)\|_n^2\ge1/48.
+\]
+Moreover $\Delta=\langle b-g(S),g(S)\rangle_n=n^{-1}\sum_i\epsilon_i g(X_i)/4$, so Hoeffding gives $|\Delta|\le1/512$ except on probability $2e^{-c'M}$ for an absolute $c'>0$.
+These bounds imply, on one event whose probability tends to one,
+\begin{equation}
+ D_S\le1,\quad \|b-2g(S)\|_n\le1,\quad
+ \min\{\|g(S)\|_n^2,\|b-g(S)\|_n^2\}\ge1/64,
+ \quad |\Delta|\le1/512.
+ \label{eq:sample-event}
+\end{equation}
+The elementary numerical bounds use $\tanh(1/4)>1/\sqrt{32}$ and $\tanh(3/4)+1/4<1$.
+
+For any function prediction $f$, define the random function
+\[
+ h_S(x)=\sum_{i:X_i=x}\{Y_i-2g(x)\}.
+\]
+Since $n=M$ and the input law is uniform,
+\begin{equation}
+ \mathbb E_X[h_S(X)(f(X)-g(X))]
+ =\langle y-2g(S),f(S)-g(S)\rangle_n
+ =\langle b-2g(S),f(S)-g(S)\rangle_n.
+ \label{eq:population-witness}
+\end{equation}
+Each summand in $h_S$ has magnitude at most one, so the count event in~\eqref{eq:occupancy} gives $\mathbb E_Xh_S(X)^2\le4$.
+Thus an empirical witness of at least $1/128$ implies
+\begin{equation}
+ \mathbb E_X(f(X)-g(X))^2\ge 2^{-16}.
+ \label{eq:excess-constant}
+\end{equation}
+The independent mean-zero noise gives $R(f)=1/16+\mathbb E(f-g)^2$.

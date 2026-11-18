@@ -1,0 +1,104 @@
+\section{Second-order risk control}
+The designated coefficient perturbations are unbiased. Together with bounded hidden features, this gives a small variance and a second-order mean bias even though the unconditioned prior has infinite coordinate variance.
+
+\begin{lemma}[Pointwise perturbation moments]\label{lem:perturbation}
+Let $g\in\calG_{m,B}$, and write $z_g$ for its raw linear readout. The comparison measure in~\eqref{eq:embedding-kl} satisfies
+\begin{equation}
+ \sup_x\E_\nu|z_w(x)-z_g(x)|^2
+ \le S_{m,B}\epsilon^{2-\alpha},\qquad
+ \sup_x\left|\E_\nu[z_w(x)-z_g(x)]\right|
+ \le S_{m,B}\epsilon^{2-\alpha}.
+ \label{eq:raw-moments}
+\end{equation}
+Here $S_{m,B}$ may be taken as in~\eqref{eq:resources}, independently of learner width.
+\end{lemma}
+\begin{proof}
+First condition on a particular index assignment in the large-width construction; the small-width construction is already a product law. All selected incoming rows are independent of earlier layers. All hidden coordinates, selected or unselected, have magnitude at most one.
+
+Put $\theta=\epsilon^{2-\alpha}$; then $\epsilon^2\le\theta$. Let $v_\ell$ be the largest second moment of a selected hidden neuron's error relative to its corresponding teacher value, and let $b_\ell$ be the largest absolute mean error. We fix an input throughout; all bounds are uniform over inputs and assignments.
+
+In the first layer the preactivation error is centered and has second moment at most $(d+1)\epsilon^2/3$. At a later selected node, write the preactivation error as
+\[
+ \Delta=\sum_{j=1}^m a_j(h_j-h_j^*)+Z,
+\]
+where $a_j$ are the teacher coefficients, $h_j^*$ the teacher features, and $Z$ contains the designated coefficient perturbations and the background sum. Conditional on all preceding layers,
+\begin{equation}
+ \E[Z\mid\text{preceding layers}]=0,\qquad
+ \E[Z^2\mid\text{preceding layers}]
+ \le C_\alpha(m+1)\theta.
+ \label{eq:centered-background}
+\end{equation}
+Indeed, the incoming coordinates are independent and centered after subtraction of their designated means. Their variances are bounded by Lemmas~\ref{lem:truncation} and~\ref{lem:active}, and all multiplying hidden features are bounded by one. This argument does not require the unselected hidden neurons to be close to zero.
+
+The conditional centering removes the cross term, so
+\[
+ \E\Delta^2\le m^2B^2v_{\ell-1}+C_\alpha(m+1)\theta,
+ \qquad |\E\Delta|\le mB b_{\ell-1}.
+\]
+Lipschitzness and Taylor's theorem therefore give
+\begin{align}
+ v_\ell&\le A^2\{m^2B^2v_{\ell-1}+C_\alpha(m+1)\theta\},\\
+ b_\ell&\le AmB b_{\ell-1}
+       +\frac J2\{m^2B^2v_{\ell-1}+C_\alpha(m+1)\theta\}.
+ \label{eq:moment-recurrence}
+\end{align}
+The initial bounds are $v_1\le A^2(d+1)\theta/3$ and $b_1\le J(d+1)\theta/6$.
+
+For completeness, set $a=AmB\ge1$ and $G=1+a$. Since $m+1\le2a$ and $G^2-a^2=1+2a$, induction in the first recurrence gives
+\[
+ v_\ell\le C_\alpha A^2(d+1)G^{2\ell-2}\theta.
+\]
+The second recurrence is absorbed by $G^2-a\ge a^2+a+1$, giving
+\[
+ b_\ell\le C_\alpha J(d+1)G^{2\ell-2}\theta.
+\]
+The same constants work at every depth: the gaps $G^2-a^2$ and $G^2-a$ absorb each additive term in the displayed recurrences, so no layer-dependent prefactor is introduced. The readout has the same conditional variance estimate, but no activation. Its second moment is at most $m^2B^2v_H+C_\alpha(m+1)\theta$, and its mean error is at most $mB b_H$. Both are bounded by a constant times $(1+A^2+J)(d+1)G^{2H}\theta$. This proves~\eqref{eq:raw-moments} for every assignment and hence also for their mixture.
+\end{proof}
+
+A Lipschitz estimate on the loss would only turn a mean-square error $\theta$ into a risk error of order $\sqrt\theta$. The next property preserves the second-order improvement, including at clipping thresholds.
+
+\begin{lemma}[Squared loss after a bounded output link]\label{lem:semiconcavity}
+For $|y|\le1$, let $\ell_y(z)=(\psi(z)-y)^2$. At every $z\in\R$ there is $d_y(z)$ such that, for every $u\in\R$,
+\begin{equation}
+ \ell_y(z+u)\le\ell_y(z)+d_y(z)u+C_\psi u^2,
+ \qquad |d_y(z)|\le D_\psi,\qquad D_\psi+C_\psi\le B_\psi.
+ \label{eq:semiconcavity}
+\end{equation}
+For clipping one can use $D_\psi=4$, $C_\psi=1$. For the smooth link class, one can use $D_\psi=4L_\psi$ and $C_\psi=L_\psi^2+2J_\psi$.
+\end{lemma}
+\begin{proof}
+For clipping, $\ell_y(z)-z^2$ is concave: it is affine inside $[-1,1]$, has second derivative $-2$ outside, and its derivative jumps downward at both endpoints. Its supergradient inequality proves the claim, with $d_y(z)=2(z-y)$ for $|z|<1$ and zero for $|z|\ge1$.
+For a smooth link, $|\ell_y'|\le4L_\psi$. Its derivative is Lipschitz with constant at most $2L_\psi^2+4J_\psi$, because $|\psi-y|\le2$. Taylor's inequality proves the displayed estimate.
+\end{proof}
+
+\begin{lemma}[A deterministic comparison for every sample]\label{lem:comparison}
+For every $g\in\calG_{m,B}$, $0<r\le1$ and $N\ge m$, there is a measure $\nu_{g,r,N}\ll\mu_N$, independent of the training sample, satisfying
+\begin{equation}
+ \E_\nu(f_w(x)-y)^2\le(g(x)-y)^2+r
+ \quad\text{for every }x\in[-1,1]^d,\ |y|\le1,
+ \qquad \KL(\nu\|\mu_N)\le K_{m,B}r^{-q}.
+ \label{eq:comparison}
+\end{equation}
+In particular the empirical-risk inequality holds for every sample with labels in $[-1,1]$, and the population-risk inequality holds for every law with labels in that interval. Section~\ref{sec:noisy-regression} uses it with the bounded reference label $f_0(x)$ to treat unbounded observed labels.
+\end{lemma}
+\begin{proof}
+By Lemmas~\ref{lem:perturbation} and~\ref{lem:semiconcavity},
+\[
+ \E_\nu\ell_y(z_w(x))\le\ell_y(z_g(x))+B_\psi S_{m,B}\epsilon^{2-\alpha}.
+\]
+Choose $\epsilon=(r/(B_\psi S_{m,B}))^{1/(2-\alpha)}\le1$. Then $\epsilon^{-\alpha}=(B_\psi S_{m,B})^q r^{-q}$. Substitute this in~\eqref{eq:embedding-kl}. The additional logarithm of $1/r$ is bounded using $r^q\log(1/r)\le1/(eq)$, and the remaining terms are bounded by~\eqref{eq:complexity}.
+\end{proof}
+
+\begin{corollary}[Function-neighborhood mass]\label{cor:mass}
+For any input law $D_X$, any $g\in\calG_{m,B}$, and $0<t\le1$, the same prior satisfies
+\begin{equation}
+ \mu_N\{\|f_w-g\|_{L^2(D_X)}\le t\}
+ \ge \exp\{-C_\alpha K_{m,B}t^{-2q}\},
+ \qquad N\ge m.
+ \label{eq:function-mass}
+\end{equation}
+Thus the comparison argument also supplies an actual width-independent lower bound on a function neighborhood's prior probability.
+\end{corollary}
+\begin{proof}
+Use Lemma~\ref{lem:comparison} with the noiseless law $Y=g(X)$ and $r=t^2/2$. Markov's inequality gives comparison probability at least $1/2$ to the displayed event. The binary relative-entropy inequality gives $\KL(\nu\|\mu_N)\ge\tfrac12\log(1/\mu_N(E))-\log2$, proving the claim after increasing the constant.
+\end{proof}

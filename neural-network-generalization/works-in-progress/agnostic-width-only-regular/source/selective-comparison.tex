@@ -1,0 +1,54 @@
+\section{A selective Gaussian comparison at every prior scale}
+\label{sec:selective-standalone}
+This section proves the free-energy comparison used above. The input is $\xi=(1,x)/\sqrt D$ with $D=d+1$, and the Gaussian precision is $\omega=N^\gamma$, $\gamma\ge1$.
+
+\begin{lemma}[Gaussian perturbation of a sparse implementation]
+Let a mean ReLU network $w_*$ have at most $m\le N$ active coordinates in every hidden layer and weighted energy $Q_N(w_*)\le E$. For $0<r\le1$, center a product Gaussian at $w_*$, retain the prior variances on coordinates entering inactive hidden rows, and multiply the prior standard deviations by $r$ on all coordinates entering active hidden rows and on every readout coordinate. Denote this comparison law by $\nu_r$. Then
+\begin{align}
+ \frac2\omega\operatorname{KL}(\nu_r\Vert\mu)
+ &\le E+2[D+1+(H-1)m]\log(1/r),\label{eq:selective-entropy}\\
+ \sup_{x\in Q}\left(\mathbb E_{\nu_r}|z_w(x)-z_{w_*}(x)|^2\right)^{1/2}
+ &\le rK_E,\qquad K_E=\sqrt2(H+1)(E+1)^{H/2}.
+ \label{eq:selective-rms}
+\end{align}
+The inactive mean rows and columns are zero, as is the mean readout off the final active coordinates.
+\end{lemma}
+\begin{proof}
+There are at most $mD+(H-1)mN+N$ narrowed Gaussian coordinates. Since $N/\omega\le1$ and $m\le N$, their count divided by $\omega$ is at most $D+1+(H-1)m$. The Gaussian relative-entropy identity, with $r^2-1\le0$, gives \eqref{eq:selective-entropy} exactly.
+
+Fix an input. Put $S_\ell=\|h^\ell\|_2^2/N$. The normalized first mean squared norm is at most $E$, while the first-layer noise contributes at most one to its expectation. Later mean matrices have operator norm at most $\sqrt E$. Conditional on the preceding layer, each internal noise matrix contributes at most $(N/\omega)S_{\ell-1}\le S_{\ell-1}$ to normalized expected squared norm. Centering removes cross terms and $\operatorname{ReLU}(t)^2\le t^2$, so
+\[
+ \mathbb E S_\ell\le2(E+1)^\ell.
+\]
+
+Let $P_\ell$ project to the active coordinates, and let
+$\Delta_\ell=(\mathbb E\|P_\ell h^\ell-h_*^\ell\|_2^2/N)^{1/2}$.
+The mean state is supported on those coordinates. Current-layer independence, the narrowed active-row variances, and Lipschitzness give
+\[
+ \Delta_1\le\sqrt2r,\qquad
+ \Delta_\ell\le\sqrt E\,\Delta_{\ell-1}
+       +r\sqrt{m/\omega}\sqrt{\mathbb E S_{\ell-1}}
+ \le\sqrt E\,\Delta_{\ell-1}
+       +\sqrt2r(E+1)^{(\ell-1)/2}.
+\]
+Therefore $\Delta_\ell\le\sqrt2\ell r(E+1)^{(\ell-1)/2}$. The mean readout has $\sqrt N\|v_*\|_2\le\sqrt E$; its independent perturbation contributes output variance $(r^2/\omega)S_H$. The output RMS error is thus at most
+\[
+ \sqrt E\,\Delta_H+r\sqrt{\mathbb E S_H/\omega}
+ \le\sqrt2(H+1)r(E+1)^{H/2},
+\]
+proving \eqref{eq:selective-rms}.
+\end{proof}
+
+Apply the lemma to the mean implementation in \eqref{eq:path-to-Gaussian-energy}. Let $g=s(z_{w_*})$ and choose $r=(8nK_E)^{-1}$. Saturation is 1-Lipschitz, and squared loss between predictions in $[-1,1]$ and labels in $[-1,1]$ changes by at most four times their absolute prediction difference. Therefore
+\[
+ \mathbb E_{\nu_r}\widehat R_S(s(z_w))
+ \le\widehat R_S(g)+1/(2n).
+\]
+The variational formula gives, for every $\lambda\ge1/n$,
+\begin{equation}
+ F_S(\lambda)\le\widehat R_S(g)+\lambda A,
+ \qquad
+ A=E+1+2[D+1+(H-1)m]\log(8nK_E).
+ \label{eq:explicit-selective-cost}
+\end{equation}
+In particular this proves the declared resource $\widetilde O_{d,H}(1+P+m)$ without a teacher coefficient cap and without dependence on learner width.

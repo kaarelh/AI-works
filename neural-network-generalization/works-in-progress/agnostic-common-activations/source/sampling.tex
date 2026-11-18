@@ -1,0 +1,95 @@
+\section{A compression lemma that preserves a residual norm}
+\label{sec:sampling}
+The following construction avoids separately estimating a variance and then taking its square root. That separation would lose a square root of accuracy at each layer.
+
+\begin{lemma}[Shared importance sampling]
+\label{lem:sampling}
+On a probability space let $b\in\R^r$ satisfy $\E bb^\top=I_r$, and let $Y(x)$ be a family of square-integrable variables. Suppose
+\[
+ \sup_x\E Y(x)^2\le M^2,\qquad
+ q\ge1+\|b\|^2,\qquad |Y(x)|\le M\sqrt q,\qquad Z=\E q<\infty.
+\]
+Write
+\[
+ F(x)=\E bY(x),\qquad s(x)=\sqrt{\E Y(x)^2-\|F(x)\|^2}.
+\]
+For any probability measure $\xi$ on $x$, $0<\delta\le M/10$, and
+\[
+ k\ge C ZM^2\delta^{-2}\log(r+2),
+\]
+there are $k$ importance samples with the following property. Set
+\[
+ B_{j,*}=\sqrt{Z/k}\,b_j/\sqrt{q_j},\qquad
+ y_j(x)=\sqrt{Z/k}\,Y_j(x)/\sqrt{q_j},\qquad
+ G=B^\top B,\qquad \rho=(\delta/M)^2.
+\]
+Then the functions
+\begin{align}
+ \widetilde F&=(G+\rho I)^{-1/2}B^\top y,\qquad
+ a=(G+\rho I)^{-1}B^\top y,\\
+ \widetilde s&=\|(y-Ba,\sqrt\rho\,a)\|
+ \label{eq:sampled-pair}
+\end{align}
+satisfy
+\[
+ \|(\widetilde F,\widetilde s)-(F,s)\|_{L^2(\xi)}\le C\delta.
+\]
+For every fixed choice of sample parameters, the map $y\mapsto(\widetilde F,\widetilde s)$ is $1$-Lipschitz.
+\end{lemma}
+\begin{proof}
+Draw independently from the probability law $q\,dP/Z$. Put $R=Y-b^\top F$. Bessel's inequality gives $\|F(x)\|\le M$, $\E R(x)^2\le M^2$, and $\E bR=0$. Also $|R|/\sqrt q\le2M$.
+
+Each summand $X=Zbb^\top/q$ is positive semidefinite, satisfies $X\preceq ZI$ and has mean $I$. Matrix Chernoff~\cite{tropp} gives, for $0<\kappa\le1$,
+\[
+ \Pp(\|G-I\|_\op>\kappa)\le2r\exp[-k\kappa^2/(3Z)].
+\]
+Let $e=B^\top(y-BF)$. Independence and $\|b\|^2/q\le1$ give
+\[
+ \E\|e\|_{L^2(\xi)}^2
+ \le \frac Zk\E\int\frac{\|b\|^2R(x)^2}{q}\,d\xi(x)
+ \le \frac{ZM^2}k.
+\]
+For a nonnegative bounded random variable $V$,
+\[
+ \E\left(\sqrt{k^{-1}\textstyle\sum_j V_j}-\sqrt{\E V}\right)^2
+ \le\frac{\operatorname{Var}(V)}{k\E V}
+ \le\frac{\|V\|_\infty}{k}.
+\]
+The case $\E V=0$ is immediate; otherwise rationalize the difference of square roots. Apply this pointwise to $V=ZR^2/q\le4ZM^2$ and integrate. It follows that
+\[
+ \E\big\|\|y-BF\|-s\big\|_{L^2(\xi)}^2\le4ZM^2/k.
+\]
+Matrix Chernoff and Markov's inequality leave positive probability that
+$\|G-I\|_\op\le\delta/M$, $\|e\|_{L^2}\le C\delta$, and the last RMS error is at most $C\delta$. Fix such a sample. The spectrum of $G$ lies in $[1/2,3/2]$. Since $B^\top y=GF+e$, functional calculus gives $\|\widetilde F-F\|_{L^2}\le C\delta$.
+
+The residual in~\eqref{eq:sampled-pair} is the distance of $(y,0)$ to the column space of $(B;\sqrt\rho I)$. At coefficient $F$ the residual vector is $(y-BF,-\sqrt\rho F)$. Its projection onto this column space has norm at most
+$C(\|e\|+\rho M)$. Hence
+\[
+ \big|\widetilde s-\|y-BF\|\big|
+ \le\sqrt\rho M+C\|e\|+C\rho M
+\]
+in $L^2(\xi)$, proving the claimed residual approximation.
+
+Finally set $T=(G+\rho I)^{-1/2}B^\top$. Then $T^\top T\preceq I$ and direct expansion gives
+$\widetilde s^2=\|y\|^2-\|Ty\|^2$. Thus the pair consists of $Ty$ and the norm of $(I-T^\top T)^{1/2}y$. Orthogonal energy decomposition and the reverse triangle inequality prove its contraction property.
+\end{proof}
+
+\begin{remark}[Additional empirical Gram constraints]
+\label{rem:inputgram}
+Suppose normalized sample vectors $u'$ satisfy $\|u'\|\le1$ and
+$\E_{\rm imp}Zu'u'^\top\preceq I$. Matrix Chernoff also gives
+\[
+ \Pp\left(\left\|\frac Zk\sum_j u'_ju_j'^\top\right\|_\op>2\right)
+ \le(\dim u')e^{-ck/Z}.
+\]
+Replacing the logarithm in Lemma~\ref{lem:sampling} by
+$\log(r+\dim u'+2)$ permits this constraint simultaneously. The same applies to a bounded scalar second moment. These constraints will keep the sampled programs Lipschitz in their incoming feature coordinates.
+\end{remark}
+
+A simpler scalar version will be used at the last layer. If $\E c^2\le K$, choose
+$q=1+\|a\|^2/K+c^2/K+G_0^2$, where $G_0$ is standard normal. Importance sampling of $\E cY$ has Hilbert-space variance at most
+\[
+ \frac Zk\,\E\frac{c^2Y^2}{q}\le\frac{ZK}k\,\E Y^2.
+ \label{eq:scalar-variance}
+\]
+Thus $k\ge CZK\sup_x\E Y(x)^2/\varepsilon^2$ samples achieve $L^2(\xi)$ error at most $\varepsilon$, while the empirical Gram constraints in Remark~\ref{rem:inputgram} cost only logarithms.

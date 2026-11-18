@@ -1,0 +1,72 @@
+\section{Embedding a shared circuit}
+\label{sec:shared-dag}
+A comparator is a layered directed acyclic graph with the learner's hidden activation and hidden depth. Remove every hidden vertex that does not influence the output. Let $V$ be its number of remaining hidden vertices, $E$ its number of nonzero edges entering later hidden layers or the readout, and $E_1$ its number of nonzero first-layer input coefficients, including constant-coordinate coefficients. Put
+\[
+ J=E-V\ge0,\qquad Q=1+V+E+E_1.
+\]
+Every relevant hidden vertex has at least one outgoing edge, which proves $E\ge V$. A formula has $J=0$. Let $m$ bound the number of comparator vertices in each hidden layer, $k\ge1$ bound the number of nonzero incoming coefficients in any comparator row, including the readout, and $B\ge1$ bound every coefficient. The learner width satisfies $N\ge m$.
+
+\begin{lemma}[Shared-circuit comparison entropy]
+\label{lem:dag-entropy}
+For every $0<\epsilon\le1$, a comparison law has the following entropy bound:
+\[
+ \KL(Q_\epsilon\|\mu_N)
+ \le J\log N+E_1\log(d+1)
+       +C Q\log\frac{C(V+1)(B+8)}\epsilon.
+\]
+Constants depend only on the fixed L\'evy measure. The comparison is independent of the data. Every coordinate is either native, a centered background coordinate, or an unbiased designated coordinate from Section~\ref{sec:levy-scalar}.
+\end{lemma}
+\begin{proof}
+Suppose first that $N\ge2(V+1)$. Assign every comparator vertex a disjoint group of indices in its layer, each of cardinality at least $N/[2(V+1)]$. Independently choose one index per vertex group. At a selected row, place a designated coordinate on every nonzero comparator edge and a background coordinate on every other incoming coordinate. In the first layer only the $E_1$ used input coefficients are designated; zero input coefficients use the background law. Leave unselected hidden rows native. At the readout use designated coordinates on its nonzero comparator edges and background coordinates elsewhere.
+
+For each fixed embedding this is a product law. Distinct embedding supports are disjoint. To decode one, start at the readout and follow designated coordinates, which have absolute value greater than $\epsilon$, whereas background coordinates have magnitude at most $\epsilon$. Each vertex has its own group. If it has several parents, their designated coordinates identify the same chosen index. Every relevant vertex is eventually reached because it influences the output. Thus the weight array identifies the complete embedding even when computations are shared.
+
+The entropy of the uniform comparison mixture is its mean component entropy minus the logarithm of the number of embeddings. The $E$ internal/readout designated coordinates contribute $E\log N$; the $V$ chosen locations contribute at least $V\log N-V\log(2(V+1))$. Their net fan-in cost is $J\log N+V\log(2(V+1))$. First-layer designated coordinates contribute $E_1\log(d+1)$. The remaining designated costs are $C(E+E_1)\log(C(B+8)/\epsilon)$. Every selected row has total background entropy at most $C\log(C/\epsilon)$, and there are at most $V+1$ such rows. Adding these bounds proves the claim.
+
+If $m\le N<2(V+1)$, embed the original shared graph at fixed indices. Then
+$E\log N=J\log N+V\log N\le J\log N+V\log(2(V+1))$.
+The other costs are unchanged. This covers every realizable width. If $V=E=E_1=0$, use a background readout and native hidden layers; the same bound holds directly.
+\end{proof}
+
+\begin{lemma}[Expected uniform error with sparse input coordinates]
+\label{lem:dag-uniform-error}
+Put
+\[
+ D=C(1+A+b)(k+1)(B+8),\qquad W=C D^{H+1},
+\]
+with a sufficiently large fixed constant. The same comparison satisfies
+\[
+ \E_{Q_\epsilon}\sup_{x\in[-1,1]^d}|z_w(x)-z_g(x)|
+       \le W\epsilon.
+\]
+The constants are independent of depth, input dimension and learner width.
+\end{lemma}
+\begin{proof}
+For fixed embedding define $R_j^1=b+A\sum_{i=0}^d|W^1_{ji}|$ and $R_j^\ell=b+A\sum_i|W^\ell_{ji}|R_i^{\ell-1}$. Let $S_\ell$ be the largest expected path bound at a selected node, and $P_\ell$ the average expected path bound over its learner layer. Native rows have total expected absolute incoming weight at most $M_1$. Selected rows have at most $k$ designated coordinates of expected absolute magnitude at most $B+8$, and total background expected absolute weight at most $C\epsilon$. Hence
+\begin{align*}
+ S_1+P_1&\le C(1+A+b)(k+1)(B+8),\\
+ S_\ell&\le b+Ak(B+8)S_{\ell-1}+CA P_{\ell-1},\\
+ P_\ell&\le S_\ell+b+AM_1P_{\ell-1}.
+\end{align*}
+A sufficiently large fixed coefficient in $D$ gives $S_\ell+P_\ell\le C D^\ell$.
+
+The first-layer expected uniform error is at most $CA(k+1)\epsilon$: its at most $k$ designated perturbations each have expected absolute size $C\epsilon$, while all background input coordinates together have expected absolute weight at most $C\epsilon$. At later selected rows,
+\[
+ e_\ell\le AkB e_{\ell-1}
+             +CA\epsilon[kS_{\ell-1}+P_{\ell-1}].
+\]
+Only current-layer independence from preceding features is used; sharing within preceding layers causes no problem. Choosing $D$ to dominate twice the propagation coefficient gives $e_\ell\le C D^\ell\epsilon$. The readout adds one factor $D$. The bounds hold componentwise and hence for the embedding mixture.
+\end{proof}
+
+\begin{corollary}[A logarithmic-width circuit neighborhood]
+\label{cor:dag-mass}
+For every $0<t\le1$, the raw function neighborhood obeys
+\begin{align*}
+ -\log\mu_N\{\|z_w-z_g\|_\infty\le t\}
+ \le{}&2J\log N+2E_1\log(d+1)\\
+ &+C Q\log\frac{C(V+1)(B+8)W}{t}.
+\end{align*}
+\end{corollary}
+\begin{proof}
+Use $\epsilon=t/(2W)$, Markov's inequality under the comparison law, and binary relative entropy. Its neighborhood probability under the comparison is at least one half.
+\end{proof}

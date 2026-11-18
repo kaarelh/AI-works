@@ -1,0 +1,128 @@
+\section{Finite programs approximating the good networks}
+\label{sec:compression}
+Assume $H\ge2$. The programs below only bound statistical capacity; they are not the Bayesian learner. Define
+\[
+ \psi(m,v)=\E_G\phi(m+\sqrt vG),\qquad
+ \chi(m,v)=\E_G\phi(m+\sqrt vG)^2,\quad G\sim N(0,1).
+\]
+The Gaussian heat equation shows that these functions are Lipschitz in both arguments, including at $v=0$, with constants depending only on $\sup|\phi''|$. They have ranges $[-1,1]$ and $[0,1]$, respectively, and $\chi\ge\psi^2$.
+
+\begin{proposition}[One fixed program family for every width and scale]
+\label{prop:programs}
+For $K\ge K_H$ and $0<a\le1$, there is a compact finite-parameter family $\mathcal P(K,a)$ of functions bounded by $\sqrt K$, independent of the input measure, width, scale, and training sample, whose scalar parameter count is at most
+\begin{equation}
+ P_H(K,a)=C_H(d+1)K^{p_H}a^{-q_H},\qquad
+ p_H=H^2+2H-3,\quad q_H=4H-2.
+ \label{eq:program-count}
+\end{equation}
+Its uniform covering entropy obeys
+\begin{equation}
+ \log\mathcal N(u,\mathcal P(K,a),\|\cdot\|_\infty)
+ \le C_HP_H(K,a)\log\frac{C_H(d+1)K}{au}
+ \quad(0<u\le\sqrt K).
+ \label{eq:program-entropy}
+\end{equation}
+For every fixed probability measure $\xi$ and every $N\ge1$, $0<\tau\le1$, there is a Borel set $G_{N,\tau,\xi}(K,a)$ such that
+\begin{equation}
+ \mu_{N,\tau}(G^c)\le C_He^{-\omega K/32},\qquad \omega=N/\tau^2,
+ \label{eq:direct-prior-good}
+\end{equation}
+and every output in this set is bounded by $\sqrt K$ and has an approximant $f\in\mathcal P(K,a)$ with $\|z_w-f\|_{L^2(\xi)}\le C_Ha$.
+\end{proposition}
+
+\subsection{Separate factor and variance approximations}
+Retain factors $F_\ell$ at cutoff $\eta_\ell$, with rank $r_\ell\le\eta_\ell^{-1}$, and write $v_\ell=Q_\ell(x,x)-\|F_\ell(x)\|^2$. Actual factors have pointwise norm at most one, and $v_\ell\in[0,1]$. Use finite averages over actual rows, denoted $\E_i$, and exact coefficients satisfying $\E_i b_i b_i^\top=I$.
+
+For any preceding factor function $F$, including an unbounded approximant, and any $[0,1]$-valued variance function $v$, set
+\[
+ F_\ell^0=\E_i b_i\psi(a_i\cdot F,\tau^2v),\qquad
+ v_\ell^0=\E_i\chi(a_i\cdot F,\tau^2v)-\|F_\ell^0\|^2.
+\]
+Bessel's inequality and $\chi\ge\psi^2$ give
+\[
+ \|F_\ell^0(x)\|^2\le\E_i\psi(a_i\cdot F(x),\tau^2v(x))^2
+ \le\E_i\chi(a_i\cdot F(x),\tau^2v(x))\le1.
+\]
+Hence $v_\ell^0\in[0,1]$. For two preceding states, the vector Bessel inequality and \eqref{eq:actual-latent-gram} bound the changes in both $F_\ell^0$ and $v_\ell^0$ by
+\begin{equation}
+ C_H\big[\sqrt K\|\Delta F\|_{L^2(\xi;\R^{r_{\ell-1}})}+\|\Delta v\|_{L^2(\xi)}\big].
+ \label{eq:separate-propagation}
+\end{equation}
+For the variance use $|\|F_\ell^0\|^2-\|\widetilde F_\ell^0\|^2|\le2\|F_\ell^0-\widetilde F_\ell^0\|$. Both exact averaged vectors are pointwise bounded, even if the preceding sampled vector is not.
+
+Replacing actual current features by their conditional means changes the factor vector by at most
+\[
+ E_\ell=C_H\sqrt{r_\ell+1}\,[\omega^{-1/2}+\sqrt{K\eta_{\ell-1}}]
+\]
+on the residual event of Lemma~\ref{lem:direct-residual}. The diagonal changes by this bound without the rank factor. Thus the actual variance differs from $v_\ell^0$ by at most $C_HE_\ell$ as well.
+
+Evaluate these exact means on already chosen preceding approximants. Approximate $F_\ell^0$ by sampling row indices with replacement. Since $\E_i\|b_i\psi_i\|^2\le r_\ell$, a sample of
+\[
+ m_\ell^F=C_H(r_\ell+1)/(\delta_\ell^F)^2
+\]
+suffices for vector error $\delta_\ell^F$. Leave this vector approximation linear: do not project it onto a unit ball.
+
+The variance admits a separate scalar representation
+\begin{equation}
+ v_\ell^0=\E_i\chi_i-\E_{i,j}(b_i\cdot b_j)\psi_i\psi_j,
+ \qquad \E_{i,j}(b_i\cdot b_j)^2=r_\ell,
+ \label{eq:pair-variance}
+\end{equation}
+where $i,j$ are independent uniform row indices. The identity follows by taking the trace of $(\E_i b_i b_i^\top)^2$. Independent samples of each scalar mean, with total size
+$m_\ell^V=C_H(r_\ell+1)/(\delta_\ell^V)^2$, approximate it to error $\delta_\ell^V$. Store each pair coefficient $b_i\cdot b_j$ as one scalar and clip only this variance approximation to $[0,1]$.
+
+These positive-probability sampling assertions follow from the Hilbert-space second-moment bound and Markov's inequality. The second moments of $a,b,b_i\cdot b_j$ are at most $Kr_{\ell-1},r_\ell,r_\ell$, respectively. Additional Markov bounds on all selected coefficient sums provide samples with polynomially bounded scalar parameters while preserving positive probability of the approximation event. Sampling is performed after preceding approximants are fixed, so no empirical Gram claim is required.
+
+At the first layer apply the same construction directly to the finite features $h_i=\phi(w_i\cdot\bar x)$, using
+$F_1=\E_i b_i h_i$ and $v_1=\E_i h_i^2-\E_{i,j}(b_i\cdot b_j)h_ih_j$.
+The first-layer norm event gives $\E_i\|w_i\|^2\le K$. There is no residual deletion and no minimum-width condition at this layer: sampling with replacement is allowed.
+
+Writing $e_\ell^F,e_\ell^V$ for the two errors, for $\ell\ge2$ the construction gives
+\begin{align*}
+ e_\ell^F&\le C_H(\sqrt K e_{\ell-1}^F+e_{\ell-1}^V+E_\ell+\delta_\ell^F),\\
+ e_\ell^V&\le C_H(\sqrt K e_{\ell-1}^F+e_{\ell-1}^V+E_\ell+\delta_\ell^V).
+\end{align*}
+At layer one only the respective sampling errors occur.
+
+\subsection{Terminal readout and effective-width cutoff}
+The actual output is $z=\E_i c_i h_i^H$, with $c_i=Nv_i$ and $\E_i c_i^2\le K$. Its residual deletion error is at most
+$C_H[\sqrt{K/\omega}+K\sqrt{\eta_{H-1}}]$.
+Propagation through its conditional mean costs at most
+$C_H[K e_{H-1}^F+\sqrt K e_{H-1}^V]$.
+A sample of $m_H=C_HK/a^2$ final rows then gives scalar error $c_Ha$. Clip the final output to $[-\sqrt K,\sqrt K]$.
+
+For $t=H-\ell$ choose sufficiently small depth-dependent constants in
+\[
+ \delta_\ell^F\asymp_H aK^{-(t+1)/2},\qquad
+ \delta_\ell^V\asymp_H aK^{-t/2},\qquad
+ \eta_\ell\asymp_H a^{2t}K^{-t(t+3)/2}.
+\]
+The recurrence closes because $\eta_{\ell-1}\le c_H(\delta_\ell^F)^2\eta_\ell/K$. All residual sampling terms are also small enough if
+\begin{equation}
+ \omega\ge T_H(K,a):=C_HK^{s_H}a^{-(2H-2)},\qquad
+ s_H=(H^2+H-4)/2.
+ \label{eq:direct-width}
+\end{equation}
+Indeed the largest intermediate requirement $(r_\ell+1)/(\delta_\ell^F)^2$ starts at $\ell=2$; include the final requirement $K/a^2$. At $H=2$ the latter is the only one. The output approximation error is then at most $C_Ha$.
+
+\subsection{Contracting factors into subsequent coefficients}
+The retained dimensions need not appear among the program's parameters. The sampled vector $\widetilde F_\ell$ is a linear combination of $m_\ell^F$ scalar sampled features. Every occurrence of this vector is a linear form $a\cdot\widetilde F_\ell$ in the next layer. Contract $a$ with its sampled vector coefficients and store the resulting $m_\ell^F$ scalar coefficients. This is possible because no radial projection is applied. The separate variance formula \eqref{eq:pair-variance} also avoids evaluating the norm of the sampled vector.
+
+The total number of scalar features at layer $\ell$ is at most $m_\ell^F+3m_\ell^V\le C_Hm_\ell^F$. Consequently the parameter count is at most
+\[
+ C_H\left[(d+1)m_1^F+\sum_{\ell=2}^H m_\ell^F m_{\ell-1}^F\right],\qquad m_H^F=m_H.
+\]
+For intermediate $t=H-\ell$,
+\[
+ m_\ell^F\le C_HK^{(t^2+5t+2)/2}a^{-2t-2},\qquad
+ m_\ell^V\le C_HK^{(t^2+5t)/2}a^{-2t-2}.
+\]
+The largest adjacent product, $m_1^Fm_2^F$, gives exactly \eqref{eq:program-count}; when $H=2$ it is $K^5a^{-6}$. All contracted coefficients remain polynomially bounded. Gaussian mean features are bounded, and variances are clipped to $[0,1]$, so parameter-to-function Lipschitz constants are polynomial in $d+1,K,a^{-1}$ at fixed depth. A uniform parameter grid proves \eqref{eq:program-entropy}.
+
+Intersecting the norm event with each conditional residual event proves \eqref{eq:direct-prior-good} when \eqref{eq:direct-width} holds. Measurable spectral bases can be chosen from finite Gram matrices, including repeated eigenvalues, so the tests are Borel.
+
+For the remaining effective widths $\omega<T_H(K,a)$, necessarily $N<T_H(K,a)$. Include in the same program family the actual finite networks of every integer width below this cutoff on the norm event. Their weights have polynomial bounds, and their parameter count is at most
+\[
+ C_H[dT_H+T_H^2]\le C_H(d+1)K^{p_H}a^{-q_H},
+\]
+because $2s_H=H^2+H-4<p_H$ and $4H-4<q_H$. Their parameter-to-function Lipschitz constants are polynomial as well. A finite union changes only the constant in the entropy bound. This proves the proposition at every finite width and scale, without a second statistical argument.

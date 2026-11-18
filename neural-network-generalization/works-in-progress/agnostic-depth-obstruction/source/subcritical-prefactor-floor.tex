@@ -1,0 +1,103 @@
+\section{A sharp depth baseline below the critical prefactor}
+\label{sec:subcritical-prefactor-floor}
+Let $\nu=N\sigma^2\in(0,1)$ be fixed. Define
+\[
+ \kappa(\nu)=1-\nu+\nu\log\nu>0.
+\]
+A fractional moment of the native variance process gives a prior cost of $\kappa(\nu)$ per layer for every nontrivial output.
+
+\begin{lemma}[A fractional chi-square contraction]
+\label{lem:subcritical-fractional-moment}
+For $N\ge2$, $0<\nu<1$, and $p=\tfrac N2(\nu^{-1}-1)$,
+\[
+ \log\E\left(\nu\frac{\chi_N^2}{N}\right)^p
+ \le-\frac{N\kappa(\nu)}{2\nu}+\frac1{6N}.
+\]
+\end{lemma}
+\begin{proof}
+Put $k=N/2$. The exact gamma moment is
+\[
+ \E\left(\nu\frac{\chi_N^2}{N}\right)^p
+ =\nu^p k^{-p}\frac{\Gamma(k/\nu)}{\Gamma(k)}.
+\]
+Use $\log\Gamma(x)=(x-1/2)\log x-x+\tfrac12\log(2\pi)+R(x)$, where $0<R(x)<1/(12x)$ for $x\ge1$. Direct cancellation gives the logarithm
+\[
+ -\frac{N\kappa(\nu)}{2\nu}+\frac12\log\nu
+              +R(k/\nu)-R(k).
+\]
+Drop the nonpositive logarithm and $-R(k)$, and use $R(k/\nu)\le1/(6N)$.
+\end{proof}
+
+\begin{lemma}[A uniform finite-input prior event bound]
+\label{lem:subcritical-event-cost}
+Let $\mathcal X$ be any finite set of $m$ inputs, let $H\ge1$, and use the Gaussian tanh prior at scale $s=\nu/N$, $0<\nu<1$. For any $0<t<1$, put
+\[
+ Q_{H,N,\nu}(t,m)=\kappa(\nu)(H-1)
+ -2(1-\nu)\log(1/t)-\frac{2\nu\log m}{N}
+ -\frac{\nu(H-1)}{3N^2}.
+\]
+Then
+\[
+ \mu\{\max_{x\in\mathcal X}|z_w(x)|>t\}
+ \le\exp\{-NQ_{H,N,\nu}(t,m)/(2\nu)\}.
+\]
+The bound requires no first-layer covariance assumption beyond bounded tanh outputs.
+\end{lemma}
+\begin{proof}
+At a fixed input write $q_\ell=\|h^\ell(x)\|^2/N\le1$. Conditional on $q_\ell$, the next preactivations are independent $N(0,\nu q_\ell)$ variables. Since $|\tanh u|\le|u|$,
+\[
+ q_{\ell+1}\le\nu q_\ell\frac{\chi_N^2}{N}
+\]
+under the natural Gaussian coupling. Lemma~\ref{lem:subcritical-fractional-moment} and iteration give
+\[
+ \E q_H^p\le\exp\left\{-(H-1)\frac{N\kappa(\nu)}{2\nu}
+                                      +\frac{H-1}{6N}\right\},
+\]
+because $q_1\le1$.
+The readout is conditionally Gaussian with variance $\nu q_H/N$. For every $p>0$, monotonicity of Gaussian moments and the even-integer moment formula give
+\[
+ (\E|G|^{2p})^{1/(2p)}
+ \le(\E|G|^{2\lceil p\rceil})^{1/(2\lceil p\rceil)}
+ \le\sqrt{2p+2}.
+\]
+Since $(\nu/N)(2p+2)=1-\nu+2\nu/N\le1$ for $N\ge2$, the readout moment contributes at most one:
+$\E|z_w(x)|^{2p}\le\E q_H^p$.
+Apply Markov at $t$, use $2p=N(1-\nu)/\nu$, and take a union bound over $m$ inputs. Rearranging gives the stated formula.
+\end{proof}
+
+\begin{corollary}[A baseline entropy floor for nontrivial predictions]
+\label{cor:subcritical-indicator-floor}
+Let $A$ be any parameter event contained in
+$\{\max_{x\in\mathcal X}|z_w(x)|>t\}$. Then every comparison law $\rho$ satisfies
+\[
+ 2s\KL(\rho\|\mu)
+ \ge Q_{H,N,\nu}(t,m)\,\rho(A)-2s\log2,
+ \qquad s=\nu/N,
+\]
+provided the displayed $Q$ is nonnegative. In particular this applies to the event that the empirical prediction norm exceeds $t$, and also to such an event after an output map $\psi$ satisfying $|\psi(u)|\le|u|$.
+\end{corollary}
+\begin{proof}
+Binary relative entropy gives
+$\KL(\rho\|\mu)\ge\rho(A)\log(1/\mu(A))-\log2$.
+The prior event bound applies to $A$ by containment. The norm implications are immediate.
+\end{proof}
+
+\begin{lemma}[A high-temperature mean bound from the same event floor]
+\label{lem:subcritical-high-temperature}
+Assume $\widehat R(0)\le1$, $s\le1/2$, and write $q=Q_{H,N,\nu}(t,n)>0$. For the exact Gaussian-likelihood posterior, let $A=\{\|z_w(S)\|_n>t\}$ and $p_A=\Pi(A)$. Then
+\[
+ p_A\le\frac{1+s}{\lambda q}+\frac{2s\log2}{q},
+ \qquad
+ \|\E_\Pi z_w(S)\|_n\le t+\sqrt{5p_A}.
+\]
+The same argument works for an actual likelihood on an odd output $\psi(z)$ with $|\psi(z)|\le|z|$, and the high-output event and empirical norm then refer to $\psi(z)$.
+\end{lemma}
+\begin{proof}
+The prior mean is zero and its output variance is at most $s$, so the Gibbs free energy is at most $\widehat R(0)+s\le1+s$. It is also the posterior expected loss plus $2\lambda s\KL$. Apply Corollary~\ref{cor:subcritical-indicator-floor}, discard the nonnegative loss, and rearrange to bound $p_A$.
+The same variational comparison gives $\E_\Pi\widehat R(z_w)\le1+s$. Hence
+\[
+ \E_\Pi\|z_w(S)\|_n^2
+ \le2\E_\Pi\widehat R(z_w)+2\|y\|_n^2\le4+2s\le5.
+\]
+Split the posterior mean on $A$ and its complement, using Cauchy--Schwarz on $A$. For the output-map variant, oddness preserves prior mean zero and $|\psi|\le|z|$ preserves its variance bound and the event containment, so the same proof applies.
+\end{proof}

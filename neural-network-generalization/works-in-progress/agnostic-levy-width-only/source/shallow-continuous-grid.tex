@@ -1,0 +1,105 @@
+\section{The same width on continuous input domains}
+\label{sec:shallow-continuous-grid}
+The shallow compactification also works approximately on continuous domains, without adding neurons. A rational grid makes its constraint matrix integral. Away from a controlled set of hyperplanes, matching grid vertices then determines the whole function.
+
+Assume the input law on $[-1,1]^d$ satisfies, for every Euclidean unit vector $u$, every $t\in\R$, and $0<r\le1$,
+\begin{equation}
+ P_X\{|u\cdot X-t|\le r\}\le\kappa r^\alpha,
+ \qquad \kappa\ge1,\quad 0<\alpha\le1.
+ \label{eq:shallow-grid-slab}
+\end{equation}
+Write $s(t)=\operatorname{clip}(t,[-1,1])$ in this section.
+
+\begin{lemma}[An integer polyhedron with bounded coefficients]
+\label{lem:grid-polyhedron}
+A nonempty finite system of linear equalities and inequalities in $P$ variables, with integer coefficient magnitudes at most an integer $Q\ge1$ and real right-hand-side magnitudes at most $Q$, has a feasible point of coordinate magnitudes at most
+\[
+ B_{P,Q}=(2PQ)^{2P+2}.
+\]
+\end{lemma}
+\begin{proof}
+Use the minimum-Euclidean-norm feasible point and its active-row span, exactly as in Lemma~\ref{lem:bounded-polyhedron}. For $r\le P$ independent active rows, the integer Gram matrix has determinant at least one and entries at most $PQ^2$. Its adjugate entries are at most $(r-1)!(PQ^2)^{r-1}$. The formula $z=A^\top(AA^\top)^{-1}b$ therefore gives
+$|z_j|\le r^2Q^2(r-1)!(PQ^2)^{r-1}\le B_{P,Q}$.
+The zero-rank case gives the zero vector.
+\end{proof}
+
+\begin{lemma}[Same-width approximation by grid compactification]
+\label{lem:shallow-grid-compactification}
+Let
+\[
+ r(x)=b+\sum_{j=1}^C v_j\operatorname{ReLU}(w_j\cdot\bar x),
+ \qquad \bar x=(1,x),\qquad P=C(d+1)+1,
+\]
+with arbitrary finite real coefficients. For every integer $Q\ge1$, there is another raw shallow implementation
+\[
+ r_Q(x)=b_Q+\sum_{j=1}^C \epsilon_j
+                 \operatorname{ReLU}(a_j\cdot\bar x),
+ \qquad \epsilon_j\in\{-1,1\},
+\]
+whose incoming coefficients and bias have magnitude at most $B_{P,Q}$, and such that $s(r_Q)=s(r)$ at every vertex of the grid
+$\{-1+2j/Q:0\le j\le Q\}^d$. If $2\sqrt d/Q\le1$, then
+\begin{equation}
+ P_X\{s(r_Q(X))\ne s(r(X))\}
+ \le6\kappa(C+1)^d(2\sqrt d/Q)^\alpha.
+ \label{eq:grid-disagreement}
+\end{equation}
+The affine readout bias uses one additional constant neuron; without that bias the same construction keeps only $C$ neurons.
+\end{lemma}
+\begin{proof}
+Normalize the original readout signs by positive homogeneity. At every grid vertex, impose its original closed activation mask and the linear output constraints that make its clipped value equal to $s(r)$, as in Lemma~\ref{lem:shallow-exact-compactification}. Multiply every constraint by $Q$. The grid coordinates have denominator $Q$, so all coefficients are integers with magnitude at most $Q$, and every right-hand side has magnitude at most $Q$. The original implementation is feasible. Lemma~\ref{lem:grid-polyhedron} gives the stated cap and exact agreement at grid vertices. As before, an active preactivation becoming zero causes no semantic problem.
+
+Each shallow network has at most $C$ nontrivial activation hyperplanes, dividing space into at most $(C+1)^d$ full-dimensional regions. In each such region its raw output is affine. Add the at most two nontrivial hyperplanes on which that affine function equals $1$ or $-1$, extending these hyperplanes to the whole space. Identically constant affine functions need no extra hyperplane. For both networks together the number of hyperplanes is at most
+$2C+4(C+1)^d\le6(C+1)^d$.
+
+Call a closed grid cell bad if it meets any of these hyperplanes, including on its boundary. Otherwise each clipped network is affine or constant on that cell. They agree at all its vertices, and therefore agree everywhere on it. Every point in a bad cell lies within Euclidean distance at most the cell diameter $2\sqrt d/Q$ of one of the listed hyperplanes. A union bound using \eqref{eq:shallow-grid-slab} proves \eqref{eq:grid-disagreement}. Hyperplanes with zero normal are omitted: their affine function is constant and creates no change of piece. This also covers degenerate activation patterns.
+\end{proof}
+
+\begin{theorem}[A quadratic-width, linear-depth expectation oracle]
+\label{thm:shallow-continuous-quadratic}
+Use the fixed L\'evy fan-in prior with $M_1\le1/4$, ReLU hidden activations, and a final clip in both likelihood and prediction. Assume \eqref{eq:shallow-grid-slab}, a conditional mean in $[-1,1]$, and conditionally centered sub-Gaussian noise with proxy $\sigma^2$. Fix any learner depth $H\ge1$ and width $N\ge C+1$ before drawing data. Train on all $n\ge2$ observations with the fixed Gaussian observation variance $128(1+\sigma^2)$.
+
+Put
+\[
+ P=C(d+1)+1,\qquad
+ L_n=\log(2P)+\frac{\log(2\kappa(n+1))+d\log(C+1)}\alpha.
+\]
+There is a constant $C_0$, depending only on the fixed scalar L\'evy law, such that
+\begin{equation}
+ \E R(\bar f_{S_n})
+ \le\inf_g R(g)+\frac{C_0(1+\sigma^2)}{n+1}
+       \{HP^2L_n+HP\log(eH(n+1))\}.
+ \label{eq:continuous-shallow-quadratic}
+\end{equation}
+The infimum is over final-clipped, one-hidden-layer ReLU teachers of width $C$, with arbitrary finite real coefficients and affine readout. The same conclusion holds for a final tanh in both learner and comparison class. With zero affine readout bias, the width threshold is $N\ge C$.
+
+The algorithm needs neither the teacher coefficients nor $C,\kappa,\alpha$ for this fixed-temperature guarantee. The latter quantities occur only in its analysis. The bound is polynomial jointly in comparison width, input dimension, learner depth and $1/\alpha$, and logarithmic in $\kappa$. At fixed dimension and regularity it is quadratic in teacher width and linear in learner depth, up to logarithms.
+\end{theorem}
+\begin{proof}
+Fix an original clipped teacher and set
+\[
+ Q=\left\lceil2\sqrt d\,
+       [96\kappa(n+1)(C+1)^d]^{1/\alpha}\right\rceil.
+\]
+The discrepancy probability in \eqref{eq:grid-disagreement} is at most $1/[16(n+1)]$. Both outputs and the conditional mean $f_0$ lie in $[-1,1]$. Their population squared risks therefore differ by at most
+$4\E|s(r_Q)-s(r)|\le8P_X\{s(r_Q)\ne s(r)\}\le1/[2(n+1)]$.
+The irreducible noise cancels in this risk comparison.
+
+The compactified teacher has width at most $C+1$, one hidden layer, a formula with at most $C+1$ hidden occurrences, and coefficient cap $B_{P,Q}$. Moreover
+\[
+ \log Q\le C_1\left[\log(2d)+
+           \frac{\log(2\kappa(n+1))+d\log(C+1)}\alpha\right],
+ \qquad \log B_{P,Q}\le C_2P L_n.
+\]
+Apply the stable-padding comparison and sharp all-data expectation theorem to this deterministic compactified teacher. At depth $H$, its actual formula expansion has at most $H(C+1)$ occurrences. The stable-padding resource is at most
+\[
+ C_3\{HP^2L_n+HP\log(eH(n+1))\}.
+\]
+This comparison uses every finite $N\ge C+1$, including the small-width branch, with no dependence on the original coefficient magnitudes. Adding the compactification error proves \eqref{eq:continuous-shallow-quadratic}. The teacher and grid can depend on $n$ but are independent of the observed sample, as required by the expectation theorem. Take the infimum over all deterministic original teachers.
+
+For a final tanh, write the original raw output as $r$ and take
+$M=\tfrac12\log(16(n+1))\ge1$. Apply the grid compactification to the clipped normalized output $s(r/M)$, giving a raw normalized implementation $u_Q$ with the same width and cap $B_{P,Q}$. Use actual raw output $M u_Q$ followed by tanh. Off the same exceptional grid cells, $s(u_Q)=s(r/M)$. If their common clipped value has magnitude less than one, the actual raw outputs agree. If it equals $1$ or $-1$, both raw outputs lie beyond the same threshold $\pm M$, so their final tanh values differ by at most $2e^{-2M}=1/[8(n+1)]$. On the exceptional cells their difference is at most two. Thus their population squared risks differ by at most
+\[
+ 8/[16(n+1)]+4/[8(n+1)]=1/(n+1).
+\]
+The output rescaling increases the coefficient cap only to at most $M B_{P,Q}$ (after adding a constant neuron for the affine bias). Its extra logarithmic cost is absorbed into the same resource. ReLU identity padding and the fixed output link leave the stable-padding argument unchanged. The zero-bias case imposes that equality throughout and omits the constant neuron.
+\end{proof}

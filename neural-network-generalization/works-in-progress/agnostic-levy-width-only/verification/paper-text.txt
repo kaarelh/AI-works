@@ -1,0 +1,2214 @@
+    Bayesian neural networks compete with narrow approximations
+          ChatGPT-6 Astra                Claude Opus 5.5           Kaarel Hänni        Dmitry Vaintrob∗
+
+                                                    18 November 2026
+
+
+
+                                                        Abstract
+              We give an approximation oracle for Bayesian neural networks with one prescribed architecture
+          and independent finite-variance Lévy weight coordinates. With only a finite second moment for
+          the labels, one can compete with arbitrary-coefficient shallow ReLU teachers of width n1/8 at
+          every learner width at least n1/8 + 1. The ordinary posterior mean, trained on all n original
+                                                                                    e −1/2 ) and a vanishing
+          observations, has expected risk at most the best such teacher risk plus O(n
+          marginal label-tail term. This holds uniformly over prescribed learner depths up to n1/4 , at
+          fixed input dimension, for arbitrary Boolean-input laws and for continuous laws satisfying
+          slab anticoncentration. The output range and Gaussian observation variance follow explicit
+          deterministic schedules; there is no architecture mixture, holdout, or data-dependent temperature
+          choice.
+              With a bounded conditional mean and conditionally sub-Gaussian noise, a single fixed
+                                                                                          2
+          likelihood suffices. Shallow teachers then have expected estimation cost O((C
+                                                                                     e      + H)/n) at every
+          N ≥ C + 1, at fixed input dimension and regularity. One input dimension improves this to
+          O((C
+           e     + H)/n) with a constant-factor width allowance. Higher-depth teachers admit polynomial-
+          width comparison at every sufficiently large learner width. Formula teachers whose biases enter
+          only in the first layer admit a jointly polynomial width–depth bound without widening their
+          graph.
+              The proof combines cheap prior neighborhoods, coefficient-free compactification, and a sharp
+          expectation inequality for the final posterior mean. The prior has full support and no robustness
+          restriction. A separate validation-selected posterior supplies coefficient-one high-probability
+          guarantees at every teacher-realizable width; that posterior trains on half the sample. All
+          guarantees concern exact Bayesian prediction rather than efficient computation.
+
+
+1        Introduction
+A regression target need not be exactly represented by a small neural network for a complexity-based
+learning guarantee to be useful. The relevant question is whether a single Bayesian learner can
+compete with the best narrow approximation, even when its own architecture is much wider and
+the approximating network has unrestricted coefficient magnitudes.
+    The main finite-variance result is Corollary 3.2. Its comparison functions are ordinary real-
+valued shallow ReLU networks, with no coefficient or output bound. The learner uses output range
+Mn = n1/8 and Gaussian observation variance 128n1/4 , keeps the same independent-coordinate
+parameter prior, and conditions on every original label. Its expected risk is bounded by the best
+                                    e −1/2 ) term, and 5E[Y 2 1
+width-⌊n1/8 ⌋ comparison risk, an O(n                            {|Y |>n1/8 } ], which tends to zero for
+every finite-second-moment label law. It covers every prescribed N ≥ ⌊n1/8 ⌋+1, including arbitrarily
+larger widths. No teacher resource or noise model is supplied to the learner.
+    ∗
+        Authors are listed in alphabetical order.
+
+
+                                                           1
+   A fixed output scale and fixed observation variance give sharper finite-sample bounds when the
+conditional mean is bounded and the centered noise is conditionally sub-Gaussian. We write
+
+  R(f ) = E(f (X) − Y )2 ,   f0 (x) = E[Y | X = x],   R0 = E(Y − f0 (X))2 ,   A(f ) = R(f ) − R0 .
+
+Theorem 7.1 gives the additive C 2 + H resource for shallow teachers at every realizable learner
+width. Corollary 4.3 treats arbitrary fixed teacher depth with a slower polynomially growing
+comparison-width class. The formula-network result in Section 9 is polynomial jointly in teacher
+width and depth, at unchanged width; its no-fanout condition is a condition on the comparison
+graph, not on the learner’s prior. Theorems stated under the fixed-scale noise assumptions are
+distinguished from the finite-variance extension throughout.
+    All these primary results concern the ordinary mean of one final posterior trained on all
+observations, with a deterministic likelihood choice. Their sharp coefficient-one conclusion is in
+expectation over the sample. Theorem 11.1 provides a different, high-probability guarantee at
+general teacher depth: select one variance using independent validation observations and return the
+posterior trained on the other half. It does not imply the same bound after an all-data refit.
+    Section 12 also supplies an all-data expectation theorem at every realizable width for arbitrary
+fixed teacher depth. It uses a finite-parameter argument at smaller learner widths and may prescribe
+an extremely small observation variance there. This completes an existence statement, while leaving
+open a comparably useful fixed-likelihood theorem at those widths.
+    The architecture is fixed before data in every case. There is no prior over network sizes, and no
+claim of efficient posterior computation. The prior has full support and finite second moments; its
+non-Gaussian shape supplies favorable approximation cost without a support restriction to robust
+or sparse networks. General coefficient-free compilation can still be expensive in teacher depth,
+although additional learner depth has only an additive polynomial cost. On continuous domains,
+input regularity has a concrete role: Proposition 10.1 gives a width-one target on two sufficiently
+close inputs for which every realized sample leaves constant posterior-mean error. Thus a uniform
+coefficient-free width-only rate cannot hold over all input distributions on a continuous domain.
+
+Related work. Dense independent heavy-tailed Bayesian neural-network priors are established
+tools. Castillo and Egels [8] prove posterior and variational contraction for deterministic dense
+architectures and independent heavy-tailed weights, including Cauchy laws. Their results concern
+prescribed architecture/scaling regimes and structured smoothness classes. Nguyen, Westerhout and
+Arbel [9] study sample-size-independent shallow ReLU priors with random finite width. Lévy random
+expansions also have a substantial statistical history [10]. Our target is the every-prescribed-width
+agnostic comparison with arbitrary-coefficient neural-network approximants, and the coefficient-free
+compilers needed to obtain it. Ordinary and fractional Gaussian posteriors differ here only by their
+observation variance; that terminology is not a novelty claim. The sharp expectation argument
+adapts the leave-one-out exponential-weights method of Høgsgaard, Rebeschini and Wegel [11]; the
+arbitrary-prior and conditional sub-Gaussian extension is proved in Appendix C.
+   Coefficient reduction itself is also established. Maass [6] proves polynomial-bit, same-size
+representations for fan-out-one networks with Boolean outputs on finite rational input sets. Vardi
+and Shamir [7] obtain polynomial-weight approximations of arbitrary-weight constant-depth ReLU
+networks with polynomial width and a constant-factor depth increase under discrete and regular
+continuous input assumptions. Brand, Ganian and Rocton [5] reduce weights on edges leaving
+hidden neurons of out-degree one to signs, and use the resulting linear structure for exact training.
+We use related reductions for real-valued comparisons, track their prior costs, and combine them
+with the Bayesian risk inequalities proved here.
+
+
+                                                 2
+2    The fixed prior and the two comparison compilers
+The learner has ReLU hidden activation, one prescribed width N and hidden depth H, and a
+constant input coordinate x̄ = (1, x). There are no internal biases. Its raw readout and bounded
+output are
+
+            h1 = ReLU(W 1 x̄),         hℓ = ReLU(W ℓ hℓ−1 ),       zw = v ⊤ hH ,     fw = s(zw ),
+
+where s clips to [−1, 1]. The bounded output enters both the likelihood and prediction. In the finite-
+variance extension we instead use fw,M = M s(zw ) with a stated deterministic M ; the parameter
+prior below is unchanged.
+    Fix the symmetric Lévy measure
+                                                      du
+                                      n(du) =                  ,       u ̸= 0.                      (1)
+                                                8|u|(1 + |u|)3
+
+Let Lt be the absolutely convergent sum of Poisson jumps with intensity tn, with zero drift and no
+Gaussian component. Every weight entering a neuron of fan-in F independently has law
+
+                                                µF = L(L1/F ).                                      (2)
+
+Thus F = d + 1 in the first layer and F = N thereafter, including the readout. This completely
+specifies the parameter prior πN . Its scalar laws are absolutely continuous, have full support, and
+have no atom at zero. In particular, the network is dense almost surely. Direct integration gives
+             Z                 Z
+                 |u|n(du) =        u2 n(du) = 1/8,        EL1/F = 0,        Var(L1/F ) = 1/(8F ).
+
+The variance has the usual fan-in scale, but the law is not a scalar multiple of one fixed random
+variable: the time of an infinitely divisible family changes with fan-in. The Poisson description
+defines each independent coordinate law; there is no prior over architectures.
+    The following exact interface is proved in the companion prior analysis [1]. For every bounded-
+output ReLU implementation g of width m ≤ N , hidden depth H, coefficient cap B ≥ 1, and every
+0 < r ≤ 1, there is a data-independent comparison law satisfying
+
+                     sup       Eρ |fw (x) − g(x)|2 ≤ r,       KL(ρ∥πN ) ≤ K0 log(K1 /r).            (3)
+                   x∈[−1,1]d
+
+One may take
+
+                      D = C(m + 1)(B + 8),           V = C(d + 1)2 D2H+2 ,
+                     K0 = C(d + 1)(S + 1),            K1 = C(S + 1)(d + 1)(B + 8)V.                 (4)
+
+Here S is the number of hidden occurrences in the rooted formula obtained by unrolling the chosen
+implementation; the conservative choice S = H         ℓ
+                                              P
+                                                ℓ=1 m always suffices. The numerical constants do
+not depend on any width, on depth, or on B. The count S may come from a shared implementation
+of width m: the comparison proof embeds its formula at large learner widths and its original
+shared graph at smaller widths. The logarithm of K1 is only linear in depth and logarithmic in the
+coefficient cap. The construction is uniform over every finite N ≥ m, including widths too small to
+hold the entire unrolled formula simultaneously.
+
+
+
+                                                          3
+    The small fixed intensity in (1) also permits a sharper identity-padding estimate. If an
+implementation has depth h∗ , width m, coefficient cap B, and actual formula size S∗ , put
+S + = S∗ + m(H − h∗ ) + 1. At any H ≥ h∗ and N ≥ m there is a comparison law with
+
+           Eρ sup |fw (x) − g(x)| ≤ t,
+                x
+                        KL(ρ∥πN ) ≤ C(d + 1)S +
+                                    × [(h∗ + 1) log{C(m + 1)(B + 8)}
+                                                                                             #
+                                                                 CS + (d + 1)(H + 1)(B + 8)
+                                                           + log                            .        (5)
+                                                                              t
+
+This is the stable-padding theorem of [1]. Its proof uses first absolute moments: a designated
+relay has positive support and mean one, while the native unselected rows have total expected
+absolute incoming gain at most 1/8. Relay errors therefore grow only linearly in their number once
+the proof-only coordinate precision is chosen inversely proportional to that number. There is no
+restriction on the support of the network prior.
+    To remove the original teacher coefficients, we use two independently proved compilers. They
+change only the comparison implementation in the proof.
+
+Boolean inputs. There is a numerical integer b ≥ 2 such that every width-C, hidden-depth-h
+ReLU network with arbitrary finite real coefficients and biases has, at tolerance 0 < ζ ≤ 1, a ReLU
+implementation q satisfying
+                      sup       |s(q(x)) − s(g(x))| ≤ ζ,   H∗ ≤ b(h + 1),    m, B ≤ Qb ,
+                    x∈{−1,1}d                                                                        (6)
+                                   Q = 4(d + 1)(C + 1)h + ⌈log2 (16/ζ)⌉ + 2.
+It has a constant input, no internal biases, and pads exactly to any larger hidden depth. This is
+the coefficient-free Boolean compiler of [2]; its bounded coefficients follow from implementing its
+unweighted-majority circuit with ReLU gates. The construction is existential and nonuniform. Its
+precision cost is logarithmic.
+
+Continuous inputs. Suppose the input law on [−1, 1]d satisfies
+
+           Pr(|u⊤ X − t| ≤ s) ≤ κsα        (∥u∥2 = 1, t ∈ R, s > 0),        κ ≥ 1,   0 < α ≤ 1.      (7)
+
+Put TC = (Ch + 1)(C + 1)dh . The polyhedral compiler of [3] gives
+
+         E|q(X) − s(g(X))| ≤ ζ,          |q| ≤ 1,   H∗ = 4,   m ≤ 3TC ,     B ≤ Cd,α (κTC /ζ)1/α .   (8)
+
+It too has a constant input and no internal biases, and pads to larger depths. The construction uses
+normalized facet ramps on the teacher’s affine activation cells and caps each affine output slope.
+There are at most (C + 1)dh cells, with at most Ch facets per cell; the slab assumption bounds the
+exceptional region. Although this compiler’s coefficient cap is polynomial in inverse accuracy, its
+cost in (3) is only logarithmic. Bounded-density cube laws satisfy (7), as do uniform sphere laws in
+dimension at least three with α = 1, and the circle with α = 1/2.
+    Both compilers approximate the clipped teacher. Since the conditional mean belongs to [−1, 1],
+clipping any original real-valued teacher cannot increase its population squared risk. For bounded f0 ,
+the approximation risks of two bounded functions differ by at most four times their L1 (PX ) distance.
+These observations transfer the compiler estimates to regression risk even when the observed labels
+are unbounded.
+
+                                                       4
+3    Competing with polynomial-width real-valued teachers
+The conditional-mean and noise restrictions can be removed. The following learner keeps the same
+parameter prior, uses every original real label, and chooses its output scale and observation variance
+deterministically from sample count. Its sharp guarantee is still in expectation.
+   For M ≥ 1, set
+                                                                n
+                                                         "                            #
+                                                           1   X
+      fw,M (x) = M s(zw (x)),       dΠSn ,M (w) ∝ exp −            {fw,M (Xi ) − Yi }2 dπN (w).
+                                                        256M 2 i=1
+
+The physical Gaussian observation variance is 128M 2 . Let f¯Sn ,M be its ordinary final mean. The
+observed labels are not clipped.
+   Define entropy resources, with a sufficiently large numerical c,
+              B
+             JC,H,d (k) = c(d + 1)2 {(C + 1)2 + H} log2 {e(d + 1)(C + 1)(H + 1)(k + 1)},
+          R                 c(d + 1)4 {(C + 1)2 + H}
+         JC,H,d,κ,α (k) =                            log2 {eκ(d + 1)(C + 1)(H + 1)(k + 1)}.
+                                        α2
+The superscripts distinguish Boolean inputs from slab-regular inputs, not different priors or algo-
+rithms.
+
+Theorem 3.1 (A real-valued shallow oracle with finite-variance labels). Assume only EY 2 < ∞.
+Fix any learner depth H ≥ 1, width N ≥ C + 1, sample count n ≥ 2, and output range M ≥ 1 before
+data. Let                             l                    m
+                                   k = 64(n + 1)4 (1 + M )4 .
+                                                   B
+For arbitrary Boolean-input distributions use J = JC,H,d                                  R
+                                                         ; under slab regularity use J = JC,H,d,κ,α .
+Then
+                                                   cM 2 J (k)
+                      ER(f¯Sn ,M ) ≤ infraw R(g) +            + 5E[Y 2 1{|Y |>M } ]
+                                     g∈GC,1          n+1
+                                                         √
+                                                   c(1 + EY 2 )
+                                                 +               .                                 (9)
+                                                     (n + 1)2
+
+The comparison class consists of original real-valued, one-hidden-layer ReLU teachers with width
+at most C, arbitrary finite coefficients, hidden biases, and an affine readout. There is no bound
+on their output magnitudes. The same prescribed posterior is used for every comparator in this
+infimum, at every eligible learner width.
+
+Proof. Normalize a fixed raw teacher to g/M . Apply the exact Boolean or continuous same-width
+compactification, now at precision index k, followed by the reset comparison from Theorem 7.1.
+These constructions are independent of the observed labels. Their proofs supply a comparison law
+whose entropy is at most J (k) and whose normalized mean-square discrepancy from s(g/M ) is at
+most
+                                                    1
+                                   ηn,M =                     .
+                                           (n + 1)4 (1 + M )4
+Indeed the continuous grid changes the function on probability O(1/k), the outputs are bounded by
+one, and the native comparison has expected uniform error O(1/k); increasing the fixed factor 64
+or the comparison precision by a numerical constant ensures this display. In the Boolean case the
+
+
+                                                     5
+compactification is exact. The exceptional width-2 case is covered by the explicit stable-padding
+branch in Theorem 7.1.
+    Corollary D.3 applies to this law. Its direct leave-one-out argument uses the original labels,
+contributes at most four times the displayed marginal second-moment tail, and the projection of the
+raw comparator
+      √          contributes at most one further tail. The comparison-MSE remainder is at most
+c(1 + EY 2 )/(n + 1)2 . This proves the stated inequality. No assumption on the conditional mean
+or on a conditional noise distribution was used.
+
+Corollary 3.2 (A direct polynomial-width approximation guarantee). Fix d and, in the continuous
+case, the slab-regularity constants κ, α. For every sufficiently large n, choose
+
+                                       Cn = ⌊n1/8 ⌋,       Mn = n1/8 .
+
+Prescribe any finite learner width N ≥ Cn + 1 and hidden depth 1 ≤ H ≤ n1/4 before observing the
+data. Use the fixed Lévy prior, output Mn s(zw ), and Gaussian observation variance 128n1/4 . For
+every joint label law with EY 2 < ∞,
+                                                                  
+               ER(f¯Sn ,Mn ) ≤     inf
+                                     raw
+                                         R(g) + O n−1/2 log2 (en) + 5E[Y 2 1{|Y |>n1/8 } ].        (10)
+                                 g∈GCn ,1
+
+
+The big-O constant may depend on the fixed input parameters and the label second moment, but
+not on learner width, learner depth in the displayed range, or teacher coefficient magnitudes. The
+final tail tends to zero, so this is a coefficient-one oracle with a vanishing remainder against a
+polynomially growing raw-network comparison class.
+    Every observation enters the returned posterior. There is no holdout, data-dependent temperature
+choice, averaging over sample sizes or temperatures, or prior over architectures. The output scale
+and likelihood variance do depend on n, as stated. Any fixed positive learner depth satisfies the range
+condition for all sufficiently large n.
+
+Proof. At the stated choices, k is polynomial in n and log(k + 1) = O(log n). Both resources satisfy
+J (k) = O((Cn2 + H) log2 n) at the fixed input parameters. Thus Mn2 J (k)/(n + 1) = O(n−1/2 log2 n)
+uniformly over H ≤ n1/4 . The second-moment tail tends to zero by dominated convergence.
+Substitute into Theorem 3.1.
+
+    The same finite-variance transfer also applies to the general-depth compiler and formula-teacher
+expectation bounds: only logarithmic precision factors change, while the statistical complexity
+cost is multiplied by Mn2 . In particular, the general-depth polynomial-width comparison retains a
+vanishing remainder when the width-growth exponent and output-range exponent are chosen with
+sufficient slack. Appendix D also proves universal risk consistency for arbitrary compact-domain
+input laws and arbitrary deterministic width sequences tending to infinity; that pointwise consistency
+conclusion needs no input regularity, although a uniform coefficient-free rate does.
+
+
+4    Coefficient-free comparison resources
+We use C ≥ 1 for teacher width, h ≥ 1 for teacher hidden depth, and H for learner hidden depth.
+The comparison class GC,h consists of outputs clipped to [−1, 1] of ReLU networks with at most
+these width and depth bounds, arbitrary finite real weights, hidden biases, and an affine readout.
+A constant wire converts their hidden biases to the learner’s convention, using width at most
+C + 1. ReLU identity layers pad them exactly to depth H ≥ h. Bounds for this clipped class also
+
+
+                                                       6
+upper-bound the risk infimum over the corresponding original real-valued teachers, since clipping
+decreases squared distance to f0 ∈ [−1, 1].
+   Let b ≥ 2 be the numerical compiler constant in (6), increase it to an integer if needed, and set
+
+                a = 2b(b + 1),     Qn = 4(d + 1)(C + 1)h + ⌈log2 (16(n + 1)2 )⌉ + 2.
+
+Define two deterministic resources:
+
+     BC,h,H,d (n) = c(d + 1)(h + 1){Qa(h+1)
+                                     n      + H + 1} log{e(d + 1)(H + 1)(n + 1)Qn },             (11)
+  CC,h,H,d,κ,α (n) = cd,α (TC + H + 1) log{eκ(H + 1)(TC + 1)(n + 1)},    TC = (Ch + 1)(C + 1)dh .
+                                                                                              (12)
+
+Here and below numerical constants can be enlarged uniformly. In particular B and C are at least
+one. Additional learner depth enters additively, up to logarithms.
+
+Lemma 4.1 (Comparison implementations and their actual formula sizes). For every g ∈ GC,h and
+n ≥ 1:
+
+  1. On the Boolean cube, if H ≥ b(h + 1), there is a depth-H comparison implementation of width
+     at most Qbn , with population risk at most R(g) + 4/(n + 1)2 . Its logarithmic prior-comparison
+     cost at accuracy 1/(n + 1) is at most BC,h,H,d (n).
+
+  2. Under (7), if H ≥ max{h, 4}, there is a depth-H comparison implementation of width at most
+     3TC , with population risk at most R(g) + 4/(n + 1)2 . Its logarithmic prior-comparison cost at
+     accuracy 1/(n + 1) is at most CC,h,H,d,κ,α (n).
+
+Each statement applies at every learner width at least the stated comparison width. The accuracy,
+implementations, and their coefficients are used only in the proof; the actual prior and likelihood do
+not depend on them.
+
+Proof. Use the corresponding compiler with ζ = (n + 1)−2 . Bounded squared-risk differences are at
+most four times the L1 approximation error, giving the risk claims.
+    For the Boolean compiler, H∗ ≤ b(h + 1) and m, B ≤ Qbn . Unrolling its finite computation
+                                                                                      a(h+1)
+gives at most (m + 1)H∗ +1 hidden occurrences. Since m + 1 ≤ Qb+1n , this is at most Qn      . The
+two-channel compiler of Lemma A.1 carries only the positive and negative scalar outputs through
+further layers. Thus the actual formula resource at depth H is at most
+
+                                        c{Qa(h+1)
+                                           n      + H + 1}.
+
+If H = H∗ use the original comparison; otherwise apply Corollary A.2. Its logarithmic stability cost
+uses base depth H∗ + 1 = O(h + 1) rather than total learner depth. This gives (11).
+    For the continuous compiler, the coarse estimate mH∗ is unnecessary. Write its activation cells
+as Pj , with rj ≤ Ch facets. Its two final mask hinges per cell use the following formula resources.
+Unrolling one fourth-layer hinge produces one fourth-layer node, four third-layer nodes, rj + 4
+second-layer nodes, and 2rj + 8 first-layer nodes: in total 3rj + 17. The two hinges therefore use at
+most 34(rj + 1) occurrences. There are at most (C + 1)dh cells, so the four-layer compiler has at
+most 34TC occurrences. Apply the two-channel scalar-output compiler and then relay only its two
+nonnegative outputs. The actual formula resource at learner depth H is at most
+
+                                           c(TC + H + 1).
+
+
+                                                  7
+The coefficient cap obeys
+
+                             log(B + 8) ≤ cd,α log{eκ(TC + 1)(n + 1)}.
+
+Apply Corollary A.2 with original compiled depth four. This proves (12). Neither estimate pays an
+exponential cost for the added identity layers.
+
+Theorem 4.2 (A sharp all-data width-only expectation oracle). Use the fixed prior (2), the fixed
+Gaussian observation variance 128s0 , where s0 = 1 + σ 2 , and all n IID observations. Let f¯Sn be the
+ordinary final posterior mean.
+
+   1. For Boolean inputs with arbitrary input law, if H ≥ b(h + 1) and N ≥ Qbn , then
+
+                                                                  cs0 BC,h,H,d (n)
+                                ESn R(f¯Sn ) ≤ inf R(g) +                          .
+                                                g∈GC,h                 n+1
+
+   2. Under (7), if H ≥ max{h, 4} and N ≥ 3TC , then
+
+                                                        cs0 CC,h,H,d,κ,α (n)
+                              ESn R(f¯Sn ) ≤ inf R(g) +                      .
+                                            g∈GC,h            n+1
+
+The architecture is fixed before observing the data. There is no dependence on N in the remainder,
+no selection of likelihood variance, no sample splitting, and no prior over network sizes.
+
+Proof. For a fixed original teacher choose the deterministic compiled implementation in Lemma 4.1.
+Apply its stable-padding comparison at t = (n + 1)−1 . The comparison’s averaged risk is at most
+the compiled risk plus 4/(n + 1). The sharp all-data inequality of Theorem C.1 then gives the
+stated resource divided by n + 1. Its proof uses the same fixed architecture and prior at sample
+sizes n and n + 1; no architecture schedule is needed for the auxiliary posterior. The constants are
+uniform in the original teacher coefficients, so the infimum over deterministic teachers may be taken
+afterward.
+
+Corollary 4.3 (Competing with a polynomially growing width class). Fix the input dimension d,
+teacher depth h, and noise proxy σ 2 . In the continuous case also fix κ, α. There are constants u > 0,
+v > 0, a fixed learner depth H = O(h + 1), and a fixed Gaussian observation variance such that, for
+every sufficiently large n and every prescribed finite width N ≥ n, the all-n posterior mean satisfies
+
+                               ESn R(f¯Sn ) ≤      inf       R(g) + O(n−v ).                          (13)
+                                                g∈G⌊nu ⌋,h
+
+
+This uses the one fixed fan-in prior family (2). It uses no holdout, temperature selection, averaging
+over sample sizes or temperatures, or architecture mixture.
+   One explicit choice is v = 1/2 and
+                  1                                                 1
+         u=                 for Boolean inputs,          u=                  under slab regularity.
+              4ah(h + 1)                                        4(dh + 1)
+
+For Boolean inputs take H = ⌈b(h + 1)⌉; for slab-regular inputs take H = max{h, 4}. More generally
+the rates allow any positive u, v satisfying ah(h+1)u+v < 1 in the Boolean case, or (dh+1)u+v < 1
+in the continuous case, with a sufficiently small u to fit the stated compiled width. The architecture
+may depend on n, but must be selected before seeing its observations.
+
+
+                                                     8
+                                             e uh ), so the resource is O(n
+Proof. For the stated Boolean choice, Qn = O(n                            e 1/4 ) and Qb = o(n). In
+                                                                                         n
+the continuous case TC = O(nu(dh+1) ) = O(n1/4 ), again with resource O(ne 1/4 ) and compiled width
+o(n). Therefore every N ≥ n satisfies the respective width requirement for all sufficiently large n.
+                   e −3/4 ), which is O(n−1/2 ). The strict-inequality variants follow from the same
+The remainder is O(n
+substitution. All hidden constants may depend on the fixed displayed parameters, but not on N or
+on the original coefficient magnitudes.
+
+
+5    A quadratic-width oracle for shallow Boolean-input teachers
+A one-hidden-layer ReLU teacher admits a stronger coefficient reduction. Its bounded function on
+the Boolean cube has an exact implementation with uniformly bounded coefficient magnitudes and
+the same number of nonconstant neurons. This removes the compiled-width threshold entirely.
+Lemma 5.1 (A bounded point in an integer polyhedron). Let a nonempty finite system of linear
+equalities and inequalities in P ≥ 1 real variables have coefficient entries in {−1, 0, 1} and right-hand
+sides in [−1, 1]. It has a feasible point z satisfying
+
+                                                ∥z∥∞ ≤ (2P )2P .
+
+The right-hand sides may be arbitrary real numbers, and the number of constraints does not enter
+the bound.
+Proof. Choose a feasible point of minimum Euclidean norm. Existence follows by restricting the
+closed feasible set to the closed ball determined by any one feasible point. Include every equality
+and every tight inequality in its active system. For a vector v in the nullspace of the active rows,
+both sufficiently small perturbations z ± tv remain feasible: every inactive inequality has positive
+slack, and there are finitely many constraints. Minimality therefore implies z · v = 0. Thus z belongs
+to the row span of its active coefficient matrix.
+    Choose r ≤ P linearly independent active rows and write the resulting matrix as A. If r = 0,
+then z = 0. Otherwise Az = b and
+                                          z = A⊤ (AA⊤ )−1 b.
+The Gram matrix is an invertible integer matrix, so its determinant is an integer at least one in
+absolute value. Its entries have magnitude at most P . Cofactor expansion and the permutation
+formula bound every entry of its adjugate by (r − 1)!P r−1 . Since |bi | ≤ 1 and |Aij | ≤ 1,
+
+                                       |zj | ≤ r2 (r − 1)!P r−1 ≤ (2P )2P .
+
+The displayed point is the already feasible minimum-norm point, so no further feasibility argument
+is needed.
+
+Lemma 5.2 (Exact shallow compactification). Let
+                                                       
+                                 C
+                                 X
+                g(x) = s b +          vj ReLU(wj · x̄) ,       x ∈ {−1, 1}d ,   x̄ = (1, x),
+                                 j=1
+
+with arbitrary finite real coefficients. Put P = C(d + 1) + 1 and BP = (2P )2P . There are coefficients
+aj ∈ [−BP , BP ]d+1 , b′ ∈ [−BP , BP ], and signs sj ∈ {−1, 1} such that
+                                                            
+                                       C
+                    g(x) = s b′ +
+                                       X
+                                             sj ReLU(aj · x̄)   for every x ∈ {−1, 1}d .
+                                       j=1
+
+
+                                                        9
+One constant hidden neuron implements b′ in a linear readout. If the original affine readout has
+zero bias and the output bias is constrained to remain zero, the same conclusion holds without the
+extra neuron.
+Proof. For each nonzero vj , positive homogeneity gives vj ReLU(wj · x̄) = sign(vj ) ReLU(|vj |wj · x̄).
+For zero vj , use the zero incoming vector and choose sign +1. Fix these readout signs and the
+original activation mask at each Boolean input.
+    The unknowns are the C(d + 1) incoming coefficients and one output bias. For an originally
+active unit impose aj · x̄ ≥ 0; for an inactive unit impose aj · x̄ ≤ 0. On these closed constraints, the
+raw output equals the linear expression
+                                  Lx = b′ +
+                                                        X
+                                                                          sj (aj · x̄).
+                                              j: originally active at x
+
+If −1 < g(x) < 1, impose Lx = g(x). If g(x) = 1, impose Lx ≥ 1; if g(x) = −1, impose Lx ≤ −1.
+This system is nonempty because the normalized original implementation satisfies it. Every coefficient
+is 0 or ±1, and every right-hand side belongs to [−1, 1]. Lemma 5.1 gives the desired magnitude cap.
+     Strict activation inequalities are unnecessary. If a previously active preactivation becomes zero,
+both its affine expression and its ReLU value are zero. Hence all prescribed output constraints
+still imply exact equality of the clipped functions. A neuron computing ReLU(1) = 1 supplies the
+output bias. If the output bias must be zero, impose that additional equality in the linear system;
+no constant neuron is then needed.
+
+Corollary 5.3 (A fixed-temperature quadratic-width expectation bound). Let the learner have
+one ReLU hidden layer and the Lévy fan-in prior of (2). Let the input law be arbitrary on the
+Boolean cube, the conditional mean lie in [−1, 1], and the centered observation noise be conditionally
+sub-Gaussian with proxy σ 2 . Use the single fixed Gaussian observation variance 128(1 + σ 2 ) and all
+n observations. For every prescribed N ≥ C + 1,
+                          C0 (1 + σ ) 2 2     h                                           i
+   ER(f¯Sn ) ≤ inf R(g) +            P log(2P ) + P log(e(n + 1)) ,                           P = C(d + 1) + 1.
+              g∈GC,1         n+1
+Here GC,1 consists of clipped shallow ReLU functions with arbitrary finite coefficients and affine
+readout. The numerical constant C0 is independent of C, d, N, n. At fixed input dimension, the width
+cost is quadratic, up to logarithms. With zero output bias, the same guarantee holds at every N ≥ C.
+Proof. The exact compactification has width at most C + 1, depth one, coefficient cap BP , and a
+formula with at most C + 1 hidden occurrences. In the native comparison interface,
+                     K0 ≤ C1 (d + 1)(C + 2) ≤ C2 P,                log K1 ≤ C3 P log(2P ).
+Apply the sharp all-data expectation theorem and its logarithmic-comparison corollary at temper-
+ature T = 256(1 + σ 2 ). Their prediction uses the same bounded output and every observation.
+Taking the infimum over deterministic original teachers is legitimate because the resource bound is
+uniform in their coefficients. The constant-wire-free case is identical.
+
+   At a larger prescribed learner depth H, identity padding adds only H(C + 1) formula occurrences.
+The stable-padding comparison (5) yields the sharper resource
+                              h                                                           i
+                  C0 (1 + σ 2 ) HP 2 log(2P ) + HP log(e(H + 1)(n + 1)) /(n + 1),
+with the same all-width threshold. Thus the learner-depth dependence in this shallow-teacher result
+is nearly linear without a robustness restriction. The primary quadratic-width statement already
+holds at one hidden layer.
+
+                                                        10
+6    The same width on continuous input domains
+The shallow compactification also works approximately on continuous domains, without adding
+neurons. A rational grid makes its constraint matrix integral. Away from a controlled set of
+hyperplanes, matching grid vertices then determines the whole function.
+   Assume the input law on [−1, 1]d satisfies, for every Euclidean unit vector u, every t ∈ R, and
+0 < r ≤ 1,
+                      PX {|u · X − t| ≤ r} ≤ κrα ,      κ ≥ 1, 0 < α ≤ 1.                      (14)
+Write s(t) = clip(t, [−1, 1]) in this section.
+
+Lemma 6.1 (An integer polyhedron with bounded coefficients). A nonempty finite system of linear
+equalities and inequalities in P variables, with integer coefficient magnitudes at most an integer
+Q ≥ 1 and real right-hand-side magnitudes at most Q, has a feasible point of coordinate magnitudes
+at most
+                                        BP,Q = (2P Q)2P +2 .
+
+Proof. Use the minimum-Euclidean-norm feasible point and its active-row span, exactly as in
+Lemma 5.1. For r ≤ P independent active rows, the integer Gram matrix has determinant at least
+one and entries at most P Q2 . Its adjugate entries are at most (r − 1)!(P Q2 )r−1 . The formula
+z = A⊤ (AA⊤ )−1 b therefore gives |zj | ≤ r2 Q2 (r − 1)!(P Q2 )r−1 ≤ BP,Q . The zero-rank case gives the
+zero vector.
+
+Lemma 6.2 (Same-width approximation by grid compactification). Let
+                            C
+                            X
+               r(x) = b +         vj ReLU(wj · x̄),          x̄ = (1, x),      P = C(d + 1) + 1,
+                            j=1
+
+with arbitrary finite real coefficients. For every integer Q ≥ 1, there is another raw shallow
+implementation
+                                           C
+                                           X
+                          rQ (x) = bQ +          ϵj ReLU(aj · x̄),          ϵj ∈ {−1, 1},
+                                           j=1
+
+whose incoming coefficients and bias have magnitude at√most BP,Q , and such that s(rQ ) = s(r) at
+every vertex of the grid {−1 + 2j/Q : 0 ≤ j ≤ Q}d . If 2 d/Q ≤ 1, then
+                                                                  √
+                         PX {s(rQ (X)) ̸= s(r(X))} ≤ 6κ(C + 1)d (2 d/Q)α .                   (15)
+
+The affine readout bias uses one additional constant neuron; without that bias the same construction
+keeps only C neurons.
+
+Proof. Normalize the original readout signs by positive homogeneity. At every grid vertex, impose
+its original closed activation mask and the linear output constraints that make its clipped value equal
+to s(r), as in Lemma 5.2. Multiply every constraint by Q. The grid coordinates have denominator Q,
+so all coefficients are integers with magnitude at most Q, and every right-hand side has magnitude
+at most Q. The original implementation is feasible. Lemma 6.1 gives the stated cap and exact
+agreement at grid vertices. As before, an active preactivation becoming zero causes no semantic
+problem.
+    Each shallow network has at most C nontrivial activation hyperplanes, dividing space into at
+most (C + 1)d full-dimensional regions. In each such region its raw output is affine. Add the at
+most two nontrivial hyperplanes on which that affine function equals 1 or −1, extending these
+
+                                                        11
+hyperplanes to the whole space. Identically constant affine functions need no extra hyperplane. For
+both networks together the number of hyperplanes is at most 2C + 4(C + 1)d ≤ 6(C + 1)d .
+    Call a closed grid cell bad if it meets any of these hyperplanes, including on its boundary.
+Otherwise each clipped network is affine or constant on that cell. They agree at all its vertices, and
+therefore agree everywhere
+                    √        on it. Every point in a bad cell lies within Euclidean distance at most
+the cell diameter 2 d/Q of one of the listed hyperplanes. A union bound using (14) proves (15).
+Hyperplanes with zero normal are omitted: their affine function is constant and creates no change
+of piece. This also covers degenerate activation patterns.
+
+Theorem 6.3 (A quadratic-width, linear-depth expectation oracle). Use the fixed Lévy fan-in
+prior with M1 ≤ 1/4, ReLU hidden activations, and a final clip in both likelihood and prediction.
+Assume (14), a conditional mean in [−1, 1], and conditionally centered sub-Gaussian noise with
+proxy σ 2 . Fix any learner depth H ≥ 1 and width N ≥ C + 1 before drawing data. Train on all
+n ≥ 2 observations with the fixed Gaussian observation variance 128(1 + σ 2 ).
+    Put
+                                                       log(2κ(n + 1)) + d log(C + 1)
+               P = C(d + 1) + 1,      Ln = log(2P ) +                                .
+                                                                     α
+There is a constant C0 , depending only on the fixed scalar Lévy law, such that
+
+                                          C0 (1 + σ 2 )
+                 ER(f¯Sn ) ≤ inf R(g) +                 {HP 2 Ln + HP log(eH(n + 1))}.            (16)
+                              g              n+1
+The infimum is over final-clipped, one-hidden-layer ReLU teachers of width C, with arbitrary finite
+real coefficients and affine readout. The same conclusion holds for a final tanh in both learner and
+comparison class. With zero affine readout bias, the width threshold is N ≥ C.
+    The algorithm needs neither the teacher coefficients nor C, κ, α for this fixed-temperature guaran-
+tee. The latter quantities occur only in its analysis. The bound is polynomial jointly in comparison
+width, input dimension, learner depth and 1/α, and logarithmic in κ. At fixed dimension and
+regularity it is quadratic in teacher width and linear in learner depth, up to logarithms.
+
+Proof. Fix an original clipped teacher and set
+                                    l √                        m
+                               Q = 2 d [96κ(n + 1)(C + 1)d ]1/α .
+
+The discrepancy probability in (15) is at most 1/[16(n + 1)]. Both outputs and the conditional
+mean f0 lie in [−1, 1]. Their population squared risks therefore differ by at most 4E|s(rQ ) − s(r)| ≤
+8PX {s(rQ ) ̸= s(r)} ≤ 1/[2(n + 1)]. The irreducible noise cancels in this risk comparison.
+   The compactified teacher has width at most C + 1, one hidden layer, a formula with at most
+C + 1 hidden occurrences, and coefficient cap BP,Q . Moreover
+
+                                  log(2κ(n + 1)) + d log(C + 1)
+                                                                
+          log Q ≤ C1 log(2d) +                                  ,       log BP,Q ≤ C2 P Ln .
+                                               α
+Apply the stable-padding comparison and sharp all-data expectation theorem to this deterministic
+compactified teacher. At depth H, its actual formula expansion has at most H(C + 1) occurrences.
+The stable-padding resource is at most
+
+                                  C3 {HP 2 Ln + HP log(eH(n + 1))}.
+
+This comparison uses every finite N ≥ C + 1, including the small-width branch, with no dependence
+on the original coefficient magnitudes. Adding the compactification error proves (16). The teacher
+
+                                                   12
+and grid can depend on n but are independent of the observed sample, as required by the expectation
+theorem. Take the infimum over all deterministic original teachers.
+   For a final tanh, write the original raw output as r and take M = 12 log(16(n + 1)) ≥ 1.
+Apply the grid compactification to the clipped normalized output s(r/M ), giving a raw normalized
+implementation uQ with the same width and cap BP,Q . Use actual raw output M uQ followed by
+tanh. Off the same exceptional grid cells, s(uQ ) = s(r/M ). If their common clipped value has
+magnitude less than one, the actual raw outputs agree. If it equals 1 or −1, both raw outputs lie
+beyond the same threshold ±M , so their final tanh values differ by at most 2e−2M = 1/[8(n + 1)].
+On the exceptional cells their difference is at most two. Thus their population squared risks differ
+by at most
+                             8/[16(n + 1)] + 4/[8(n + 1)] = 1/(n + 1).
+The output rescaling increases the coefficient cap only to at most M BP,Q (after adding a constant
+neuron for the affine bias). Its extra logarithmic cost is absorbed into the same resource. ReLU
+identity padding and the fixed output link leave the stable-padding argument unchanged. The
+zero-bias case imposes that equality throughout and omits the constant neuron.
+
+
+7     An additive cost for additional learner depth
+A shallow teacher’s large coefficient precision need not be paid separately at every later layer. After
+its computation, the comparison network can reset the bounded scalar output into two channels.
+The native background contracts, so the precision needed in later layers relaxes as that background
+decays. The detailed construction is Theorem B.1.
+
+Theorem 7.1 (Quadratic teacher width plus linear learner depth). Use the fixed Lévy prior, ReLU
+hidden activations, and final clipping in both the likelihood and prediction. Assume a conditional
+mean in [−1, 1] and conditionally sub-Gaussian noise with proxy σ 2 , and put s0 = 1 + σ 2 . Fix any
+learner depth H ≥ 1 and width N ≥ C + 1 before data. Use all observations and the fixed Gaussian
+variance 128s0 .
+    For Boolean inputs with arbitrary law, one has
+
+                             cs0 (d + 1)2 {(C + 1)2 + H}
+    ER(f¯Sn ) ≤ inf R(g) +                               log2 {e(d + 1)(C + 1)(H + 1)(n + 1)}. (17)
+              g∈GC,1                     n+1
+
+Under the slab condition (7), a continuous-domain bound is
+
+                             cs0 (d + 1)4 {(C + 1)2 + H}
+    ER(f¯Sn ) ≤ inf R(g) +                               log2 {eκ(d + 1)(C + 1)(H + 1)(n + 1)}. (18)
+              g∈GC,1                   α2 (n + 1)
+
+                                                                               e 0 (C 2 + H)/n), at
+Thus, at fixed input dimension and regularity, the expected estimation cost is O(s
+every learner width above the original teacher width plus its constant wire. There is no robustness
+restriction or architecture mixture.
+
+Proof. First suppose C ≥ 2. The exact Boolean compactification has width m = C + 1 ≥ 3, an
+existing constant-one feature, depth one, formula size at most C + 1, and coefficient cap satisfying
+log(B + 8) ≤ cP log(2P ), P = C(d + 1) + 1. The reset theorem’s width condition is therefore N ≥ m,
+not m + 1. Its resource is bounded by
+                       h                                                         i
+                   c P 2 log2 (2P ) + (P + H) log{e(P + H + 1)(H + 1)(n + 1)} .
+
+
+                                                  13
+This is bounded by the remainder in (17). If H is too small for the two-layer reset, the original
+comparison has only a bounded number of layers and obeys the same estimate.
+   For continuous inputs use the same-width grid compactification at discrepancy probability
+O(1/n). Its coefficient cap satisfies
+
+                                              log(2κ(n + 1)) + d log(C + 1)
+                                                                              
+                   log(B + 8) ≤ cP log(2P ) +                               .
+                                                           α
+
+Substitute this into the same reset resource. The bracket is at most c(d + 1)α−1 log{eκ(d + 1)(C +
+1)(n + 1)}. The squared-log term in the reset resource and its teacher term are therefore bounded
+by the right side of (18); the compactification risk error is absorbed there as well.
+    The remaining case is C = 1 and N = 2, where a three-channel intermediate reset may not fit.
+Use the original stable-padding estimates from the shallow Boolean or continuous theorem. Their
+resources are O(HP 2 log(2P ) + HP log(eHn)) and O(HP 2 Ln + HP log(eHn)), respectively, with
+P = d + 2. Because C = 1, these are bounded by the displayed additive formulas after enlarging the
+numerical constant. All larger widths use the reset proof. This handles every N ≥ C + 1 without
+an implicit minimum-width exception.
+
+
+8    A coefficient-free oracle for univariate shallow networks
+Let X ∈ [−1, 1] and suppose that, for every interval I ⊆ [−1, 1],
+
+                           Pr(X ∈ I) ≤ κ|I|α ,        κ ≥ 1,   0 < α ≤ 1.                        (19)
+
+A density bounded by κ gives the case α = 1. The constants below do not depend on the original
+teacher coefficients.
+
+Lemma 8.1 (Bounded-slope approximation of a bounded spline). Let f : [−1, 1] → [−1, 1] be
+continuous and piecewise affine, with at most K interior breakpoints. For every 0 < δ ≤ 1 there is a
+continuous piecewise-affine q : [−1, 1] → [−1, 1] with at most 2K interior breakpoints and Lipschitz
+constant at most 2/δ such that
+                                      E|q(X) − f (X)| ≤ 6κKδ α .                                (20)
+Moreover, q has a one-hidden-layer ReLU implementation, with a constant input, at most 2K + 2
+hidden neurons, and every coefficient bounded in absolute value by 4/δ.
+
+Proof. If K = 0, take q = f . A bounded affine function on [−1, 1] has slope at most one, and the
+representation below uses two neurons. Otherwise list the actual breakpoints as −1 < t1 < · · · <
+tk < 1, with k ≤ K. Partition them into maximal consecutive clusters by placing two successive
+breakpoints in the same cluster exactly when their gap is at most 3δ. For a cluster with first and
+last breakpoints a, b, set
+                              Ia,b = [max{−1, a − δ}, min{1, b + δ}].
+The resulting intervals are disjoint, and successive such intervals are separated by more than δ.
+Define q = f outside their interiors, and interpolate linearly between the two endpoint values of f
+on each interval. This preserves continuity and the bound |q| ≤ 1. All original breakpoints lie inside
+these intervals, so q has at most two breakpoints per cluster.
+   Each replacement interval has length at least δ, hence its chord has slope at most 2/δ. Every
+complementary interval between two replacement intervals has length greater than δ; on it, f is affine
+and bounded, giving the same slope bound. If a nonempty complementary interval touches the left
+
+
+                                                 14
+endpoint −1, then the first original breakpoint lies more than δ from −1. The affine segment extends
+all the way to that breakpoint, so its slope is again at most 2/δ even if the retained complementary
+interval itself is short. The right boundary is identical. Thus q is globally 2/δ-Lipschitz.
+    A cluster containing kj breakpoints has replacement-interval length at most 3δ(kj −1)+2δ ≤ 3kj δ.
+Since |q − f | ≤ 2 and the functions agree elsewhere,
+                                                  X                      X
+                       E|q(X) − f (X)| ≤ 2κ           (3kj δ)α ≤ 6κδ α        kj ≤ 6κKδ α .
+                                                  j                       j
+
+Here 3α ≤ 3 and kjα ≤ kj .
+   For completeness, if u1 < · · · < ur are the new interior breakpoints and s0 , . . . , sr the slopes, use
+                                                                   r
+                                                                   X
+              q(x) = q(−1) ReLU(1) + s0 ReLU(x + 1) +                  (sj − sj−1 ) ReLU(x − uj ).
+                                                                   j=1
+
+The identity holds throughout [−1, 1]. All input coefficients and biases are at most one, |q(−1)| ≤ 1,
+|s0 | ≤ 2/δ, and every slope jump is at most 4/δ. This proves the implementation claim.
+
+Corollary 8.2 (Compactifying a clipped univariate ReLU network). Let g be any one-hidden-layer
+univariate ReLU network of width C ≥ 1, with arbitrary finite real coefficients and biases. Let s clip
+to [−1, 1]. For every 0 < ζ ≤ 1 there is a one-hidden-layer ReLU network q satisfying
+                         |q(x)| ≤ 1      (x ∈ [−1, 1]),        E|q(X) − s(g(X))| ≤ ζ,                    (21)
+whose width and coefficient cap obey
+                                                                              1/α
+                                                          18κ(C + 1)
+                                                               
+                               m ≤ 6C + 6,            B≤4                            .                   (22)
+                                                              ζ
+It has a constant input and no internal biases, and its nonnegative hidden features can be relayed by
+identity matrices through any additional hidden layers.
+Proof. The original network is affine on at most C + 1 intervals. Clipping can add at most two
+breakpoints on each such interval, so s ◦ g has at most K = 3C + 2 interior breakpoints. Apply
+Lemma 8.1 with δ = [ζ/(18κ(C + 1))]1/α ≤ 1. Then 6κKδ α ≤ ζ and 2K + 2 ≤ 6C + 6. A ReLU
+identity layer preserves the nonnegative hidden vector exactly.
+
+Theorem 8.3 (A sharp continuous-domain width-only oracle). Use the independent-coordinate Lévy
+fan-in prior with the fixed small intensity required by the stable-padding comparison theorem. Fix
+one learner width N , one hidden depth H ≥ 1, ReLU hidden activation, and clipping to [−1, 1] in
+both the likelihood and prediction. Assume (19), f0 (x) = E[Y | X = x] ∈ [−1, 1], and conditionally
+centered σ 2 -sub-Gaussian label noise. Put sσ = 1+σ 2 . The ordinary all-data posterior with likelihood
+                                                 n
+                                              "                                #
+                                            1 X
+                         dΠSn (w) ∝ exp −           (fw (Xi ) − Yi )2 dπN (w)
+                                          256sσ i=1
+
+and posterior mean f¯Sn satisfies, for a numerical A,
+                                                   Asσ (C + 1)H 
+                                                                                                    
+    ESn R(f¯Sn ) ≤
+                                                                                          
+                         inf            inf R(g) +             log eκ(C + 1)(H + 1)(n + 1) ,             (23)
+                     C≥1: 6C+6≤N       g∈GC          α(n + 1)
+where GC is the class of one-hidden-layer univariate ReLU networks of width at most C, with no
+coefficient restriction. The same fixed posterior is used for every comparator in this infimum. If the
+displayed index set is empty, the theorem makes no comparator claim. No prior over network sizes
+or posterior averaging over sample sizes is used.
+
+                                                          15
+Proof. Fix C with 6C + 6 ≤ N and g ∈ GC . Clipping g cannot increase squared risk because
+f0 ∈ [−1, 1]. Apply Corollary 8.2 with ζ = (n + 1)−1 to get a bounded width-m comparator q. For
+two functions taking values in [−1, 1], population squared risks differ by at most four times their
+L1 (PX ) distance; this follows by conditioning on X and cancelling the common label-noise variance.
+Consequently
+                                                         4
+                                         R(q) ≤ R(g) +      .
+                                                       n+1
+Its one-hidden-layer rooted formula has size at most m. Identity padding to depth H increases this
+to at most mH. The audited stable-padding comparison theorem gives the all-data expectation
+remainder
+           Asσ (mH + 1)
+                        [2 log{A(m + 1)(B + 8)} + log{A(mH + 1)H(B + 8)(n + 1)}] .
+               n+1
+Substitute (22) and m ≤ 6C + 6. Since 0 < α ≤ 1, this is bounded by the remainder in (23), after
+enlarging A to absorb 4/(n + 1). Every comparison law is deterministic given the comparator
+and input distribution. The expectation oracle holds separately for every such law and uses the
+same posterior, so one may take the infimum over all C and g without a confidence union or a size
+prior.
+
+Interpretation. For a bounded-density one-dimensional input law and fixed learner depth, the
+excess-risk cost is O((1
+                    e    + σ 2 )C/n), independent of the original teacher coefficients and the learner
+width. Additional learner depth costs only a factor H and logarithms. The anti-concentration
+assumption matters: the proof permits changes on short intervals around tightly packed breakpoints,
+and controls their probability through (19). The theorem is an expectation bound for the ordinary
+final posterior mean. It does not claim that a single posterior draw has the same guarantee.
+
+
+9    Coefficient-free formula networks at unchanged width
+A ReLU formula network is a layered scalar-output network in which each hidden neuron has at
+most one outgoing edge. The input coordinates may be reused. We first use the learner’s convention:
+a constant input is available in the first layer, but there are no later hidden biases and the final
+readout is linear. Its output is clipped to [−1, 1]. Write S for its number of hidden neurons after
+deleting vertices with no path to the readout, and L1 for the number in its first hidden layer. A
+width-C, hidden-depth-h formula has L1 ≤ C and S ≤ Ch.
+Lemma 9.1 (Exact formula compactification). On the Boolean cube, every such formula has an
+exact implementation on the same graph in which all edges between hidden neurons and all readout
+edges belong to {−1, 1}, while the first-layer coefficients have magnitude at most
+
+                                 BP = (2P )2P ,        P = (d + 1)L1 .
+
+The formula’s original coefficients may be arbitrary finite real numbers. Zero functions may instead
+use one zero hidden chain.
+Proof. Delete vertices whose unique outgoing edge is zero. Starting at the readout and moving
+backwards, absorb the absolute value of each neuron’s unique outgoing weight into all its incoming
+coefficients, using positive homogeneity of ReLU. Replace that outgoing weight by its sign. No
+conflicting normalization is possible because the edge is unique. The resulting internal and readout
+edges are ±1; only first-layer coefficients remain unconstrained.
+
+                                                  16
+    Fix the normalized formula’s activation mask at every Boolean input. Treat its P first-layer
+coefficients as variables. Every preactivation is linear in those variables: substitute the prescribed
+zero-or-identity activation at each earlier node. Every variable has at most one path to any later
+neuron, so each coefficient of this linear expression is 0 or ±1. Impose the closed inequalities
+preserving every activation mask. Impose the clipped-output equalities or inequalities exactly as in
+the shallow compactification: equality at an output in (−1, 1), and the corresponding inequality at
+±1.
+    The original normalized first layer makes this finite linear system feasible. Its right sides lie in
+[−1, 1] and its coefficient matrix is integral with entries 0, ±1. The minimum-norm integer-polyhedron
+lemma gives a feasible first layer bounded by BP . Closed masks suffice because a preactivation
+reaching zero contributes zero in either convention. The reconstructed formula therefore has exactly
+the original clipped output at every Boolean input.
+
+    The following sharper prior-comparison estimate avoids multiplying a logarithmic coefficient
+cost by depth. Its proof uses the fact that the normalized formula has internal column ℓ1 norms at
+most one.
+Lemma 9.2 (Contracting formula comparison). Use the fixed Lévy fan-in prior with first absolute
+jump moment M1 ≤ 1/4. Let a comparison formula have S ≥ 1 hidden occurrences, L1 first-layer
+nodes, first-layer coefficient cap B ≥ 1, internal and readout weights ±1, and width at most N . Put
+P = (d + 1)L1 . For every 0 < t ≤ 1, a data-independent comparison law satisfies
+                                                                            c(d + 1)(S + 1)(P + 1)(B + 8)
+Eρ     sup       |fw (x) − g(x)| ≤ t,    KL(ρ∥πN ) ≤ c(d + 1)(S + 1) log                                  .
+     x∈[−1,1]d                                                                            t
+
+The constant is independent of depth, width, and the first-layer coefficient cap.
+Proof. We use the designated-coordinate and background-coordinate laws of the Lévy comparison
+construction. At a coordinate with desired mean a, the designated law has mean a, lies within cε
+of a, and has entropy cost at most log F + c log(c(B + 8)/ε). For a = ±1 and sufficiently small ε,
+its sign is fixed and E|W | = 1. A background coordinate entering a selected row has first absolute
+moment at most cε/F ; its row-normalized entropy cost is c log(c/ε). All these coordinates are
+independent at a fixed embedding. Native unselected coordinates obey E|W | ≤ M1 /F .
+    First fix an embedding. Let Uℓ be the sum, over the selected formula nodes in layer ℓ, of expected
+uniform absolute activation. Let pℓ be the average expected uniform absolute activation over all N
+nodes, and let mℓ be the number of selected nodes in that layer. The first layer satisfies
+
+                                        U1 ≤ cP B,       p1 ≤ M1 + U1 /N.
+
+At every subsequent layer, uniqueness of outgoing formula edges and E|W | = 1 give
+
+                               Uℓ ≤ Uℓ−1 + cεmℓ pℓ−1 ,        pℓ ≤ M1 pℓ−1 + Uℓ /N.
+
+For the second inequality, bound the unselected rows by the native gain and count the selected rows
+separately; double-counting only enlarges the bound. Consequently
+
+                                            pℓ ≤ c + cN −1 max Uj .
+                                                                  j≤ℓ
+
+Since ℓ mℓ = S, summing the first recurrence and choosing ε ≤ c0 /(S + 1) with small numerical
+        P
+
+c0 yields
+                    max Uℓ ≤ c(P B + 1),       max pℓ ≤ c(1 + P B/N ).
+                                 ℓ                            ℓ
+
+
+                                                         17
+No exponential-in-depth factor occurs.
+   Let Eℓ be the sum of expected uniform discrepancies between selected activations and the
+deterministic formula at layer ℓ. The first-layer discrepancy is at most cP ε. At later layers, split
+a designated product into its mean-edge action on the previous discrepancy and its coordinate
+perturbation on the actual previous activation. Unique outgoing edges give
+
+                                      Eℓ ≤ Eℓ−1 + cεUℓ−1 + cεmℓ pℓ−1 .
+
+There are at most S nonempty layers. The same estimate for the readout, followed by the one-
+Lipschitz output clip, gives
+
+                              Eρ sup |fw (x) − g(x)| ≤ cε(S + 1)(P B + 1).
+                                  x
+
+Take ε = c1 t/[(S + 1)(P B + 1)] with a small enough numerical c1 ; this also enforces the earlier
+cutoff condition.
+   At N ≥ 2(S+1) use the random disjoint-group embeddings of the native comparison theorem. The
+formula has exactly one outgoing designated edge per hidden occurrence, so the embedding entropy
+cancels the log N coordinate costs and leaves at most c(d + 1)(S + 1) log(c(d + 1)(S + 1)(B + 8)/ε).
+At N < 2(S + 1) use the original graph directly and bound each uncanceled log N by log(2(S + 1)).
+The same entropy bound results. Substituting ε proves the lemma after enlarging its numerical
+constant. The output approximation estimates above hold for every fixed embedding, hence also for
+their mixture.
+
+Theorem 9.3 (A pure Bayesian formula oracle, polynomial jointly in width and depth). Use the
+fixed Lévy prior, clipped output in likelihood and prediction, and fixed Gaussian observation variance
+128s0 , where s0 = 1 + σ 2 . Let the input distribution be arbitrary on the Boolean cube, with bounded
+conditional mean and conditionally sub-Gaussian observation noise. At every prescribed learner
+width N ≥ C and hidden depth h, the ordinary posterior mean trained on all n observations obeys
+
+                                          cs0 (d + 1)(Ch + 1)
+                 ER(f¯Sn ) ≤ inf R(g) +                       [C(d + 1) log{2C(d + 1)}
+                              g                   n+1
+                                                       + log{e(d + 1)(Ch + 1)(n + 1)}] .
+
+The infimum is over clipped width-C, depth-h ReLU formula networks with the input-bias-only
+convention and arbitrary finite coefficients. Thus, up to logarithms, the excess cost is s0 C 2 (d+1)2 h/n.
+There is no robustness restriction on the prior and no selection of temperature or architecture.
+
+Proof. Apply Lemma 9.1, then Lemma 9.2 with t = (n + 1)−1 . The output comparison changes
+squared risk by at most 4t because outputs and the conditional mean lie in [−1, 1]. Its entropy is
+at most the displayed resource, since P ≤ C(d + 1) and S ≤ Ch. The sharp all-data expectation
+theorem completes the proof. Take the infimum over deterministic teachers; no confidence union is
+needed for an expectation oracle.
+
+Theorem 9.4 (Formula teachers on a regular continuous domain). Assume the slab condition
+PX {|u · X − t| ≤ r} ≤ κrα on [−1, 1]d , with κ ≥ 1, 0 < α ≤ 1. Keep the same fixed prior, likelihood,
+and input-bias-only formula convention. Put
+
+                                                            log{eκ(S + 2)(n + 1)} + dh log(C + 1)
+     P = C(d + 1),        S = Ch,         Ln = log(2P ) +                                         .
+                                                                             α
+
+
+
+                                                    18
+For every prescribed learner width N ≥ C and hidden depth h, the ordinary all-data posterior mean
+satisfies
+                                   cs0 (d + 1)(S + 1)
+          ER(f¯Sn ) ≤ inf R(g) +                      [P Ln + log{e(d + 1)(S + 1)(n + 1)}] ,
+                       g                  n+1
+where the infimum is over clipped width-C, depth-h ReLU formula networks with arbitrary finite
+coefficients. In particular, the dependence is polynomial jointly in teacher width, teacher depth,
+dimension, and 1/α, and logarithmic in κ.
+Proof. Normalize the original formula’s unique outgoing edges to ±1. On the rational cube grid of
+denominator Q, impose its closed activation masks and clipped-output constraints. Multiplying by
+Q makes every constraint coefficient an integer of magnitude at most Q, with right side of magnitude
+at most Q. The bounded-polyhedron lemma gives first-layer coefficients at most (2P Q)2P +2 without
+changing the graph or its normalized internal edges.
+    A width-C, depth-h ReLU network has at most (C + 1)dℓ full-dimensional affine regions after
+layer ℓ. Indeed, each previous convex polyhedral    region is cut by at most C affine hyperplanes in
+the next layer, creating at most dj=0 Cj ≤ (C + 1)d new regions. For each node on every previous
+                                 P        
+
+region, extend its nontrivial preactivation-zero hyperplane to all of space. Add the two nontrivial
+raw-output clipping hyperplanes on each final region. A safe bound on the number of hyperplanes
+for one network is (Ch + 2)(C + 1)dh . Count both the original and compactified networks, giving
+
+                                      M ≤ 2(Ch + 2)(C + 1)dh .
+
+Identically zero or constant affine pieces create no change of piece and need no hyperplane. The
+listed hyperplanes cover every activation or clipping boundary.
+    A closed grid cell not meeting these hyperplanes is a region on which both clipped outputs are
+affine or constant. Exact agreement at its vertices
+                                             √      therefore implies agreement throughout the cell.
+The union of bad cells lies within distance 2 d/Q of the listed hyperplanes. Choose
+                                        l √                     m
+                                   Q = 2 d [32κM (n + 1)]1/α .
+
+The two bounded functions disagree with probability at most 1/[32(n + 1)], so their population
+squared risks differ by at most 1/[4(n + 1)]. Also
+
+                               log{eκ(S + 2)(n + 1)} + dh log(C + 1)
+                                                                      
+         log Q ≤ c log(2d) +                                         ,        log B ≤ cP Ln .
+                                                α
+Apply the contracting formula comparison, whose proof depends on the graph and normalized edges
+rather than the original coefficient sizes, at t = (n + 1)−1 . Its entropy and the sharp expectation
+oracle give the displayed remainder. The grid and comparison law are deterministic given the
+teacher, input law, and sample count; they do not depend on the realized sample. Taking the
+infimum over teachers is therefore legitimate.
+
+Allowing hidden biases. There is also a coefficient-free, jointly polynomial guarantee for formula
+teachers with arbitrary hidden biases and an affine readout. It has a looser depth polynomial and
+uses one constant wire. To see this on the Boolean cube, retain every normalized hidden bias and
+the output bias among the LP variables. The same unique-path argument keeps every matrix
+coefficient in {0, ±1}. The number of variables is at most
+
+                                          Pb = C(d + h) + 1,
+
+                                                  19
+and the same bound B = (2Pb )2Pb follows. A constant hidden wire represents all biases in width
+C + 1. Unrolling its contributions adds at most one chain of length h for each original node and for
+the readout, so a safe actual formula bound is Sb ≤ (h+1)(Ch+1). Apply the generic stable-padding
+comparison with base depth h, width C + 1, and coefficient cap B. At learner depth h and every
+N ≥ C + 1, its expected excess is at most
+
+      cs0 (d + 1)(h + 1)(Ch + 1)
+                                 [(h + 1)Pb log(2Pb ) + log{e(d + 1)(h + 1)(Ch + 1)(n + 1)}] .
+                 n+1
+This is polynomial jointly in width, depth, and dimension, with quadratic width dependence up to
+logarithms. For slab-regular continuous inputs the same grid argument applies: replace P log(2P )
+in the coefficient-cap estimate by
+
+                                      log{eκ(Ch + 2)(n + 1)} + dh log(C + 1)
+                                                                                   
+                     Pb log(2Pb ) +                                          .
+                                                        α
+
+No changed learner prior or robustness restriction is needed. The sharper O(C     e 2 (d + 1)2 h/n)
+statement above uses the explicit input-bias-only convention; it is not asserted for general hidden
+biases by this conservative argument.
+
+
+10     Why an input-scale assumption cannot simply be removed
+The regularity assumption in the preceding continuous-domain theorem excludes targets that change
+sharply between two input points of arbitrarily small separation. The following obstruction applies to
+the Lévy fan-in prior, and more generally to any independent centered fan-in prior whose coordinate
+variances are at most the reciprocal fan-in.
+
+Proposition 10.1 (A fixed-width target on two nearby inputs). Consider a univariate depth-H
+width-N ReLU learner with constant input, no internal biases, independent centered coordinates of
+variance at most 1/2 in the first layer and at most 1/N thereafter, including the readout. Clip its
+output to [−1, 1]. Fix T > 0 and use
+                                                   n
+                                           "                            #
+                            dΠSn (w) ∝ exp −T −1
+                                                   X
+                                                         (fw (Xi ) − Yi )2 dπ(w).
+                                                   i=1
+
+For every n ≥ 1, every N ≥ 1 and every H ≥ 1, there is a noiseless two-point input distribution
+and a width-one shallow ReLU target such that the ordinary posterior mean has risk at least 1/16
+for every realized training sample of size n.
+
+Proof. For 0 < δ ≤ 1, denote differences between inputs δ and 0 by ∆. ReLU is 1-Lipschitz. The
+first layer therefore satisfies
+                                      Eπ ∥∆h1 ∥22 ≤ N δ 2 /2.
+At each later hidden layer, condition on previous layers. Centering and independence of the incoming
+coordinates give
+                                    E[∥∆hℓ ∥22 | hℓ−1 ] ≤ ∥∆hℓ−1 ∥22 .
+The same calculation for the independent linear readout, followed by clipping, yields
+
+                                      Eπ |fw (δ) − fw (0)|2 ≤ δ 2 /2.                             (24)
+
+
+
+                                                    20
+Let X be uniform on {0, δ} and set Y = X/δ. Both labels lie in [0, 1], so every squared loss in the
+likelihood is at most four and its normalizer is at least e−4n/T . The likelihood numerator is at most
+one. Consequently, for every realized sample,
+
+                      |f¯Sn (δ) − f¯Sn (0)|2 ≤ EΠSn |fw (δ) − fw (0)|2 ≤ e4n/T δ 2 /2.
+                     √
+Choose δ = e−2n/T / 2. The two posterior-mean values differ by at most 1/2. For any real a, b with
+|b − a| ≤ 1/2,
+                                a2 + (b − 1)2   (1 − (b − a))2    1
+                                              ≥                ≥ .
+                                      2               4           16
+Finally, g(x) = ReLU(x/δ) is a width-one shallow network agreeing exactly with both labels. It
+remains exact after output clipping on these two inputs. Its coefficients may be large, as permitted
+by a coefficient-free comparison class.
+
+Quantifiers. The adverse distribution and teacher may depend on the sample size. This disproves
+a uniform distribution-independent rate depending only on teacher width; it does not assert
+inconsistency on one fixed two-point problem. The obstruction uses no optimization difficulty, no
+width limit and no robustness restriction. Its mechanism is the prior’s continuity at small input
+separations, together with a fixed likelihood temperature.                     √
+    The obstruction can also use an atomless input law. Set δ = e−2n/T /(2 2) and ε = δ/4, and
+give equal mass to the uniform laws on [−ε, 0] and [δ, δ + ε]. The same clipped width-one target is
+identically zero on the first interval and one on the second. Apply (24) to each pair of points, whose
+distance is at most δ + 2ε, and average. The difference between the two interval-averaged posterior
+predictions has squared magnitude at most
+
+                                   e4n/T (δ + 2ε)2 /2 = 9/64 < 1/4.
+
+Jensen’s inequality within each interval again gives population risk at least 1/16. Each law has a
+bounded density, but its density bound grows with n; this is consistent with the positive theorem’s
+explicit dependence on the regularity constant κ.
+
+
+11     Every realizable width: a high-probability selected-posterior
+       oracle
+The fixed-temperature expectation theorem requires enough learner width to hold the coefficient-
+bounded comparison implementation. The shallow Boolean result avoids this issue entirely. At
+general depth, a different guarantee covers every learner width above the original teacher width:
+train a small collection of posteriors at the same architecture, and use independent validation data
+to choose one likelihood variance. This is a different prediction rule from the fixed-temperature
+theorem, and its returned posterior uses only the training half of the observations.
+    Here is the rule precisely. Split n ≥ 4 observations into m = ⌊n/2⌋ training observations and
+n − m validation observations. For J = ⌈log2 (128n)⌉, train posterior means at inverse temperatures
+βj = 2−j , 0 ≤ j ≤ J, where the posterior density is proportional to e−βj mRbT relative to the same
+πN . Add one more posterior: writing
+                                          1
+                                                   Z
+                              FT (β) = −    log        e−βmRT (fw ) dπN (w),
+                                                             b
+                                         βm
+
+
+                                                    21
+choose the first β = 2ℓ , ℓ ≥ 0, satisfying FT (β) ≤ inf w R
+                                                           b T (fw ) + 1/m. Full support and continuity
+ensure that this finite choice exists. Return the candidate posterior mean minimizing validation
+squared loss, with a fixed tie rule. This rule knows neither teacher width, teacher coefficients,
+approximation risk, nor noise scale. Its architecture and prior are fixed before observing the data.
+   For a positive real M define the parameter-complexity upper bound
+                VH,d (M ) = c(d + 1)(H + 1)2 (M + 1)2 log{e(d + 1)(H + 1)(M + 1)}.
+The ReLU pseudodimension theorem [4] bounds the pseudodimension of every width-N learner with
+N < M by this quantity. Indeed it has O((d + 1)N + HN 2 ) parameters; clipping the last output
+changes the bound by at most a constant factor.
+Theorem 11.1 (A coefficient-one oracle at every teacher-realizable width). Suppose the observations
+satisfy the conditional-mean and sub-Gaussian assumptions. Fix H, N before data, use the prior
+(2), and run the variance-selection rule above. Put s0 = 1 + σ 2 and AC,h = inf g∈GC,h R(g) − R0 . For
+C + 1 ≤ N define, in the Boolean case with b(h + 1) ≤ H,
+                         "                                                               #
+                  cs0                                          8(J + 2)(C + 1)2 (h + 1)2
+           DC,h =     BC,h,H,d (n) + VH,d (Qbn ) log(en) + log                           .
+                   n                                                      δ
+In the slab-regular case with h ≤ H and H ≥ 4, use instead
+                     "                                                                       #
+                cs0                                              8(J + 2)(C + 1)2 (h + 1)2
+         DC,h =     CC,h,H,d,κ,α (n) + VH,d (3TC ) log(en) + log                           .
+                 n                                                          δ
+On an event of probability at least 1 − δ, simultaneously for all the stated teacher classes,
+                                               n           q                       o
+                             R(fb) ≤ R0 + inf AC,h + c AC,h DC,h + cDC,h .                        (25)
+                                         C,h
+
+The output is the ordinary mean of one posterior trained on ⌊n/2⌋ observations. The guarantee does
+not imply the same inequality after refitting that variance to all n observations. Its remainder is
+independent of how large N is.
+Proof. For each teacher class split the proof into two cases; the algorithm does not use this split. If
+N is at least the compiled width, Lemma 4.1 provides a comparison to a deterministic compiled
+teacher with risk within 4/(n + 1)2 of the original. The stable-padding comparison also implies the
+L2 logarithmic-comparison interface in Section E, since |fw − g|2 ≤ 2|fw − g| for bounded functions.
+Its resource at precision 1/n is bounded by B or C.
+    If C + 1 ≤ N is smaller than the compiled width, the original teacher fits after adding one
+constant wire and identity-padding. Its coefficients need no bound. The pseudodimension of this
+particular learner is at most V evaluated at the compiled-width bound, so the finite-parameter
+candidate in Theorem E.4 gives the alternative resource. The displayed sum safely bounds both
+cases, without making an unjustified dominance claim.
+    Use Corollary E.5 with proof-only weights wC,h = (C + 1)−2 (h + 1)−2 , whose sum over positive
+integers is less than one. Its shared validation event and the common relative-noise baseline give
+(25). The approximation error 4/(n + 1)2 and deterministic near-minimizer error are absorbed by
+DC,h . No prior over classes is introduced.
+
+   For Boolean inputs, the resource remains polynomial in C, d at fixed h, and polynomial in the
+additional learner depth. For slab-regular inputs, a safe simplified bound is
+                                                                           !
+                                                   s0 (H + 1)2 (TC + 1)2
+                                  DC,h = O
+                                         e d,α                                 ,
+                                                             n
+
+                                                      22
+where the suppressed logarithms include n, κ, H, TC , 1/δ. The extra square in TC covers the
+intermediate widths at which the original teacher fits but the coefficient-bounded compiler may not.
+The pure fixed-temperature expectation theorem at larger widths has only linear TC cost.
+     The noise-sensitive form is relevant even when there is irreducible observation noise: the square-
+root term depends on approximation error AC,h above the regression noise floor, not on the total
+risk R0 + AC,h . The fixed-temperature high-probability lemma in Section E provides an all-data
+alternative with coefficient 1 + η on approximation error whenever the logarithmic comparison itself
+fits. That result and the holdout result have different quantifiers from the sharp all-data expectation
+theorem.
+
+
+12     An existence result with deterministic all-width calibration
+The general-depth expectation theorem above requires enough learner width to contain a coefficient-
+controlled compilation. A deterministic likelihood schedule removes this width allowance. The
+additional argument uses finite parameter complexity at smaller widths, and may prescribe an
+extremely small, nonexplicit observation variance there. It is therefore an existence result, not a
+refinement of the fixed-likelihood claim.
+Theorem 12.1 (All realizable widths with a prescribed likelihood schedule). Fix input dimension
+d ≥ 1 and teacher hidden depth h ≥ 1. Consider either arbitrary input laws on {−1, 1}d , or laws on
+[−1, 1]d satisfying the slab condition with fixed κ, α. Fix a learner hidden depth H large enough for
+the corresponding compiler: H ≥ b(h + 1) in the Boolean case, and H ≥ max{h, 4} in the continuous
+case. Here b is the numerical Boolean compiler constant used in Section 4. There is a deterministic
+positive temperature schedule Tn,N , depending only on n, N, H, d and the stated input-regularity
+constants, with the following property. Use the fixed Lévy parameter-prior family of Section 2, output
+fw,n = Mn clip(zw , [−1, 1]) with Mn = n1/8 , and
+                                                        n
+                                            "                                          #
+                                                  −1
+                                                        X
+                                                                                   2
+                       dΠn,N (w) ∝ exp          −Tn,N         (fw,n (Xi ) − Yi )           dπN (w).
+                                                        i=1
+
+The observation variance is Tn,N /2. No training label is changed. Put a = 2b(b + 1) and choose
+          1                                                 1
+u=                  on Boolean inputs,            u=                      under slab regularity,      Cn = ⌊nu ⌋.
+     16ah(h + 1)                                        16(dh + 1)
+
+For every input–label law in the stated class with EY 2 < ∞, every sufficiently large n, and every
+prescribed N ≥ Cn + 1, the ordinary posterior mean trained on all n observations obeys
+                                                                                              h     i
+        ER(f¯n,N ) ≤             inf              R(g) + O n−1/8 log2 (en) + 5E Y 2 1{|Y |>n1/8 } .          (26)
+                         g a raw ReLU network
+                       hidden depth h, width≤Cn
+
+The comparison networks have arbitrary real coefficients and affine biases. The constant in O(·)
+may depend on d, h, H, κ, α and EY 2 , but not on N or comparison coefficients. The schedule uses
+neither the data nor a label-moment bound.
+    The schedule equals 256Mn2 when N > ⌊n1/8 ⌋. At smaller widths it is fixed before observing data
+through the finite covering argument below. No useful numerical lower bound on that small-width
+variance is claimed. There is still one architecture, one prior, one posterior trained on all data, and
+no validation or architecture mixture. The finite-variance shallow theorem has the stronger feature
+that its simple variance schedule works at every realizable width.
+
+                                                        23
+12.1    Uniform prior comparisons at a fixed finite architecture
+Let FN,H denote the normalized bounded predictions clip(zw , [−1, 1]) at the specified architecture.
+The input family P is either all laws on the Boolean cube or all laws with the stated slab constants.
+Define
+                                dP (f, g) = sup EPX |f (X) − g(X)|.
+                                              PX ∈P
+
+Lemma 12.2 (Finite uniform covers and finite prior cost). For every fixed N, H, d and 0 < ϵ < 1,
+there are finitely many parameter-space open balls B1 , . . . , BJ of positive πN -mass such that every
+g ∈ FN,H has some j for which
+
+                                   sup dP (clip(zw , [−1, 1]), g) ≤ ϵ.
+                                  w∈Bj
+
+Consequently, a finite deterministic number KN,H,d,ϵ ≥ 1 exists such that every such g has a
+comparison measure ρg satisfying
+
+                   KL(ρg ∥πN ) ≤ KN,H,d,ϵ ,           sup Eρg ,PX |fw (X) − g(X)| ≤ ϵ.
+                                                  PX ∈P
+
+No polynomial bound on KN,H,d,ϵ is asserted.
+
+Proof. On a finite Boolean cube, quantize the finitely many output values into bins of length ϵ/4.
+There are finitely many realized bin patterns; choose one implementing parameter vector for each.
+Networks in the same pattern differ uniformly by at most ϵ/4.
+    For continuous inputs, the clipped prediction of a depth-H, width-N ReLU network is affine
+on each cell of a finite polyhedral partition. The number of hidden activation regions is at most
+(N + 1)dH . Every activation boundary is contained in the zero set of one of the corresponding affine
+preactivations, and final clipping adds at most two affine boundaries per region. Thus all changes of
+affine formula are contained in a union of at most
+
+                                      J0 = (HN + 2)(N + 1)dH
+
+affine hyperplanes; identically zero expressions add no boundary. Use the rational grid of mesh
+2/Q on [−1, 1]d and quantize prediction values at its vertices into bins of length ϵ/4. Choose one
+network for each realized finite pattern. For a network and its chosen representative, discard every
+closed grid cell meeting
+                 √       one of their at most 2J0 boundary hyperplanes. Each discarded cell lies
+within distance√2 d/Q of a corresponding hyperplane, so its total probability under any PX ∈ P is
+at most 2κJ0 (2 d/Q)α . On any remaining cell both predictions are affine and differ at every vertex
+by at most ϵ/4; the same bound holds throughout that cell. Hence their dP distance is at most
+                                                     √
+                                        ϵ/4 + 4κJ0 (2 d/Q)α .
+
+Choose the finite integer Q so that the second term is at most ϵ/4. This produces a finite ϵ/2-cover
+with centers in the original architecture. No wider compiler was used.
+    For every chosen finite parameter vector, continuity of the network jointly in parameters and
+in the compact input domain supplies an open parameter ball whose predictions differ uniformly
+from the center by at most ϵ/2. Each ball has positive mass because the coordinate prior has
+full support. Set KN,H,d,ϵ = max{1, maxj log(1/πN (Bj ))} and take ρg = πN (· | Bj ). Then
+KL(ρg ∥πN ) = log(1/πN (Bj )). All choices depend only on the prescribed function class and regularity
+constants, before any data or comparison network is selected.
+
+                                                      24
+12.2    Expected uniform convergence with finite-variance labels
+Lemma 12.3 (Bounded predictions, unbounded square-integrable labels). Let F ⊂ [−M, M ]X be a
+pointwise separable class of pseudodimension at most V ≥ 1, and let EY 2 < ∞. For iid samples
+and a numerical constant c,
+                                                                                    s
+                                                                            √           V log(en)
+               E sup (Pn − P ) f (X)2 − 2f (X)Y          ≤ c M 2 + M EY 2
+                                                                              
+                                                                                                  .
+                 f ∈F                                                                       n
+
+This controls squared-loss differences without requiring EY 4 < ∞.
+
+Proof. Symmetrize the two terms separately. Uniform L2 covering bounds for bounded VC-subgraph
+classes give log N (ϵM, F, L2 (Q)) ≤ cV log(c/ϵ) for every probability measure Q. The map t 7→ t2
+is 2M
+    2
+      p-Lipschitz on [−M, M ], so the squared term has expected Rademacher supremum at most
+cM V log(en)/n. For the multiplier term, condition on the sample and apply the same entropy
+bound with the weighted empirical measure
+                                               P 2
+                                                i Yi δXi
+                                           QY = P     2 ,
+                                                         i Yi
+                                                                                qP
+                                                                             2              2
+when its denominator is positive. The Rademacher increment metric is     i Yi /n times the L (QY )
+metric. Dudley’s entropy integral therefore bounds its conditional supremum by
+                                                           qP
+                                                                    2
+                                                                i Yi
+                                           q
+                                      cM       V log(en)                .
+                                                                n
+The zero-denominator case contributes zero. Jensen’s inequality gives the stated expectation. For
+neural networks, rational parameter vectors form a countable pointwise dense class, and dominated
+convergence extends the estimate to all parameters.
+
+12.3    Construction and proof of the schedule
+For N ≤ ⌊n1/8 ⌋, choose the finite cost in Lemma 12.2 at ϵn = n−8 and set
+
+                                                      n−3
+                                       Tn,N =                   .                                     (27)
+                                                  1 + KN,H,d,ϵn
+
+The prior used to define this cost is exactly the prescribed width-N prior. In the continuous case its
+dependence on κ, α is understood. For larger N , set Tn,N = 256n1/4 .
+            M
+   Write FN,H   = M FN,H and R(f   b ) = Pn (f − Y )2 . Gibbs’ variational identity gives, for each
+sample and every comparison measure ρ,
+
+                                  b ) ≤ Eρ R(f             Tn,N
+                               EΠ R(f      b )+                 KL(ρ∥πN ).
+                                                            n
+      b ) − R(0)
+Since R(f   b    equals Pn [f 2 − 2f Y ], Lemma 12.3 and Jensen’s inequality imply
+
+                                              Tn,N
+                        ER(f¯n,N ) ≤ Eρ R(f ) +    KL(ρ∥πN )
+                                               n
+                                                 √     q
+                                    + c(Mn2 + Mn EY 2 ) VN,H,d log(en)/n.
+
+
+                                                    25
+The common term Pn Y 2 − EY 2 cancels after expectation; no fourth moment is used. Here
+VN,H,d ≤ cd,H (N + 1)2 log(e(N + 1)) by the usual ReLU pseudodimension bound [4]; saturation and
+multiplication by Mn preserve this upper bound.
+    Take any raw comparison network g of width at most Cn and hidden depth h. If N ≥ Cn + 1,
+a constant wire and nonnegative ReLU identity relays embed it at depth H and width N . Thus
+clip(g/Mn , [−1, 1]) ∈ FN,H . The comparison measure from Lemma 12.2 has squared L2 (PX × ρ)
+error at most 2Mn2 ϵn relative to clip(g, [−Mn , Mn ]). Cauchy–Schwarz bounds its risk increase by
+                                           √          √
+                                 2(Mn + EY 2 )Mn 2ϵn + 2Mn2 ϵn .
+
+The entropy term under (27) is at most n−4 . Since N ≤ n1/8 and Mn = n1/8 , the uniform-
+convergence remainder is O(n−1/8 log(en)), uniformly over these widths. The projection inequality
+in Appendix D adds at most E[Y 2 1{|Y |>Mn } ] when the clipped comparison risk is replaced by R(g).
+    At larger widths, apply the finite-variance expectation theorem and the coefficient-free compilers
+to the normalized teacher g/Mn . Use normalized precision O((n + 1)−4 (1 + Mn )−4 ). For the
+choices of u in Theorem 12.1, both the compiled width and its logarithmic-prior resource are
+O(n1/16 logcd,h,H (en)). Consequently the compiled width is at most n1/8 for all sufficiently large n.
+The all-data expected cost is O(Mn2 n1/16 logcd,h,H (en)/n) = O(n−11/16 logcd,h,H (en)), together with
+the five-fold label-tail term from Appendix D. At fixed d, h, H, this smaller remainder is absorbed
+by O(n−1/8 log2 (en)). The two branches therefore prove (26) uniformly over every N ≥ Cn + 1.
+Taking deterministic comparison near-minimizers and then an infimum does not change the learner
+or its schedule.
+
+
+A     Only two channels need to cross the extra learner layers
+The last hidden width of a comparison implementation can be much smaller than its largest hidden
+width. Scalar output permits a useful compiler: after completing the teacher computation, carry its
+positive and negative parts through the additional layers.
+
+Lemma A.1 (Two-channel output compiler). Let a ReLU teacher have hidden depth h, width at
+most m, linear scalar readout zg , coefficient cap B ≥ 1, and rooted formula size S before the readout.
+There is an implementation of the same raw function with hidden depth h + 1, width at most m,
+coefficient cap B, and rooted formula size at most 2S + 2. Its last hidden layer has at most two
+relevant neurons and its final nonzero final readout coefficients belong to {−1, 1}. At any larger
+hidden depth H, exact identity relays give rooted formula size at most
+
+                              2S + 2 + 2(H − h − 1) = 2S + 2(H − h).                              (28)
+
+Proof. Add the two hidden neurons q+ = ReLU(zg ) and q− = ReLU(−zg ) and use readout q+ − q− .
+Each new neuron has one copy of the teacher’s readout formula as its input, proving the occurrence
+count. Its incoming coefficients are just the teacher’s readout coefficients with a possible sign
+change. Both outputs are nonnegative, so one-predecessor ReLU identity relays preserve them
+exactly and add two formula occurrences per layer. If m = 1, the last teacher feature is nonnegative
+and zg = vhh has constant sign. One added channel ReLU(|v|hh ) and final coefficient sgn(v) suffice,
+using only width one and no more formula occurrences. The final observation link, including clipping
+to [−1, 1], is unchanged.
+
+
+
+
+                                                  26
+Corollary A.2 (Padding cost depends on scalar output, not hidden width). For the fixed small-
+intensity Lévy fan-in prior, let H ≥ h and N ≥ m. Define S∗ = S + H − h + 1 and
+
+                    Jnscalar = A(d + 1)S∗ (h + 2) log{A(m + 1)(B + 8)}
+                                            
+                                                                                       
+                                                + log{AS∗ (d + 1)(H + 1)(B + 8)(n + 1)} .           (29)
+
+For conditionally sub-Gaussian labels as in the all-data expectation oracle, the ordinary final posterior
+mean obeys
+                                                  A(1 + σ 2 )(1 + Jnscalar )
+                            ER(f¯Sn ) ≤ R(g) +                               .                       (30)
+                                                           n+1
+Here g is the teacher’s bounded observed output. The same fixed prior and likelihood are used at
+every comparison resource.
+
+Proof. When H = h, apply the original teacher comparison. Otherwise apply Lemma A.1 and then
+the stable-padding comparison proof. Its relay argument tracks the selected last-layer features and
+their native bulk background. The count of new designated formula occurrences is the number of
+relevant last-layer features times the number of relay layers. There are now two such features, not
+m, so the actual count is (28). The first-moment stability recurrence is unchanged: each selected
+relay has one designated coefficient equal to one, and the native background contracts because its
+total first absolute moment is at most 1/4. Thus substitute teacher depth h + 1, actual formula size
+2S + 2, and two terminal channels into the same proof. Its logarithmic precision factor is bounded
+by the brackets in (29). Applying the sharp all-data expectation theorem gives (30).
+
+Corollary A.3 (An additive width-and-depth resource in one dimension). Under the assumptions
+and the fixed posterior of Theorem 8.3, its conclusion improves to
+                                (                                                                 )
+                                                A(1 + σ 2 )(C + H + 1) 
+    ER(f¯Sn ) ≤
+                                                                                                 
+                      inf            inf R(g) +                       log eκ(C + 1)(H + 1)(n + 1) .
+                  C≥1: 6C+6≤N       g∈GC              α(n + 1)
+                                                                                                   (31)
+
+Proof. The bounded-slope spline compiler has depth one, width m ≤ 6C + 6, formula size S ≤ m,
+and log(B + 8) ≤ Aα−1 log[eκ(C + 1)(n + 1)] at L1 accuracy (n + 1)−1 . Apply Corollary A.2 with
+h = 1 and absorb its 4/(n + 1) approximation error as before. If H = 1 the original one-layer
+comparison gives the same bound directly.
+
+
+B      Separating teacher precision from extra learner depth
+For ReLU and a clipped observation, the scalar output can be clipped inside the comparison network
+before the extra layers. The two carried features are then bounded, even if the teacher coefficients
+are large. Different relay layers can use different comparison precisions. Their cost need not multiply
+the teacher coefficient logarithm by learner depth.
+
+Theorem B.1 (Bounded reset and layer-specific relay precision). Let a ReLU teacher have hidden
+depth h, width m, coefficient cap B ≥ 1, and rooted formula size S. Its observed output is g = s(zg ),
+where s clips to [−1, 1]. Use the fixed small-intensity Lévy fan-in prior, and prescribe any learner
+depth H ≥ h and width N ≥ max(m + 1, 3). Put
+
+                     L = (h + 3) log{A(d + 1)(m + 1)(B + 8)},           S0 = S + h + 1,
+
+
+
+                                                        27
+and
+
+                    Jnreset = A (d + 1)S0 [L + log{A(S0 + H + 1)(n + 1)}]
+                              
+
+                                  + H log{A(S0 + H + 1)(H + 1)(n + 1)} + L2 .                   (32)
+
+For the same conditionally sub-Gaussian label assumptions and fixed likelihood temperature as the
+sharp all-data expectation theorem,
+
+                                                     A(1 + σ 2 )(1 + Jnreset )
+                             ER(f¯Sn ) ≤ R(g) +                                .                (33)
+                                                             n+1
+The constant A depends only on the fixed Lévy law. In particular, the term proportional to extra
+learner depth contains no factor log B. Large teacher coefficients enter through the teacher term
+and the additive L2 term.
+
+Proof. We give a data-independent comparison law with expected uniform raw error at most r and
+entropy bounded by the right side of (32), replacing n + 1 by 1/r. The expected-risk result then
+follows with r = (n + 1)−1 .
+    An exact bounded reset. Carry a constant-one feature through the original h layers, adding at
+most one neuron per layer. After the teacher computation add
+
+                         a = ReLU(zg + 1),         b = ReLU(zg − 1),        u = 1,
+
+and then
+                       q+ = ReLU(a − b − u),              q− = ReLU(−a + b + u).
+Because a − b − u = s(zg ), these two features lie in [0, 1] and q+ − q− = g. This uses two extra
+hidden layers, width at most max(m + 1, 3), coefficients bounded by B + 1, and rooted formula size
+at most A(S + h + 1). The constant paths and the fixed number of copies of the teacher formula
+account for this count. If H < h + 2, use the original comparison directly; since the number of extra
+layers is at most one, its entropy is already bounded by (32). Thus assume H ≥ h + 2 and write
+q = H − h − 2.
+    Teacher block. Apply the existing uniform comparison construction through the reset block at a
+common precision η0 = re−AL , with a sufficiently large numerical multiplier in AL. Its expected
+uniform error at each selected reset feature is at most r/100. Its selected-feature first moments are
+therefore at most two. Its average native-and-selected first moment is at most some deterministic
+U ≥ 1 with
+                                            log U ≤ AL.                                          (34)
+These are the same absolute-path first-moment bounds used in the uniform comparison proof. The
+entropy paid by the teacher block is at most
+
+                        A(d + 1)(S + h + 1)[L + log{A(S + h + q + 1)/r}].
+
+The group-size logarithm already permits all later relay occurrences.
+    Relay block. Let Tℓ be the largest expected uniform absolute value of either selected relay
+feature, and let P   = N −1 P E sup |hℓ (x)|. At the end of the reset, T ≤ 2 and P ≤ U . Write
+    R              ℓ         j     x j                                  0         0
+ρ = |u|n(du) ≤ 1/4. For q ≥ 1, choose deterministic layer precisions
+                                              cr
+                                  ηℓ =                  ,      1 ≤ ℓ ≤ q,                       (35)
+                                         q[1 + U ρℓ−1 ]
+
+
+                                                     28
+with a sufficiently small fixed c. They are at most 1/8. The designated coefficient-one law then has
+positive support and mean one, hence expected absolute value one. Its expected deviation from one
+is at most Aηℓ . Background coordinates have expected absolute value at most Aηℓ /N . Unselected
+rows remain native. Independence from preceding features gives
+
+                                          Tℓ ≤ Tℓ−1 + Aηℓ Pℓ−1 ,
+                                          Pℓ ≤ ρPℓ−1 + 2Tℓ .                                    (36)
+
+Induction, using (35), gives
+                                        Tℓ ≤ 3,      Pℓ ≤ 8 + U ρℓ .
+Indeed, the second bound follows from the first and the geometric sum, and the total increase in
+the first is at most A ℓ ηℓ (8 + U ρℓ−1 ) ≤ 8Acr ≤ 1.
+                      P
+
+   If eℓ is the maximum expected uniform error from the ideal reset feature, Lipschitzness and
+independence give
+                                    eℓ ≤ eℓ−1 + Aηℓ (Tℓ−1 + Pℓ−1 ).
+The total error increase is at most Acr. Use the final readout coefficients 1, −1 at precision
+cr/[1 + U ρq ] and the corresponding background law. The readout adds another O(cr) error. After
+choosing c small, the expected uniform raw error is at most r. For q = 0, apply the same readout
+prescription directly after the reset.
+    Entropy and width cancellation. The proof of the disjoint-embedding entropy identity works with
+a different known cutoff at each layer: the parent row’s cutoff identifies each designated incoming
+edge. Thus the log N costs still cancel against embedding location entropy. In the small-width
+branch, the shared reset-and-relay network fits, and log N is bounded by the logarithm of its total
+formula resource. There are two selected relay rows per layer, each with one designated coefficient
+bounded by one. Their total entropy, including the final readout, is at most
+                                                                       q
+                                   A(S + h + q + 1)(q + 1)    X
+                    A(q + 1) log                           +A     log(1 + U ρℓ ).               (37)
+                                             r                ℓ=0
+
+The elementary geometric estimate
+                               X
+                                     log(1 + U ρℓ ) ≤ Aρ [1 + log2 (1 + U )]                    (38)
+                               ℓ≥0
+
+follows by splitting at ℓ = ⌈log U/ log(1/ρ)⌉: before this index use log(1 + v) ≤ log 2 + log v for
+v ≥ 1, and afterward use log(1 + v) ≤ v. Combine (34)–(38) with the teacher-block entropy. This
+is the resource (32) with n + 1 = 1/r. The observation clipping cannot enlarge the uniform error.
+Since the conditional mean and observed predictions lie in [−1, 1], comparison risk increases by at
+most 4r. The sharp all-data expectation theorem proves (33).
+
+Why a fixed tiny cutoff is unnecessary. The large teacher block may leave a large average
+native background U . It contracts geometrically in subsequent untouched rows. Only the early
+relay layers need precision inversely proportional to this background. The sum of those precision
+logarithms is quadratic in log U , independent of the number of later layers. The prior itself is
+unchanged; all layer-specific cutoffs belong to a comparison law.
+
+
+
+
+                                                     29
+Width conventions. If the teacher already carries a constant-one feature through its hidden
+layers, the extra width-one allowance is unnecessary: the construction uses width at most max(m, 3).
+If its raw output is already bounded by one, the two-channel compiler itself is a bounded reset; no
+constant wire or two-stage clipping gadget is needed, and width N ≥ m suffices (using the width-one
+special case when needed). These variants have the same resource bound, with adjusted numerical
+constants.
+
+
+C       A sharp expectation oracle for the ordinary final posterior
+Let π be any probability prior on jointly measurable functions fw : X → [−1, 1]. Suppose the
+observations are IID, f0 (x) = E[Y | X = x] ∈ [−1, 1], and ξ = Y − f0 (X) is conditionally
+sub-Gaussian with proxy σ 2 . Set s = 1 + σ 2 and fix T ≥ 256s. For a sample Sn of size n, let
+                                                  n
+                                         (                            )
+                                               1X
+                                                                                                 Z
+             dQSn (w) = ZS−1 exp             −       (fw (Xi ) − Yi )2 dπ(w),           f¯Sn =       fw dQSn (w).
+                           n
+                                               T i=1
+
+This is the ordinary posterior with Gaussian observation variance T /2, using all n observations. No
+averaging over sample sizes is performed.
+
+Theorem C.1 (Sharp all-data expectation bound). For every deterministic comparison law ρ ≪ π,
+
+                                                                            T KL(ρ∥π)
+                                                       Z
+                                      ESn R(f¯Sn ) ≤       R(fw ) dρ(w) +             .
+                                                                              n+1
+Consequently the infimum over all such comparison laws may be taken on the right-hand side. The
+theorem requires neither convexity of the support of π nor a Bernstein condition relative to the
+comparator.
+
+Proof. We first prove an averaged one-observation inequality. Fix a probability law q on U ∈ [−1, 1],
+with mean µ and variance v. For a real label y, let Ly (u) = (u − y)2 and
+
+                                                               e−Ly (u)/T
+                                                dpy (u) = R                dq(u).
+                                                                e−Ly /T dq
+
+For two independent draws U, U ′ from q, the covariance identity gives
+                                                                                    ′
+                                                E[(Ly (U ) − Ly (U ′ ))(e−Ly (U )/T − e−Ly (U )/T )]
+                  Z               Z
+                      Ly dq −          Ly dpy =                                                      .
+                                                                 2 e−Ly /T dq
+                                                                   R
+
+
+Since
+                      |Ly (u) − Ly (u′ )| ≤ 2(1 + |y|)|u − u′ |,           osc[−1,1] Ly ≤ 4(1 + |y|),
+the mean-value theorem bounds the last display by
+
+                                                   4(1 + |y|)2 4(1+|y|)/T
+                                                              e           v.
+                                                       T
+       R
+Also       Ly dq = Ly (µ) + v. Hence
+                                                           "                               #
+                                                            4(1 + |y|)2 4(1+|y|)/T
+                              Z
+                                      Ly dpy ≥ Ly (µ) + 1 −            e           v.                               (39)
+                                                                T
+
+
+                                                                 30
+   Now let Y = a + ξ, where |a| ≤ 1 and ξ is centered σ 2 -sub-Gaussian, independently of the fixed
+law q. The elementary estimates
+                                                      2 2
+                                      Eet|ξ| ≤ 2eσ t /2 ,            Eξ 4 ≤ 16σ 4
+
+and Cauchy–Schwarz imply
+                     h                            i
+                   E (1 + |Y |)2 e4(1+|Y |)/T
+                         ≤ e8/T E[(8 + 2ξ 2 )e4|ξ|/T ]
+                                h     2    2     √     2  2
+                                                            i
+                         ≤ e8/T 16e8σ /T + 8 2 σ 2 e16σ /T ≤ 32s                    (T ≥ 256s).
+
+Thus the expected coefficient subtracted in (39) is at most 128s/T ≤ 1/2. After averaging over Y
+we obtain                               Z                      Z
+                         EY LY (µ) ≤ EY LY dpY − 12 v ≤ EY LY dpY .                          (40)
+
+The same statement holds conditionally on any input X = x and on an independent training sample.
+    Introduce n + 1 IID observations, retaining the same fixed architecture, prior and T used by
+the n-observation learner. Let Q+ be their full posterior and Q−i the posterior after removing
+observation i. Conditional on the other observations and Xi , push Q−i forward through w 7→ fw (Xi )
+to obtain q. It is independent of Yi given this conditioning. Updating q by the omitted squared-loss
+factor gives exactly the corresponding pushforward of Q+ . Applying (40) and then averaging yields
+                                                            Z
+                            E(f¯−i (Xi ) − Yi )2 ≤ E            (fw (Xi ) − Yi )2 dQ+ (w).
+
+Sum over i = 1, . . . , n + 1. By exchangeability and independence, the left-hand average is ESn R(f¯Sn ).
+For each realized enlarged sample the Gibbs variational inequality gives
+                             Z n+1
+                               X
+                                      (fw (Xi ) − Yi )2 dQ+ (w)
+                                i=1
+                                    Z n+1
+                                      X
+                                ≤             (fw (Xi ) − Yi )2 dρ(w) + T KL(ρ∥π),
+                                        i=1
+
+where the nonnegative term T KL(Q+ ∥π) was dropped. Take expectations and divide by n + 1
+to prove the theorem. All integrals are finite: the outputs are bounded and the labels have finite
+second moment. The posterior normalizers are positive, and the loss oscillation over parameters is
+finite for every realized sample.
+
+Corollary C.2 (Logarithmic comparison entropy). Suppose a deterministic g : X → [−1, 1] has,
+for every 0 < r ≤ 1, a data-independent comparison law with
+
+            Eρ ∥fw − g∥2L2 (PX ) ≤ r,          KL(ρ∥π) ≤ K0 log(K1 /r),               K0 ≥ 1, K1 ≥ e.
+
+At T = 256s the same all-data final posterior mean satisfies
+
+                                                      5 + 256sK0 log(K1 (n + 1)2 )
+                            ER(f¯Sn ) ≤ R(g) +                                     .
+                                                                n+1
+Thus the oracle is sharp, with coefficient one on comparator risk and a remainder of order
+sK0 log(K1 n)/n.
+
+                                                            31
+Proof. Write A(g) = E(g − f0 )2 ≤ 4. Cauchy–Schwarz gives
+                                 Z                       q
+                                     R(fw ) dρ ≤ R(g) + 2 A(g)r + r.
+
+Take r = (n+1)−2 and use the theorem. The approximation increase is at most 4/(n+1)+1/(n+1)2 ≤
+5/(n + 1).
+
+Scope. The result is in expectation over the training sample. It does not assert a sharp high-
+probability oracle, and an all-data refit is not being inferred from a holdout result. Every observation
+enters the likelihood of the returned posterior. If the comparison constants are uniform in learner
+width, so is this bound. One may take the infimum over all deterministic comparator classes
+and resources directly; unlike a common high-probability event, this expectation oracle needs no
+confidence allocation over classes. The learner must still have its architecture and prior fixed before
+observing the data.
+
+Attribution. The leave-one-out strategy and a pointwise inverse-tilting inequality for bounded
+losses are from M. M. Høgsgaard, P. Rebeschini and T. Wegel, Aggregation with Exponential Weights
+is Optimal in Expectation, arXiv:2607.02247, July 2026. Their main statement uses a finite uniform
+dictionary and bounded losses. Above, sums are replaced by integrals and the variational comparison
+is written in KL form; the pointwise bounded-loss step is replaced by an averaged cooling inequality
+for bounded predictions and conditionally sub-Gaussian labels. This extension should not be
+attributed verbatim to that paper.
+
+Corollary C.3 (Posterior draws and confident sign prediction). For 0 < η ≤ 1/2 and fixed
+T ≥ 128s/η, the same prior and all-data posterior satisfy
+                    h                                       i         T KL(ρ∥π)
+               ESn A(f¯Sn ) + (1 − η)EX VarQSn (fw (X)) ≤ Eρ A(fw ) +           .
+                                                                        n+1
+Consequently
+                                              1              T KL(ρ∥π)
+                                                                          
+                         ESn EQSn A(fw ) ≤       Eρ A(fw ) +           .
+                                             1−η               n+1
+If |f0 (X)| ≥ a > 0 almost surely, let pS (x) be the posterior probability that fw (x) has the same
+nonzero sign as f0 (x). Then
+
+                                              3                 T KL(ρ∥π)
+                                                                                
+                   ESn PX {pS (X) ≤ 2/3} ≤ 2        Eρ A(fw ) +           .
+                                          a (1 − η)               n+1
+
+These are expectation guarantees for the current Gaussian squared-loss likelihood; they do not
+condition on exact training signs or on an all-input margin event.
+
+Proof. Since T ≥ 256s, the preceding moment calculation still applies, and its cooling coefficient is
+at most 128s/T ≤ η. Retain (1 − η)v rather than discarding the variance term in the leave-one-out
+proof. Exchangeability identifies its average with the fresh-input posterior variance. Subtract R0 to
+obtain the first display.
+    The identity EQ A(fw ) = A(f¯) + EX VarQ fw (X) and nonnegativity of A(f¯) give the second
+display. A wrong or zero sign at an input with |f0 | ≥ a contributes at least a2 squared discrepancy.
+Thus 1{pS ≤2/3} ≤ 3EQ (fw − f0 )2 /a2 pointwise. Integrate and apply the second bound.
+
+
+
+                                                  32
+D     Real-valued labels with only a finite second moment
+A growing bounded output range permits arbitrary real-valued labels. No labels need be clipped in
+the algorithm or in the proof, and no conditional noise model is required.
+Theorem D.1 (A sharp all-data oracle with a marginal tail remainder). Let π be any probability
+prior on jointly measurable functions fw : X → [−M, M ], with M > 0. Let (X, Y ) have any joint
+law with EY 2 < ∞, and let the observations be IID. Fix T ≥ 256M 2 and define the ordinary final
+posterior and mean by
+                                                      n
+                                        "                                          #                         Z
+           dQSn (w) = ZS−1                       −1
+                                                                                                    f¯Sn =
+                                                      X
+                                                                               2
+                         n
+                           exp              −T              (fw (Xi ) − Yi )           dπ(w),                    fw dQSn .
+                                                      i=1
+
+For every deterministic comparison law ρ ≪ π,
+                                                                   T KL(ρ∥π)
+                                    Z
+                   ER(f¯Sn ) ≤          R(fw ) dρ(w) +                       + 4M E[|Y |1{|Y |>M } ].                        (41)
+                                                                     n+1
+In particular, the final term is at most 4E[Y 2 1{|Y |>M } ]. The prior and output range may be
+predetermined functions of n; the theorem is applied with those choices held fixed.
+Proof. Fix a probability law q on U ∈ [−M, M ], with mean µ and variance v. For Ly (u) = (u − y)2 ,
+write
+                                              e−Ly (u)/T
+                                   dpy (u) = R −L /T     dq(u).
+                                               e y dq
+The same covariance calculation as for the bounded-label inverse-tilt inequality gives
+                                                                                            4(M + |y|)2 4M (M +|y|)/T
+            Z
+                Ly dpy ≥ Ly (µ) + [1 − AM (y)]v,                        AM (y) =                       e              .      (42)
+                                                                                                T
+For completeness, for independent U, U ′ ∼ q the difference
+                                                                                        R           R
+                                                                                            Ly dq − Ly dpy equals
+                                                                          ′
+                            E[(Ly (U ) − Ly (U ′ ))(e−Ly (U )/T − e−Ly (U )/T )]
+                                                                                 .
+                                             2 e−Ly /T dq
+                                               R
+
+The bounds |Ly (u) − Ly (u′ )| ≤ 2(M + |y|)|u − u′ | and osc Ly ≤ 4M (M + |y|), together with the
+mean-value
+R
+             theorem and E(U − U ′ )2 = 2v, give the subtracted quantity at most AM (y)v. Since
+  Ly dq = Ly (µ) + v, this proves (42).
+   If |y| ≤ M , then AM (y) ≤ e1/32 /16 < 1, so Ly (µ) ≤ LRy dpy . If |y| > M , the squared-loss range
+                                                        R
+
+over [−M, M ] has length exactly 4M |y|. Both Ly (µ) and Ly dpy lie in this range. Therefore, for
+every real y,                            Z
+                                        Ly (µ) ≤             Ly dpy + 4M |y|1{|y|>M } .                                      (43)
+
+This step requires no conditional tail bound or independence between q and the input.
+    Introduce n + 1 observations, retaining exactly the same prior, output range M , and temperature
+T as the n-sample learner. Let Q+ be the enlarged-sample posterior and Q−i the posterior with
+observation i omitted. Conditional on the other observations and Xi , push Q−i forward through
+w 7→ fw (Xi ) to get q. Updating by the omitted observation gives exactly the pushforward of Q+
+through the same map. Apply (43), average, and sum over i. Exchangeability and independence of
+the held-out observation give
+
+                                      1 n+1
+                                Z
+                ER(f¯Sn ) ≤ E
+                                          X
+                                              (fw (Xi ) − Yi )2 dQ+ (w) + 4M E[|Y |1{|Y |>M } ].
+                                    n + 1 i=1
+
+                                                                   33
+For each realized enlarged sample the Gibbs variational inequality bounds the posterior average
+total empirical loss by the comparison average total empirical loss plus T KL(ρ∥π); the posterior KL
+is nonnegative and may be dropped. Take expectations and divide by n + 1. All risks and averages
+are integrable because predictions are bounded and EY 2 < ∞. The posterior normalizer is positive
+for every realized sample. This proves the theorem.
+
+Lemma D.2 (Projection of an arbitrary real-valued comparator). Let sM clip to [−M, M ]. For
+every pair of real numbers a, y,
+
+                               (sM (a) − y)2 ≤ (a − y)2 + (|y| − M )2+ .                           (44)
+
+Consequently R(sM ◦ g) ≤ R(g) + E[Y 2 1{|Y |>M } ] for every real-valued comparator.
+
+Proof. If |y| ≤ M , projection cannot increase distance to y. If y > M , clipping a < −M also
+decreases its distance to y; for a > M the loss increase is (y − M )2 − (a − y)2 ≤ (y − M )2 . The case
+y < −M is symmetric.
+
+Corollary D.3 (A coefficient-one real-valued oracle). Use an output family fw,M = M s(zw ), with
+the same parameter prior for every M , and temperature T = 256M 2 . Suppose a deterministic
+real-valued comparator g admits a comparison law with
+
+             fw,M − sM ◦ g 2                           1
+        Eρ                         ≤ ηn,M :=         4 (1 + M )4
+                                                                 ,         KL(ρ∥π) ≤ Kn,M (g).
+                  M          2
+                           L (PX )           (n + 1)
+
+Then, for a numerical A,
+
+                                            256M 2 Kn,M (g)
+                      ER(f¯Sn ,M ) ≤ R(g) +                 + 5E[Y 2 1{|Y |>M } ]
+                                                n+1
+                                                  √
+                                            A(1 + EY 2 )
+                                          +               .                                        (45)
+                                              (n + 1)2
+
+Infima over all deterministic comparators may be taken on the right.
+
+Proof. Put gM = sM ◦ g. Its risk is at most 2M 2 + 2EY 2 . The comparison MSE is at most M 2 ηn,M ,
+so Cauchy–Schwarz gives
+                      Z                                q
+                          R(fw,M ) dρ ≤ R(gM ) + 2M        R(gM )ηn,M + M 2 ηn,M .
+                                    √                              √                      √
+The last two terms are at most A(1 + EY 2 )/(n + 1)2 , since M (M + EY 2 )/(1 + M )2 ≤ 1 + EY 2 .
+Apply Theorem D.1 and Lemma D.2.
+
+Continuous compilers and prior comparisons. A continuous-domain compiler that only
+controls normalized L1 (PX ) error is enough. Both normalized functions lie in [−1, 1], so their
+squared difference is at most twice their absolute difference. Use compiler tolerance at most ηn,M /16
+and a native comparison MSE at most ηn,M /4; the triangle-square inequality gives the hypothesis
+of Corollary D.3. The required inverse tolerances have logarithm O(log(n + 1) + log(1 + M )). Thus
+the Lévy coefficient-free compilers and logarithmic-entropy comparisons preserve their polynomial
+resources, with only these additional logarithms. No bound on E[Y | X] is used in this transfer.
+
+
+
+
+                                                  34
+                                                                                2      2
+                                                                           −t /(2K ) , choosing M =
+  p regimes. For a sub-Gaussian marginal 2envelope 2Pr(|Y | > t) ≤ 2e
+Tail                                                                                              n
+K 16 log(e(n + 1)) makes the tail term O(K /(n + 1) ) and changes the complexity remainder
+only by a logarithmic factor. If E|Y |p ≤ Vp for some p > 2, the tail is at most Vp M 2−p , giving an
+explicit tradeoff with the M 2 Kn,M /n term. With only a finite second moment, any deterministic
+Mn → ∞ makes the tail vanish, without a uniform rate over all such label laws.
+Corollary D.4 (Universal squared-risk consistency at arbitrary widths). Let X have any Borel
+probability law on a compact cube and let EY 2 < ∞. Use the fixed small-intensity Lévy fan-in
+coordinate prior and ReLU hidden activation. Prescribe any finite width sequence Nn → ∞, at any
+rate, and fix a hidden depth H ≥ 1. Choose 0 < b < 1/2, output range Mn = nb , and
+                                 fw,n = Mn s(zw ),      Tn = 256Mn2 .
+                                                                                                        2
+                                                                                    i (fw,n (Xi ) − Yi ) /Tn ]
+                                                                                P
+Use all observations with their unchanged real labels in the likelihood exp[−
+and return its ordinary posterior mean. Then
+                                                                 2
+                                lim ER(f¯Sn ,n ) = E Y − E[Y | X] .                                      (46)
+                                n→∞
+
+No input-density or anti-concentration assumption is needed. There is one prescribed architecture at
+each sample size and no prior over architectures.
+Proof. Fix any finite-width shallow ReLU function g with finite coefficients. On the compact input
+cube it is bounded. Its nonnegative hidden features pass exactly through any fixed number of
+ReLU identity layers. For all sufficiently large n, Nn contains this fixed implementation and Mn
+exceeds its output bound. The normalized comparison g/Mn has no larger coefficient cap than a
+fixed constant depending on g. The width-independent uniform Lévy comparison theorem, used
+at the precision in Corollary D.3, therefore has Kn,Mn (g) ≤ Ag log(n + 1). The complexity term is
+Og (n2b−1 log(n + 1)) → 0, and the label-tail term vanishes by integrability of Y 2 . Thus
+                                      lim sup ER(f¯Sn ,n ) ≤ R(g)
+                                         n
+
+for every such g. Shallow ReLU networks with a constant input are uniformly dense in continuous
+functions on a compact cube. Continuous functions are dense in L2 (PX ), and E[Y | X] ∈ L2 (PX )
+by Jensen’s inequality. Hence the infimum of R(g) over these networks equals the Bayes squared
+risk. Every predictor has risk at least that quantity, proving (46).
+    The same proof permits varying learner depth Hn whenever
+                             (Hn + 1) log{(n + 1)(Hn + 1)} = o(n1−2b ),
+using the stable-padding comparison for each fixed shallow teacher. In particular, polynomially
+growing depths with exponent strictly less than 1 − 2b are allowed. The conclusion is consistency,
+with no uniform convergence rate over all finite-second-moment label laws. The quantitative
+coefficient-free polynomial-width oracle retains the Boolean-input or continuous anti-concentration
+assumptions of its compiler.
+
+
+E     Logarithmic comparison entropy and a sharp holdout oracle
+This section is conditional on one explicit prior-comparison property. It contains no prior over
+architectures. Let the prescribed network have bounded output fw ∈ [−1, 1], a full-support parameter
+prior πN , and a continuous parameter-to-prediction map. Labels have conditional mean f0 ∈ [−1, 1]
+and centered conditional sub-Gaussian noise of proxy σ 2 . Write s0 = 1 + σ 2 , R0 = E(Y − f0 )2 , and
+A(f ) = R(f ) − R0 .
+
+                                                  35
+Lemma E.1 (A uniform relative-loss inequality). Let F ⊂ [−1, 1]X be a pointwise separable class
+of pseudodimension at most V ≥ 1. Define
+
+                                C[V log(en) + log(8/δ)]
+                         tn =                           ,     vn = (1 + σ 2 )tn .
+                                          n
+With probability at least 1 − δ, simultaneously for all f ∈ F,
+                                                     q
+                                  A(f ) ≤ AbS (f ) + C A(f )vn + Cvn .
+
+The constants are numerical and do not depend on f0 .
+
+Proof. Write Dn (f ) = n−1 i (f (Xi ) − f0 (Xi ))2 . Relative uniform convergence for bounded nonneg-
+                            P
+
+ative VC-subgraph classes gives, on one event,
+                                                q
+                          |Dn (f ) − A(f )| ≤ C A(f )tn + Ctn        (f ∈ F).
+
+The squared-discrepancy class has the required entropy: shifting by the fixed function f0 preserves
+every evaluation-cover radius, and squaring on [−2, 2] is 4-Lipschitz. Equivalently, its subgraph
+                                                                         √                        √
+patterns are determined by the two threshold tests f (x) > f0 (x) + u and f (x) < f0 (x) − u,
+whose VC growth is controlled by that of F.
+   Condition on the observed inputs. First restrict to a countable pointwise-dense subclass, and
+quantize its evaluation vectors in the maximum norm at mesh n−2 . The pseudodimension growth
+bound on the O(n3 ) input-threshold pairs gives a net with logarithmic cardinality at most CV log(en).
+Choose actual function representatives from this subclass. One first-index representative for each
+nonempty quantization cell makes the selection measurable and dependent only on the inputs.
+   For any such representative f , conditional sub-Gaussian concentration gives
+
+                                1X                              q
+                                    ξi (f (Xi ) − f0 (Xi )) ≤ Cσ Dn (f )tn
+                                n i
+                                                     p
+                                p maxi |ξi | ≤ σ 2 log(8n/δ) handles passage from the
+on the union-bound event. The event                                                 p net to all
+functions, at error at most σn−2 2 log(8n/δ) ≤ C(1 + σ 2 )tn . The same mesh changes Dn (f ) by
+at most n−2 . Thus, uniformly,
+
+                      1X                              q
+                          ξi (f (Xi ) − f0 (Xi )) ≤ Cσ Dn (f )tn + C(1 + σ 2 )tn .
+                      n i
+
+Use the first display to replace Dn (f ) by A(f ) in the square root. Finally AbS (f ) = Dn (f ) −
+2n−1 i ξi (f (Xi ) − f0 (Xi )). The claimed result follows by the triangle inequality, with the allocated
+      P
+
+failure probabilities summing to δ. Pointwise density and boundedness extend the result from the
+countable subclass to the whole class. If tn is larger than a fixed constant, the same bounds follow
+after enlarging constants; no large-sample assumption is needed.
+
+   Suppose a deterministic bounded comparator g has, for every 0 < r ≤ 1, a data-independent
+comparison law satisfying
+
+                Eν ∥fw − g∥2L2 (PX ) ≤ r,    KL(ν∥πN ) ≤ K log(eV /r),          K, V ≥ 1.           (47)
+
+The same bounds may hold pointwise in the input, which is sufficient for this assumption.
+
+
+                                                    36
+Lemma E.2 (A fixed-temperature noise-sensitive oracle). For 0 < η ≤ 1, let β = η/(32s0 ) and
+use the ordinary Gaussian posterior with density proportional to e−βnRbS (fw ) relative to πN . With
+probability at least 1 − δ,
+                                                           Cs0 [K log(eV n) + log(8/δ)]
+                 Z
+                     R(fw )dΠS,β ≤ R0 + (1 + η)A(g) +                                   .
+                                                                       ηn
+The same bound holds for the ordinary posterior mean.
+Proof. For completeness, let c = 1 − η/8. For every deterministic bounded f , conditional noise
+concentration gives
+                                     2         2                  2         2
+                        E[e−β{(f −Y ) −(f0 −Y ) } | X] ≤ e−β(1−2βσ )(f −f0 ) .
+The chord bound on (f − f0 )2 ∈ [0, 4] and β = η/(32s0 ) make the unconditional expectation at most
+e−βcA(f ) . Independence, Markov’s inequality after integrating over the prior, and the variational
+inequality therefore give, simultaneously for every comparison measure ρ,
+                                                         KL(ρ∥πN ) + log(4/δ)
+                           cEρ A(fw ) ≤ Eρ AbS (fw ) +                        .
+                                                                βn
+At the Gibbs posterior the empirical-risk and KL terms combine to its free energy, leaving the
+common offset −R   b S (f0 ). This is the required relative-loss PAC–Bayes certificate. Apply (47) at
+r = 1/n. The squared-triangle inequality gives Eν A(fw ) ≤ (1 + η/8)A(g) + C/(ηn). For the fixed
+comparison law, its averaged relative loss has the form a(X) − 2ξb(X) with 0 ≤ a ≤ 4, b2 ≤ a, and
+ξ = Y − f0 (X). Conditional sub-Gaussian concentration and bounded Bernstein give variance proxy
+Cs0 Ea. Absorb its square-root term into another fixed fraction of ηEa plus Cs0 log(8/δ)/(ηn). The
+KL term is at most 32s0 K log(eV n)/(ηn). Division by c leaves the coefficient on A(g) at most 1 + η,
+since (1 + η/8)2 /(1 − η/8) ≤ 1 + η for 0 < η ≤ 1. Jensen proves the mean statement.
+
+    Validation can select the likelihood variance without knowing the approximation error, comparison
+resource, or noise proxy, and obtain a coefficient-one oracle. This changes the allocation of
+observations: the returned posterior is trained on one half, while the other half chooses its variance.
+It remains the mean of one posterior, not a mixture of predictors.
+    For n ≥ 4, split the IID observations deterministically into a training part of size m = ⌊n/2⌋
+and a validation part of size k = n − m. Put
+                            J = ⌈log2 (128n)⌉,      βj = 2−j     (0 ≤ j ≤ J).
+On the training sample compute the posterior mean fj at each βj . Also compute the empirical-
+minimum-temperature posterior: with training free energy FT , choose the first nonnegative integer
+ℓ for which
+                         FT (2ℓ ) ≤ inf R
+                                        b T (fw ) + 1/m,  βpar = 2ℓ .
+                                         w
+Full support and continuity make this finite. Add its ordinary mean fpar to the candidates. Select a
+candidate with the smallest validation squared loss, using a fixed tie rule, and return that candidate’s
+training posterior mean. The candidates and selection use no comparison resource, comparator risk,
+or noise-scale upper bound.
+Lemma E.3 (Finite-candidate validation above the noise floor). Conditional on the training sample,
+let H be any finite set of bounded predictors. With probability at least 1 − δ over the validation
+sample, empirical squared-loss minimization over H satisfies
+                                         r                               s0 log(4|H|/δ)
+                 A(fb) ≤ min A(f ) + C min A(f ) v + Cv,            v=                  .
+                          f ∈H               f ∈H                               k
+
+                                                    37
+Proof. For each candidate, the relative loss is (f − f0 )2 − 2ξ(f − f0 ). Its bounded first term and
+conditional sub-Gaussian second term yield, on a union-bound event,
+                                                  q
+                           |AbV (f ) − A(f )| ≤ C A(f )v + Cv           (f ∈ H).
+
+Here AbV (f ) = R
+                b V (f )− R
+                          b V (f0 ), and the common unobserved offset cancels in empirical minimization.
+Comparing the selected candidate with one minimizing population risk gives
+                                                q           p       √
+                              A(fb) ≤ A∗ + C[     A(fb) +       A∗ ] v + Cv.
+                                 q        √        √
+Completing the square first gives A(fb) ≤ A∗ + C v, then the displayed bound. The conditional
+argument is legitimate because the candidate set depends only on training observations.
+
+Theorem E.4 (A sharp agnostic oracle for one selected posterior). Under (47), define
+
+                                     Cs0 [K log(eV n) + log(8(J + 2)/δ)]
+                              Dg =                                       .
+                                                      n
+The split-sample learner above satisfies, with probability at least 1 − δ,
+                                                      q
+                                 R(fb) ≤ R(g) + C A(g)Dg + CDg .                                   (48)
+
+If instead g lies in the uniform closure of a learner class of pseudodimension VN , the same statement
+holds with
+                                      Cs0 [VN log(en) + log(8(J + 2)/δ)]
+                               Dg =                                      .
+                                                       n
+Thus the same variance-selection algorithm can use either a cheap prior comparison or a finite-
+parameter guarantee, without knowing which is useful. The output is the mean of one posterior
+trained on m observations; validation observations are used only for the variance choice.
+
+Proof. Apply Lemma E.2 only to grid values satisfying βj ≤ 1/(32s0 ), with associated slack
+ηj = 32s0 βj and failure probability δ/[4(J + 1)]. Unsafe temperatures need no training guarantee;
+they remain bounded predictors covered by validation. If Dg ≥ 1, bounded excess
+                                                                              q risk makes the
+conclusion immediate after increasing constants. Otherwise put η∗ = min{1, Dg /A(g)}, taking
+it to be one when A(g) = 0, and β∗ = η∗ /(32s0 ). The fixed numerical constant in Dg is chosen
+sufficiently large. Since K log(eV n) + log(8(J + 2)/δ) ≥ 1, the condition Dg < 1 implies s0 ≤ n/C.
+If η∗ = 1, then β∗ ≥ C/(32n). Otherwise A(g) ≤ 4 gives β∗ ≥ C/(64n) after decreasing the fixed
+constant C if necessary. Hence the dyadic grid contains a value in [β∗ /2, β∗ ]. Its associated slack is
+within a factor two of η∗ . At this point,
+                                                       q
+                                 A(fj ) ≤ A(g) + C A(g)Dg + CDg .
+
+The algorithm does not need to identify this point in advance.              p
+   For the parameter alternative, Lemma E.1 gives A(f ) ≤ AbT (f ) + C A(f )vN + CvN for
+every network, with vN = Cs0 [VN log(em) + log(8/δ)]/m. Integrate over the empirical-minimum-
+temperature posterior, use EΠ Rb T ≤ FT ≤ Rb T (g) + 1/m, and apply fixed-comparator relative-loss
+concentration to g. Jensen for the square root gives
+                                              q                 q        √
+                      EΠ A(fw ) ≤ A(g) + C[ EΠ A(fw ) +             A(g)] vN + CvN .
+
+
+                                                      38
+The same square-completion argument yields the claimed bound for the parameter candidate’s
+mean.
+                                                                                    q Its v is at most
+     In either case, one candidate has the displayed training oracle. Apply Lemma E.3.
+                                                                          1/4 3/4
+a fixed multiple of Dg . Substituting the candidate bound and using A(g) Dg ≤ [ A(g)Dg +Dg ]/2
+absorbs the extra validation square root. The total failure probability is at most δ.
+
+Corollary E.5 (Simultaneous comparison with countably many resource classes). Let Gj be
+deterministic comparison classes, and choose deterministic weights wj > 0 with j wj ≤ 1. Suppose
+                                                                                P
+
+each class has uniform logarithmic-comparison resources Kj , Vj , or a parameter-branch resource Pj
+as above. Put
+                                         "                                                #
+                                   Cs0                                      8(J + 2)
+         Aj = inf A(g),       Dj =     max{Kj log(eVj n), Pj log(en)} + log          ,
+               g∈Gj                 n                                         δwj
+
+where an unused branch may be omitted. Then the same noise-adaptive holdout learner satisfies
+                                                       q
+                             R(fb) ≤ R0 + inf {Aj + C Aj Dj + CDj }
+                                             j
+
+with probability at least 1 − δ, provided the applicable comparison or parameter guarantee holds for
+each stated class. The weights are only confidence-allocation devices in the proof; they are not a
+prior over classes or architectures and are not supplied to the learner.
+
+Proof. For each class choose a deterministic comparator within 1/n of its approximation-risk
+infimum, and allocate its training comparison events probability at most δwj /2. The finite-candidate
+validation event is common to all classes and uses the remaining confidence. Union bound the training
+events and apply the theorem on their intersection. Since Dj ≥ c/n, the near-minimizer error and
+its square-root contribution are absorbed into CDj . No additional candidates or architecture choices
+are introduced.
+
+
+References
+ [1] ChatGPT-6 Astra, Claude Opus 5.5, Kaarel Hänni, and Dmitry Vaintrob. Fast agnostic learning
+     with infinitely divisible neural-network priors. 2026. Source and verification record.
+
+ [2] ChatGPT-6 Astra, Claude Opus 5.5, Kaarel Hänni, and Dmitry Vaintrob. A width-only
+     approximation guarantee for Bayesian neural networks on Boolean inputs. 2026. Coefficient-free
+     Boolean compilation theorem. Source and verification record.
+
+ [3] ChatGPT-6 Astra, Claude Opus 5.5, Kaarel Hänni, and Dmitry Vaintrob. Learning narrow-
+     network approximations with Gaussian Bayesian ReLU networks. 2026. Polyhedral approxima-
+     tion under hyperplane anticoncentration. Source and verification record.
+
+ [4] Peter L. Bartlett, Nick Harvey, Christopher Liaw, and Abbas Mehrabian. Nearly-tight VC-
+     dimension and pseudodimension bounds for piecewise linear neural networks. Journal of Machine
+     Learning Research 20(63):1–17, 2019.
+
+ [5] Cornelius Brand, Robert Ganian, and Mathis Rocton. New complexity-theoretic frontiers
+     of tractability for neural network training. Advances in Neural Information Processing Sys-
+     tems 36, 2023. Lemmas 1–2. https://papers.neurips.cc/paper_files/paper/2023/hash/
+     b07091c16719ad3990e3d1ccee6641f1-Abstract-Conference.html.
+
+                                                 39
+ [6] Wolfgang Maass. Bounds for the computational power and learning complexity of analog neural
+     nets. SIAM Journal on Computing 26(3):708–732, 1997. Theorem 2.1. https://doi.org/10.
+     1137/S0097539793256041.
+
+ [7] Gal Vardi and Ohad Shamir. Neural networks with small weights and depth-separation barriers.
+     Advances in Neural Information Processing Systems 33:19433–19442, 2020. https://papers.
+     nips.cc/paper/2020/file/e1fe6165cad3f7f3f57d409f78e4415f-Paper.pdf.
+
+ [8] Ismaël Castillo and Paul Egels. Posterior and variational inference for deep neural networks
+     with heavy-tailed weights. Journal of Machine Learning Research 26(122):1–58, 2025. https:
+     //www.jmlr.org/papers/v26/24-0894.html.
+
+ [9] Hien Duy Nguyen, Jacob Westerhout, and Julyan Arbel. Sieve-free ReLU Bayesian priors with
+     near-minimax posterior contraction. arXiv:2610.23308, 2026.
+
+[10] Robert L. Wolpert, Merlise A. Clyde, and Chong Tu. Stochastic expansions using continuous
+     dictionaries: Lévy adaptive regression kernels. Annals of Statistics 39(4):1916–1962, 2011.
+
+[11] M. M. Høgsgaard, Patrick Rebeschini, and T. Wegel. Aggregation with exponential weights is
+     optimal in expectation. arXiv:2607.02247, 2026.
+
+
+
+
+                                               40
+

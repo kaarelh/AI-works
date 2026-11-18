@@ -1,0 +1,82 @@
+\section{A comparison uniform over all smaller variance prefactors}
+\label{sec:prefactor-echo}
+Let $\nu=Ns\in(0,1]$, so that the original independent Gaussian variances are $\nu/d$, $\nu/N$, and $\nu/N^2$. Put
+\[
+ \beta=1-\nu,\qquad \kappa(\nu)=1-\nu+\nu\log\nu.
+\]
+The leading depth cost of the fixed-teacher comparison is $H\kappa(\nu)$, with a bounded remainder at the canonical prefactor.
+
+\begin{theorem}[Uniform comparison through the critical prefactor]
+\label{thm:prefactor-echo}
+Fix a shallow teacher width, a coefficient bound, an input dimension, and an accuracy $\varepsilon>0$. There are constants $C,A,H_0,K,p$ uniform over that teacher class such that, for every $H\ge H_0$, $N\ge KH^p$, and $0<\nu\le1$, each teacher $g$ admits a comparison law satisfying
+\begin{align*}
+ 2s\KL(\rho\|\mu_{H,N,s})
+ &\le (H+d)\kappa(\nu)+C\beta\log(H+1)+A,\\
+ \sup_{x\in\mathbb S^{d-1}}\E_\rho|z_w(x)-g(x)|^2&\le\varepsilon^2.
+\end{align*}
+In particular the normalized cost is at most $C'(1+\beta^2H)$, with $C'$ depending only on the fixed teacher class, dimension, and accuracy. The learner's prior is unchanged. The comparison's first-layer covariance is $I/d$, which agrees with the prior only when $\nu=1$.
+\end{theorem}
+\begin{proof}
+Use the same reverse factors $W_\ell=R_\ell^2$ as in the canonical construction: $W_\ell=1$ during the burn and $W_\ell=1+\alpha_\ell$ during reversal. Inflate the first-layer covariance unconditionally from $\nu I/d$ to $I/d$. Given the current unit direction $e$, use internal row covariance
+\[
+ \frac1N\{\nu I+(W_\ell-\nu)ee^{\mathsf T}\}.
+\]
+Its effective variance in direction $e$ is $W_\ell/N$, so the exact scalar recursion is
+\[
+ q'=F(\nu q+(\beta+\alpha_\ell)r^2),\qquad
+ r'=\sqrt{1+\alpha_\ell}\,r(1-q').
+\]
+The same standardized directional Gaussian defines the next unit direction.
+
+The zero-signal baseline now obeys $b_1=q_0$ and $b_{\ell+1}=F(\nu b_\ell)$. It is bounded above by the canonical native baseline. Define its linear response by
+\[
+ L_1=1,\qquad
+ L_{\ell+1}=\sqrt{1+\alpha_\ell}(1-b_{\ell+1})L_\ell.
+\]
+Then $c_d\sqrt H\le L_H\le C_dH$, uniformly in $\nu$. The remaining-response bound $L_\ell/L_H\le C_d/(t+1)$ during reversal remains valid: the remaining derivative product is at least its canonical value. During the burn, $L_\ell\le1$.
+
+Start with $r_1=s_0/L_H$, where $s_0$ is the intended final signal. Monotonicity again gives $q\ge b$ and $|r_\ell|\le |s_0|L_\ell/L_H$. The excess variance satisfies the sharper recurrence
+\[
+ 0\le\Delta_{\ell+1}\le\nu\Delta_\ell+
+                       (\beta+\alpha_\ell)r_\ell^2.
+\]
+For $\beta>0$, a disturbance persists for a total weight at most $1/\beta$, and also for at most the remaining number of transitions. The burn contribution to $\sum_\ell\Delta_\ell$ is therefore at most
+\[
+ \sum_{\ell\text{ in burn}}r_\ell^2
+ \le C_ds_0^2 H/L_H^2\le C_ds_0^2.
+\]
+During reversal, a disturbance with $t$ transitions remaining contributes at most
+\[
+ C_ds_0^2\min\{t+1,\beta^{-1}\}
+ \left(\beta+\frac{C_d}{t+1}\right)\frac1{(t+1)^2}
+ \le\frac{C_ds_0^2}{(t+1)^2}.
+\]
+For $\beta=0$ the canonical proof applies directly. Summing gives $\sum\Delta_\ell\le C_ds_0^2$ uniformly in the prefactor. The correlation-product identity thus gives the same cubic-response bound $|r_H-s_0|\le C_d|s_0|^3$.
+
+Use the same bounded Gaussian-feature encoding of $g_0/(\mathcal B L_H)$ and random unit-direction completion. Because $L_H\ge c_d\sqrt H$, its first-layer concentration bounds and admissibility threshold are uniform in $\nu$. For completeness, finite-width propagation is also uniform. During the burn, the exact states satisfy $q_\ell\le C_d/(\ell+1)$: the excess variance is at most $\max_{j\le\ell}r_j^2\le C_ds_0^2/H$. During reversal, the geometric recurrence gives
+\[
+ \Delta_\ell\le C_ds_0^2/H+C_ds_0^2/(t+1)^2,
+\]
+so $q_\ell\le C_dq_t^*$. On either monotone reference-variance segment, write its envelope as $b_*$ and use
+\[
+ \| (\delta q,\delta r)\|_{b_*,\beta}
+ =\frac{K_0\sqrt{b_*}}{\beta+b_*}|\delta q|+|\delta r|.
+\]
+On small-variance envelopes the derivative matrix is bounded entrywise by
+\[
+ \begin{pmatrix}
+ \nu & C(\beta+b_*)\sqrt{b_*}\\
+ C\sqrt{b_*} &1+Cb_*
+ \end{pmatrix}.
+\]
+Choose fixed $K_0$ large enough. The weighted column sums are then at most $1+Cb_*$. Along the burn and reverse segments, $\sum b_*=O_d(\log H)$ and the total variation of the logarithm of the weight is $O_d(\log H)$: its logarithmic derivative with respect to $b_*$ lies between $-1/2$ and $1/2$. The finite number of larger-variance initial or final steps has bounded derivatives uniformly in $\nu$. Hence the total error amplification is polynomial in $H$, uniformly in the prefactor. All actual Gaussian directional variances are bounded by the fixed schedule $W_\ell/N$, so the conditional concentration constants are uniform too. The pointwise mean-square approximation follows exactly as before at $N\ge KH^p$.
+
+The normalized first-layer entropy is $(d+1)\kappa(\nu)$. At an internal transition the exact normalized entropy is
+\[
+ W_\ell-\nu-\nu\log(W_\ell/\nu)
+ =\kappa(\nu)+\alpha_\ell-\nu\log(1+\alpha_\ell)
+ \le\kappa(\nu)+\beta\alpha_\ell+\alpha_\ell^2/2.
+\]
+The readout mean $\mathcal B e_H/\sqrt N$ has normalized cost $\mathcal B^2$, with native covariance $\nu I/N^2$. Since $\sum\alpha_\ell=O_d(\log H)$ and $\sum\alpha_\ell^2=O_d(1)$, summing proves the displayed entropy bound. Finally $\kappa(\nu)\le\beta^2$ follows from its power series, while
+$\beta\log(H+1)\le\beta^2H+\log^2(H+1)/(4H)$ and the latter ratio is bounded. This proves the final estimate.
+\end{proof}

@@ -1,0 +1,40 @@
+\subsection{Nonvanishing initialization scale and small-network prior mass}
+\label{sec:cauchy-native-scale}
+A nonzero width limit of the initialization output scale does not by itself imply Gaussian-process or kernel behavior. The bounded-activation Cauchy model gives an explicit counterexample to that inference.
+
+\begin{proposition}[The fixed-depth native Cauchy scale]
+\label{prop:cauchy-native-scale}
+Fix an input $x\in[-1,1]^d$ and hidden depth $H\ge1$. Use tanh hidden activations, a raw linear readout followed by either tanh or clipping to $[-1,1]$, and the independent Cauchy prior with scale $1/(d+1)$ in the first layer and $1/N$ in all subsequent layers, including the readout. Define
+\[
+ a_0=\frac{1+\sum_{j=1}^d|x_j|}{d+1}>0,
+ \qquad \Psi(a)=\E|\tanh(aZ)|,\quad Z\sim\operatorname{Cauchy}(1),
+ \qquad a_\ell=\Psi(a_{\ell-1}).
+\]
+At fixed $H$, as $N\to\infty$,
+\[
+ a_{H,N}:=\frac1N\sum_{j=1}^N|h_j^H(x)|
+ \longrightarrow a_H\in(0,1)
+ \quad\text{in probability},
+ \qquad z_w(x)\ \Longrightarrow\ \operatorname{Cauchy}(a_H).
+\]
+Conditional on the hidden network, the raw readout has exactly the Cauchy law with scale $a_{H,N}$. In particular its limiting absolute median is $a_H>0$. The raw readout has infinite variance. The actual bounded output, however, has finite variance satisfying
+\[
+ \operatorname{Var}(f_w(x))\longrightarrow
+ \E[\psi(a_H Z)^2]\in(0,1).
+\]
+Thus its initialization standard deviation is bounded above and below by positive constants as width increases at fixed depth.
+\end{proposition}
+\begin{proof}
+The characteristic function of a centered Cauchy variable of scale $b$ is $e^{-b|t|}$. Independence therefore shows that $\sum_j c_jZ_j$, for independent scale-$b_j$ Cauchy variables, is Cauchy of scale $\sum_j|c_j|b_j$.
+
+First-layer preactivations at the fixed input are consequently independent Cauchy variables of scale $a_0$. Their bounded transformed absolute values have empirical average converging to $a_1$. At every later hidden layer, conditional on the preceding hidden vector, the preactivations are independent Cauchy variables of scale $a_{\ell-1,N}$. Their transformed absolute values lie in $[0,1]$, so conditional Hoeffding gives, for every $u>0$,
+\[
+ \Pr\{|a_{\ell,N}-\Psi(a_{\ell-1,N})|>u
+                 \mid h^{\ell-1}(x)\}\le2e^{-2Nu^2}.
+\]
+The function $\Psi$ is continuous on $[0,1]$ by dominated convergence, and is strictly positive and less than one at every positive argument. Induction in the fixed number of layers proves $a_{H,N}\to a_H\in(0,1)$ in probability.
+
+The same Cauchy addition identity gives the exact conditional readout law. Its unconditional characteristic function is $\E e^{-|t|a_{H,N}}$, which converges to $e^{-|t|a_H}$ by bounded convergence in probability. This proves weak convergence. The limiting absolute-value distribution is continuous and strictly increasing, with median $a_H$, so the absolute medians converge as well. At every finite width the first-layer continuous variables give positive hidden absolute averages almost surely; conditioning on any positive readout scale gives an infinite raw second moment. The bounded output $\psi(z)$ is symmetric and therefore has mean zero. Its variance converges by weak convergence and the bounded continuous function $z\mapsto\psi(z)^2$, proving the final assertion.
+\end{proof}
+
+The earlier prior-mass and online-learning conclusions apply to this same tanh Cauchy prior. Thus a nonvanishing fixed-depth initialization scale coexists with width-independent small-network neighborhoods and polynomial total online mistakes. The Gaussian central-limit intuition fails because the coordinates have infinite variance and their sums remain stable Cauchy variables. The proposition does not assert a scale lower bound uniform in growing depth.

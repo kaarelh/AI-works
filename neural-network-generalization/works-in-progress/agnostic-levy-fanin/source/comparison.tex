@@ -1,0 +1,44 @@
+\section{Embedding a formula without a width cost}
+\label{sec:embedding}
+Fix a formula comparator and a precision $0<\epsilon\le1$. For each teacher coefficient $a$, use the designated-coordinate law from the preceding section. For a background coordinate, use the centered background law with cutoff $\epsilon$. Every designated weight has absolute value greater than $\epsilon$, while every background weight has absolute value at most $\epsilon$.
+
+First suppose $N\ge2(S+1)$. Partition the indices in each hidden layer into disjoint groups assigned to that layer's formula occurrences. Each group has cardinality at least
+$\lfloor N/(S+1)\rfloor\ge N/[2(S+1)]$. Independently choose one index uniformly from each group. These choices define an embedding $\iota$.
+
+At every selected hidden row, use designated laws for the teacher's incoming edges and background laws for all other coordinates. A selected first-layer row uses designated laws for its $d+1$ input coefficients. Use designated laws at the readout for the teacher's final edges, and background laws on its remaining coordinates. Leave all unselected hidden rows at the native prior. For a fixed embedding, this comparison measure, denoted $Q_\iota$, is a product law on the weights. Its coordinates do not depend on the data or on preceding features.
+
+\begin{lemma}[Disjoint supports and embedding entropy]\label{lem:embedding}
+Distinct embeddings have disjoint supports under their comparison laws. Consequently, if $Q$ is their uniform mixture,
+\begin{equation}
+ \KL(Q\|\mu_N)
+ =\frac1{|\mathcal I|}\sum_{\iota\in\mathcal I}
+       \KL(Q_\iota\|\mu_N)-\log|\mathcal I|.
+ \label{eq:embedding-entropy}
+\end{equation}
+Every designated internal or readout edge's $\log N$ cost is canceled by the entropy of its source occurrence's selected location, up to an additive $\log(2(S+1))$.
+\end{lemma}
+\begin{proof}
+Start at the readout. In each group corresponding to one of its formula children, exactly one incoming coordinate has absolute value greater than $\epsilon$; that coordinate identifies the selected child. Inspect that row to identify its children in the same way. Every relevant hidden formula occurrence has one parent, and every relevant occurrence is reached from the output. Thus the weights determine the complete embedding. This proves disjointness.
+
+On the support of $Q_\iota$, the mixture density is its density divided by $|\mathcal I|$. Integrating its logarithm gives~\eqref{eq:embedding-entropy}. There is exactly one outgoing edge for every hidden occurrence. Hence there are $S$ designated edges entering later hidden layers or the readout, and $S$ independently chosen locations. Each costs $\log N$ in the scalar designated-coordinate bound and contributes at least $\log(N/[2(S+1)])$ to the embedding entropy. First-layer input coefficients do not participate in this cancellation; their fan-in is only $d+1$.
+\end{proof}
+
+If $m\le N<2(S+1)$, the formula itself fits in the prescribed learner. Place its nodes at fixed indices, with the same designated and background laws. There is no embedding mixture, but every designated internal $\log N$ cost is at most $\log(2(S+1))$. Thus the same entropy bound holds.
+
+For a general width-$m$ teacher, let $S$ bound the size of its actual rooted formula expansion. In the large-width case, use that expansion as above. Each unrolled row retains at most $m$ predecessors, so the moment resource continues to use the original width $m$, even though the number of formula occurrences can be much larger. In the small-width case, embed the original shared network instead. Every used internal/readout edge appears in at least one formula occurrence, so there are at most $S$ such edges. For a fully connected teacher the coarse bound is $(H-1)m^2+m\le\sum_{\ell=1}^H m^\ell$. The original implementation has at most $S$ relevant hidden rows and at most $(d+1)S$ first-layer coordinates. The moment argument below applies to both product comparison constructions.
+
+\begin{lemma}[Entropy of the comparison]\label{lem:entropy}
+For every finite $N\ge m$, the comparison law satisfies
+\begin{equation}
+ \KL(Q\|\mu_N)
+ \le C(d+1)(S+1)
+       \log\frac{C(S+1)(d+1)(B+8)}{\epsilon}.
+ \label{eq:comparison-entropy}
+\end{equation}
+The constant depends only on the fixed L\'evy measure and is independent of depth.
+\end{lemma}
+\begin{proof}
+Each selected background row has at most its fan-in many background coordinates. Their scalar KL bounds therefore sum to at most $C\log(C/\epsilon)$. There are at most $S+1$ selected rows, including the readout. There are at most $S$ designated internal/readout edges and $(d+1)S$ designated first-layer coordinates. Apply their scalar entropy bounds and Lemma~\ref{lem:embedding}, or the small-width bound on $\log N$. Product additivity gives the result for a fixed embedding, followed by~\eqref{eq:embedding-entropy} for the mixture.
+\end{proof}
+
+The mixture over embeddings is a comparison measure, not the learner's prior. The prior remains the independent product law $\mu_N$.

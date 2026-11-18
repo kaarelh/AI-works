@@ -1,0 +1,108 @@
+\section{An independent Gaussian affine output component does not remove the obstruction}
+\label{sec:affine-skip-fixed-accuracy}
+The constant-accuracy Gaussian-noise result remains valid after giving the learner a separate Gaussian output bias and direct linear input features. Integrating those features out makes it possible to use the same objective comparison on an appropriate quadratic loss.
+
+\begin{theorem}[The depth obstruction with Gaussian affine output skips]
+\label{thm:affine-skip-fixed-accuracy}
+The conclusion of Theorem~\ref{thm:gaussian-fixed-accuracy} remains valid, with possibly smaller absolute constants $\eta,c_0>0$, a larger width constant and depth threshold, and excess lower bound $2^{-34}$, when each learner predicts
+\[
+ z_w(x)+b^{\mathsf T}(1,x),
+\]
+where $b$ has any independent centered Gaussian prior with finite positive semidefinite covariance. The conclusion is simultaneous over every such covariance, every allowed width and prior scale, and every positive likelihood temperature, and survives arbitrary data-dependent mixtures of their ordinary raw posterior means. No upper or lower covariance bound is required. Singular covariance, including no affine component, is allowed.
+\end{theorem}
+\begin{proof}
+Use the same input law and Gaussian labels. Let $\Phi$ be the training matrix with rows $(1,X_i)^{\mathsf T}$, let $\Sigma$ be the affine prior covariance, and set
+\[
+ v=n\lambda s,\qquad
+ B=(I+\Phi\Sigma\Phi^{\mathsf T}/v)^{-1}.
+\]
+Let $P$ be the orthogonal projection onto the complement of the full affine training span, independently of the rank of $\Sigma$. Then
+\[
+ 0\prec B\preceq I,\qquad PB=BP=P.
+\]
+Gaussian integration over $b$ shows that the marginal neural posterior is exactly the original neural prior tilted by
+\[
+ \exp\{-\widehat R_B(z_w)/(2\lambda s)\},\qquad
+ \widehat R_B(z)=\|B^{1/2}(y-z(S))\|_n^2.
+\]
+The determinant factor is independent of $w$ and cancels from this marginal posterior. Conditional on the neural function, the total posterior mean training vector is
+$(I-B)y+Bz(S)$. Therefore its unconditional mean $f$ satisfies
+\begin{equation}
+ f=(I-B)y+Bm_z,\qquad Pf=Pm_z,
+ \label{eq:affine-marginal-mean}
+\end{equation}
+where $m_z$ is the marginal neural posterior mean.
+
+Let $b_S$ denote the empirical atom means and $r_0=\|y-b_S\|_n^2$. The within-atom residual is orthogonal to every function vector and to the affine span. Hence
+\[
+ \widehat R_B(z)=r_0+\|B^{1/2}(b_S-z)\|_n^2.
+\]
+Apply the segment lemma in the inner product induced by $B$ on the atom-constant subspace. If $\|B^{1/2}z\|_n>t$, then $\|z\|_n>t$, so the same operator-energy floor holds. The zero comparison is at most $\widehat R_B(0)+s$, because $B\preceq I$. A Gaussian neural comparison fitting the empirical means in ordinary RMS also fits them in the $B$ norm. Thus all entropy and objective estimates hold with $D_S$ replaced by $\|B^{1/2}b_S\|_n^2\le1$. For sufficiently small fixed energy gaps and comparison errors, they give
+\[
+ \|P m_z-pP b_S\|_n
+ \le\|B^{1/2}(m_z-pb_S)\|_n\le2^{-17}
+\]
+for some $p\in[0,1]$ and every $\lambda\le16/H$. This uses only $P\preceq B$, so it is uniform in $\Sigma$.
+
+To obtain the required smaller comparison error for Gaussian labels, clip empirical atom means to $[-8,8]$ only in the proof comparison. At an atom of count $k$,
+\[
+ k(b_x-\clip_{[-8,8]}b_x)^2
+ \le a^2(|Z_x|-29)_+^2,\qquad a=1/4.
+\]
+The same exponential-moment calculation as before bounds the empirical clipping cost by $2^{-46}$ except on probability $e^{-2^{-45}n}$. A native comparison RMS of $2^{-22}$ then gives total squared residual less than $2^{-40}$. Choose the energy ratio error, the entropy correction, and the norm threshold small enough, also bounded by fixed multiples of $2^{-40}$, to make the segment distance at most $2^{-17}$. The native near-baseline theorem permits these fixed choices after shrinking $\eta,c_0$ and increasing the depth and width constants.
+
+For $\lambda\ge16/H$, the operator-energy tail argument applies to the marginalized loss: its zero comparison remains at most $\widehat R(0)+s\le1+s$. It therefore makes $m_z$ pointwise exponentially small in $H$. By \eqref{eq:affine-marginal-mean}, its projected full prediction $Pf$ is equally small in training norm.
+
+We next give one sample event and one witness common to all these marginal losses. The target's population residual from affine functions is
+\[
+ r_*=
+ \frac{\{(3/4)\tanh(1/4)-(1/4)\tanh(3/4)\}^2}
+ {2\{(1/4)^2+(3/4)^2\}}>1/4096.
+\]
+The last inequality follows already from $\tanh(1/4)>.244$ and $\tanh(3/4)<.636$. For the concentration argument, use the equivalent whitened affine coordinates
+\[
+ \psi(x)=(1,T,2\sqrt D\,x_2,\ldots,2\sqrt D\,x_{D+1},x_{D+2})=(1,T,z,\sqrt{3/4-T^2}).
+\] Their span is exactly the original affine span; no change is made to the learner or its prior. The population Gram matrix of these coordinates has minimum eigenvalue at least $1/128$: nuisance coordinates have variance one, the $T$ variance is $5/16$, and the constant/last-coordinate block has determinant at least $1/64$ and trace less than two. It is otherwise block diagonal.
+
+Bounded-entry concentration for this Gram matrix and target moments implies
+\[
+ \|Pg(S)\|_n^2\ge r_*/2>1/8192
+\]
+with probability tending to one. To make the dimension dependence explicit, the matrix dimension is $q=D+3=O(H)$; entry errors of the whitened coordinates at most $c q^{-2}$ make its operator perturbation $O(q^{-1})$, preserve a constant lower eigenvalue, and control the Schur complement. Hoeffding and a union bound bound failure by $Cq^2e^{-c'n/q^4}$ for suitable absolute constants.
+
+Let $\xi=b_S-g(S)$. Conditional on inputs, the affine projection of the Gaussian noise has squared training norm distributed as $a^2\chi^2_r/n$, with $r\le q$. Consequently its norm squared is at most $1/192$ with probability tending to one. Since the earlier singleton event gives $\|\xi\|_n^2\ge1/96$,
+\[
+ \|P\xi\|_n^2\ge1/192>1/8192.
+\]
+The projected alignment $\langle P\xi,Pg\rangle_n$ is conditionally Gaussian with variance at most $a^2/n$. With an additional failure probability tending to zero it has absolute value at most $2^{-17}$. Finally the earlier Gaussian sample events give $\|P(b_S-2g)\|_n\le1$.
+
+Use the witness $w=P(b_S-2g)$. The segment calculation, now in the affine-orthogonal space, gives
+\[
+ \langle w,f-g\rangle_n
+ \ge2^{-13}-2^{-17}-2^{-17}>2^{-14}
+\]
+for the low-temperature branch. The high-temperature branch gives the same inequality directly because $Pf$ is arbitrarily small. This witness is independent of $\Sigma$, width, scale, and temperature.
+
+To pass to population risk, extend $w$ to the support using its expression
+\[
+ w_i=b_S(X_i)-2g(X_i)-(1,X_i)^{\mathsf T}\widehat\beta,
+\]
+where $\widehat\beta$ is the empirical least-squares coefficient for $y-2g(S)$, equivalently for $b_S-2g(S)$ because the within-atom residual is affine-orthogonal. Define
+\[
+ h(x)=\sum_{i:X_i=x}\{Y_i-2g(x)-(1,x)^{\mathsf T}\widehat\beta\}.
+\]
+Then $\langle h,f-g\rangle_{L^2(D_X)}=\langle w,f-g\rangle_n$ for every function prediction.
+The population affine regression coefficient for $Y-2g(X)$ is the negative of that for $g(X)$; only its $T$ coefficient is nonzero and its magnitude is at most one. In the whitened coordinates just defined, the same Gram concentration, together with conditional Gaussian concentration of the affine noise moments, gives
+\[
+ \sup_{x\in\mathcal X_D}|(1,x)^{\mathsf T}\widehat\beta|\le1
+\]
+with probability tending to one. For details, target-moment and Gram entry errors $O(q^{-2})$ give coefficient error $O(q^{-1})$; multiplication by $\|\psi(x)\|=O(\sqrt q)$ is $o(1)$ uniformly over the support. Gaussian noise moment entries are $O(q^{-2})$ with failure at most $Cq e^{-c n/q^4}$. The population affine prediction has magnitude at most $3/4$, leaving a fixed margin.
+
+The earlier count event therefore bounds the population norm of the affine correction $x\mapsto k_x(1,x)^{\mathsf T}\widehat\beta$ by two. The unprojected Gaussian witness has norm at most $5/2$ on the earlier common event. Thus $\|h\|_{L^2(D_X)}^2\le(9/2)^2<64$. Cauchy--Schwarz and the common separator give
+\[
+ R(f)-R(g)\ge (2^{-14})^2/64=2^{-34}.
+\]
+The witness is linear and common, so the same holds for arbitrary mixtures. All failure probabilities tend to zero because $n$ is exponential in $H$ while $q=O(H)$. A larger fixed depth threshold makes their sum at most $1/10$.
+\end{proof}
+
+The affine extension concerns raw posterior means. Clipping an affine prediction can introduce a nonlinear component, so the affine-projection argument does not automatically cover clipping conventions. Gaussian integration here is exact for every finite covariance; no flat-prior or infinite-variance limit is used.

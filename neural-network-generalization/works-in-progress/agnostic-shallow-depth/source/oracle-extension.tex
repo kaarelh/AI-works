@@ -1,0 +1,235 @@
+\section{The all-width oracle for smooth non-Gaussian priors}
+\label{sec:nongaussian-oracle}
+Let $\mathcal G_{C,B}$ consist of one-hidden-layer tanh networks
+\[
+ g(x)=\sum_{j=1}^{C'} c_j\tanh(a_j\cdot(1,x)),
+ \qquad C'\le C,\qquad
+ |c_j|\le B,\qquad\|a_j\|_\infty\le B.
+\]
+An output bias can be represented by one additional constant hidden
+feature; this changes only the width convention by one. No separate
+bound on the teacher output is assumed.
+
+\begin{theorem}[A smooth non-Gaussian shallow-comparison oracle]
+\label{thm:nongaussian-shallow-oracle}
+Fix the coordinate law $P$ satisfying
+\eqref{eq:coordinate-curvature}, the input dimension $d$, the teacher
+coefficient cap $B\ge1$, and accuracy/confidence
+$\varepsilon,\delta\in(0,1)$. Let $X$ have any distribution on the
+unit sphere in $\mathbb R^d$. Labels may be bounded by a fixed
+constant, or may have a fixed marginal sub-Gaussian envelope.
+
+For every hidden depth $H\ge1$, width $N\ge C$, and $0<\nu\le1$,
+use the independent coordinate prior of Section~\ref{sec:nongaussian-law},
+tanh hidden activation, a linear raw readout, and the likelihood
+\begin{equation}
+ d\Pi_{S_n,\lambda}(w)=Z_{S_n,\lambda}^{-1}
+ \exp\!\left[-\frac{N}{2\nu\lambda}
+                  \widehat R_{S_n}(z_w)\right]d\pi_{N,H,\nu}(w).
+ \label{eq:nongaussian-likelihood}
+\end{equation}
+There are constants $a,c>0$, depending only on the fixed quantities
+above, and a deterministic calibration specified below, such that
+\begin{equation}
+ n\ge(2+C)^c\exp\!\left\{c[\sqrt H+(1-\nu)H]\right\}
+ \label{eq:nongaussian-sample-budget}
+\end{equation}
+implies, with probability at least $1-\delta$,
+\begin{equation}
+ \int R(z_w)\,d\Pi_{S_n,\lambda}(w)
+ \le\inf_{g\in\mathcal G_{C,B}}R(g)+\varepsilon.
+ \label{eq:nongaussian-shallow-oracle}
+\end{equation}
+The risk of the ordinary raw posterior mean is no larger. For fixed
+$C,H,n$, one event gives this conclusion for every $N\ge C$ and
+every prefactor $\nu$ satisfying \eqref{eq:nongaussian-sample-budget}.
+
+The learner has one prescribed architecture and one independent
+coordinate prior. The comparison laws used in the proof do not
+modify that prior or introduce a distribution over network sizes.
+At $\nu=1$, the depth factor is $\exp(O(\sqrt H))$. The constants and
+the degree of the width polynomial may depend on $d,B,\varepsilon$
+and the label envelope; the theorem is not a jointly polynomial
+bound in these quantities.
+\end{theorem}
+
+\paragraph{Calibration.}
+Put $D_C=1+\log(2+C)$ and
+$N_0=\lceil(2+C)^a(H+1)^a\rceil$.
+Choose fixed positive constants $\ell_-,\ell_0,\ell_+$ sufficiently
+small. If $N<N_0$, take
+$\lambda=\ell_-(2+C)^{-a}(H+1)^{-a}$.
+If $N\ge N_0$ and $H<aD_C$, take
+$\lambda=\ell_0/[H\exp(aD_C/H)]$.
+Otherwise put
+\[
+ T_{C,H,\nu}=1+(1-\nu)^2H+D_C^2/H,
+ \qquad j=\lceil\log_2 T_{C,H,\nu}\rceil,
+ \qquad\lambda=\ell_+2^{-j}.
+\]
+Constants can be enlarged in the order used in the proof. This
+calibration depends on the declared comparison class and architecture,
+not on unknown teacher coefficients or population risks.
+
+\begin{proof}
+We spell out how the Gaussian scalar construction and the preceding
+new lemmas yield the claim. This also separates properties of the
+comparison law from properties required of the actual prior.
+
+\emph{A bounded comparison response.}
+A fixed shallow teacher can be approximated by a bounded Gaussian
+feature density:
+\[
+ g_0(x)=\E[\psi(G)\tanh(G\cdot(1,x))],
+ \qquad G\sim N(0,I/d),\qquad \|\psi\|_\infty\le Q.
+\]
+Place bounded-density Gaussian bumps near its $C$ parameter vectors.
+Their radii can be inverse polynomial in $C$ at the required fixed
+risk accuracy. Thus $Q\le(2+C)^{a_0}$, uniformly over the class.
+In particular $D=\log(e+A_dQ/\mathcal B)=O(D_C)$, where
+$\mathcal B$ is a fixed auxiliary readout gain.
+
+The constructions in Theorems~\ref{thm:quantitative-echo} and~\ref{thm:high-gain-echo} use an initial critical
+variance-decreasing block, a middle gain block, and a reversed
+variance block. Its scalar state is exactly
+\eqref{eq:nongaussian-gaussian-state}. It supplies controls satisfying
+\eqref{eq:control-product-bounds}, a bounded response
+$f_{g,\nu,H}=\mathcal B r_H$, and the action estimates
+\begin{align}
+ \sum_{\ell=2}^H(\sqrt{W_\ell}-1)^2
+ &\le A_d(1+D^2/H)\qquad(H\ge A_dD),\notag\\
+ \sum_{\ell=2}^H(\sqrt{W_\ell}-1)^2
+ &\le A_d[1+H\exp(A_dD/H)]\qquad(H\ge2).
+ \label{eq:nongaussian-schedule-action}
+\end{align}
+These follow from the critical variance sequence
+$q_{j+1}=\E\tanh^2(\sqrt{q_j}G)\asymp(j+1)^{-1}$:
+reverse gains telescope, and a gain $e^D$ distributed over a block
+of length proportional to $H$ costs $O(D^2/H)$ when $D/H$ is bounded,
+or $O(H e^{A_dD/H})$ in general. The schedules for $H=2,3$ use a
+fixed number of gain layers and obey the second bound.
+The deterministic response has the same sign as $g_0$, has magnitude
+at most $|g_0|$, and differs from it by at most
+$A_d|g_0|^3/\mathcal B^2$. The scalar construction, including~\eqref{eq:continuous-cubic-response} and~\eqref{eq:response-attenuation}, is unchanged
+by the present extension; its ingredients are the Gaussian state map,
+the critical variance drift, and the global projection inequality
+proved in Lemma~\ref{lem:nongaussian-global-transfer}.
+
+These facts give a risk comparison without a teacher-output cap.
+For $|y|\le L$ and $|g_0|\ge2L$, any attenuation of $g_0$ toward
+zero cannot increase its squared loss. For $|g_0|\le2L$, choose the
+fixed $\mathcal B$ so that the cubic error is sufficiently small.
+For all $y$, the excess loss of attenuation is at most $y^2$.
+For sub-Gaussian labels, choose fixed $L$ with small
+$\E[Y^2\mathbf1_{|Y|>L}]$, and use one common empirical label-tail
+and moment event. Taking the Gaussian feature approximation accuracy
+inverse polynomial in $C$ controls its loss error as well. Thus the
+bounded response has empirical risk at most the original teacher
+risk plus the prescribed small error, on a common event.
+
+\emph{A non-Gaussian comparison law.}
+Replace only the first-layer comparison distribution by the canonical
+Gaussian law. Lemma~\ref{lem:nongaussian-first-layer} charges a fixed
+normalized entropy $A_{P,d}$. At subsequent layers use the adaptive
+rank-one transports of Lemma~\ref{lem:nongaussian-rank-one-entropy}.
+Their normalized action is bounded by
+\[
+ A_P\sum_\ell(\sqrt{W_\ell}-\sqrt\nu)^2
+ \le 2A_P\sum_\ell(\sqrt{W_\ell}-1)^2
+                   +2A_PH(1-\sqrt\nu)^2.
+\]
+Translate the readout mean by $\mathcal B e_H/\sqrt N$ and leave its
+centered native noise unchanged. This costs at most $M\mathcal B^2$.
+By Lemma~\ref{lem:nongaussian-global-transfer}, width
+$N\ge(2+C)^a(H+1)^a$ gives any fixed small pointwise MSE around the
+same bounded deterministic response. Consequently the normalized
+comparison entropy is at most
+\begin{equation}
+ A[1+(1-\nu)^2H+D_C^2/H]
+ \quad\hbox{if }H\ge aD_C,
+ \label{eq:nongaussian-long-action}
+\end{equation}
+and at most $A[1+H e^{aD_C/H}]$ at smaller $H\ge2$.
+The comparison is data-independent. Conditional entropy chain rules
+and convexity account for its auxiliary directions.
+For $H=1$, use the Gaussian first features and readout mean
+$\psi(G_i)/N$. Its normalized entropy and approximation width are
+polynomial in $Q$, hence polynomial in $C$; no variance schedule is
+needed.
+
+\emph{The large-width statistical bound.}
+The variational free-energy inequality bounds the empirical evidence
+certificate by the comparison empirical risk plus $\lambda$ times
+its normalized entropy. With the stated calibrations this additional
+cost is as small as desired. In the long-depth branch,
+Corollary~\ref{cor:nongaussian-sobolev} requires sample size, up to
+polynomial factors, at most
+\[
+ \exp\{A_d\sqrt{H[1+(1-\nu)^2H+D_C^2/H]}\}
+ \le\exp\{A_d[\sqrt H+(1-\nu)H+D_C]\}.
+\]
+This has the form \eqref{eq:nongaussian-sample-budget}.
+The dyadic entropy levels used in the calibration produce one sample
+event for all qualifying $\nu$; their confidence costs are logarithmic.
+The function classes in the evidence certificate do not depend on
+learner width.
+
+For the short-depth branch use the operator-energy certificate.
+Independent sub-Gaussian rows give
+\[
+ \E\exp(c\omega Q_{\mathrm{op}})\le e^{AN(H+1)},\qquad
+ Q_{\mathrm{op}}=N^{-1}\|W^1\|_F^2
+     +\sum_{\ell=2}^H\|W^\ell\|_{\mathrm{op}}^2
+     +N\|v\|_2^2.
+\]
+A comparison action $A_*$ therefore permits cutoff
+$Q_{\mathrm{op}}=O(H+A_*)$.
+The amplitude is $O(\sqrt{H+A_*})$, and AM--GM bounds the input
+Lipschitz constant by
+$[(H+A_*)/(H+1)]^{(H+1)/2}$.
+An input-space cover has logarithmic sample budget
+$O_d(H+(H+1)\log(1+A_*/H))$.
+For $A_*=O(H e^{aD_C/H})$ and $H<aD_C$ this is $O_d(D_C)$,
+so the required sample size is polynomial in $C$. The same reasoning
+handles the $H=1$ polynomial action.
+
+\emph{All remaining widths.}
+For $C\le N<N_0$, implement the shallow teacher at the same width
+and depth by weak identity relays: retain its first hidden features,
+use $\eta I$ in the next layer, identity matrices subsequently, and
+multiply the readout by $1/\eta$. Taking
+$\eta^2=O(\varepsilon/[CB(H+1)])$ makes the accumulated tanh relay
+error small. At $H=1$ use $\eta=1$ and the original teacher.
+The coefficient bounds and the required parameter-box precision are
+polynomial in $C,H,N$; perturbing identity layers by norm
+$O(1/H)$ avoids any exponential error amplification.
+
+The curvature upper bound implies $p(t)\ge a_Pe^{-b_Pt^2}$.
+For a prior coordinate $sX$ and a target coefficient $\theta$, the
+interval $|sX-\theta|\le r$ therefore has negative log probability
+at most
+\[
+ A_P[1+\theta^2/s^2+\log_+(s/r)].
+\]
+After summing coordinates and multiplying by $2\nu/N$, the box law
+has normalized entropy polynomial in $C,H,N$, uniformly in $\nu$;
+all coordinate scales satisfy $s\le1$, and $N<N_0$ is itself
+polynomial in $C,H$. Choose the small-width likelihood calibration
+to pay for this comparison. Ordinary finite-parameter covers have
+polynomial sample cost: parameter count is polynomial, and the
+logarithm of the parameter-to-function Lipschitz constant is only
+$O(H\log(C+H+N))$. Prior operator tails restore raw risk outside the
+cover. A countable confidence allocation over widths and norm levels
+makes this one event for the entire small-width range.
+
+Finally, concentrate one population-risk minimizing teacher in the
+compact coefficient-capped class. Its output bound $CB$ costs only a
+polynomial in $C$; for sub-Gaussian labels use the corresponding
+subexponential squared-loss concentration. All empirical comparison
+steps and the common label-tail event then imply
+\eqref{eq:nongaussian-shallow-oracle}. Jensen's inequality gives the
+posterior-mean assertion. The constants may be chosen successively:
+first comparison accuracies and readout gain, then polynomial width
+thresholds, then the small likelihood constants, and finally the
+sample exponent $c$.
+\end{proof}

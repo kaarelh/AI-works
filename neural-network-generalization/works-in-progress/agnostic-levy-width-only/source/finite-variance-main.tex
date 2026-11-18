@@ -1,0 +1,76 @@
+\section{Competing with polynomial-width real-valued teachers}
+\label{sec:finite-variance-main}
+The conditional-mean and noise restrictions can be removed. The following learner keeps the same parameter prior, uses every original real label, and chooses its output scale and observation variance deterministically from sample count. Its sharp guarantee is still in expectation.
+
+For $M\ge1$, set
+\[
+ f_{w,M}(x)=M s(z_w(x)),\qquad
+ d\Pi_{S_n,M}(w)\propto
+ \exp\left[-\frac1{256M^2}\sum_{i=1}^n
+                   \{f_{w,M}(X_i)-Y_i\}^2\right]d\pi_N(w).
+\]
+The physical Gaussian observation variance is $128M^2$. Let $\bar f_{S_n,M}$ be its ordinary final mean. The observed labels are not clipped.
+
+Define entropy resources, with a sufficiently large numerical $c$,
+\begin{align*}
+ \mathcal J^{\mathrm B}_{C,H,d}(k)
+ &=c(d+1)^2\{(C+1)^2+H\}
+      \log^2\{e(d+1)(C+1)(H+1)(k+1)\},\\
+ \mathcal J^{\mathrm R}_{C,H,d,\kappa,\alpha}(k)
+ &=\frac{c(d+1)^4\{(C+1)^2+H\}}{\alpha^2}
+      \log^2\{e\kappa(d+1)(C+1)(H+1)(k+1)\}.
+\end{align*}
+The superscripts distinguish Boolean inputs from slab-regular inputs, not different priors or algorithms.
+
+\begin{theorem}[A real-valued shallow oracle with finite-variance labels]
+\label{thm:finite-variance-shallow-main}
+Assume only $\E Y^2<\infty$. Fix any learner depth $H\ge1$, width $N\ge C+1$, sample count $n\ge2$, and output range $M\ge1$ before data. Let
+\[
+ k=\left\lceil64(n+1)^4(1+M)^4\right\rceil.
+\]
+For arbitrary Boolean-input distributions use $\mathcal J=\mathcal J^{\mathrm B}_{C,H,d}$; under slab regularity use $\mathcal J=\mathcal J^{\mathrm R}_{C,H,d,\kappa,\alpha}$. Then
+\begin{align}
+ \E R(\bar f_{S_n,M})\le\inf_{g\in\mathcal G^{\mathrm{raw}}_{C,1}}R(g)
+ &+\frac{cM^2\mathcal J(k)}{n+1}
+ +5\E[Y^2\mathbf1_{\{|Y|>M\}}]\notag\\
+ &+\frac{c(1+\sqrt{\E Y^2})}{(n+1)^2}.
+ \label{eq:finite-variance-shallow-main}
+\end{align}
+The comparison class consists of original real-valued, one-hidden-layer ReLU teachers with width at most $C$, arbitrary finite coefficients, hidden biases, and an affine readout. There is no bound on their output magnitudes. The same prescribed posterior is used for every comparator in this infimum, at every eligible learner width.
+\end{theorem}
+\begin{proof}
+Normalize a fixed raw teacher to $g/M$. Apply the exact Boolean or continuous same-width compactification, now at precision index $k$, followed by the reset comparison from Theorem~\ref{thm:shallow-additive-depth}. These constructions are independent of the observed labels. Their proofs supply a comparison law whose entropy is at most $\mathcal J(k)$ and whose normalized mean-square discrepancy from $s(g/M)$ is at most
+\[
+ \eta_{n,M}=\frac1{(n+1)^4(1+M)^4}.
+\]
+Indeed the continuous grid changes the function on probability $O(1/k)$, the outputs are bounded by one, and the native comparison has expected uniform error $O(1/k)$; increasing the fixed factor $64$ or the comparison precision by a numerical constant ensures this display. In the Boolean case the compactification is exact. The exceptional width-$2$ case is covered by the explicit stable-padding branch in Theorem~\ref{thm:shallow-additive-depth}.
+
+Corollary~\ref{cor:finite-variance-comparator} applies to this law. Its direct leave-one-out argument uses the original labels, contributes at most four times the displayed marginal second-moment tail, and the projection of the raw comparator contributes at most one further tail. The comparison-MSE remainder is at most $c(1+\sqrt{\E Y^2})/(n+1)^2$. This proves the stated inequality. No assumption on the conditional mean or on a conditional noise distribution was used.
+\end{proof}
+
+\begin{corollary}[A direct polynomial-width approximation guarantee]
+\label{cor:finite-variance-growing-width}
+Fix $d$ and, in the continuous case, the slab-regularity constants $\kappa,\alpha$. For every sufficiently large $n$, choose
+\[
+ C_n=\lfloor n^{1/8}\rfloor,\qquad M_n=n^{1/8}.
+\]
+Prescribe any finite learner width $N\ge C_n+1$ and hidden depth
+$1\le H\le n^{1/4}$ before observing the data. Use the fixed L\'evy prior, output $M_n s(z_w)$, and Gaussian observation variance $128n^{1/4}$. For every joint label law with $\E Y^2<\infty$,
+\begin{equation}
+ \E R(\bar f_{S_n,M_n})
+ \le\inf_{g\in\mathcal G^{\mathrm{raw}}_{C_n,1}}R(g)
+ +O\!\left(n^{-1/2}\log^2(en)\right)
+ +5\E[Y^2\mathbf1_{\{|Y|>n^{1/8}\}}].
+ \label{eq:finite-variance-growing-main}
+\end{equation}
+The big-$O$ constant may depend on the fixed input parameters and the label second moment, but not on learner width, learner depth in the displayed range, or teacher coefficient magnitudes. The final tail tends to zero, so this is a coefficient-one oracle with a vanishing remainder against a polynomially growing raw-network comparison class.
+
+Every observation enters the returned posterior. There is no holdout, data-dependent temperature choice, averaging over sample sizes or temperatures, or prior over architectures. The output scale and likelihood variance do depend on $n$, as stated. Any fixed positive learner depth satisfies the range condition for all sufficiently large $n$.
+\end{corollary}
+\begin{proof}
+At the stated choices, $k$ is polynomial in $n$ and $\log(k+1)=O(\log n)$. Both resources satisfy
+$\mathcal J(k)=O((C_n^2+H)\log^2 n)$ at the fixed input parameters. Thus
+$M_n^2\mathcal J(k)/(n+1)=O(n^{-1/2}\log^2n)$ uniformly over $H\le n^{1/4}$. The second-moment tail tends to zero by dominated convergence. Substitute into Theorem~\ref{thm:finite-variance-shallow-main}.
+\end{proof}
+
+The same finite-variance transfer also applies to the general-depth compiler and formula-teacher expectation bounds: only logarithmic precision factors change, while the statistical complexity cost is multiplied by $M_n^2$. In particular, the general-depth polynomial-width comparison retains a vanishing remainder when the width-growth exponent and output-range exponent are chosen with sufficient slack. Appendix~\ref{sec:finite-variance-transfer} also proves universal risk consistency for arbitrary compact-domain input laws and arbitrary deterministic width sequences tending to infinity; that pointwise consistency conclusion needs no input regularity, although a uniform coefficient-free rate does.

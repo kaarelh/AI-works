@@ -1,0 +1,104 @@
+\section{A width-independent dictionary for Gaussian neuron gates}
+\label{sec:gaussian-ard-compression}
+Fix $0<\kappa\le1$ and a globally $A$-Lipschitz activation $\phi$, and write $b=|\phi(0)|$. The input domain is $[-1,1]^d$. The hidden depth is $H\ge1$ and every hidden layer has width $N\ge1$. All hidden vertices have independent gates $S_j^\ell\sim\operatorname{Gamma}(\kappa/N,1)$. All factors $G_{ij}^\ell$, all hidden biases $G_{i0}^\ell$, and the readout factors and bias are independent standard Gaussian variables, independent also of the gates. The raw network is
+\begin{align*}
+ h_i^1(x)&=\phi\left(G_{i0}^1+\sum_{j=1}^dG_{ij}^1x_j\right),\\
+ h_i^\ell(x)&=\phi\left(G_{i0}^\ell+\sum_{j=1}^N S_j^{\ell-1}G_{ij}^\ell h_j^{\ell-1}(x)\right)
+                    &&(2\le\ell\le H),\\
+ z(x)&=G_0^{\rm out}+\sum_{j=1}^N S_j^HG_j^{\rm out}h_j^H(x).
+\end{align*}
+The result concerns this native prior. It imposes no conditioning, parameter cap, output clipping, or mixture over architecture sizes. Constants below depend only on $\kappa,A,b$.
+
+\begin{theorem}[Gaussian-factor compression]
+\label{thm:gaussian-ard-compression}
+Let $q\ge1$, $0<\epsilon\le1/2$, and put
+\[
+ L=H+q+1+\log\frac{d+1}{\epsilon},\qquad
+ B_{\rm code}=C\left[(H+1)\log\big((d+1)(L+1)\big)
+                         +\log\frac1\epsilon\right].
+\]
+There is a deterministic finite dictionary $\mathcal D_{H,d,q,\epsilon}$ of rational-weight networks with activation $\phi$, hidden depth $H$, and a linear readout, independent of $N$, such that
+\[
+ \Pr\left\{\inf_{g\in\mathcal D_{H,d,q,\epsilon}}
+                  \|z-g\|_\infty\le\epsilon\right\}\ge1-e^{-q}.
+\]
+Every dictionary element has hidden width at most $CL$, at most $CHL$ hidden vertices, and at most $B_{\rm code}$ bits per coefficient. Its size satisfies
+\begin{equation}
+ \log|\mathcal D_{H,d,q,\epsilon}|
+ \le C(dL+HL^2)
+       \left[(H+1)\log\big((d+1)(L+1)\big)
+                               +\log\frac1\epsilon\right].
+ \label{eq:gaussian-ard-code-budget}
+\end{equation}
+The dictionary can be chosen to obey the deterministic raw-output bound
+\begin{equation}
+ \sup_{g\in\mathcal D_{H,d,q,\epsilon}}\|g\|_\infty
+ \le \exp\left\{C(H+1)\log\big((d+1)(L+1)\big)\right\}.
+ \label{eq:gaussian-ard-code-envelope}
+\end{equation}
+If additionally $|\phi|\le M_\phi$, the last bound improves to $C(1+M_\phi)L^{5/2}$, where its constant may also depend on $M_\phi$. The cardinality bound is unchanged. In particular, at fixed $H,d,\epsilon$, the logarithmic dictionary size is $O(q^2\log(e q))$.
+\end{theorem}
+
+\begin{proof}
+Write $m_1=\mathbb E|G|$. For $S\sim\operatorname{Gamma}(\kappa/N,1)$ and $0<r\le1$, direct integration of its density gives, uniformly in $N$,
+\begin{align}
+ N\mathbb E[S\mathbf1_{S\le r}]&\le Cr,
+ &N\Pr(S>r)&\le C\log(C/r),
+ &N\Pr(S>u)&\le Ce^{-u/2}\quad(u\ge1).
+ \label{eq:gaussian-ard-gate-tails}
+\end{align}
+Indeed $\Gamma(a)^{-1}\le Ca$ for $0<a\le1$; integrating $a s^{a-1}e^{-s}$ on $(0,r)$, $(r,1)$ and $(1,\infty)$ proves these bounds.
+
+Delete every outgoing column whose gate is at most $r$, retaining the original factors and biases. Call the resulting raw function $z^{(r)}$. A gate is independent of the feature at its own vertex, for both native and truncated networks. Layerwise expected uniform path bounds therefore give
+\[
+ P_1\le b+A m_1(d+1),\qquad
+ P_\ell\le b+A m_1+A\kappa m_1P_{\ell-1},
+\]
+where $P_\ell$ bounds the expected uniform magnitude of any native or truncated feature. Hence $P_\ell\le C(d+1)K^\ell$ for a fixed $K>1$. The same independence, applied to the difference of the coupled networks, gives
+\begin{equation}
+ \mathbb E\|z-z^{(r)}\|_\infty
+       \le C(d+1)r(H+1)K^{H+1}.
+ \label{eq:gaussian-ard-truncation-error}
+\end{equation}
+For clarity, a retained column propagates the previous feature difference with expected total absolute gain at most $\kappa m_1$, while omitted columns contribute at most $CrP_{\ell-1}$. The readout obeys the same calculation without an activation. No independence between a feature and an earlier gate is asserted or needed.
+
+Set $\delta=e^{-q}$ and
+\[
+ r=\frac{\delta\epsilon}{C(d+1)(H+1)K^{H+1}},
+\]
+with $C$ large enough. Markov's inequality makes the raw truncation error at most $\epsilon/2$ outside an event of probability $\delta/4$. The displayed choice satisfies $\log(C/r)\le CL$.
+
+The retained count in each hidden layer is binomial with mean at most $CL$. Its moment generating function is bounded by that of a Poisson variable with this mean. A Chernoff bound and a union over the $H$ layers give a simultaneous count bound $U=\lceil CL\rceil$, except on an event of probability at most $\delta/4$; here $\log(H/\delta)\le CL$. Likewise the last gate-tail bound in \eqref{eq:gaussian-ard-gate-tails}, summed over all $HN$ gates, shows that all gates are at most
+\[
+ B_S=C\log(CH/\delta)\le CL
+\]
+except on an event of probability at most $\delta/8$.
+
+Relabel the retained vertices consecutively in each layer. Only these vertices can influence the output, and the induced dense subnetwork contains at most
+\[
+ M=(d+1)U+(H-1)U(U+1)+U+1\le C(dL+HL^2)
+\]
+factors and biases. Conditional on the retained index sets, these variables are still independent standard Gaussians, since the sets were selected using gates alone. A Gaussian union bound therefore shows that they all have magnitude at most
+\[
+ B_G=C\sqrt{\log(CM/\delta)}\le C\sqrt L
+\]
+except on an event of probability $\delta/8$. The last inequality uses $H\le L$, $q\le L$, $\log(d+1)\le L$, and $\log(L+1)\le L$. Consequently every actual coefficient of the retained subnetwork is bounded by
+\[
+ B_*:=\max\{1,B_S\}B_G\le CL^{3/2}.
+\]
+The biases and first-layer coefficients obey the same bound. Empty retained layers are permitted; later retained neurons may then be constant because biases are present.
+
+Choose a common dyadic mesh $\zeta\le1$ and round all coefficients. For any two networks on the retained architecture, with coefficient magnitudes at most $B_*+1$ and coordinatewise difference at most $\zeta$, deterministic layerwise Lipschitz propagation gives
+\[
+ \|g_1-g_2\|_\infty
+ \le C\zeta(H+1)(d+U+1)K_*^{H+1},
+ \qquad K_*=1+b+A(d+U+1)(B_*+1).
+\]
+This bound follows by combining the ordinary feature-magnitude recurrence with the recurrence for feature differences. Since
+\[
+ \log K_*\le C\log\big((d+1)(L+1)\big),
+\]
+a dyadic mesh making this error at most $\epsilon/2$ requires at most the stated $B_{\rm code}$ bits per coefficient, including its sign and integer part. Enumerate all layer widths up to $U$ and all such rounded coefficients of magnitude at most $B_*+1$. This is a deterministic dictionary and includes the rounded retained network. Its widths and coefficients do not record any original learner index. The width choices cost at most $CH\log(U+1)$ bits, and the coefficient choices cost at most $M B_{\rm code}$; their sum is bounded by \eqref{eq:gaussian-ard-code-budget}.
+
+The total excluded probability is at most $3\delta/4<\delta$, and the two uniform approximation errors add to at most $\epsilon$. The deterministic feature-magnitude recurrence with width $U$ and coefficient bound $B_*+1$ also proves \eqref{eq:gaussian-ard-code-envelope}. When $|\phi|\le M_\phi$, only the readout needs bounding: its magnitude is at most $(B_*+1)(1+UM_\phi)\le C(1+M_\phi)L^{5/2}$. This proves every assertion.
+\end{proof}

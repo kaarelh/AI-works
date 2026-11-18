@@ -1,0 +1,68 @@
+\section{Conditional readout uncertainty inside sample gaps}
+The following bound separates uncertainty in the last Gaussian layer
+from uncertainty in the hidden features. It applies to the actual
+posterior and helps locate what remains missing from a sharper
+population argument.
+
+\begin{proposition}[Gaussian readout variance between observations]
+Condition on the hidden weights $W=((a_j,b_j))_{j=1}^N$ and the sample.
+Let $X_-<X_+$ be two observed inputs and let $x\in[X_-,X_+]$.
+Write $h=X_+-X_-$ and
+$Q_W=N^{-1}\sum_j(a_j^2+b_j^2)$.
+Then
+\[
+ \operatorname{Var}_{\Pi}(z(x)\mid W,S)
+ \le \frac{2n\lambda\nu}{N}+
+       \frac{2\nu Q_Wh^2}{N}. \tag{RV1}
+\]
+For bounded labels, averaging over the hidden-weight posterior gives
+\[
+ \mathbb E_{W\mid S}\operatorname{Var}_{\Pi}(z(x)\mid W,S)
+ \le\frac{2n\lambda\nu}{N}
+ +\frac{2\nu h^2}{N}\left(3\nu+\frac1{2\lambda}\right). \tag{RV2}
+\]
+The same statement holds with $1$ replaced by $\widehat{Y^2}$ in
+the last numerator when the observed labels are not bounded.
+\end{proposition}
+\begin{proof}
+Let $H$ be the training feature matrix and let
+$\sigma^2=n\lambda\nu/N$ be the actual observation variance.
+The conditional Gaussian readout posterior has covariance
+\[
+ \Sigma=(N^2\nu^{-1}I+\sigma^{-2}H^\top H)^{-1}.
+\]
+Consequently $\Sigma\preceq(\nu/N^2)I$ and
+$H\Sigma H^\top\preceq\sigma^2 I_n$.
+Write $t=(x-X_-)/h$ and
+\[
+ h_W(x)=(1-t)h_W(X_-)+t h_W(X_+)+e(x).
+\]
+The ReLU Lipschitz property gives
+$|e_j(x)|\le |a_j|h$.
+The conditional variance of the first two terms is at most
+$\sigma^2((1-t)^2+t^2)\le\sigma^2$, while that of the residual
+is at most $(\nu/N^2)h^2\sum_j a_j^2\le\nu Q_Wh^2/N$.
+Using $\operatorname{Var}(U+V)\le2\operatorname{Var}U+
+2\operatorname{Var}V$ proves (RV1).
+
+For completeness, Gaussian radial integration by parts gives
+\[
+ \mathbb E_\Pi Q_N
+ =3\nu-\frac2\lambda\mathbb E_\Pi P_n[z(z-Y)]
+ \le3\nu+\frac{\widehat{Y^2}}{2\lambda}.
+\]
+Indeed the Gaussian density is proportional to
+$e^{-\omega Q_N/2}$, the parameter dimension is $3N$, and scaling
+all parameters scales $z$ quadratically. Since $Q_W\le Q_N$,
+averaging (RV1) proves (RV2).
+\end{proof}
+
+For a design with maximum adjacent sample gap
+$h_{\max}=O(\log(n/\delta)/n)$ and $N\ge n$, this conditional
+variance is at most
+$O(\lambda+\log^2(n/\delta)/(n^3\lambda))$ in the sample range.
+This does not control the variation of the conditional posterior
+mean as the hidden weights vary. It also makes no assertion about
+extrapolation beyond the smallest and largest observed inputs.
+Consequently (RV2) alone does not bound the full posterior's
+population squared error.

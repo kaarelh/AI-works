@@ -1,0 +1,176 @@
+\section{Removing the original teacher coefficient magnitudes}
+\label{sec:width-oracles}
+Let $\mathcal G_{C,h}$ be all raw scalar-output ReLU networks with
+hidden width at most $C$, hidden depth $h$, arbitrary finite real
+coefficients and affine biases. No bound on their output or coefficient
+magnitudes is imposed. The zero function belongs to this class.
+
+\begin{lemma}[Risk transfer through a proof-only bounded compiler]
+\label{lem:compiler-risk}
+Suppose $f=\clip_{[-M,M]}g$, $M\ge1$, and a deterministic network $q$
+satisfies $|q|\le D M$ and
+$\E|q-f|\le D M\zeta$, where $D\ge1$ is fixed. Then
+\[
+ R(q)\le R(g)+C_D M^2\zeta
+                   +C_D\E[Y^2\mathbf1_{\{|Y|>M\}}].
+\]
+\end{lemma}
+\begin{proof}
+The pointwise projection inequality
+\[
+ (\clip_{[-M,M]}a-y)^2\le(a-y)^2+(|y|-M)_+^2
+\]
+follows by maximizing the quadratic excess over $a$ outside the clipping
+interval. On $|Y|\le M$, the loss difference between $q$ and $f$ is at
+most $(D+3)M|q-f|$. On its complement, it is at most
+$C_D M(M+|Y|)\le C_DY^2$. Integrate and add the projection inequality.
+\end{proof}
+
+Use $M=M_n$ from Section~\ref{sec:statistical-interface}. Compile
+$g/M_n$ to a raw tanh network approximating its clipped output, and
+multiply its final readout by $M_n$. Thus the compiled width stays $m$
+and its coefficient cap grows by only the logarithmic factor $M_n$.
+The lemma gives
+\[
+ R(q)\le R(g)+\widetilde O(\zeta)+o(n^{-2})
+\]
+in every continuous case, and with $\zeta$ replaced by the uniform
+accuracy $\epsilon$ in the Boolean case. This is only a proof step:
+the actual learner uses its unrestricted raw output.
+
+\begin{theorem}[Coefficient-free Gaussian raw oracles]
+\label{thm:width-only}
+Fix $d,h,H,s_Y,\delta$ and use the Gaussian prior and raw likelihood
+specified in Sections~\ref{sec:model}--\ref{sec:statistical-interface}.
+The following statements hold, with probability at least $1-\delta$,
+simultaneously over every learner width large enough to contain the
+stated compiler and every $0<\nu\le1$.
+
+\begin{enumerate}
+\item On Boolean inputs $\{-1,1\}^d$ with any input distribution, assume
+$H\ge b(h+1)$, where $b$ is the numerical compiler exponent.
+At compiler accuracy $\epsilon=n^{-2}$, both width and coefficient
+cap before the final $M_n$ rescaling are at most
+\[
+ m,B\le[4(d+1)(C+1)^h+c\log(n+2)]^b.
+\]
+The ordinary raw posterior mean and posterior-averaged risk are bounded
+by $\inf_{g\in\mathcal G_{C,h}}R(g)+o(1)$ whenever
+$C\le n^u$ and $4bhu<1/v_H$.
+
+\item On a continuous cube law with Lebesgue density at most $\kappa$,
+assume $H\ge2$. Put $s_d=d+\max\{d,2\}$. For any positive $u,t$ with
+\begin{equation}
+ s_d(hu+t)<1/(2v_H),
+ \label{eq:density-growth}
+\end{equation}
+take $C\le n^u$ and compiler accuracy $\zeta=n^{-t}$.
+Then the same oracle holds, with an excess bounded by
+\[
+ \widetilde O\left(n^{-t}
+       +n^{-1/v_H+2s_d(hu+t)}
+       +n^{-1/\rho_H+2r_Hs_d(hu+t)}\right).
+\]
+
+\item Under slab regularity \eqref{eq:slab}, including the sphere laws
+listed above, assume $H\ge2$ and set
+\[
+ s_{d,\alpha}=d/\alpha+
+             \max\{d/\alpha,1/\alpha+1/\alpha^2\}.
+\]
+For any positive $u,t$ with
+\begin{equation}
+ s_{d,\alpha}[(dh+1)u+2t]<1/(2v_H),
+ \label{eq:slab-growth}
+\end{equation}
+put $a=s_{d,\alpha}[(dh+1)u+2t]$.
+At $C\le n^u$, $\zeta=n^{-t}$, the same oracle has excess
+\[
+ \widetilde O\left(n^{-t}+n^{-1/v_H+2a}
+                              +n^{-1/\rho_H+2r_Ha}\right).
+\]
+\end{enumerate}
+All constants may depend on the fixed quantities and the input
+regularity constants, but never on original teacher coefficient
+magnitudes or learner width. The prior, likelihood and predictions
+are not clipped or support-restricted.
+\end{theorem}
+\begin{proof}
+Choose a deterministic $n^{-2}$-minimizer of population risk over
+$\mathcal G_{C,h}$. Its risk is at most $\E Y^2+n^{-2}$, because the
+zero function is available. No attainment of the infimum is needed.
+Compile this function after scaling by $M_n$, and use
+Lemma~\ref{lem:compiler-risk}. Its compiled risk remains bounded by a
+fixed constant plus a vanishing term. Apply
+Lemma~\ref{lem:gaussian-interface} to this one deterministic compiled
+network. Its event is common to all eligible widths and prior scales.
+The calibration has no dependence on the selected teacher or compiler.
+
+In the Boolean case, $mB\le\widetilde O(C^{2bh})$, so the two
+statistical terms have powers $n^{-1/v_H+4bhu}$ and
+$n^{-1/\rho_H+4bhu r_H}$, both negative under the stated condition.
+In the density case, $mB\le\widetilde O(n^{s_d(hu+t)})$.
+In the slab case, $mB\le\widetilde O(n^a)$.
+Substitution in \eqref{eq:gaussian-interface-coarse} gives the
+claimed exponents. The final readout rescaling, label-tail transfer
+and confidence factors contribute only logarithms.
+\end{proof}
+
+\begin{corollary}[Polynomial input-dimension cost on Boolean inputs]
+\label{cor:boolean-samples}
+At fixed $h,H,s_Y$, with $H\ge b(h+1)$, a sufficient Boolean-input
+sample bound for excess at most $\varepsilon\in(0,1)$ is
+\[
+ n\ge\widetilde O_{h,H,s_Y}\left(
+ (d+1)^2[(d+1)(C+1)^h]^{4b v_H}\varepsilon^{-v_H}\right).
+\]
+Logarithms include confidence and the displayed resources. The learner
+width need only exceed
+$[4(d+1)(C+1)^h+c\log(n+2)]^b$, up to a numerical constant. The
+conclusion holds simultaneously over every larger finite width and
+all $0<\nu\le1$. In particular, the sufficient sample complexity is
+polynomial jointly in teacher width and input dimension at fixed
+teacher and learner depths, with no original coefficient bound.
+\end{corollary}
+\begin{proof}
+The Boolean compiler gives $mB\le\widetilde O(K^{2b})$ for
+$K=(d+1)(C+1)^h$. Hence the comparison action is at most
+$\widetilde O_H(K^{4b})$, and $\theta_n$ has dimension factor
+$(d+1)^2/n$. The displayed budget makes the first statistical remainder
+at most $c\varepsilon$. It makes the second at most
+$c\varepsilon^{r_H}\le c\varepsilon$, because $r_H\ge2$.
+Compiler and label-tail errors are absorbed by enlarging the constant.
+\end{proof}
+
+\begin{corollary}[A literal polynomial-width comparison class]
+\label{cor:literal-poly-width}
+Each of the following is a sufficient concrete choice. For all
+sufficiently large $n$, one event of probability at least $1-\delta$
+covers every $N\ge n$ and every $0<\nu\le1$:
+\[
+ R(\bar z_S)\le\Pi_SR(z)
+       \le\inf_{g\in\mathcal G_{\lfloor n^u\rfloor,h}}R(g)
+                                   +\widetilde O(n^{-\eta}).
+\]
+One may take
+\[
+\begin{array}{c|c|c}
+\text{input law}&u&\eta\\ \hline
+\text{Boolean}&(16bhv_H)^{-1}&(2v_H)^{-1}\\
+\text{bounded density}&(8hs_dv_H)^{-1}&(8s_dv_H)^{-1}\\
+\text{slab regularity}&[16s_{d,\alpha}(dh+1)v_H]^{-1}
+                                      &[32s_{d,\alpha}v_H]^{-1}.
+\end{array}
+\]
+The required learner depths are those in Theorem~\ref{thm:width-only}.
+The constants in the sample threshold may be large. These exponents
+are explicit sufficient choices, not claims of optimality.
+\end{corollary}
+\begin{proof}
+Use $t=\eta$ in the continuous cases and substitute in the theorem.
+The resulting compiler width is $o(n)$ in each row, including every
+logarithmic factor, so $N\ge n$ contains it for all large enough $n$.
+In the Boolean row the statistical exponent is at least
+$3/(4v_H)$; the displayed $1/(2v_H)$ leaves slack. The other rows'
+statistical exponents are faster than their displayed compiler errors.
+\end{proof}

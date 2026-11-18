@@ -1,0 +1,267 @@
+\section{One bounded final hidden layer removes the readout restriction}
+\label{sec:final-bounded-hidden}
+A bounded final hidden activation gives a simple alternative to a
+digital compiler when comparison coefficients are bounded. It allows
+arbitrary globally Lipschitz activations in the preceding layers and
+requires no regularity of the input distribution. The architecture
+choice is explicit: there is one additional hardtanh hidden layer,
+followed by the ordinary unbounded raw readout. This is not a theorem
+for a network with ReLU in every hidden layer or for unchanged
+independent Gaussian weights.
+
+Fix $h\ge1$ and hidden-prefix activations $\phi_1,\ldots,\phi_h$, all with
+Lipschitz constant at most $A$ and $|\phi_\ell(0)|\le b$, where
+$A,b$ are fixed. ReLU, GELU and tanh may be used or combined in this
+prefix. A learner has $h+1$ hidden layers of common width $N$.
+The first $h$ use the specified activations and the last uses
+\[
+ \operatorname{hardtanh}(t)=\max\{-1,\min\{1,t\}\}.
+\]
+All hidden edge factors and biases have the same fixed Student law
+with more than two degrees of freedom. Outgoing hidden columns share
+Gamma$(\kappa/N,1)$ gates exactly as before. Its final readout is
+\[
+ z_w(x)=U_0+\sum_{j=1}^NP_jU_jh_j^{h+1}(x),\qquad
+ P\sim\operatorname{Dirichlet}(\kappa/N,\ldots,\kappa/N),
+ \quad U_j\stackrel{\rm iid}=\operatorname{arsinh}(Z).
+\]
+Thus the prior still has full parameter support and the actual output
+is unbounded. The final hidden features, not the network output, lie
+in $[-1,1]$. The last-layer bound alone proves the same native
+logarithmic supremum moments, independently of the prefix activations,
+width, depth, and input dimension.
+
+Let $g$ be a raw depth-$h$ comparison network with the specified prefix
+activations, widths $m_\ell\le m\le N$, and all coefficients and
+biases bounded by $B\ge1$, including its linear readout. Set
+\[
+ P_g=(d+1)m_1+\sum_{\ell=2}^h m_\ell(m_{\ell-1}+1)+m_h+1,
+ \qquad Q_g=P_g+\sum_{\ell=1}^h m_\ell+h+4.
+\]
+All selected-block positions, including zeros, are counted.
+
+\begin{lemma}[A uniform comparison for a clipped teacher]
+\label{lem:bounded-final-hidden-comparison}
+For $M\ge1$ and $0<r\le1$, there is a deterministic comparison law
+supported on raw outputs of magnitude at most $6M$ such that
+\[
+ \E_\rho\|z_w-\operatorname{clip}_{[-M,M]}g\|_\infty^2\le r
+\]
+and
+\begin{align}
+ \KL(\rho\|\mu_{h+1,N})\le C Q_g\bigg[&(h+3)
+        \log\{C(d+m+2)(B+2)\}\notag\\
+       &+\log\frac{C(h+3)(m+1)(B+2)(M+1)}{r}\bigg]
+         +C\exp[C(M+1)].
+ \label{eq:bounded-final-hidden-resource}
+\end{align}
+Constants depend only on $A,b,\kappa$ and the fixed Student law.
+\end{lemma}
+\begin{proof}
+Append one hardtanh hidden neuron to the teacher, with incoming
+coefficients equal to its old readout coefficients divided by $M$
+and bias equal to its old output bias divided by $M$. Give this
+neuron raw readout coefficient $M$ and zero output bias. Its function
+is exactly $M\operatorname{hardtanh}(g/M)$, hence exactly the
+required clipped teacher. The appended internal coefficients are
+bounded by $B$, since $M\ge1$; there is one final selected feature.
+Its selected coefficient count is $P_g+2$, hidden-vertex count
+$\sum m_\ell+1$, and depth $h+1$, giving the displayed $Q_g$.
+
+For completeness the hidden comparison does not require a bounded
+prefix activation. At scalar precision $\epsilon$, choose one vertex
+per teacher position from disjoint groups; put selected hidden gates
+near one, condition each layer's total inactive Gamma mass to be at
+most $\epsilon$, and put all selected factors and biases in intervals
+of radius $\epsilon$ around their teacher values. Native factors
+outside these blocks retain their Student laws. Selected final
+Dirichlet gates and factors use the construction of
+Lemma~\ref{lem:asinh-growing-comparison} with one selected readout.
+Each hidden coefficient interval costs only
+$C\log[C(B+2)/\epsilon]$. Selected gate costs $\log N$ cancel
+against the uniform placement entropy, up to $C Q_g\log(2m)$,
+including $N<2m$.
+
+Here is the stability estimate in the unbounded prefix. For a fixed
+placement, take the largest individual-neuron uniform $L^2$ magnitude
+$R_\ell$, deterministic teacher magnitude $T_\ell$, and selected
+feature error $e_\ell$; this is not an expectation of the maximum
+over all random neurons. Own-layer outgoing gates are independent of
+the features they multiply. The total inactive gate bound and the
+fixed second moment of Student factors give inactive row contribution
+at most $C\epsilon R_{\ell-1}$ in uniform $L^2$.
+Selected-row coefficient magnitudes are at most $C(B+1)$ and their
+errors at most $C\epsilon(B+2)$. With
+\[
+ D=C(1+A+b)(d+m+2)(B+2),
+\]
+induction consequently gives
+\[
+ R_\ell,T_\ell\le D^{\ell+1},\qquad
+ e_\ell\le\epsilon(\ell+1)D^{\ell+1}
+          \quad(1\le\ell\le h+1).
+\]
+The first-layer estimate is $C(d+1)\epsilon$, and the internal
+selected error satisfies the explicit bound
+\[
+ e_\ell\le A\{C\epsilon+C m(B+1)e_{\ell-1}
+       +C m\epsilon(B+2)T_{\ell-1}
+       +C\epsilon R_{\ell-1}\},
+\]
+with $A$ replaced by one for the hardtanh layer. Native unselected
+rows have the same magnitude recurrence using their fixed second
+moments. No maximum over $N$ enters these estimates.
+
+Since the final hidden activation is bounded, the final readout
+comparison and its constant-probability inactive-sum conditioning
+are exactly those of Lemma~\ref{lem:asinh-growing-comparison}.
+They give raw support at most $6M$, a scalar interval cost
+$C\exp[C(M+1)]$, and uniform squared error at most
+$C M^2\epsilon^2(h+3)^2D^{2h+6}$ after conditioning.
+Choose
+$\epsilon=\sqrt r/[C(M+1)(h+3)(m+1)(B+2)D^{h+3}]$.
+Substitution in the entropy calculation proves
+\eqref{eq:bounded-final-hidden-resource}.
+\end{proof}
+
+\begin{theorem}[A raw oracle for arbitrary Lipschitz prefixes]
+\label{thm:bounded-final-hidden-oracle}
+Assume arbitrary IID inputs in $[-1,1]^d$ and marginally sub-Gaussian
+labels, $\E e^{Y^2/K_Y^2}\le2$. Use the preceding fixed full-support
+prior with one final hardtanh hidden layer, and the raw Gaussian
+likelihood temperature $T_n\asymp\log^2(n+2)$.
+If $|\E[Y\mid X]|\le1$, then, for every finite $N\ge m$,
+\[
+ \E R(\bar z_{S_n})\le R(g)
+       +\frac{C\log^2(n+2)}{n+1}\mathcal K_n^{\rm end}(g)
+       +C(n+1)^{-2},
+\]
+where
+\begin{align*}
+ \mathcal K_n^{\rm end}(g)=C Q_g\big[&(h+3)
+                  \log\{C(d+m+2)(B+2)\}\\
+       &+\log\{C(h+3)(m+1)(B+2)(n+1)\}\big].
+\end{align*}
+There is no restriction on the teacher's readout variation beyond its
+stated coefficient cap. The teacher has $h$ hidden layers; the learner
+has $h+1$, with the extra layer prescribed above.
+The resource is polynomial jointly in $d,m,h$, logarithmic in $B$,
+and independent of learner width. In dense form it is
+$\widetilde O(((d+1)m+hm^2)h)$.
+
+Without the bound on the conditional mean, the same conclusion holds
+with additional resource
+$C\exp[C K_Y\sqrt{\log(n+2)}]$ and logarithmic changes in
+$\mathcal K_n^{\rm end}$.
+Thus the additional statistical term is $n^{-1+o(1)}$ at fixed label
+envelope. The actual learner never clips labels or outputs.
+\end{theorem}
+\begin{proof}
+If the conditional mean is bounded by one, clipping the teacher to
+$[-1,1]$ cannot increase squared risk. Use
+Lemma~\ref{lem:bounded-final-hidden-comparison} with $M=1$ and
+$r=(n+1)^{-4}$, and apply the supported-law clause of
+Theorem~\ref{thm:logmoment-raw-oracle}. This gives the displayed bound.
+The uniform approximation changes comparison risk by at most
+$C_{K_Y}(n+1)^{-2}$.
+For marginal labels alone choose
+$M=\max\{1,K_Y\sqrt{12\log(n+2)}\}$ and
+$r=(n+1)^{-8}$. Lemma~\ref{lem:asinh-proof-clipping} bounds the
+teacher's clipping loss. The added readout is a single coefficient,
+so \eqref{eq:bounded-final-hidden-resource} pays only
+$C\exp[C(M+1)]$ beyond its logarithmic resource. Its raw support is
+at most $6M$, which lies within the analytical cutoff after increasing
+the fixed temperature constant. The supported-law oracle finishes.
+\end{proof}
+
+\paragraph{A clipped-ReLU final hidden layer.}
+The same conclusions hold, with different fixed numerical constants,
+if the final hidden activation is the standard clipped ReLU,
+\[
+ \operatorname{ReLU6}(t)=\min\{6,\max\{0,t\}\}.
+\]
+The exact comparison identity is
+\[
+ \operatorname{clip}_{[-M,M]}g
+   =\frac M3\operatorname{ReLU6}(3g/M+3)-M.
+\]
+Thus one final hidden neuron again suffices: its incoming coefficients
+are three times the old readout coefficients divided by $M$, its bias
+is $3b_g/M+3$, its new raw readout coefficient is $M/3$, and its
+output bias is $-M$. The hidden coefficient cap grows only by a fixed
+factor. Final features are bounded by six, so the native log-moment
+bound and the last-row comparison estimates change only by fixed
+constants; the comparison's raw support can still be bounded by $6M$
+by choosing its scalar precision sufficiently small. The same counts,
+entropy resource and learning rates follow. This is an extra bounded
+final hidden layer, not a claim for an all-ReLU hidden architecture.
+
+\begin{corollary}[The same architecture with a Gaussian readout]
+\label{cor:bounded-final-hidden-gaussian}
+Keep the Student/Gamma hidden prior and the extra final hardtanh or
+ReLU6 hidden layer, but replace the final readout by
+\[
+ z_w=G_0+\sum_j\sqrt{P_j}G_jh_j^{h+1},\qquad
+ G_0,G_j\stackrel{\rm iid}{\sim}N(0,1).
+\]
+For marginally sub-Gaussian labels and arbitrary input laws on the
+cube, temperature $T_n=t_0\sqrt n$ gives, at every $N\ge m$,
+\[
+ \E R(\bar z_{S_n})\le R(g)
+        +\frac{C\mathcal K_n^{\rm end}(g)}{\sqrt n}
+        +C(n+1)^{-2}.
+\]
+No bound on the original conditional mean is required.
+The coefficient-cap dependence remains logarithmic. The teacher still
+has depth $h$, and the learner has the additional bounded hidden layer.
+
+If instead $Y=g(X)+\xi$, $|g|\le1$, with centered conditional
+$\sigma^2$-sub-Gaussian noise, any fixed $T\ge8\sigma^2+1$ gives
+\[
+ \E\Pi_{S_n}R(z)\le R_0+
+   \frac{C K_n[T+K_n+\log(n+2)]}{n},
+ \qquad K_n=\mathcal K_n^{\rm end}(g).
+\]
+The generic fixed-temperature confidence version also applies with
+this resource, and the raw posterior mean obeys the same bounds.
+\end{corollary}
+\begin{proof}
+The normalized Gaussian readout has native supremum moments
+$C\sqrt q$ because the final hidden features are bounded by one
+(or six). No earlier feature bound is used in that argument.
+The hidden comparison in
+Lemma~\ref{lem:bounded-final-hidden-comparison} is unchanged.
+Its single final readout coefficient $M$ now costs $O(M^2)$ rather
+than $\exp(O(M))$; the Gaussian comparison construction gives
+uniform squared approximation at any prescribed precision.
+Choose $M=\max\{1,K_Y\sqrt{12\log(n+2)}\}$ for the comparison
+$\operatorname{clip}_{[-M,M]}g$. This adds only a logarithmic
+resource, and the marginal label-tail clipping error is negligible.
+The raw sub-Weibull-prior theorem with exponent $r=1/2$ applies at
+$T_n\asymp\sqrt n$; its analytical cutoff of order $n^{1/4}$
+contains this comparison range after increasing the fixed constant.
+This proves the agnostic assertion.
+
+For the realizable assertion use $M=1$, so the clipped comparison is
+exactly $g$. The same uniform comparison has accuracy $n^{-4}$ and
+entropy $O(K_n)$. The native moment exponent is $1/2$; hence the
+generic fixed-temperature realizable theorem and its confidence
+version give the stated conclusions directly. This use of that
+theorem requires no native compression of the unbounded prefix.
+\end{proof}
+
+\paragraph{Growing comparisons and confidence for the sinh-normal readout.}
+With the sinh-normal readout, at fixed $d,h,B$, take $m_n=\lfloor n^{1/4}\rfloor$ and any prescribed
+$N\ge m_n$. The same learner competes with the entire width-$m_n$
+comparison class, with expected risk gap $\widetilde O(n^{-1/2})$;
+the additive $n^{-1+o(1)}$ term under marginal labels alone is smaller.
+Its depth is only $h+1$, and no input-regularity assumption is used.
+The marginal-label confidence theorem also applies to these supported
+comparison laws. At fixed or polynomially small confidence level,
+choosing $\eta_n=n^{-1/4}$ and temperature of order
+$n^{1/4}\log^2 n$ gives raw posterior-average and mean risk at most
+the best comparison risk plus $\widetilde O(n^{-1/4})$.
+The parameter event is for each prescribed architecture. These
+conclusions do not remove the logarithmic coefficient dependence;
+they are not coefficient-free bounds for arbitrary weights under an
+arbitrary continuous input law.

@@ -1,0 +1,132 @@
+\section{One-posterior selection with sub-Gaussian observations}
+\label{sec:noisy-certificate-selection}
+We record the statistical step needed to cover learner widths too small for a coefficient-controlled compilation. It applies to any prescribed architecture with a full-support prior, a continuous parameter-to-prediction map, and a bounded output $f_w\in[-1,1]$.
+
+Assume $f_0(x)=\E[Y\mid X=x]\in[-1,1]$ and $\xi=Y-f_0(X)$ satisfies
+$\E[e^{t\xi}\mid X]\le e^{\sigma^2t^2/2}$ for every real $t$. Put
+\[
+ R_0=\E\xi^2,\quad A(f)=R(f)-R_0=\E(f-f_0)^2,
+ \quad \widehat A_S(f)=\widehat R_S(f)-\widehat R_S(f_0).
+\]
+The learner knows an upper proxy $\sigma^2$, but not $f_0$ or $R_0$.
+
+\begin{lemma}[A uniform relative-loss inequality]
+\label{lem:subgaussian-VC-excess}
+Let $\mathcal F\subset[-1,1]^{\mathcal X}$ be a pointwise separable class of pseudodimension at most $V\ge1$. Define
+\[
+ t_n=\frac{C[V\log(en)+\log(8/\delta)]}{n},
+ \qquad v_n=(1+\sigma^2)t_n.
+\]
+With probability at least $1-\delta$, simultaneously for all $f\in\mathcal F$,
+\[
+ A(f)\le\widehat A_S(f)+C\sqrt{A(f)v_n}+Cv_n.
+\]
+The constants are numerical and do not depend on $f_0$.
+\end{lemma}
+\begin{proof}
+Write $D_n(f)=n^{-1}\sum_i(f(X_i)-f_0(X_i))^2$. Relative uniform convergence for bounded nonnegative VC-subgraph classes gives, on one event,
+\[
+ |D_n(f)-A(f)|\le C\sqrt{A(f)t_n}+Ct_n\qquad(f\in\mathcal F).
+\]
+The squared-discrepancy class has the required entropy: shifting by the fixed function $f_0$ preserves every evaluation-cover radius, and squaring on $[-2,2]$ is 4-Lipschitz. Equivalently, its subgraph patterns are determined by the two threshold tests $f(x)>f_0(x)+\sqrt u$ and $f(x)<f_0(x)-\sqrt u$, whose VC growth is controlled by that of $\mathcal F$.
+
+Condition on the observed inputs. First restrict to a countable pointwise-dense subclass, and quantize its evaluation vectors in the maximum norm at mesh $n^{-2}$. The pseudodimension growth bound on the $O(n^3)$ input-threshold pairs gives a net with logarithmic cardinality at most $C V\log(en)$. Choose actual function representatives from this subclass. One first-index representative for each nonempty quantization cell makes the selection measurable and dependent only on the inputs.
+
+For any such representative $f$, conditional sub-Gaussian concentration gives
+\[
+ \left|\frac1n\sum_i\xi_i(f(X_i)-f_0(X_i))\right|
+ \le C\sigma\sqrt{D_n(f)t_n}
+\]
+on the union-bound event. The event
+$\max_i|\xi_i|\le\sigma\sqrt{2\log(8n/\delta)}$ handles passage from the net to all functions, at error at most
+$\sigma n^{-2}\sqrt{2\log(8n/\delta)}\le C(1+\sigma^2)t_n$.
+The same mesh changes $\sqrt{D_n(f)}$ by at most $n^{-2}$. Thus, uniformly,
+\[
+ \left|\frac1n\sum_i\xi_i(f(X_i)-f_0(X_i))\right|
+ \le C\sigma\sqrt{D_n(f)t_n}+C(1+\sigma^2)t_n.
+\]
+Use the first display to replace $D_n(f)$ by $A(f)$ in the square root. Finally
+$\widehat A_S(f)=D_n(f)-2n^{-1}\sum_i\xi_i(f(X_i)-f_0(X_i))$.
+The claimed result follows by the triangle inequality, with the allocated failure probabilities summing to $\delta$. Pointwise density and boundedness extend the result from the countable subclass to the whole class. If $t_n$ is larger than a fixed constant, the same bounds follow after enlarging constants; no large-sample assumption is needed.
+\end{proof}
+
+Let $\pi_N$ be the actual prior, let
+\[
+ d\Pi_{S,\beta}=Z_{S,\beta}^{-1}e^{-\beta n\widehat R_S(f_w)}d\pi_N,
+ \qquad F_S(\beta)=-\frac1{\beta n}\log Z_{S,\beta}.
+\]
+Fix $0<\eta\le1$, and put
+\[
+ \beta_0=\frac\eta{32(1+\sigma^2)},\qquad c=1-\eta/8.
+\]
+The relative-loss PAC--Bayes inequality gives, with probability at least $1-\delta/4$,
+\begin{equation}
+ c\int A(f_w)d\Pi_{S,\beta_0}
+ \le J_{\rm imp}-\widehat R_S(f_0),\qquad
+ J_{\rm imp}=F_S(\beta_0)+\frac{\log(8/\delta)}{\beta_0n}.
+ \label{eq:general-implicit-score}
+\end{equation}
+For completeness, conditional noise concentration gives
+\[
+ \E[e^{-\beta_0((f-Y)^2-(f_0-Y)^2)}\mid X]
+ \le e^{-\beta_0(1-2\beta_0\sigma^2)(f-f_0)^2}.
+\]
+A chord bound on $(f-f_0)^2\in[0,4]$ makes its unconditional expectation at most $e^{-\beta_0cA(f)}$. The variational inequality proves \eqref{eq:general-implicit-score} simultaneously over all posterior measures, and its application at the displayed Gibbs posterior cancels the KL term.
+
+For the second score, let $\widehat r_N=\inf_w\widehat R_S(f_w)$. Full support and continuity on the finite sample imply $F_S(\beta)\to\widehat r_N$ as $\beta\to\infty$. Choose the first nonnegative integer $j$ with
+\[
+ F_S(2^j)\le\widehat r_N+1/n,
+ \qquad \beta_{\rm par}=2^j.
+\]
+This is a finite positive measurable value. Apply Lemma~\ref{lem:subgaussian-VC-excess} at failure probability $\delta/4$. Young's inequality absorbs the square-root term into $(\eta/8)A+C v_n/\eta$. Integrating against $\Pi_{S,\beta_{\rm par}}$ gives
+\begin{equation}
+ c\int A(f_w)d\Pi_{S,\beta_{\rm par}}
+ \le J_{\rm par}-\widehat R_S(f_0),\qquad
+ J_{\rm par}=F_S(\beta_{\rm par})+\frac{C t_n}{\beta_0}.
+ \label{eq:general-parameter-score}
+\end{equation}
+Here the posterior empirical risk is no greater than its free energy. The two scores are observable; their unknown offset and coefficient $c$ are identical. Select the smaller score, with a fixed tie rule, and return that one posterior mean. On the intersection of the events, its excess risk is at most
+\[
+ \frac{\min(J_{\rm imp},J_{\rm par})-\widehat R_S(f_0)}c.
+\]
+This is not a mixture over temperatures or architectures.
+
+A native comparison satisfying $\operatorname{KL}(\nu\|\pi_N)\le K r^{-q}$ and $\E_\nu A(f_w)\le A(g)+r$ gives the implicit-score oracle
+\begin{equation}
+ \frac{J_{\rm imp}-\widehat R_S(f_0)}c
+ \le(1+\eta)A(g)+
+ C_q\left(\frac{(1+\sigma^2)[K+\log(8/\delta)]}{\eta n}\right)^{1/(q+1)}.
+ \label{eq:general-score-oracle}
+\end{equation}
+This is the fixed-comparison relative-loss concentration step in the imported heavy-tail theorem: its comparison law is independent of the sample, and its bounded reference label is $f_0(x)$. It does not apply a bounded-observed-label estimate to unbounded $Y$. More explicitly, write $a(x)=\E_\nu(f_w(x)-f_0(x))^2$ and $b(x)=\E_\nu(f_w(x)-f_0(x))$. Then $0\le a\le4$, $b^2\le a$, and the comparison-averaged relative loss is $a(X)-2\xi b(X)$. Conditional sub-Gaussian concentration and bounded Bernstein give variance proxy $C(1+\sigma^2)\E a$. Young's inequality allocates a fraction of $\eta A(g)$, and optimizing $r+K r^{-q}/(\beta_0n)$ proves \eqref{eq:general-score-oracle}.
+
+If $g$ lies in the uniform closure of the learner class, then $F_S(\beta_{\rm par})\le\widehat R_S(g)+1/n$. The same fixed-function relative-loss concentration yields
+\begin{equation}
+ \frac{J_{\rm par}-\widehat R_S(f_0)}c
+ \le(1+\eta)A(g)+
+ \frac{C(1+\sigma^2)[V\log(en)+\log(8/\delta)]}{\eta n}.
+ \label{eq:general-parameter-oracle}
+\end{equation}
+Both displayed comparison inequalities preserve coefficient one on irreducible label noise after adding $R_0$.
+
+\subsection{A sharper oracle from squared comparison error}
+For a multiplicative approximation slack, a squared-error comparison is enough; no smoothness of the hidden activation is required. Suppose that, for every $0<r\le1$, a data-independent comparison law satisfies
+\[
+ \E_\nu\|f_w-g\|_{L^2(P_X)}^2\le r,
+ \qquad \operatorname{KL}(\nu\|\pi_N)\le K r^{-p},\qquad p>0.
+\]
+The weighted squared-triangle inequality gives
+\[
+ \E_\nu A(f_w)\le(1+\eta/8)A(g)+C r/\eta.
+\]
+Apply the same comparison-averaged relative-loss concentration to this law. After assigning another fraction of the allowed multiplicative slack to Bernstein's square-root term and dividing by $c$, the implicit score obeys
+\begin{equation}
+ \frac{J_{\rm imp}-\widehat R_S(f_0)}c
+ \le(1+\eta)A(g)+\frac{C_p}{\eta}
+       \left(\frac{(1+\sigma^2)[K+\log(8/\delta)]}{n}
+       \right)^{1/(p+1)}.
+ \label{eq:general-L2-score-oracle}
+\end{equation}
+Indeed the terms depending on $r$ are bounded by
+$C\eta^{-1}[r+(1+\sigma^2)K r^{-p}/n]$.
+Optimizing gives \eqref{eq:general-L2-score-oracle}; the scalar concentration remainder is dominated by it after increasing constants. If the optimizing $r$ exceeds one, bounded excess risk gives the same statement. This improvement is specific to the oracle with factor $1+\eta$ on approximation error. A coefficient-one total-risk oracle cannot replace its comparison loss by this squared-triangle estimate.

@@ -1,0 +1,66 @@
+\section{A baseline cost plus an amplitude penalty}
+\label{sec:baseline-prox}
+The statistical argument also permits a positive cost for producing any appreciable output. Its value may vary with the prior scale. The conclusion needed for the noise witness is unchanged: the posterior mean is close to a mixture of zero and a capped empirical predictor.
+
+\begin{lemma}[A baseline-plus-amplitude posterior bound]
+\label{lem:baseline-prox}
+Let the input support be a finite set $\mathcal U$, let $|Y_i|\le2a$, and write $M(z)=\max_{x\in\mathcal U}|z(x)|$. Suppose $B\ge0$, $0<c\le4$, and $t>0$ satisfy the entropy bound
+\[
+ \mathfrak s\operatorname{KL}(\rho\|\mu)
+ \ge B\Pr_\rho(M(z)>t)+c\,\mathbb E_\rho M(z)-e_0
+\]
+for every absolutely continuous comparison law, where $\mathfrak s>0$ is the entropy normalization and $s,\zeta,e_0,e_2\ge0$. Suppose the prior itself has expected empirical loss at most $\widehat R(0)+s$, and every function $v:\mathcal U\to[-2a,2a]$ has a comparison satisfying
+\[
+ \mathbb E\widehat R(z)\le\widehat R(v)+\zeta,
+ \qquad \mathfrak s\operatorname{KL}(\rho_v\|\mu)
+        \le B+4\|v\|_\infty+e_2.
+\]
+Let $\Pi$ be the Gibbs posterior minimizing
+$\mathbb E\widehat R+\lambda\mathfrak s\operatorname{KL}$, and let $u_\lambda$ minimize
+\[
+ J_\lambda(u)=\widehat R(u)+\lambda c\|u\|_\infty
+\]
+on sample vectors constant on repeated inputs. Then $u_\lambda$ is a capped empirical-mean predictor. For some $p\in[0,1]$,
+\[
+ \|\mathbb E_\Pi z(S)-p u_\lambda\|_S
+ \le t+\sqrt{4at+s+\zeta+
+          \lambda\{2a(4-c)+e_0+e_2\}}.
+\]
+If $2a\le1$, the same bound holds for the mean of draws clipped to $[-1,1]$ and for clipping the raw posterior mean. The reference vector $p u_\lambda$ is nonpositive at every observed input with a nonpositive empirical label mean.
+\end{lemma}
+\begin{proof}
+Set $A=\{M(z)>t\}$ and $p=\Pi(A)$. The low-output event has
+\[
+ \widehat R(z)\ge\widehat R(0)-2t\|y\|_S
+               \ge\widehat R(0)-4at.
+\]
+The quadratic-gap inequality in Lemma~\ref{lem:canonical-prox} gives, on the high-output event,
+\[
+ \widehat R(z)+\lambda cM(z)
+ \ge J_\lambda(u_\lambda)+\|z(S)-u_\lambda\|_S^2.
+\]
+Let $F$ be the posterior free energy. The entropy floor therefore implies
+\begin{align*}
+ F+\lambda e_0
+ &\ge (1-p)\{\widehat R(0)-4at\}
+       +p\{J_\lambda(u_\lambda)+\lambda B\}
+       +\mathbb E_\Pi\mathbf1_A\|z(S)-u_\lambda\|_S^2.
+\end{align*}
+Extend $u_\lambda$ by zero at unobserved support points. Its sup norm is at most $2a$. The two variational comparisons give
+\[
+ F\le\min\left\{\widehat R(0)+s,
+   J_\lambda(u_\lambda)+\lambda B+\zeta+
+          \lambda[2a(4-c)+e_2]\right\}.
+\]
+For any two real numbers $A_0,A_1$ and nonnegative errors $r_0,r_1$,
+\[
+ \min(A_0+r_0,A_1+r_1)
+ \le (1-p)A_0+pA_1+r_0+r_1.
+\]
+Subtracting the preceding inequalities bounds
+$\mathbb E_\Pi\mathbf1_A\|z(S)-u_\lambda\|_S^2$ by the quantity under the square root. Meanwhile the low-output contribution to the mean has norm at most $t$. Cauchy--Schwarz controls the high-output contribution by that square root, proving the estimate.
+
+Clipping contracts distance to $u_\lambda\in[-2a,2a]$ on the high event and cannot increase the low-event norm. Clipping the mean contracts distance to $p u_\lambda$. Finally the capped empirical-mean characterization from Lemma~\ref{lem:canonical-prox} proves the sign assertion.
+\end{proof}
+
+The baseline $B$ disappears from the approximation error. This cancellation is why a varying baseline cost does not itself protect a learner against the negative-singleton witness. It changes whether zero or a capped empirical predictor is favored, but both have the wrong sign on the same negative singleton observations when the true regression function is positive there.

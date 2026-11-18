@@ -1,0 +1,63 @@
+\section{The high-temperature branch at a small mean-field prefactor}
+\label{sec:operator-energy-tail}
+A posterior tail bound complements the operator-norm entropy inequality. It gives a uniform high-temperature argument at likelihood parameter of order inverse depth, which allows a fixed small mean-field prior prefactor.
+
+\begin{lemma}[Posterior operator-energy tail]
+\label{lem:posterior-op-tail}
+Assume zero-origin, one-Lipschitz hidden activations, the deterministic product bound stated below, and a prior comparison $F\le\widehat R(0)+s$. Bounded tanh activations satisfy this comparison because their centered native output variance is at most $s$; the ReLU extension below verifies it directly. Put $s=\sigma^2$, $L=H+1$, and let $\mathcal B_\eta$ be as in Lemma~\ref{lem:operator-entropy}. Define
+\[
+ q_* =\frac{(\widehat R(0)+s)/\lambda+s\mathcal B_\eta}{1-\eta},
+ \qquad b_* =\frac{2s}{1-\eta}.
+\]
+For every $q\ge q_*$ the posterior satisfies
+\[
+ \Pi(Q_{\mathrm{op}}>q)\le e^{-(q-q_*)/b_*}.
+\]
+Consequently, for every input in $\mathcal X_D$,
+\[
+ \E_\Pi |z_w(x)|
+ \le\left\{\frac{q_*+b_*(L/2+1)}L\right\}^{L/2}.
+\]
+The same upper bound applies to the absolute value of the ordinary posterior mean, its clipping to $[-1,1]$, and the posterior mean of individually clipped network outputs.
+\end{lemma}
+\begin{proof}
+The prior comparison gives $F\le\widehat R(0)+s$. Markov applied to the Gaussian operator-norm exponential moment gives
+\begin{align*}
+ \Pi(Q_{\mathrm{op}}>q)
+ &\le e^{F/(2\lambda s)}\mu_s(Q_{\mathrm{op}}>q)\\
+ &\le\exp\left\{\frac{\widehat R(0)+s}{2\lambda s}
+       +\frac{\mathcal B_\eta}2-\frac{(1-\eta)q}{2s}\right\}
+ =e^{-(q-q_*)/b_*}.
+\end{align*}
+For $q<q_*$ the trivial bound one shows that $Q_{\mathrm{op}}$ is stochastically dominated by $q_*+Z$, where $Z$ is exponential of mean $b_*$. If $p=L/2\ge1$, then
+\[
+ \|Z\|_{L^p}\le\|Z\|_{L^{\lceil p\rceil}}
+ =b_*(\lceil p\rceil!)^{1/\lceil p\rceil}
+ \le b_*(p+1).
+\]
+The deterministic product bound $|z_w(x)|\le(Q_{\mathrm{op}}/L)^{L/2}$ and Minkowski prove the mean estimate. Clipping cannot increase absolute value, and Jensen gives each stated mean convention.
+\end{proof}
+
+\begin{corollary}[Uniform high-temperature decay]
+\label{cor:small-prefactor-high-temperature}
+Fix $0<\eta\le1/2$ and suppose $d\le H+2$. There is $c_0(\eta)>0$ such that, for all sufficiently large $H$, all $N\ge e^H$, and all
+\[
+ 0<s\le c_0(\eta)/N,\qquad \lambda\ge16/H,
+\]
+every posterior mean convention in Lemma~\ref{lem:posterior-op-tail} has absolute value at most $2^{-(H+1)/2}$ at every support point. The constants are independent of the training sample with labels in $[-1,1]$.
+\end{corollary}
+\begin{proof}
+Use $\widehat R(0)\le1$, $\lambda\ge16/H$, and the displayed formula for $\mathcal B_\eta$. For fixed $\eta$,
+\[
+ \frac{q_*+b_*(L/2+1)}L
+ \le\frac{1+o(1)}{16(1-\eta)}+\frac{4c_0}{\eta}+o(1)
+\]
+uniformly over the stated widths. The first term is at most $1/8+o(1)$. Choose $c_0$ so small that $4c_0/\eta\le1/8$, and then take $H$ large enough that the sum is at most $1/2$. Lemma~\ref{lem:posterior-op-tail} finishes the proof.
+\end{proof}
+
+\paragraph{Low temperatures use the same fixed prefactor.}
+For $0<\lambda\le16/H$, the entropy correction satisfies
+\[
+ \lambda s\mathcal B_\eta=O_\eta(c_0)
+\]
+uniformly in $H$, rather than growing with depth. Thus this error can be made any prescribed small constant by fixing $c_0>0$ sufficiently small. Combining this fact with Theorem~\ref{thm:native-near-baseline} and the common-witness objective lemma gives the fixed-positive-accuracy obstruction at every scale $N\sigma^2\le c_0$, including a mean-field prior with this fixed prefactor. The canonical prefactor $N\sigma^2=1$ is not implied by the entropy argument.

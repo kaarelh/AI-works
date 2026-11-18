@@ -1,0 +1,188 @@
+\section{Digital compilation under slab anticoncentration}
+\label{sec:slab-quantized-input}
+The binary quantizer also works for singular input laws, including
+surface measure on a sphere. The approximation argument here uses
+output-level hyperplanes rather than translation of a density.
+
+Assume $X\in[-1,1]^d$ and, for fixed $\kappa\ge1$ and
+$0<\alpha\le1$,
+\begin{equation}\label{eq:digital-slab-assumption}
+ P_X\{|u\cdot X-t|\le r\}\le\kappa r^\alpha
+ \qquad(\|u\|_2=1,\ t\in\mathbb R,\ r>0).
+\end{equation}
+No Lebesgue density is required.
+
+\begin{lemma}[Slab-regular quantized-input compiler]
+\label{lem:slab-quantized-compiler}
+Let $g$ be a ReLU network of hidden width $C\ge1$, hidden depth
+$h\ge1$, arbitrary finite real coefficients, and affine biases.
+For $0<\epsilon<1/4$, define
+\[
+ A=(C+1)^{dh},\qquad L=\lceil8/\epsilon\rceil,
+ \qquad F=(hC+L+1)A,
+\]
+\[
+ J=\left\lceil\log_2\max\left\{8,
+       4\sqrt d\left(\frac{8\kappa F}{\epsilon}\right)^{1/\alpha}
+                          \right\}\right\rceil,
+\]
+and
+\[
+ K=4(dJ+1)(C+1)^h+\lceil\log_2(32/\epsilon)\rceil+2.
+\]
+For a numerical exponent $b\ge2$, and every prescribed hidden depth
+$H\ge2J+b(h+1)+3$, there is a tanh network $q$ with raw affine
+readout satisfying
+\[
+ \E|q(X)-\operatorname{clip}(g(X),[-1,1])|^2\le6\epsilon,
+ \qquad \sup_{[-1,1]^d}|q|\le4.
+\]
+Its readout coefficient absolute sum plus absolute bias is at most
+four. Its hidden width and coefficient cap satisfy
+\[
+ m\le c K^b,\qquad
+ \log(B+2)\le\frac c\alpha
+   \left[J+\log\frac{\kappa(d+1)}\epsilon+\log(K+2)\right],
+\]
+with numerical $c,b$ independent of the original coefficients and
+the additional learner depth. In particular,
+\[
+ J\le\frac c\alpha
+   \left[dh\log(C+1)
+           +\log\frac{\kappa(d+1)(hC+1)}\epsilon\right].
+\]
+Thus inverse accuracy enters width and depth only logarithmically.
+\end{lemma}
+
+\begin{proof}
+The common refinement of all hidden activation regions has at most
+$A$ full-dimensional polyhedral cells. Indeed, each layer cuts an
+existing cell by at most $C$ affine hyperplanes, producing at most
+$\sum_{j=0}^d\binom Cj\le(C+1)^d$ subcells. The activation boundaries
+are contained in a union of at most $hCA$ affine hyperplanes: include
+each nonconstant preactivation's zero hyperplane on each preceding
+cell. Identically zero or nonzero constant expressions add no boundary.
+This is an upper bound on full hyperplanes, not merely on their
+restricted pieces. Boundary points are contained in the same union;
+degenerate identically zero gates do not create further boundaries.
+
+On each final activation cell the raw output is affine. For every
+such affine formula $\ell$, add its nonempty proper level hyperplanes
+\[
+ \ell(x)=-1+2j/L,\qquad j=0,\ldots,L.
+\]
+When $\ell$ is constant there is no level boundary to add. The total
+collection $\mathcal H$ has at most $F$ hyperplanes. It depends on
+the teacher, but its cardinality bound is independent of all teacher
+coefficient magnitudes. On a connected set avoiding every plane of
+$\mathcal H$, the activation formula stays fixed and the clipped
+output varies by at most $2/L\le\epsilon/4$. If the raw output lies
+beyond the extreme levels, its clipped value is constant instead.
+
+Put $Q=2^J$, $y=(x+2\mathbf1)/4$, and
+\[
+ x_Q=-2\mathbf1+4Q^{-1}\lfloor Qy\rfloor.
+\]
+Here $y\in[1/4,3/4]^d$, and
+$\|x-x_Q\|_2\le4\sqrt d/Q$.
+Whenever the rounding segment intersects a plane in $\mathcal H$,
+the original point lies within $4\sqrt d/Q$ of that plane.
+The slab assumption and union bound therefore give an exceptional
+set of probability at most
+\[
+ \kappa F(4\sqrt d/Q)^\alpha\le\epsilon/8.
+\]
+Outside that set, writing $f=\operatorname{clip}(g,[-1,1])$,
+we have $|f(X)-f(X_Q)|\le\epsilon/4$. This argument uses one fixed
+unshifted grid and works for the singular laws allowed by
+\eqref{eq:digital-slab-assumption}.
+
+For the binary quantizer choose
+\[
+ \rho=\frac14\left(\frac{\epsilon}{16\kappa d Q}\right)^{1/\alpha}.
+\]
+Since $\alpha\le1$, this is smaller than $1/(4Q)$.
+In the range $y_j\in[1/4,3/4]$, at most $Q$ grid boundaries occur
+for each coordinate. Each original-coordinate bad strip has width
+condition $|x_j-t|<4\rho$. Consequently its union has probability
+at most
+\[
+ \kappa dQ(4\rho)^\alpha=\epsilon/16.
+\]
+No density bound is used for this second exceptional set either.
+
+The exact quantizer bits describe $X_Q$ as an affine function of
+$dJ$ signed Boolean variables. Compose that decoding with the first
+layer of $g$ and apply the coefficient-free Boolean compiler from
+Lemma~\ref{lem:raw-Boolean-tanh}. It has size $S\le K^b$, depth
+at most $b(h+1)$, and a signed-bit readout with variation plus offset
+below four, approximating $f(X_Q)$ to $\epsilon/4$.
+Use Lemma~\ref{lem:tanh-quantizer} at tolerance
+\[
+ \delta=\min\left\{\frac{\rho}{10^6Q(J+1)},
+                   \frac1{100(S+1)},\frac\epsilon{100}\right\}.
+\]
+Integer-margin majority gates replaced by tanh gates restore this
+accuracy at each layer. The raw readout adds at most $4\delta$,
+so $|q-f(X_Q)|\le\epsilon/2$ away from the quantizer strips.
+Additional hidden layers restore the signed bits before the final
+readout. They do not accumulate error or increase the coefficient cap.
+
+Outside the two exceptional sets the total prediction error is at
+most $3\epsilon/4$, and hence its square is at most $\epsilon^2$.
+Everywhere, $|q-f|\le5$ because the readout variation and offset
+give $|q|\le4$. The mean square error is thus at most
+\[
+ \epsilon^2+25(\epsilon/8+\epsilon/16)\le6\epsilon.
+\]
+The quantizer and Boolean widths are bounded by $cK^b$.
+Their logarithmic coefficient bound follows from
+\[
+ \log(1/\rho)
+ =\log4+\alpha^{-1}\log(16\kappa dQ/\epsilon)
+\]
+and the explicit quantizer gains and majority-gate biases.
+Finally, taking logarithms in the definition of $F$ and $J$ gives
+the stated upper bound on $J$. All constants are numerical.
+\end{proof}
+
+\begin{corollary}[Uniform cubes and spheres]
+\label{cor:digital-cube-sphere}
+The preceding compiler applies in both of the following cases.
+If $P_X$ has density at most $\kappa_0\ge1$ relative to the uniform
+probability law on $[-1,1]^d$, one may take
+$\alpha=1$ and $\kappa=\kappa_0\sqrt d$.
+If $d\ge2$ and $P_X$ has density at most $\kappa_0$ relative to
+uniform surface probability on $\mathbb S^{d-1}$, one may take
+\[
+ (\alpha,\kappa)=
+ \begin{cases}
+ (1/2,4\kappa_0),&d=2,\\
+ (1,4\kappa_0\sqrt d),&d\ge3.
+ \end{cases}
+\]
+In particular the sphere version has no ambient Lebesgue-density
+assumption. The regularity constants are fixed uniformly over the
+teacher and the requested accuracy.
+\end{corollary}
+\begin{proof}
+For the uniform cube, choose a coordinate with
+$|u_j|\ge1/\sqrt d$ and condition on all the others. Its uniform
+coordinate lies in an interval of length at most $2r/|u_j|$,
+giving slab probability at most $\sqrt d\,r$. A bounded density
+relative to this reference probability multiplies the bound by
+$\kappa_0$.
+
+For the unit sphere, rotation invariance reduces the question to
+the first coordinate. When $d\ge3$, its density is
+\[
+ c_d(1-t^2)^{(d-3)/2}\mathbf1_{\{|t|<1\}},\qquad
+ c_d=\frac{\Gamma(d/2)}{\sqrt\pi\,\Gamma((d-1)/2)}\le\sqrt d.
+\]
+An interval of length $2r$ therefore has probability at most
+$2\sqrt d\,r$. For $d=2$ the density is
+$1/(\pi\sqrt{1-t^2})$ on $(-1,1)$; integrating over any interval
+of length $2r$ gives at most $4\sqrt r$.
+Multiplication by $\kappa_0$ and harmless enlargement give the
+displayed constants.
+\end{proof}

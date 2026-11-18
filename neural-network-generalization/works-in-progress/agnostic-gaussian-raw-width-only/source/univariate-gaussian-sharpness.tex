@@ -1,0 +1,195 @@
+\section{A schedule-specific width obstruction on the uniform interval}
+\label{sec:univariate-schedule-sharpness}
+
+The following lower bound concerns the likelihood schedules used by the
+one-dimensional upper bounds. It holds on one fixed uniform input law
+and uses noiseless targets. It is not an obstruction to every possible
+temperature choice.
+
+Use one hidden ReLU layer and the ordinary raw output
+\[
+ z_w(x)=\sum_{j=1}^N v_j(a_jx+b_j)_+,
+ \qquad x\in[-1,1].
+\]
+For $0<\nu\le1$, the independent prior variances are $\nu$ in
+$a_j,b_j$ and $\nu/N^2$ in $v_j$. Put
+\[
+ Q_N(w)=\frac1N\sum_{j=1}^N(a_j^2+b_j^2)
+                   +N\sum_{j=1}^Nv_j^2,
+ \qquad \omega=\frac N\nu.
+\]
+For any sample $S=((X_i,Y_i))_{i=1}^n$ and $\lambda>0$, the actual
+posterior is
+\begin{equation}\label{eq:univariate-sharpness-posterior}
+ d\Pi_S(w)\propto
+ \exp\!\left[-\frac\omega2
+       \left(Q_N(w)+\frac{\widehat R_S(z_w)}\lambda\right)\right]dw,
+ \qquad
+ \widehat R_S(z)=\frac1n\sum_{i=1}^n(z(X_i)-Y_i)^2.
+\end{equation}
+Its physical Gaussian observation variance is $n\lambda\nu/N$.
+
+\begin{lemma}[Posterior quadratic energy]
+\label{lem:univariate-posterior-energy}
+For every finite sample with finite labels, every $N\ge1$,
+$0<\nu\le1$, and $\lambda>0$,
+\begin{align}
+ \int Q_N\,d\Pi_S
+ &=3\nu-\frac2\lambda\int
+     \frac1n\sum_{i=1}^n z_w(X_i)(z_w(X_i)-Y_i)\,d\Pi_S(w)
+       \label{eq:univariate-energy-identity}\\
+ &\le 3\nu+\frac{1}{2\lambda n}\sum_{i=1}^nY_i^2.
+       \label{eq:univariate-energy-bound}
+\end{align}
+\end{lemma}
+\begin{proof}
+The parameter dimension is $D=3N$. For positive scalars $r$,
+$Q_N(rw)=r^2Q_N(w)$ and $z_{rw}=r^2z_w$.
+Integrate the derivative of $r^D$ times the unnormalized posterior
+density on each ray, then integrate over directions. The endpoint
+terms vanish at both zero and infinity. The resulting identity is
+\[
+ 0=D-\omega\int Q_N\,d\Pi_S
+   -\frac{2\omega}{\lambda}\int
+        \frac1n\sum_i z_w(X_i)(z_w(X_i)-Y_i)\,d\Pi_S(w).
+\]
+This argument does not differentiate ReLU across a gate boundary:
+its positive radial homogeneity is exact. For each fixed $N,\nu$
+and sample, the positive definite Gaussian quadratic form dominates
+all polynomial factors arising in the differentiation; the
+likelihood is at most one. This justifies the integrations and also
+shows that every posterior moment used here is finite. Since
+$D/\omega=3\nu$ and $t(t-y)\ge-y^2/4$, the two claims follow.
+\end{proof}
+
+Define the continuous one-period triangular function
+\[
+ \varphi(t)=
+ \begin{cases}
+  1-4t,&0\le t\le1/2,\\
+  4t-3,&1/2\le t\le1,
+ \end{cases}
+\]
+and extend it periodically. For an integer $m\ge1$, let
+\[
+ f_m(x)=\varphi\!\left(\frac{m(x+1)}2\right),\qquad -1\le x\le1.
+\]
+Thus $f_m$ has $m$ full periods, takes values in $[-1,1]$, and is
+the conditional mean of the noiseless law $X\sim\operatorname{Unif}[-1,1]$,
+$Y=f_m(X)$. Write $P$ for integration against this uniform input law.
+
+\begin{lemma}[A triangular target and its double primitive]
+\label{lem:univariate-triangular-target}
+The target satisfies $P f_m^2=1/3$ and has an exact raw shallow ReLU
+representation with width $2m+1$ and coefficient cap $4m$.
+There is a twice continuously differentiable function $F_m$ on
+$[-1,1]$ such that
+\[
+ F_m''=f_m/2,\qquad F_m(\pm1)=F_m'(\pm1)=0,
+ \qquad \|F_m\|_\infty=\frac{1}{12m^2}.
+\]
+Consequently every network $z_w$ above obeys
+\begin{equation}\label{eq:univariate-triangle-correlation}
+ |P(z_wf_m)|\le\frac{Q_N(w)}{24m^2}.
+\end{equation}
+\end{lemma}
+\begin{proof}
+Direct integration gives
+\[
+ \int_0^1\varphi(t)\,dt=\int_0^1t\varphi(t)\,dt=0,
+ \qquad \int_0^1\varphi(t)^2\,dt=\frac13.
+\]
+For $F_*(t)=\int_0^t(t-u)\varphi(u)\,du$, both $F_*$ and
+$F_*'$ vanish at $0,1$. On $[0,1/2]$,
+$F_*(t)=t^2/2-2t^3/3$; reflection gives its values on the other half.
+It is nonnegative and has maximum $F_*(1/2)=1/24$.
+On each period of length $2/m$, set $F_m$ equal to the rescaled
+copy $(2/m^2)F_*$. The copies and their first two derivatives match
+at period endpoints, giving all asserted properties.
+
+For $x_j=-1+j/m$, the exact representation on $[-1,1]$ is
+\[
+ f_m(x)=1-2m(x+1)_+
+           +4m\sum_{j=1}^{2m-1}(-1)^{j+1}(x-x_j)_+.
+\]
+The constant one is a neuron with input weight zero and bias one.
+All hidden input weights and biases have magnitude at most one,
+and all readout coefficients have magnitude at most $4m$.
+
+The distributional second derivative of $z_w$ in the open interval
+is a finite signed measure with
+\[
+ \operatorname{TV}(z_w'')
+ \le\sum_j|v_j a_j|
+ \le\frac12\sum_j\left(Nv_j^2+\frac{a_j^2}{N}\right)
+ \le\frac12Q_N(w).
+\]
+Terms with $a_j=0$ have no second derivative. Two integrations by
+parts, with the displayed boundary values of $F_m$, give
+$P(z_wf_m)=\int F_m\,d z_w''$. Multiplying the total variation
+bound by $\|F_m\|_\infty$ proves
+\eqref{eq:univariate-triangle-correlation}.
+\end{proof}
+
+\begin{theorem}[Raw prediction lower bound for a chosen schedule]
+\label{thm:univariate-schedule-obstruction}
+Let $m,N\ge1$, $0<\nu\le1$, and $\lambda>0$. For every sample
+with $X_i\in[-1,1]$ and $|Y_i|\le1$, both the ordinary posterior
+mean $\bar z_S=\int z_w\,d\Pi_S(w)$ and the posterior-averaged
+squared risk against the noiseless triangular target satisfy
+\begin{align}
+ P(\bar z_S-f_m)^2
+ &\ge\frac13-\frac{3\nu+(2\lambda n)^{-1}\sum_iY_i^2}{12m^2}
+ \ge\frac13-\frac{3+(2\lambda)^{-1}}{12m^2},
+       \label{eq:univariate-schedule-lower}\\
+ \int P(z_w-f_m)^2\,d\Pi_S(w)
+ &\ge\frac13-\frac{3+(2\lambda)^{-1}}{12m^2}.
+       \label{eq:univariate-schedule-gibbs-lower}
+\end{align}
+In particular these bounds hold surely, and in expectation, for
+IID noiseless training data from the uniform-input target law.
+The best raw teacher of width $2m+1$ has risk zero. The bounds are
+uniform over every $N\ge2m+1$ and every mean-field-or-stronger scale.
+\end{theorem}
+\begin{proof}
+Discard the nonnegative $P\bar z_S^2$ term and apply Fubini and
+\eqref{eq:univariate-triangle-correlation}:
+\[
+ P(\bar z_S-f_m)^2
+ \ge\frac13-2P(\bar z_S f_m)
+ \ge\frac13-\frac1{12m^2}\int Q_N\,d\Pi_S.
+\]
+Lemma~\ref{lem:univariate-posterior-energy} proves the mean bound.
+The identical argument before taking the posterior expectation
+proves the Gibbs-risk bound. All moments are finite, so the
+interchanges are justified. The explicit teacher representation
+proves the zero-risk comparison claim.
+\end{proof}
+
+\paragraph{Consequences for three universal schedules.}
+For a deterministic schedule $\lambda_n>0$, if $m_n\to\infty$
+and $\lambda_nm_n^2\to\infty$, the lower bound approaches $1/3$.
+More quantitatively, if $\lambda_n\to0$ and
+$m_n=\lceil\lambda_n^{-1/2}\rceil$, its limit inferior is at least
+$7/24$. Thus:
+\begin{itemize}
+\item For $\lambda_n=L_n/n^{3/2}$, where $1\le L_n\le
+c\log^a(n+2)$ for fixed constants $a,c>0$, a teacher of width
+$O(n^{3/4}/\sqrt{L_n})$ already has nonvanishing risk for this learner.
+This matches the nearly $n^{3/4}$ comparison-width threshold of
+the corresponding localized upper bound, up to logarithmic factors.
+\item For $\lambda_n=n^{-3/5}$, a teacher of width $O(n^{3/10})$
+has nonvanishing risk. This matches the width exponent of the
+corresponding coefficient-one universal schedule.
+\item For $\lambda_n=n^{-8/7}$, a teacher of width $O(n^{4/7})$
+has nonvanishing risk. This matches the width exponent of the
+coefficient-one empirical-midpoint oracle at $N\ge n$.
+Fixed logarithmic factors in $\lambda_n$ change this threshold
+only by the corresponding inverse square-root logarithmic factor.
+\end{itemize}
+The input law is the same uniform law throughout; the noiseless
+targets and their coefficient magnitudes grow with $n$. No prior
+is changed. These conclusions concern the specified schedules.
+The lower bound weakens when $\lambda$ is made smaller and does
+not exclude a faster theorem at another temperature or with
+teacher-dependent calibration.

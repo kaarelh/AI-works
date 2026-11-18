@@ -1,0 +1,130 @@
+\section{Nearly additive extra learner depth for ReLU}
+A shallow comparison function can also be learned by a much deeper architecture. With biases available, clipping can be computed through a single scalar channel:
+\begin{equation}
+ \operatorname{clip}(z)=1-\operatorname{ReLU}\!\left(2-\operatorname{ReLU}(z+1)\right).
+ \label{eq:scalar-reset}
+\end{equation}
+This identity permits a bounded scalar relay after the comparison computation, without increasing its maximum width.
+
+\begin{theorem}[A scalar relay through extra layers]\label{thm:scalar-padding}
+Use ReLU hidden activations and final clipping in the neuron-gated prior. Let a comparison network have hidden depth $h\ge1$, maximum width $m$, coefficient cap $B\ge1$, and resource
+\[
+ Q_g=P_g+V_g+h+1,
+\]
+where $P_g,V_g$ are the counts in~\eqref{eq:counts} for its own depth. Prescribe any learner depth $H\ge h$ and width $N\ge m$. Put
+\[
+ D_0=C(d+m+2)(B+4),\qquad L=(h+4)\log D_0+\log(h+4),
+\]
+and
+\begin{equation}
+ J_n=C\left[
+ Q_g\{L+\log((m+1)(n+1))\}
+ +(H-h+1)\log\{C(H+1)(n+1)\}\right].
+ \label{eq:scalar-padding-cost}
+\end{equation}
+At the same fixed likelihood temperature $\beta_*=1/(256s)$,
+\[
+ \E R(\bar f_{S_n,\beta_*})
+ \le R(g)+\frac{C s(1+J_n)}{n+1}.
+\]
+The high-probability noise-separated companion holds with remainder
+$Cs[J_n+\log(2/\delta)]/(\eta n)$ at $\beta_\eta=\eta/(32s)$.
+The extra learner-depth cost is nearly linear and additive; it is not multiplied by $m^2$ or by the logarithm of the teacher coefficient cap. No extra width allowance or prior restriction is needed.
+\end{theorem}
+\begin{proof}
+For $H=h$, use the general comparison directly. If $H=h+1$, one added neuron computes $\operatorname{ReLU}(z_g+1)$, with readout that subtracts one; final clipping still gives $g$. The general comparison at this depth has the stated resource. Hence suppose $H\ge h+2$ and put $q=H-h-2$.
+
+Append the two scalar ReLU neurons in~\eqref{eq:scalar-reset}. The second has ideal feature $u(x)\in[0,2]$, and the final intended raw output is $1-u(x)=g(x)$. Insert $q$ identity ReLU relays between this feature and its readout. All added layers have width one. The original readout coefficients become the first reset neuron's incoming coefficients; the second reset has coefficient $-1$ and bias $2$. Every subsequent relay has coefficient $1$ and bias zero. This implementation uses at most $P_g+2(q+2)$ coefficient positions and $V_g+q+2$ hidden vertices.
+
+Fix a desired expected uniform error $0<t\le1$. In the teacher and reset block use the comparison construction at a common precision
+\[
+ \epsilon_0=ct\big/\{(h+4)D_0^{h+4}\},
+\]
+with a sufficiently small fixed $c$. The outgoing gates of the final reset neuron are not yet specified; they do not affect its own feature. The uniform stability proof gives
+\[
+ e_0:=\E\|h^0-u\|_\infty\le t/100,
+ \qquad T_0:=\E\|h^0\|_\infty\le2+t/100,
+ \qquad M_0\le U,
+\]
+where $M_0$ is the largest expected uniform magnitude of any native or selected feature at that layer, and $\log(U+1)\le CL$. The entropy paid by this prefix is at most
+$CQ_g[L+\log(C(m+1)/t)]$.
+
+For each relay, use a precision $\epsilon_\ell$ for its selected incoming factor and bias, and for the gates in the preceding layer. Thus its selected gate is uniform near one, and the total inactive gate mass is at most $\epsilon_\ell$. The layerwise choices remain independent of the features whose outgoing gates they modify. The designated coefficient and gate are positive with means one, so their product has expected absolute value exactly one. If $T_\ell$ is the selected feature's expected uniform magnitude and $M_\ell$ is the maximum over all features, then
+\begin{align}
+ T_\ell&\le T_{\ell-1}+C\epsilon_\ell(1+M_{\ell-1}),\\
+ M_\ell&\le C(1+T_{\ell-1})+C\epsilon_\ell M_{\ell-1}.
+ \label{eq:scalar-relay-moments}
+\end{align}
+The first inequality uses the selected bias and inactive background. The second uses the native factor first moment; it also covers the selected row by enlarging $C$.
+
+For $q\ge1$, choose
+\[
+ \epsilon_1=\frac{ct}{(q+1)(1+U)},\qquad
+ \epsilon_\ell=\frac{ct}{q+1}\quad(2\le\ell\le q),
+\]
+with $c$ small. The first relay makes $M_1$ bounded by a numerical constant. Induction in~\eqref{eq:scalar-relay-moments}, summing the first recurrence and using $C\epsilon_\ell\le1/2$, gives $T_\ell\le3$ and $M_\ell\le C$ for all later relays. The identity target and independence of each incoming gate/factor from the preceding feature similarly give
+\[
+ e_\ell\le e_{\ell-1}+C\epsilon_\ell(1+M_{\ell-1}),
+\]
+so their total error contribution is at most $Ct$ with an arbitrarily small fixed coefficient after choosing $c$.
+
+At the final readout, use target coefficient $-1$ and bias $1$. If $q\ge1$, its precision and the outgoing gate precision are $ct/(q+1)$. If $q=0$, use $ct/(1+U)$ instead. The same first-moment calculation bounds its added expected uniform raw error by a small multiple of $t$. The whole comparison consequently has expected uniform raw error at most $t$ from $g$.
+
+The entropy argument permits distinct deterministic precisions at different layers. The selected gate markers still identify every chosen vertex, and its location entropy cancels its $\log N$ cost. Each scalar relay layer has a bounded number of modified factors and gates. Their combined entropy, including the readout, is at most
+\[
+ C(q+1)\log\frac{C(q+1)}t+C\log(1+U).
+\]
+Only the first relay, or the readout when there is no relay, pays for the large prefix background. Adding the prefix cost gives~\eqref{eq:scalar-padding-cost} with $n+1$ replaced by $1/t$.
+
+Final clipping cannot enlarge the approximation error. Bounded predictions and the bounded regression mean imply that comparison risk exceeds $R(g)$ by at most $4t$. Take $t=(n+1)^{-1}$ and apply the sharp expectation theorem. For the high-probability version, bounded differences also give
+$\E_\rho\|f-g\|_{L^2}^2\le2t$; the relative-loss proof with $t=1/n$ then gives the stated companion.
+\end{proof}
+
+For fixed teacher depth and coefficient bound, this gives a resource of order
+$\widetilde O(d m+m^2h+H)$, rather than multiplying the large teacher width by every added learner layer. The likelihood and prior do not know the comparator depth or use a mixture over depths.
+
+\begin{theorem}[A scalar relay for tanh]\label{thm:tanh-padding}
+Use tanh hidden activations, any fixed bounded Lipschitz output link, and the Student factor law. Let the teacher have depth $h$, width $m$, coefficient bound $B$, and resource $Q_g$ as above. For every learner depth $H\ge h$ and every finite width $N\ge m$, the sharp expected and near-sharp high-probability conclusions of Theorem~\ref{thm:scalar-padding} hold with
+\begin{align}
+ J_n^{\tanh}=C\big[&Q_g\{(h+2)\log D_0+
+                       \log((H+1)(n+1))\}\notag\\
+ &+(H-h+1)\log\{C(H+1)(m+1)(B+2)(n+1)\}\big],
+ \label{eq:tanh-padding-cost}
+\end{align}
+where $D_0=C(d+m+2)(B+2)$. Extra learner depth again has only a nearly linear additive cost. The fast rate in this refinement uses the Student factor's logarithmic cost for a large final readout; it is not asserted for the fully Gaussian-factor variant.
+\end{theorem}
+\begin{proof}
+The case $H=h$ is the general theorem. Put $q=H-h\ge1$ and $M=(m+1)B$, so the teacher raw output satisfies $|z_g|\le M$ everywhere. For a desired uniform error $t$, choose
+\[
+ \delta=\sqrt{ct/(qM^3)},
+\]
+with a small fixed constant, absorbing the output-link Lipschitz constant in $c$. Append $q$ scalar tanh layers: the first computes $u_1=\tanh(\delta z_g)$, and the others compute $u_\ell=\tanh(u_{\ell-1})$. Their intended final readout is $u_q/\delta$. Since $|u_\ell|\le\delta M$ and $|\tanh v-v|\le |v|^3/3$,
+\[
+ \|u_q/\delta-z_g\|_\infty\le q\delta^2M^3/3\le ct.
+\]
+The first new row has coefficients $\delta v_j$ and bias $\delta b$, all bounded by one. The remaining rows have coefficient one and bias zero. Width remains at most $m$.
+
+Use the original comparison construction in the teacher block with precision small enough that the largest selected feature error is at most $t/(100M)$. Its entropy is at most
+$CQ_g[(h+2)\log D_0+\log(C/t)]$. As before, the teacher's final outgoing gates can be specified later, since they do not enter its own features.
+
+For the first scalar row and all subsequent scalar hidden rows, use factor and preceding-gate precision
+\[
+ \epsilon_s=\frac{ct\delta}{q(m+1)}.
+\]
+All actual tanh features are bounded by one. The first scalar preactivation discrepancy is therefore at most
+$\delta M$ times the teacher feature error plus $C(m+1)\epsilon_s$ in expected uniform norm. At later unit relays, the selected positive gate and coefficient have product with expected absolute value one, independently of the preceding feature. If $e_\ell$ denotes the expected uniform discrepancy from $u_\ell$, then
+\[
+ e_\ell\le e_{\ell-1}+C\epsilon_s.
+\]
+The selected biases and the inactive gate mass are included in this additive term. Consequently $e_q\le c_1t\delta$, with $c_1$ arbitrarily small after reducing the comparison precision constants.
+
+At the final readout use coefficient $1/\delta$, bias zero, and factor and gate precision $\epsilon_o=ct/(M+1)$. The selected coefficient is positive, and the gate has mean one, so propagation of $e_q$ costs exactly $e_q/\delta$ in expected absolute norm. Its coefficient perturbation acting on $|u_q|\le\delta M$ contributes at most $C\epsilon_oM$. The bias and inactive terms contribute at most $C\epsilon_o$, since tanh features are bounded. Together with the deterministic relay error this gives expected uniform raw error at most $t$.
+
+The entropy cancellation still applies layer by layer. The first scalar row and the teacher's outgoing gates use $O(m)$ controlled variables; the other relays use $O(q)$; and the final readout coefficient contributes only $C\log(1/\delta)$. Since
+\[
+ \log(1/\delta)\le C\log\{CqM/t\},
+\]
+the additional entropy is at most
+$C(m+q+1)\log\{Cq(m+1)M/t\}$.
+Absorb the $m$ term into $Q_g$ and combine with the prefix cost to obtain~\eqref{eq:tanh-padding-cost}. The same statistical substitutions as in the ReLU proof finish both conclusions.
+\end{proof}

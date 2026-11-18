@@ -1,0 +1,161 @@
+\section{A fixed-accuracy learning obstruction at canonical mean field}
+\label{sec:canonical-learning}
+The matching supremum-norm bounds have a statistical consequence. They allow a deep canonical mean-field network to memorize arbitrary small labels almost as cheaply as it represents a smooth signal of the same amplitude. The resulting posterior is close to a simple capped empirical predictor, which preserves the signs of noisy singleton labels.
+
+Write $\mathcal U_D$ for the unit-sphere input set used in Theorem~\ref{thm:canonical-function-memorizer}; it has $M=4\cdot2^D$ points and first coordinate $T\in\{-3/4,-1/4,1/4,3/4\}$. At canonical scaling, the first-layer, internal-layer, and readout variances are $1/d$, $1/N$, and $1/N^2$, respectively. For $n$ observations, define
+\[
+ \widehat R_S(z)=\frac1n\sum_{i=1}^n(z(X_i)-Y_i)^2,
+ \qquad
+ \Pi_{N,H,\lambda,S}(dw)=\frac{e^{-N\widehat R_S(z_w)/(2\lambda)}}{Z_{N,H,\lambda,S}}\,\mu_{N,H}(dw).
+\]
+Thus the Gaussian observation variance is $n\lambda/N$; every positive observation variance is allowed.
+
+\begin{theorem}[Failure after exponentially many samples in square-root depth]
+\label{thm:canonical-learning}
+There are absolute constants $a,c,C>0$ and $H_0$ such that the following holds for every integer $H\ge H_0$. Set
+\[
+ D=\lfloor c\sqrt H\rfloor,\qquad d=D+2,\qquad n=4\cdot2^D,
+\]
+let $X$ be uniform on $\mathcal U_D$, and let
+\[
+ Y=g(X)+a\epsilon,\qquad
+ g(X)=\frac a4(2+\tanh X_1),\qquad
+ \Pr(\epsilon=1)=\Pr(\epsilon=-1)=\frac12,
+\]
+where $\epsilon$ is independent of $X$. With probability at least $9/10$ over $n$ IID observations, simultaneously for every integer $N\ge n^C$ and every $\lambda>0$, the ordinary posterior mean satisfies
+\[
+ R(\widehat f)\ge a^2+\frac{a^2}{4096}.
+\]
+The same bound holds for the mean of posterior draws clipped to $[-1,1]$, for clipping an ordinary posterior mean, and for arbitrary well-defined data-dependent probability mixtures of these predictions, including clipping after mixing.
+
+The conditional mean $g$ has a width-two, one-hidden-layer tanh implementation with a fixed coefficient bound. It also has a bounded-width, bounded-coefficient implementation at every hidden depth. In particular, the excess-loss lower bound is a fixed positive number, while the sample count is $\exp(\Omega(\sqrt H))$.
+\end{theorem}
+
+The theorem concerns one fixed architecture at a time. Its event is uniform over widths and likelihood temperatures because it depends only on the occupancy and noise signs of the observed sample. No architecture prior, posterior computation assumption, or limiting interchange is involved.
+
+\subsection{The proximal predictor selected by a supremum-norm penalty}
+For a fixed sample, let $B_S\subset\mathbb R^n$ be the linear subspace of vectors constant on repeated copies of the same input. Equip it with $\|u\|_S^2=n^{-1}\sum_i u_i^2$. Let $b$ be the orthogonal projection of the label vector $y$ onto $B_S$; its entries are the empirical means at each observed input. Put $r_0=\|y-b\|_S^2$.
+
+\begin{lemma}[A capped empirical predictor]
+\label{lem:canonical-prox}
+For every $\kappa>0$ and $\lambda>0$, the functional
+\[
+ J_\lambda(u)=r_0+\|u-b\|_S^2+\lambda\kappa\|u\|_\infty,
+ \qquad u\in B_S,
+\]
+has a unique minimizer $u_\lambda$. There is a threshold $t_\lambda\in[0,\|b\|_\infty]$ for which
+\[
+ u_\lambda=\operatorname{clip}(b,[-t_\lambda,t_\lambda]).
+\]
+For all $u\in B_S$,
+\[
+ J_\lambda(u)-J_\lambda(u_\lambda)\ge\|u-u_\lambda\|_S^2.
+\]
+\end{lemma}
+\begin{proof}
+For a fixed cap $t\ge0$, the least-squares minimizer under $\|u\|_\infty\le t$ is coordinatewise clipping of $b$. Minimize $\|\operatorname{clip}(b,[-t,t])-b\|_S^2+\lambda\kappa t$ over $0\le t\le\|b\|_\infty$; no larger cap can improve the value. Strict convexity of the squared term gives uniqueness of $u_\lambda$. Finally $u\mapsto\lambda\kappa\|u\|_\infty$ is convex. At its minimizer, the first-order condition cancels the linear term in the expansion of the squared norm, leaving the displayed quadratic lower bound.
+\end{proof}
+
+\begin{lemma}[Posterior approximation by the capped predictor]
+\label{lem:canonical-posterior-prox}
+Suppose $|Y_i|\le2a$, and suppose the prior satisfies
+\[
+ \frac2N\operatorname{KL}(\rho\|\mu)
+ \ge\kappa\,\mathbb E_\rho\|z\|_{\infty,\mathcal U_D}-e_0,
+ \qquad 0<\kappa\le4.
+\]
+Suppose every function $v:\mathcal U_D\to[-2a,2a]$ has a comparison law with
+\[
+ \mathbb E\widehat R_S(z)\le\widehat R_S(v)+\zeta,
+ \qquad
+ \frac2N\operatorname{KL}(\rho_v\|\mu)\le4\|v\|_\infty+e_2.
+\]
+Then the Gaussian-likelihood posterior obeys
+\[
+ \mathbb E_\Pi\|z(S)-u_\lambda\|_S^2
+ \le\zeta+\lambda\{2a(4-\kappa)+e_0+e_2\}.
+ \tag{*}\label{eq:canonical-prox-gap}
+\]
+Here $u_\lambda$ is from Lemma~\ref{lem:canonical-prox}. The same upper bound holds for the squared distance between $u_\lambda$ and each of the following: the ordinary posterior mean, its clipping to $[-1,1]$, and the mean of draws clipped to that interval, provided $2a\le1$.
+\end{lemma}
+\begin{proof}
+The Gibbs variational identity gives
+\[
+ F_S=\mathbb E_\Pi\widehat R_S(z)+\frac{2\lambda}{N}\operatorname{KL}(\Pi\|\mu)
+ \le\mathbb E_{\rho_v}\widehat R_S(z)+\frac{2\lambda}{N}\operatorname{KL}(\rho_v\|\mu).
+\]
+Extend $u_\lambda$ by zero at unobserved atoms and use this extension as $v$. Since $\|u_\lambda\|_\infty\le\|b\|_\infty\le2a$, the comparison applies. The entropy lower bound and $\|z\|_{\infty,\mathcal U_D}\ge\|z(S)\|_\infty$ show
+\[
+ \mathbb E_\Pi J_\lambda(z(S))
+ \le J_\lambda(u_\lambda)+\zeta+
+       \lambda\{(4-\kappa)\|u_\lambda\|_\infty+e_0+e_2\}.
+\]
+Apply Lemma~\ref{lem:canonical-prox} pointwise and then integrate. Jensen proves the assertion for the mean. Projection onto $[-1,1]$ cannot increase distance to $u_\lambda\in[-2a,2a]$, proving both clipped assertions.
+\end{proof}
+
+\subsection{A sample witness common to every temperature and width}
+\begin{proof}[Proof of Theorem~\ref{thm:canonical-learning}]
+Fix $\Lambda=2^{14}$ and $\delta=2^{-44}$. Choose $t<2$ in Corollary~\ref{cor:sup-entropy} so close to two that $\kappa=2t\ge4-\delta$. First choose a fixed sufficiently small $a>0$, then $c>0$ sufficiently small. Theorem~\ref{thm:canonical-function-memorizer}, with amplitude bound $2a$, allows these choices so that, at $D=\lfloor c\sqrt H\rfloor$, every comparison function $v$ with $\|v\|_\infty\le2a$ has
+\[
+ \frac2N\operatorname{KL}(\rho_v\|\mu)\le4\|v\|_\infty+e_2,
+ \qquad e_2\le\delta a/2,
+\]
+for all sufficiently large $H$ and all $N\ge n^C$. Use the fixed RMS approximation tolerance $\varepsilon=2^{-28}a$. Since $|v-Y|\le4a$, the corresponding empirical-risk error satisfies
+\[
+ \zeta\le8a\varepsilon+\varepsilon^2.
+\]
+The finite-set entropy floor has
+\[
+ e_0=2D_H(t)+\frac{2\log(2n)}N\le\delta a/2
+\]
+after increasing the depth threshold and the width constant. Increase them again so that $1/N\le a^2$. The comparison-width requirement is a fixed polynomial in $H$ and $e^D$ at this fixed accuracy. Since $n=4\cdot2^D$ and $D=\lfloor c\sqrt H\rfloor$, it is bounded by $n^C$ after increasing the absolute exponent and depth threshold. All these choices are fixed constants, independent of the observed sample.
+
+For $0<\lambda\le\Lambda a$, Lemma~\ref{lem:canonical-posterior-prox} now gives
+\[
+ \mathbb E_\Pi\|z(S)-u_\lambda\|_S^2
+ \le8a\varepsilon+\varepsilon^2+3\Lambda\delta a^2
+ <10^{-6}a^2.
+ \label{eq:canonical-small-temp}
+\]
+Thus all three stated posterior predictions lie within $a/1000$ of $u_\lambda$ in empirical norm.
+
+For $\lambda>\Lambda a$, use the prior itself as the variational comparison. Its output is centered and has variance at most $1/N$ at every input. Since $|Y|<2a$,
+\[
+ F_S\le\widehat R_S(0)+1/N\le5a^2.
+\]
+Dropping the nonnegative empirical risk from the entropy lower bound yields
+\[
+ \mathbb E_\Pi\|z\|_{\infty,\mathcal U_D}
+ \le\frac{5a^2}{\kappa\lambda}+\frac{e_0}{\kappa}
+ <\frac a{1000}.
+\]
+The same bound applies to the sup norm of each stated posterior prediction. Hence large temperatures give predictors uniformly close to zero, itself a capped predictor with threshold zero.
+
+Let $A_S$ be the set of sample indices whose input occurs exactly once and whose independent noise sign is negative. Since $n$ observations are drawn from $n$ equally likely atoms, the expected singleton count is $n(1-1/n)^{n-1}$. Changing one input alters this count by at most two, so bounded differences shows that it is at least $n/3$ with probability tending to one. Conditional on the inputs, the signs on these singleton indices are independent fair signs. A Chernoff bound therefore gives
+\[
+ |A_S|\ge n/10
+\]
+with probability at least $9/10$ for all sufficiently large $H$. Work on this event. Define $w_i=-\mathbf1_{i\in A_S}$. At such an index the empirical mean is $b_i=Y_i=g(X_i)-a<0$. Every capped predictor therefore has $u_{\lambda,i}\le0$, whereas $g(X_i)>a/4$. Consequently
+\[
+ \langle w,u_\lambda-g\rangle_S\ge\frac a4\frac{|A_S|}n\ge\frac a{40}.
+\]
+The small-temperature approximation and $\|w\|_S\le1$ show that each posterior prediction $f$ satisfies
+\[
+ \langle w,f-g\rangle_S\ge\frac a{40}-\frac a{1000}>\frac a{64}.
+ \label{eq:canonical-witness}
+\]
+The same follows directly from the uniform near-zero bound at large temperatures.
+
+This linear witness is common to every admissible width and temperature. It therefore persists under arbitrary well-defined probability mixtures. More precisely, each small-temperature prediction admits a decomposition $f=u+e$, where $u\le0$ on $A_S$ and $\|e\|_S\le a/1000$; large-temperature predictions use $u=0$. Mixtures preserve these two properties by convexity. Since clipping is monotone and fixes the interval containing every capped predictor, clipping after mixing also preserves the same approximation and witness. For a general mixture, the reference capped predictors remain in $[-2a,2a]$; Jensen and the contraction of interval projection justify this last claim.
+
+Let $h(x)=-1$ on the distinct singleton atoms represented by $A_S$ and zero elsewhere. The population law assigns each such atom mass $1/n$, so
+\[
+ \langle h,f-g\rangle_{L^2(P_X)}=\langle w,f-g\rangle_S>\frac a{64},
+ \qquad \|h\|_{L^2(P_X)}^2=|A_S|/n\le1.
+\]
+Cauchy--Schwarz gives $\|f-g\|_{L^2(P_X)}^2\ge a^2/4096$. Independent centered label noise gives $R(f)=a^2+\|f-g\|_{L^2(P_X)}^2$, proving the risk bound.
+
+Finally the width-two shallow representation uses one constant tanh feature and one feature $\tanh T$. To obtain a fixed-width representation at arbitrary depth, preserve the constant feature at a nonzero tanh fixed point and preserve $(\tanh T,\tanh(2T))$ on the four possible values of $T$. The two feature values determine $T$ by a fixed linear map: the ratio $\tanh(2T)/\tanh T$ is strictly different at $|T|=1/4$ and $3/4$. Applying that map and then the two tanh features reproduces the same pair at every layer. All resulting coefficients are fixed constants. This completes the proof.
+\end{proof}
+
+The conclusion is specific about what must fail. It rules out a bound polynomial jointly in learner depth and the complexity of an approximating teacher for this unrestricted canonical Gaussian learner. It is compatible with polynomial sample complexity at every fixed depth, and it does not assert an exponential lower bound in teacher depth when the learner itself remains shallow. The independent label noise is essential to this construction; the analogous noiseless Boolean question requires a different argument.

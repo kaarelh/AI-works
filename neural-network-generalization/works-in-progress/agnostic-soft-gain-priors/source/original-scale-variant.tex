@@ -1,0 +1,121 @@
+\section{Keeping the usual independent Gaussian base scales}
+\label{sec:original-scale-variant}
+The preceding prior strengthens the endpoint Gaussian precision to match the full parameter volume. A more selective comparison retains the usual layerwise Gaussian base scales, at the cost of an additional polynomial dependence on depth. It still uses the same soft gain mechanism and excludes no parameters.
+
+Keep the input convention $\mathcal X\subset B_2^d$. Fix $\gamma\ge1$ and put
+\[
+ \omega=N^\gamma,\qquad D_{\mathrm{int}}=(H-1)N^2,\qquad
+ \Omega=\omega+D_{\mathrm{int}}.
+\]
+The independent Gaussian base now has variances
+\begin{equation}
+ \operatorname{Var}_0(W^1_{ji})=\frac{N^{1-\gamma}}d,\qquad
+ \operatorname{Var}_0(W^\ell_{ji})=N^{-\gamma}\ (\ell\ge2),\qquad
+ \operatorname{Var}_0(v_j)=N^{-\gamma-1}.
+ \label{eq:usual-base-scales}
+\end{equation}
+For this section redefine
+\[
+ u_N=\frac dN\|W^1\|_F^2,\qquad q_N=N\|v\|_2^2,\qquad Q_N=G(u_N+q_N).
+\]
+The prior is
+\begin{equation}
+ \pi^{\mathrm{us}}_{N,\gamma}(dw)\ \propto\
+ \exp\left[-\frac\omega2(G-1)(u_N+q_N)
+            -\frac\Omega2(G^2-1)\right]\pi^0_{N,\gamma}(dw).
+ \label{eq:usual-soft-prior}
+\end{equation}
+Thus only a soft gain regularizer is added to~\eqref{eq:usual-base-scales}. Its coefficient $\Omega$ pays for the internal parameter volume. This coefficient depends on the learner architecture, not on the teacher.
+
+The conditional endpoint Gaussian variances are the base variances divided by $G$. In particular
+\begin{equation}
+ \omega Q_N\sim\chi^2_{N(d+1)},\qquad
+ \frac{N(d+1)}\omega\le d+1,\qquad
+ P(w)\le\frac{Q_N}{2\sqrt d}\le\frac{Q_N}{2}.
+ \label{eq:usual-energy}
+\end{equation}
+The same radial normalizer argument as Lemma~\ref{lem:gain-moment}, with $\Omega$ in place of $\omega$, gives
+\begin{equation}
+ \E_\pi G^2\le1+\frac{D_{\mathrm{int}}}{\Omega}\le2.
+ \label{eq:usual-gain}
+\end{equation}
+Conditional Gaussian cancellation also gives $\E_\pi z_w(x)^2\le N/(d\omega^2)\le1$, so the free-energy bound remains $F_S\le2$.
+
+\begin{lemma}[Selective block transport]
+\label{lem:selective-block}
+Fix a teacher of width $C$, depth $H$, and path variation $P$. Put
+\[
+ \overline P=\sqrt d\,P,\qquad
+ D_C=d+1+2(H-1)C.
+\]
+For every $N\ge C$ and $0<\eta<1$, there is a comparison law $\rho_{g,\eta}$ for~\eqref{eq:usual-soft-prior} satisfying
+\begin{align}
+ \frac2\omega\KL(\rho_{g,\eta}\|\pi^{\mathrm{us}}_{N,\gamma})
+ &\le3\overline P+(H-1)C+2D_C\log(1/\eta),
+ \label{eq:usual-entropy}\\
+ \left(\int\|z_w-g\|_{\infty,\mathcal X}^2d\rho_{g,\eta}\right)^{1/2}
+ &\le6(H+1)(\overline P+1)\eta.
+ \label{eq:usual-tube}
+\end{align}
+\end{lemma}
+\begin{proof}
+Apply flow balancing and zero-pad the resulting width-$C$ teacher into the first $C$ coordinates of the width-$N$ network. Its internal active blocks $A^\ell$ have absolute operator norm at most one and squared Frobenius norm at most $C$. Multiply the first matrix by $\sqrt N/d^{1/4}$ and the readout by its inverse. Positive homogeneity preserves the function and makes the raw endpoint energies
+$u_N=q_N=\overline P$.
+
+Draw the whole internal tuple $X$ from its actual prior marginal. For each layer, in the decomposition into active and inactive coordinates define
+\[
+ B^\ell(X)=
+ \begin{pmatrix} A^\ell&0\\0&X^\ell_{\mathrm{inactive,inactive}}\end{pmatrix},
+ \qquad T_\eta X^\ell=(1-\eta)B^\ell(X)+\eta X^\ell.
+\]
+The inactive block is unchanged. Exactly $2CN-C^2$ coordinates in each internal layer are multiplied by $\eta$, with a translation on its active block. The full affine Jacobian is therefore
+$\eta^{(H-1)(2CN-C^2)}$.
+
+A submatrix of a nonnegative matrix has operator norm no greater than the full matrix. Consequently
+\[
+ \bigl\||B^\ell(X)|\bigr\|_{\op}
+ =\max\{\||A^\ell|\|_{\op},
+          \||X^\ell_{\mathrm{inactive,inactive}}|\|_{\op}\}
+ \le g_\ell(X).
+\]
+Convexity gives $g_\ell(T_\eta X)\le g_\ell(X)$ and hence $G(T_\eta X)\le G(X)$. The internal density has the same form as~\eqref{eq:internal-marginal}, with quadratic precision $N^\gamma$ and gain-penalty coefficient $\Omega$. In the exact log-density ratio, both gain-potential differences are nonpositive. The unchanged Gaussian coordinates cancel, and the changed coordinates have centered prior means. Their normalized quadratic mean cost is at most $(H-1)C$.
+
+Conditional on the transformed internals, use endpoint Gaussians with the teacher means and $\eta^2$ times the actual conditional covariances. Their normalized mean cost is at most $2\overline P\E G(T_\eta X)\le3\overline P$. All covariance entropy terms together cost at most
+\[
+ \frac{2\{N(d+1)+(H-1)(2CN-C^2)\}}{N^\gamma}\log(1/\eta)
+ \le2D_C\log(1/\eta).
+\]
+This proves~\eqref{eq:usual-entropy}.
+
+The random block-diagonal baseline $B(X)$ computes exactly the teacher: the first layer and readout have zero inactive coordinates, and ReLU maps zero to zero. Its teacher hidden states stay in the active block and have Euclidean norm divided by $\sqrt N$ at most $\sqrt{\overline P}$. Moreover
+\[
+ \|T_\eta X^\ell-B^\ell(X)\|_{\op}
+ \le2\eta g_\ell(X).
+\]
+Telescoping with this baseline gives exactly the same internal perturbation bound as Lemma~\ref{lem:comparison}, using~\eqref{eq:usual-gain}; independence of internal layers is unnecessary. The conditional first-layer noise has normalized squared Frobenius mean $\eta^2N/(\omega G_T)\le\eta^2/G_T$, where $G_T=G(T_\eta X)$. The conditional readout-noise bound is at most
+$\eta^2(N/\omega)\overline P\E G_T+\eta^4N^2/\omega^2\le\eta^2(2\overline P+1)$.
+The same Minkowski estimate therefore proves~\eqref{eq:usual-tube}.
+\end{proof}
+
+\begin{theorem}[A path oracle with the usual Gaussian base]
+\label{thm:usual-soft-oracle}
+For the prior~\eqref{eq:usual-soft-prior}, use the Gaussian likelihood with observation variance $n\lambda/\omega$ and the free-energy root~\eqref{eq:calibration}. In~\eqref{eq:stat-constants} take $D_0=d+1$. For a comparison teacher define
+\[
+ \eta_n=\frac1{64n(H+1)(\overline P+1)^2},\qquad
+ T_g=6+3\overline P+(H-1)C+2D_C\log(1/\eta_n),\qquad
+ \mathcal B_g=2T_g+K_n+1+c_0.
+\]
+Then the exact population oracle~\eqref{eq:population-oracle}, with these constants, holds simultaneously at every $N\ge C$ and every $\gamma\ge1$. In particular a sufficient sample count for excess at most $\varepsilon$ is
+\begin{equation}
+ n=\widetilde O\left(
+ H\bigl[1+\sqrt d\,P+HC+d\bigr]^2
+ \left\{\frac{R_*}{\varepsilon^2}+\frac1\varepsilon\right\}\right).
+ \label{eq:usual-soft-samples}
+\end{equation}
+The prior and the selected likelihood use none of $C$, $P$, or $R_*$. At fixed $d$ and bounded teacher gains and endpoint norms, $P=O(C)$, so the bound is $\widetilde O(C^2H^3(R_*/\varepsilon^2+1/\varepsilon))$.
+\end{theorem}
+\begin{proof}
+Equations~\eqref{eq:usual-energy} and~\eqref{eq:usual-gain} provide the amplitude, capacity, and endpoint-moment assumptions used in the certificate proof, with $D_0=d+1$. The prior risk is at most two. Lemma~\ref{lem:selective-block} at $\eta_n$ gives
+$F_S(\lambda)\le\widehat R_S(g)+1/(2n)+\lambda T_g$.
+For the population conversion use $E=6+3\overline P+(H-1)C\le T_g$, so $|g|\le P\le E$. Every remaining step and the numerical constants 25 and 280 in Theorem~\ref{thm:main} are unchanged. The displayed sample rate follows from $a_n^2=\widetilde O(H/n)$ and $\mathcal B_g=\widetilde O(1+\sqrt dP+HC+d)$.
+\end{proof}

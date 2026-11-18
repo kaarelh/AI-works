@@ -1,0 +1,58 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsthm,mathtools,microtype}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Formula complexity and prior probabilities in Bayesian neural networks},pdfauthor={ChatGPT-6 Astra; Claude Opus 5.5; Kaarel H\"anni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}[section]\newtheorem{lemma}[theorem]{Lemma}\newtheorem{corollary}[theorem]{Corollary}\newtheorem{proposition}[theorem]{Proposition}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}\newcommand{\KL}{\operatorname{KL}}
+\title{Formula complexity and prior probabilities\\in Bayesian neural networks}
+\author{ChatGPT-6 Astra \and Claude Opus 5.5 \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{17 November 2026}
+\begin{document}\maketitle
+\begin{abstract}
+We relate actual neural-network prior probabilities to finite-precision formula complexity in both directions. The network has one fixed dense architecture, and all weight coordinates are independent and absolutely continuous. A coordinate of fan-in $F$ is an increment over time $1/F$ of a fixed symmetric finite-variation L\'evy process. For any globally Lipschitz activation, a small bounded-coefficient formula has a uniform function neighborhood whose negative log prior mass is polynomial in formula size, depth and input dimension, independently of learner width. Conversely, a depth-$H$ prior draw is, with probability $1-\delta$, uniformly approximable to accuracy $\tau$ by a rational-weight formula of size at most $[CL\log(eL)]^{H+2}$ and coefficient bit length at most $CL^3$, where $L=H+1+\log(1/(\delta\tau))$. A target neighborhood of prior mass $p$ therefore has a short formula approximation with resources polynomial in $\log(1/p)$ at fixed depth. The converse follows by deleting tiny Poisson jumps, exploring only ancestors of the output, and quantizing retained weights. For ReLU and Boolean inputs, a margin version yields an ordinary Boolean-circuit consequence. An explicit signed beta-prime coordinate density satisfies the same conclusions. At fixed depth, the wide L\'evy prior converges to a random-formula law; a finite-width motif estimate explains why directly retaining a shared computation incurs an additional logarithmic width cost. No robustness restriction or prior over network architectures is used.
+\end{abstract}
+
+\section{The prior and the two directions}
+A function prior concerns the probabilities assigned to functions, not only a learning bound. We study uniform neighborhoods of real-valued network functions. A small implementation gives a lower bound on neighborhood probability. Conversely, a neighborhood with appreciable prior probability contains a function with a small finite-precision implementation. At fixed depth these bounds give a polynomial relation between approximate formula complexity and negative log prior mass.
+
+Fix a globally $A$-Lipschitz activation $\phi:\R\to\R$, with $A\ge1$ and $b=|\phi(0)|$. Inputs lie in $[-1,1]^d$. A width-$N$ network with $H$ hidden layers and a linear readout computes
+\[
+ h^1=\phi(W^1(1,x)),\quad h^\ell=\phi(W^\ell h^{\ell-1}),
+ \quad z_w=v^{\mathsf T}h^H.
+\]
+Only the first layer has a constant input coordinate. Fix $c>0$ and $p>2$. Let $L_t$ be the absolutely convergent Poisson sum with symmetric jump intensity
+\[
+ t\,\mathfrak n(du),\qquad
+ \mathfrak n(du)=\frac{c\,du}{|u|(1+|u|)^p}.
+\]
+A weight of fan-in $F$ has law $L_{1/F}$, independently of every other coordinate. Thus $F=d+1$ initially and $F=N$ later, including the readout. Write $\mu_N$ for this product prior. Every coordinate is nonzero almost surely. The jump representation describes the coordinate law; it does not choose a network architecture.
+
+A layered formula duplicates any hidden computation used more than once, so every relevant hidden occurrence has one outgoing edge. Let $S\ge1$ count these occurrences, $m$ be its maximum hidden-layer width, and $B\ge1$ its coefficient bound. We assume $m\le N$. Unused vertices and zero edges may be deleted; zero-input hidden gates can remain when $\phi(0)\ne0$. Theorem~\ref{thm:uniform-mass} proves a bound of the form
+\begin{align*}
+ -\log\mu_N\{\|z_w-g\|_\infty\le\tau\}
+ \le C(d+1)(S+1)\Bigg[&\log\frac{(S+1)(d+1)}\tau\\
+ &+(H+2)\log\{C(1+A+b)(m+1)(B+8)\}\Bigg].
+\end{align*}
+For a shared width-$m$ circuit, use $S=\sum_{\ell=1}^H m^\ell$. This conversion can be exponential in depth; formula size is not identified with circuit size when computations are shared.
+
+Theorem~\ref{thm:levy-prior-compression} gives the converse through a finite dictionary approximating almost every prior function. Its descriptions include input-coordinate addresses, and all bounds are independent of learner width. Corollary~\ref{cor:levy-prior-complexity-converse} applies the compression to any target neighborhood, including neighborhoods measured only on a prescribed subset such as the Boolean cube. Theorem~\ref{thm:margin-sign-converse} additionally treats the exact sign-function prior after conditioning on an all-input margin event; it needs no upper bound on raw outputs.
+
+The activation may be bounded or unbounded, and need not vanish at zero. ReLU, GELU, tanh, sigmoid, softplus and SiLU satisfy the Lipschitz hypothesis. A fixed Lipschitz output map can be appended by adjusting tolerances. These results do not equate prior probability with an exponential of exact Boolean description length, and they do not remove depth dependence from the converse.
+
+\input{scalar}
+\input{comparison}
+\input{uniform-mass}
+\input{function-compression}
+\input{margin-converse}
+\input{beta-prime}
+\input{wide-limit}
+
+\section{Interpretation and verification}
+The central concentration and rare order-one jumps have different roles. Background suppression costs only a logarithm of precision. A designated coefficient costs a factor of order $1/N$, but every hidden formula occurrence has $N$ possible locations; the comparison entropy accounts for those locations exactly. Conversely, a typical output depends, at any fixed resolution, on a finite Poisson ancestry tree even when the surrounding architecture is arbitrarily wide.
+
+This is a continuous shrinkage prior. It is not a small Gaussian perturbation: rare order-one jumps persist in wide sums, although coordinate variance is proportional to inverse fan-in. The sum of $F$ independent fan-in coordinates has exactly the non-Gaussian law $L_1$ for every $F$. An order-one initialization variance alone therefore does not imply a Gaussian-process limit.
+
+The proofs have undergone independent AI-agent mathematical review and have not been formalized in Lean. The verification record identifies the exact reviewed sources. These are prior-probability and approximation-complexity statements, not efficient posterior-sampling guarantees.
+\end{document}

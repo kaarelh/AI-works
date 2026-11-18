@@ -1,0 +1,236 @@
+\section{Removing the comparison-output restriction}
+\label{sec:risk-weighted-multiplier}
+A variance-sensitive multiplier estimate removes the output cap from the
+preceding arbitrary-input-law oracle without worsening its rate.
+The fixed comparison is selected using population risk, before sampling;
+it need not have a uniformly small output.
+
+Keep the Gaussian model, activation, resource $A_n(g)$ in (AD1), and
+input cube of the preceding section, but now allow any finite
+comparison network $g$, with no output restriction. Write
+$V=\sum_i|c_i|$ and $F=\|g\|_\infty\le K V$.
+For the proof it suffices to consider $R(g)\le R(0)+1\le2$ under
+bounded labels: a comparison with larger risk can be replaced in the
+proof by the zero network, at the same likelihood scale.
+
+\begin{lemma}[Risk-weighted ridge multipliers]
+\label{lem:risk-weighted-ridge}
+Let $u$ be a fixed measurable function with $\|u\|_\infty\le F_u$,
+let $|Y|\le B$, and put
+$m(X,Y)=u(X)-Y$ and $s^2=\mathbb E m^2$.
+For $t=\log(2/\delta)$, with probability at least $1-\delta$,
+\[
+ \sup_\theta\bigl|(P-P_n)[m\phi(\theta\cdot\widetilde X)]\bigr|
+ \le C_\phi\left\{
+       s\sqrt{(D+t)/n}+(F_u+B)t/n\right\}=:\eta_n.       \tag{WM1}
+\]
+The inequality holds simultaneously over every incoming weight vector,
+without a norm bound or any independence between $m$ and $X$.
+\end{lemma}
+\begin{proof}
+Condition on the observed pairs and write $m_i=m(X_i,Y_i)$.
+The weighted Rademacher process has increment metric
+\[
+ d_m(h,h')^2=n^{-2}\sum_i m_i^2(h(X_i)-h'(X_i))^2.
+\]
+If $\sum_i m_i^2>0$, normalize these weights to a probability measure
+$P_{n,m}=\sum_i m_i^2\delta_{X_i}/\sum_i m_i^2$.
+The VC-subgraph covering bound for the bounded ridge class is valid for
+this probability measure too. Dudley's integral therefore gives
+\[
+ \mathbb E_\epsilon\sup_\theta
+ \left|n^{-1}\sum_i\epsilon_i m_i\phi(\theta\cdot\widetilde X_i)\right|
+ \le C_\phi\sqrt D\,\frac{\sqrt{\sum_i m_i^2}}n.
+\]
+For zero total weight the process is identically zero. Taking expectation,
+using Jensen, and symmetrizing shows that the expected centered supremum
+is at most $C_\phi s\sqrt{D/n}$.
+
+For the class with both signs, each summand has envelope
+$U=K(F_u+B)$ and variance at most $K^2s^2$.
+Bousquet's inequality~\cite[Theorem~2.3]{bousquet} bounds its centered supremum by its expectation
+plus
+\[
+ C\sqrt{(K^2s^2+U\mathbb E Z)t/n}+CUt/n.
+\]
+The mixed term $\sqrt{U(\mathbb E Z)t/n}$ is at most
+$C\mathbb E Z+CUt/n$, by Young's inequality.
+This proves (WM1). The weighted covering argument is conditional on the
+observed pairs and uses only $m_i^2$, so dependence on $X$ causes no issue.
+\end{proof}
+
+\begin{theorem}[Sharp uncapped-comparison oracle]
+\label{thm:uncapped-all-d}
+Assume $|Y|\le1$, and fix any comparison network $g$.
+Let $b_n$ be (AD4), with a sufficiently large
+activation-dependent constant. In the nontrivial range
+$A_n(g)b_n\le c_\phi$, with probability at least $1-\delta$,
+simultaneously for all $0<\nu\le1$, all
+$n^{-2}\le\lambda\le1$ with $\lambda\ge C_\phi b_n$, and all
+$N\lambda\ge C_\phi$,
+\[
+ R(\mathbb E_{\Pi_\lambda}f)\le\Pi_\lambda R(f)
+ \le R(g)+C_\phi\{\lambda A_n(g)+b_n/\lambda\}
+       +C_\phi n^{-10}.                                \tag{WM2}
+\]
+In particular, $\lambda=C_\phi\sqrt{b_n/A_n(g)}$ yields
+\[
+ R(\mathbb E_{\Pi_\lambda}f)\le\Pi_\lambda R(f)
+ \le R(g)+\widetilde O_\phi\left(\sqrt{(d+1)A_n(g)/n}\right),         \tag{WM3}
+\]
+with the same learner-width condition as (AD11). There is no output
+cap on either the comparison network or the learner.
+\end{theorem}
+\begin{proof}
+It suffices to prove the bound when $R(g)\le R(0)+1$. Otherwise
+apply that case to zero at the same $\lambda$: $A_n(0)\le A_n(g)$
+and $R(0)\le R(g)$, so its conclusion is stronger than (WM2).
+This is a proof choice and does not require the learner to know either risk.
+
+Use the variation-weighted comparison pack from (AD8), with
+$\sigma=n^{-20}/(V+1)$, and write $u=g_\sigma$.
+Its uniform error is $O_\phi(n^{-20})$. By the triangle inequality in
+population $L^2$, its residual risk satisfies
+\[
+ \sqrt{R(u)}\le\sqrt{R(g)}+C_\phi n^{-20}.
+\]
+Thus $R(u)$ is bounded by an activation-dependent constant,
+without using the output envelope $F$. Moreover $u$ is a signed
+Gaussian mixture of ridge features with total variation exactly $V$
+(or at most $V$ after combining coincident features).
+
+Apply (WM1) to $m=u-Y$. Its event is uniform over every ridge, so for
+any learner function $f\in\mathcal F_q$,
+\[
+ |(P-P_n)[m(f-u)]|\le(\sqrt q+V)\eta_n.                 \tag{WM4}
+\]
+For the $u$ term this follows by integrating the common ridge bound
+against its signed mixing measure; boundedness justifies Fubini.
+For $f$ it follows by its finite signed-hull representation.
+Since $\|u\|_\infty\le F+C_\phi n^{-20}$,
+\[
+ \eta_n^2\le C_\phi\{b_n+(F+1)^2b_n^2\}
+ \le C_\phi b_n.                                      \tag{WM5}
+\]
+The last step uses $(F+1)^2\le C_\phi A_n$ and $A_nb_n\le c_\phi$.
+Young's inequality in (WM4), with a chosen small constant, gives
+\[
+ 2|(P-P_n)[m(f-u)]|
+ \le c\lambda q+C\lambda V^2+C_\phi b_n/\lambda.        \tag{WM6}
+\]
+
+The smooth-loss norm comparison (AD6) does not need $u$ to be bounded
+by two. With its actual envelope it gives
+\[
+ (P_X-P_n)(f-u)^2
+ \le\tfrac16P_n(f-u)^2
+       +C_\phi b_n\{q+(F+1)^2\}.                      \tag{WM7}
+\]
+Its $q$ term is absorbed into a small multiple of $\lambda q$ by
+$\lambda\ge C_\phi b_n$; its constant term is at most
+$C_\phi\lambda A_n$. Combine (WM6)--(WM7) with the relative-risk
+identity used in (AD5), integrate, and use the exact midpoint
+comparison (AD9). That comparison and its pack entropy do not require
+an output cap. Its empirical-distance and readout-energy penalties
+absorb the chosen small terms, proving (WM2).
+
+For completeness, the same finite energy cutoff is valid here.
+The condition $A_nb_n\le c$ implies $F^2\le C_\phi A_n\lesssim n$.
+The discarded distance and relative-risk integrands are bounded by
+$C_\phi(1+Q_G+F^2)$, so the original Gaussian readout tail above
+$n^{22}$ remains negligible uniformly over the claimed scales.
+Finally $R(u)\le R(g)+C_\phi n^{-20}$ by the residual $L^2$ inequality,
+and Jensen gives the raw-mean claim. All sample events use only the
+fixed $u$ and shared feature classes, preserving simultaneity in $N,\nu$.
+\end{proof}
+
+\paragraph{Marginally sub-Gaussian labels and the class infimum.}
+Suppose instead $\mathbb E\exp(Y^2/K_Y^2)\le2$.
+Fix any uncapped comparison network. As above, comparisons with
+$R(g)>R(0)+1$ are replaced by zero only in the proof.
+The same conclusion holds with
+\[
+ b_n^*=C_{\phi,K_Y}(D+1)\log^5(e n/\delta)/n
+\]
+in place of $b_n$, under the same nontrivial-range and width conditions.
+To verify it, use the proof-only label cutoff from (AD14),
+$B_n=\max\{1,K_Y\sqrt{40\log(e n/\delta)}\}$.
+The clipped-label residual has bounded second moment because
+\[
+ \|g_\sigma-Y^{B_n}\|_{L^2}
+ \le\sqrt{R(g)}+\|Y-Y^{B_n}\|_{L^2}+C_\phi n^{-20}
+ \le C_{\phi,K_Y}.
+\]
+Apply (WM1) with envelope $F+C_\phi+B_n$. Its squared bound is
+$C_{\phi,K_Y}\{b_n^*+(F+1)^2(b_n^*)^2\}$, absorbed by
+$C_{\phi,K_Y}b_n^*$ when $A_nb_n^*$ is small.
+The other proof steps are unchanged. The actual posterior agrees with
+the proof's clipped-label posterior on the no-exceedance event, and
+\[
+ [R_Y(f)-R_Y(g)]-[R_{Y^{B_n}}(f)-R_{Y^{B_n}}(g)]
+ =-2\mathbb E[(Y-Y^{B_n})(f(X)-g(X))].
+\]
+Here $F\lesssim\sqrt{A_n}\lesssim\sqrt n$, and the readout energy
+moment from (AD14) bounds the posterior average of $\|f\|_\infty$.
+Thus the marginal tail still makes this transfer $O_{\phi,K_Y}(n^{-10})$.
+No conditional-mean assumption and no actual label clipping are used.
+
+For any declared coefficient-bounded shallow teacher class containing
+zero, select a deterministic population near-minimizer; it satisfies
+$R(g)\le R(0)+1$. Equations (WM2)--(WM3) therefore hold with its
+risk replaced by the class infimum and a deterministic upper bound on
+$A_n$, with exact leading coefficient one. For fixed $d,B$, the error
+is $\widetilde O(C/\sqrt n)$ against \emph{all} width-$C$ teachers
+with coefficient cap $B$, not just those with bounded output.
+In particular, the single schedule $\lambda=n^{-3/4}$ competes with
+all width-$n^{1/4}$ such teachers at excess
+$\widetilde O(n^{-1/4})$, simultaneously for every $N\ge c_\phi n$
+and $0<\nu\le1$, once $n$ is sufficiently large. The schedule does not
+use the unknown comparator coefficients or risk.
+The same removal of the output cap applies to the exact ReLU-to-hardtanh
+compiler in the preceding section.
+
+\begin{corollary}[Growing width and coefficient budgets]
+\label{cor:all-d-growing-resources}
+Fix $d$, the activation, a marginal sub-Gaussian label envelope, and
+nonnegative exponents $a,b$ with $a+b<1/2$. For a class of shallow
+teachers of width at most $n^a$ and coefficient cap $n^b$, with no
+output cap, a deterministic scale
+$\lambda_n=\widetilde\Theta(n^{-1/2-a-b})$ gives
+\[
+ R(\mathbb E_{\Pi_{\lambda_n}}f)\le\Pi_{\lambda_n}R(f)
+ \le\inf_g R(g)+\widetilde O(n^{a+b-1/2})
+\]
+with probability at least $1-\delta$, simultaneously over all
+$0<\nu\le1$ and $N\ge c_\phi n$, for sufficiently large $n$.
+The scale uses the declared growth budgets, not the unknown teacher.
+For a hardtanh learner against coefficient-capped ReLU teachers, the
+corresponding condition is $a+2b<1/2$, with remainder
+$\widetilde O(n^{a+2b-1/2})$.
+\end{corollary}
+\begin{proof}
+Equation (AD2) gives $A_n=\widetilde O(n^{2(a+b)})$ at fixed $d$.
+Balance the two terms of (WM2). Its nontrivial-range and width conditions
+hold because $a+b<1/2$. The hardtanh compiler instead has
+$V'=O_d(n^{a+2b})$ and $J'=O_d(1)$, giving the stated substitution.
+\end{proof}
+
+There is also one schedule that needs neither growth exponent. At fixed
+$d$, put $\ell_n=\log(e n/\delta)$ and
+$\lambda_n=\ell_n^7/n$. For sufficiently large $n$, (WM2) gives
+\begin{equation}
+ R(\mathbb E_{\Pi_{\lambda_n}}f)\le\Pi_{\lambda_n}R(f)
+ \le\inf_{g\in\mathcal G_n}R(g)
+ +C_{\phi,d,K_Y}\left\{\frac{a_n\ell_n^7}{n}+\ell_n^{-2}\right\}
+ +C_{\phi,d,K_Y}n^{-10},                              \tag{WM8}
+\end{equation}
+for any declared class $\mathcal G_n$ containing zero with
+$\sup_{g\in\mathcal G_n}A_n(g)\le a_n$ and
+$a_n b_n^*\le c_\phi$. The event is common to every eligible learner
+width $N\ge c_\phi n$ and scale $0<\nu\le1$; the algorithm does not
+use $a_n$. Indeed $b_n^*/\lambda_n=O_{\phi,d,K_Y}(\ell_n^{-2})$,
+while the first term is $\lambda_n a_n$. Thus this same schedule gives
+a vanishing remainder for each fixed pair $a,b$ with $a+b<1/2$ above.
+This means one learning rule has the stated guarantee for each declared
+class, not that all data-selected comparison networks share a single
+unproved event.

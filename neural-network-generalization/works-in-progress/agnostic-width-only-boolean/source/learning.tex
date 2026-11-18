@@ -1,0 +1,201 @@
+\section{A width-only Bayesian approximation guarantee}
+\label{sec:boolean-learning}
+The compiler yields a statistical guarantee with no assumption on the distribution of Boolean inputs. The learner uses one prescribed network width. Its prior does not depend on the sample size, the comparison network, or its coefficients. A data-dependent likelihood variance is selected by comparing two valid statistical certificates.
+
+\subsection{The model and the statistical ingredients}
+Let $X\in\{-1,1\}^d$, $|Y|\le1$, and write
+$R(f)=\E(f(X)-Y)^2$. No restriction is placed on the joint law of $(X,Y)$. Let $\mathcal G_{C,h}$ be the class of ReLU networks with hidden width at most $C$, hidden depth $h$, arbitrary finite real coefficients and biases, and a scalar affine readout.
+
+Fix a learner hidden depth $H$, width $N$, and exponent $\gamma\ge1$. Put $D=d+1$ and use the input vector $\bar x=(1,x)$. The learner has no internal biases; a constant wire can implement biases when needed. Its independent centered Gaussian prior has variances
+\begin{equation}
+ \operatorname{Var}(W^1_{ji})=\frac{N^{1-\gamma}}D,
+ \qquad \operatorname{Var}(W^\ell_{ji})=N^{-\gamma}\ (2\le\ell\le H),
+ \qquad \operatorname{Var}(v_j)=N^{-\gamma-1}.
+ \label{eq:boolean-Gaussian-prior}
+\end{equation}
+Write $\omega=N^\gamma$ and
+\[
+ Q_N(w)=\frac DN\|W^1\|_F^2+
+              \sum_{\ell=2}^H\|W^\ell\|_F^2+N\|v\|_2^2.
+\]
+Every Gaussian coordinate has positive variance; there is no restriction on the support of the prior. After the scalar linear readout $z_w$, apply $s(z)=\max\{-1,\min\{1,z\}\}$. Both the Gaussian likelihood and prediction use this bounded network output:
+\begin{equation}
+ d\Pi_{S,\lambda}(w)=Z_S(\lambda)^{-1}
+  e^{-\omega\widehat R_S(s(z_w))/(2\lambda)}d\pi_N(w),
+ \qquad \widehat f_{S,\lambda}(x)=\int s(z_w(x))d\Pi_{S,\lambda}(w).
+ \label{eq:boolean-posterior}
+\end{equation}
+The physical Gaussian observation variance is $n\lambda/\omega$. This is a Gaussian observation model for a network with a bounded final activation, not clipping only at prediction time. Define its observable free energy
+\[
+ F_S(\lambda)=-\frac{2\lambda}{\omega}\log Z_S(\lambda)
+ =\inf_\nu\left\{\E_\nu\widehat R_S+
+                  \frac{2\lambda}{\omega}\operatorname{KL}(\nu\Vert\pi_N)\right\}.
+\]
+Since the prior readout is symmetric, $F_S(\lambda)\le2$ for every sample.
+
+We use the following proved Gaussian free-energy certificate. The statement records precisely the statistical input to the compiler argument. The full-energy case follows from the smooth-loss energy-ball argument in~\cite{adaptive}; the all-scale case uses the finite-program Gaussian compression theorem in~\cite{direct} and its localized finite-dictionary argument~\cite{localized}.
+
+\begin{lemma}[Gaussian certificate with a comparison cost]
+\label{lem:boolean-Gaussian-certificate}
+For every fixed $H\ge2$, there are finite constants $a_H,c_H$ and an observable positive-temperature rule $\lambda_{\rm imp}(S)$ with an observable certificate $B_{\rm imp}(S)$, having these properties. On one event of probability at least $1-\delta$, the certificate bounds the posterior-average population risk, simultaneously over the indicated learner widths and exponents. Suppose a fixed bounded function $q$ has a deterministic comparison cost $A\ge1$ such that
+\begin{equation}
+ F_S(\lambda)\le\widehat R_S(q)+\lambda A
+ \quad\text{for every sample and }\lambda\ge1/n.
+ \label{eq:boolean-comparison-interface}
+\end{equation}
+Then, on a further fixed-comparator concentration event,
+\begin{equation}
+ B_{\rm imp}(S)\le R(q)+
+ \widetilde O_H\left[
+  \bar A R(q)^{1-\rho/v}n^{-1/v}
+       +\bar A^{v/\rho}n^{-1/\rho}\right],
+ \qquad \bar A=(d+2)^{a_H}(A+1),
+ \label{eq:boolean-certificate-oracle}
+\end{equation}
+where logarithmic factors in $n,d,A,1/\delta$ are suppressed. The available powers are
+\[
+\begin{array}{c|c|c}
+\text{prior exponents}&v&\rho\\ \hline
+\gamma\ge2&H+1&1\\
+\gamma\ge1&2H^2+H-1&2H.
+\end{array}
+\]
+The algorithm uses none of $q,A,C,h$, or $R(q)$. Its constants depend only on $H,d,\delta,n$ and the indicated prior regime.
+\end{lemma}
+\begin{proof}[Explanation of the imported statistical theorem]
+For $\gamma\ge2$, $\omega Q_N$ is chi-square and its degrees of freedom divided by $\omega$ are at most $D+H$. ReLU energy balls have empirical Rademacher complexity at most
+$C_H\sqrt{\log(2D)/n}(1+Q)^{(H+1)/2}$. Saturation is a contraction, and the loss remains bounded and smooth as a function of the bounded prediction. The weighted-objective tail and entropy identity in~\cite{adaptive} therefore give an observable certificate $F_S(\lambda)+c_0\lambda+n^{-4}$. Its calibration is the unique positive solution of
+$\lambda^{H+1}=256a_n^2[2F_S(\lambda)+b_n\lambda]^H$.
+Here $a_n^2=\widetilde O_H(\operatorname{poly}(d)/n)$ and $b_n,c_0$ are polynomial in $d$ and logarithmic in $n$. Substituting \eqref{eq:boolean-comparison-interface} gives the first row.
+
+For every $\gamma\ge1$, direct Gaussian compression supplies fixed dictionaries with approximation accuracy $a$, norm level $K$, and entropy
+\[
+ \log|\mathcal D(K,a)|\le C_H(d+1)K^{p}a^{-q_0}
+       [\log(C_H(d+1)K/a)]^{c_H},
+ \quad q_0=4H-2,\quad p=(H+1)q_0/2.
+\]
+Outside a prior set of mass at most $C_He^{-c_H\omega K}$, these dictionaries approximate the network in any specified input $L^2$ norm. The lower norm cutoff is $K_0=C_H(d+1)$. Clip the dictionary centers and network outputs. Their approximation errors and cardinalities do not increase, and the loss envelope is now bounded independently of $K$.
+
+The localized dictionary argument in~\cite{localized} gives
+$\rho=(q_0+2)/2=2H$ and $v=\max\{p,2\rho\}=p$ for $H\ge2$.
+Its root is
+$\lambda^v=\theta_n[2F_S(\lambda)+b_n\lambda]^{v-\rho}$,
+with $\theta_n=\widetilde O_H(\operatorname{poly}(d)/n)$, and its certificate is $F_S(\lambda)+c_0\lambda+n^{-3}$. For small samples the rule uses the deterministic fallback $\lambda=2\omega$, whose risk certificate is $2\sqrt e$; the second oracle term covers this branch. Finite-dictionary Bernstein bounds are established before choosing the root, so its data dependence does not add an unproved uniformity assumption. All factors introduced by $K_0$ and the prior exponential moments are polynomial in $d$ at fixed $H$, and are absorbed in $a_H$. Finally, bounded-loss Bernstein concentration for the one fixed comparator preserves the leading coefficient one in \eqref{eq:boolean-certificate-oracle}.
+\end{proof}
+
+\subsection{The comparison cost of the compiled network}
+\begin{lemma}[From path variation to a Gaussian comparison]
+\label{lem:boolean-path-Gaussian}
+Let $q$ be a width-$m$ ReLU network, of hidden depth at most $H$, represented on $\xi=\bar x/\sqrt D$, with path variation $P$ and $|q(x)|\le1$ on the Boolean cube. For every $N\ge m$ and every $\gamma\ge1$, it has a comparison cost in \eqref{eq:boolean-comparison-interface} satisfying
+\begin{equation}
+ E=2P+(H-1)m,\qquad
+ A=E+1+2[D+1+(H-1)m]\log(8nK_E),
+ \quad K_E=\sqrt2(H+1)(E+1)^{H/2}.
+ \label{eq:boolean-selective-cost}
+\end{equation}
+\end{lemma}
+\begin{proof}
+Pad by positive identity layers if necessary. A path-flow rescaling makes every internal absolute spectral norm at most one and gives first and last squared Euclidean norms both equal to $P$. Here is the rescaling argument. Let $a^1_j=\|W^1_{j,:}\|_2$, $a^\ell=|W^\ell|a^{\ell-1}$, $b^H=|v|$, and $b^{\ell-1}=|W^\ell|^{\mathsf T}b^\ell$. After removing neurons on zero-weight paths, rescale neuron $j$ by $\sqrt{b_j/a_j}$. The transformed nonnegative internal matrix sends $r^{\ell-1}$ to $r^\ell$ and its transpose sends $r^\ell$ back, where $r_j=\sqrt{a_jb_j}$. Weighted Cauchy--Schwarz bounds its operator norm by one. At both endpoints the squared norm is $\sum_j a_jb_j=P$.
+
+Convert from $\xi$ to $\bar x$ by dividing the first matrix by $\sqrt D$. Zero-pad to width $N$, then multiply every hidden activation by $\sqrt N$. Only the first matrix and readout change. Their two weighted energy contributions are each $P$, and each internal squared Frobenius norm is at most $m$. Thus $Q_N\le E$.
+
+Center a product Gaussian at this implementation. Multiply prior standard deviations by $r$ on all coordinates entering its active hidden rows and on every readout coordinate; leave all other variances at their prior values. The narrowed coordinate count is at most $mD+(H-1)mN+N$, whose ratio to $\omega$ is at most $D+1+(H-1)m$. The Gaussian entropy identity gives
+\[
+ \frac2\omega\operatorname{KL}(\nu_r\Vert\pi_N)
+ \le E+2[D+1+(H-1)m]\log(1/r).
+\]
+For completeness, with $S_\ell=\|h^\ell\|_2^2/N$, centering and layerwise independence give $\E S_\ell\le2(E+1)^\ell$. Let $\Delta_\ell$ be the RMS error on the active rows, divided by $\sqrt N$. ReLU's Lipschitz property gives
+\[
+ \Delta_1\le\sqrt2r,\qquad
+ \Delta_\ell\le\sqrt E\Delta_{\ell-1}
+        +\sqrt2r(E+1)^{(\ell-1)/2}.
+\]
+The mean readout and its independent Gaussian perturbation then give output RMS error at most $rK_E$, uniformly on the cube. This calculation uses $\|\bar x\|_2^2=D$ and the first-layer variance in \eqref{eq:boolean-Gaussian-prior}; no input-normalization factor is missing.
+
+Choose $r=(8nK_E)^{-1}$. Saturation does not increase the perturbation. For bounded outputs and labels, squared loss changes by at most four times output difference, so the comparison's expected empirical loss is at most $\widehat R_S(q)+1/(2n)$. The free-energy variational formula and $\lambda\ge1/n$ prove \eqref{eq:boolean-selective-cost}.
+\end{proof}
+
+\subsection{A second certificate removes the compilation-width requirement}
+At small learner widths the compiled implementation might not fit. The original comparator still fits, so use a second certificate based on parameter count.
+
+Let $\mathcal F_{N,H}$ be the bounded-output learner class and let
+$\widehat r_N=\inf_{f\in\mathcal F_{N,H}}\widehat R_S(f)$.
+Positive Gaussian density and continuity imply $F_S(\lambda)\to\widehat r_N$ as $\lambda\downarrow0$: a neighborhood of any nearly optimal finite parameter vector has positive prior probability and contributes a lower bound to $Z_S$. Choose the first integer $j\ge0$ with
+\[
+ F_S(2^{-j})\le\widehat r_N+1/n,
+ \qquad \lambda_{\rm par}=2^{-j}.
+\]
+This rule is measurable and strictly positive. Measurability follows by expressing the empirical infimum using a countable dense set of rational parameter vectors.
+
+Let $D_N=N(D+1)+(H-1)N^2$ be the parameter count. Relative VC uniform convergence and the standard ReLU pseudodimension estimate~\cite{vapnik,bartlettvc} give, on a common event over all integer widths,
+\[
+ R(f)\le\widehat R_S(f)+c\sqrt{\widehat R_S(f)a_N}+ca_N,
+ \qquad a_N=\widetilde O\left(\frac{D_N(H+2)+\log((N+1)^2/\delta)}n\right),
+ \quad f\in\mathcal F_{N,H}.
+\]
+One derivation applies the relative VC inequality to bounded-loss superlevel sets and integrates over their levels; Cauchy--Schwarz controls the integrated square-root term. Allocate confidence proportional to $\delta/(N+1)^2$. Integrating the result against the posterior and using its empirical risk bound $\E_\Pi\widehat R_S\le F_S$ yields the observable certificate
+\[
+ B_{\rm par}=F_S(\lambda_{\rm par})+
+                c\sqrt{F_S(\lambda_{\rm par})a_N}+ca_N.
+\]
+For any fixed comparator representable at this width, bounded-loss Bernstein concentration yields
+\begin{equation}
+ B_{\rm par}\le R(g)+\widetilde O\left(
+       \sqrt{R(g)D_N(H+2)/n}+D_N(H+2)/n\right).
+ \label{eq:boolean-parameter-oracle}
+\end{equation}
+Clipping an arbitrary raw comparator can only reduce its squared risk.
+
+The learner computes $(\lambda_{\rm imp},B_{\rm imp})$ and $(\lambda_{\rm par},B_{\rm par})$, selects the smaller certificate, and returns the ordinary mean of that \emph{single} posterior. Ties are broken deterministically. On the intersection of the certificate events its risk is at most $\min\{B_{\rm imp},B_{\rm par}\}$. This rule does not know the comparator width, depth, coefficients, or risk.
+
+\begin{theorem}[A coefficient-free width oracle on Boolean inputs]
+\label{thm:boolean-width-oracle}
+There is a numerical $b\ge2$ with the following property. Fix integers $C,h,d\ge1$ and a learner depth $H\ge b(h+1)$. Let $(X,Y)$ have any joint distribution with $X\in\{-1,1\}^d$ and $|Y|\le1$. Use the fixed-architecture independent Gaussian prior \eqref{eq:boolean-Gaussian-prior}, bounded-output observation model \eqref{eq:boolean-posterior}, and two-certificate calibration above.
+
+Write $R_* =\inf_{g\in\mathcal G_{C,h}}R(g)$ and $0<\varepsilon\le1$. For the powers $(v,\rho)$ in Lemma~\ref{lem:boolean-Gaussian-certificate}, there is a finite constant $a_H$ such that
+\begin{equation}
+ n\ge\widetilde O_H\left(
+  (d+1)^{a_H}(C+1)^{b h(h+1)v}
+  \left[\frac{R_*^{v-\rho}}{\varepsilon^v}
+                    +\frac1{\varepsilon^\rho}\right]\right)
+ \label{eq:boolean-width-samples}
+\end{equation}
+implies, with probability at least $1-\delta$, simultaneously for every $N\ge C+1$ and every indicated $\gamma$,
+\[
+ R(\widehat f_S)\le\inf_{g\in\mathcal G_{C,h}}R(g)+\varepsilon.
+\]
+The logarithms suppressed in \eqref{eq:boolean-width-samples} involve $n,d,C,1/\varepsilon,1/\delta$; they do not involve any original coefficient magnitude or learner width. The extra neuron carries a constant wire for the original teacher's biases. If the stated teacher width already includes that wire, $N\ge C$ suffices.
+\end{theorem}
+\begin{proof}
+Choose a deterministic $g$ with $R(g)\le R_*+\varepsilon/32$. Apply Theorem~\ref{thm:constant-depth-compiler} to $g$ with uniform output tolerance $\varepsilon/64$. This gives a bounded network $q$ with
+\[
+ R(q)\le R(g)+\varepsilon/16,\qquad
+ m\le B,\quad P(q)\le B,
+\]
+where
+\[
+ B=\left[4(d+1)(C+1)^h+
+              \left\lceil\log_2(1024/\varepsilon)\right\rceil+2\right]^{b(h+1)}.
+\]
+Increase the numerical $b$ once to cover the compiler's depth and size constants. Pad to depth $H$. Lemma~\ref{lem:boolean-path-Gaussian} gives $A=\widetilde O_H(d+B)$. When $N\ge m$, the implicit certificate is at most $R(q)+\varepsilon/4$ provided
+\[
+ n\ge\widetilde O_H\left(\operatorname{poly}_H(d)B^v
+       [R_*^{v-\rho}\varepsilon^{-v}+\varepsilon^{-\rho}]\right).
+\]
+Here $R(q)\le R_*+O(\varepsilon)$; the extra $\varepsilon^{v-\rho}$ contribution is absorbed by the second term. Expanding $B^v$ and absorbing its dimension and logarithmic factors gives \eqref{eq:boolean-width-samples}.
+
+If $C+1\le N<m$, the original comparator, including its biases, is represented by a width-$N$ network with one constant wire and identity padding to depth $H$. Its clipped risk is no greater than $R(g)$. Equation~\eqref{eq:boolean-parameter-oracle} gives excess at most $\varepsilon/4$ under
+\[
+ n\ge\widetilde O_H\left((dB+B^2)
+                    [R_*\varepsilon^{-2}+\varepsilon^{-1}]\right).
+\]
+The preceding implicit-certificate budget dominates this: $v\ge2$, $\rho\ge1$, $v-\rho\ge1$, and, for $u=R_*/\varepsilon\ge0$,
+$u+1\le2(u^{v-\rho}+1)$.
+All dimension factors can be included in $a_H$. The confidence logarithm involving $N$ is at most a logarithm of $m\le B$ in this branch.
+
+Select the smaller certificate. Allocate confidence among the two statistical events and the two fixed-comparator Bernstein bounds. The implicit event is common to all eligible widths and scales, and the parameter event used a summable width allocation. No compactness of the comparison class is needed: the one deterministic comparator within $\varepsilon/32$ of its infimum suffices.
+\end{proof}
+
+For fixed teacher and learner depths, \eqref{eq:boolean-width-samples} is polynomial in the teacher width, input dimension, and inverse accuracy. At positive comparison risk the accuracy power is $H+1$ for $\gamma\ge2$, and $2H^2+H-1$ for all $\gamma\ge1$; at zero comparison risk these powers improve to $1$ and $2H$, respectively. The coefficient-free compiler's precision cost is only logarithmic and therefore does not worsen these accuracy powers. In particular, at fixed $d,h,H$, the same learner competes with teachers of width $n^a$ for a sufficiently small constant $a>0$, with vanishing additive error. Its depth must satisfy the stated constant-factor overhead; this is not a same-depth theorem.
+
+The result permits arbitrary bounded label noise. It is a statistical existence theorem: computing either the exact posterior or the global empirical infimum in the parameter certificate may be computationally difficult. It concerns one selected positive-temperature posterior, not a prior or posterior mixture over network sizes.

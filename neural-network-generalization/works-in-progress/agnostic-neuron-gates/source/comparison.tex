@@ -1,0 +1,53 @@
+\section{A comparison law around a shared network}
+Fix a precision $0<\epsilon\le1/4$. All entropy calculations are first made on the latent gates and edge factors. Relative entropy cannot increase when these variables are mapped to actual weights or functions.
+
+\begin{lemma}[Gate and factor costs]\label{lem:scalar-gates}
+The following modifications have the stated costs, uniformly in $N$.
+\begin{enumerate}
+\item A selected gate can be made uniform on $[1-\epsilon,1+\epsilon]$, at KL cost at most $\log N+C\log(C/\epsilon)$.
+\item Any specified collection of inactive gates in one layer can be conditioned to have total mass at most $\epsilon$, at joint KL cost at most $C\log(C/\epsilon)$.
+\item A Student factor can be made uniform on $[a-\epsilon,a+\epsilon]$, $|a|\le B$, at KL cost at most $C\log(C(B+2)/\epsilon)$.
+\end{enumerate}
+\end{lemma}
+\begin{proof}
+Write $a_N=\kappa/N\le1$. On $[3/4,5/4]$, the gamma density
+$s^{a_N-1}e^{-s}/\Gamma(a_N)$ is at least $c a_N$, since $\Gamma(a_N+1)$ is bounded above and below on $[0,1]$. This proves the first claim by a pointwise density ratio.
+
+The sum of $k$ inactive gates is $\operatorname{Gamma}(a,1)$ with $a=k\kappa/N\le1$. If $k=0$, no change is needed. Otherwise
+\[
+ \Pp\{T\le\epsilon\}
+ \ge\frac{e^{-\epsilon}\epsilon^a}{\Gamma(a+1)}.
+\]
+The negative logarithm is at most $C\log(C/\epsilon)$, proving the second claim. In particular, every inactive gate is then at most $\epsilon$.
+
+Finally, the Student density is bounded below by $c(B+2)^{-(\nu+1)}$ on each specified coefficient interval. The uniform interval density gives the last claim.
+\end{proof}
+
+For each layer, partition $[N]$ into $m_\ell$ disjoint groups, each of size at least $\lfloor N/m_\ell\rfloor$. Choose one position uniformly from each group. The groups label the teacher neurons. Given these choices, modify the prior as follows:
+\begin{itemize}
+\item put each selected gate uniformly near one;
+\item condition the sum of all other gates in that layer to be at most $\epsilon$;
+\item put each selected first-layer row, each factor between two selected neurons, each selected bias, and each selected readout factor uniformly near its teacher coefficient;
+\item leave all other edge and bias factors at their native Student laws.
+\end{itemize}
+There are exactly $P$ modified factors. In particular, a zero coefficient inside an active block must also be controlled. Conditional on a placement, the gate changes are independent of all factor changes, and factor coordinates remain independent.
+
+\begin{lemma}[Entropy independent of learner width]\label{lem:entropy}
+The resulting mixture $\rho_\epsilon$ satisfies
+\[
+ \KL(\rho_\epsilon\|\mu_N)
+ \le CQ\log\frac{C(m+1)(B+2)}\epsilon,
+ \qquad N\ge m.
+\]
+\end{lemma}
+\begin{proof}
+For a fixed placement, Lemma~\ref{lem:scalar-gates} bounds entropy by
+\[
+ V\log N+CQ\log\frac{C(B+2)}\epsilon.
+\]
+Distinct placements have disjoint latent supports: a selected gate exceeds $3/4$, while all inactive gates are at most $1/4$. Each group's selected position identifies its teacher role. The KL of the uniform mixture is consequently the average component KL minus the logarithm of the number of placements. For every layer,
+\[
+ \log N-\log\lfloor N/m_\ell\rfloor\le\log(2m_\ell).
+\]
+All $V\log N$ costs therefore cancel up to $V\log(2m)$, which is absorbed into the stated bound. This includes $N=m$; no large-width limit is taken. Actual weight vectors need not identify the latent gates. Disjointness is used only before applying the deterministic map to weights.
+\end{proof}

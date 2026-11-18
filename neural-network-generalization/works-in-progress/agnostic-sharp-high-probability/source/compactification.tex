@@ -1,0 +1,135 @@
+\section{Removing the incoming coefficient bound for tanh}
+\label{sec:l1-compactification}
+These refinements keep the same number of hidden neurons and the same
+readout coefficients. In particular the readout $\ell^1$ restriction remains
+unchanged. Only the original incoming coefficient bound is removed.
+
+\begin{lemma}[Boolean compactification of one tanh ridge]
+\label{lem:l1-Boolean-ridge}
+Let $D=d+1$, $0<\tau\le1/2$, and
+$h(x)=\tanh(v\cdot\bar x)$ on $\{-1,1\}^d$, with arbitrary finite $v$.
+There is $v'$ with
+\[
+ \|v'\|_\infty\le (2D)^{2D}\operatorname{arctanh}(1-\tau)
+\]
+such that $\sup_x|\tanh(v'\cdot\bar x)-h(x)|\le\tau$.
+\end{lemma}
+\begin{proof}
+Put $M=\operatorname{arctanh}(1-\tau)>0$. At inputs with
+$|h(x)|\le1-\tau$, impose $v'\cdot\bar x=\operatorname{arctanh}h(x)$.
+At the remaining inputs impose $v'\cdot\bar x\ge M$ or
+$v'\cdot\bar x\le-M$ according to the sign. The original vector is
+feasible. In variables $z=v'/M$, this is a finite closed polyhedron
+with coefficients in $\{-1,1\}$ and right-hand sides in $[-1,1]$.
+
+Its minimum-norm feasible point lies in the span of its active rows:
+every null direction admits both sufficiently small feasible
+perturbations. Select $r\le D$ independent active rows $A$, with
+right-hand side $b$. The point is $A^\top(AA^\top)^{-1}b$.
+The integer Gram matrix has determinant at least one and entries at
+most $D$ in magnitude; its adjugate entries are bounded by
+$(r-1)!D^{r-1}$. Therefore every coordinate has magnitude at most
+$r^2(r-1)!D^{r-1}\le(2D)^{2D}$. If there are no active rows, the point
+is zero. The output values are exact at nonsaturated inputs; at a
+saturated input both values lie in the same interval of length $\tau$.
+\end{proof}
+
+\begin{lemma}[Continuous compactification of one tanh ridge]
+\label{lem:l1-continuous-ridge}
+Suppose the input law on $[-1,1]^d$ satisfies
+\[
+ P_X\{|u\cdot X-t|\le r\}\le\kappa r^\alpha
+ \quad(\|u\|_2=1,\ t\in\mathbb R,\ 0<r\le1),
+ \qquad \kappa\ge1,\quad0<\alpha\le1.
+\]
+For $0<\tau\le1/2$ and any finite $v=(b,w)$ there is $v'$ with
+\begin{align*}
+ \mathbb E|\tanh(v'\cdot\bar X)-\tanh(v\cdot\bar X)|&\le\tau,\\
+ \|v'\|_\infty&\le
+ (\sqrt d+2)\,\tfrac12\log(4/\tau)
+                     (4\kappa/\tau)^{1/\alpha}.
+\end{align*}
+\end{lemma}
+\begin{proof}
+Set $M=\frac12\log(4/\tau)$,
+$\delta=(\tau/(4\kappa))^{1/\alpha}\le1$, and $R=M/\delta$.
+The elementary bound $1-\tanh M\le2e^{-2M}=\tau/2$ will be used.
+Write $r=\|w\|_2$.
+
+If $r\le R$ and $|b|\le R\sqrt d+M$, retain $v$. If $r\le R$ but
+$|b|>R\sqrt d+M$, the original preactivation has constant sign and
+magnitude exceeding $M$ everywhere; replace it by the constant
+$\operatorname{sign}(b)M$. This changes the output by at most $\tau/2$.
+Both cases have the asserted coefficient bound.
+
+If $r>R$, write $u=w/r$ and $t=-b/r$, so the preactivation is
+$r(u\cdot x-t)$. When $|t|>\sqrt d+\delta$, its sign is constant and
+its magnitude exceeds $r\delta>M$ throughout the cube. Replace it
+by the constant $-\operatorname{sign}(t)M$. Otherwise
+$|t|\le\sqrt d+\delta\le\sqrt d+1$; replace the preactivation by
+$R(u\cdot x-t)$. This has coefficients at most $R(\sqrt d+1)$.
+Outside the slab $|u\cdot x-t|\le\delta$, both preactivations have
+the same sign and magnitude at least $M$, so their tanh values differ
+by at most $\tau/2$. The slab has probability at most
+$\kappa\delta^\alpha=\tau/4$, where the output difference is at most
+two. Thus the expected difference is at most $\tau$.
+\end{proof}
+
+For a teacher $g=\sum_{j=1}^C b_jh_j$ with $\sum_j|b_j|\le1$, apply
+either lemma separately to every feature. The resulting same-width
+teacher $g_\tau$ satisfies $\|g-g_\tau\|_\infty\le\tau$ in the Boolean
+case, or $\mathbb E|g-g_\tau|\le\tau$ in the continuous case. Since both
+functions and $f_0$ lie in $[-1,1]$,
+\[
+ R(g_\tau)\le R(g)+4\tau.
+\]
+The noise floor cancels in this comparison.
+
+\begin{corollary}[Coefficient-free shallow tanh classes]
+\label{cor:l1-coefficient-free}
+Use the same posterior as in Theorem~\ref{thm:l1-main}, and fix
+$N\ge8C$, $n\ge2$. The comparison class consists of
+width-at-most-$C$ tanh teachers with arbitrary finite incoming
+coefficients and readout $\ell^1$ norm at most one. With probability at least
+$1-\delta$, its final posterior mean satisfies the following bounds.
+For arbitrary Boolean-input laws, put $D=d+1$; then
+\[
+ \begin{aligned}
+ R(\bar f_S)&\le\inf_gR(g)+C_9C/N^2\\
+ &\quad+\frac{C_9s}{n}
+ \left[CD\{D\log(2D)+\log(e(C+1)n)\}
+                   +\log(4/\delta)\right].
+ \end{aligned}
+\]
+Under the slab assumption of Lemma~\ref{lem:l1-continuous-ridge},
+\[
+ \begin{aligned}
+ R(\bar f_S)&\le\inf_gR(g)+C_9C/N^2\\
+ &\quad+\frac{C_9s}{n}
+ \left[CD\left\{\log(eD(C+1)n)
+               +\frac1\alpha\log(e\kappa n)\right\}
+                    +\log(4/\delta)\right].
+ \end{aligned}
+\]
+If also $N\ge\sqrt n$, the $C/N^2$ term is absorbed into the statistical
+remainder. Constants depend only on the fixed scalar prior. No regularity or
+teacher-complexity parameter is supplied to the learner. Countably
+many width or regularity classes can be compared simultaneously by
+the confidence allocation already stated after the main theorem.
+\end{corollary}
+\begin{proof}
+Fix a deterministic teacher within $1/n$ of the class risk infimum
+and compactify with $\tau=1/n$. In the Boolean case,
+\[
+ \log(B_\tau+8)\le C_{10}\{D\log(2D)+\log\log(en)\}.
+\]
+In the continuous case,
+\[
+ \log(B_\tau+8)\le C_{10}\left\{\log(2D)+\log\log(en)
+                                 +\alpha^{-1}\log(e\kappa n)\right\}.
+\]
+Substitute these bounds in Theorem~\ref{thm:l1-main} and absorb the
+$4/n$ compactification error and $1/n$ near-minimizer error. The
+compactified teacher is deterministic and uses the same width and
+readout variation as the original one.
+\end{proof}

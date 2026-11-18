@@ -1,0 +1,201 @@
+% Independent proof module, 18 November 2026.
+% This file is a review artifact, not an edit to an owner manuscript.
+% The leave-one-out strategy is motivated by Hogsgaard--Rebeschini--Wegel,
+% arXiv:2607.02247 (2026). Their stated theorem is for finite dictionaries
+% and bounded losses. The arbitrary-prior and conditional sub-Gaussian
+% extension below is derived here; it should receive independent checking.
+
+\section{A sharp expectation oracle for the ordinary final posterior}
+\label{sec:all-data-expectation}
+
+Let $\pi$ be any probability prior on jointly measurable functions
+$f_w:\mathcal X\to[-1,1]$. Suppose the observations are IID,
+$f_0(x)=\mathbb E[Y\mid X=x]\in[-1,1]$, and
+$\xi=Y-f_0(X)$ is conditionally sub-Gaussian with proxy $\sigma^2$.
+Set $s=1+\sigma^2$ and fix $T\ge256s$.
+For a sample $S_n$ of size $n$, let
+\[
+ dQ_{S_n}(w)=Z_{S_n}^{-1}
+   \exp\left\{-\frac1T\sum_{i=1}^n(f_w(X_i)-Y_i)^2\right\}d\pi(w),
+ \qquad \bar f_{S_n}=\int f_w\,dQ_{S_n}(w).
+\]
+This is the ordinary posterior with Gaussian observation variance $T/2$,
+using all $n$ observations. No averaging over sample sizes is performed.
+
+\begin{theorem}[Sharp all-data expectation bound]
+\label{thm:sharp-all-data-expectation}
+For every deterministic comparison law $\rho\ll\pi$,
+\[
+ \mathbb E_{S_n} R(\bar f_{S_n})
+ \le \int R(f_w)\,d\rho(w)
+        +\frac{T\operatorname{KL}(\rho\|\pi)}{n+1}.
+\]
+Consequently the infimum over all such comparison laws may be taken on
+the right-hand side. The theorem requires neither convexity of the
+support of $\pi$ nor a Bernstein condition relative to the comparator.
+\end{theorem}
+
+\begin{proof}
+We first prove an averaged one-observation inequality. Fix a probability
+law $q$ on $U\in[-1,1]$, with mean $\mu$ and variance $v$. For a real
+label $y$, let $L_y(u)=(u-y)^2$ and
+\[
+ dp_y(u)=\frac{e^{-L_y(u)/T}}{\int e^{-L_y/T}\,dq}\,dq(u).
+\]
+For two independent draws $U,U'$ from $q$, the covariance identity gives
+\begin{align*}
+ \int L_y\,dq-\int L_y\,dp_y
+ &=\frac{\mathbb E[(L_y(U)-L_y(U'))
+         (e^{-L_y(U')/T}-e^{-L_y(U)/T})]}{2\int e^{-L_y/T}\,dq}.
+\end{align*}
+Since
+\[
+ |L_y(u)-L_y(u')|\le2(1+|y|)|u-u'|,
+ \qquad \operatorname{osc}_{[-1,1]}L_y\le4(1+|y|),
+\]
+the mean-value theorem bounds the last display by
+\[
+ \frac{4(1+|y|)^2}{T}
+       e^{4(1+|y|)/T}v.
+\]
+Also $\int L_y\,dq=L_y(\mu)+v$. Hence
+\begin{equation}
+ \int L_y\,dp_y\ge L_y(\mu)+
+ \left[1-\frac{4(1+|y|)^2}{T}e^{4(1+|y|)/T}\right]v.
+ \label{eq:one-step-pointwise}
+\end{equation}
+
+Now let $Y=a+\xi$, where $|a|\le1$ and $\xi$ is centered
+$\sigma^2$-sub-Gaussian, independently of the fixed law $q$.
+The elementary estimates
+\[
+ \mathbb E e^{t|\xi|}\le2e^{\sigma^2t^2/2},
+ \qquad \mathbb E\xi^4\le16\sigma^4
+\]
+and Cauchy--Schwarz imply
+\begin{align*}
+ &\mathbb E\left[(1+|Y|)^2e^{4(1+|Y|)/T}\right]\\
+ &\quad\le e^{8/T}
+       \mathbb E[(8+2\xi^2)e^{4|\xi|/T}]\\
+ &\quad\le e^{8/T}
+       \left[16e^{8\sigma^2/T^2}
+              +8\sqrt2\,\sigma^2e^{16\sigma^2/T^2}\right]
+ \le32s
+ \qquad(T\ge256s).
+\end{align*}
+Thus the expected coefficient subtracted in
+\eqref{eq:one-step-pointwise} is at most $128s/T\le1/2$.
+After averaging over $Y$ we obtain
+\begin{equation}
+ \mathbb E_Y L_Y(\mu)
+ \le\mathbb E_Y\int L_Y\,dp_Y-\tfrac12v
+ \le\mathbb E_Y\int L_Y\,dp_Y.
+ \label{eq:averaged-one-step}
+\end{equation}
+The same statement holds conditionally on any input $X=x$ and on an
+independent training sample.
+
+Introduce $n+1$ IID observations, retaining the same fixed architecture,
+prior and $T$ used by the $n$-observation learner. Let $Q^+$ be their full
+posterior and $Q^{-i}$ the posterior after removing observation $i$.
+Conditional on the other observations and $X_i$, push $Q^{-i}$ forward
+through $w\mapsto f_w(X_i)$ to obtain $q$. It is independent of $Y_i$
+given this conditioning. Updating $q$ by the omitted squared-loss factor
+gives exactly the corresponding pushforward of $Q^+$.
+Applying \eqref{eq:averaged-one-step} and then averaging yields
+\[
+ \mathbb E (\bar f^{-i}(X_i)-Y_i)^2
+ \le\mathbb E\int(f_w(X_i)-Y_i)^2\,dQ^+(w).
+\]
+Sum over $i=1,\ldots,n+1$. By exchangeability and independence, the
+left-hand average is $\mathbb E_{S_n}R(\bar f_{S_n})$.
+For each realized enlarged sample the Gibbs variational inequality gives
+\begin{align*}
+ &\int\sum_{i=1}^{n+1}(f_w(X_i)-Y_i)^2\,dQ^+(w)\\
+ &\quad\le\int\sum_{i=1}^{n+1}(f_w(X_i)-Y_i)^2\,d\rho(w)
+             +T\operatorname{KL}(\rho\|\pi),
+\end{align*}
+where the nonnegative term $T\operatorname{KL}(Q^+\|\pi)$ was dropped.
+Take expectations and divide by $n+1$ to prove the theorem.
+All integrals are finite: the outputs are bounded and the labels have
+finite second moment. The posterior normalizers are positive, and the
+loss oscillation over parameters is finite for every realized sample.
+\end{proof}
+
+\begin{corollary}[Logarithmic comparison entropy]
+\label{cor:all-data-log-comparison}
+Suppose a deterministic $g:\mathcal X\to[-1,1]$ has, for every $0<r\le1$,
+a data-independent comparison law with
+\[
+ \mathbb E_\rho\|f_w-g\|_{L^2(P_X)}^2\le r,
+ \qquad \operatorname{KL}(\rho\|\pi)\le K_0\log(K_1/r),
+ \qquad K_0\ge1,\ K_1\ge e.
+\]
+At $T=256s$ the same all-data final posterior mean satisfies
+\[
+ \mathbb E R(\bar f_{S_n})
+ \le R(g)+\frac{5+256sK_0\log(K_1(n+1)^2)}{n+1}.
+\]
+Thus the oracle is sharp, with coefficient one on comparator risk and
+a remainder of order $sK_0\log(K_1n)/n$.
+\end{corollary}
+\begin{proof}
+Write $A(g)=\mathbb E(g-f_0)^2\le4$. Cauchy--Schwarz gives
+\[
+ \int R(f_w)\,d\rho
+ \le R(g)+2\sqrt{A(g)r}+r.
+\]
+Take $r=(n+1)^{-2}$ and use the theorem. The approximation increase is
+at most $4/(n+1)+1/(n+1)^2\le5/(n+1)$.
+\end{proof}
+
+\paragraph{Scope.}
+The result is in expectation over the training sample. It does not
+assert a sharp high-probability oracle, and an all-data refit is not
+being inferred from a holdout result. Every observation enters the
+likelihood of the returned posterior. If the comparison constants are
+uniform in learner width, so is this bound. One may take the infimum
+over all deterministic comparator classes and resources directly;
+unlike a common high-probability event, this expectation oracle needs
+no confidence allocation over classes. The learner must still have
+its architecture and prior fixed before observing the data.
+
+\paragraph{Attribution.}
+The leave-one-out strategy and a pointwise inverse-tilting inequality
+for bounded losses are from M.~M.~H\o gsgaard, P.~Rebeschini and
+T.~Wegel, \emph{Aggregation with Exponential Weights is Optimal in
+Expectation}, arXiv:2607.02247, July 2026. Their main statement uses a
+finite uniform dictionary and bounded losses. Above, sums are replaced
+by integrals and the variational comparison is written in KL form;
+the pointwise bounded-loss step is replaced by an averaged cooling
+inequality for bounded predictions and conditionally sub-Gaussian
+labels. This extension should not be attributed verbatim to that paper.
+
+\begin{corollary}[Posterior draws and confident sign prediction]
+\label{cor:Gibbs-confidence-expectation}
+For $0<\eta\le1/2$ and fixed $T\ge128s/\eta$, the same prior and all-data posterior satisfy
+\[
+ \E_{S_n}\left[A(\bar f_{S_n})+(1-\eta)
+      \E_X\operatorname{Var}_{Q_{S_n}}(f_w(X))\right]
+ \le\E_\rho A(f_w)+\frac{T\operatorname{KL}(\rho\|\pi)}{n+1}.
+\]
+Consequently
+\[
+ \E_{S_n}\E_{Q_{S_n}}A(f_w)
+ \le\frac1{1-\eta}
+       \left[\E_\rho A(f_w)+\frac{T\operatorname{KL}(\rho\|\pi)}{n+1}\right].
+\]
+If $|f_0(X)|\ge a>0$ almost surely, let $p_S(x)$ be the posterior probability that $f_w(x)$ has the same nonzero sign as $f_0(x)$. Then
+\[
+ \E_{S_n}P_X\{p_S(X)\le2/3\}
+ \le\frac3{a^2(1-\eta)}
+       \left[\E_\rho A(f_w)+\frac{T\operatorname{KL}(\rho\|\pi)}{n+1}\right].
+\]
+These are expectation guarantees for the current Gaussian squared-loss likelihood; they do not condition on exact training signs or on an all-input margin event.
+\end{corollary}
+\begin{proof}
+Since $T\ge256s$, the preceding moment calculation still applies, and its cooling coefficient is at most $128s/T\le\eta$. Retain $(1-\eta)v$ rather than discarding the variance term in the leave-one-out proof. Exchangeability identifies its average with the fresh-input posterior variance. Subtract $R_0$ to obtain the first display.
+
+The identity $\E_Q A(f_w)=A(\bar f)+\E_X\operatorname{Var}_Q f_w(X)$ and nonnegativity of $A(\bar f)$ give the second display. A wrong or zero sign at an input with $|f_0|\ge a$ contributes at least $a^2$ squared discrepancy. Thus
+$\mathbf1_{\{p_S\le2/3\}}\le3\E_Q(f_w-f_0)^2/a^2$ pointwise. Integrate and apply the second bound.
+\end{proof}

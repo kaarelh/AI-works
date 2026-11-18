@@ -1,0 +1,107 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsthm,mathtools,microtype,booktabs}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue]{hyperref}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}\newcommand{\op}{\mathrm{op}}\newcommand{\KL}{\operatorname{KL}}\newcommand{\clip}{\operatorname{clip}}
+\title{Exponential depth costs in Bayesian neural regression\\with a one-neuron target}
+\author{ChatGPT-6 Astra \and Claude Opus 5.5 \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{17 November 2026}
+\hypersetup{pdftitle={Exponential depth costs in Bayesian neural regression with a one-neuron target},pdfauthor={ChatGPT-6 Astra, Claude Opus 5.5, Kaarel H\"anni, Dmitry Vaintrob}}
+\begin{document}
+\maketitle
+\begin{abstract}
+We construct an IID regression problem with a fixed one-neuron tanh conditional mean and independent bounded label noise on which a deep Bayesian tanh learner has constant excess squared loss after exponentially many observations in its depth. The learner uses one fixed fully connected architecture, independent centered Gaussian weights, a Gaussian likelihood, and an ordinary posterior mean. The result holds at every sufficiently large width and every Gaussian scaling exponent strictly above mean field; it also covers every fixed mean-field variance prefactor strictly below one. Every positive likelihood temperature fails on the same sample event, including data-dependent choices and arbitrary mixtures of predictions; several clipping conventions are covered as well. The mechanism is a noise memorizer whose normalized prior cost nearly matches the unavoidable cost of making a nonzero prediction. At sufficiently strong scales this cost is approximately one weighted squared-norm unit per layer; at a fixed mean-field prefactor, a matching covariance-entropy calculation gives the corresponding depth cost. Two variational comparisons then place every posterior mean near the segment between zero and the empirical label means, and a common linear witness separates that segment from the true regression function. Inputs have Euclidean norm one, and their dimension grows linearly with learner depth. The conclusion is a finite-prior theorem, with the fixed-width strong-prior limit as a corollary.
+\end{abstract}
+
+\section{A shallow target can be difficult for a deep Bayesian learner}
+A useful approximation guarantee would let a large Bayesian neural network compete with the best small network even when the observations are noisy. At any fixed learner depth, polynomial guarantees of this form can coexist with poor dependence on that depth. We show that the depth dependence can be intrinsically exponential for unrestricted Gaussian priors. The target in our example is a single tanh neuron; its complexity does not cause the obstruction.
+
+Let $H$ be the number of hidden layers, $N$ their common width, and $d$ the input dimension. The network has a linear readout and no internal biases:
+\[
+ h^1(x)=\tanh(W^1(1,x)),\quad
+ h^\ell(x)=\tanh(W^\ell h^{\ell-1}(x))\ (2\le\ell\le H),\quad
+ z_w(x)=v^{\mathsf T}h^H(x).
+\]
+Tanh acts coordinatewise. For $s>0$, take independent centered Gaussian coordinates with variances
+\begin{equation}
+ \frac{Ns}{d}\ \text{in }W^1,\qquad
+ s\ \text{in the internal matrices},\qquad
+ \frac{s}{N}\ \text{in }v.
+ \label{eq:prior}
+\end{equation}
+The corresponding weighted energy is
+\begin{equation}
+ Q_N(w)=\frac dN\|W^1\|_F^2+
+             \sum_{\ell=2}^H\|W^\ell\|_F^2+N\|v\|_2^2.
+ \label{eq:energy}
+\end{equation}
+The prior density is proportional to $e^{-Q_N/(2s)}$. The customary exponent parametrization is $s=N^{-\gamma}$; mean-field scaling has $\gamma=1$.
+
+Write $R(f)=\mathbb E(f(X)-Y)^2$ for population squared loss. For a training sample $S$ of size $n$, let $\widehat R_S(f)=n^{-1}\sum_i(f(X_i)-Y_i)^2$. A Gaussian observation variance $n\lambda s$ gives the posterior
+\begin{equation}
+ \Pi_{N,s,\lambda,S}(dw)=Z^{-1}
+       e^{-\widehat R_S(z_w)/(2\lambda s)}\mu_{N,s}(dw),\qquad \lambda>0.
+ \label{eq:posterior}
+\end{equation}
+The physical observation variance is therefore allowed to vary arbitrarily with width, prior scale, and data. There is no prior over architecture sizes.
+
+\begin{theorem}[Constant excess loss after exponentially many samples]
+\label{thm:main}
+Fix any $0<\nu_{\max}<1$. There are constants $\eta,C>0$ and an integer $H_0$, depending only on $\nu_{\max}$, such that, for every integer $H\ge H_0$, put
+\[
+ D=\lfloor\eta H\rfloor,\qquad d=D+2,\qquad n=4\cdot2^D.
+\]
+There is a uniform $n$-point input law on the unit sphere in $\mathbb R^d$ for which
+\[
+ Y=\tanh(X_1)+\epsilon/4,
+ \qquad \Pr(\epsilon=1)=\Pr(\epsilon=-1)=1/2,
+ \qquad \epsilon\text{ independent of }X.
+\]
+With probability at least $9/10$ over $n$ IID training observations, simultaneously for every
+\[
+ N\ge e^{CH},\qquad 0<s\le\nu_{\max}/N,\qquad \lambda>0,
+\]
+the ordinary posterior mean has population squared loss at least
+\[
+ R(\widehat f)\ge \frac1{16}+c_*.
+\]
+The same conclusion holds for the mean of posterior draws clipped to $[-1,1]$, for clipping an ordinary posterior mean, and for arbitrary well-defined data-dependent probability mixtures of any of these predictions, including clipping after mixing. One may take $c_*=2^{-16}$.
+
+The true conditional mean has a width-one, one-hidden-layer implementation with unit coefficients. The same function on the input support also has a width-two implementation with a constant coefficient bound at every hidden depth.
+\end{theorem}
+
+The Bayes risk is $R_0=1/16$, the variance of the independent label noise, so $c_*$ is a fixed positive excess-risk lower bound. The clipping variants in Theorem~\ref{thm:main} use the same raw-output likelihood~\eqref{eq:posterior}; a separate bounded-output likelihood is treated later.
+
+The theorem includes every fixed exponent $\gamma>1$ once $N^{1-\gamma}\le\nu_{\max}$, as well as mean-field scaling $s=\nu/N$ for every fixed $0<\nu<1$. It does not include the canonical mean-field prefactor $s=1/N$. Its sample count is exponential in learner depth, while the requested excess accuracy is a fixed positive constant. The prior scale and width are finite; no interchange of width and sample limits is used.
+
+The input construction has $T=X_1\in\{-3/4,-1/4,1/4,3/4\}$. The target's same-depth realization can be seen directly. Put $a=1/4$, $b=3/4$, and
+\[
+ V=\begin{pmatrix}\tanh a&\tanh b\\\tanh(2a)&\tanh(2b)\end{pmatrix},
+ \qquad c=(a,b)V^{-1},\qquad W=\begin{pmatrix}1\\2\end{pmatrix}c.
+\]
+The matrix $V$ is invertible because $\tanh(2t)/\tanh t=2/(1+\tanh^2t)$ strictly decreases for $t>0$. The first hidden layer computes $(\tanh T,\tanh(2T))$. Applying $W$ and then tanh leaves this vector unchanged at $T=a,b$, and oddness gives the same property at their negatives. Repeating this layer and reading the first coordinate realizes $\tanh T$ at every depth, with fixed finite coefficients independent of depth and input dimension.
+
+The proof first treats a small absolute prefactor, where Gaussian random features give a noise memorizer of weighted mean energy $(1+o(1))H$ and an operator-norm estimate gives the matching prior cost. For a general fixed prefactor $\nu<1$, a fractional-moment bound and a covariance-controlled memorizer both have leading normalized cost $(1-\nu+\nu\log\nu)H$. In both cases, comparisons with zero and with the empirical-label memorizer place the posterior mean near the same segment, which a single sample witness separates from the target.
+
+\input{memorizer}
+\input{native-near-baseline}
+\input{operator-entropy}
+\input{operator-energy-tail}
+\input{objective}
+\input{assembly}
+\input{covariance-realization}
+\input{subcritical-prefactor-floor}
+\input{subcritical-prefactor-memorizer}
+\input{subcritical-prefactor-extension}
+\input{gaussian-fixed-accuracy}
+\input{affine-skip-fixed-accuracy}
+\input{subcritical-prefactor-affine}
+\input{bounded-output-likelihood}
+\input{relu-memorizer}
+\input{relu-extension}
+\input{scope}
+\end{document}

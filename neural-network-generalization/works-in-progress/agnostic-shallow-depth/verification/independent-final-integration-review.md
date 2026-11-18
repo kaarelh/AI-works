@@ -1,0 +1,13 @@
+# Independent complete-source review
+
+Reviewed the complete current source set on 18 November 2026. These are conventional mathematical proofs, not Lean formalizations.
+
+The main theorem passes with its explicit assumptions: fixed input dimension, coefficient cap, uniform shallow-teacher output envelope, accuracy and confidence; learner depth at least a constant times log(2+C); all finite learner widths N>=C; and one sample event over every qualifying variance prefactor. Its sufficient sample count is polynomial in C times exp(O(sqrt(H)+(1-nu)H)). The calibration is specified for the comparison class and accuracy, and the paper states that dependence.
+
+The Gaussian Jacobian-moment and Morrey certificate has the correct energy normalization, prior exceptional mass, raw-risk tail, and polynomial small-effective-width branch. The continuous covariance echo uses unchanged native first-layer features at canonical scale, a bounded feature-encoding density, random orthogonal unit completion, a nearly linear scalar response, and polynomial finite-width propagation. Its uniform-prefactor variant has exact first-layer, internal and readout KL costs. The additional middle gain changes encoding dependence to log(Q), with cost beta*D+D^2/H and width exp(O(D)); its cumulative nonlinear distortion remains bounded independently of H and D.
+
+The source makes all scalar variance-chain estimates self-contained. The same-width approximate relay has the claimed error; cloning and a symmetric Gaussian cylinder give a polynomial-cost comparison at every smaller realizable width. Direct finite-parameter covers then handle that entire branch uniformly in the prior prefactor. The large-width assembly keeps all encoding constants uniform over the bounded teacher class and uses a finite dyadic calibration/confidence union, rather than assuming a continuum-uniform statistical event without proof. Compactness supplies the single population comparator used for scalar concentration.
+
+The marginal-sub-Gaussian-label corollary also passes. Its common empirical label-moment event gives the needed evidence bound, Gaussian readout conditioning controls the prior fourth moment of risk, and finite-class Bernstein replaces Hoeffding without altering the width/depth exponents. Actual observations and likelihoods are not clipped. The bounded-observation general-Lipschitz capacity corollary is correctly separated from the raw tanh comparison theorem.
+
+These hashes identify the reviewed snapshot before any proposed removal of the logarithmic minimum-depth condition. Such a later strengthening requires a new review.

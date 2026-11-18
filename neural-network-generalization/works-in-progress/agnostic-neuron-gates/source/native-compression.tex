@@ -1,0 +1,92 @@
+\section{Native compression of the neuron-gated prior}
+\label{sec:ard-native-compression}
+This section concerns the native hierarchical prior, without conditioning any weights. At each hidden vertex let $S_j^\ell\sim\operatorname{Gamma}(\kappa/N,1)$, with fixed $0<\kappa\le1$. All edge factors and all biases are independent symmetric Student variables of fixed degrees of freedom $\nu>2$. An outgoing weight from vertex $j$ is $S_j^\ell G_{ij}^{\ell+1}$. The first layer has no gate on its input coordinates. The hidden activation is globally $A$-Lipschitz, and $b=|\phi(0)|$. Biases are present at every hidden layer and at the linear readout. Constants below may depend on this fixed activation and scalar-law choice.
+
+\begin{theorem}[A polynomial-depth circuit dictionary]
+\label{thm:ard-native-compression}
+For $0<\delta,\tau\le1/2$, put
+\[
+ L=H+1+\log\frac{d+1}{\delta\tau}.
+\]
+With prior probability at least $1-\delta$, the raw depth-$H$ network is uniformly $\tau$-approximable on $[-1,1]^d$ by a rational-weight network of the same activation and hidden depth, with
+\[
+ \text{width}\le CL,\qquad
+ \text{hidden vertices}\le CHL,\qquad
+ \text{bits per coefficient}\le CHL.
+\]
+The approximating networks belong to a deterministic finite dictionary, independent of learner width $N$, whose cardinality obeys
+\[
+ \log|\mathcal D_{H,d,\delta,\tau}|
+ \le C\big[dH L^2+H^2L^3\big].
+ \label{eq:ard-dictionary-cardinality}
+\]
+These are polynomial bounds jointly in depth, input dimension, and logarithmic failure probability and precision.
+\end{theorem}
+\begin{proof}
+Write $m_1=\E|G|<\infty$. The gamma density implies, uniformly for $a=\kappa/N\in(0,1]$ and $0<\epsilon\le1$,
+\begin{align*}
+ N\E[S\mathbf1_{S\le\epsilon}]&\le C\epsilon,\\
+ N\Pr(S>\epsilon)&\le C\log(C/\epsilon),\\
+ N\Pr(S>B)&\le C e^{-B/2}\qquad(B\ge1).
+\end{align*}
+Indeed $1/\Gamma(a)\le Ca$, integration below $\epsilon$ gives the first bound, integration over $(\epsilon,1)$ and $(1,\infty)$ gives the second, and the exponential gamma tail gives the third.
+
+Delete all outgoing columns whose gates are at most $\epsilon$, keeping the same factors and biases elsewhere. Let $z^{(\epsilon)}$ denote the resulting raw function. The gate $S_j^\ell$ is independent of its own feature $h_j^\ell$, because that feature depends only on earlier gates. Thus the usual path majorants give
+\[
+ P_1\le b+A m_1(d+1),\qquad
+ P_\ell\le b+A m_1+A\kappa m_1P_{\ell-1},
+\]
+where $P_\ell$ bounds the expected uniform magnitude at any native or truncated neuron. For a fixed $K>1$, these imply $P_\ell\le C(d+1)K^\ell$. Subtract the coupled networks one layer at a time. A retained column propagates a previous feature error with expected total absolute gain at most $\kappa m_1$. The deleted-column contribution has expected absolute gain at most $C\epsilon$. Independence from the preceding features therefore gives
+\[
+ \E\|z-z^{(\epsilon)}\|_\infty
+ \le C(d+1)\epsilon(H+1)K^{H+1}.
+\]
+Choose
+\[
+ \epsilon=\frac{\delta\tau}{C(d+1)(H+1)K^{H+1}}
+\]
+with a sufficiently large constant. The raw truncation error exceeds $\tau/2$ with probability at most $\delta/4$. Also $\log(C/\epsilon)\le CL$.
+
+In one hidden layer, the number of retained gates is binomial with mean at most $C\log(C/\epsilon)\le CL$. Its exponential moment is bounded by that of a Poisson variable with the same mean. Since $\log(H/\delta)\le CL$, a Chernoff bound and union over layers show that every layer retains at most $U=\lceil CL\rceil$ vertices, except on an event of probability at most $\delta/4$. Similarly, the maximum of all $HN$ gates is at most
+\[
+ B_S=C\log(CH/\delta)
+\]
+except on an event of probability at most $\delta/8$.
+
+After deletion, only the retained vertices can influence later layers. Their induced subnetwork uses at most
+\[
+ M=(d+1)U+(H-1)U(U+1)+U+1
+       \le C(dL+HL^2)
+\]
+edge factors and biases. The retained index sets depend only on gates and are independent of every factor and bias. The Student tail bound therefore permits a conditional union bound over these at most $M$ variables. Except on an event of probability at most $\delta/8$, all their magnitudes are at most
+\[
+ B_G=1+(CM/\delta)^{1/\nu}.
+\]
+Every actual coefficient of the induced subnetwork is then bounded by $B_*=\max\{1,B_S\}B_G$, and $\log(B_*+1)\le CL$. This includes its readout bias. Empty retained layers are allowed; subsequent retained neurons may then be constants due to their biases.
+
+Relabel retained vertices consecutively in each layer; their original learner indices no longer occur. Round every coefficient to a common dyadic mesh of step $q\le1$. A deterministic layerwise Lipschitz estimate bounds the resulting uniform output error by
+\[
+ Cq(H+1)(d+U+1)K_q^{H+1},
+ \qquad K_q=1+b+A(d+U+1)(B_*+1).
+\]
+Choosing a dyadic $q$ small enough to make this at most $\tau/2$ requires at most $CHL$ bits per coefficient, since $\log K_q\le CL$. The total failure probability used above is at most $3\delta/4$, and the truncation and rounding errors sum to at most $\tau$.
+
+Finally enumerate all layer widths between zero and $U$, all allowed dyadic coefficients, and all edges in their consecutive dense layer blocks. There are at most $M$ coefficients, each with $CHL$ bits, plus at most $CH\log(U+1)$ bits for the layer widths. This gives \eqref{eq:ard-dictionary-cardinality}. The enumeration contains no original learner-neuron addresses and is independent of $N$.
+\end{proof}
+
+\begin{corollary}[An actual circuit-complexity converse]
+\label{cor:ard-prior-complexity}
+Let $\mathcal X\subseteq[-1,1]^d$ and suppose
+\[
+ p=\mu_N\{\|z-f\|_{\infty,\mathcal X}\le\tau\}>0,
+ \qquad0<\tau\le1/2.
+\]
+Then $f$ has a uniform $2\tau$ approximation on $\mathcal X$ by a rational-weight network of hidden depth $H$, width at most $CL_p$ and coefficient bit length at most $CHL_p$, where
+\[
+ L_p=H+1+\log\frac{d+1}{p\tau}.
+\]
+Its description has at most $C[dH L_p^2+H^2L_p^3]$ bits.
+\end{corollary}
+\begin{proof}
+Apply Theorem~\ref{thm:ard-native-compression} with failure probability $p/2$. Its compression event intersects the specified function neighborhood. The triangle inequality proves the approximation claim, and the remaining conclusions are the dictionary bounds.
+\end{proof}

@@ -1,0 +1,128 @@
+\section{A depth upper bound that includes mean field}
+\label{sec:all-scales}
+The preceding exponential-depth proof uses $\tau\to0$ with width. A different finite-cover argument gives a weaker depth bound at every $0<\tau\le1$, including canonical mean field $\tau=1$. Here set $\omega=N/\tau^2$ without imposing $\tau^2=N^{1-\gamma}$.
+
+\begin{theorem}[All scales, with explicit dimension dependence]
+\label{thm:all-scales}
+Fix $C,B,\epsilon,\delta$ as before and let $T=d+H+2$. There are $c>0$ and $0<\ell<1$, independent of $d,H,N,\tau$, such that the posterior with $\lambda=\ell/T^2$ satisfies \eqref{eq:main}, on one sample event common to every $N\ge C$ and every $0<\tau\le1$, whenever
+\begin{equation}
+ n\ge T^{c(d+1)H}.
+ \label{eq:spatial-depth-budget}
+\end{equation}
+If $\phi$ is twice continuously differentiable with a fixed bound on $|\phi''|$, a second sufficient budget is
+\begin{equation}
+ n\ge T^{cH^2},
+ \label{eq:program-depth-budget}
+\end{equation}
+with $c$ also depending on that derivative bound. Thus the smooth bounded case permits $n\ge T^{cH\min\{H,d+1\}}$ after enlarging $c$.
+\end{theorem}
+
+At fixed dimension the spatial bound is $\exp(O(H\log H))$. It has an exponential dependence on dimension. The program bound is polynomial in dimension at every fixed depth; for $d\le H$ it is $\exp(O(H^2\log H))$. These distinct dimension dependences should not be conflated.
+
+\subsection{A common comparison and tail estimate}
+Use Lemma~\ref{lem:teacher} with arbitrary $\tau\le1$. Its clone energy is $O_{C,B}(T^2)$, cylinder dimension is $O_C(T)$, and $\log P_H=O_{C,B}(T)$. With $\lambda=\ell/T^2$, its comparison cost obeys
+\[
+ A_{H,N}(\lambda)\le c_{C,B}T^2[1+\log(1/\ell)].
+\]
+Choose $\ell$ small enough to make the comparison penalty a prescribed fraction of $\epsilon$.
+
+For an absolute sufficiently large lower cutoff, the norm event
+\begin{equation}
+ \|W^1\|_F^2/N\le K,\qquad
+ \max_{2\le l\le H}\|W^l\|_\op^2\le K,\qquad
+ N\|v\|^2\le K
+ \label{eq:all-scale-norm}
+\end{equation}
+has prior complement at most $c(H+1)e^{-c_0\omega K}$, with absolute $c,c_0>0$. This follows from chi-square and Gaussian operator-norm tails. The factor $1/d$ in the first-layer variance keeps its mean energy at most two, independently of dimension.
+Choose $K=k_0T^2$, with fixed $k_0$ sufficiently large. A parameter-good set with the same prior complement bound has posterior raw-risk contribution on its complement at most
+\begin{equation}
+ \sqrt{24c(H+1)}\exp[\omega/\lambda-c_0\omega K/2]
+ \le\epsilon/32.
+ \label{eq:all-scale-bad-risk}
+\end{equation}
+This uses the evidence lower bound and prior risk second moment already proved. The same inequality is valid for a good set depending on a fixed sample, provided its prior bound holds for each such sample. The high-empirical-risk tail on $\widehat R>8$ is at most $2e^{-3\omega/\lambda}$.
+
+It remains to prove $R(z)\le\widehat R(z)+\epsilon/4$ on the relevant good set with empirical risk at most eight. Integrating, using the teacher objective, and applying one fixed minimizer's scalar concentration event then proves the theorem.
+
+\subsection{The spatial bound}
+On \eqref{eq:all-scale-norm}, the raw output has amplitude at most $M=\sqrt K$ and Euclidean input Lipschitz constant at most
+$L_K=K^{(H+1)/2}$; the first-layer $\sqrt N$ cancels the readout's $N^{-1/2}$.
+A coordinate grid of spacing $a/(4L_K\sqrt d)$ and grid-value quantization at spacing $a/4$ gives a finite uniform-norm $a$-cover of this entire function class. Nearest-grid representatives are measurable piecewise constant functions. The dictionary $\mathcal D$ satisfies
+\[
+ \log|\mathcal D|\le(c\sqrt d L_K/a)^d\log(cM/a).
+\]
+Choose fixed $a=c_\epsilon\epsilon$ sufficiently small. Finite-class Hoeffding gives population-minus-empirical loss at most $\epsilon/32$ for every dictionary member if
+\[
+ n\ge c\epsilon^{-2}(M+1)^4
+                 [\log|\mathcal D|+\log(c/\delta)].
+\]
+On networks with empirical risk at most eight, the approximant has bounded empirical and population risks. Minkowski's inequality for both square-loss norms transfers the bound with $O(a)$ loss cost. Since $K=k_0T^2$, this sample condition is implied by \eqref{eq:spatial-depth-budget}. The dictionary is independent of width, scale, and the data law, so its statistical event is common to all learners.
+
+\subsection{A Gaussian finite dictionary with tracked constants}
+We provide the additional compression argument for \eqref{eq:program-depth-budget}. Constants in this subsection can depend on the fixed derivative bound, but their dependence on depth is tracked.
+Fix any probability measure $\xi$ on the input cube. For an actual hidden layer define the normalized covariance operator
+\[
+ Q_l(x,y)=N^{-1}\sum_i h_i^l(x)h_i^l(y)
+\]
+on $L^2(\xi)$. Its trace is at most one. At cutoff $\eta_l$, retain factors $F_l=(\sqrt{\lambda_j}e_j)_j$ of rank $r_l\le1/\eta_l$ and let
+$v_l(x)=Q_l(x,x)-\|F_l(x)\|^2\in[0,1]$.
+There are exact row coefficients with
+\[
+ F_l=\E_i b_i h_i^l,\qquad \E_i b_i b_i^\top=I,
+\]
+where $\E_i$ is the uniform finite row average. This follows from the orthonormal right-singular vectors of the normalized hidden-feature operator.
+
+Conditional on the preceding layer, a current Gaussian row field is
+$a_i\cdot F_{l-1}+Z_i^0$, where $a_i$ is centered Gaussian with covariance $\tau^2I$ and the independent residual field has covariance $\tau^2E$, with $\|E\|_\op\le\eta_{l-1}$ and diagonal at most one. Write $r_i$ for the activated feature minus its conditional mean given $a_i$. Uniformly over every coefficient vector,
+\begin{equation}
+ \left\|c\mapsto N^{-1/2}\sum_i c_i r_i\right\|_\op
+ \le c[\omega^{-1/2}+\sqrt{K\eta_{l-1}}]
+ \label{eq:depth-residual}
+\end{equation}
+except on conditional probability $e^{-\omega K}$. To prove this, fix $\|c\|_2=1$. Gaussian Poincar\'e gives mean Hilbert norm at most $\tau/\sqrt N$, and Gaussian concentration has Lipschitz constant $\tau\sqrt{\eta_{l-1}/N}$. A $1/2$-net of the coefficient sphere has at most $5^N$ points; its cost is absorbed into the displayed deviation because $\tau\le1$. The same argument for $\phi^2$, which is two-Lipschitz, bounds the centered diagonal-profile mean without the coefficient net. The operator bound holds also for coefficients selected from the current realization.
+
+Let $\psi(m,v)=\E\phi(m+\sqrt vG)$ and $\chi(m,v)=\E\phi(m+\sqrt vG)^2$. The Gaussian heat equation makes both globally Lipschitz in $m$ and in $v\in[0,1]$, with fixed constants. For $\psi_i=\psi(a_i\cdot F_{l-1},\tau^2v_{l-1})$ and $\chi_i=\chi(a_i\cdot F_{l-1},\tau^2v_{l-1})$, the exact conditional-mean factor and residual variance are
+\[
+ F_l^0=\E_i b_i\psi_i,\qquad
+ v_l^0=\E_i\chi_i-\|F_l^0\|^2
+      =\E_i\chi_i-\E_{i,j}(b_i\cdot b_j)\psi_i\psi_j.
+\]
+Bessel's inequality gives $\|F_l^0(x)\|^2\le\E_i\psi_i(x)^2\le\E_i\chi_i(x)\le1$ and $v_l^0\in[0,1]$. On the norm event, the exact latent Gram satisfies $\E_i a_i a_i^\top\preceq KI$. Thus preceding factor and variance errors propagate through these means by at most
+$c_\phi[\sqrt K e_{l-1}^F+e_{l-1}^V]$, without a rank multiplier. Deleting the residual fields costs at most
+$c\sqrt{r_l+1}[\omega^{-1/2}+\sqrt{K\eta_{l-1}}]$ for both outputs; use \eqref{eq:depth-residual} for the factors and the diagonal bound for the variance.
+
+Approximate these finite means by sampling with replacement after evaluating on the already chosen preceding approximants. Factor integrands have Hilbert second moment at most $r_l$, while the scalar pair coefficient satisfies
+$\E_{i,j}(b_i\cdot b_j)^2=r_l$.
+Hence sample counts $cH(r_l+1)/(\delta_l^F)^2$ and $cH(r_l+1)/(\delta_l^V)^2$ give the respective errors with positive probability. Clip only variance approximants to $[0,1]$; leave factor approximants linear. Their exact means remain pointwise bounded even when the preceding sampled factor vector is not. The first layer is sampled directly from its actual features and needs no residual deletion or minimum width. The final output is approximated directly as a scalar average with coefficient second moment at most $K$, using $cHK/a^2$ samples.
+
+Here is an explicit error schedule. Put $G_*=c_\phi\sqrt K$ with a sufficiently large fixed $c_\phi$, and for $t=H-l$ choose
+\[
+ \delta_l^F=\frac{a}{cH G_*^{t+1}},\qquad
+ \delta_l^V=\sqrt K\,\delta_l^F,\qquad
+ \eta_{H-1}=\frac{a^2}{cH^2K^2},\qquad
+ \eta_{l-1}=\frac{(\delta_l^F)^2\eta_l}{c_\phi K}.
+\]
+These choices make every layer's propagated contribution at most $a/(cH)$. The factor error is smaller than its tolerance when the effective width exceeds
+\[
+ \omega_* =cH\max\{K/a^2, \max_{2\le l\le H-1}(r_l+1)/(\delta_l^F)^2\}.
+\]
+The inner maximum is omitted when $H=2$. For fixed $a$, $K=k_0T^2$, and $H\le T$, this schedule gives
+\[
+ \log(1/\eta_l)\le c_\phi H^2\log T,\qquad
+ \log(1/\delta_l^F)\le c_\phi H\log T,\qquad
+ \omega_*\le T^{c_\phi H^2}.
+\]
+All ranks and sample counts are therefore at most $T^{c_\phi H^2}$.
+
+Markov bounds control the sampled coefficients; the logarithms of their caps are $O_\phi(H^2\log T)$. Linear sampled factors can be contracted into subsequent incoming coefficients. Variances use the separate scalar pair representation, so they do not require the norm of a sampled factor vector. The programs form a shared layered directed graph: the parameter count sums adjacent-layer sample-count products, rather than unfolding a separate tree for every output. It is at most $T^{c_\phi H^2}$. Parameter magnitudes obey the same bound. With $O(H)$ computational stages of bounded Gaussian means and scalar clipping, the parameter-to-uniform-function Lipschitz constant has logarithm at most $c_\phi H^3\log T$. This larger quantity enters only the logarithm of a parameter grid. Consequently a fixed finite dictionary of accuracy $a$ has
+\begin{equation}
+ \log|\mathcal D|\le T^{c_\phi H^2}.
+ \label{eq:depth-program-entropy}
+\end{equation}
+Clip final program outputs to $[-\sqrt K,\sqrt K]$.
+
+If $\omega<\omega_*$, then $N\le\omega<\omega_*$. Include actual norm-bounded networks at every such integer width in the same dictionary. Their parameter counts are $O_H(dN+N^2)\le T^{c_\phi H^2}$, with polynomially bounded weights and the same bound on the logarithm of their parameter-to-function Lipschitz constants. Uniform parameter grids and a finite union preserve \eqref{eq:depth-program-entropy}.
+
+This constructs, for each fixed $\xi$, a prior-good set of complement at most $c(H+1)e^{-c_0\omega K}$ whose outputs have $L^2(\xi)$ approximants of error $a$ in one fixed dictionary. The dictionary is independent of $\xi,N,\tau$ and the sample. Good sets are Borel, using measurable spectral bases of finite Gram matrices; all probability estimates follow from conditional Gaussian bounds and a union over layers.
+
+Use $\xi=(D_X+\widehat D_{X,S})/2$. Then each approximant is close in both population and empirical square-loss norms. The auxiliary good set may depend on the input sample, but its prior complement bound holds for every fixed sample, so \eqref{eq:all-scale-bad-risk} applies pointwise. The statistical event is applied only to the fixed dictionary. Finite-class Hoeffding costs a polynomial in $K$ times \eqref{eq:depth-program-entropy}, which is absorbed into \eqref{eq:program-depth-budget}. Root-risk transfer on empirical risk at most eight gives the required deviation. This completes the all-scale theorem.

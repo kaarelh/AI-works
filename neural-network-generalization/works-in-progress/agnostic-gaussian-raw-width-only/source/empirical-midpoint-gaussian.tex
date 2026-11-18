@@ -1,0 +1,334 @@
+\section{A sharper oracle when learner width is at least the sample size}
+\label{sec:empirical-midpoint}
+Averaging a posterior function with a comparison function improves
+empirical squared loss by one quarter of their squared disagreement.
+A linear program realizes those averaged training values using at
+most $n$ neurons and controlled path variation. The Gaussian norm
+cost of a neighborhood of that implementation is small enough that
+posterior optimality forces an empirical-distance inequality.
+The one-dimensional variation estimates transfer this inequality to
+test risk with comparison coefficient exactly one. The linear program
+is a proof device: the actual independent Gaussian prior, likelihood,
+and raw posterior prediction are unchanged.
+
+Use the same shallow model and notation:
+\[
+ Q_N=N^{-1}\sum(a_j^2+b_j^2)+N\sum v_j^2,\quad
+ \omega=N/\nu,\quad P(w)=\sum_j|v_j|\sqrt{a_j^2+b_j^2}\le Q_N/2.
+\]
+The actual posterior is
+$d\Pi_\lambda\propto
+ \exp[-\omega\widehat R(z)/(2\lambda)]\,d\mu$.
+Labels are initially bounded by one and the input density is bounded
+above and below by positive constants.
+
+The finite-sample atomic representation is the standard conic
+Carath\'eodory principle for variation-norm neural networks; see
+Bach~\cite{bach-convex}, Section 2.2. The following proof also specifies
+a measurable choice for its use inside the posterior comparison.
+
+\begin{lemma}[Minimum-mass compression of a training vector]
+For every finite sample of $n$ inputs and any two shallow ReLU
+functions $f,g$ of path variations $P_f,P_g$, the training vector
+$(f(X_i)+g(X_i))_{i=1}^n/2$ has a shallow ReLU implementation
+using at most $n$ neurons and path variation at most $(P_f+P_g)/2$.
+The implementation can be chosen measurably in the original
+parameters and the sample inputs.
+\end{lemma}
+\begin{proof}
+Normalize every nonzero incoming row of $f$ and $g$ to unit norm,
+and absorb the sign of its readout coefficient into the signed
+unit-ridge feature.
+Let the columns of $A$ be the resulting finitely many training
+feature vectors, and let $y=(f(X_i)+g(X_i))_{i=1}^n/2$.
+The linear program
+\[
+ \min\left\{\sum_j\alpha_j:A\alpha=y,\ \alpha_j\ge0\right\}
+\]
+is feasible with cost at most $(P_f+P_g)/2$, using the original
+absolute amplitudes divided by two. Its bounded sublevel sets are
+compact, so an optimum exists. An optimum with minimal support has
+linearly independent supported columns: otherwise move along a
+column dependence, choosing the sign that does not increase cost,
+until a coefficient vanishes. If the dependence changed cost
+strictly it would contradict optimality; if not it would contradict
+minimal support. Its support size is therefore at most
+$\operatorname{rank}A\le n$.
+
+For measurability, enumerate the finitely many independent column
+subsets of size at most $n$. For each, solve the coefficient vector
+by its Gram inverse, retaining it only when it is nonnegative and
+satisfies the training equations. Choose minimum cost, breaking ties
+lexicographically. All tests and formulas are Borel on their domains.
+The zero training vector is implemented by the zero network.
+\end{proof}
+
+\begin{lemma}[An empirical midpoint comparison law]
+\label{lem:empirical-midpoint-law}
+Fix a deterministic comparator $g$ of width $k$, $|g|\le1$ and
+path variation $P_g\le n^4$. Suppose $N\ge n$ and
+$n^{-2}\le\lambda\le1$. There is a law $\rho$ on the same
+width-$N$ Gaussian parameter space such that
+\begin{align}
+ \rho\widehat R(z)
+ &\le\tfrac12\Pi_\lambda\widehat R(z)
+       +\tfrac12\widehat R(g)
+       -\tfrac14\Pi_\lambda P_n(z-g)^2+Cn^{-10}, \tag{EM1}\\
+ \operatorname{KL}(\rho\Vert\mu)
+       -\operatorname{KL}(\Pi_\lambda\Vert\mu)
+ &\le-\tfrac14\omega\Pi_\lambda P
+       +\tfrac12\omega P_g+CN\log(n+1). \tag{EM2}
+\end{align}
+\end{lemma}
+\begin{proof}
+For each posterior draw $f=z_w$, apply the preceding minimum-mass
+compression directly to the midpoint training vector of $f$ and $g$,
+and pad its at most $n$ neurons with zeros. Its path variation is
+at most $(P_f+P_g)/2$.
+Balance each neuron using positive homogeneity: a unit direction
+with signed amplitude $c$ is represented by incoming row
+$\sqrt{N|c|}\,\theta$ and readout
+$\operatorname{sign}(c)\sqrt{|c|/N}$.
+Thus the parameter center $\bar w_f$ obeys
+\[
+ Q_N(\bar w_f)\le P_f+P_g.
+\]
+At every training input its function is exactly $(f+g)/2$.
+
+Around this center place a Gaussian law with every native
+coordinate variance multiplied by $\epsilon^2$, where
+$\epsilon=n^{-30}$, and mix these laws using the posterior
+distribution of $f$. A single component has relative entropy
+\[
+ \operatorname{KL}(\rho_f\Vert\mu)
+ \le\frac{\omega}{2}(P_f+P_g)+3N\log(1/\epsilon).
+\]
+Convexity of relative entropy gives the same upper bound after
+averaging over $f$.
+
+The Gaussian energy exponential moment is
+\[
+ \log\mathbb E_\mu e^{3\omega Q_N/8}=3N\log2.
+\]
+The entropy variational inequality and $Q_N\ge2P$ therefore give
+\[
+ \operatorname{KL}(\Pi_\lambda\Vert\mu)
+ \ge\tfrac34\omega\Pi_\lambda P-3N\log2.
+\]
+Subtracting proves (EM2).
+
+For clarity, the balanced Gaussian perturbation has uniform
+root-mean-square error at most
+\[
+ C\epsilon\sqrt\nu
+ \left(\sum_j|\bar v_j|+N^{-1}\sum_j\|\bar r_j\|_2\right)
+ +C\epsilon^2\nu
+ \le C\epsilon\sqrt{P_f+P_g+1}+C\epsilon^2.
+\]
+Indeed balance and support at most $N$ bound each displayed sum
+by the square root of the center path variation. The last term
+is the product of independent incoming and readout perturbations.
+At training inputs the center is exactly $(f+g)/2$.
+Since $|g|,|Y_i|\le1$ and $|f|\le\sqrt2P_f$, the expected
+squared-loss perturbation is bounded by
+\[
+ C\epsilon\,\Pi_\lambda
+       [(P_f+1)\sqrt{P_f+P_g+1}]
+       +C\epsilon^2\Pi_\lambda(P_f+P_g+1).
+\]
+The deterministic Gaussian posterior bound
+$\Pi_\lambda P_f^2\le C/\lambda^2$, together with
+$\lambda\ge n^{-2}$ and $P_g\le n^4$, makes this at most
+$Cn^{-10}$. The squared-loss midpoint identity now gives (EM1).
+\end{proof}
+
+\begin{lemma}[A strong empirical comparison inequality]
+\label{lem:empirical-midpoint-objective}
+Under the preceding assumptions,
+\[
+ \Pi_\lambda\widehat R(z)-\widehat R(g)
+ +\tfrac12\Pi_\lambda P_n(z-g)^2+\lambda\Pi_\lambda P
+ \le2\lambda P_g+C\lambda\log(n+1)+Cn^{-10}. \tag{EM3}
+\]
+\end{lemma}
+\begin{proof}
+The actual posterior minimizes
+$\rho\widehat R+(2\lambda/\omega)\operatorname{KL}(\rho\Vert\mu)$.
+Compare it to the preceding mixture, use (EM1)--(EM2), and
+multiply the result by two. Since $N/\omega=\nu\le1$, the entropy
+remainder is at most $C\lambda\log(n+1)$.
+The comparison law is only a proof device; the learner itself
+uses one fixed architecture, prior and likelihood.
+\end{proof}
+
+\begin{theorem}[A sharp raw path oracle at every width at least $n$]
+\label{thm:wide-sharp-path}
+For every deterministic bounded comparator $g$ as above, every
+$N\ge n$, every $0<\nu\le1$, and
+\[
+ \widetilde Cn^{-13/8}\le\lambda\le1,
+\]
+with probability at least $1-\delta$,
+\begin{align}
+ R(\bar z_\lambda)\le\Pi_\lambda R(z)
+ \le R(g)+\widetilde O\bigl(
+ &\lambda(P_g+1)+n^{-4/3}\lambda^{-2/3}
+       +n^{-3}\lambda^{-2}\\
+ &+n^{-3}(P_g+1)^2+n^{-1}\bigr). \tag{EM4}
+\end{align}
+The event is common to all the eligible widths and Gaussian scales.
+\end{theorem}
+\begin{proof}
+Take one sufficiently small fixed tolerance in the localized noise
+and bounded design-multiplier inequalities of
+Section~\ref{sec:localized-proof}, including its localized envelope. Keep their quadratic
+terms as norms of $h=z-g$ instead of bounding them by approximation
+risks. The sharp design-norm comparison, in both directions,
+then gives uniformly over $z$
+\begin{align*}
+ R(z)-R(g)\le{}&
+ \widehat R(z)-\widehat R(g)
+ +\tfrac14P_n(z-g)^2+\tfrac12\lambda P(z)
+ +C\lambda(P_g+1)\\
+ &+\widetilde Cn^{-4/3}\lambda^{-2/3}
+ +\widetilde Cn^{-3}(P(z)+P_g+1)^2
+ +\widetilde Cn^{-3}\lambda^{-1}+\widetilde C/n.
+\end{align*}
+Young's inequality absorbs the localized $P^{2/5}$ and $P^{1/2}$
+terms into the displayed path penalty. The remaining linear
+$Pn^{-13/8}$ term is absorbed by the assumed likelihood floor.
+The same finite-shell Gaussian-tail argument controls the logarithms.
+Integrate, apply (EM3), and discard the leftover nonnegative
+empirical-distance and path-energy terms. Finally use
+$\Pi_\lambda P^2\le C/\lambda^2$ and
+$\lambda^{-1}\le\lambda^{-2}$. Jensen proves the statement for
+the ordinary raw mean. The fixed tolerance is why the leading
+comparison coefficient is exactly one.
+\end{proof}
+
+\begin{corollary}[Coefficient-free wide-network rates]
+\label{cor:wide-sharp-width}
+Let $1\le C\le n$ and let the comparison class contain every
+univariate shallow ReLU network of width at most $C$, with arbitrary
+finite coefficients. At every prescribed
+$N\ge n$, the deterministic choice
+\[
+ \lambda=\widetilde\Theta\left(
+ \max\{(C+1)^{-6/7}n^{-8/7},
+       (C+1)^{-2/5}n^{-6/5}\}\right)
+\]
+gives
+\[
+ R(\bar z_\lambda)\le\Pi_\lambda R(z)
+ \le\inf_{\text{width }C}R+
+ \widetilde O\left(
+ (C+1)^{4/7}n^{-4/7}
+ +(C+1)^{4/5}n^{-3/5}\right). \tag{EM5}
+\]
+The likelihood schedule uses the declared comparison budget but not
+its coefficients or risk. The universal schedule
+$\lambda=\widetilde\Theta(n^{-8/7})$ instead gives
+\[
+ R(\bar z_\lambda)\le\inf_{\text{width }C}R+
+       \widetilde O((C+1)n^{-4/7}) \tag{EM6}
+\]
+without using $C$ in the schedule.
+A sufficient sample size for excess $\varepsilon$ in (EM5) is
+\[
+ n\ge\widetilde O\left(
+ (C+1)\varepsilon^{-7/4}
+ +(C+1)^{4/3}\varepsilon^{-5/3}\right). \tag{EM7}
+\]
+\end{corollary}
+\begin{proof}
+Use the bounded spline compiler at $t=\sqrt\lambda$.
+It has width at most $6C+6$, bounded output, path variation
+at most $c(C+1)/t$, and comparison-risk increment
+$O((C+1)t)$. Substitution in (EM4) gives
+\[
+ \inf_{\text{width }C}R+\widetilde O\left(
+ (C+1)\sqrt\lambda+n^{-4/3}\lambda^{-2/3}
+ +n^{-3}\lambda^{-2}
+ +\frac{(C+1)^2}{n^3\lambda}+n^{-1}\right).
+\]
+Balance the first term against the second and third and take
+the larger of the resulting scales. In the nontrivial regime,
+$(C+1)\sqrt\lambda=O(1)$, so the comparator-design term is dominated
+by $n^{-3}\lambda^{-2}$. Outside it, use the zero comparator at
+the same scale to get a bound absorbed by the displayed constant-size
+remainder. The scales are above the $n^{-13/8}$ floor for $C\le n$.
+The two balances yield (EM5). For the fixed choice in (EM6),
+the noise term is $n^{-4/7}$, the posterior design term is
+$n^{-5/7}$, and the comparator design term
+$(C+1)^2n^{-13/7}$ is dominated by $(C+1)n^{-4/7}$ for $C\le n$.
+Inverting its two optimized remainder terms gives (EM7).
+All comparisons can share one event by a summable allocation over
+the integer width budgets. No architecture mixture is involved.
+\end{proof}
+
+
+\paragraph{One fixed schedule for a prescribed polynomial width range.}
+More generally, fix $0<a<3/2$ and use
+$\lambda=\widetilde\Theta(n^{-a})$, independently of the comparison
+width. The same proof gives, in the nontrivial range
+$(C+1)n^{-a/2}\lesssim1$,
+\[
+ R(\bar z_\lambda)\le\inf_{\text{width }C}R+
+ \widetilde O\left((C+1)n^{-a/2}
+       +n^{-4/3+2a/3}+n^{-3+2a}\right).
+\]
+Thus every fixed width-growth exponent $u<3/4$ is compatible with
+one deterministic schedule having a vanishing power-rate remainder:
+choose $2u<a<3/2$. This coefficient-one statement concerns the
+regime $N\ge n$; it does not replace the separate smaller-learner-width
+result.
+
+\begin{corollary}[Marginally sub-Gaussian labels in the wide regime]
+\label{cor:wide-sharp-subgaussian}
+All conclusions of Corollary~\ref{cor:wide-sharp-width} extend to
+$\E\exp(Y^2/s_Y^2)\le2$, with the same powers of $C,n$ and additional
+logarithmic factors. Every risk still uses the actual raw output and
+original labels. If $\lambda'$ is the corresponding displayed schedule,
+the physical scale is $\lambda=M_n^2\lambda'$, with
+$M_n=\max\{1,s_Y\sqrt{c\log(n/\delta)}\}$; its observation variance
+is $n\lambda\nu/N$. The high-probability event is common to all
+$N\ge n$ and all $0<\nu\le1$.
+\end{corollary}
+\begin{proof}
+Use the proof-only clipped label $Y_M$ on the unchanged input law,
+as in Corollary~\ref{cor:localized-subgaussian}. Analyze observable
+$z/M_n$ and label $Y_M/M_n$ with the original parameter prior.
+The minimum-mass linear program compresses the training midpoint
+of the physical $z$ and physical comparator $M_nq$ into at most
+$n$ neurons, exactly as before. Its path bound becomes
+$(P(z)+M_nP(q))/2$. Consequently the midpoint entropy calculation
+and its positive empirical-distance term are unchanged, apart from
+the logarithmic factor $M_n$ in the comparison resource.
+More explicitly, the normalized midpoint objective inequality has
+left side
+\[
+ \Pi\{\widehat R(z/M_n)-\widehat R(q)\}
+ +\tfrac12\Pi P_n(z/M_n-q)^2+\lambda'\Pi P(z)
+\]
+and right side $2\lambda'M_nP(q)+C\lambda'\log(n+1)+Cn^{-10}$.
+The normalized path $P(z)/M_n$ is at most $P(z)$, so all localized
+process errors still absorb into this physical path penalty.
+The prior energy and normalized empirical-risk bounds still give
+$\Pi Q_N^2\le C(1+(\lambda')^{-2})$.
+
+All statistical and optimization steps therefore retain their
+powers after enlarging the logarithmic factors. Multiplying normalized
+risks by $M_n^2$ preserves their leading coefficient one. On the
+all-training-labels event the proof posterior equals the actual
+posterior. The raw population-risk difference is bounded by
+\[
+ C(1+(\lambda')^{-1})\{\E(Y-Y_M)^2\}^{1/2}
+       +\E|Y^2-Y_M^2|,
+\]
+which is negligible for the stated polynomial schedules and a
+sufficiently large $c$. Finally clip each original comparator only
+inside the proof, using the projection inequality and risk transfer
+of Corollary~\ref{cor:localized-subgaussian}. This does not change
+its number of affine pieces beyond the stated $3C+2$ bound.
+A union of the training-label and statistical events finishes.
+\end{proof}

@@ -1,0 +1,81 @@
+\section{Why an input-scale assumption cannot simply be removed}
+\label{sec:close-input-obstruction}
+The regularity assumption in the preceding continuous-domain theorem
+excludes targets that change sharply between two input points of
+arbitrarily small separation. The following obstruction applies to
+the L\'evy fan-in prior, and more generally to any independent centered
+fan-in prior whose coordinate variances are at most the reciprocal
+fan-in.
+
+\begin{proposition}[A fixed-width target on two nearby inputs]
+\label{prop:close-input-obstruction}
+Consider a univariate depth-$H$ width-$N$ ReLU learner with constant
+input, no internal biases, independent centered coordinates of
+variance at most $1/2$ in the first layer and at most $1/N$ thereafter,
+including the readout. Clip its output to $[-1,1]$. Fix $T>0$ and use
+\[
+ d\Pi_{S_n}(w)\propto
+ \exp\!\left[-T^{-1}\sum_{i=1}^n(f_w(X_i)-Y_i)^2\right]d\pi(w).
+\]
+For every $n\ge1$, every $N\ge1$ and every $H\ge1$, there is a
+noiseless two-point input distribution and a width-one shallow ReLU
+target such that the ordinary posterior mean has risk at least
+$1/16$ for every realized training sample of size $n$.
+\end{proposition}
+\begin{proof}
+For $0<\delta\le1$, denote differences between inputs $\delta$ and
+$0$ by $\Delta$. ReLU is $1$-Lipschitz. The first layer therefore
+satisfies
+\[
+ \E_\pi\|\Delta h^1\|_2^2\le N\delta^2/2.
+\]
+At each later hidden layer, condition on previous layers. Centering
+and independence of the incoming coordinates give
+\[
+ \E[\|\Delta h^\ell\|_2^2\mid h^{\ell-1}]
+ \le\|\Delta h^{\ell-1}\|_2^2.
+\]
+The same calculation for the independent linear readout, followed by
+clipping, yields
+\begin{equation}
+ \E_\pi|f_w(\delta)-f_w(0)|^2\le\delta^2/2.
+ \label{eq:prior-close-input}
+\end{equation}
+Let $X$ be uniform on $\{0,\delta\}$ and set $Y=X/\delta$.
+Both labels lie in $[0,1]$, so every squared loss in the likelihood is
+at most four and its normalizer is at least $e^{-4n/T}$.
+The likelihood numerator is at most one. Consequently, for every
+realized sample,
+\[
+ |\bar f_{S_n}(\delta)-\bar f_{S_n}(0)|^2
+ \le\E_{\Pi_{S_n}}|f_w(\delta)-f_w(0)|^2
+ \le e^{4n/T}\delta^2/2.
+\]
+Choose $\delta=e^{-2n/T}/\sqrt2$. The two posterior-mean values differ
+by at most $1/2$. For any real $a,b$ with $|b-a|\le1/2$,
+\[
+ \frac{a^2+(b-1)^2}{2}
+ \ge\frac{(1-(b-a))^2}{4}\ge\frac1{16}.
+\]
+Finally, $g(x)=\operatorname{ReLU}(x/\delta)$ is a width-one shallow
+network agreeing exactly with both labels. It remains exact after
+output clipping on these two inputs. Its coefficients may be large,
+as permitted by a coefficient-free comparison class.
+\end{proof}
+
+\paragraph{Quantifiers.}
+The adverse distribution and teacher may depend on the sample size.
+This disproves a uniform distribution-independent rate depending only
+on teacher width; it does not assert inconsistency on one fixed
+two-point problem. The obstruction uses no optimization difficulty,
+no width limit and no robustness restriction. Its mechanism is the
+prior's continuity at small input separations, together with a fixed
+likelihood temperature.
+
+
+The obstruction can also use an atomless input law. Set
+$\delta=e^{-2n/T}/(2\sqrt2)$ and $\varepsilon=\delta/4$, and give equal mass to the uniform laws on $[-\varepsilon,0]$ and $[\delta,\delta+\varepsilon]$. The same clipped width-one target is identically zero on the first interval and one on the second. Apply \eqref{eq:prior-close-input} to each pair of points, whose distance is at most $\delta+2\varepsilon$, and average. The difference between the two interval-averaged posterior predictions has squared magnitude at most
+\[
+ e^{4n/T}(\delta+2\varepsilon)^2/2=9/64<1/4.
+\]
+Jensen's inequality within each interval again gives population risk at least $1/16$. Each law has a bounded density, but its density bound grows with $n$; this is consistent with the positive theorem's explicit dependence on the regularity constant $\kappa$.

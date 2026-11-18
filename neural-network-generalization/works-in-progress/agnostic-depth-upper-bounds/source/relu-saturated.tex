@@ -1,0 +1,133 @@
+\section{An all-scale exponential-depth bound for saturated ReLU prediction}
+\label{sec:relu-all-scale-depth}
+The preceding raw-output results assume bounded hidden activations. ReLU admits a different construction because its positive homogeneity lets a small active subnetwork carry signals of size $\sqrt N$. This yields an exponential-depth theorem even at canonical mean field, provided the observed output is saturated. The saturation is part of both the likelihood and the prediction rule.
+
+Let $\phi(t)=\max\{t,0\}$ in every hidden layer, and put $s(t)=\max\{-1,\min\{1,t\}\}$. The observed network output is $f_w=s(z_w)$. Use the same independent Gaussian variances as before, with any $0<\tau\le1$ and $\omega=N/\tau^2$, and define
+\[
+ d\Pi_{N,H,S}(w)=Z^{-1}\exp[-\omega\widehat R_S(f_w)/(2\lambda)]d\mu_{N,H}(w).
+\]
+The prediction is $\bar f(x)=\int s(z_w(x))d\Pi(w)$. In particular it is not $s(\int z_wd\Pi)$, and this section does not use a likelihood on the raw outputs.
+Let $\mathcal G^{\mathrm{sat}}_{C,B,H}$ be the class of saturated, same-depth, width-$C$ ReLU comparison networks with every coefficient bounded by $B$.
+
+\begin{theorem}[All scales, saturated ReLU]
+\label{thm:relu-all-scale-depth}
+Fix $d,C,B,\epsilon,\delta$ as in Theorem~\ref{thm:main}. There are constants $a,c>0$ and $0<\ell_+,\ell_-<1$, depending only on those fixed resources, such that the following holds for every $H\ge2$. Set
+\[
+ N_*(H)=\lceil e^{aH}\rceil,\qquad
+ \lambda_{H,N}=
+ \begin{cases}\ell_-/H^2,&N<N_*(H),\\
+ \ell_+/H,&N\ge N_*(H).
+ \end{cases}
+\]
+If $n\ge e^{cH}$, one event of sample probability at least $1-\delta$ satisfies, simultaneously for every $N\ge C$ and every $0<\tau\le1$,
+\[
+ \int R(f_w)d\Pi_{N,H,S}
+ \le\inf_{g\in\mathcal G^{\mathrm{sat}}_{C,B,H}}R(g)+\epsilon.
+\]
+The same bound holds for $R(\bar f)$. Thus every fixed power-law prior exponent $\gamma\ge1$, including $\gamma=1$, is covered.
+\end{theorem}
+
+The same proof applies if $s$ is replaced by any fixed one-Lipschitz map $s:\mathbb R\to[-1,1]$, including a tanh readout, used in both the learner and comparison class. It also applies to positively homogeneous one-Lipschitz hidden activations such as leaky ReLU.
+
+The constants are not uniform in dimension or comparison resources. This is a fixed-resource depth theorem. It does not assert that the canonical raw-output tanh learner has the same bound.
+
+\subsection{A translated Gaussian comparison with no variance shrinkage}
+Write a comparison network's hidden matrices and readout as $V^1,\ldots,V^H,b$. Choose $C$ active neurons in every learner layer. The deterministic mean network has first active rows $\sqrt N V^1$, internal active blocks $V^l$, readout $b/\sqrt N$ on active neurons, and zero mean elsewhere. ReLU homogeneity makes its active hidden vectors exactly $\sqrt N$ times the comparison vectors, and its raw output is the comparison output.
+Its density energy is
+\begin{equation}
+ E_H=d\|V^1\|_F^2+\sum_{l=2}^H\|V^l\|_F^2+\|b\|^2
+ \le dC(d+1)B^2+(H-1)C^2B^2+CB^2
+ \le c_1H.
+ \label{eq:relu-mean-energy}
+\end{equation}
+For $0<r\le1$, center a Gaussian comparison law $\nu_r$ at this mean. Multiply prior variances by $r^2$ only on the active first-layer rows, the rows entering active internal neurons, and the full readout. All remaining coordinates keep their prior variances. The number of changed variances is
+\[
+ D_{H,N}=C(d+1)+(H-1)CN+N.
+\]
+The exact Gaussian relative entropy gives
+\begin{equation}
+ \frac{2}{\omega}\KL(\nu_r\Vert\mu)
+ =E_H+\frac{D_{H,N}}{\omega}(r^2-1-2\log r)
+ \le E_H+2\frac{D_{H,N}}N\log(1/r).
+ \label{eq:relu-selective-entropy-depth}
+\end{equation}
+In particular $r=1$ translates the full prior without changing any covariance and pays precisely $E_H$.
+
+We next keep the width factor in its approximation error. For a fixed input, let $q_l=N^{-1}\E_{\nu_r}\|h^l\|^2$, and let $e_l$ be $N^{-1}$ times the expected squared difference between the active hidden vector and its deterministic comparison value. Put $A=CB$ and $K_0=A^2+1$. There is $Q_0$, depending only on $d,C,B$, such that
+\[
+ q_1\le Q_0,\qquad e_1\le 2Cr^2/N,
+\]
+and, for $l\ge2$,
+\begin{equation}
+ q_l\le K_0 q_{l-1},\qquad
+ e_l\le A^2e_{l-1}+\frac{Cr^2}{N}q_{l-1}.
+ \label{eq:relu-depth-moments}
+\end{equation}
+Indeed ReLU has norm at most that of its preactivation and is one-Lipschitz. The current centered Gaussian row noise is independent of the preceding hidden vector, so all mean--noise cross terms vanish before the norm bounds are applied. The active noise contributes $Cr^2\tau^2q_{l-1}/N$ to normalized squared error; the full noise contributes at most $\tau^2q_{l-1}$ to $q_l$. We have used $\tau\le1$.
+
+Solving \eqref{eq:relu-depth-moments} and then integrating the independent readout noise gives
+\begin{equation}
+ \sup_x\E_{\nu_r}|z_w(x)-z_g(x)|^2
+ \le \|b\|^2 e_H+\frac{r^2}{N}q_H
+ \le\frac{r^2J_H}{N},\qquad
+ J_H\le c_2(H+1)K_0^H\le e^{c_3H}.
+ \label{eq:relu-unshrunk-depth-error}
+\end{equation}
+The supremum is over the input cube. Since $s$ is one-Lipschitz, the same bound holds for saturated output differences. For labels in $[-1,1]$, squared loss is four-Lipschitz on this output interval. Hence, for every fixed sample,
+\[
+ \int\widehat R_S(f_w)d\nu_r
+ \le\widehat R_S(g)+4r\sqrt{J_H/N}.
+\]
+Choose $N_*(H)$ so large that $4\sqrt{J_H/N_*}\le\epsilon/64$; an exponential $e^{aH}$ suffices. At larger widths use $r=1$. At smaller widths use
+$r_H=\min\{1,\epsilon/(256\sqrt{J_H})\}$.
+Then both regimes have comparison loss error at most $\epsilon/64$. Equations \eqref{eq:relu-mean-energy}--\eqref{eq:relu-selective-entropy-depth} give normalized entropy costs $O(H)$ and $O(H^2)$ respectively, uniformly over $N$ and $\tau$. Choose $\ell_+,\ell_-$ sufficiently small. The posterior variational identity then yields, in both regimes,
+\begin{equation}
+ \int\widehat R_S(f_w)d\Pi
+ \le\widehat R_S(g)+\epsilon/16.
+ \label{eq:relu-depth-objective}
+\end{equation}
+The full variational objective also obeys this bound; we have dropped its nonnegative entropy term.
+
+\subsection{A total operator-energy bound}
+Define
+\[
+ Q_{\mathrm{op}}(w)=\|W^1\|_F^2/N+
+       \sum_{l=2}^H\|W^l\|_\op^2+N\|v\|^2.
+\]
+For absolute constants $c_0,C_0>0$,
+\begin{equation}
+ \E_\mu e^{c_0\omega Q_{\mathrm{op}}}
+ \le e^{C_0N(H+1)}.
+ \label{eq:relu-total-op-mgf}
+\end{equation}
+The first and last factors follow directly from chi-square moment generating functions. For an internal standard Gaussian matrix $G$, the bound
+$\Pr(\|G\|_\op>2\sqrt N+t)\le e^{-t^2/2}$ gives
+$\E e^{c_0\|G\|_\op^2}\le e^{C_0N}$ for sufficiently small $c_0$.
+The scaling $W=\tau G/\sqrt N$ cancels exactly against $\omega=N/\tau^2$. Independence multiplies the moment bounds.
+
+Every saturated loss is at most four, so $Z\ge e^{-2\omega/\lambda}$. Since $N\le\omega$, \eqref{eq:relu-total-op-mgf} implies that, for a sufficiently large fixed $T_0$, the posterior mass outside
+\[
+ Q_{\mathrm{op}}\le T_0H\quad(N\ge N_*),\qquad
+ Q_{\mathrm{op}}\le T_0H^2\quad(N<N_*)
+\]
+is at most $\epsilon/64$ in both regimes. These bounds hold for every sample. No posterior concentration limit is being taken.
+
+\subsection{Two finite covers and one common sample event}
+For the large-width good set, the input Lipschitz constant of $f_w$ is at most
+\[
+ \sqrt{N\|v\|^2}\sqrt{\|W^1\|_F^2/N}
+       \prod_{l=2}^H\|W^l\|_\op
+ \le\left(\frac{Q_{\mathrm{op}}}{H+1}\right)^{(H+1)/2}
+ \le e^{c_4H}.
+\]
+The factors $N^{1/2}$ and $N^{-1/2}$ cancel, and the middle inequality is AM--GM. All outputs are in $[-1,1]$. A spatial grid and quantized values therefore give one fixed uniform-norm cover of accuracy $\epsilon/256$ whose log cardinality is at most $e^{c_5H}$ at fixed $d$.
+
+For the small-width good set, include every integer $C\le N<N_*$. There are at most
+$O(HN_*^2+dN_*)=e^{O(H)}$ parameters per network. The energy bound gives coordinate magnitudes at most $\sqrt{NT_0H^2}$. A layerwise telescoping estimate makes the logarithm of the parameter-to-output Lipschitz constant $O(H\log(N+H+2))=O(H^2)$. Uniform parameter grids, followed by final saturation, thus give a second fixed cover of accuracy $\epsilon/256$ with log cardinality at most $e^{c_6H}$. Taking the union over these widths changes only the constant. The covers do not depend on the scale $\tau$.
+
+Finite-class Hoeffding on the union of both dictionaries gives a common event on which every good function satisfies
+$R(f)\le\widehat R(f)+\epsilon/8$, once $n\ge e^{cH}$. Loss perturbations from the uniform covers cost at most four times their output accuracy. Integrating this inequality, charging at most four times the posterior bad-set mass, and using \eqref{eq:relu-depth-objective} gives
+\[
+ \int R(f_w)d\Pi\le\widehat R(g)+\epsilon/4.
+\]
+The comparison parameter cube is compact and its loss is continuous, so a population-risk minimizer exists. Apply scalar concentration only to this fixed minimizer; its outputs and labels are bounded. Enlarge $c$ to absorb that event and all fixed constants. This proves Theorem~\ref{thm:relu-all-scale-depth} simultaneously for every stated width and scale. Jensen's inequality gives the posterior-mean conclusion.

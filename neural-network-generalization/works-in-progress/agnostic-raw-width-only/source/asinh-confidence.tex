@@ -1,0 +1,112 @@
+\section{Confidence bounds and an eventual noise-scale-free schedule}
+\label{sec:asinh-confidence}
+The preceding exact-leading-one theorem is in expectation.  A
+high-probability version controls posterior-averaged risk as well, at
+the cost of a slightly larger coefficient on approximation error.
+Only a marginal label-tail assumption is needed.
+
+\begin{corollary}[A raw high-probability width oracle]
+\label{cor:asinh-width-confidence}
+Use the asinh-readout prior and assume
+$\E e^{Y^2/K_Y^2}\le2$.  Fix $q>0$.  For all sufficiently large $n$,
+let $n^{-q}\le\delta<1/2$ and $n^{-1/2}\le\eta\le1/2$.
+Set
+\[
+ B=\max\{1,K_Y\sqrt{12\log((n+2)/\delta)}\},\qquad
+ t=\lceil\log_2(128(n+2)^8)\rceil,
+\]
+and
+\[
+ \mathcal D_n=\mathcal B_n^{(B)}+(t+1)e^{cB}
+                         +\log(6/\delta).
+\]
+Here $\mathcal B_n^{(B)}$ is the main compiler resource at proof range
+$B$.  There is a deterministic temperature
+$T_n\asymp_{q,K_Y}\eta^{-1}\log^2(n+2)$, independent of the
+comparison class, such that for each prescribed eligible architecture,
+with probability at least $1-\delta$,
+\begin{align}\label{eq:asinh-width-confidence}
+ R(\widehat f_S)\le\Pi_S R(z_w)
+ &\le R_0+(1+\eta)\inf_{g\in\mathcal G_{C,h}}
+                           \E(g(X)-f_0(X))^2\notag\\
+ &\quad+\frac{c\log^2(n+2)}{\eta n}\mathcal D_n
+                         +\frac{c}{\eta n^2},
+\end{align}
+where $f_0(X)=\E[Y\mid X]$ and $R_0=\E(Y-f_0(X))^2$.
+Neither the conditional mean nor conditional noise variance is assumed
+bounded.  The event is for each architecture prescribed before data;
+it is not asserted to hold simultaneously for all widths.
+
+At fixed $d,h$ and input regularity, choosing
+\[
+ \eta_n=n^{-1/4},\qquad C_n=\lfloor n^{1/(4bh)}\rfloor,\qquad
+ H\le n^{1/2},\qquad N\ge n
+\]
+gives the coefficient-one comparison
+\[
+ R(\widehat f_S)\le\Pi_S R(z_w)
+       \le\inf_{g\in\mathcal G_{C_n,h}}R(g)
+                               +\widetilde O(n^{-1/4})
+\]
+with probability at least $1-\delta$.  The previous lower depth
+thresholds remain, including $H\ge c\log n$ on continuous domains.
+This last schedule uses physical Gaussian variance of order
+$n^{1/4}\log^2 n$, rather than the expected theorem's $\log^2 n$.
+\end{corollary}
+\begin{proof}
+We use the marginal-label confidence theorem in~\cite{rawprior}.
+For a centered prior with logarithmic native supremum moments, it sets
+$a_n=\log((n+2)/\delta)$, $q_n=c(n+a_n)$,
+$L_n=eA\log(e+q_n)+6B+6$ and
+$T_n=c\eta^{-1}(L_n^2+B^2)$.
+On one event of probability at least $1-\delta$, simultaneously for
+all comparison laws supported on raw outputs of magnitude at most
+$L_n$, it bounds actual posterior-averaged approximation error by
+\[
+ (1+\eta)\rho\E_X(z_w-f_0)^2+
+       \frac{cT_n}{n}\{\KL(\rho\|\mu)+\log(6/\delta)\}
+       +c(n+1)^{-2}.
+\]
+Its proof conditions on moderate labels only analytically, applies a
+bounded-prior relative-loss PAC--Bayes inequality, and transfers both
+the population risk and its irreducible-noise floor back to the original
+law.  The original comparison risk appears in this interface, so no
+input-regularity assumption has to survive that auxiliary conditioning.
+A native-tail and inverse-evidence estimate removes the proof-only
+parameter restriction.  The actual data and posterior stay unchanged.
+
+Apply this interface with a fixed smaller multiple of the desired
+$\eta$.  The comparison from \eqref{eq:asinh-digital-comparison} is
+supported on raw outputs at most $3B\le L_n$, and its entropy is at
+most $c\mathcal D_n$.  Projection of the teacher to $[-B,B]$ adds
+$O(n^{-2})$ to risk by the marginal tail bound.  Young's inequality
+converts its population squared error $cB^2(n+2)^{-8}$ into a factor
+$1+\eta/8$ on the teacher approximation error and an additive
+$O(\eta^{-1}n^{-2})$ term.  Enlarging the fixed temperature constant
+makes the product of approximation coefficients at most $1+\eta$.
+Because $\delta\ge n^{-q}$, both $B^2$ and $a_n$ are $O(\log n)$
+and $L_n^2=O(\log^2 n)$.  The confidence event is common to the
+comparison laws, so taking population near-minimizers gives
+\eqref{eq:asinh-width-confidence} without a class-dependent algorithm.
+
+For the growing-class choice,
+$\mathcal D_n=\widetilde O(n^{1/2})+n^{o(1)}$.
+The zero network shows that the infimum approximation error is at most
+$\E f_0(X)^2\le\E Y^2$, so the extra multiplicative term contributes
+only $O(n^{-1/4})$.  Substitution gives the last display.
+\end{proof}
+
+\paragraph{An eventual schedule requiring no known label scale.}
+The expected theorem has a further asymptotic interpretation.  Fix
+$q_n=c(n+1)$, $L_n=eA\log(e+q_n)$ and $T_n=256L_n^2$, with $c$
+chosen using only the native prior.  For every fixed law having some
+finite marginal sub-Gaussian envelope, the conclusions of
+Theorem~\ref{thm:asinh-width} then hold for all sufficiently large $n$.
+The onset and remainder constants may depend on that unknown envelope.
+Indeed $T_n$ eventually dominates its exponential-square moment scale,
+$q_n$ dominates the inverse-evidence exponent $O(nK_Y^2/T_n)$, and
+$L_n$ eventually contains the proof range $O(K_Y\sqrt{\log n})$.
+The label tails also become negligible.  Thus the eventual growing-class
+oracle can use a single prior-only temperature schedule; the explicit
+finite-sample bounds earlier in the paper still allow their calibration
+constants to depend on a known label envelope.

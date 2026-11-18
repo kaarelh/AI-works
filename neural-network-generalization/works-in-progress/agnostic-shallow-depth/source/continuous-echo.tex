@@ -1,0 +1,149 @@
+\section{A depth-independent comparison for a fixed shallow teacher}
+\label{sec:continuous-echo}
+This section uses the unchanged canonical Gaussian prior: first-layer variance $1/d$, internal variance $1/N$, and readout variance $1/N^2$. Inputs lie on the unit sphere in $\mathbb R^d$, and the first layer includes its usual constant coordinate. The conclusion is a pointwise mean-square comparison; it does not require a simultaneous approximation event on the whole sphere.
+
+\begin{theorem}[A fixed teacher at arbitrarily large depth]
+\label{thm:continuous-echo}
+Fix $d$, a finite shallow tanh function
+\[
+ g(x)=\sum_{j=1}^C c_j\tanh(a_j^{\mathsf T}(1,x)),
+\]
+and an accuracy $\varepsilon>0$. There exist finite constants $A,H_0,K,p$, depending on these fixed objects but not on learner depth or width, such that for every $H\ge H_0$ and every $N\ge K H^p$ there is a comparison law $\rho\ll\mu_{H,N}$ satisfying
+\[
+ \frac2N\KL(\rho\|\mu_{H,N})\le A,
+ \qquad
+ \sup_{x\in\mathbb S^{d-1}}\E_\rho|z_w(x)-g(x)|^2\le\varepsilon^2.
+\]
+The constants can be chosen uniformly over all teachers of a fixed width and a fixed coefficient bound. The same law therefore approximates $g$ in expected squared loss under every input distribution on the sphere and on every deterministic training sample. No restriction is imposed on the learner's prior support. The first-layer marginal of the comparison remains exactly the native Gaussian law.
+\end{theorem}
+
+\subsection{A reverse schedule with an almost linear response}
+Let $F(q)=\E\tanh^2(\sqrt q Z)$, put $q_{-1}=2/d$ and $q_0=F(q_{-1})$, and recursively set $q_j=F(q_{j-1})$. Constants in this section may depend on the fixed dimension. The critical drift gives
+\[
+ \frac{c_d}{j+1}\le q_j\le\frac{C_d}{j+1},\qquad
+ q_j-q_{j+1}\le C_dq_j^2.
+\]
+For $H=2M+1$, use $M$ native transitions followed by $M$ covariance spikes. The reverse steps, indexed by their remaining count $t=M,M-1,\ldots,1$, have
+\[
+ R_t^2=\frac{q_{t-2}}{q_t},\qquad \alpha_t=R_t^2-1\ge0.
+\]
+Thus their reference variances run from $q_M$ back to $q_0$. If $H$ is even, append one native transition to the odd-depth schedule with $H-1$ hidden layers. The fixed final native transition changes none of the estimates below. We have
+\[
+ \alpha_t\le\frac{C_d}{t+1},\qquad
+ \sum_t\{R_t^2-1-\log R_t^2\}\le C_d,
+ \qquad
+ \prod_{t=1}^M R_t
+ =\left(\frac{q_{-1}q_0}{q_{M-1}q_M}\right)^{1/2}
+ \asymp_d H.
+\]
+The first bound and the convergent square sum imply the entropy estimate; the finitely many final factors are bounded constants.
+
+For zero initial correlation the hidden variances continue to follow the native sequence, even during the spike schedule. Define $b_\ell=q_{\ell-1}$ at hidden layer $\ell$ and let
+\[
+ L_1=1,\qquad L_{\ell+1}=R_\ell(1-b_{\ell+1})L_\ell,
+\]
+where $R_\ell=1$ on native transitions and is the displayed reverse factor on a spike transition. The small-variance identity
+\[
+ \frac{q(1-F(q))^2}{F(q)}=1+O(q^2)
+\]
+and summability of $q_j^2$ show that
+\[
+ \prod_{\ell=1}^{H-1}(1-b_{\ell+1})\asymp_d H^{-1/2},
+ \qquad L_H\asymp_d\sqrt H.
+\]
+The constants are strictly positive because every factor is positive and only finitely many initial variances lie outside a fixed small interval. For a state immediately before a reverse step with $t$ steps remaining, telescoping the remaining $R$ factors and bounding the remaining native derivative product above and below gives
+\begin{equation}
+ \frac{L_\ell}{L_H}\le\frac{C_d}{t+1}.
+ \label{eq:continuous-response-ratio}
+\end{equation}
+Indeed, all native variances in the reverse half are $O(1/H)$, so their derivative product over at most $H$ transitions is bounded below by a positive dimension-dependent constant. The remaining spike product is comparable to $t+1$.
+
+Consider the exact scalar recursion for a prescribed initial correlation $r_1$:
+\[
+ q_1=q_0,\quad
+ v_\ell=q_\ell+(R_\ell^2-1)r_\ell^2,\quad
+ q_{\ell+1}=F(v_\ell),\quad
+ r_{\ell+1}=R_\ell r_\ell(1-q_{\ell+1}).
+\]
+Choose $r_1=s/L_H$ for a signed intended final signal $s$. During the native burn $q_\ell=b_\ell$. Throughout the schedule, $q_\ell\ge b_\ell$ and $|r_\ell|\le |s|L_\ell/L_H$. Since $0\le F'\le1$, the excess variance $\Delta_\ell=q_\ell-b_\ell$ satisfies
+\[
+ 0\le\Delta_{\ell+1}\le\Delta_\ell+
+             (R_\ell^2-1)s^2(L_\ell/L_H)^2.
+\]
+Each perturbation contributes to at most $t+1$ subsequent excess variances. Equation~\eqref{eq:continuous-response-ratio} therefore gives
+\[
+ \sum_{\ell=1}^H\Delta_\ell
+ \le C_ds^2\sum_{t\ge1}\frac{t+1}{(t+1)^3}
+ \le C_ds^2.
+\]
+Here $F'\le1$ follows by differentiating the Gaussian expectation: $F'(q)=\frac12\E(\tanh^2)''(\sqrt qZ)\le1$, while monotonicity gives the lower bound. Dividing the exact correlation product by its linearization yields
+\[
+ \frac{r_H}{s}=\prod_{\ell=2}^H
+       \left(1-\frac{\Delta_\ell}{1-b_\ell}\right).
+\]
+All factors lie in $[0,1]$. Since $1-b_\ell\ge1-q_0>0$, the elementary product inequality gives the uniform response estimate
+\begin{equation}
+ |r_H-s|\le C_d|s|^3.
+ \label{eq:continuous-cubic-response}
+\end{equation}
+For $s=0$ the assertion follows directly. The scalar recursion is admissible for every sufficiently large $H$ whenever $s$ lies in a fixed bounded interval, because $r_1^2\le q_0$.
+
+\subsection{Native Gaussian features encode the small initial signal}
+Let $W\sim N(0,I_{d+1}/d)$. There is a bounded measurable function $\psi(W)$ such that
+\[
+ g_0(x)=\E[\psi(W)\tanh(W^{\mathsf T}(1,x))]
+ \quad\hbox{satisfies}\quad
+ \sup_{x\in\mathbb S^{d-1}}|g_0(x)-g(x)|\le\varepsilon/4.
+\]
+To construct it explicitly, choose small balls $B_j$ around the finitely many $a_j$, put $p_j=\Pr(W\in B_j)>0$, and set $\psi=\sum_j c_j\mathbf1_{B_j}/p_j$. The $1$-Lipschitz property of tanh and $\|(1,x)\|=\sqrt2$ make the approximation uniform as the ball radii decrease. In particular $M_\psi=\|\psi\|_\infty<\infty$ is fixed independently of $H$. For a fixed teacher width and coefficient bound, use a common ball radius proportional to $\varepsilon/(1+\sum_j|c_j|)$. The Gaussian masses of these balls have a uniform positive lower bound because their centers lie in a fixed compact set. Thus $M_\psi$ and every later comparison constant are uniform over that teacher class.
+
+Choose a fixed readout factor $\mathcal B\ge1+\|g\|_\infty+\|g_0\|_\infty$ so large that
+\[
+ C_d\|g_0\|_\infty^3/\mathcal B^2\le\varepsilon/4.
+\]
+The intended scalar signal at input $x$ is $s(x)=g_0(x)/\mathcal B$. Draw the first-layer rows $W_i$ from their unchanged Gaussian law and put
+\[
+ a_i=\frac{\psi(W_i)}{\mathcal B L_H\sqrt N}.
+\]
+For all sufficiently large $H$, $\|a\|\le M_\psi/(\mathcal B L_H)\le1/2$ deterministically. Conditional on the first-layer weights, take an auxiliary random unit vector $v$ uniform on the sphere perpendicular to $a$ and set
+\[
+ e_1=a+\sqrt{1-\|a\|^2}\,v.
+\]
+If $a=0$, use a uniform unit vector in the whole space. This gives an exact unit direction. At any fixed input, Hoeffding concentration for the bounded feature average and the elementary spherical-coordinate tail give
+\[
+ \left|\frac{h^1(x)^{\mathsf T}e_1}{\sqrt N}
+           -\frac{g_0(x)}{\mathcal B L_H}\right|\le\delta,
+ \qquad
+ \left|\frac{\|h^1(x)\|^2}{N}-q_0\right|\le\delta
+\]
+except on probability at most $C\exp(-cN\delta^2)$, with constants depending only on the fixed teacher, accuracy, and dimension. These bounds are pointwise in $x$ but their constants are uniform over the sphere. They do not require a simultaneous event for every input.
+
+\subsection{Finite-width propagation and entropy}
+At an internal transition, conditionally on the past and the current unit direction $e$, change each row covariance from $I/N$ to
+\[
+ N^{-1}\{I+(R_\ell^2-1)ee^{\mathsf T}\}.
+\]
+Let $\xi_i$ be the standardized Gaussian component of row $i$ in direction $e$, and take the next direction to be $\xi/\|\xi\|$. Gaussian integration by parts gives exactly the scalar recursion above for the conditional expectations before the empirical normalization of $\xi$. Conditional concentration of the bounded squares, the sub-Gaussian products $\xi_i\tanh(G_i)$, and $N^{-1}\sum_i\xi_i^2$ gives a one-step state error at most $C\delta$, except on probability $C\exp(-cN\delta^2)$.
+
+The errors grow only polynomially with $H$. During native transitions the Jacobians are triangular, their diagonal entries have absolute value at most one, and their off-diagonal entries are uniformly bounded. Their products therefore have norm $O(H)$. During the reverse tail let $q_t^*=q_t$ denote the reference variance. The exact scalar states obey $q_\ell\le C_dq_t^*$: the native baseline is $O(1/H)$ and the excess-variance estimate sharpened to the current time gives $\Delta_\ell\le C_ds^2/(t+1)^2$. Also $\alpha_t\le C_dq_t^*$. On enlarged envelopes, the one-step derivative bounds are
+\[
+ |\partial_q q'|\le1,\quad
+ |\partial_r q'|\le C_d(q_t^*)^{3/2},\quad
+ |\partial_q r'|\le C_d\sqrt{q_t^*},\quad
+ |\partial_r r'|\le1+C_dq_t^*.
+\]
+The weighted norm $|\Delta q|/\sqrt{q_t^*}+|\Delta r|$ thus grows by at most $1+C_dq_t^*$ per step. The reference variance increases, so changing its denominator at the next step only reduces this norm. Since $\sum_{t=1}^M q_t^*=O_d(\log H)$, the total amplification is polynomial in $H$. The finitely many final steps outside a small-variance interval have bounded derivatives and contribute only a fixed factor. A first-exit argument on enlarged envelopes establishes the same bound for the empirical states.
+
+Take each local accuracy to be a sufficiently small fixed multiple of $\varepsilon H^{-p_0}/\mathcal B$ and also smaller than a fixed multiple of $H^{-1}$, with $p_0$ exceeding the propagation exponent by at least two. A union bound over the $H$ layers, followed by an increase of the fixed polynomial width, makes the good-event readout error at most $\varepsilon/4$ and the bad-event probability at most $c\varepsilon^2/\mathcal B^2$. Give the final readout native covariance and mean $\mathcal B e_H/\sqrt N$. Its mean output is bounded by $\mathcal B$ at every input, and its native conditional variance is at most $1/N$. Consequently a further adjustment of constants gives
+\[
+ \sup_x\E_\rho|z_w(x)-g(x)|^2\le\varepsilon^2,
+\]
+using the initial feature approximation and the cubic distortion bound.
+
+For every internal layer the normalized Gaussian relative entropy is exactly $R_\ell^2-1-\log R_\ell^2$. The readout contributes exactly $\mathcal B^2$. The first layer contributes zero. Auxiliary random directions can be included with the same law in the reference probability space; marginalization can only reduce relative entropy. Hence
+\[
+ \frac2N\KL(\rho\|\mu_{H,N})
+ \le\sum_\ell\{R_\ell^2-1-\log R_\ell^2\}+\mathcal B^2
+ \le C_d+\mathcal B^2.
+\]
+This proves Theorem~\ref{thm:continuous-echo}.

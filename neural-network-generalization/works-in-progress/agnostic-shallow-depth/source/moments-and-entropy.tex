@@ -1,0 +1,195 @@
+\section{Independent smooth coordinate laws}
+\label{sec:nongaussian-law}
+Let $P$ have density $p(x)=Z^{-1}e^{-V(x)}$ on $\mathbb R$, mean zero,
+and variance one. Assume $V\in C^2$ and
+\begin{equation}
+ 0<m\le V''(x)\le M<\infty\qquad(x\in\mathbb R).
+ \label{eq:coordinate-curvature}
+\end{equation}
+All constants in this section may depend on this one fixed scalar law.
+Strong log-concavity implies a sub-Gaussian bound
+$\E e^{tX}\le e^{K^2t^2/2}$ for some fixed $K\ge1$.
+The assumptions can equivalently be replaced below by this
+sub-Gaussian bound, the upper curvature bound, and the stated
+centering, variance and integration-by-parts identities.
+The law need not be Gaussian or symmetric. For example, a centered,
+variance-normalized density proportional to
+$\exp\{-x^2/2-a\cos x\}$ with $0<|a|<1/2$ qualifies.
+
+The network prior uses independent copies of $X\sim P$, multiplied by
+$\sqrt{\nu/d}$ in the first layer, $\sqrt{\nu/N}$ in internal layers,
+and $\sqrt\nu/N$ in the readout. Here $0<\nu\le1$ and
+$\omega=N/\nu$. This is one fixed coordinate shape under the same
+variance scalings as the Gaussian learner. There is no support
+conditioning and no prior over architectures.
+
+\begin{lemma}[Matrix moments with an exact isotropic baseline]
+\label{lem:exact-isotropic-moments}
+Let $X_1,\ldots,X_N$ be independent vectors with independent
+coordinates of law $P$, and let $J$ be a deterministic matrix with
+compatible dimensions. Write $\mu=\|J\|_F^2$. There is $c=c_K$ such
+that, for every integer $k\ge1$,
+\begin{equation}
+ \E\left[\frac1N\sum_{i=1}^N\|X_i^\top J\|_2^2\right]^k
+ \le \mu^k\prod_{j=0}^{k-1}\left(1+\frac{cj}{N}\right)
+ \le\mu^k\left(1+\frac{ck}{N}\right)^k.
+ \label{eq:exact-isotropic-moment}
+\end{equation}
+Consequently, if $W=\sqrt{\nu/N}(X_i^\top)_{i=1}^N$ and $p=2k$,
+\begin{equation}
+ \E\|WJ\|_F^p
+ \le \|J\|_F^p\exp\!\left(\frac{cp^2}{4\omega}\right).
+ \label{eq:nongaussian-matrix-moment}
+\end{equation}
+\end{lemma}
+\begin{proof}
+The case $\mu=0$ is immediate. Put $Y=\|X_1^\top J\|^2$.
+The singular-value decomposition and convexity show that
+$\E(Y/\mu)^k$ is at most the largest $2k$-th moment of a unit linear
+projection of $X_1$. Such projections are $K$-sub-Gaussian, so
+\[
+ \E(Y/\mu)^k\le2(2K^2)^k k!\qquad(k\ge1),
+ \qquad \E(Y/\mu)=1.
+\]
+Take $c=16K^4$. For $k\ge2$,
+\[
+ 2(2K^2)^k k!
+ \le c^{k-1}(k-1)!
+ \le\prod_{j=0}^{k-1}(1+cj).
+\]
+The first inequality follows from
+$32k/8^k\le1$ for $k\ge2$ and $K\ge1$.
+Thus every moment of $Y$ is at most the corresponding moment of a
+Gamma random variable with shape $1/c$ and scale $c\mu$; the first
+moments agree exactly. Expanding the integer moment of a sum and
+using independence preserves this termwise domination. The sum of
+$N$ independent such Gamma variables has shape $N/c$ and scale
+$c\mu$. Its $k$-th moment gives the first inequality in
+\eqref{eq:exact-isotropic-moment}; the second is immediate.
+Finally,
+\[
+ \nu^k(1+ck/N)^k
+ \le\exp(c\nu k^2/N),
+\]
+using $t(1+r)\le e^{tr}$ for $0<t\le1$ and $r\ge0$.
+This proves \eqref{eq:nongaussian-matrix-moment}.
+\end{proof}
+
+\begin{corollary}[The critical Gaussian Sobolev estimate persists]
+\label{cor:nongaussian-sobolev}
+For a depth-$H$ network with any globally $1$-Lipschitz hidden
+activation, its raw readout satisfies, for every even $p\ge2$ and
+fixed input $x$,
+\begin{equation}
+ \E_\pi\|\nabla z_w(x)\|_2^p
+ \le\left(\frac{C p}{\omega}\right)^{p/2}
+             \exp\!\left(\frac{C H p^2}{\omega}\right).
+ \label{eq:nongaussian-gradient}
+\end{equation}
+For bounded hidden activation, the raw-readout amplitude tail and
+prior fourth-risk moment used by the Gaussian evidence certificate
+also hold, with constants depending only on $P$ and the label envelope.
+Hence the same sample budget
+$\exp\{C_d\sqrt{HK}\}$, up to polynomial factors in $H,K$ and
+accuracy/confidence, proves the raw posterior evidence certificate
+when $K$ is a sufficiently large multiple of $1+\lambda^{-1}$.
+\end{corollary}
+\begin{proof}
+Activation-derivative matrices are contractions and require no
+independence. Conditional on earlier layers, apply
+Lemma~\ref{lem:exact-isotropic-moments} to each hidden matrix step with the present independent row law.
+In the first layer the derivative matrix has $Nd$ independent
+coordinates, and the same estimate follows by applying the scalar
+sum version of \eqref{eq:exact-isotropic-moment}. Its variance
+normalization is $\nu/d$, so the initial Frobenius factor is
+$\sqrt N$ and its exponential correction is no larger than the one
+in \eqref{eq:nongaussian-matrix-moment}.
+Conditional on the last hidden Jacobian, the independent readout is
+sub-Gaussian. The same singular-value convexity argument gives its
+Hilbert-valued $p$-th moment at most
+$(C\sqrt p\sqrt\nu/N)^p$ times the incoming Frobenius norm to power
+$p$. Combining the factors proves \eqref{eq:nongaussian-gradient}.
+
+For bounded hidden activation, use
+$|z_w(x)|\le\sqrt N\|v\|_2$.
+The scalar sub-Gaussian square has a finite exponential moment, so
+\[
+ \E\exp(c\omega N\|v\|_2^2)\le e^{CN}.
+\]
+The same conditional readout calculation gives a bounded prior
+fourth output moment. The Sobolev proof now uses
+$p\asymp\omega\sqrt{K/H}$ exactly as in the Gaussian case; choosing
+a sufficiently small proportionality constant absorbs the changed
+moment constant. Markov's inequality and Morrey's inequality give
+a common Holder-$1/2$ class with Holder constant
+$C_d e^{C\sqrt{HK}}$, outside prior mass $e^{-c\omega K}$.
+The small-effective-width branch uses ordinary finite-parameter
+covers. Evidence lower bounds and Cauchy--Schwarz restore the raw
+risk on the exceptional set. Only numerical constants change.
+\end{proof}
+
+\begin{lemma}[Rank-one transport and translation entropy]
+\label{lem:nongaussian-rank-one-entropy}
+Let $X\sim P^{\otimes N}$, let $e$ be a unit vector, and let
+$T_a=I+(a-1)ee^\top$ with $a\ge1$. Then
+\begin{equation}
+ \operatorname{KL}((T_a)_\#P^{\otimes N}\|P^{\otimes N})
+ \le a-1-\log a+\tfrac M2(a-1)^2
+ \le\tfrac{M+1}2(a-1)^2.
+ \label{eq:rank-one-transport-entropy}
+\end{equation}
+For every deterministic translation $b\in\mathbb R^N$,
+\begin{equation}
+ \operatorname{KL}(\mathcal L(X+b)\|P^{\otimes N})
+ \le\tfrac M2\|b\|_2^2.
+ \label{eq:translation-entropy}
+\end{equation}
+In particular, a physical row with native scale $\sqrt{\nu/N}$
+can have its directional variance changed from $\nu/N$ to $W/N$,
+for $W\ge1$, at normalized layer cost at most
+$(M+1)(\sqrt W-\sqrt\nu)^2$. A readout mean
+$\mathcal B e/\sqrt N$ costs at most $M\mathcal B^2$ in normalized
+relative entropy $2\operatorname{KL}/\omega$.
+\end{lemma}
+\begin{proof}
+Integration by parts gives
+\[
+ \E V'(X)=0,\qquad \E[XV'(X)]=1.
+\]
+The change-of-variables formula for relative entropy gives
+\[
+ \operatorname{KL}((T_a)_\#P^N\|P^N)
+ =\E\sum_i[V((T_aX)_i)-V(X_i)]-\log a.
+\]
+Taylor's upper bound has first-order expectation $a-1$, because
+$\E[(e\cdot X)(e\cdot V'(X))]=1$, and remainder at most
+$M(a-1)^2/2$. Since $a-1-\log a\le(a-1)^2/2$ for $a\ge1$, this
+proves \eqref{eq:rank-one-transport-entropy}.
+Translation has zero first-order expectation and proves
+\eqref{eq:translation-entropy}.
+For a network layer there are $N$ independent rows and
+$a=\sqrt{W/\nu}$. Multiply the row bound by $N$ and normalize by
+$2\nu/N$. For the readout, the translation in standardized
+coordinates is $\mathcal B\sqrt{N/\nu}\,e$; the same normalization
+proves the claim.
+\end{proof}
+
+\begin{lemma}[A Gaussian first-layer comparison has bounded action]
+\label{lem:nongaussian-first-layer}
+Replacing all first-layer coordinates by independent $N(0,1/d)$
+coordinates has normalized relative entropy at most a constant
+$A_{P,d}$, uniformly in $N$ and $0<\nu\le1$.
+\end{lemma}
+\begin{proof}
+For one coordinate, scaling to the original standardized prior gives
+$G/\sqrt\nu$, with $G$ standard Gaussian. Its relative entropy
+against $P$ equals
+\[
+ -\tfrac12\log(2\pi e/\nu)+\log Z+\E V(G/\sqrt\nu).
+\]
+The upper curvature bound gives
+$V(t)\le V(0)+V'(0)t+Mt^2/2$, so this is at most
+$A_P+M/(2\nu)+\tfrac12\log\nu$.
+There are $N(d+1)$ coordinates; multiply by $2\nu/N$ and use
+$\nu\le1$ to obtain a finite $A_{P,d}$.
+\end{proof}

@@ -1,0 +1,109 @@
+\section{Sub-Gaussian labels without changing the parameter prior}
+\label{sec:subgaussian-adaptive-transfer}
+The raw-output adaptive Gaussian oracle extends to unbounded labels with a known marginal sub-Gaussian tail. Its powers of sample size and teacher complexity are unchanged; only logarithmic factors and an explicit negligible label-tail term are added. The learner still trains on the original observations and predicts the ordinary raw posterior mean. No Gaussian weight or prior is rescaled.
+
+We state the transfer for the full-energy and input-covering theorems proved here, and for finite-program variants with the same statistical structure. The common-Lipschitz and bounded-smooth-activation finite-program theorems of~\cite{common-program,smooth-program} also satisfy its hypotheses. Suppose the bounded-label theorem has powers $v,\rho>0$, $r=v/\rho\ge2$, deterministic statistical factor $\theta_n$, and a deterministic comparison resource $\bar A$ such that its posterior-average oracle is
+\begin{equation}
+ G(S):=\int R(z_w)d\Pi_S
+ \le R(g)+C\left[
+ \bar A R(g)^{1-1/r}\theta_n^{1/v}
+          +\bar A^r\theta_n^{1/\rho}\right]+n^{-3}.
+ \label{eq:transfer-unit-oracle}
+\end{equation}
+The theorem's confidence parameter, including all scalar-comparator events, will be $\delta/2$. Its fixed prior family, admissible learner widths/scales, and teacher class are unchanged. The needed closure property is that its proof remains valid for the observation map $w\mapsto z_w/T$ and teacher $g/T$, using the same original parameter vectors and comparison resource, whenever $T\ge1$. We verify that property below for the Gaussian dictionary and full-energy arguments.
+
+Assume that for a known $s_Y>0$,
+\begin{equation}
+ \Pr(|Y|>t)\le2e^{-t^2/(2s_Y^2)}\quad(t\ge0).
+ \label{eq:transfer-label-tail}
+\end{equation}
+Let $n\ge2$ and set
+\begin{equation}
+ T=\max\{1,s_Y\sqrt{8\log(8n/\delta)}\},
+ \qquad u=2s_Y\left(\frac\delta{8n}\right)^2.
+ \label{eq:transfer-T}
+\end{equation}
+For a physical likelihood parameter $\lambda$, write $F_S(\lambda)$ for its raw free energy. Run the bounded-label calibration on the normalized observable and labels, namely
+\[
+ z'_w=z_w/T,\qquad Y'_i=Y_i/T,
+ \qquad F'_S(\lambda')=T^{-2}F_S(T^2\lambda').
+\]
+If it selects $\lambda'$, the actual learner uses $\lambda=T^2\lambda'$. This is an observable scalar likelihood calibration. In particular, for the dictionary theorem the root is applied to $F'_S$, not to an unmodified free energy with silently changed units. The physical Gaussian observation variance is $nsT^2\lambda'$ under prior scale $s$.
+
+For $x\ge0$, define
+\begin{equation}
+ e_T(x)=C\left[
+ \bar A T^{2/r}x^{1-1/r}\theta_n^{1/v}
+       +\bar A^rT^2\theta_n^{1/\rho}\right]+T^2n^{-3}.
+ \label{eq:transfer-remainder}
+\end{equation}
+\begin{theorem}[Raw adaptive oracle with sub-Gaussian labels]
+\label{thm:subgaussian-adaptive-transfer}
+Under the stated bounded-label theorem and its verified observation-map closure, the posterior trained on the original unbounded labels satisfies, with probability at least $1-\delta$,
+\begin{equation}
+ \int R(z_w)d\Pi_S
+ \le R(g)+e+4u\sqrt{R(g)+e}+4u^2,
+ \qquad e=e_T\big((\sqrt{R(g)}+u)^2\big).
+ \label{eq:transfer-oracle}
+\end{equation}
+The ordinary raw posterior mean has the same risk bound. If the bounded-label event is common to all admissible widths and scales, so is this event. At fixed label-tail parameter $s_Y$, depth and confidence, the powers $1/v$ and $1/\rho$, and every polynomial teacher-resource exponent, are unchanged up to logarithms.
+\end{theorem}
+\begin{proof}
+Let $Y_T=\operatorname{clip}_{[-T,T]}Y$ and let $R_T$ be its population squared risk. Tail integration gives
+\[
+ \|Y-Y_T\|_2^2
+ =\int_0^\infty2a\Pr(|Y|>T+a)\,da
+ \le4s_Y^2e^{-T^2/(2s_Y^2)}\le u^2.
+\]
+Also a union bound gives
+\[
+ \Pr(\exists i:Y_i\ne(Y_i)_T)
+ \le2ne^{-T^2/(2s_Y^2)}
+ \le2n(\delta/(8n))^4<\delta/2.
+\]
+On the complementary event the original and clipped training samples coincide exactly, so every prior, likelihood, free energy, selected temperature and posterior coincides as well. Truncation of labels is used only in the proof.
+
+Apply the bounded-label theorem to $(X,Y_T/T)$ and observable $z_w/T$. Its posterior likelihood is exactly the actual likelihood at $\lambda=T^2\lambda'$, since
+\[
+ \frac{\widehat R_S(z_w)}{2\lambda s}
+ =\frac{\widehat R_{S/T}(z_w/T)}{2\lambda' s}.
+\]
+Multiplying \eqref{eq:transfer-unit-oracle} by $T^2$ yields
+\[
+ \int R_T(z_w)d\Pi_S\le R_T(g)+e_T(R_T(g)).
+\]
+Minkowski gives $\sqrt{R_T(g)}\le\sqrt{R(g)}+u$.
+The function $e_T$ is nondecreasing, so the right side is at most
+$R_T(g)+e$, with $e$ as in the theorem.
+
+For each observed sample, apply Minkowski on the product of the posterior law and an independent test observation:
+\[
+ \sqrt{\int R(z_w)d\Pi_S}
+ \le\sqrt{\int R_T(z_w)d\Pi_S}+u
+ \le\sqrt{R(g)+e}+2u.
+\]
+The last step uses $\sqrt{R_T(g)+e}\le\sqrt{R(g)+e}+u$.
+Squaring proves \eqref{eq:transfer-oracle}. The two exceptional events total at most $\delta$. Jensen proves the ordinary-mean statement. All posterior moments invoked in the raw Gaussian theorem remain finite; the comparison of the original and clipped posteriors is exact on the stated event.
+\end{proof}
+
+\subsection{Why the new Gaussian proofs have the required closure}
+The normalization acts only on the observation map, not on parameters. Each original network and teacher is retained, and its output is divided by $T$ in the analysis.
+
+For the finite-program proof, divide every dictionary center by $T$. Its cardinality does not change, its amplitude decreases, and an original $L^2$ approximation error at most $a$ becomes at most $a/T\le a$. The prior-good-set probabilities, normalized parameter energies and prior-tail bounds are unchanged. The normalized-observable prior risk under labels bounded by one is no greater than the same constant used in the bounded-label proof, after retaining the constant label contribution. Consequently the fixed-dictionary statistical event, sample-dependent complexity, weighted objective tail, and scalar free-energy root apply with the same $p,q,v,\rho$ and the same upper statistical constants. This includes the improved bounded-$C^2$ dictionary: its smaller entropy exponents are unaffected by dividing outputs by $T$.
+
+The Gaussian comparison also keeps the original teacher parameters. Its KL cost is unchanged. More explicitly, suppose the native comparison has output RMS error at most $e_0$, with $|g|\le U$, and the bounded-label proof chose it so that
+$2(U+1)e_0+e_0^2\le1/n$. The normalized squared-loss increment is at most
+\[
+ 2(U/T+1)e_0/T+e_0^2/T^2
+ \le2(U+1)e_0+e_0^2\le1/n.
+\]
+Thus the same comparison resource $\bar A$ is sufficient for the normalized theorem; no new teacher cap or width factor is introduced. The teacher-amplitude condition also improves under division by $T$.
+
+For the full-energy proof, empirical Rademacher complexity, amplitude and prior raw moments decrease under output division by $T$. Its Gaussian energy identity and entropy cost are identical. The same argument therefore applies. The sharper shallow-tanh oracle transforms to
+\[
+ R_T(g)+\widetilde O\left(
+ T\sqrt{\bar A R_T(g)/n}+T^2\bar A/n\right),
+\]
+followed by the same $L^2$ label-tail transfer. Its sample powers also remain unchanged.
+
+The tail assumption includes Gaussian noise around a uniformly bounded conditional mean, with a sufficiently large known $s_Y$. No correctly specified observation-noise variance is required. The actual prior and Gaussian likelihood form are unchanged, but their selected likelihood variance acquires the explicit factor $T^2$ and the corresponding normalized free-energy calibration.

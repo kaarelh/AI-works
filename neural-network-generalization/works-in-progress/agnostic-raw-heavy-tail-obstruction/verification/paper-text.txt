@@ -1,0 +1,718 @@
+                         Failures of unbounded Bayesian prediction:
+                        a tanh network and Gaussian-mixture priors
+          ChatGPT-6 Astra                Claude Opus 5.5           Kaarel Hänni           Dmitry Vaintrob∗
+
+                                                    18 November 2026
+
+
+
+                                                        Abstract
+               We give an explicit obstruction to distribution-uniform approximation oracles for the raw
+          posterior mean of a Bayesian neural network. The model consists of one biased tanh neuron,
+          with three independent Student weights of any fixed tail index p > 2, and an ordinary Gaussian
+          likelihood of any fixed positive variance. The prior has finite second moments and is unchanged
+          with sample size. There are noiseless distributions on [−1, 1]×[−1, 1] for which the posterior mean
+          has test squared risk at least cn1/3 with constant probability, although the fixed zero network has
+          risk at most n−1/3 . The same divergence holds in expectation. The distributions depend on n
+          and put mass 1/n on a rarely observed test input. The proof controls the posterior normalizer in
+          both the nearly saturated and locally linear regimes, and bounds the signed prediction numerator;
+          it is a lower bound for the actual posterior mean, rather than for posterior-averaged risk. Thus
+          bounded labels and finite-variance heavy-tailed coordinates alone do not justify removing an
+          output link from a random-design Bayesian oracle theorem. The same construction works
+          with unit-norm inputs in dimension two, including smooth atomless input laws, and a uniform
+          refinement covers polylogarithmically growing deterministic likelihood variances.
+              A separate generic example shows that even a uniformly sub-Gaussian function supremum
+          and bounded conditional Gaussian covariance do not suffice for a fixed-temperature agnostic
+          raw-mean oracle. One fixed mixture of centered rank-one Gaussian function priors on a compact
+          interval fails at every fixed temperature: its risk grows linearly along a sample-size sequence, while
+          the zero comparison has fixed risk and constant relative entropy. The adverse laws may depend
+          on the temperature. An extension permits arbitrarily light unbounded amplitude tails, including
+          arsinh-Gaussian amplitudes, with potentially slower divergence. These generic examples are not
+          finite neural-network priors. All results concern varying adverse data laws, not inconsistency
+          under one fixed law.
+
+
+1        Introduction
+Heavy-tailed weight priors can assign substantial probability to small neural networks with large
+coefficients. This can be useful for approximation, but an unbounded readout creates a separate
+prediction problem. A function may fit observed inputs well and have a large value at an input that
+the sample misses. A Gaussian likelihood only penalizes its values on the observed inputs.
+   We show this problem within a standard finite neural model. There is one input coordinate,
+one tanh hidden neuron with a bias, and one linear readout coefficient. All three parameters
+are independent Student variables with tail index p > 2. Thus the prior is continuous, has full
+parameter support and finite second moments, and uses no architecture mixture. The learner is
+    ∗
+        Authors are listed in alphabetical order.
+
+
+
+                                                            1
+its ordinary posterior mean under the Gaussian likelihood using all observations, with any fixed
+positive observation variance. Both likelihood and prediction use the raw network output.
+    For every sufficiently large n, we construct a bounded, noiseless distribution Pn such that
+
+                         Pn⊗n {RPn (f¯Sn ) ≥ cn1/3 } ≥ q,   RPn (0) ≤ n−1/3 ,
+
+where c, q > 0 depend only on the fixed prior and likelihood variance. Here RP (h) = EP [(h(X)−Y )2 ]
+is population risk at a fresh random input. The comparator is the same zero function for every n.
+The bound therefore rules out a distribution-uniform vanishing oracle remainder, even against this
+single elementary comparator. It also rules out such a theorem in expectation.
+    The construction has two common inputs very close to zero, with small opposite labels, and a
+third input of probability 1/n with label zero. With constant probability the sample misses the
+third input and contains balanced numbers of the first two. Fitting those two labels requires a
+very large local slope. That slope can be split between the incoming and outgoing weights. The
+two matching Student tails and the likelihood Jacobian leave a range of readout amplitudes whose
+contribution to the posterior mean is logarithmic in the required slope. We choose that logarithm
+to be of order n2/3 . The rare input then contributes order n1/3 to test risk. A separate integration
+argument controls neurons that fit by saturation; this is needed to upper-bound the full normalizer.
+    The scope is deliberately precise. The distributions vary with n; we do not establish inconsistency
+under one fixed distribution. Their common inputs approach one another rapidly, and we impose
+no fixed input regularity constant. The theorem concerns this width-one Student prior, rather
+than every heavy-tailed prior or every larger architecture. Its conclusion is that finite coordinate
+variance and bounded labels alone are insufficient for the proposed raw-mean oracle. Output links,
+output-norm restrictions, or additional input and prior structure can materially change the problem.
+    Appendix A isolates a different limitation of generic raw-prediction arguments. Its prior is fixed
+on smooth functions on [0, 1], has a Gaussian tail for the supremum, and is a mixture of centered
+Gaussian processes with covariance diagonal at most one. Nevertheless its raw posterior mean
+has divergent risk against a fixed-risk, constant-entropy zero comparator. The latent features can
+suppress their values at observed zero-label inputs while retaining a positive average at unobserved
+inputs. This is a general function-prior construction, not another standard neural architecture. It
+shows why a fixed-kernel Gaussian argument cannot be extended using only conditional covariance
+bounds and native output tails.
+    Appendix B extends this generic obstruction to every symmetric full-support amplitude law
+with finite first moment. It retains that law’s native supremum-tail bounds, even when its moments
+grow only logarithmically. The failure is still at fixed temperature, so it is compatible with positive
+raw-prediction theorems whose temperature grows as the square of a logarithm.
+
+Related work. Dalalyan and Tsybakov [1] prove sharp PAC–Bayesian aggregation bounds for
+squared loss at a deterministic design. Their later analysis [2] explicitly accommodates unbounded
+regression functions and heavy-tailed priors. Those guarantees concern the average error on the
+specified design; the present obstruction concerns population error at a fresh random input that
+can be absent from the sample. There is no conflict between the two statements. Castillo and
+Egels [3] establish contraction results for dense deterministic neural architectures with independent
+heavy-tailed weights. Such positive results under their statistical assumptions do not assert the
+distribution-uniform agnostic raw-mean oracle refuted here. Our contribution is the explicit fixed
+neural model and the direct control of its signed posterior mean; we make no general claim that
+negative results for Bayesian prediction are new.
+
+
+
+                                                    2
+2    A raw posterior mean can fail under finite-variance Student
+     weights
+Fix p > 2 and T > 0. Let the three parameters v, w, γ be independent with density
+
+                                  qp (t) = cp (1 + t2 )−(p+1)/2 ,    t ∈ R,
+
+and consider the ordinary biased one-neuron network fv,w,γ (x) = v tanh(wx + γ). Every coordi-
+nate has a finite second moment. The prior, architecture, and likelihood temperature are fixed
+independently of the sample size. For observations Sn , use the raw Gaussian likelihood and raw
+mean
+                                    n
+                              (                            )
+                                 1X
+                                                                                      Z
+        dQSn (θ) = ZS−1 exp    −       (fθ (Xi ) − Yi )2 dπ(θ),          f¯Sn (x) =       fθ (x) dQSn (θ).
+                      n
+                                 T i=1
+
+The physical observation variance is T /2. There is no clipping.
+
+Theorem 2.1 (A distribution-uniform raw-mean obstruction). There are constants c∗ , q∗ > 0,
+depending only on p, T , and distributions Pn supported on [−1, 1] × [−1, 1], with noiseless labels,
+such that for every sufficiently large n,
+
+                                     Pn⊗n {RPn (f¯Sn ) ≥ c∗ n1/3 } ≥ q∗ .
+
+Yet the fixed width-one comparator g ≡ 0 satisfies RPn (g) ≤ n−1/3 . In particular, EPn⊗n RPn (f¯Sn ) ≥
+q∗ c∗ n1/3 . Thus this fixed prior and fixed likelihood do not admit any distribution-uniform vanishing
+oracle remainder against the zero network, either in expectation or at any fixed failure probability
+δ < q∗ .
+
+Proof. Write
+                                                1                     2/3
+                       b = n−1/6 ,    c=               ,       R = ecn      ,   a = b/R.
+                                           100p(T + 1)
+The distribution assigns probabilities (1 − 1/n)/2, (1 − 1/n)/2, 1/n to the pairs (a, b), (−a, −b), (1, 0),
+respectively. Let En be the event that the sample contains no input 1 and that its counts n+ , n− at
+a, −a both belong to [n/3, 2n/3]. Its probability tends to e−1 , so is bounded below by a positive
+constant. All bounds below are uniform over samples in En .
+    For such a sample define
+
+    u+ = v tanh(γ + aw),     u− = v tanh(γ − aw),          L = exp{−[n+ (u+ − b)2 + n− (u− + b)2 ]/T }.
+
+The transformation (v, w, γ) 7→ (−v, −w, −γ) leaves the represented function unchanged and
+preserves the prior. We may therefore restrict all integrals to v > 0 and multiply by two. Constants
+in the proof may depend on p, T but never on n or the balanced counts.
+    Set
+                                                                     ap b−p−1   R−p
+                 G = {|u+ − b| ≤ b/2, |u− + b| ≤ b/2},        Z∗ :=           =     .
+                                                                         n       bn
+On Gc , the likelihood is at most
+
+                             L ≤ exp{−nb2 /(12T )} = exp{−n2/3 /(12T )}.                                     (1)
+
+Since pc = 1/[100(T + 1)] < 1/(12T ), this upper bound is o(Z∗ ), and also o(Z∗ log R).
+
+                                                       3
+    We first prove the evidence bound ZSn ≤ CZ∗ . On G necessarily v ≥ b/2. For b/2 ≤ v ≤ 3b,
+set h+ = tanh(γ + aw) and h− = − tanh(γ − aw). If the good-fit set of such v is nonempty, then
+h+ , h− ≥ 1/6, whence w ≥ t0 /a for t0 = arctanh(1/6) > 0. For every fixed such (w, γ), the exponent
+as a function of v is a quadratic with coefficient
+                                          n+ h2+ + n− h2− ≥ n/36.
+The density qp (v) is bounded, so integrating in v first, even over the entire real line, gives at most
+  √
+C/ n. The Student tail bound then gives
+                                                                            Cap
+                                                          Z ∞
+                                                C
+                           Z
+                                         L dπ ≤ √               qp (w) dw ≤ √ .                     (2)
+                            G∩{b/2≤v≤3b}          n       t0 /a              n
+The bias density integrates to one. This argument includes the near-saturation region without a
+                                                                        √
+singular change of variables. The ratio of the last bound to Z∗ is bp+1 n = n(2−p)/6 ≤ 1 for large n.
+    For v ≥ 3b, use the exact coordinates (u+ , u− ) instead of (w, γ):
+             arctanh(u+ /v) − arctanh(u− /v)           arctanh(u+ /v) + arctanh(u− /v)
+         w=                                  ,    γ=                                   .
+                           2a                                             2
+Their Jacobian is
+                          ∂(w, γ)                     1
+                                     =                                    .                         (3)
+                         ∂(u+ , u− )   2av [1 − (u+ /v)2 ][1 − (u− /v)2 ]
+                                          2
+
+On G we have |u± |/v ≤ 1/2 and R/(2v) ≤ w ≤ 2R/v. Thus the Jacobian is at most C/(av 2 ). The
+global bound qp (w) ≤ C|w|−p−1 and boundedness of qp (γ) imply
+                                               ∂(w, γ)
+                         qp (v)qp (w)qp (γ)               ≤ Cap b−p−1 qp (v)v p−1 .
+                                              ∂(u+ , u− )
+The v integral of qp (v)v p−1 over (0, ∞) is finite. The likelihood integral over the u rectangle is at
+         √
+most πT / n+ n− ≤ C/n. Together with (1) and (2), this proves
+                                                ZSn ≤ CZ∗ .                                         (4)
+                                                                                              √
+    We next lower-bound the numerator of the raw prediction at x = 1. Let tn = 1/(10 n) and
+restrict the transformed integral to
+                          1 ≤ v ≤ R/100,        |u+ − b| ≤ tn ,   |u− + b| ≤ tn .
+For large n this region lies inside G; its likelihood is at least e−1/(100T ) . Here R/(2v) ≤ w ≤ 2R/v,
+|γ| ≤ 1, and hence f (1) = v tanh(w + γ) ≥ c1 v. The Student density lower bounds give
+                       qp (v) ≥ c2 v −p−1 ,   qp (w) ≥ c2 (R/v)−p−1 ,    qp (γ) ≥ c2 .
+The Jacobian in (3) is at least 1/(2av 2 ). The prediction-weighted density is consequently at least
+c3 ap b−p−1 /v throughout this region. Its u area is 4t2n = 1/(25n), and its v integral contains
+R R/100
+ 1      dv/v = log(R/100). Its positive contribution to the numerator is therefore at least c4 Z∗ log R.
+    There is no negative contribution on G. Indeed, for v > 0 the opposite signs of u+ , u− imply
+w > 0 and −aw < γ < aw. Since a < 1, it follows that w + γ > w(1 − a) > 0. On Gc , |f (1)| ≤ |v|
+                                                            2/3
+and (1) bounds the absolute contribution by Eπ |v|e−n /(12T ) = o(Z∗ log R). After symmetry is
+restored, the full numerator is still at least c5 Z∗ log R. By (4),
+                               f¯Sn (1) ≥ c6 log R = c6 cn2/3     (Sn ∈ En ).
+The rare input alone contributes at least (c6 c)2 n1/3 to test risk. The zero comparator has risk
+(1 − 1/n)b2 ≤ n−1/3 , completing the proof. All posterior quantities exist: the likelihood is bounded
+by one, its normalizer is positive, and |f (x)| ≤ |v| with Eπ v 2 < ∞.
+
+                                                      4
+Corollary 2.2 (A cheap comparison law still does not give a raw oracle). Let ρn = π(· | |v| ≤ 1/n).
+For every data distribution in the theorem,
+                                                    Z
+                  KL(ρn ∥π) ≤ log n + Cp ,              RPn (f ) dρn (f ) ≤ RPn (0) + n−2 .
+
+Consequently no fixed constant A < ∞ can make the naive raw-mean PAC–Bayesian bound
+                                                                       AT
+                                              Z                                   
+                       ERPn (f¯Sn ) ≤ inf          RPn (f ) dρ(f ) +      KL(ρ∥π)
+                                        ρ≪π                             n
+valid for all bounded data distributions and all n for this prior and fixed temperature.
+Proof. The density qp is bounded below on [−1, 1], so π(|v| ≤ 1/n) ≥ c′p /n, giving the entropy
+bound.  Conditioning on Rthis event preserves the symmetry and independence of the readout v.
+Thus f (x)dρn = 0 and f (x)2 dρn ≤ n−2 at every input. Expanding squared loss gives the risk
+      R
+
+bound. The displayed PAC–Bayesian right side would then tend to zero, whereas the main theorem
+makes its left side diverge. The comparison measure is deterministic and uses no training data.
+
+Scope. The adverse distribution depends on n. This is a failure of a distribution-uniform oracle
+theorem, not a claim of inconsistency for one fixed distribution. The common inputs approach
+each other exponentially fast, so the construction imposes no fixed geometric regularity or uniform
+anti-concentration constant on the input law. The teacher is the same zero function for every n.
+The prior is dense, continuous, independent across all three coordinates, and unchanged with n;
+the likelihood is the ordinary all-data Gaussian likelihood with fixed variance. The lower bound is
+specifically for the raw posterior mean, rather than for posterior-averaged loss.
+
+
+3    The same raw-mean obstruction on the unit circle
+The preceding example does not rely on different input norms. A fixed two-dimensional sphere
+already permits the same divergence.
+Corollary 3.1 (A unit-norm input counterexample). The raw-mean obstruction holds for the
+one-neuron network
+                         fv,w1 ,w2 ,γ (x) = v tanh(w1 x1 + w2 x2 + γ),
+with four independent coordinates of density qp , when every input lies on the unit circle. The prior,
+architecture and Gaussian likelihood variance remain fixed. There are noiseless bounded-label laws
+for which the raw posterior mean has squared test risk at least cn1/3 with fixed positive probability,
+while the zero comparator has risk at most n−1/3 .
+                                  2/3
+Proof. Retain b = n−1/6√, R = ecn , and a = b/R from the scalar construction, with its sufficiently
+small fixed c. Put r = 1 − a2 . Replace the common inputs by
+
+                                   x+ = (a, r),             x− = (−a, r),
+
+with labels b, −b and probabilities (1 − 1/n)/2 each. The rare input is x∗ = (1, 0), with label zero
+and probability 1/n. Every input has norm one. For large n, r ∈ [1/2, 1].
+   On the no-rare, balanced-count event, the training likelihood depends on w2 , γ only through
+h = rw2 + γ. The joint density of (h, γ) is
+
+                                  jr (h, γ) = qp (γ)qp ((h − γ)/r)/r.
+
+                                                        5
+                     R
+Its marginal qr (h) = jr (h, γ)dγ is a probability density, is bounded above uniformly in r ∈ [1/2, 1],
+and is bounded below by a positive constant on |h| ≤ 1, uniformly in that range. The upper bound
+follows from convolution with a bounded density. For the lower bound, integrate over |γ| ≤ 1 and
+use the positive minima of qp on fixed compact intervals.
+    Consequently the evidence upper bound from the scalar construction applies unchanged, with h
+replacing the hidden bias: the saturation estimate uses only that its density integrates to one, and
+the linear-region estimate uses only a uniform density upper bound. Thus
+                                       ZSn ≤ CZ∗ ,           Z∗ = R−p /(bn).
+The same global sign symmetry permits restriction to v > 0.
+   It remains to check the signed numerator at x∗ . Define
+                                                 Z
+                                   Ir (w, h) =       tanh(w + γ)jr (h, γ)dγ.
+
+On the good-fit rectangle, w = w1 > 0 and |h| < aw, so w + h > 0. Pair the integral around γ = −w.
+For t > 0, monotonicity of qp in absolute value gives
+                                          qp (−w + t) ≥ qp (−w − t),
+                                  qp ((h + w − t)/r) ≥ qp ((h + w + t)/r).
+Both inequalities use positive centers, w > 0 and h + w > 0. Therefore
+                                  Z ∞
+                    Ir (w, h) =         tanh(t)[jr (h, −w + t) − jr (h, −w − t)]dt ≥ 0.
+                                   0
+
+Thus the full good-fit region has no negative contribution after integrating the latent bias decompo-
+sition.
+    Moreover, there are fixed W0 , c0 > 0 such that
+                         Ir (w, h) ≥ c0          (w ≥ W0 , |h| ≤ 1, 1/2 ≤ r ≤ 1).
+To verify this, use only the paired terms with γ = −w + t ∈ [−1, 1]. Their positive density jr (h, γ)
+is bounded below by an absolute positive constant. The reflected density at −2w − γ is at most
+Cw−2p−2 , uniformly in h, r. For sufficiently large fixed W0 it is at most half the positive lower
+bound, while tanh(t) ≥ 1/2. Integration over this interval proves the claim; all omitted paired terms
+are nonnegative.
+    In the scalar lower-numerator region, replace 1 ≤ v ≤ R/100 by 1 ≤ v ≤ R/(100W0 ). Then
+w ≥ W0 , |h| ≤ 1, and the same Jacobian and Student bounds apply. The integrated prediction factor
+is now vIr (w, h) ≥ c0 v. Hence the positive numerator is at least cZ∗ log R, since shortening the upper
+endpoint by a fixed factor changes the logarithm only by a constant. The bad-fit contribution is still
+                  2/3
+at most E|v|e−n /(12T ) = o(Z∗ log R) in absolute value. Therefore the raw posterior mean at x∗ is
+at least c log R, and its rare-input risk is at least cn1/3 . The event probability and zero-comparator
+risk are unchanged.
+
+    This unit-norm version still uses input laws whose two common atoms approach one another
+exponentially fast. It does not satisfy a fixed uniform anti-concentration condition. The conclusion
+is a distribution-uniform failure, not inconsistency for a single fixed input law.
+Corollary 3.2 (Smooth atomless input distributions). The input laws in Corollary 3.1 can instead
+have C ∞ densities with respect to arc length on the unit circle. Labels remain noiseless and bounded.
+The same risk lower bound, up to a fixed constant factor, and the same zero-comparator risk upper
+bound hold. No uniform bound on the input densities or their derivatives is asserted.
+
+                                                         6
+Proof. Fix n and its three-point construction. For every parameter vector, fθ (x) is continuous in x
+on the circle. The posterior normalizer is continuous in the training inputs and labels, by dominated
+convergence with the integrable bound one. The prediction numerator is jointly continuous in
+the training data and test input, by dominated convergence with the integrable bound |v|. The
+normalizer is strictly positive everywhere. On the compact set of circle-valued training inputs, labels
+in [−1, 1], and a circle-valued test input, it therefore has a positive minimum. Consequently the
+raw posterior prediction is jointly continuous and uniformly continuous on this compact set. These
+statements are for each fixed n and its positive temperature; no uniform modulus in n is needed.
+    Replace each of the three input atoms by a normalized smooth bump supported in a sufficiently
+small arc around that atom, retaining its original mixture probability. Choose the three arcs disjoint,
+and retain the constant label b, −b, 0 on the respective arcs. Couple each perturbed observation
+with its original cluster center. For sufficiently small arc radii, uniform continuity ensures that the
+perturbed posterior prediction, at every test input in the rare arc, differs from the original posterior
+prediction at x∗ by at most one, simultaneously for every training cluster assignment. On the original
+no-rare, balanced-count event, the original prediction is at least cn2/3 . The perturbed prediction is
+therefore at least (c/2)n2/3 for all sufficiently large n. The event probability is unchanged because it
+depends only on the cluster assignments. The rare arc still has probability 1/n and label zero, so it
+contributes at least (c2 /4)n1/3 to risk. The zero-comparator risk remains exactly (1 − 1/n)b2 . The
+finite mixture of the three smooth bump densities is smooth and atomless, proving the claim.
+
+  The arc radii may depend arbitrarily strongly on n. This smoothing does not give a counterex-
+ample under a fixed density bound or a fixed quantitative anti-concentration condition.
+
+
+4    Deterministic growing likelihood variances
+The obstruction persists for slowly growing, predetermined likelihood variances. The following
+statement allows a different adverse law at each sample size, as does the main theorem. The
+temperature sequence must be fixed before observing the data.
+
+Corollary 4.1 (A growing-temperature obstruction). Fix p > 2, T0 > 0, and
+                                             1      p
+                                               <r<     .
+                                             2     p+1
+
+Let (Tn ) be any deterministic sequence satisfying T0 ≤ Tn ≤ nr−1/2 for all sufficiently large n. For
+the same fixed one-neuron Student prior and the raw Gaussian likelihood at temperature Tn , there
+are bounded noiseless laws Pn and constants c∗ , q∗ > 0, depending only on p, r, T0 , such that
+                                      (                            )
+                                                         n2r−1
+                              Pn⊗n    RPn (f¯Sn ) ≥ c∗                 ≥ q∗ ,
+                                                       (Tn + 1)2
+                                                             RPn (0) ≤ nr−1 .
+
+The same lower bound, multiplied by q∗ , holds in expectation. In particular, the risk diverges for
+every polylogarithmically bounded temperature sequence, whereas the zero-comparator risk vanishes.
+For p > 3, one may choose r > 3/4; then the risk still diverges when Tn = n1/4 .
+
+Proof. Use the same three-point construction and balanced-count event, but now set
+                                                             nr
+                                                                      
+                     b = n(r−1)/2 ,       R = exp                    ,          a = b/R.
+                                                        100p(Tn + 1)
+
+                                                        7
+All prior density bounds in the preceding proof
+                                              p are independent of temperature. Integrating  p the
+                                                                                           p
+likelihood in the saturated region now gives C Tn /n, so that contribution is bounded by Ca Tn /n.
+Integrating the two regular prediction coordinates gives CTn /n. The appropriate evidence scale is
+
+                                             Tn p −p−1 Tn R−p
+                                   Z∗,n :=     a b    =       .
+                                             n           bn
+The ratio of the saturated bound to this scale is at most
+                                 q        C
+                            Cbp+1 n/Tn ≤ √ n[(r−1)(p+1)+1]/2 = o(1).
+                                          T0
+
+On the bad-fit complement the likelihood is at most exp{−nr /(12Tn )}. Its exponential rate exceeds
+p log R = nr /[100(Tn + 1)] by at least cnr /(Tn + 1). Since Tn ≤ nr−1/2 , this last quantity is at
+        √
+least c′ n for large n. The polynomial factors in Z∗,n cannot offset this gap. Hence ZSn ≤ CZ∗,n
+uniformly over the allowed temperatures.                    √        √                     √
+    For the numerator use prediction-coordinate radius tn = Tn /(10 n) instead of 1/(10 n). Its
+ratio to b is
+                                   tn    1q             1
+                                      =       Tn /nr ≤ n−1/4 ,
+                                    b    10            10
+so the rectangle still lies in the good-fit region. Its likelihood is at least e−1/100 and its area is
+Tn /(25n). The same density and Jacobian lower bounds, integrated over 1 ≤ v ≤ R/100, therefore
+                                                                                            r
+give numerator at least cZ∗,n log R. The negative contribution is still bounded by E|v|e−n /(12Tn ) =
+o(Z∗,n log R). Consequently f¯Sn (1) ≥ c log R, which gives the stated rare-input risk. All constants
+are uniform in the prescribed temperature sequence within the displayed range.
+
+    This corollary does not cover data-dependent temperature selection. It also does not assert
+failure for every possible deterministic temperature growth rate.
+
+
+5    Consequences and limits
+The adverse sample event has probability tending to e−1 . Consequently the lower bound persists at
+any fixed confidence level whose allowed failure probability is smaller than some positive constant.
+The target is noiseless, so there is no irreducible noise floor. The construction works for every fixed
+positive likelihood variance, with its constants and adverse distributions allowed to depend on that
+variance.
+    The result also distinguishes the posterior mean from a posterior draw. A large posterior second
+moment need not force a large mean, because positive and negative predictions can cancel. Here
+the good-fit region has positive prediction at the rare input, while the absolute contribution from
+its complement is exponentially smaller than the positive numerator. This explicit sign argument is
+what turns the tail calculation into a lower bound for the raw mean.
+    The finite second moment of the prior guarantees that every finite-sample posterior mean and
+risk in this construction is finite. The statement is a divergence along a sequence of sample sizes
+and data distributions, rather than an undefined posterior moment. Clipping each prediction to the
+label range would prevent this particular amplitude divergence. The theorem does not, by itself,
+establish any oracle guarantee for a clipped learner.
+    Section 4 gives the corresponding range of exponents and deterministic temperatures. These
+variants retain the same prior and architecture. The likelihood variance changes with sample size
+only when the temperature sequence is explicitly allowed to do so.
+
+
+                                                  8
+    The generic examples rule out even fixed multiplicative agnostic factors under its covariance
+and tail assumptions. It does not contradict fixed-temperature realizable guarantees that localize
+the prior near the true regression function: its cheap zero comparison has approximation error 1/2.
+Nor does it establish failure of any particular normalized Gaussian-readout neural prior. A positive
+theorem for such a prior may use feature structure beyond the generic assumptions considered here.
+
+
+A      A bounded-covariance Gaussian mixture can fail under raw
+       prediction
+A fixed Gaussian function prior and a mixture of Gaussian function priors have different raw-output
+behavior. The following example has a uniformly sub-Gaussian function supremum. Conditional
+on its latent feature, it is a centered rank-one Gaussian process with kernel diagonal at most one.
+Nevertheless its ordinary raw posterior mean has divergent population risk at every prescribed fixed
+likelihood temperature. The example concerns a general function prior; it is not a counterexample
+for the specific continuous neuron-gate prior constructed elsewhere.
+
+Theorem A.1 (A fixed-prior Gaussian-mixture obstruction). For every fixed T > 0, there is one
+prior µT on continuous real-valued functions on [0, 1], unchanged with sample size, with the following
+properties.
+
+    1. Conditional on a latent feature, the function is a centered Gaussian process whose covariance
+       is rank one or zero and whose kernel obeys K(x, x) ≤ 1 at every input.
+                                                                 √
+    2. If F (f ) = supx∈[0,1] |f (x)|, then EµT exp(F (f )2 /4) ≤ 2.
+
+    3. The zero function has prior mass 1/2.
+
+There are noiseless laws Pj with labels in {0, 1} and sample sizes nj = 2j such that the ordinary
+posterior                                (      nj                  )
+                                            1X                    2
+                          ΠS (df ) ∝ exp −         (f (Xi ) − Yi ) µT (df )
+                                            T i=1
+                                   R
+has raw posterior mean mS =            f dΠS satisfying, for all sufficiently large j,
+                            ⊗nj
+                          Pj      {RPj (mS ) ≥ cT nj } ≥ 9/10,               RPj (0) = 1/2,
+
+where cT > 0 depends only on T . The expected risk also diverges. All function paths can be chosen
+smooth, and all finite-sample posterior moments used in the proof exist.
+
+Proof. Fix T > 0 and put
+                                            1
+                               p=                  ,       nj = 2j ,           Mj = n3j .
+                                       100(T + 1)2
+
+Choose disjoint open intervals Ij ⊂ (0, 1) accumulating only at zero. In each Ij , choose Mj +1 distinct
+points xj,0 , . . . , xj,Mj and smooth bump functions ηj,i with pairwise disjoint supports compactly
+contained in Ij , satisfying 0 ≤ ηj,i ≤ 1 and ηj,i (xj,i ) = 1. For a bit vector B = (B1 , . . . , BMj ), define
+
+                                                                     Mj
+                                                 −1/2                X
+                                   ψj,B (x) = nj        ηj,0 (x) +         Bi ηj,i (x).
+                                                                     i=1
+
+
+                                                          9
+Disjoint supports ensure 0 ≤ ψj,B ≤ 1.
+    Give the zero function prior mass 1/2. Give branch j mass wj = 2−j−1 . Within that branch
+draw independent bits Bi ∼ Bernoulli(p) and an independent G ∼ N (0, 1), and set f = Gψj,B .
+These branch masses sum to 1/2, so this defines one fixed prior. Conditional on (j, B), its covariance
+is Kj,B (x, x′ ) = ψj,B (x)ψj,B (x′ ), with diagonal at most one. Also F (f ) ≤ |G|, proving the uniform
+exponential moment. Each sampled function is smooth and supported in one interval; no path
+contains an infinite sum of bumps over the branch index.
+    Under Pj , the common input xj,0 has probability 1/2 and label one. Each of the Mj other inputs
+has probability 1/(2Mj ) and label zero. Write n = nj , M = Mj . Let K be the number of common
+observations and let ki be the number of observations at rare input i. Define the event
+
+                                          En = {K ≥ n/3}.
+
+Since K ∼ Binomial(n, 1/2), Hoeffding’s inequality gives Pr(En ) ≥ 1 − e−n/18 .
+    All branches other than j are identically zero on this law’s support. Their total likelihood is
+therefore Z0 = e−K/T . In the active branch, after averaging each observed bit, the conditional
+likelihood for G is
+                          √     2                                                2
+                   e−K(G/ n−1) /T L(G),                       [(1 − p) + pe−ki G /T ].
+                                                         Y
+                                               L(G) =
+                                                        i:ki >0
+
+There are at most n observed rare coordinates, so
+
+                                        (1 − p)n ≤ L(G) ≤ 1.                                        (5)
+
+Set k = K/n. Integrating only the common-observation Gaussian factor gives
+
+                              Zc = (1 + 2k/T )−1/2 exp{−K/(T + 2k)}.
+
+Consequently the active-branch to inactive-branch posterior odds are at least
+                                                           ( "                           #)
+            wj (1 − p)n Zc     wj                            2k 2
+                           ≥        (1 + 2/T )−1/2 exp n            + log(1 − p)              .
+          1 − wj   Z0        1 − wj                      T (T + 2k)
+
+On En , 1/3 ≤ k ≤ 1. The bracket is at least
+                                           2/9 − 1/50
+                                                      > 0,
+                                            (T + 1)2
+
+because log(1 − p) ≥ −2p and T (T + 2) ≤ (T + 1)2 . The exponential in n = 2j dominates
+log(1/wj ) = O(j). Hence the active posterior mass is at least 1/2 for all sufficiently large j,
+uniformly over samples in En .
+    We next bound its posterior mean readout. After conditioning only on the common observations,
+the readout is Gaussian with
+                                        √
+                                      2k n               T
+                                 µ=          ,    v=           ≤ 1.
+                                      T + 2k          T + 2k
+              √                       √
+On En , µ ≥ 2 n/[3(T + 1)] and µ ≤ n. The active readout posterior Q is this Gaussian tilted by
+L(G). By (5) its density ratio is at most (1 − p)−n ≤ e2pn . Thus
+                                                       (1/18 − 1/50)n
+                                                                      
+                              Q{G ≤ µ/2} ≤ exp −                      .
+                                                          (T + 1)2
+
+                                                  10
+The negative contribution is bounded, by Cauchy–Schwarz under the unperturbed Gaussian, by
+                                           √               (1/9 − 1/50)n
+                                                                          
+                           EQ [(−G)+ ] ≤       n + 1 exp −               .
+                                                              (T + 1)2
+                                                                2
+Indeed the Gaussian probability of G < 0 is at most e−µ /(2v) , and its second moment is at most
+n + 1. It follows for large j that                   √
+                                                       n
+                                   EQ G ≥ µ/4 ≥            .
+                                                  6(T + 1)
+    Every unobserved bit remains independent Bernoulli(p) under this active posterior and remains
+independent of G: the likelihood contains no occurrence of that bit. Hence at every unobserved
+rare input the full posterior mean is at least
+                                                      √
+                                        1            p n
+                                          p EQ G ≥           .
+                                        2          12(T + 1)
+
+There are at least M − n ≥ M/2 such inputs. Their total population probability is at least 1/4,
+and their labels are zero. Therefore, on En ,
+
+                                                           p2 n
+                                      RPj (mS ) ≥                  .
+                                                       576(T + 1)2
+
+This proves the theorem with cT = p2 /[576(T + 1)2 ], since Pr(En ) → 1. The zero-function risk
+is exactly 1/2. The likelihood is bounded by one, its evidence is positive, and the prior function
+supremum has every finite moment, so all posterior quantities in the proof exist.
+
+Corollary A.2 (One prior for every fixed temperature). There is one prior µ, independent of
+temperature as well as sample size, with all three properties of Theorem A.1, such that its conclusion
+holds for every fixed T > 0. The positive constant and adverse data-law sequence may depend on T ;
+a single data-law sequence defeating all temperatures is not asserted.
+
+Proof. Use pairwise disjoint input intervals Ij,k for all integers j, k ≥ 1. Give the zero function
+mass 1/2 and branch (j, k) mass 2−j−k−1 ; these branch masses sum to 1/2. On that branch
+use the preceding smooth-feature construction with nj = 2j , Mj = n3j , and Bernoulli parameter
+pk = 2−k /100. The Gaussian amplitude and all supremum and covariance bounds are unchanged.
+For any fixed T , choose one fixed k = k(T ) with pk ≤ 1/[100(T + 1)2 ] and support the adverse law
+on block (j, k). All other branches vanish on that block, including those with smaller Bernoulli
+parameters. Every estimate in the preceding proof still holds, while the extra prior penalty is
+only O(k) in addition to O(j) and is dominated by the exponential evidence advantage. The final
+constant is cT = p2k(T ) /[576(T + 1)2 ] > 0.
+
+Corollary A.3 (No covariance-only raw agnostic oracle). There is no distribution-uniform oracle
+bound for the temperature-independent prior µ above and any fixed T > 0 of the form
+                                                           C2 T
+                                                                      
+                          ER(mS ) ≤ C1 inf          ρR +        KL(ρ∥µ) + o(1),
+                                         ρ≪µ                n
+with finite constants C1 , C2 , or with any other right side that stays bounded for a fixed-risk, fixed-
+entropy comparator. Indeed the comparison law concentrated on the zero atom has ρR = 1/2 and
+KL(ρ∥µ) = log 2.
+
+
+                                                      11
+    The adverse laws vary with j, whereas the function prior and likelihood variance are fixed. The
+theorem does not assert inconsistency under one fixed law. It also does not identify the above
+feature mixture with a finite neural architecture. Its purpose is to isolate a statistical obstruction:
+a uniform sub-Gaussian raw supremum and bounded conditional Gaussian covariance do not, by
+themselves, permit the sharp fixed-kernel Gaussian argument to be averaged over learned feature
+kernels. The latent feature weights can use observed zero labels to switch off training coordinates
+while leaving an unobserved positive bias.
+
+
+B     Arbitrarily light unbounded tails do not suffice at fixed temper-
+      ature
+The preceding Gaussian-mixture construction is not specific to Gaussian amplitude tails. Even much
+lighter unbounded tails cannot, by themselves, imply a general fixed-temperature raw-prediction
+oracle. The following is still a generic function-prior example, not a counterexample for a particular
+finite neural-network prior.
+Theorem B.1 (One fixed prior for every fixed temperature). Let G have any symmetric full-support
+law on R with E|G| < ∞. There is one centered prior µ on smooth functions on [0, 1], independent
+of temperature, such that
+                                    Eµ Ψ(∥f ∥∞ ) ≤ EΨ(|G|)
+for every nonnegative increasing function Ψ. For every fixed T > 0 there is a sequence of noiseless
+data laws, with labels in {0, 1} and sample sizes nj → ∞, for which the ordinary raw Gaussian-
+likelihood posterior mean satisfies
+
+                                      P{R(f¯Snj ) ≥ cT j 2 } −→ 1.
+
+The zero predictor has risk 1/2 and a comparison law of entropy at most log 2 under this one prior.
+In particular the conclusion applies to G = arsinh(Z) with Z standard Gaussian, whose moments
+grow only logarithmically. The adverse law sequence is allowed to depend on T ; one fixed law or one
+law sequence defeating all T is not asserted.
+Proof. For each integer j ≥ 1, set rj = P{j ≤ G ≤ 9j/8} > 0. Choose an integer
+
+                             nj ≥ 2j + j 2 {1 + log(1/rj )},      Mj = n3j ,
+
+increasing with j, if necessary by increasing it further. For each k ≥ 1 let pk = 2−k /1000. Choose
+disjoint open intervals Ij,k ⊂ (0, 1) and, inside each, Mj + 1 disjoint nonnegative smooth bump
+functions ζj,k,i of maximum one. Let xj,k,i be points at which the respective bumps equal one. For
+independent Bernoulli(pk ) bits B1 , . . . , BMj , define
+                                                           Mj
+                                           1             X
+                               ψj,k,B (x) = ζj,k,0 (x) +     Bi ζj,k,i (x).
+                                           j             i=1
+
+The prior has an atom of mass 1/2 at zero and, for each (j, k), mass wj,k = 2−j−k−1 on f = Gψj,k,B ,
+independently drawing G and the bits. These weights sum to one. Every individual function is
+smooth and supported in one interval, and ∥ψj,k,B ∥∞ ≤ 1. Symmetry centers the prior and proves
+the asserted tail comparison.
+    Fix T > 0 and choose k such that p = pk ≤ 1/[1000(T + 1)]. For each j, put probability 1/2 on
+xj,k,0 with label one, and probability 1/(2Mj ) on each xj,k,i , i ≥ 1, with label zero. Every inactive
+
+                                                   12
+prior branch is identically zero at these inputs. Let K count the common input in a sample of size
+n = nj . The event K ≥ n/3 has probability tending to one. We work on this event.
+    Within the active branch, integrating observed bits gives the amplitude likelihood
+                                                           Y
+             exp[−K(G/j − 1)2 /T ]L(G),         L(G) =             {(1 − p) + p exp(−ki G2 /T )},
+                                                          i seen
+
+where ki is the observed multiplicity of rare input i. For every G, (1 − p)n ≤ L(G) ≤ 1. Its branch
+normalizer Dj is therefore bounded below by
+
+                     Dj ≥ rj exp[−n/(64T )](1 − p)n ≥ rj exp[−n/(64T ) − 2pn].
+
+If G ≤ j/2, the common-input squared error is at least 1/4. Consequently the active-branch posterior
+Qj satisfies
+
+               Qj {G ≤ j/2} ≤ rj−1 exp[−n/(12T ) + n/(64T ) + 2pn] ≤ rj−1 e−n/(20T ) .
+
+For negative amplitudes the common-input error is at least one, so
+
+                                 EQj [|G|1{G<0} ] ≤ (E|G|)rj−1 e−n/(4T ) .
+
+The last two numerical bounds follow from p ≤ 1/[1000(T + 1)]. Since log(1/rj ) ≤ nj /j 2 , both right
+sides tend to zero. It follows that EQj G ≥ j/4 for all sufficiently large j.
+    The combined inactive branches have likelihood e−K/T . The posterior odds of the active branch
+are at least
+                                wj,k    Dj       wj,k
+                                       −K/T
+                                            ≥           rj en/(4T ) −→ ∞.
+                             1 − wj,k e        1 − wj,k
+Here − log wj,k = O(j + k), nj ≥ 2j , and − log rj ≤ nj /j 2 . Thus active posterior mass is at least
+one half eventually. At an unobserved rare input, its bit retains its independent Bernoulli(p) law,
+even after conditioning on the amplitude and all observed data. The full raw posterior mean there is
+therefore at least pj/8. At least Mj − nj rare inputs are unobserved, and their total population mass
+is at least 1/4. The resulting squared risk is at least p2 j 2 /256, proving the claim with cT = p2k /256.
+    The zero predictor has exactly risk 1/2. The zero function has prior probability at least 1/2,
+giving the stated comparison entropy. All posterior means exist because the likelihood is bounded
+and E|G| < ∞; the displayed lower bounds remain valid if some population risks are infinite.
+
+   The theorem preserves any prescribed native tail control obtainable from a symmetric unbounded
+amplitude law. For the asinh-Gaussian choice it is therefore compatible with the logarithmic-
+temperature positive oracle: it only rules out a generic conclusion at fixed T . Its function prior
+uses a countable mixture of feature families for the counterexample; it is not the fixed-architecture
+neural prior used in that positive result. The quantitative divergence here is measured in j, and its
+sample sizes can be much larger than in the Gaussian-amplitude example.
+
+
+References
+[1] Arnak Dalalyan and Alexandre B. Tsybakov. Aggregation by exponential weighting, sharp
+    PAC-Bayesian bounds and sparsity. Machine Learning 72(1–2):39–61, 2008. https://doi.org/
+    10.1007/s10994-008-5051-0.
+
+
+
+                                                    13
+[2] Arnak S. Dalalyan and Alexandre B. Tsybakov. Sparse regression learning by aggregation
+    and Langevin Monte-Carlo. Journal of Computer and System Sciences 78(5):1423–1443, 2012.
+    https://doi.org/10.1016/j.jcss.2011.12.023.
+
+[3] Ismaël Castillo and Paul Egels. Posterior and variational inference for deep neural networks
+    with heavy-tailed weights. Journal of Machine Learning Research 26(122):1–58, 2025. https:
+    //www.jmlr.org/papers/v26/24-0894.html.
+
+
+
+
+                                              14
+

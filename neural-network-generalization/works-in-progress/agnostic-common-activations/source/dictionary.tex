@@ -1,0 +1,263 @@
+\section{Finite dictionaries for typical Gaussian networks}
+\label{sec:dictionary}
+\begin{theorem}[A width-independent finite dictionary]
+\label{thm:dictionary}
+For $K\ge C(d+H+1)$ and $0<e<1/2$, there is a finite set $\calF_{K,e}$ of functions bounded by $M=C K^{L/2}$ such that
+\begin{equation}
+ \log|\calF_{K,e}|
+ \le C(d+1)e^{-q_H}\log^c\!\bigl(C(d+1)K/e\bigr).
+ \label{eq:dictionary-size}
+\end{equation}
+It depends on $d,H,\phi,K,e$, but not on learner width, prior scale or the measure below. For every probability measure $\xi$ on the input cube, every $N\ge1$ and every scale~\eqref{eq:scales},
+\begin{equation}
+ \mu_{N,\sigma}\left(\{\|z_w\|_\infty>M\}\cup\left\{
+   \inf_{f\in\calF_{K,e}}\|z_w-f\|_{L^2(\xi)}>Me
+   \right\}\right)
+ \le C e^{-c\omega K}.
+ \label{eq:dictionary-prob}
+\end{equation}
+The exceptional set may depend on $\xi$. The dictionary does not.
+\end{theorem}
+
+\subsection{Norm bounds and spectral coordinates}
+The event
+\begin{equation}
+ \frac dN\|W^1\|_F^2\le K,\qquad
+ \|W^\ell\|_\op^2\le K\ (2\le\ell\le H),\qquad
+ N\|v\|^2\le K
+ \label{eq:normevent}
+\end{equation}
+has probability at least $1-Ce^{-c\omega K}$. For the first and last blocks this is a chi-square bound. For an internal matrix, Gaussian operator-norm concentration around $2\tau$ gives the stated exponent once $K$ exceeds a fixed constant. The first-layer mean energy is $\tau^2(d+1)$, explaining the requirement $K\ge C(d+H+1)$.
+
+On~\eqref{eq:normevent},
+\[
+ \|h^\ell(x)\|/\sqrt N\le U_\ell,\qquad
+ U_1=A\sqrt{K(d+1)/d}+\beta,\qquad
+ U_\ell=A\sqrt K\,U_{\ell-1}+\beta.
+\]
+Hence $U_\ell\le C K^{\ell/2}$ and $|z_w(x)|\le M=C K^{L/2}$.
+
+Fix $\xi$. The normalized hidden kernel
+$Q_\ell(x,y)=N^{-1}\langle h^\ell(x),h^\ell(y)\rangle$
+is a positive finite-rank operator on $L^2(\xi)$, with trace at most $U_\ell^2$. At a cutoff $\eta_\ell>0$ retain its eigenvalues at least $\eta_\ell$. There is an $N$ by $r_\ell$ matrix $V_\ell$ with orthonormal columns such that
+\begin{equation}
+ F_\ell(x)=V_\ell^\top h^\ell(x)/\sqrt N,\qquad
+ s_\ell(x)=\|(I-V_\ell V_\ell^\top)h^\ell(x)\|/\sqrt N,\qquad
+ r_\ell\le U_\ell^2/\eta_\ell.
+ \label{eq:state}
+\end{equation}
+The discarded covariance operator has norm at most $\eta_\ell$.
+The pair $(F_\ell,s_\ell)$ has pointwise Euclidean norm at most $U_\ell$.
+A Borel choice of spectral bases can be made for the finite Gram matrix, including repeated eigenvalues.
+
+Conditional on earlier layers, the next row preactivation is exactly
+\begin{equation}
+ a_i^\top F_{\ell-1}(x)+Z_i(x),
+ \label{eq:decomposition}
+\end{equation}
+where the $a_i$ are independent $N(0,\tau^2I)$ and the $Z_i$ are independent centered Gaussian fields, independent of the $a_i$, with covariance $\tau^2$ times the discarded kernel. Their pointwise variance is $\tau^2s_{\ell-1}(x)^2$.
+On~\eqref{eq:normevent},
+\[
+ \frac1N\sum_i a_ia_i^\top\preceq KI,
+\]
+because the coefficient matrix is $\sqrt N W^\ell V_{\ell-1}$.
+
+\subsection{Removing the Gaussian residual fields}
+The next two bounds hold conditionally on all earlier layers and all $a_i$. Write
+\[
+ h_i(x)=\phi(a_i^\top F(x)+Z_i(x)),\quad
+ m_i(x)=\E_Zh_i(x),\quad r_i(x)=h_i(x)-m_i(x).
+\]
+Suppose the discarded kernel has operator norm at most $\eta$ and pointwise diagonal at most $U^2$.
+
+\begin{lemma}[Residual operator]
+\label{lem:residual}
+As an operator from $\R^N$ to $L^2(\xi)$, let
+$B_rc=N^{-1/2}\sum_i c_i r_i$. Except on conditional probability $e^{-\omega K}$,
+\begin{equation}
+ \|B_r\|_\op\le C A\left\{\frac U{\sqrt\omega}
+                      +\sqrt{\eta(K+1)}\right\}.
+ \label{eq:residualop}
+\end{equation}
+Consequently every orthonormal $N$ by $r$ matrix $V$, even one chosen after the current features are seen, satisfies
+\[
+ \|V^\top(h-m)/\sqrt N\|_{L^2(\xi;\R^r)}
+ \le\sqrt r\,\|B_r\|_\op.
+\]
+\end{lemma}
+\begin{proof}
+For fixed $\|c\|=1$, independence and Gaussian Poincar\'e give
+$\E\|B_rc\|^2\le A^2\tau^2U^2/N=A^2U^2/\omega$.
+As a function of the independent standard Gaussian row variables,
+$\|B_rc\|$ is $A\tau\sqrt{\eta/N}$-Lipschitz. Indeed apply pointwise Cauchy--Schwarz in the row index, the Lipschitz property of $\phi$, and the operator norm $\sqrt\eta$ of the residual Gaussian covariance square root into $L^2(\xi)$.
+
+Gaussian concentration~\cite{gaussian}, a $1/2$-net of the unit sphere of cardinality at most $5^N$, and the usual net bound on operator norm prove~\eqref{eq:residualop}. The squared deviation used in the union bound is
+$2A^2\eta(K+\tau^2\log5)$: its tail exponent is $\omega K+N\log5$.
+The last assertion follows by summing the squared bound over the columns of $V$.
+\end{proof}
+
+\begin{lemma}[A uniform residual standard deviation]
+\label{lem:rms}
+Let $P$ be an orthogonal projector of rank $r$ and put
+\[
+ T_P(x)=\|(I-P)h(x)\|/\sqrt N,\qquad
+ b_P(x)=\sqrt{\|(I-P)m(x)\|^2/N+
+                      N^{-1}\sum_i\operatorname{Var}(h_i(x))}.
+\]
+On the norm event, except on conditional probability at most $Ce^{-\omega K}$, simultaneously for every such projector of every allowed rank,
+\begin{align}
+ \|T_P-b_P\|_{L^2(\xi)}
+ \le C A\biggl\{
+ U\sqrt{\frac{r+1}{\omega}}
+ +\sqrt{\eta\left[K+(r+1)
+                  \log\left(2+\frac{\sqrt{r+1}}{\kappa}\right)\right]}
+ +\kappa U_{\rm next}
+ \biggr\}
+ \label{eq:rms}
+\end{align}
+for $0<\kappa<1$. Here $U_{\rm next}$ is the next-layer norm bound, and constant factors in it are harmless.
+\end{lemma}
+\begin{proof}
+First fix $P$ independently of the current residual fields. The map from those standard Gaussian variables to $\|T_P-b_P\|_{L^2(\xi)}$ is $A\tau\sqrt{\eta/N}$-Lipschitz. Pointwise Poincar\'e gives
+\[
+ \operatorname{Var}(T_P(x))
+       \le A^2\tau^2s_{\rm prev}(x)^2/N.
+\]
+The row fluctuations are independent, so
+\[
+ \E T_P(x)^2=b_P(x)^2-
+                 N^{-1}\sum_iP_{ii}\operatorname{Var}(h_i(x)).
+\]
+The last term is between zero and $rA^2\tau^2s_{\rm prev}(x)^2/N$.
+Using $\E(T-\sqrt{\E T^2})^2\le2\operatorname{Var}(T)$ and the square-root inequality gives
+\[
+ \E\|T_P-b_P\|_{L^2}\le C A U\sqrt{(r+1)/\omega}.
+\]
+
+A $\kappa$-net of the rank-$r$ Stiefel manifold in Frobenius norm has cardinality at most $(1+2\sqrt r/\kappa)^{Nr}$. Its projectors approximate in operator norm to within $2\kappa$. On the norm event, $\|h\|/\sqrt N\le U_{\rm next}$; the coefficient Gram bound also gives $\|m\|/\sqrt N\le C U_{\rm next}$. Replacing $P$ by a net projector therefore changes both $T_P$ and $b_P$ in $L^2$ by at most $C\kappa U_{\rm next}$. Gaussian concentration and this net prove~\eqref{eq:rms}. The net contribution to the squared deviation is at most $C\eta\tau^2r\log(2+\sqrt r/\kappa)$, bounded by the displayed expression.
+
+For simultaneous ranks, assign failure probability $e^{-\omega K-r-1}$ at rank $r$ and sum. The additional term in the squared deviation is bounded by $C\eta(r+1)$ and is already covered. Ranks cannot exceed $N$. The norm-event intersection handles the interpolation bounds; its complement was counted separately in~\eqref{eq:normevent}.
+\end{proof}
+
+For the actual spectral projector at layer $\ell$, set
+$b_i=\sqrt N(V_\ell)_{i,*}$, so $N^{-1}\sum_i b_ib_i^\top=I$.
+Let $G_0$ be an independent scalar standard normal and define
+\[
+ Y_i(x,G_0)=\phi(a_i^\top F_{\ell-1}(x)+\tau s_{\ell-1}(x)G_0).
+\]
+The two lemmas approximate the actual pair $(F_\ell,s_\ell)$ by
+\begin{equation}
+ \left(\E_{i,G_0}b_iY_i,\quad
+       \sqrt{\E_{i,G_0}Y_i^2-\|\E_{i,G_0}b_iY_i\|^2}\right).
+ \label{eq:modelpair}
+\end{equation}
+Although $b_i$ depends on the current residual fields, the factor bound was uniform over orthonormal matrices and the RMS bound uniform over projectors. Thus this substitution does not assume false conditional independence.
+
+\subsection{Why errors do not acquire repeated square roots}
+The coordinate functions of $b_i$ are orthonormal in
+$L^2(\text{uniform }i\times\text{Gaussian }G_0)$. For any scalar $Y$, the map
+\[
+ Y\longmapsto\left(\E bY,\ \|Y-\operatorname{proj}_bY\|_2\right)
+\]
+is $1$-Lipschitz by Pythagoras and the reverse triangle inequality.
+Together with the coefficient Gram bound, changing a previous state $(F,s)$ to $(F',s')$ changes~\eqref{eq:modelpair} by at most
+\begin{equation}
+ A\sqrt{K\|F-F'\|_{L^2}^2+\tau^2\|s-s'\|_{L^2}^2}.
+ \label{eq:propagation}
+\end{equation}
+No derivative of $\phi$ is used. In particular the argument never differentiates a ReLU Gaussian mean with respect to variance at zero.
+
+Apply Lemma~\ref{lem:sampling} to~\eqref{eq:modelpair}, evaluated on the \emph{already approximated} preceding state, with
+\[
+ q=1+\|a\|^2/K+\|b\|^2+G_0^2,\qquad
+ Z\le2+r_{\rm prev}+r.
+\]
+Then $Y/\sqrt q=\psi_c(\sqrt K\,a'^\top F+g's)$, where
+\[
+ \psi_c(t)=c\phi(t/c),\quad c=1/\sqrt q,\quad
+ a'=a/(\sqrt K\sqrt q),\quad g'=\tau G_0/\sqrt q .
+\]
+All normalized parameters have norm at most one; the normalized feature and its second moment are bounded by $C U_\ell$. The vector
+$u'=(a',g')$ satisfies the empirical-Gram conditions of Remark~\ref{rem:inputgram}, since its importance-weighted expected Gram is
+$\operatorname{diag}(\E aa^\top/K,\tau^2)\preceq I$.
+Consequently the selected sampled layer, including Gram whitening and radial projection to radius $U_\ell$, is $C A\sqrt K$-Lipschitz in its incoming state, independently of its ranks.
+
+At the first layer apply the same sampling lemma directly to the empirical distribution of actual incoming rows and $b_i$, with
+$q=1+(d+1)\|W^1_{i,*}\|^2/K+\|b_i\|^2$.
+There is no Gaussian residual-removal error at that layer.
+
+At the final hidden layer a scalar approximation is enough. Write the readout as $N^{-1}\sum_i c_i h_i$ with $c_i=Nv_i$ and $N^{-1}\sum_i c_i^2\le K$. Lemma~\ref{lem:residual} gives
+\[
+ \left\|z-\E_{i,G_0}c_iY_i\right\|_{L^2}
+ \le C\sqrt K\left\{U_{H-1}/\sqrt\omega+
+                         \sqrt{\eta_{H-1}(K+1)}\right\}.
+\]
+The scalar importance construction after Lemma~\ref{lem:sampling} compresses this expectation. Its selected empirical input Gram and coefficient second moment ensure state Lipschitz constant $C A K$. For $H=1$ apply this scalar construction directly to the first-layer row distribution.
+
+\subsection{Quantitative ranks and a finite dictionary}
+We give the bookkeeping because the polynomial degree is part of the claim.
+For $H\ge2$ set the final absolute output accuracy to $\varepsilon=C K^{L/2}e$.
+Take local state errors
+\[
+ \delta_\ell=c_H\varepsilon K^{-(H-\ell+1)/2},\qquad
+ \eta_{H-1}=c_H\varepsilon^2/K^2,
+\]
+and choose successively
+\[
+ \eta_{\ell-1}
+ =c_H\frac{\delta_\ell^2\eta_\ell}{K U_\ell^2 J},
+ \qquad J=C_H\log(C_HK/e).
+\]
+Small constants are chosen in depth order to absorb the Lipschitz factors in~\eqref{eq:propagation}. With $\kappa_\ell=c_H\delta_\ell/U_\ell$, the residual errors in Lemmas~\ref{lem:residual} and~\ref{lem:rms} are at most $\delta_\ell$, apart from their finite-effective-width terms.
+The deterministic rank caps satisfy
+\begin{equation}
+ R_\ell\le C_H e^{-2(H-\ell)}J^{H-\ell-1},
+                  \qquad 1\le\ell\le H-1.
+ \label{eq:rankcaps}
+\end{equation}
+The importance sample counts can be chosen as
+\[
+ k_\ell\le C_H(1+R_{\ell-1}+R_\ell)e^{-2}\log^c(C_HK/e),
+\]
+with $Z_1\le3+R_1$ at the first layer and the corresponding scalar count at the terminal layer. The total scalar parameter count, including the normalized incoming and outgoing coefficient vectors, is bounded by
+\begin{equation}
+ C_H(d+1)e^{-(4H-2)}\log^c(C_HK/e).
+ \label{eq:paramcount}
+\end{equation}
+For example the largest product is of order $e^{-2}R_1^2$; subsequent layers and the scalar terminal fit the same bound.
+
+The finite-effective-width terms are small whenever
+\begin{equation}
+ \omega\ge T:=C_H K^{-1}e^{-2}
+              \max(1,R_2,\ldots,R_{H-1})\log^c(C_HK/e).
+ \label{eq:effectivewidth}
+\end{equation}
+The first layer contributes no such condition. If $\omega<T$, then $N\le\omega<T$, and we instead cover the original finite network directly on~\eqref{eq:normevent}. The number of parameters is at most
+$C_H(T^2+dT)$, which fits~\eqref{eq:paramcount}. Entrywise parameter bounds and network Lipschitz constants are polynomial in $K,T,d$ at fixed depth; parameter quantization adds only logarithms. This small-width argument does not change the prior or introduce a mixture of widths. For $H=1$ the direct scalar sampling argument has no effective-width threshold.
+
+It remains to discretize the scalar perspective functions without assumptions on the asymptotic behavior of $\phi$. Each $\psi_c$ is $A$-Lipschitz and $|\psi_c(0)|\le\beta$. On a bounded interval $[-T_0,T_0]$, the class of all such scalar functions has a uniform $\eta$-net with logarithmic cardinality
+\[
+ C(1+AT_0/\eta)\log(2+(\beta+AT_0)/\eta).
+\]
+Construct it by a mesh of spacing $\eta/(CA)$ and quantized vertex values, with piecewise-linear interpolation. The representatives can be taken $2A$-Lipschitz. This factor is absorbed into the depth-dependent constants.
+
+At layer $\ell<H$ the argument interval has radius $T_0\le C U_\ell$.
+Choose scalar activation accuracy
+$\eta_\ell'=c_H\varepsilon K^{-(H-\ell+1)/2}/\sqrt{Z_\ell}$;
+at the terminal layer choose
+$\eta_H'=c_H\varepsilon/\sqrt{KZ_H}$.
+The empirical input-Gram constraints and the state Lipschitz bounds above propagate these errors to total output error at most $C\varepsilon$. In both cases
+\[
+ T_0/\eta_\ell'\le C_H\sqrt{Z_\ell}/e.
+\]
+Thus independently choosing the scalar activation at every atom costs at most
+\[
+ \sum_\ell C_H k_\ell\sqrt{Z_\ell}/e
+ \le C_H e^{-3H}\log^c(C_HK/e)
+\]
+in log cardinality. For $H\ge2$, $3H\le4H-2$, so~\eqref{eq:paramcount} still dominates.
+For $H=1$, bounded $Z$ and $O(e^{-2})$ scalar samples give exponent three.
+
+Finally quantize the remaining bounded program parameters. The ridge is bounded below by a polynomial in $e$ and $K^{-1}$, so matrix inversion, inverse square root and the augmented residual formula have polynomial parameter Lipschitz constants. State radial projections are contractions, and the chosen scalar functions have bounded Lipschitz constants. A sufficiently fine polynomial parameter mesh therefore costs only additional logarithms. Representatives can be selected from nonempty mesh cells intersecting the empirical-Gram constraint set, preserving its state Lipschitz bounds. Clip the terminal output to $[-M,M]$.
+
+The resulting finite set is independent of $\xi,N,\sigma$. Conditional failure probabilities from the Gaussian lemmas sum over the fixed number of layers to $Ce^{-c\omega K}$. Intersecting with~\eqref{eq:normevent}, choosing small depth-dependent approximation constants, and the direct small-width cover prove Theorem~\ref{thm:dictionary}.

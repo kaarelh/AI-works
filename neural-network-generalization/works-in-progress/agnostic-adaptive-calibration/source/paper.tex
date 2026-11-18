@@ -1,0 +1,175 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,mathtools,booktabs,microtype}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Bayesian neural networks adapt to approximation error},pdfauthor={ChatGPT-6 Astra; Claude Opus 5.5; Kaarel Hänni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}[section]\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{definition}\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\E}{\mathbb E}\newcommand{\Prob}{\mathbb P}\newcommand{\R}{\mathbb R}\newcommand{\N}{\mathbb N}
+\newcommand{\KL}{\operatorname{KL}}\newcommand{\Rad}{\operatorname{Rad}}\newcommand{\Lip}{\operatorname{Lip}}
+\newcommand{\clip}{\operatorname{clip}}\newcommand{\one}{\mathbf1}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\title{Bayesian neural networks adapt to approximation error}
+\author{ChatGPT-6 Astra \and Claude Opus 5.5 \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{18 November 2026}
+\begin{document}\maketitle
+\begin{abstract}
+We give finite-posterior approximation guarantees for a dense Bayesian neural network without knowing the width, coefficient bound, approximation error, or noise level of a useful comparison network. The learner has one fixed architecture and independent Gaussian parameter coordinates. Its prediction is the ordinary posterior mean of its raw real output. An empirical free-energy equation selects the Gaussian observation variance. For every prior exponent $\gamma\ge2$, a comparison network of squared risk $R$ and implementation budget $A$ gives excess, up to logarithms, $A R^{1-1/r}n^{-1/r}+A^r/n$. One may take $r$ equal to hidden depth for tanh with at least two hidden layers, and total affine depth for every fixed globally Lipschitz activation. Shallow tanh has the sharper bound $\sqrt{AR/n}+A/n$. A second proof covers every $\gamma\ge1$ and every fixed globally Lipschitz activation, with a dimensional cost and a noiseless rate $n^{-2/(d+2)}$. All guarantees are independent of learner width and simultaneous over eligible comparison caps. When two calibrations apply, the learner can select the posterior with the smaller observable risk certificate. No architecture prior or mixture of predictors is introduced. A shallow ReLU specialization has sample cost quadratic in path variation, and a normalization argument extends the raw-output bounds to sub-Gaussian labels with only logarithmic changes. We also prove that fixed physical observation variance, and several ordinary variance-hyperprior alternatives, cannot provide this all-width behavior even for a constant target.
+\end{abstract}
+
+\section{Learning at an unknown approximation scale}
+A small neural network may approximate a regression function well even when no small network explains the labels exactly. A useful Bayesian guarantee should compare test loss with that approximation, remain valid when the learner is much wider, and improve when the comparison error is small. It should also select its likelihood without being told which width or coefficient cap gives a useful approximation.
+
+This paper obtains those properties by retaining empirical free energy in the posterior-tail calculation. The free energy measures the compromise between fit and prior cost that the posterior actually makes on the observed sample. A scalar calibration adapts the likelihood to this compromise. Prediction uses one posterior at one selected variance; neither network size nor temperature is averaged over a prior.
+
+Let $R(g)=\E(g(X)-Y)^2$, let $H$ denote hidden depth, and put $L=H+1$ for depth including the linear readout. For a width-$m$, coefficient-$B$ teacher, useful implementation budgets are
+\begin{align}
+ E_{\tanh}&=d(d+1)B^2+2Hm^2B^2,\label{eq:intro-tanh-energy}\\
+ E_{\mathrm{ReLU}}&=L[d(d+1)]^{1/L}m^{2H/L}B^2.\label{eq:intro-relu-energy}
+\end{align}
+The first budget also applies to a general Lipschitz activation. Precise costs below add explicit logarithmic neighborhood and confidence terms. At fixed dimension, depth, and activation, write $A_g=\widetilde O(E_g)$ for those costs.
+
+For prior exponents $\gamma\ge2$, the main approximation bound is
+\begin{equation}
+ R(\widehat f_n)\le\inf_g\left\{R(g)+\widetilde O\left(
+ A_gR(g)^{1-1/r}n^{-1/r}+A_g^r/n\right)\right\}.
+ \label{eq:intro-oracle}
+\end{equation}
+Here $r=H$ for tanh with $H\ge2$, and $r=L$ for ReLU. The latter exponent applies to every fixed globally Lipschitz activation, including tanh, GELU, sigmoid and softplus, and allows nonzero activation values at the origin. A scalar-link entropy argument adds only logarithms in sample size; a simpler signed-hinge decomposition avoids those extra logarithms for activations with bounded derivative variation. With one hidden layer, the Gaussian moment hypothesis holds for all $\gamma\ge1$. Shallow tanh has the stronger remainder
+\begin{equation}
+ \widetilde O\left(\sqrt{A_gR(g)/n}+A_g/n\right).
+ \label{eq:intro-shallow}
+\end{equation}
+
+For every $\gamma\ge1$, including deep mean-field networks, an input-domain covering argument gives
+\begin{equation}
+ R(\widehat f_n)\le\inf_g\left\{R(g)+\widetilde O\left(
+ A_gR(g)^{1-1/r}n^{-2/[r(d+2)]}
+       +A_g^r n^{-2/(d+2)}\right)\right\}.
+ \label{eq:intro-all-gamma}
+\end{equation}
+Every fixed globally Lipschitz activation permits $r=L$. For tanh this improves to
+$r=\max\{2,(2+dL)/(d+2)\}$. No bounded-variation assumption on the derivative is needed in this second argument. The dimensional exponent is its cost for covering all prior scales.
+
+The infima have a precise simultaneous interpretation: one sample event compares the selected learner with the population minimizer of every integer width and coefficient cap fitting inside its architecture. Neither those caps nor their risks enter the calibration. The data law may be discrete or continuous and need not follow a Gaussian noise model. For a conditional mean $f_0(x)=\E[Y\mid X=x]$ and noise variance $\nu=\E\operatorname{Var}(Y\mid X)$, the identity
+$R(g)=\nu+\|g-f_0\|_{L^2(P_X)}^2$ turns each statement into an approximation guarantee for $f_0$.
+
+The main restriction on comparison functions is a coefficient bound, in addition to width and depth. These raw-output theorems allow arbitrary input laws. The sample-polynomial degree still worsens with depth; this paper does not assert a polynomial bound jointly in width and unrestricted depth. It also does not give an efficient method for evaluating the evidence or posterior integral.
+
+\section{One Gaussian architecture and its likelihood calibration}
+Inputs lie in $[-1,1]^d$, labels satisfy $|Y|\le1$, and observations are IID. Appendix~\ref{sec:subgaussian-adaptive-transfer} extends the raw-output guarantees to sub-Gaussian labels; Appendix~\ref{sec:shallow-ReLU-path} specializes the shallow ReLU case to Euclidean-ball inputs. At learner width $N$, put $\bar x=(1,x)$ and
+\[
+ h^1=\phi(W^1\bar x),\qquad h^\ell=\phi(W^\ell h^{\ell-1})\ (2\le\ell\le H),
+ \qquad z_w=v^{\mathsf T}h^H.
+\]
+There are no internal biases. Ordinary biased teachers can be compiled by a constant neuron, as explained below. The activation is fixed and known. Define
+\begin{equation}
+ Q_N(w)=\frac dN\|W^1\|_F^2+\sum_{\ell=2}^H\|W^\ell\|_F^2+N\|v\|_2^2.
+ \label{eq:energy}
+\end{equation}
+For $s=N^{-\gamma}$, $\gamma\ge1$, the prior $\mu_{N,s}$ has independent centered Gaussian coordinates with variances $Ns/d$, $s$, and $s/N$ in the first, internal, and readout layers. Its density is proportional to $e^{-Q_N/(2s)}$. These are actual finite-width priors. The full-energy argument requires $\gamma\ge2$ at more than one hidden layer; the operator-norm argument covers the entire specified range.
+
+For a sample $S=((X_i,Y_i))_{i=1}^n$, write
+$\widehat R_S(f)=n^{-1}\sum_i(f(X_i)-Y_i)^2$.
+At a likelihood parameter $\lambda>0$, choose Gaussian observation variance $n\lambda s$. The posterior and empirical free energy are
+\begin{align}
+ \Pi_{S,\lambda}(dw)&=Z_S(\lambda)^{-1}
+ e^{-\widehat R_S(z_w)/(2\lambda s)}\mu_{N,s}(dw),\label{eq:posterior}\\
+ F_S(\lambda)&=-2\lambda s\log Z_S(\lambda)
+ =\inf_\rho\left\{\int\widehat R_S(z_w)d\rho
+                  +2\lambda s\KL(\rho\Vert\mu_{N,s})\right\}.
+ \label{eq:freeenergy}
+\end{align}
+The Gaussian likelihood's weight-independent normalizer is omitted from $Z_S$. This does not change the posterior at a fixed $\lambda$, but it is part of the definition of the calibration. The procedure is not maximum marginal-likelihood estimation of a physical noise variance.
+
+For the full-energy proof with $r\ge2$, choose the unique positive root
+\begin{equation}
+ \lambda^r=256a_n^2[2F_S(\lambda)+\lambda(K_n+1)]^{r-1}.
+ \label{eq:root-calibration}
+\end{equation}
+The deterministic $a_n=\widetilde O(n^{-1/2})$ and logarithmic $K_n$ are specified in Section~\ref{sec:abstract}. For shallow tanh, choose the smallest minimizer of
+\begin{equation}
+ F_S(\lambda)(1+4a_n^2/\lambda)+c_0\lambda
+ \quad\text{over }\lambda\ge16a_n^2.
+ \label{eq:shallow-calibration}
+\end{equation}
+Both rules are well defined at every $n\ge2$.
+
+The all-scale proof uses the equivalent notation $\omega=1/s$ and $\tau^2=Ns$. Its root is
+\[
+ \lambda^p=\theta_n[2F_S(\lambda)+\lambda b_n]^q,
+ \qquad p=r(d+2)/2,\quad q=p-(d+2)/2,
+\]
+with explicit constants and a deterministic small-sample fallback in Section~\ref{ag-sec:adaptive-core}. Each calibration has an observable upper certificate for posterior-average test risk. Section~\ref{sec:certificate-selection} explains how to select the smaller certificate when more than one is available. In every case the final predictor is one ordinary raw posterior mean,
+\[
+ \widehat f_n(x)=\int z_w(x)d\Pi_{S,\lambda_S}(w).
+\]
+
+\input{abstract-theorem}
+\input{network-ingredients}
+\input{network-corollaries}
+\input{all-lipschitz-capacity}
+\input{all-lipschitz-chaining}
+\input{activation-variation}
+\input{all-gamma-network-ingredients}
+\input{all-gamma-finite-cover-statistics}
+\input{all-gamma-adaptive-core}
+\input{all-gamma-population-oracle}
+\input{all-gamma-relu-selective}
+
+\section{One posterior can use the best available certificate}
+\label{sec:certificate-selection}
+The two arguments apply to the same Gaussian prior and likelihood family. At a scale where both are valid, evaluate each calibration with failure probability $\delta/2$. The full-energy certificate is
+\[
+ C_E(S)=F_S(\lambda_E)+c_0\lambda_E+n^{-4}
+\]
+for $r\ge2$, or
+\[
+ C_E(S)=F_S(\lambda_E)(1+4a_n^2/\lambda_E)+c_0\lambda_E+n^{-4}
+\]
+for shallow tanh. The operator-norm certificate is
+\[
+ C_O(S)=F_S(\lambda_O)+2B_H\lambda_O+n^{-3},
+\]
+or its declared deterministic bound on the fallback branch. All quantities are functions of the specified learner and the observed sample.
+
+Select whichever pair $(\lambda_E,C_E)$ or $(\lambda_O,C_O)$ has smaller certificate, with a fixed tie rule. On the intersection of the two theorem events, the posterior-average risk at the selected temperature is at most $\min\{C_E,C_O\}$. Its ordinary mean has no larger risk by Jensen. The comparison arguments bound the certificates themselves, so the selected learner inherits the smaller of the corresponding approximation-oracle bounds. The union of their failure probabilities is at most $\delta$.
+
+If only the operator-norm argument applies, use that certificate alone. No teacher cap, risk, or noise parameter is supplied to this selection rule, and no temperature mixture is introduced. For example, a deep mean-field network uses the all-scale argument; a sufficiently strong tanh prior can additionally use the sharper full-energy certificate.
+
+\section{Interpretation and scope}
+The statistical gain comes from the actual posterior objective. When a small comparison network has small risk, its comparison measure gives small free energy. The weighted objective-tail bound then reduces both the empirical-loss range and the parameter range that need to be controlled. The calibration adjusts to that reduction using only the observed data.
+
+For the full-energy argument an exactly fitting teacher gives a $1/n$ rate, while the all-scale argument gives $n^{-2/(d+2)}$. At positive fixed comparison risk, their slower depth-dependent exponents remain. These statements concern risk, so they also cover approximation error and bounded label noise without assuming that the Gaussian likelihood is a correct data-generating model.
+
+The coefficient cap matters for unrestricted input laws. A fixed number of neurons with very large coefficients can vary on very small input scales. The present theorems do not identify network width alone with an adequate uniform complexity measure. Separate bounded-output results under regular input laws can change that conclusion; those are different observation conventions and assumptions.
+
+The prior is fixed at each learner architecture. The likelihood variance depends on sample size and is selected from free energy for prediction. It is not claimed to estimate the physical conditional noise variance. Appendix~\ref{sec:normalization} gives simple obstructions to several fixed-variance and fixed-hyperprior alternatives.
+
+\paragraph{Verification status.}
+These are conventional mathematical proofs, not Lean formalizations. The two main statistical routes and the activation extension have undergone separate mathematical audits. The full-energy route invokes the stated smooth-loss Rademacher inequality; the operator-norm route constructs its statistical event directly from finite covers and Bernstein's inequality. All events are fixed before the sample-dependent likelihood calibration.
+
+\appendix
+\input{shallow-relu-path}
+\input{subgaussian-transfer}
+\input{normalization}
+\begin{thebibliography}{99}
+\bibitem{sst} Nathan Srebro, Karthik Sridharan and Ambuj Tewari.
+\emph{Smoothness, Low Noise and Fast Rates}. Advances in Neural Information Processing Systems 23, 2010.
+\url{https://www.cs.cornell.edu/~sridharan/smoothness.pdf}.
+\bibitem{talagrand} Michel Talagrand. \emph{Upper and Lower Bounds for Stochastic Processes}. Springer, 2014. Gaussian Sudakov minoration, entropy bounds, and the two-sided majorizing-measure theorem.
+\bibitem{finite} ChatGPT-6 Astra, Claude Opus 5.5, Kaarel H\"anni and Dmitry Vaintrob.
+\emph{Finite Gaussian Bayesian networks can compete with small approximating networks}. Research manuscript, 2026.
+\url{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/works-in-progress/agnostic-finite-posteriors}.
+\bibitem{relu} ChatGPT-6 Astra, Claude Opus 5.5, Kaarel H\"anni and Dmitry Vaintrob.
+\emph{A sharp comparator-growth threshold for Gaussian Bayesian ReLU networks}. Research manuscript, 2026.
+\url{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/works-in-progress/agnostic-relu-sharp}.
+\bibitem{common-program} ChatGPT-6 Astra, Claude Opus 5.5, Kaarel H\"anni and Dmitry Vaintrob.
+\emph{Agnostic oracle bounds for Gaussian neural networks with Lipschitz activations}. Research manuscript, 2026.
+\bibitem{smooth-program} ChatGPT-6 Astra, Claude Opus 5.5, Kaarel H\"anni and Dmitry Vaintrob.
+\emph{Finite Bayesian neural networks as agnostic approximation learners}. Research manuscript, 2026.
+\end{thebibliography}
+\end{document}

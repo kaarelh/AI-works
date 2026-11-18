@@ -1,0 +1,259 @@
+\section{Restoring bit circuits with a raw normalized readout}
+\label{sec:raw-restoring-bits}
+This comparison refinement separates an analog prefix from later digital
+computation. It concerns the same gamma-gated Student hidden prior and
+normalized Gaussian readout. No additional restriction is imposed on
+the learner's prior.
+
+Fix an input law $P_X$ and a measurable good set $\mathcal A$ with
+$P_X(\mathcal A^c)\le\xi$. A teacher prefix has depth $J$, width at most
+$m$, coefficient cap $B_0$, and resource $Q_{\rm pre}$ in the neuron-gate
+comparison. On $\mathcal A$, the final features used by the digital block approximate specified
+bits in $\{-1,1\}$ within $\delta/4$. Other final prefix features may be retained but have zero intended outgoing coefficients in that block.
+After the prefix, let a layered signed-bit circuit use unweighted
+majority gates, including copying and negation. Before multiplying by
+a gain $k$, each gate has integer coefficients of magnitude at most
+one, a bias of magnitude at most $m+1$, and signed preactivation margin
+at least one on its intended input bits. Let $Q_{\rm dig}$ count all
+active dense coefficient positions, hidden vertices and layers after
+the prefix, including zero positions between selected neurons.
+The actual tanh implementation multiplies each gate's coefficients
+and bias by
+\[
+ k\ge\log(8/\delta),\qquad
+ 0<\delta\le\frac1{16(m+1)}.
+\]
+Let the ideal bit readout have coefficients $v_j$, bias $b$, and
+$L=\sum_j|v_j|$, with $L+|b|\le4$. Let $g_*$ denote that ideal readout
+on $\mathcal A$, extended arbitrarily with $|g_*|\le4$ outside it.
+
+\begin{lemma}[A depth-stable raw bit comparison]
+\label{lem:raw-bit-comparison}
+For every prescribed finite width $N\ge m$, there is a
+sample-independent comparison law $\rho$ for the raw-output learner
+such that
+\[
+ \rho\{\|z_w\|_\infty\le6\}=1,\qquad
+ \E_\rho\|z_w-g_*\|_{L^2(P_X)}^2
+       \le C(\delta^2+\xi),
+\]
+and
+\begin{align}
+ \KL(\rho\Vert\mu_N)\le C Q_{\rm pre}
+ &\left[(J+2)\log\{C(d+m+2)(B_0+2)\}
+                   +\log(1/\delta)\right]\notag\\
+ &+C(Q_{\rm dig}+m+1)
+       \log\frac{C(Q_{\rm pre}+Q_{\rm dig}+m+2)(k+1)}{\delta}
+       +C(L^2+b^2).
+ \label{eq:raw-bit-resource}
+\end{align}
+Constants depend on the fixed prior parameters but not on learner
+width, prefix depth, or digital depth. In particular the digital
+block pays its actual parameter count times logarithms, without
+a further factor of its depth.
+\end{lemma}
+\begin{proof}
+First construct a comparison before imposing three good events.
+Choose the usual disjoint per-vertex location groups at every layer.
+In the prefix use the standard gate comparison with scalar precision
+small enough that the maximum expected squared uniform error over
+all its final selected features is at most
+$\delta^2/[10^4(m+1)]$. Its depth-uniform stability bound shows that
+the logarithm of this precision is at most
+\[
+ C(J+2)\log\{C(d+m+2)(B_0+2)\}
+       +C\log((m+1)/\delta).
+\]
+The first good event makes every such feature error at most
+$\delta/4$. A union bound and Markov's inequality give this event
+probability at least $0.99$. On $\mathcal A$ the actual prefix output
+is then within $\delta/2$ of its intended bits. Outgoing gates of
+the last prefix layer can be assigned at the next step, because they
+do not enter their own features.
+
+At every digital layer put selected gates uniformly near one,
+condition the total inactive gate mass to be at most $\epsilon$,
+and put selected edge/bias factors uniformly within $\epsilon$ of
+their intended gain-$k$ values. All actual tanh features are bounded
+by one. The selected coefficient perturbation in one row is
+deterministically at most $C m(k+1)\epsilon$. Its inactive background
+has expected uniform absolute value at most $C\epsilon$, since the
+total inactive gate mass is at most $\epsilon$ and the native factor
+has a fixed first absolute moment. These bounds do not require the
+preceding features to be independent of one another.
+
+Let $V_{\rm dig}$ be the number of digital gates and choose
+\[
+ \epsilon\le
+ \frac{c}{(V_{\rm dig}+1)(m+1)(k+1)}.
+\]
+The sum of the expected uniform absolute perturbations over every
+digital row is then at most $k/1000$. The second good event makes
+each such perturbation at most $k/8$; Markov's inequality gives
+failure probability at most $0.01$.
+
+On the first two good events, the digital output error remains
+at most $\delta$ at every depth. Indeed, if incoming features are
+within $\delta$ of the intended bits, their contribution to the
+preactivation error is at most $km\delta\le k/16$.
+The ideal signed margin is at least $k$, and the new row perturbation
+is at most $k/8$. Thus the actual preactivation has the correct sign
+and magnitude at least $3k/4$. Its tanh output differs from that sign
+by at most $2e^{-3k/2}\le\delta$. Induction proves the assertion,
+starting from the prefix error $\delta/2$.
+
+At the normalized Gaussian readout use the variation-adapted
+Dirichlet comparison: selected latent gate centers are
+\[
+ \omega_j=(|v_j|+L/r)/(2L)
+\]
+when $L>0$, where $r$ is the number of selected output bits; use
+$\omega_j=1/r$ if $L=0$. They sum to one and are at least $1/(2r)$.
+The selected Gaussian centers are $v_j/\sqrt{\omega_j}$.
+Their quadratic cost is at most $2L^2$, and the bias adds $Cb^2$.
+Choose its scalar precision at most $c\delta/(m+1)$.
+The selected effective coefficient errors then have total absolute
+size at most $C\delta$, while the inactive contribution has expected
+uniform absolute size at most $c\delta$ by the bound
+$\sum_{\rm inactive}\sqrt{P_j}\le C\epsilon$ in the readout comparison.
+The third good event bounds that inactive absolute contribution by
+$\delta/100$; choosing its precision constant small makes its
+failure probability at most $0.01$.
+
+The intersection $E$ of the three good events has probability at
+least $0.97$ under the comparison law. On $E$, the raw output is
+uniformly bounded by six, and on $\mathcal A$ its discrepancy from
+$g_*$ is at most $C\delta$. On $\mathcal A^c$, both functions have
+absolute value at most six. This gives the stated integrated error
+after conditioning the comparison on $E$.
+
+Before conditioning, every selected latent gate has the usual
+$\log N$ entropy cost. The disjoint location mixture cancels all
+these costs, including those for the final Dirichlet gates.
+The prefix pays the first term of
+\eqref{eq:raw-bit-resource}. Digital factors, gates and biases pay
+$C Q_{\rm dig}\log[C(Q_{\rm pre}+Q_{\rm dig}+m+2)(k+1)/\delta]$;
+the selected final factors and gates pay at most the same logarithm
+times $C(m+1)$, plus $C(L^2+b^2)$.
+The selected marker intervals remain disjoint from inactive gates
+because the precisions are chosen smaller if necessary.
+
+Finally conditioning a law $\nu$ on an event of probability at
+least $0.97$ increases its KL against the native prior by at most
+a fixed factor plus a numerical constant. Explicitly the KL chain
+rule for $(E,E^c)$ implies
+\[
+ \nu(E)\KL(\nu(\cdot\mid E)\Vert\mu_N)
+ \le\KL(\nu\Vert\mu_N)+h(\nu(E)),
+\]
+where $h$ is binary entropy. This proves
+\eqref{eq:raw-bit-resource}. Conditioning occurs only in the
+comparison proof, not in the actual learner.
+\end{proof}
+
+\begin{corollary}[A growing readout range]
+\label{cor:raw-bit-range}
+If the ideal bit readout instead has $L+|b|\le4M$ for a deterministic
+$M\ge1$, the same construction gives
+\[
+ \rho\{\|z_w\|_\infty\le6M\}=1,\qquad
+ \E_\rho\|z_w-g_*\|_{L^2(P_X)}^2
+       \le C M^2(\delta^2+\xi).
+\]
+In the resource \eqref{eq:raw-bit-resource}, add $\log(M+1)$ inside
+the logarithmic precision terms and retain the exact final cost
+$C(L^2+b^2)\le C M^2$.
+\end{corollary}
+\begin{proof}
+The digital and prefix comparison is unchanged. At the readout use
+precision $c\delta/[(m+1)(M+1)]$, the selected centers
+$v_j/\sqrt{\omega_j}$ for the enlarged coefficients, and the same
+constant-probability event bounding its inactive absolute contribution
+by $\delta/100$. Selected coefficient errors have total absolute
+size $C\delta$, while the bit approximation contributes at most
+$L\delta\le4M\delta$. The selected absolute-sum norm plus bias is
+at most $4M+C\delta$, and the inactive term is at most $\delta/100$,
+giving the support bound after reducing the precision constant.
+The complement of the good input set contributes at most $CM^2\xi$
+to integrated squared error. Only the precision logarithm and the
+Gaussian selected-center cost change.
+\end{proof}
+
+\paragraph{Interface to the raw-tail theorem.}
+The raw-tail statistical proof only needs the comparison supported
+inside its auxiliary event
+$E_n=\{\|z_w\|_\infty\le M_n\}$ and a population-risk comparison.
+For all sufficiently large $n$, $M_n\ge6$, so the law above is already
+supported there. Moreover
+\[
+ \KL(\rho\Vert\mu_N(\cdot\mid E_n))
+   =\KL(\rho\Vert\mu_N)+\log\mu_N(E_n)
+   \le\KL(\rho\Vert\mu_N).
+\]
+If $\delta\le n^{-2}$ and $\xi\le n^{-4}$, Cauchy--Schwarz and
+$\E Y^2<\infty$ give
+$\E_\rho R(z_w)\le R(g_*)+C(1+\sqrt{\E Y^2})n^{-2}$.
+The remaining raw-tail comparison between the auxiliary and actual
+posterior is unchanged. Thus the resource above can replace the
+generic depth-amplified comparison resource in the raw oracle.
+For a quantizer prefix of logarithmic depth and logarithmic-bit
+output, extra bit-copying layers cost only their selected dense
+block count times logarithms, typically $H\,\operatorname{polylog}n$.
+
+For a growing range $M$, the same interface applies once the auxiliary
+raw-tail cutoff satisfies $M_n\ge6M$. Choosing
+$\delta\le n^{-3}/M^2$ and $\xi\le n^{-6}/M^4$ gives an
+$O((1+\sqrt{\E Y^2})n^{-2})$ comparison-risk remainder, since
+$|g_*|\le4M$. In particular $M=O(\sqrt{\log n})$ only changes the
+compiler resources and statistical remainder by logarithmic factors.
+The population comparison itself only needs a finite second moment;
+the imported raw-tail oracle still requires its stated marginal
+sub-Gaussian label assumption.
+
+\begin{corollary}[The power-readout family]
+\label{cor:raw-bit-power}
+Fix $p>1$. Replace the final readout by
+$G_0+\sum_jP_j^{1-1/p}G_jh_j^H$, with independent factor and bias
+density proportional to $e^{-|G|^p}$.
+The preceding comparison conclusions remain true, with constants
+depending on $p$, and the final magnitude cost becomes
+\[
+ C_p\left[\left(\sum_j|v_j|\right)^p+|b|^p\right]
+ \le C_p M^p.
+\]
+All other resource terms change only by constants and logarithmic
+precision factors.
+\end{corollary}
+\begin{proof}
+Put $\alpha=1-1/p$. Use the same selected gate centers $\omega_j$,
+but the selected factor center is $v_j/\omega_j^\alpha$.
+For $L>0$, $\omega_j\ge|v_j|/(2L)$, so
+\[
+ \sum_j\frac{|v_j|^p}{\omega_j^{p-1}}
+ \le(2L)^{p-1}\sum_j|v_j|
+ =2^{p-1}L^p.
+\]
+For $L=0$ all selected centers are zero. The power-readout comparison
+conditions the inactive latent gate sum to be at most
+$\epsilon^{1/\alpha}$ and then bounds
+$\sum_{\rm inactive}S_j^\alpha\le C_{\vartheta,p}\epsilon$
+at constant additional entropy. The identity
+\[
+ \E\left[\sum_{\rm inactive}S_j^\alpha
+          \,\middle|\,\sum_{\rm inactive}S_j=t\right]
+ =
+ t^\alpha(N-r)
+ \frac{\Gamma(a+\alpha)\Gamma(b_0)}
+      {\Gamma(a)\Gamma(b_0+\alpha)}
+ \le C_{\vartheta,p}t^\alpha
+\]
+proves that assertion, with $a=\vartheta/N$ and
+$b_0=(N-r)a$; the empty inactive set is interpreted separately.
+The total gate sum remains close to one, so selected effective
+coefficient errors have total size at most $C_p\delta$ at precision
+$c_p\delta/[(m+1)(M+1)]$. Native factors have finite first moments,
+so the same inactive-output good event applies. All digital steps
+are unchanged. The designated-factor entropy is the displayed
+$p$-power cost plus logarithms, and the same constant-probability
+conditioning finishes the proof.
+\end{proof}

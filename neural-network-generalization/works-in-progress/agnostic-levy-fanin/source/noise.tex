@@ -1,0 +1,88 @@
+\section{The fixed-temperature noisy oracle}
+Write $A(f)=\E(f(X)-f_0(X))^2=R(f)-R_0$, $s=1+\sigma^2$ and $\beta=\eta/(32s)$. Network outputs and the regression mean lie in $[-1,1]$, but observed labels need not be bounded. The following two elementary inequalities provide the statistical part of the proof.
+
+\begin{lemma}[A relative-loss PAC--Bayes inequality]\label{lem:relative-pac}
+With probability at least $1-\delta/2$, simultaneously for every probability measure $\rho$ on weights,
+\begin{equation}
+ c_\beta^{\mathrm{rel}}\E_\rho A(f_w)
+ \le\E_\rho[\whR_S(f_w)-\whR_S(f_0)]
+       +\frac{\KL(\rho\|\mu_N)+\log(2/\delta)}{\beta n},
+ \label{eq:relative-pac}
+\end{equation}
+where
+\[
+ c_\beta^{\mathrm{rel}}=\frac{1-e^{-4\beta(1-2\beta\sigma^2)}}{4\beta}
+       \ge1-4s\beta=1-\eta/8.
+\]
+\end{lemma}
+\begin{proof}
+Fix $f=f_w$ and put $e=f-f_0$. The difference of squared losses is $e(X)^2-2\xi e(X)$. Conditional sub-Gaussianity gives
+\[
+ \E[e^{-\beta\{(f(X)-Y)^2-(f_0(X)-Y)^2\}}\mid X]
+ \le e^{-\beta(1-2\beta\sigma^2)e(X)^2}.
+\]
+Since $0\le e^2\le4$, convexity on that interval yields
+\[
+ \E e^{-\beta\{(f(X)-Y)^2-(f_0(X)-Y)^2\}}
+ \le e^{-\beta c_\beta^{\mathrm{rel}} A(f)}.
+\]
+The lower bound on $c_\beta^{\mathrm{rel}}$ follows from $1-e^{-u}\ge u-u^2/2$ and the chosen range of $\beta$. Independence, integration against the prior, Markov's inequality and the entropy variational inequality prove~\eqref{eq:relative-pac}. The individual squared losses have finite expectation under the conditional sub-Gaussian noise assumption; their difference has the exponential moment just established.
+\end{proof}
+
+The comparison measure may itself be averaged before applying concentration. This is useful because the perturbation lemma is naturally a statement about its expected risk.
+
+\begin{lemma}[Concentration for a fixed comparison law]\label{lem:comparison-concentration}
+Let $\nu$ be any fixed probability measure on bounded predictions, independent of the data, and let $a=\E_\nu A(f_w)$. With probability at least $1-e^{-\ell}$,
+\begin{equation}
+ \E_\nu[\whR_S(f_w)-\whR_S(f_0)]
+ \le a+C\sqrt{sa\ell/n}+Cs\ell/n.
+ \label{eq:comparison-bernstein}
+\end{equation}
+\end{lemma}
+\begin{proof}
+Set
+\[
+ v(x)=\E_\nu(f_w(x)-f_0(x))^2,\qquad
+ b(x)=\E_\nu(f_w(x)-f_0(x)).
+\]
+Then $0\le v\le4$, $b^2\le v$, and one comparison-averaged excess loss is $L=v(X)-2\xi b(X)$, of mean $a$. For $0\le t\le1/(16s)$, conditional sub-Gaussianity gives
+\[
+ \E e^{t(L-a)}
+ \le e^{-ta}\E e^{(t+2\sigma^2t^2)v(X)}
+ \le\exp\left\{a\left[\frac{e^{4(t+2\sigma^2t^2)}-1}{4}-t\right]\right\}
+ \le e^{6sa t^2}.
+\]
+For the last inequality, put $u=t+2\sigma^2t^2\le9t/8$, use $4u\le1$ and $e^{4u}-1\le4u+16u^2$. Chernoff's bound for the independent observations then gives~\eqref{eq:comparison-bernstein}, with an absolute constant. Equivalently, optimize over $t\le1/(16s)$ to obtain a square-root term and a linear term.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:main}]
+Fix the deterministic comparator $g$. For $0<r\le1$, let $Q$ be the comparison law of Lemma~\ref{lem:comparison}. Weighted triangle gives
+\[
+ a:=\E_Q A(f_w)
+ \le(1+\eta/8)A(g)+(1+8/\eta)r.
+\]
+At the Gibbs posterior, the empirical-risk plus relative-entropy term equals the free energy
+$F_{S_n,\beta}=-(\beta n)^{-1}\log Z_{S_n,\beta}$.
+The variational formula and Lemma~\ref{lem:relative-pac} therefore yield
+\[
+ c_\beta^{\rm rel}\E_{\Pi_{S_n,\beta}}A(f_w)
+ \le \E_Q[\whR_{S_n}(f_w)-\whR_{S_n}(f_0)]
+       +\frac{K_0\log(K_1/r)+\log(2/\delta)}{\beta n}.
+\]
+Use Lemma~\ref{lem:comparison-concentration} with $\ell=\log(2/\delta)$.
+Young's inequality bounds its square-root term by
+$(\eta/8)a+Cs\ell/(\eta n)$.
+The coefficient of $A(g)$ after division by
+$c_\beta^{\rm rel}\ge1-\eta/8$ is at most
+\[
+ \frac{(1+\eta/8)^2}{1-\eta/8}\le1+\eta.
+\]
+Every other term is at most
+\[
+ \frac C\eta\left[
+ r+\frac{s}{n}\{K_0\log(K_1/r)+\log(2/\delta)\}\right].
+\]
+Take $r=1/n$. Since $K_0\ge1$, $K_1\ge e$ and $s\ge1$, the extra $1/n$ is absorbed. Add $R_0$ and apply Jensen's inequality to the posterior mean. The two concentration events fail with total probability at most $\delta$.
+\end{proof}
+
+The regression function $f_0$ and its empirical risk appear only in the proof; their terms cancel from the learner's variational comparison. The actual posterior uses only the observations, the chosen approximation factor and an upper bound on the conditional noise proxy.

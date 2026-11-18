@@ -1,0 +1,307 @@
+\section{A single law defeats arbitrary mixtures}
+\label{sec:relu-mixture-extension}
+
+We construct one input law on which every allowed posterior mean has
+substantial empirical error against the regression function. The noisy
+component has Boolean nuisance coordinates, whereas the signal
+component consists of four fixed atoms. The Gaussian-readout sector
+then supplies a shared linear witness for all mixtures.
+
+\subsection{The modified law and a gated memorizer}
+
+Fix $p=9/10$, $q=1/10$, an integer $n\ge2$,
+$D=\lceil\log_2n\rceil$, $J=2^D$, and $d=D+2$. Thus $n\le J<2n$.
+For the exponent statements take $m=\lfloor n^a\rfloor$ and $B=n^b$,
+with fixed $a>0$, $b\ge0$, and $Ha+Lb>1/2$. Put
+$\delta=2/(\lfloor m/4\rfloor^H B^L)$; sufficiently large $n$
+ensures $m\ge4$ and $\delta\le1/2$.
+Write $X=(T,A,Z)$ with $Z\in[-1,1]^D$. On the noisy component,
+with probability $p$, take $T=0$, $A=1$, $Z$ uniform on
+$\{-1,1\}^D$, and $Y$ an independent fair sign. On the signal
+component, with probability $q$, take $A=-1$, $Z=0$, $T$ uniform
+on $\{-1,-\delta,\delta,1\}$, and $Y=g(T)$, where $g$ is the
+bounded tent teacher from Lemma~\ref{lem:tent}. Thus $g(T)$ is again
+the exact conditional mean and its risk is $p$. The input covariance is
+\[
+ \operatorname{diag}\bigl(q(1+\delta^2)/2,4pq,p,\ldots,p\bigr),
+\]
+so its eigenvalues remain between $1/20$ and one.
+
+\begin{lemma}[A sparse gated memorizer]
+\label{lem:relu-gated-memorizer}
+Let $r:\{-1,1\}^D\to[-1,1]$ satisfy $\sum_zr(z)^2\le n$.
+Set
+\[
+ M=(D+1)2^D,\quad Q_1=16d(D+1)^2,\quad Q_2=40(D+1)^2n,
+ \qquad e=(Q_1Q_2\,6^{L-2})^{1/L}.
+\]
+At every $N\ge M$ there is an exact network with each weighted layer
+energy at most $e$, which equals $r(Z)$ on the noisy atoms and zero
+on the signal atoms. It has at most $M$ active first-layer neurons
+and at most two active neurons in each later hidden layer.
+\end{lemma}
+\begin{proof}
+For a nonempty set of $j$ Boolean coordinates, let $t$ be their sum,
+$t_i=-j+2i$, and $y_i=(-1)^j(-1)^i$. Its parity is represented at
+these sums by
+\begin{equation}
+ 2y_0\relu(t+j+1/2)
+       -4\sum_{i=0}^{j-1}y_i\relu(t-t_i-1/2).
+ \label{eq:relu-margin-parity}
+\end{equation}
+At $t_0$ its value is $y_0$. On $[t_i,t_i+1/2]$ its slope is
+$2y_i$, and on $[t_i+1/2,t_{i+1}]$ its slope is $-2y_i$, so its
+next value is $-y_i=y_{i+1}$. This proves the representation by
+induction. Each hinge argument has absolute value at least $1/2$ on
+the Boolean cube, and the coefficient squared sum is at most
+$4+16j\le20(D+1)$. The constant parity is $2\relu(1/2)$.
+
+Apply normalized Fourier expansion and Parseval to $r$. Keeping
+separate copies of all parity features gives affine forms $\ell_j(Z)$ and coefficients
+$c_j$ satisfying
+\[
+ r(Z)=\sum_{j=1}^M c_j\relu(\ell_j(Z)),\qquad
+ |\ell_j(Z)|\ge1/2,
+ \quad T_c:=\sum_jc_j^2\le20(D+1)n/2^D.
+\]
+Zero-coefficient features fill any unused slots. The constant parity
+uses $\ell=1/2$. Replace every affine form by
+\[
+ \widetilde\ell_j(A,Z)=\ell_j(Z)-2(D+1)(1-A).
+\]
+At $A=1$ nothing changes. At $A=-1,Z=0$, each form is at most
+$D+1/2-4(D+1)<-1/2$, because each original intercept has magnitude
+at most $D+1/2$. Thus the features all vanish on the signal atoms.
+Every new augmented coefficient norm is at most $4(D+1)$: its squared
+norm is at most $D+9(D+1)^2+4(D+1)^2\le16(D+1)^2$.
+
+Partition $N$ into $M$ positive balanced integers $k_j$, so
+$k_j\ge N/(2M)$. Use just $M$ active first-layer neurons, with
+preactivations $\sqrt{k_j}\,\widetilde\ell_j$.
+Their weighted energy is at most $Q_1$.
+If $H=1$, give these neurons readout coefficients $c_j/\sqrt{k_j}$.
+The output is exactly the desired Fourier sum, and readout energy is
+at most $2MT_c\le Q_2$.
+
+If $H\ge2$, let $k_+,k_-$ be positive balanced integers summing to
+$N$. The only active second-layer neurons have incoming means
+$+\sqrt{k_+}c_j/\sqrt{k_j}$ and
+$-\sqrt{k_-}c_j/\sqrt{k_j}$. Put
+$F=\sum_jc_j\relu(\widetilde\ell_j)$.
+Their activations are $\sqrt{k_+}\relu(F)$ and
+$\sqrt{k_-}\relu(-F)$, and the second-layer energy is at most
+$2MT_c\le Q_2$.
+For each later hidden layer, use only two active rows, chosen so that
+its normalized preactivations are $\pm(h_+/\sqrt{k_+}-h_-/\sqrt{k_-})$.
+Explicitly, its $2$-by-$2$ nonzero block is
+\[
+ \begin{pmatrix}
+ 1&-\sqrt{k_+/k_-}\\
+ -\sqrt{k_-/k_+}&1
+ \end{pmatrix}.
+\]
+Its squared Frobenius norm is
+$N(1/k_++1/k_-)\le6$. The normalized activation difference remains
+exactly $F$, by $\relu(t)-\relu(-t)=t$.
+Readout weights $1/\sqrt{k_+}$ and $-1/\sqrt{k_-}$ recover $F$,
+and their weighted energy is at most six.
+
+The product of the $L$ weighted layer energies is at most
+$Q_1Q_2\,6^{L-2}$. Positive homogeneity balances them to their
+geometric mean without altering the output or active supports. If
+one is zero, the target function is zero and the zero network suffices.
+This proves all assertions.
+\end{proof}
+
+Apply Lemma~\ref{lem:relu-profile-comparison} to this sparse
+memorizer. Its covariance cost now has coefficient
+\[
+ D_*:=d+2+2(H-1),
+\]
+independent of $M$. This is why no enlarged width threshold is
+needed to include mean-field scaling.
+
+\subsection{One sample event and empirical separation}
+
+Keep $\tau_n=n^{-1/L}d^{-4}$ and set
+\[
+ N_*(n)=\max\{m,(D+1)2^D\}=O(m+n\log n).
+\]
+For every sufficiently large $n$, the following properties hold on
+one sample event, uniformly over $N\ge N_*$,
+$0<\sigma^2\le1/N$, and $\lambda>0$.
+
+First, the singleton occupancy and signal-count bounds remain
+\[
+ S_1/n\ge pe^{-p}-n^{-1/3},\qquad
+ n_s/n\le q+n^{-1/3},
+\]
+with failure probability at most $2e^{-n^{1/3}/2}$. Indeed
+$\mathbb E S_1=np(1-p/J)^{n-1}\ge npe^{-p}$ because $J\ge n$;
+changing one observation changes $S_1$ by at most two. McDiarmid and
+Hoeffding give the two bounds.
+For $\lambda\le\tau_n$, use the empirical noisy means as $r$ in
+Lemma~\ref{lem:relu-gated-memorizer}. The memorizer has energy at
+most $Le=O_H(n^{1/L}d^{5/L})$ and is bounded by one on the support.
+Set $K_e=\sqrt2 L(e+1)^{H/2}$ and
+$r_n=[8n(K_e+1)]^{-1}$ in the selective Gaussian comparison lemma.
+Its expected empirical loss is at most the exact memorizer's loss
+plus $1/n$. The Gibbs variational identity gives
+\[
+ \int\widehat R_S(z_w)d\Pi
+ \le\widehat R_S(z_{w_*})+1/n
+       +\lambda\{Le+2D_*\log(1/r_n)\}.
+\]
+Here $\log(1/r_n)=O_H(\log n)$, uniformly in learner width and
+prior scale. After subtracting the within-atom noise residual,
+the expected weighted noisy residual is therefore at most
+$q+o(1)\le1/5$.
+Jensen and the reverse triangle inequality imply that the raw
+posterior mean $f$ obeys
+\[
+ \frac1n\sum_{i\text{ noisy}}f(X_i)^2
+ \ge\left(\sqrt{1/3}-\sqrt{1/5}\right)^2>1/160.
+\]
+The same conclusion holds after clipping this mean to $[-1,1]$,
+because clipping cannot increase its noisy-label fitting residual.
+
+For $\lambda\ge\tau_n$, normalize the matrices by
+$A_1=\sqrt{d/N}\,W^1$, $A_\ell=W^\ell$ internally, and
+$A_L=\sqrt N\,v^{\mathsf T}$. Every coordinate then has variance
+$\sigma^2$. Put $T=\max_\ell\|A_\ell\|_{\rm op}$ and
+$M_d=1+\sqrt{d+1}$. Gaussian operator-norm concentration and
+$N\sigma^2\le1$ give
+$\mu\{T>M_d+t\}\le L e^{-t^2/(2\sigma^2)}$.
+The prior expected empirical loss is at most three, so
+$Z\ge e^{-3/(2\lambda\sigma^2)}$ by Jensen. Dividing the prior
+tail by $Z$ and integrating yields
+\[
+ \left(\int T^L d\Pi\right)^{1/L}
+ \le M_d+\sqrt{3/\lambda+2\log L}+2\sqrt L.
+\]
+The input-coordinate Lipschitz constant is at most $d^{-1/2}T^L$.
+The inner signal points have $A=-1,Z=0$, and therefore
+\[
+ \frac{|f(\delta,-1,0)-f(-\delta,-1,0)|}{2}=o(1)\le1/2
+\]
+whenever $Ha+Lb>1/2$. Clipping the raw mean preserves this bound.
+Require in addition that each inner signal atom occurs at least
+$qn/8$ times. Its count has mean $qn/4$, so the additional failure
+probability is at most $2e^{-nq/32}=2e^{-n/320}$.
+The sum of the two squared errors against their labels $\pm1$ is
+at least $1/2$. Therefore these observations alone give empirical
+squared error against $g$ at least $qn/16=n/160$.
+
+Thus every allowed raw posterior mean, and every clipped raw
+posterior mean, has empirical squared error against $g$ at least
+$1/160$ on this event. This conclusion, unlike an individual
+population-risk lower bound, can be combined with a common linear
+separator.
+
+\begin{theorem}[Failure of all data-dependent mixtures]
+\label{thm:relu-mixture-failure}
+Fix $H\ge1$, $a>0$, $b\ge0$, and $Ha+(H+1)b>1/2$.
+For all sufficiently large integers $n$, the modified law above has a
+conditional mean of width at most $\lfloor n^a\rfloor$, depth
+$L=H+1$, coefficient bound $n^b$, and output magnitude at most one.
+With sample probability at least
+\[
+ 1-2e^{-n^{1/3}/2}-2e^{-n/320}-1/n,
+\]
+every data-dependent probability mixture of ordinary raw posterior
+means over
+\[
+ N\ge N_*(n),\qquad 0<\sigma^2\le1/N,\qquad \lambda>0
+\]
+has excess population squared risk at least $1/300000$.
+The same is true if each component mean is clipped to $[-1,1]$
+before mixing, or if the mixture contains both types of components.
+
+This includes every canonical exponent $\gamma\ge1$ at
+$\sigma^2=N^{-\gamma}$, with no limiting operation. The same
+conclusion holds for mixtures of strong-prior global minimizers.
+\end{theorem}
+\begin{proof}
+The previous subsection proves the empirical separation. The
+Gaussian-readout sector and separator lemmas apply because
+$Y_i g(X_i)=g(X_i)^2$ coordinatewise: $g$ is zero on noisy atoms and
+is exactly the label on signal atoms. Add the event
+$\sum_j k_j^2\le4n$ for noisy counts. It has failure probability at
+most $1/n$: if $C=\sum_j\binom{k_j}{2}$ counts noisy collisions,
+then $\sum_jk_j^2\le n+2C$, $\mathbb EC\le n/2$, and
+\[
+ \operatorname{Var}(C)
+ \le n\{p^2/2+p^3(1-p)\}<n.
+\]
+Indeed disjoint collision indicators are independent, and pairs
+sharing one observation have covariance $p^3(1-p)/J^2$. Since $J\ge n$, the displayed variance bound follows.
+Chebyshev now proves the claim.
+For the separator $h$, the noisy contribution to its squared
+population norm is at most
+$J\sum_j k_j^2/(n^2p)\le8/p$. The signal contribution is at most
+$4n_s^2/(n^2q)\le16q$, since $n_s\le2qn$ eventually.
+Thus $\|h\|_2^2\le8/p+16q<11$. Applying the separator with $c=1/160$ gives excess at
+least $1/(25600\cdot11)>1/300000$, uniformly over all mixtures.
+
+For strong-prior global minimizers, comparison with the deterministic
+sparse memorizer gives the same low-temperature residual estimate.
+Comparison with zero gives $Q_N\le1/\lambda$ at high temperature,
+and hence the same vanishing inner-pair half-difference. Every
+minimizing readout is a ridge solution and satisfies the sector
+inequality. Thus these components can be included in the same
+mixture family. All ingredients use the same sample event.
+\end{proof}
+
+The mixture may be chosen using the sample, validation data, or the
+unknown law itself. In particular, a hyperprior over the allowed
+likelihood temperatures does not repair this counterexample. The
+claim concerns mixtures of raw posterior means and clipping of each
+such mean before mixing. It does not assert the same property for
+averaging clipped posterior draws, or for clipping only after taking
+an arbitrary mixture of raw means.
+
+
+\begin{corollary}[Any fixed positive localized noise mass]
+Fix $0<p\le9/10$. The same strict comparator-growth condition admits
+one law of Bayes risk $p$ for which every mixture in
+Theorem~\ref{thm:relu-mixture-failure} has excess risk at least
+\[
+ \frac{p^3e^{-2p}}{600000}.
+\]
+The width threshold remains $O(m+n\log n)$, and the sample probability
+is at least
+$1-2e^{-n^{1/3}/2}-2e^{-nr/16}-1/n$, where $r=pe^{-p}/32$.
+The sufficiently large sample threshold may depend on $p$.
+\end{corollary}
+\begin{proof}
+Keep noisy mass $p$ with Boolean $Z$. Give the inner pair total mass
+$r=pe^{-p}/32$, and the outer anchors total mass $1-p-r$; all signal
+atoms have $A=-1,Z=0$. The same teacher is the conditional mean.
+The covariance is diagonal with entries
+$1-p-r+r\delta^2$, $4p(1-p)$, and $p$ in the nuisance coordinates,
+so it stays nondegenerate for each fixed $p$.
+
+Use the singleton event together with Hoeffding control of the
+inner-pair count, whose sample fraction is at most $r+n^{-1/3}$.
+These two events have total failure at most $2e^{-n^{1/3}/2}$.
+Write $s=pe^{-p}$. The singleton count is at least $sn/2$ eventually,
+and the memorizer's empirical signal loss is only the inner-pair
+count. The low-temperature noisy fitting residual is therefore at
+most $s/16$ for sufficiently large $n$. Its noisy prediction norm
+squared, divided by $n$, is at least
+$s(1/\sqrt2-1/4)^2>s/256$.
+Each inner signal atom has count at least $rn/4$, except with total
+probability $2e^{-nr/16}$. The high-temperature half-difference is
+at most $1/2$, so its empirical squared error is at least $rn/8$,
+which equals $sn/256$.
+Thus the common separator applies with $c=s/256$.
+Its noisy squared norm is at most $8/p$. Since the inner-pair count
+is at most $2rn$ eventually, its signal squared norm is at most
+$8r$. Hence $V\le8/p+8r\le9/p$, and
+\[
+ c^2/V\ge p^3e^{-2p}/589824>p^3e^{-2p}/600000.
+\]
+The occupancy and collision arguments are unchanged. Labels retain
+unit magnitude on the noisy region and inner pair; this is localized
+regression noise, not independent Boolean label flips.
+\end{proof}

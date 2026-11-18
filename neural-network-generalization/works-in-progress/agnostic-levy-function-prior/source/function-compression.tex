@@ -1,0 +1,142 @@
+\section{Typical prior functions have short formula descriptions}
+\label{sec:levy-function-compression}
+The small-formula prior-mass theorem has a converse. With high probability, a draw from the same dense prior is uniformly approximable by a finite formula whose size and coefficient precision are bounded independently of learner width. The proof uses the Poisson representation only to describe that draw; it does not modify the prior.
+
+A formula here is an ordered tree of affine summations and the fixed hidden activation $\phi$, with a linear output node. Input leaves are labelled by one of $1,x_1,\ldots,x_d$. A repeated input or hidden computation may occur several times in the tree. Size counts gates and weighted edges. Dyadic coefficient bit length includes the signed numerator and the power-of-two denominator. Zero-input hidden gates are allowed and represent the fixed constant $\phi(0)$.
+
+\begin{theorem}[Uniform approximation of prior draws]
+\label{thm:levy-prior-compression}
+Fix the L\'evy measure and a globally $A$-Lipschitz activation with $A\ge1$ and $b=|\phi(0)|$. There is a constant $C$, depending only on these fixed quantities, such that the following holds for every input dimension $d$, hidden depth $H\ge1$, finite learner width $N$, and $0<\delta,\tau\le1/2$. Put
+\[
+ L=H+1+\log\frac1{\delta\tau},\qquad
+ S_*=[CL\log(eL)]^{H+2},\qquad B_*=CL^3.
+\]
+There is a finite dictionary $\mathcal D_{H,d,\delta,\tau}$ of formulas of hidden depth at most $H$, size at most $S_*$, and dyadic coefficient bit length at most $B_*$, independent of $N$, such that
+\[
+ \mu_N\left\{\inf_{g\in\mathcal D_{H,d,\delta,\tau}}
+          \sup_{x\in[-1,1]^d}|z_w(x)-g(x)|\le\tau\right\}
+ \ge1-\delta.
+\]
+Its logarithmic cardinality is at most
+\[
+ \log|\mathcal D_{H,d,\delta,\tau}|
+       \le[1+\log(d+1)][CL\log(eL)]^{H+6},
+\]
+after increasing $C$. The same conclusion holds after a fixed Lipschitz output map, with adjusted constants and that map appended to each formula.
+\end{theorem}
+
+\subsection{Truncating small jumps uniformly on the input cube}
+For each weight use its native Poisson representation and remove all jumps with magnitude at most $\epsilon$. Denote the resulting weight by $W^{>\epsilon}$ and the resulting raw network by $z^{>\epsilon}$. The omitted remainder satisfies
+\[
+ \E|W-W^{>\epsilon}|
+ \le\frac1F\int_{|u|\le\epsilon}|u|\mathfrak n(du)
+ \le C\epsilon/F,
+\]
+while both $\E|W|$ and $\E|W^{>\epsilon}|$ are at most $M_1/F$.
+
+For a hidden node define the absolute path bound
+\[
+ R_j^1=b+A\sum_{k=0}^d|W^1_{jk}|,
+ \qquad
+ R_j^\ell=b+A\sum_k|W^\ell_{jk}|R_k^{\ell-1}.
+\]
+It bounds the hidden feature uniformly on the cube. The analogous truncated path bound has the same expected upper bound. Since the total incoming expected absolute weight is at most $M_1$ in every row, layer independence gives
+\[
+ \E R_j^\ell,\ \E R_j^{\ell,>\epsilon}\le K^\ell,
+ \qquad K=1+b+AM_1.
+\]
+Let $e_\ell$ be the maximal expected uniform difference at a hidden node. Using the full weights on the propagated difference and the omitted remainder on the truncated feature gives
+\[
+ e_\ell\le AM_1e_{\ell-1}+CA\epsilon K^{\ell-1},
+ \qquad e_0=0.
+\]
+The current layer's weights are independent of all preceding features; independence between its full weight and its own remainder is not needed. Including the linear readout proves
+\begin{equation}
+ \E\sup_x|z_w(x)-z^{>\epsilon}(x)|
+       \le C\epsilon(H+1)K^{H+1}.
+ \label{eq:levy-truncation-uniform}
+\end{equation}
+All constants are independent of width and input dimension. Choose
+\[
+ \epsilon=\min\left\{\frac12,
+          \frac{\delta\tau}{16C(H+1)K^{H+1}}\right\}.
+\]
+Markov's inequality makes this uniform truncation error at most $\tau/2$ outside a prior event of probability at most $\delta/4$. Also
+\begin{equation}
+ \lambda:=\Lambda(\epsilon)\le C L.
+ \label{eq:levy-row-intensity}
+\end{equation}
+
+\subsection{A stopped exploration of the output ancestry}
+Across a row of fan-in $F$, the number of retained jumps is exactly Poisson with mean $F\Lambda(\epsilon)/F=\lambda$. These counts are independent between rows. Start at the readout row and reveal only the hidden rows reached by its retained jumps, continuing backwards through the layers. Multiple jumps at one coordinate are kept as separate weighted edges; repeated occurrences of a hidden node reuse its already revealed row. Unrolling this directed acyclic graph produces a formula with the same function.
+
+The choice to inspect a previously unrevealed row depends only on weights in later layers and on already revealed distinct rows. It is therefore independent of that row's incoming jumps. This remains true for the first hidden layer, whose fan-in is $d+1$ instead of $N$.
+
+Choose an integer
+\[
+ T=\left\lceil C L\log(eL)\right\rceil,
+ \qquad S=2(T+1)^{H+1},
+\]
+with a sufficiently large fixed $C$. Stop exploration at the first row with more than $T$ retained jumps. Before such a failure, no more than $S$ rows can be inspected: a depth-$H+1$ tree with branching at most $T$ has fewer nodes than that bound. For $T\ge e^2\lambda$, the Poisson tail satisfies
+$\Pr\{\operatorname{Poisson}(\lambda)>T\}\le e^{-T}$.
+A conditional union bound over the stopped exploration therefore gives failure probability at most $S e^{-T}\le\delta/4$. The final inequality follows by increasing the fixed coefficient in $T$: since $H+1\le L$, $\log S=O((H+1)\log(T+1))\le C_1L\log(eL)$, while $\log(1/\delta)\le L$. A fixed sufficiently large coefficient dominates these bounds and the condition $T\ge e^2\lambda$.
+
+The retained jump magnitudes also have a width-independent bound. For $B\ge1$, the intensity of jumps larger than $B$ in one complete row is
+\[
+ \Lambda(B)\le C B^{-p}.
+\]
+At most $S$ previously unrevealed rows are examined before the degree stop. The same conditional union argument gives probability at most $CSB^{-p}$ of seeing a jump larger than $B$. Choose
+\[
+ B=(C S/\delta)^{1/p}+1.
+\]
+Outside another event of probability at most $\delta/4$, the explored formula has at most $S$ weighted edges and gates, at most $T$ incoming jumps per node, and each edge coefficient has magnitude at most $B$. No statement about all $N H$ rows is needed. In particular there is no hidden $\log N$ factor.
+
+\subsection{Quantization and the finite dictionary}
+On the preceding event, round every retained jump coefficient to a dyadic grid of step $q$. Each rounded coefficient has magnitude at most $B+1$. Put
+\[
+ K_q=1+b+AT(B+1).
+\]
+The absolute output of a hidden formula of depth $\ell$ is at most $K_q^{\ell}$ on the cube. A telescoping layerwise error estimate therefore bounds the final raw output change by
+\[
+ q(H+1)T K_q^{H+1}.
+\]
+Choose a power-of-two grid step satisfying
+\[
+ q\le\frac{\tau}{4(H+1)T K_q^{H+1}}.
+\]
+The right side uses the already fixed bound $B+1$, not the actual rounded coefficients, so this is not a circular definition. The quantization error is at most $\tau/4$.
+
+From \eqref{eq:levy-row-intensity}, $T\le CL\log(eL)$ and $S\le[CL\log(eL)]^{H+2}$. Also
+\[
+ \log(B+1)\le C[\log S+\log(1/\delta)],
+\]
+so both the numerator and denominator of each rounded coefficient have at most $CL^3$ bits. Indeed the needed grid exponent is at most
+\[
+ C\left[\log(1/\tau)+(H+1)
+                 \{1+\log T+\log(B+1)\}\right]\le CL^3.
+\]
+Take the dictionary of all formulas obeying these size, depth, coefficient-precision and input-label bounds. A prefix tree description specifies each node's arity, edge coefficients, and any input label. Its total description length is at most
+$C S_*[B_*+\log(S_*+1)+\log(d+1)]$.
+This gives the stated logarithmic cardinality. The truncation, degree, and magnitude failures have total probability at most $3\delta/4$, and the successful approximation error is at most $3\tau/4$. Enlarging constants gives the theorem with its displayed $\delta,\tau$.
+
+\begin{corollary}[Prior mass bounds approximation complexity]
+\label{cor:levy-prior-complexity-converse}
+Fix a prescribed input subset $\mathcal X\subseteq[-1,1]^d$, a raw target function $f$ on that set, and $0<\tau\le1/2$. Write $\|\cdot\|_{\infty,\mathcal X}$ for the supremum on this set, and assume the following event is measurable. If
+\[
+ p=\mu_N\{\|z_w-f\|_{\infty,\mathcal X}\le\tau\}>0,
+\]
+then $f$ has a uniform $2\tau$ approximation on $\mathcal X$ by a formula of hidden depth at most $H$, size at most
+\[
+ [C L_p\log(eL_p)]^{H+2},\qquad L_p=H+1+\log\frac1{p\tau},
+\]
+and dyadic coefficient bit length at most
+\[
+ C\left(H+1+\log\frac1{p\tau}\right)^3.
+\]
+The bounds are independent of learner width. Combined with Theorem~\ref{thm:uniform-mass}, this gives a two-sided approximate function-prior relation at fixed depth: a short bounded-coefficient formula has a prior neighborhood with controlled negative log mass, and a neighborhood of appreciable prior mass contains a function approximable by a short finite-precision formula.
+\end{corollary}
+\begin{proof}
+Apply Theorem~\ref{thm:levy-prior-compression} with failure probability $p/2$ and approximation tolerance $\tau$. Its successful set intersects the stated neighborhood, because that neighborhood has mass $p$ and the exceptional set has mass at most $p/2$. For a network in the intersection, the triangle inequality gives a $2\tau$ approximation to $f$. Substitute $\delta=p/2$ into the resource bounds and absorb the factor two into $C$.
+\end{proof}
+
+For ReLU, this also gives an ordinary Boolean-circuit consequence on the Boolean cube. If the target takes values in $\{-1,1\}$ and $2\tau<1$, the rational ReLU formula in the corollary has exactly the target's sign at every Boolean input. At each gate, rational fixed-coefficient multiplication, addition and comparison with zero can be implemented by Boolean arithmetic circuits. With dyadic weights of $B_*$ bits, all intermediate integer bit lengths are polynomial in $H$, $B_*$ and $\log(S_*+1)$: a common denominator at layer $\ell$ has at most $\ell B_*$ bits, and the coefficient magnitude and fan-in bounds control numerator growth. Schoolbook arithmetic consequently gives a Boolean circuit of size polynomial in $d,S_*,H,B_*$. Thus, at fixed depth and fixed margin tolerance, a Boolean function with appreciable raw-function prior mass has Boolean circuit complexity polynomial in its negative log prior mass and input dimension. This statement concerns approximation neighborhoods of real outputs; it does not identify their probability with the mass of an unrestricted sign event lacking a positive output margin.

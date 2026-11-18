@@ -1,0 +1,49 @@
+\section{A common linear separator for posterior mixtures}
+
+\begin{lemma}[The Gaussian-readout sector]
+\label{lem:sector}
+Fix a training sample with label vector $y\in\R^n$. Suppose the readout has an independent centered Gaussian prior, conditional on all preceding parameters, and the likelihood is Gaussian with any positive scalar observation variance. The ordinary posterior mean's training prediction vector $f$ satisfies
+\[
+ y^{\mathsf T}f\ge\|f\|_2^2,\qquad \|f\|_2\le\|y\|_2.
+\]
+Arbitrary mixtures of such prediction vectors satisfy the same inequalities. If $|y_i|\le1$, coordinatewise clipping $f$ to $[-1,1]$ also preserves the first inequality.
+\end{lemma}
+\begin{proof}
+Conditional on the hidden features, let $K$ be the training covariance induced by the Gaussian readout and let $\nu>0$ be the likelihood variance. The conditional posterior mean prediction is $Sy$, where
+\[
+ S=K(K+\nu I)^{-1},\qquad 0\preceq S\preceq I.
+\]
+Thus $y^{\mathsf T}Sy\ge\|Sy\|_2^2$. Averaging over the posterior of hidden parameters preserves the inequality by Jensen; it also preserves $f=Ay$ for a matrix $0\preceq A\preceq I$, proving the norm bound. The same argument applies to any further mixture. For clipping, each coordinate with $|f_i|>1$ increases the quantity $y_if_i-f_i^2$ by
+\[
+ (|f_i|-1)(|f_i|+1-y_i\operatorname{sign}f_i)\ge0.
+\]
+\end{proof}
+
+\begin{lemma}[A common separator for mixtures]
+\label{lem:separator}
+Let $D_X$ have finite support, with atom probabilities $p_x>0$, and let $g$ be a regression function on that support. Fix a training sample and suppose its target vector $g_S=(g(X_i))_i$ obeys $y^{\mathsf T}g_S=\|g_S\|_2^2$. Let a family of predictors $f_\theta$ satisfy the sector inequality of Lemma~\ref{lem:sector} and
+\[
+ \frac1n\|f_\theta(S)-g_S\|_2^2\ge c>0
+ \qquad\text{for every }\theta.
+\]
+Define
+\[
+ h(x)=\frac1{np_x}\sum_{i:X_i=x}\bigl(Y_i-2g(x)\bigr),\qquad V=\|h\|_{L^2(D_X)}^2.
+\]
+Then every probability mixture $F=\int f_\theta\,d\pi(\theta)$ has
+\[
+ \|F-g\|_{L^2(D_X)}^2\ge c^2/V.
+\]
+The mixing measure may depend arbitrarily on the sample. The prediction integral is automatically finite at observed atoms; any extension to unobserved atoms preserves the lower bound.
+\end{lemma}
+\begin{proof}
+The sector inequality and the assumption on $g_S$ give
+\[
+ \|f_\theta(S)-g_S\|_2^2
+ \le(y-2g_S)^{\mathsf T}(f_\theta(S)-g_S).
+\]
+Dividing by $n$ expresses the right side as $\langle h,f_\theta-g\rangle_{L^2(D_X)}$. It is therefore at least $c$ for every $\theta$, and averaging preserves that linear inequality. Integrability on observed atoms follows from the common training norm bound. Since $h$ vanishes on unobserved atoms, their predictions do not affect the inequality. Cauchy--Schwarz now gives the result; in particular $V>0$ whenever the hypotheses hold. If a proposed extension has infinite squared risk, the lower bound is immediate.
+\end{proof}
+
+The separator lemma only uses a finite-support target and a training-vector property. It does not rely on tanh, Gaussian hidden weights, or a particular likelihood temperature. It also accommodates an approximate identity $y^{\mathsf T}g_S-\|g_S\|_2^2\le n\Delta$: replace $c$ in the conclusion by $c-\Delta>0$.
+

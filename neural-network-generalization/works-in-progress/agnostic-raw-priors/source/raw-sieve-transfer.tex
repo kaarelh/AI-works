@@ -1,0 +1,127 @@
+\section{An all-data raw-output oracle from a prior sieve}
+\label{sec:raw-sieve-transfer}
+This section is an abstract statistical statement. The likelihood uses
+the observed labels themselves, and prediction is the ordinary mean of
+the final posterior. No output clipping is part of either operation.
+
+Let $\mu$ be a prior on real-valued functions on a fixed input domain.
+Write $U(f)=\sup_x|f(x)|$. Suppose
+\begin{equation}
+ \E_\mu f(x)=0,\quad \sup_x\E_\mu f(x)^2\le V,
+ \quad \E_\mu U(f)^4\le W_4<\infty.
+ \label{eq:abstract-prior-moments}
+\end{equation}
+For $q\ge1$ and $0<e\le1$, suppose there is a deterministic finite
+function dictionary $\mathcal D(q,e)$ such that
+\begin{equation}
+ \mu\{U(f)>M(q)\ \text{or}\
+       \inf_{g\in\mathcal D(q,e)}\|f-g\|_\infty>e\}
+       \le2e^{-q},
+ \qquad \log(2|\mathcal D(q,e)|)\le J(q,e).
+ \label{eq:abstract-sieve}
+\end{equation}
+Assume $M(q)\ge1$. These hypotheses will hold uniformly in learner width. They concern a
+high-probability part of the prior, not a restriction on its support.
+
+Let $(X_i,Y_i)$ be IID, with arbitrary input law and
+$\sigma_Y^2=\E Y^2<\infty$. Fix $0<a<1$ and set
+\begin{equation}
+ T_S=n^{1-a}\left(1+\frac1n\sum_{i=1}^nY_i^2\right),\qquad
+ d\Pi_S(f)=Z_S^{-1}
+  \exp\left\{-\frac1{T_S}\sum_{i=1}^n(f(X_i)-Y_i)^2\right\}d\mu(f).
+ \label{eq:raw-adaptive-temperature}
+\end{equation}
+Thus the conditional Gaussian observation variance is $T_S/2$.
+The variance calibration uses all observed labels and is part of the
+specified learner; it is not a fixed-variance Bayesian generative model.
+
+\begin{theorem}[A finite-variance raw oracle]
+\label{thm:raw-sieve-oracle}
+Put $Q_n=\max(1,V)n^a$ and
+$q_n=4Q_n+8\log(n+1)+4$. For any deterministic comparison law $\rho$
+with finite KL and risk, the posterior-average risk and ordinary
+posterior-mean risk satisfy
+\begin{align}
+ \E_S R(\bar f_S)
+ &\le\E_S\int R(f)\,d\Pi_S(f)\\
+ &\le\int R(f)\,d\rho(f)
+       +(1+\sigma_Y^2)n^{-a}\KL(\rho\Vert\mu)\notag\\
+ &\quad+C M(q_n)\sqrt{(1+V+\sigma_Y^2)J(q_n,e)/n}\notag\\
+ &\quad+C M(q_n)^2J(q_n,e)/n\notag\\
+ &\quad+Ce\{M(q_n)+1+\sigma_Y\}
+       +C(1+\sqrt{W_4})(1+\sigma_Y)(n+1)^{-4}.
+ \label{eq:raw-sieve-oracle}
+\end{align}
+Here $e\in(0,1]$ is arbitrary and $C$ is absolute. The comparison law
+may depend on $n$ and on the underlying distribution, but not on the
+realized sample. Taking an infimum over such laws is valid.
+\end{theorem}
+\begin{proof}
+Jensen's inequality and the centering in
+\eqref{eq:abstract-prior-moments} give, for every realized sample,
+\[
+ Z_S\ge\exp\left\{-\frac{n(\widehat{\E}Y^2+V)}{T_S}\right\}
+       \ge e^{-Q_n}.
+\]
+Consequently $d\Pi_S/d\mu\le e^{Q_n}$ deterministically, even when
+labels are unbounded.
+
+Let $\mathcal G$ be the good set in \eqref{eq:abstract-sieve} at
+$q_n,e$, and write $M=M(q_n)$. For analysis only, clip each dictionary
+function to $[-M,M]$. Its cardinality does not increase, and each
+$f\in\mathcal G$ still has a uniform $e$ approximation. This operation
+does not change the learner or posterior.
+
+Use centered squared losses
+\[
+ c_f(x,y)=f(x)^2-2f(x)y.
+\]
+The variational comparison to the native prior gives, at every realized
+positive temperature,
+\[
+ \Pi_S P_n(f-Y)^2\le P_nY^2+V,
+ \qquad \Pi_S P_nf^2\le4P_nY^2+2V.
+\]
+Push the posterior good part to its dictionary approximations and put
+the remaining mass on the zero function. Its expected empirical second
+moment is at most $C(V+\sigma_Y^2+e^2)$. The relative dictionary lemma,
+which combines empirical Bernstein for $g^2$ with Rademacher
+symmetrization for $gY$, therefore bounds the good-part centered-loss
+gap by
+\[
+ C M\sqrt{(1+V+\sigma_Y^2)J(q_n,e)/n}
+       +CM^2J(q_n,e)/n,
+\]
+apart from the approximation term below. This step only needs the
+second label moment. In particular no high-probability exceptional
+sample event is multiplied by the posterior density ceiling.
+For a good $f$ and its dictionary approximation,
+\[
+ |c_f-c_g|\le e(2M+e+2|y|).
+\]
+Its expected population-plus-empirical contribution is at most
+$Ce(M+1+\sigma_Y)$.
+
+The bad set has prior mass at most $2e^{-q_n}$. Its contribution to
+the posterior population-minus-empirical centered loss is bounded by
+\[
+ e^{Q_n}\left[2\E_\mu U^2\mathbf1_{\mathcal G^c}
+ +2(\E|Y|+\widehat{\E}|Y|)
+                \E_\mu U\mathbf1_{\mathcal G^c}\right].
+\]
+Cauchy--Schwarz, \eqref{eq:abstract-prior-moments}, and the choice of
+$q_n$ bound its sample expectation by the last term of
+\eqref{eq:raw-sieve-oracle}.
+
+Finally the exact variational inequality at the realized temperature is
+\[
+ \int P_n c_f\,d\Pi_S
+ \le\int P_n c_f\,d\rho+\frac{T_S}{n}\KL(\rho\Vert\mu).
+\]
+The empirical $Y^2$ term cancels from both sides. Take expectations,
+apply the preceding deviation and tail estimates, and use
+$\E(T_S/n)=(1+\sigma_Y^2)n^{-a}$. Adding $\E Y^2$ yields the
+posterior-average risk bound. Jensen gives the ordinary posterior-mean
+bound. All integrals are finite by the deterministic density ceiling
+and the fourth prior moment.
+\end{proof}

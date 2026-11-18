@@ -1,0 +1,75 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,mathtools}
+\usepackage[margin=1in]{geometry}
+\usepackage{microtype}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Sharp high-probability Bayesian neural-network oracles with bounded output variation},pdfauthor={ChatGPT-6 Astra; Claude Opus 5.5; Kaarel H\"anni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\title{Sharp high-probability Bayesian neural-network oracles\\with bounded output variation}
+\author{ChatGPT-6 Astra \and Claude Opus 5.5 \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{18 November 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+We prove a coefficient-one, high-probability squared-risk oracle for one ordinary Bayesian neural-network posterior using all observations. The learner has one prescribed hidden layer with bounded Lipschitz activation, such as tanh. Its incoming weights have independent L\'evy fan-in laws; its readout has a signed beta-prime product law conditioned on $\ell^1$ norm at most one. This norm restriction makes the raw predictions bounded, with no final clipping. Against a width-$C$ teacher with the same readout variation bound and incoming coefficients bounded by $B$, the remainder is
+$\widetilde O((1+\sigma^2)C(d+1)\log(B+2)/n)+O(C/N^2)$,
+uniformly over every prescribed finite width $N\ge8C$. The width term is absorbed into the fast statistical rate when $N\ge\sqrt n$.
+Labels may have conditionally sub-Gaussian noise. The likelihood variance is fixed, and no validation, architecture mixture, or averaging over sample sizes is used.
+
+The proof moves an arbitrary posterior approximately halfway toward a teacher at additive KL cost independent of learner width. It merges pairs of small readout terms without changing their conditional mean, inserts the teacher in the freed slots, and cancels the insertion cost by hiding its locations. The midpoint improvement in squared loss then yields the sharp high-probability bound. For tanh, same-width feature compactification removes all incoming coefficient restrictions: the statistical costs are $\widetilde O((1+\sigma^2)Cd^2/n)$ on Boolean inputs and $\widetilde O((1+\sigma^2)Cd/(\alpha n))$ under slab anticoncentration with exponent $\alpha$, with the same $O(C/N^2)$ term. A convex-hull bound gives the same posterior a slower vanishing oracle at every width $N\ge C$. The readout variation restriction remains essential to these statements.
+\end{abstract}
+
+\section{Introduction}
+A sharp approximation oracle compares a learner's risk with the risk of a small approximating network with coefficient exactly one. This matters when approximation error is nonzero: a multiplicative loss on that error can dominate the statistical remainder. We obtain such an oracle with high probability for the final ordinary Bayesian posterior at one fixed architecture and one fixed likelihood variance.
+
+Our learner is a bounded linear combination of bounded hidden features. The prior conditions the readout coefficients to have $\ell^1$ norm at most one, and the teacher obeys the same variation bound. These are substantive restrictions. They ensure bounded predictions without clipping and supply the counting argument that makes the result uniform in learner width. The prior retains continuous coordinates and is dense almost surely inside this support. Incoming coefficients are unrestricted under the prior. The learner has one hidden layer; no claim is made here for raw ReLU features or an unrestricted multilayer clipped-output prior.
+
+The formal result, Theorem~\ref{thm:l1-main}, controls the posterior average of population squared risk and therefore also the risk of its mean. For a teacher with width $C$ and incoming coefficient cap $B$, it gives, with probability at least $1-\delta$,
+\[
+ \begin{aligned}
+ R(\bar f_S)&\le R(g)+K C/N^2\\
+ &\quad+\frac{K(1+\sigma^2)}n
+ \left[(1+C(d+1))\log\{e(d+1)(B+8)(C+1)n\}
+                                      +\log\frac4\delta\right].
+ \end{aligned}
+\]
+Here $K$ depends only on the fixed scalar prior, and the inequality holds for every prescribed $N\ge8C$. In the fast-rate regime $N\ge\max\{8C,\sqrt n\}$, the width term is absorbed into the statistical remainder. Writing $R(g)=R_0+A(g)$, where $R_0$ is the irreducible noise and $A(g)$ the approximation error, both terms retain coefficient one. The Gaussian observation variance is $1024(1+\sigma^2)$; the noise proxy is used to set it. The comparator, its width, and its coefficients are used only in the analysis.
+
+The key geometric fact is the squared-loss midpoint identity. Moving a function halfway toward a teacher improves average loss by one quarter of their squared distance. To exploit that identity at a fixed width, the prior must permit movement of an arbitrary posterior, rather than only put mass near the teacher. We construct precisely this transfer. A readout with $\ell^1$ norm at most one has many small coefficients. Randomly merging pairs preserves their conditional mean and incurs total variance only $O(C/N^2)$. After scaling the survivors, the freed slots hold a slightly shrunken teacher. The inserted coefficients are distinguishable from zero, so the readout norm bounds how many locations could have been used. Averaging over their locations cancels the apparent logarithmic learner-width cost. A relative-loss exponential inequality then converts the empirical midpoint improvement into a sharp population oracle.
+
+For tanh, Section~\ref{sec:l1-compactification} removes the incoming coefficient cap without adding neurons. On the Boolean cube, inverse-tanh interpolation reduces each feature to an integer linear system. On a continuous cube, slab anticoncentration permits capping a feature's normalized slope because both original and capped features are saturated outside a small slab. The output variation bound makes the approximation errors add without a factor $C$. These refinements yield coefficient-free width-only guarantees within the same restricted teacher class.
+
+The same posterior also has a slower guarantee at every realizable width $N\ge C$, including $N=C$. Every function with readout variation at most one lies in the absolute convex hull of single tanh features. Its uniform relative-loss deviation is therefore $\widetilde O(\sqrt{(1+\sigma^2)(d+1)/n})$, independently of network width. Combined with direct prior localization, Theorem~\ref{thm:all-width-variation} gives a coefficient-one oracle with this deviation term and the same logarithmic comparison cost divided by $n$. The learner-width condition distinguishes the faster rate; it is not needed for a vanishing approximation oracle.
+
+\paragraph{Related work.}
+Sharp high-probability aggregation inequalities are established results; for example, Lecu\'e and Rigollet~\cite{qagg} prove them for $Q$-aggregation. Ordinary exponential weighting has different behavior: Lecu\'e and Mendelson~\cite{lm} give probability lower bounds for general finite dictionaries, while H\o gsgaard, Rebeschini and Wegel~\cite{hrw} prove a sharp expectation bound for the final exponential-weights aggregate at a sufficiently large fixed temperature. Our proof uses the additional approximate-midpoint structure of this particular neural prior to obtain a high-probability statement for its ordinary posterior. It is not a general upgrade of arbitrary-prior exponential weighting.
+
+The output-variation viewpoint is also established in convex neural-network theory; Bach~\cite{bach} studies output-norm regularization and generalization for single-hidden-layer models. Our all-width Rademacher argument uses the familiar convex-hull reduction. The faster fixed-posterior result additionally needs the prior-specific transfer.
+
+Dense heavy-tailed neural priors also have substantial precedent. Castillo and Egels~\cite{ce} establish posterior and variational contraction with independent heavy-tailed weights on deterministic dense architectures. The L\'evy fan-in construction and its scalar placement estimates are developed in a companion analysis~\cite{levy}; the finite-width scalar ingredients needed here are proved below. The present result uses a different, signed beta-prime readout prior conditioned on its $\ell^1$ norm, and establishes a width-uniform agnostic comparison through posterior transfer. No claim of first-ever sharp Bayesian or aggregation bounds is needed.
+
+\input{core-merging}
+\input{compactification}
+\input{all-width}
+
+\paragraph{Growing comparison widths.}
+At fixed dimension and regularity, the coefficient-free all-width oracle has vanishing remainder whenever $N_n\ge C_n$ and its displayed comparison resource is $o(n)$. For example, in the continuous case it is enough that
+\[
+ C_n(d+1)
+ \left\{\log(e(d+1)(C_n+1)n)+\alpha^{-1}\log(e\kappa n)\right\}=o(n).
+\]
+The width may remain fixed when the comparison width is fixed. The faster merged bound applies at $N_n\ge8C_n$ and has the additional term $C_n/N_n^2$; this term vanishes for a growing $C_n$ with a constant-factor width enlargement, and is absorbed into the fast statistical rate when $N_n\ge\sqrt n$. These statements concern the same ordinary posterior within the readout variation class.
+
+\begin{thebibliography}{9}
+\bibitem{qagg} Guillaume Lecu\'e and Philippe Rigollet. Optimal learning with $Q$-aggregation. \emph{Annals of Statistics} 42(1):211--224, 2014. \url{https://doi.org/10.1214/13-AOS1190}.
+\bibitem{lm} Guillaume Lecu\'e and Shahar Mendelson. On the optimality of the aggregate with exponential weights for low temperatures. \emph{Bernoulli} 19(2):646--675, 2013. \url{https://doi.org/10.3150/11-BEJ408}.
+\bibitem{hrw} Mikael M\o ller H\o gsgaard, Patrick Rebeschini, and Tobias Wegel. Aggregation with exponential weights is optimal in expectation. arXiv:2607.02247, 2026. \url{https://arxiv.org/abs/2607.02247}.
+\bibitem{bach} Francis Bach. Breaking the curse of dimensionality with convex neural networks. \emph{Journal of Machine Learning Research} 18(19):1--53, 2017. \url{https://www.jmlr.org/papers/v18/14-546.html}.
+\bibitem{ce} Isma\"el Castillo and Paul Egels. Posterior and variational inference for deep neural networks with heavy-tailed weights. \emph{Journal of Machine Learning Research} 26(122):1--58, 2025. \url{https://www.jmlr.org/papers/v26/24-0894.html}.
+\bibitem{levy} ChatGPT-6 Astra, Claude Opus 5.5, Kaarel H\"anni, and Dmitry Vaintrob. Bayesian neural networks with L\'evy fan-in priors. 2026. \url{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/works-in-progress/agnostic-levy-fanin}.
+\end{thebibliography}
+\end{document}

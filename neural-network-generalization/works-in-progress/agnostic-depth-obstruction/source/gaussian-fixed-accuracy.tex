@@ -1,0 +1,87 @@
+\section{Correctly specified Gaussian observation noise}
+\label{sec:gaussian-fixed-accuracy}
+The constant-accuracy obstruction also holds when the observation-noise family is correctly specified. This extension concerns ordinary raw posterior means and arbitrary data-dependent mixtures of those means.
+
+\begin{theorem}[A Gaussian-noise depth obstruction]
+\label{thm:gaussian-fixed-accuracy}
+There are absolute constants $\eta,c_0,C>0$ and a depth threshold $H_0$ such that the following holds. For each $H\ge H_0$, put
+\[
+ D=\lfloor\eta H\rfloor,\quad d=D+2,\quad n=4\cdot2^D,
+\]
+and use the uniform input law on $\mathcal X_D$. The labels are
+\[
+ Y=\tanh(X_1)+G/4,\qquad G\sim N(0,1)\text{ independent of }X.
+\]
+With probability at least $9/10$ over $n$ IID observations, every well-defined data-dependent probability mixture of ordinary raw posterior means over all
+\[
+ N\ge e^{CH},\qquad 0<N\sigma^2\le c_0,\qquad \lambda>0
+\]
+has squared population risk at least
+\[
+ \frac1{16}+2^{-21}.
+\]
+The true conditional mean has a one-hidden-layer width-one implementation with unit coefficients, and an exact bounded-coefficient width-two implementation at hidden depth $H$ on the support. Each component learner has one fixed dense architecture. Its Gaussian likelihood family contains the true observation variance $1/16$.
+\end{theorem}
+\begin{proof}
+Write $g(x)=\tanh(x_1)$ and $a=1/4$. The target satisfies
+$1/\sqrt{32}<|g(x)|<2/3$ at every support point. Use the same occupancy event as before: at least $n/3$ singleton atoms and $n^{-1}\sum_x k_x^2\le4$, with failure tending to zero.
+
+Conditional on the inputs, the squared noise sum on singleton observations is at least $a^2n/6$ except on probability $e^{-c n}$, by a chi-square lower tail. Consequently the empirical atom means $b$ obey
+\[
+ \|b-g(S)\|_n^2\ge1/96>1/128.
+\]
+The empirical noise-square average is at most $1/9$ except on probability $e^{-c'n}$, again by a chi-square tail, since its mean is $1/16$. On this event, projection onto the atom-constant subspace gives
+\[
+ \|b\|_n\le\|g(S)\|_n+\|y-g(S)\|_n\le1,
+\]
+\[
+ \|b-2g(S)\|_n\le\|g(S)\|_n+\|b-g(S)\|_n\le1,
+ \qquad \widehat R(0)=\|y\|_n^2\le1.
+\]
+The alignment
+$\Delta=n^{-1}\sum_i (Y_i-g(X_i))g(X_i)$ is conditionally Gaussian with variance at most $a^2/n$. Thus $|\Delta|\le1/1024$ except on probability $2e^{-c''n}$. These events give
+\begin{equation}
+ D_S\le1,\quad\|b-2g(S)\|_n\le1,\quad
+ \min\{\|g(S)\|_n^2,\|b-g(S)\|_n^2\}\ge1/128,
+ \quad |\Delta|\le1/1024.
+ \label{eq:gaussian-accuracy-sample}
+\end{equation}
+
+The empirical means are not uniformly bounded, so the comparison fits their clipping to $[-4,4]$. At an atom of count $k\ge1$, its mean is $b_x=g(x)+aZ_x/\sqrt k$ with independent standard Gaussians $Z_x$. Since $4-|g(x)|\ge13a$,
+\[
+ k(b_x-\clip_{[-4,4]}b_x)^2\le a^2(|Z_x|-13)_+^2.
+\]
+For $W=(|Z|-13)_+^2$,
+$\Pr(W>u)\le2e^{-169/2}e^{-u/2}$ and
+$\E e^{W/4}\le1+2e^{-169/2}$. Add independent dummy variables for unobserved atoms. Exponential Markov therefore gives
+\[
+ \Pr\left(\|b-\clip_{[-4,4]}b\|_n^2>2^{-24}
+                   \mid X_1,\ldots,X_n\right)
+ \le e^{-2^{-23}n}.
+\]
+Apply Theorem~\ref{thm:native-near-baseline} with output bound four and output RMS $2^{-11}$ to the clipped empirical means. The comparison empirical RMS against the unmodified means is at most
+$2^{-11}+2^{-12}<2^{-10}$, so its excess over the within-atom residual is less than $2^{-20}$. Its mean energy still has the arbitrarily small relative gap above $H$ needed for the objective-segment lemma. Shrink the fixed dimension coefficient $\eta$ if necessary; all constants remain independent of depth.
+
+Choose the energy gap and entropy parameter as in the bounded-noise proof, so that $1-q/K\le2^{-18}$ and the empirical low-temperature segment distance is less than $1/256$. The prior comparison uses only $\widehat R(0)\le1$, which is included in the common event. Select the fixed prefactor $c_0$ small enough that the entropy error for $\lambda\le16/H$ is at most $2^{-20}$. The same objective-segment lemma then gives, for every such raw mean,
+\[
+ \langle b-2g(S),m(S)-g(S)\rangle_n
+ \ge1/128-1/1024-1/256>1/512.
+\]
+For $\lambda\ge16/H$, the posterior operator-energy tail proof remains valid on $\widehat R(0)\le1$. That proof never used coordinatewise label boundedness elsewhere. It makes the raw mean pointwise exponentially small in $H$, so the same witness is greater than $1/512$ for all sufficiently large $H$. This gives one common separator over every width, scale, and positive temperature in the theorem, and it survives arbitrary data-dependent mixing.
+
+It remains to bound the population norm of the witness
+\[
+ h_S(x)=\sum_{i:X_i=x}(Y_i-2g(x)).
+\]
+Conditional on the inputs, its coordinates after division by $\sqrt n$ are a deterministic vector $-k_xg(x)/\sqrt n$ plus independent Gaussian variables of variances $a^2k_x/n$. The deterministic norm is at most $3/2$ on the count event. The Gaussian variance trace is $a^2$, and its largest coordinate variance is at most $2a^2/\sqrt n$, because $k_x\le2\sqrt n$. Gaussian norm concentration consequently makes the random part have norm at most one except on probability at most $e^{-\sqrt n}$. Thus
+\[
+ \|h_S\|_{L^2(D_X)}^2\le(5/2)^2<7.
+\]
+The population witness identity and Cauchy--Schwarz yield, for every allowed mixture,
+\[
+ R(m)-R(g)\ge\frac{(1/512)^2}{7}>2^{-21}.
+\]
+All failure probabilities tend to zero as $n=4\cdot2^{\lfloor\eta H\rfloor}$ grows. Enlarge $H_0$ so that their sum is at most $1/10$. This proves the theorem.
+\end{proof}
+
+This is a correctly specified Gaussian regression example: the conditional mean belongs to the learner architecture on the data support, and the learner may use exactly the true observation-noise variance. The conclusion also permits every other positive variance and arbitrary data-dependent mixing of the associated raw posterior means. Clipping is used only to construct the proof's comparison distribution; the learner receives the original Gaussian labels and the theorem does not clip its predictions.

@@ -1,0 +1,81 @@
+\section{A relative dictionary bound with only a second label moment}
+\label{sec:relative-raw-dictionary}
+The square-loss term can be controlled more sharply than by applying Hoeffding's inequality to its full envelope. The following lemma isolates the improvement. All risks and moments in this section are for a fresh observation with the same law as the iid training sample.
+
+\begin{lemma}[Expected comparison for a data-dependent distribution on a dictionary]
+\label{lem:relative-raw-dictionary}
+Let $\mathcal D$ be a deterministic finite class of measurable functions with $|g|\le M$, where $M\ge1$, and let $Y$ have a finite second moment. Write
+\[
+ \ell_g(x,y)=g(x)^2-2g(x)y,\qquad J=|\mathcal D|\ge1.
+\]
+For each sample $S$, let $\rho_S$ be any probability distribution on $\mathcal D$. Suppose
+\[
+ \mathbb E_S\rho_S P_n g^2\le K.
+\]
+Then
+\begin{equation}
+ \mathbb E_S\left|\rho_S(P-P_n)\ell_g\right|
+ \le C M\sqrt{\frac{(K+\mathbb E Y^2)\log(2J)}n}
+           +C M^2\frac{\log(2J)}n.
+ \label{eq:relative-dictionary-bound}
+\end{equation}
+Here $\rho_SP_ng^2$ denotes the posterior average empirical second moment, and the constant is numerical. The distribution $\rho_S$ may depend arbitrarily on all labels.
+\end{lemma}
+\begin{proof}
+Bernstein's inequality for $g(X)^2\in[0,M^2]$, whose variance is at most $M^2Pg^2$, followed by the usual quadratic rearrangement and a union bound gives the following simultaneous empirical-variance form. There is a nonnegative sample-dependent variable $T_S$ with $\Pr(T_S>t)\le e^{-t}$ such that, for every $g\in\mathcal D$,
+\[
+ |(P-P_n)g^2|
+ \le C M\sqrt{\frac{P_ng^2[\log(2J)+T_S]}n}
+       +C M^2\frac{\log(2J)+T_S}n.
+\]
+For example, define $T_S$ as the positive part of the smallest additional confidence parameter for which all these inequalities hold; the union bound proves the stated tail. Jensen's inequality over $\rho_S$ gives a square-root term with $P_ng^2$ replaced by $\rho_SP_ng^2$. Taking expectations and applying Cauchy--Schwarz to the two square-root factors bounds this term by
+\[
+ C M\sqrt{\frac{\mathbb E[\rho_SP_ng^2]\,
+              \mathbb E[\log(2J)+T_S]}n}
+ \le C M\sqrt{\frac{K\log(2J)}n}.
+\]
+No independence between the posterior empirical moment and $T_S$ is used. The remaining square term contributes at most $CM^2\log(2J)/n$.
+
+For the label multiplier use symmetrization, followed conditionally on the data by the finite-class Rademacher maximum bound:
+\begin{align*}
+ \mathbb E\max_{g\in\mathcal D}|(P-P_n)(gY)|
+ &\le 2\mathbb E\mathbb E_\varepsilon
+          \max_{g\in\mathcal D}
+            \left|\frac1n\sum_{i=1}^n\varepsilon_i g(X_i)Y_i\right|\\
+ &\le \frac{C M\sqrt{\log(2J)}}n
+            \mathbb E\sqrt{\sum_{i=1}^nY_i^2}
+ \le C M\sqrt{\frac{\mathbb E Y^2\log(2J)}n}.
+\end{align*}
+Finite second moments ensure all quantities are integrable and justify symmetrization. A posterior average is bounded by the displayed maximum, regardless of its data dependence. Combining the square and multiplier terms proves \eqref{eq:relative-dictionary-bound}.
+\end{proof}
+
+\begin{corollary}[Uniform approximation and a raw posterior]
+\label{cor:relative-raw-posterior}
+Let $\Pi_S$ be a data-dependent distribution on raw functions and let $\mathcal G$ be a deterministic good set. Assume every $f\in\mathcal G$ admits a measurable choice $g_f\in\mathcal D$ with $\|f-g_f\|_\infty\le\epsilon$, and $|g_f|\le M$. Suppose
+\[
+ \mathbb E_S\Pi_S P_nf^2\le K_0.
+\]
+The good part of its expected centered empirical-to-population gap is at most
+\[
+ C M\sqrt{\frac{(K_0+\epsilon^2+\mathbb E Y^2)\log(2J)}n}
+   +CM^2\frac{\log(2J)}n
+   +C\epsilon(M+\epsilon+\sqrt{\mathbb E Y^2}).
+\]
+The same bound applies to the absolute value before taking sample expectation, with the latter expectation outside the absolute value. A separate bound on the posterior integral over $\mathcal G^c$ may be added.
+\end{corollary}
+\begin{proof}
+Push the subprobability $\Pi_S|_{\mathcal G}$ forward under $f\mapsto g_f$, and complete it to a probability by placing the remaining mass on the zero function. Adding zero changes $\log(2J)$ by only a numerical factor and contributes no centered loss. The new empirical second moment is at most $2\Pi_SP_nf^2+2\epsilon^2$. Apply the lemma. On the good set,
+\[
+ |\ell_f-\ell_{g_f}|
+       \le\epsilon(2M+\epsilon+2|Y|).
+\]
+The empirical and population versions of this bound, followed by Cauchy--Schwarz for $\mathbb E|Y|$, prove the claim.
+\end{proof}
+
+\begin{remark}
+For a raw Gaussian posterior, the needed empirical second-moment bound follows directly from the Gibbs variational inequality whenever the native prior is centered and has uniformly bounded second output moment $V$. Comparing the posterior objective to the native prior gives $\Pi_S P_n(f-Y)^2\le P_nY^2+V$. Therefore
+\[
+ \Pi_S P_nf^2\le4P_nY^2+2V.
+\]
+This holds for every positive temperature, including a temperature chosen from the same data. For a bounded hidden activation under Gaussian neuron gates, a cutoff of prior probability $1-e^{-q}$ has raw envelope $M=Cq^{3/2}$; the dictionary budget at fixed $H,d,\epsilon$ is $\widetilde O(q^2)$. The leading dictionary deviation is consequently $\widetilde O(q^{5/2}/\sqrt n)$, rather than the $\widetilde O(q^4/\sqrt n)$ obtained from a square-envelope Hoeffding bound. Balancing it against a comparison penalty $n^{-a}$ with $q$ of order $n^a$ gives $a=1/7$, up to logarithmic factors. The final oracle must still supply the bad-set bound and its comparison law.
+\end{remark}

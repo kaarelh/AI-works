@@ -1,0 +1,189 @@
+\section{Competing with arbitrary-weight networks under a regular input law}
+\label{sec:width-only-regular}
+The path-variation oracle also yields a width-only approximation guarantee under a restriction on the input distribution. The comparison network may have arbitrarily large coefficients. The learner still uses a single fixed architecture, but its width must be large enough for a bounded-variation approximation of the comparison function.
+
+Let $Q=[-1,1]^d$, and let $U_Q$ denote its uniform probability measure. Assume $|Y|\le1$ and
+\[
+ \frac{dP_X}{dU_Q}\le\kappa,\qquad \kappa\ge1.
+\]
+The learner receives the augmented input $\xi(x)=(1,x)/\sqrt{d+1}$, which lies in the Euclidean unit ball. Its mixed path variation therefore uses first-row Euclidean norms in these augmented coordinates. Put
+\[
+ H_d=2\lceil\log_2 d\rceil+2,\qquad
+ J_d=10d^2\sqrt{d+1}.
+\]
+
+\begin{theorem}[A bounded-path approximation with no coefficient bound]
+\label{thm:width-only-approximation}
+Let $g:\mathbb R^d\to\mathbb R$ be computed by a ReLU network with $h\ge1$ hidden layers, at most $C\ge1$ neurons in each hidden layer, arbitrary finite real weights and biases, and a linear readout. Define
+\[
+ R_0=(C+1)^h,\qquad f=\max\{-1,\min\{1,g\}\}.
+\]
+For every $0<\Delta\le1$, there is a ReLU network $p$ with no internal biases, augmented input $\xi$, hidden depth $H_d$, and
+\begin{align}
+ \operatorname{width}(p)&\le(4d+1)(5/\Delta)^d,\label{eq:width-only-width}\\
+ P(p)&\le J_d5^d\Delta^{-(d+1)},\label{eq:width-only-path}\\
+ |p(x)|&\le1\quad(x\in Q),\qquad
+ \int_Q|p-f|\,dU_Q\le dR_0\Delta.\label{eq:width-only-error}
+\end{align}
+Consequently,
+\begin{equation}
+ R(p)\le R(g)+4\kappa dR_0\Delta.
+ \label{eq:width-only-risk}
+\end{equation}
+Identity layers increase the hidden depth to any $H\ge H_d$ without changing the width or path variation bounds.
+\end{theorem}
+
+\subsection{Variation on coordinate lines}
+Fix every input coordinate except one. The restricted ReLU network is a univariate continuous piecewise affine function. At the first hidden layer, the breakpoints of all $C$ neurons divide the line into at most $C+1$ intervals. On each interval on which all preceding features are affine, the next layer creates at most $C$ new breakpoints. Inductively the output has at most $(C+1)^h=R_0$ affine intervals. Biases and arbitrary coefficient magnitudes do not change this count.
+
+On each affine interval, clipping the scalar output to $[-1,1]$ gives a monotone function with total variation at most two. Thus on every coordinate line,
+\begin{equation}
+ \operatorname{TV}(f\text{ on that line})\le2R_0.
+ \label{eq:width-only-line-TV}
+\end{equation}
+This holds on the whole line, including lines outside $Q$.
+
+The following translation estimate is useful. For any $z\in\mathbb R^d$,
+\begin{equation}
+ \int_Q|f(x+z)-f(x)|\,dU_Q(x)\le R_0\|z\|_1.
+ \label{eq:width-only-translation}
+\end{equation}
+Indeed, telescope one coordinate at a time. For a one-dimensional function of total variation at most $2R_0$, its integral translation error on an interval is at most $2R_0|z_j|$. Integrating the other coordinates over intervals of length two and dividing by $2^d$ proves the asserted contribution $R_0|z_j|$. The variation estimate is uniform over those other coordinates and their intermediate translations.
+
+\subsection{Kuhn hats and a randomly shifted grid}
+Define
+\[
+ \Phi(z)=\operatorname{ReLU}\!\left(1-
+       \max\{0,z_1,\ldots,z_d\}
+       -\max\{0,-z_1,\ldots,-z_d\}\right).
+\]
+For a grid vertex $v\in u+\Delta\mathbb Z^d$, set
+$\phi_v(x)=\Phi((x-v)/\Delta)$. These are the nodal hats of the Kuhn triangulation. They are nonnegative, vanish unless $\|x-v\|_\infty\le\Delta$, and satisfy
+\begin{equation}
+ \sum_{v\in u+\Delta\mathbb Z^d}\phi_v(x)=1.
+ \label{eq:width-only-partition}
+\end{equation}
+Here is a direct verification. In a unit grid cell, order the fractional coordinates as $\theta_{\pi(1)}\ge\cdots\ge\theta_{\pi(d)}$. The only potentially nonzero hats correspond to the $d+1$ vertices obtained by adding the first $j$ ordered coordinate vectors to the lower corner. Their values are
+\[
+ 1-\theta_{\pi(1)},\quad
+ \theta_{\pi(1)}-\theta_{\pi(2)},\quad\ldots,\quad
+ \theta_{\pi(d-1)}-\theta_{\pi(d)},\quad
+ \theta_{\pi(d)}.
+\]
+They sum to one. A different vertex either lies outside the adjacent grid cube or has a selected coordinate with smaller fractional part than an unselected one; the displayed maximum-plus-maximum formula then gives zero. Ties and cell boundaries follow by continuity. Integrating \eqref{eq:width-only-partition} over a fundamental grid cell also gives $\int_{\mathbb R^d}\Phi=1$.
+
+For a shift $u\in[0,\Delta)^d$, form the nodal interpolant
+\[
+ I_uf(x)=\sum_{v\in u+\Delta\mathbb Z^d}f(v)\phi_v(x).
+\]
+It stays in $[-1,1]$. Fixed grid vertices can meet narrow features of a function, so a deterministic unshifted grid is not sufficient for the next estimate. Averaging over a uniformly random shift removes that issue. By \eqref{eq:width-only-partition}, Tonelli's theorem, and the tiling of $\mathbb R^d$ by the translated fundamental cells,
+\begin{align*}
+ \mathbb E_u\int_Q|I_uf-f|\,dU_Q
+ &\le\int_{\mathbb R^d}\Phi(-z)
+       \int_Q|f(x+\Delta z)-f(x)|\,dU_Q(x)\,dz\\
+ &\le R_0\Delta\int\Phi(-z)\|z\|_1\,dz
+ \le dR_0\Delta.
+\end{align*}
+The last inequality uses $\operatorname{supp}\Phi\subset[-1,1]^d$ and $\int\Phi=1$. Some fixed shift therefore has the claimed error. Only vertices in $[-1-\Delta,1+\Delta]^d$ can contribute on $Q$, and there are at most
+\[
+ M\le(2/\Delta+3)^d\le(5/\Delta)^d
+\]
+ such vertices. Retain only these hats.
+
+\subsection{Realizing the interpolant and bounding its path variation}
+Each hat has a ReLU realization with $H_d$ hidden layers. In the first layer, compute
+\[
+ \operatorname{ReLU}((x_j-v_j)/\Delta),\quad
+ \operatorname{ReLU}((v_j-x_j)/\Delta)\quad(1\le j\le d),
+ \qquad \operatorname{ReLU}(1)=1.
+\]
+The last neuron carries a constant through subsequent layers. Compute the maxima of the positive and negative lists by balanced binary trees, padding with zeros to $D=2^{\lceil\log_2d\rceil}$ leaves. For nonnegative $a,b$,
+\[
+ \max\{a,b\}=\operatorname{ReLU}(\operatorname{ReLU}(a-b)+b).
+\]
+Thus each tree level takes two ReLU layers. The final layer computes $\operatorname{ReLU}(1-M_+-M_-)$. It uses the carried constant, so no internal bias is needed. Every layer has at most $4d+1$ neurons per hat.
+
+For completeness, path budgets are propagated by absolute weights. At a first-layer neuron, its budget is its incoming Euclidean row norm. At a later neuron it is the sum of its predecessors' budgets times the corresponding absolute weights. The output budget is exactly mixed path variation. In augmented coordinates, each first-layer hinge has budget at most
+\[
+ \sqrt{d+1}\sqrt{1+v_j^2}/\Delta\le\sqrt{5(d+1)}/\Delta,
+\]
+while the constant has budget $\sqrt{d+1}$. A two-layer maximum block sends budgets $p_a,p_b$ to $p_a+2p_b\le2(p_a+p_b)$. Hence either maximum tree has budget at most
+\[
+ Dd\sqrt{5(d+1)}/\Delta\le2d^2\sqrt{5(d+1)}/\Delta.
+\]
+The final hat therefore has budget at most
+\[
+ \sqrt{d+1}+4d^2\sqrt{5(d+1)}/\Delta
+ \le J_d/\Delta.
+\]
+Place the $M$ hat networks side by side and use readout coefficients $f(v)\in[-1,1]$. This proves \eqref{eq:width-only-width} and \eqref{eq:width-only-path}. Identity padding preserves these budgets because every hidden coordinate is nonnegative.
+
+Finally clipping $g$ can only reduce squared loss when $|Y|\le1$. Both $p$ and $f$ are in $[-1,1]$, so
+\[
+ |(p-Y)^2-(f-Y)^2|\le4|p-f|.
+\]
+Density domination and the interpolation estimate prove \eqref{eq:width-only-risk}, finishing Theorem~\ref{thm:width-only-approximation}.
+
+\subsection{A sharper path bound from hierarchical interpolation}
+A multiscale representation reduces the path variation further. Define
+\[
+ K_d=J_d\bigl(5^d+2d4^{d-1}\bigr).
+\]
+
+\begin{theorem}[Hierarchical bounded-path approximation]
+\label{thm:hierarchical-width-only}
+Under the assumptions of Theorem~\ref{thm:width-only-approximation}, let $\Delta=2^{-J}$ for an integer $J\ge0$. There is a ReLU network $p$ of hidden depth $H_d$ such that
+\begin{align}
+ \operatorname{width}(p)&\le2(4d+1)5^d\Delta^{-d},\notag\\
+ P(p)&\le2K_d R_0\Delta^{-d},\label{eq:hierarchical-path}\\
+ |p(x)|&\le1\quad(x\in Q),\qquad
+ \int_Q|p-f|\,dU_Q\le2dR_0\Delta.\notag
+\end{align}
+In particular $R(p)\le R(g)+8\kappa dR_0\Delta$.
+\end{theorem}
+\begin{proof}
+Choose one shift $u$ uniformly in $[0,1)^d$ and use all nested grids $u+\Delta_j\mathbb Z^d$, where $\Delta_j=2^{-j}$ for $0\le j\le J$. Write $I_jf$ for the corresponding Kuhn interpolant.
+
+The triangulations are nested. Indeed, a Kuhn triangulation of mesh $\Delta_j$ is cut out by the hyperplanes $x_i-u_i=k\Delta_j$ and $x_i-x_l-(u_i-u_l)=k\Delta_j$. Every coarse hyperplane is a fine hyperplane. Consequently every function affine on the coarse simplices is reproduced by fine interpolation. We therefore have the exact telescoping representation
+\begin{equation}
+ I_Jf=I_0f+\sum_{j=1}^J\sum_{v\in u+\Delta_j\mathbb Z^d}
+       c_{j,v}\phi_{j,v},\qquad
+ c_{j,v}=f(v)-I_{j-1}f(v).
+ \label{eq:hierarchical-expansion}
+\end{equation}
+Only hats whose supports meet $Q$ need be retained.
+
+There is a simple formula for the detail coefficients. Write a fine vertex uniquely as
+$v=u+\Delta_jb+2\Delta_j k$, with $b\in\{0,1\}^d$ and $k\in\mathbb Z^d$. Its fractional coordinates in the containing coarse cell are $b/2$. The barycentric formula above then gives
+\begin{equation}
+ I_{j-1}f(v)=\tfrac12\bigl[f(v-\Delta_j b)+f(v+\Delta_j b)\bigr].
+ \label{eq:hierarchical-midpoint}
+\end{equation}
+This also holds for $b=0$, when the detail is zero.
+
+Put $Q_j=[-1-\Delta_j,1+\Delta_j]^d$. Averaging over $u$ is equivalent to averaging modulo the coarse mesh $2\Delta_j$. Tiling separately for each parity $b$ and using \eqref{eq:hierarchical-midpoint} gives
+\begin{align*}
+ \mathbb E_u\sum_{v\in (u+\Delta_j\mathbb Z^d)\cap Q_j}|c_{j,v}|
+ &\le(2\Delta_j)^{-d}\sum_{b\in\{0,1\}^d}
+ \frac12\int_{Q_j}\bigl(
+ |f(v)-f(v-\Delta_j b)|+|f(v)-f(v+\Delta_j b)|\bigr)\,dv\\
+ &\le dR_0(2+2\Delta_j)^{d-1}\Delta_j^{1-d}
+ \le d4^{d-1}R_0\Delta_j^{1-d}.
+\end{align*}
+For the second inequality, the unnormalized coordinate translation bound on a box of side $2+2\Delta_j$ is
+$2R_0(2+2\Delta_j)^{d-1}\|z\|_1$, and
+$\sum_{b\in\{0,1\}^d}\|b\|_1=d2^{d-1}$.
+
+Implement \eqref{eq:hierarchical-expansion} by placing all of its hats in parallel. A hat of mesh $\Delta_j$ has path budget at most $J_d/\Delta_j$, as already proved. The base interpolant costs at most $J_d5^d$. The expected sum of path budgets is consequently at most
+\[
+ J_d5^d+J_dd4^{d-1}R_0\sum_{j=1}^J\Delta_j^{-d}
+ \le K_dR_0\Delta^{-d}.
+\]
+The total number of retained hats is at most
+$5^d\sum_{j=0}^J\Delta_j^{-d}\le2\cdot5^d\Delta^{-d}$, which gives the stated width. Every hat has depth $H_d$.
+
+The final interpolant $I_Jf$ still takes values in $[-1,1]$, despite the signed multiscale coefficients. The earlier random-shift proof gives
+$\mathbb E_u\int_Q|I_Jf-f|\,dU_Q\le dR_0\Delta$.
+The sum of this error divided by $dR_0\Delta$ and the constructed path budget divided by $K_dR_0\Delta^{-d}$ has expectation at most two. Some shift makes the sum at most two. For that shift, each nonnegative term is at most two, proving both claims simultaneously. Density domination and the bounded-output squared-loss inequality give the final risk estimate.
+\end{proof}
+

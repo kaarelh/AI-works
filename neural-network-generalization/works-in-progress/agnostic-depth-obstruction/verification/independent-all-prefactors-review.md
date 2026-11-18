@@ -1,0 +1,11 @@
+# Independent integration review
+
+Reviewed all eighteen included source files on 18 November 2026, after the earlier thirteen-source integration audit. The five new covariance/fractional-moment modules and the updated abstract, main theorem, proof bridge and scope all pass. This is a mathematical audit, not Lean verification.
+
+The self-contained native first-feature kernel and unit-seed construction use the correct normalized finite-set Gram operator. The measurable nullspace extension realizes every bounded seed by a unit direction. Conditional Gaussian covariance spikes give exactly the stated scalar recursion and chain-rule normalized entropy, including native readout covariance. Bounded, sub-Gaussian and chi-square concentration yield the expected supremum error at every sufficiently large finite width.
+
+The fractional chi-square moment produces the leading indicator cost kappa(nu)H, with kappa(nu)=1-nu+nu log nu. The covariance-controlled memorizer matches that action up to an arbitrarily small relative error, uniformly on compact prefactor intervals below one. The final posterior argument uses the nonnegative indicator energy q 1_A; the low-temperature segment lemma and high-temperature second-moment estimate therefore apply to all such prefactors. Taking a union with the existing tiny-prefactor range yields the exact stated simultaneous range 0<Ns<=nu_max<1.
+
+The Gaussian-noise, arbitrary Gaussian affine-skip, and final bounded-output likelihood extensions retain their separately stated scopes. The affine branch uses the B-norm event contained in the same max-output event, so its entropy floor is uniform in the affine covariance. Its projected sample witness is unchanged. The final clip/tanh likelihood branch uses oddness and contraction and does not assume raw affine conjugacy.
+
+The main excess constant, fixed shallow target, unit-sphere domain, exponential support growth, and common event over all widths, scales and likelihood temperatures agree with the proof. Constants may deteriorate as nu_max approaches one, and canonical Ns=1 is explicitly excluded from this exponential-in-H theorem. The separately included ReLU extension keeps its gamma>1 scope. The earlier fixed-width deterministic-interpolator clarification remains present.

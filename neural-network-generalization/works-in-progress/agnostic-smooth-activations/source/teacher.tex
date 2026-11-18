@@ -1,0 +1,47 @@
+\section{A comparison distribution around a small network}
+\label{sec:teacher}
+Write $\omega=N/\tau^2$.  The quadratic form in the Gaussian density is
+\[
+ Q_N(w)=\frac dN\|W^1\|_F^2+\sum_{\ell=2}^H\|W^\ell\|_F^2+N\|v\|_2^2,
+ \qquad d\mu_{N,\tau}\propto e^{-\omega Q_N/2}\,dw.
+\]
+Partition the $N$ neurons in each hidden layer into $m$ groups of sizes $k_j\in\{\lfloor N/m\rfloor,\lceil N/m\rceil\}$. Copy the teacher's first-layer rows, divide every internal edge from group $j$ by $k_j$, and divide readout coefficients similarly. This balanced clone computes $g$ exactly. The inequality $N/k_j\le2m$ gives $Q_N(w_*)\le E_g$.
+
+\begin{lemma}[Teacher cylinder]
+\label{lem:teacher}
+For the quantities in \eqref{eq:teacher-cost}, the prior assigns mass at least $e^{-\omega A_g(\lambda)}$ to the event
+\[
+ U_\rho(g)=\{w:\sup_{x\in[-1,1]^d}|z_w(x)-g(x)|<\rho\}.
+\]
+Consequently, a comparison law $\nu_g$ satisfies
+\begin{equation}
+ \int\widehat R_S(z_w)d\nu_g+\frac{2\lambda}{\omega}\KL(\nu_g\Vert\mu_{N,\tau})
+ \le\widehat R_S(g)+\lambda+2\lambda A_g(\lambda).
+ \label{eq:comparison}
+\end{equation}
+\end{lemma}
+\begin{proof}
+Use standard Gaussian coordinates for every parameter block. Let $P$ project onto the group-constant subspace, with orthonormal basis $u_j=k_j^{-1/2}\mathbf1_{\text{group }j}$. Impose absolute value at most $\eta_g$ on every first-layer and readout standardized coordinate and on every internal row coefficient $\langle Z_{i,*},u_j\rangle$. These $ND_g$ independent constraints have probability at least $(3\eta_g/8)^{ND_g}$. Indeed a standard Gaussian has mass at least $3\eta/8$ on $[-\eta,\eta]$ for $0<\eta\le1$, by unimodality and its mass at least $3/4$ on $[-2,2]$.
+
+Conditioning a standard Gaussian coordinate to a symmetric interval preserves the bound $\E e^{sZ}\le e^{s^2/2}$; this follows either by differentiating its truncated moment-generating function or by pairing its two symmetric tails. Orthogonal coordinates factor, so all centered linear forms remain unit-subgaussian. Two $1/4$-nets of the Euclidean sphere, each of size at most $9^N$, imply
+\[
+ \Pr(\|Z\|_\op>2u\sqrt N\mid\text{cylinder})
+ \le2\exp[(2\log9-u^2/2)N].
+\]
+Intersect with $\|Z\|_\op\le b_0\sqrt N$ at every internal layer. A union bound leaves a centrally symmetric event $A$ with mass at least $\tfrac12(3\eta_g/8)^{ND_g}$.
+
+Translate this event by the standardized clone. Internal perturbations are $\tau Z/\sqrt N$. Their part on $I-P$ annihilates the clone's hidden states, and their part on $P$ has operator norm at most $\eta_g\sqrt m$. With normalized hidden-state errors $e_\ell=\|h^\ell-h_*^\ell\|_2/\sqrt N$, the Lipschitz property of $\phi$ gives
+\[
+ e_1\le\eta_g(d+1),\qquad
+ e_\ell\le(\sqrt2mB+b_0)e_{\ell-1}+\eta_g\sqrt m.
+\]
+The readout perturbation has $\ell^1$ norm at most $\eta_g$, and $\sqrt N\|v_*\|_2\le\sqrt2mB$. The resulting uniform output error is at most $\eta_g P_g\le\rho/2$.
+
+For a standard Gaussian measure $G$, symmetry gives
+\[
+ G(A+a)\ge G(A)e^{-\|a\|^2/2},
+\]
+since the density ratio is $e^{-\|a\|^2/2}e^{-\langle Z,a\rangle}$ and its conditional expectation on $A$ is at least its value at the conditional mean zero. Here $\|a\|^2=\omega Q_N(w_*)\le\omega E_g$. As $N\le\omega$ and $1\le\omega$, the resulting mass bound is the claimed one.
+
+Take $\nu_g=\mu_{N,\tau}(\cdot\mid U_\rho(g))$. Its entropy is at most $\omega A_g$, and its empirical risk is at most $\widehat R_S(g)+2\rho(U_g+1)+\rho^2\le\widehat R_S(g)+\lambda$. This proves \eqref{eq:comparison}.
+\end{proof}

@@ -1,0 +1,99 @@
+\section{A faster rate from a normalized Gaussian readout}
+\label{sec:dirichlet-raw-oracle}
+Use the normalized readout in Section~\ref{sec:Dirichlet-readout}, with
+tanh hidden activations. Let $L_g=\sum_j|v_j|$ be the comparison readout variation, and let $b_g$ be its output bias. For Student hidden factors define
+\begin{align*}
+\mathcal K_n^{\rm dir}(g)=C Q_g\big[&(H+2)\log\{C(d+m+2)(B+2)\}\\
+&+\log\{C(H+2)(m+1)(B+2)(n+1)\}\big]+C(L_g^2+b_g^2+1).
+\end{align*}
+For Gaussian hidden factors add $CP_{\rm hid}B^2$, where $P_{\rm hid}$ counts selected hidden coefficient positions, including zeros.
+
+\begin{corollary}[A raw $n^{-1/2}$ comparison remainder]
+\label{cor:dirichlet-raw-subgaussian}
+For either Student or Gaussian hidden factors and marginal sub-Gaussian labels, the normalized-readout learner at
+$T_n=t_0\sqrt n$ satisfies
+\[
+ \E R(\bar z)\le R(g)+C n^{-1/2}\mathcal K_n^{\rm dir}(g)
+                         +C(n+1)^{-2},
+\]
+for every finite $N\ge m$ and every raw comparator. The constants depend only on
+$\kappa$, the fixed hidden-factor law, and the marginal label envelope; they are independent of
+learner depth, width, input dimension, and comparator resources.
+\end{corollary}
+\begin{proof}
+Lemma~\ref{lem:Dirichlet-raw-moment} gives
+Theorem~\ref{thm:raw-tail-oracle} with $r=1/2$.
+Lemma~\ref{lem:Dirichlet-comparison} supplies its raw comparison law.
+The temperature and exponent are therefore as displayed. Proposition~\ref{prop:raw-cutoff-removal} removes the analytical comparison cutoff, since the resource dominates $\|g\|_\infty^2$.
+\end{proof}
+
+\begin{corollary}[A raw finite-variance remainder]
+\label{cor:dirichlet-raw-finitevariance}
+Retain Gaussian hidden factors for this corollary. If only $\E Y^2<\infty$, use
+$T_S=n^{4/5}(1+\widehat{\E}Y^2)$. Put
+\[
+ B_n=(d+H+1)^2n^{-1/5}
+            \sqrt{\log\{C(d+H+1)(n+1)\}}.
+\]
+Then every raw comparator at every $N\ge m$ obeys
+\[
+ \E R(\bar z_S)\le\E\Pi_S R(z)
+ \le R(g)+C(1+\E Y^2)
+       \{n^{-1/5}\mathcal K_n^{\rm dir}(g)+B_n+B_n^2+(n+1)^{-2}\}.
+\]
+No comparator output cap is needed in this statement.
+\end{corollary}
+\begin{proof}
+The normalized readout is centered and has pointwise variance at most
+two, including its Gaussian bias. Its uniform cutoff is
+$M(q)=C\sqrt q$, with a fixed fourth prior moment.
+Corollary~\ref{cor:normalized-readout-compression} has the same
+$q^2$ dictionary budget as before. In
+Theorem~\ref{thm:raw-sieve-oracle}, take $a=1/5$ and
+$e=(n+1)^{-3}/(M(q_n)+1)$. The relative deviation has leading
+power $n^{a(1/2+1)-1/2}=n^{-1/5}$; its quadratic term is smaller
+and is displayed as $B_n^2$. The joint dimension and depth factors
+are bounded as in Theorem~\ref{thm:raw-bounded-activation}.
+\end{proof}
+
+
+\begin{corollary}[Finite-variance labels for the principal Student-hidden prior]
+\label{cor:student-dirichlet-finitevariance}
+Use the same Student-hidden prior as in
+Theorem~\ref{thm:main-raw-oracle}. If only $\E Y^2<\infty$, take
+\[
+ T_S=n^{5/6}(1+\widehat{\E}Y^2),\qquad
+ D_n=(d+H+1)^3 n^{-1/6}.
+\]
+Then, for every $N\ge m$ and every raw comparison network,
+\[
+ \E R(\bar z_S)\le\E\Pi_S R(z)
+ \le R(g)+C(1+\E Y^2)
+ \{n^{-1/6}\mathcal K_n^{\rm dir}(g)+D_n+D_n^2+(n+1)^{-2}\}.
+\]
+Constants depend only on the fixed Student law and $\kappa$; there is
+no comparator output cap. No observed label is clipped.
+\end{corollary}
+\begin{proof}
+The native raw supremum has the same sub-Gaussian tail as in the
+Gaussian-hidden case. Corollary~\ref{cor:student-hidden-compression}
+gives the cubic dictionary budget. In
+Theorem~\ref{thm:raw-sieve-oracle}, choose $a=1/6$,
+$q_n=Cn^{1/6}+8\log(n+1)+C$, and
+$\epsilon=(n+1)^{-3}/(1+C\sqrt{q_n})$.
+Since $\log(n+1)\le Cn^{1/6}$,
+\[
+ L\le C(d+H+1)n^{1/6},\qquad
+ \log|\mathcal D|\le C(d+H+1)^5 n^{1/2}.
+\]
+The relative deviation is at most
+$C(d+H+1)^{5/2}n^{-1/6}$ plus its square, bounded by
+$C(D_n+D_n^2)$. The comparison law and the remaining negligible
+terms are handled exactly as in the Gaussian-hidden corollary.
+\end{proof}
+
+These conclusions concern the ordinary mean of the unrestricted raw
+posterior. The normalization is a random variance allocation among
+readout coordinates, not a bound on the output. It is a different prior
+from both independent Gaussian weights and the unnormalized outgoing
+Gamma-gate model.

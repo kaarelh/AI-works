@@ -1,0 +1,112 @@
+\section{A Gaussian neighborhood of a smaller network}
+\label{sec:teacher}
+This part uses only the Lipschitz property of the activation; no homogeneity or boundedness is required.
+For a width-$m$ teacher with coefficients bounded by $B\ge1$, define
+\begin{align}
+ R_0&=1+\beta+A(d+m+1)B,\qquad U_{m,B}=mB R_0^H,\\
+ E_{m,B}&=2\{d(d+1)+Hm^2\}B^2,\qquad D_{m,B}=d+2+(H-1)m.
+ \label{eq:teacher-costs}
+\end{align}
+Choose $b_H=C\sqrt{\log(2H+2)}$ sufficiently large and put
+\begin{align}
+ T_0&=1+A(\sqrt2mB+b_H)+R_0,\\
+ P_{m,B}&=(\sqrt2mB+1)A(d+1+H\sqrt m)T_0^{H-1}+R_0^H,\\
+ \mathcal A_{m,B}(\lambda)
+ &=E_{m,B}+4+
+       2D_{m,B}\log\!\left(\frac{32P_{m,B}(U_{m,B}+1)}{\lambda}\right).
+ \label{eq:Ag}
+\end{align}
+Enlarging a numerical constant in $P_{m,B}$ is harmless if needed.
+These expressions have polynomial dependence on $d,m,B$ at every fixed $H$.
+
+\begin{lemma}[Comparator neighborhood]
+\label{lem:teacher}
+For every $g\in\calG_{m,B}$, every $N\ge m$, every scale~\eqref{eq:scales} and $0<\lambda\le1$,
+\begin{equation}
+ F_\lambda\le\whR_S(g)+\lambda\mathcal A_{m,B}(\lambda).
+ \label{eq:teacher-comparison}
+\end{equation}
+This holds deterministically for every sample.
+\end{lemma}
+\begin{proof}
+Partition each width-$N$ hidden layer into $m$ groups of sizes
+$k_j\in\{\lfloor N/m\rfloor,\lceil N/m\rceil\}$. Copy the teacher's first-layer rows, divide every internal edge leaving group $j$ by $k_j$, and divide each readout coefficient by its group size. This clone computes $g$ exactly for every activation. Since $N/k_j\le2m$, its energy satisfies $Q_N(w_*)\le E_{m,B}$. Its hidden coordinates at layer $\ell$ have absolute value at most $R_0^\ell$, and $|g|\le U_{m,B}$.
+
+Use standard Gaussian coordinates in each parameter block. Let $P$ project onto the subspace of group-constant vectors, with orthonormal basis $u_j=k_j^{-1/2}\mathbf1_{\mathrm{group}\ j}$. For $0<\eta\le1/2$, require absolute value at most $\eta$ for every first-layer and readout standardized coordinate and every internal row coefficient along each $u_j$. There are $ND_{m,B}$ independent constraints. A standard normal assigns probability at least $3\eta/8$ to $[-\eta,\eta]$, so their joint mass is at least $(3\eta/8)^{ND_{m,B}}$.
+
+Conditioning a standard normal to such a symmetric interval preserves the unit-subgaussian bound: by symmetry its exponential moment is an expectation of $\cosh(s|Z|)$, and the conditioned $|Z|$ is stochastically no larger than the original one. Orthogonal unconstrained coordinates remain Gaussian and independent. Thus every centered linear form in the standardized internal matrix is unit-subgaussian after conditioning. Two $1/4$ sphere nets imply
+\[
+ \Pp(\|Z\|_\op>2u\sqrt N\mid\text{coordinate constraints})
+ \le2\exp[(2\log9-u^2/2)N].
+\]
+The choice of $b_H$ therefore permits intersecting with
+$\|Z\|_\op\le b_H\sqrt N$ at every internal layer while retaining at least half the mass. Call the resulting centrally symmetric event $A_\eta$.
+
+Translate $A_\eta$ by the standardized clone. Perturbations in the first-layer and readout coordinates are bounded by $\eta/\sqrt d$ and $\eta/N$, respectively. For an internal perturbation $\Delta W=\tau Z/\sqrt N$,
+\[
+ \|\Delta W\|_\op\le b_H,\qquad
+ \|\Delta WP\|_\op\le\eta\sqrt m.
+\]
+The part on $I-P$ annihilates the clone's hidden vector. Normalized hidden errors $e_\ell=\|h^\ell-h_*^\ell\|/\sqrt N$ consequently obey
+\[
+ e_1\le A\eta(d+1),\qquad
+ e_\ell\le A(\sqrt2mB+b_H)e_{\ell-1}
+                         +A\eta\sqrt m\,R_0^{\ell-1}.
+\]
+The normalized clone readout norm is at most $\sqrt2mB$; the perturbation readout has $\ell^1$ norm at most $\eta$. The output error is therefore at most
+\[
+ (\sqrt2mB+1)e_H+\eta R_0^H\le\eta P_{m,B}.
+\]
+
+For a standard Gaussian measure $G$ and a centrally symmetric event $A$,
+\[
+ G(A+a)\ge G(A)e^{-\|a\|^2/2}.
+\]
+Indeed the density ratio on $A$ is
+$e^{-\|a\|^2/2}e^{-\langle Z,a\rangle}$ and its conditional expectation is at least one by Jensen and symmetry. Here
+$\|a\|^2=\omega Q_N(w_*)\le\omega E_{m,B}$.
+Since $N\le\omega$ and $\omega\ge1$, the prior mass of the uniform-output neighborhood of radius $\rho=\eta P_{m,B}$ is at least
+\[
+ \exp\!\left[-\omega\left\{
+   E_{m,B}/2+D_{m,B}\log(8/(3\eta))+\log2\right\}\right].
+\]
+Choose $\rho=\lambda/[4(U_{m,B}+1)]$ and $\eta=\rho/P_{m,B}$, decreasing $\eta$ by a harmless numerical factor if necessary. Conditioning the prior on this neighborhood gives a comparison law $\nu$ with
+\[
+ \int\whR_S(z_w)\,d\nu\le\whR_S(g)+\lambda,\qquad
+ 2\sigma^2\KL(\nu\Vert\mu)\le\mathcal A_{m,B}(\lambda)-1.
+\]
+The Gibbs variational identity
+\[
+ F_\lambda=\inf_\nu\left\{\int\whR_S(z_w)\,d\nu+
+                                  2\lambda\sigma^2\KL(\nu\Vert\mu)\right\}
+\]
+proves~\eqref{eq:teacher-comparison}.
+\end{proof}
+
+\begin{corollary}[One resource for every allowed calibration]
+\label{cor:fixedteacher}
+For $n\ge2$, define
+\begin{equation}
+ \mathcal A_{m,B,n}
+ =E_{m,B}+4+
+  2D_{m,B}\log\!\left(32nP_{m,B}(U_{m,B}+1)\right).
+ \label{eq:fixed-resource}
+\end{equation}
+Then for every sample and every $\lambda\ge1/n$,
+\[
+ F_\lambda\le\whR_S(g)+\lambda\mathcal A_{m,B,n}.
+\]
+Moreover $U_{m,B}^2\le C_{H,A,\beta}E_{m,B}^{L}$.
+\end{corollary}
+\begin{proof}
+Use the preceding proof with the fixed neighborhood radius
+$1/[4n(U_{m,B}+1)]$. Its empirical-risk increase is at most $1/n\le\lambda$, while its normalized entropy cost is independent of $\lambda$. For the last bound,
+$R_0\le C(d+m+1)B$ and
+$E_{m,B}\ge c(d+m+1)^2B^2$, with activation- and depth-dependent constants. Thus
+$m^2B^2R_0^{2H}\le C E_{m,B}^{H+1}$.
+\end{proof}
+
+\begin{remark}[Biases in every layer]
+If $\phi$ is not identically zero, choose a scalar $t_*$ with
+$c_*=\phi(t_*)\ne0$. An extra neuron can carry the constant $c_*$ through the network: use first-layer bias $t_*$ and subsequent copying edge $t_*/c_*$. Replace each internal bias $b$ by an edge of weight $b/c_*$ from this neuron, and do the same for a readout bias. Thus ordinary biased comparators are included with width $m+1$ and coefficient cap at most $C_\phi B$. The learner and its prior are unchanged. If $\phi$ is identically zero, every network in the stated architecture outputs zero and the theorem is immediate.
+\end{remark}

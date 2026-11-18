@@ -1,0 +1,70 @@
+\section{Uniform neighborhoods and total online mistakes}
+The comparison can approximate a function on the entire input cube, not merely in mean square at each fixed input.
+
+\begin{lemma}[Expected uniform approximation]\label{lem:uniform}
+For the same comparison law at precision $\epsilon$,
+\[
+ \E_Q\sup_{x\in[-1,1]^d}|z_w(x)-z_g(x)|
+ \le W\epsilon,\qquad W=C(d+1)D^{H+1},
+\]
+with constants independent of depth. The output-link version holds after multiplying $W$ by $L_\psi$.
+\end{lemma}
+\begin{proof}
+Let $e_\ell$ be the maximum expected uniform error of a selected hidden occurrence. The first layer has $e_1\le CA(d+1)\epsilon$. At a later row, triangle inequality and independence give
+\[
+ e_\ell\le AmB e_{\ell-1}
+ +CA\epsilon\left[m\sqrt{S_{\ell-1}}+\sqrt{P_{\ell-1}}\right].
+\]
+The designated perturbations have $\E|W-a|\le C\epsilon$, while the background coordinates have $\E|W|\le C\epsilon/N$. The absolute path bounds dominate each feature simultaneously on the cube. Jensen's inequality bounds their first moments by the displayed square roots. Lemma~\ref{lem:path} and a sufficiently large fixed choice of $D$ close the induction with
+$e_\ell\le C(d+1)D^\ell\epsilon$. The linear readout adds one factor $D$. This reasoning works for the original shared-network small-width branch as well.
+\end{proof}
+
+\begin{theorem}[Width-independent uniform prior mass]\label{thm:uniform-mass}
+For any comparator in Theorem~\ref{thm:main}, any $0<t\le1$, and every finite $N\ge m$,
+\begin{equation}
+ -\log\mu_N\left\{
+ \sup_{x\in[-1,1]^d}|f_w(x)-g(x)|\le t
+ \right\}
+ \le C(d+1)(S+1)
+       \log\frac{C(S+1)(d+1)(B+8)W L_\psi}{t}.
+ \label{eq:uniform-prior-mass}
+\end{equation}
+The same statement holds for raw outputs, omitting $L_\psi$, and for shared implementations with the expansion resource of Corollary~\ref{cor:dense}.
+\end{theorem}
+\begin{proof}
+Take $\epsilon=t/(2WL_\psi)$, increasing $W$ so this is at most one.
+Lemma~\ref{lem:uniform} and Markov's inequality give comparison probability at least $1/2$ to the stated event $E$. The binary relative-entropy inequality gives
+\[
+ \KL(Q\|\mu_N)\ge Q(E)\log\frac1{\mu_N(E)}-\log2.
+\]
+Thus $-\log\mu_N(E)\le2\KL(Q\|\mu_N)+2\log2$.
+Apply Lemma~\ref{lem:entropy}. The raw-output version uses the same proof without the output link.
+\end{proof}
+
+For sign prediction, let $\mathcal X\subseteq[-1,1]^d$ be a prescribed compact input set, and let a raw comparator satisfy
+$y(x)z_g(x)\ge2\kappa$ for every $x\in\mathcal X$, where
+$y:\mathcal X\to\{-1,+1\}$ and $\kappa>0$.
+Apply the raw-output prior-mass theorem with
+$t=\min\{1,\kappa/2\}$. Its event is contained in
+\[
+ E_y=\{w:y(x)z_w(x)\ge\kappa\ \text{for all }x\in\mathcal X\}.
+\]
+Hence $-\log\mu_N(E_y)\le Q$, with $Q$ polynomial in
+$S,H,d,\log(B+8),\log(1+1/\kappa)$.
+If the prior is initially conditioned on the all-input margin event
+$\{|z_w(x)|\ge\kappa\ \forall x\in\mathcal X\}$,
+the conditional probability of $E_y$ is at least its original probability.
+
+\begin{corollary}[Total mistakes under exact sign learning]\label{cor:online}
+Use the preceding prior, optionally conditioned on its all-input margin event. Reveal noiseless labels $y(x_t)$ sequentially, conditioning after each reveal on the observed signs. Write $p_t$ for the posterior probability of the correct sign before revealing label $t$. For every input sequence, including adaptively chosen inputs,
+\[
+ \sum_t-\log p_t\le Q,\qquad
+ \sum_t(1-p_t)\le Q.
+\]
+Consequently majority prediction makes at most $Q/\log2$ mistakes. For any fixed $0<a<1$, at most $Q/(-\log a)$ rounds have correct-sign probability at most $a$. Fresh posterior-sampled predictions make at most $Q$ mistakes in expectation, provided the input on each round is selected before that prediction's fresh randomness.
+\end{corollary}
+\begin{proof}
+The product of the successive probabilities $p_t$ is the prior probability of agreeing with all revealed signs. This event contains $E_y$, so the product is at least $e^{-Q}$, at every finite time. Taking logarithms and then increasing the horizon proves the first claim. The inequality $1-p\le-\log p$ gives the second. Every majority error has $p_t\le1/2$, and every confidence failure has $p_t\le a$. For fresh sampling, the conditional error probability is $1-p_t$ under the specified nonanticipation condition; take expectations and use monotone convergence.
+\end{proof}
+
+The raw prior-mass statement applies to any margin teacher on a prescribed input set. It does not require a nonconstant continuous sign function to have a positive margin on the entire connected cube. The regression neighborhood theorem itself is uniform on that whole cube.

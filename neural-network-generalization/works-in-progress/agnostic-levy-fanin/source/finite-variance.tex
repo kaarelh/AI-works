@@ -1,0 +1,235 @@
+\section{Real-valued labels with only a finite second moment}
+\label{sec:finite-variance-transfer}
+A growing bounded output range permits arbitrary real-valued labels.
+No labels need be clipped in the algorithm or in the proof, and no
+conditional noise model is required.
+
+\begin{theorem}[A sharp all-data oracle with a marginal tail remainder]
+\label{thm:finite-variance-posterior}
+Let $\pi$ be any probability prior on jointly measurable functions
+$f_w:\mathcal X\to[-M,M]$, with $M>0$. Let $(X,Y)$ have any joint
+law with $\E Y^2<\infty$, and let the observations be IID.
+Fix $T\ge256M^2$ and define the ordinary final posterior and mean by
+\[
+ dQ_{S_n}(w)=Z_{S_n}^{-1}
+  \exp\!\left[-T^{-1}\sum_{i=1}^n(f_w(X_i)-Y_i)^2\right]d\pi(w),
+ \qquad \bar f_{S_n}=\int f_w\,dQ_{S_n}.
+\]
+For every deterministic comparison law $\rho\ll\pi$,
+\begin{equation}
+ \E R(\bar f_{S_n})
+ \le\int R(f_w)\,d\rho(w)
+     +\frac{T\operatorname{KL}(\rho\|\pi)}{n+1}
+     +4M\E[|Y|\mathbf1_{\{|Y|>M\}}].
+ \label{eq:finite-variance-posterior}
+\end{equation}
+In particular, the final term is at most
+$4\E[Y^2\mathbf1_{\{|Y|>M\}}]$.
+The prior and output range may be predetermined functions of $n$;
+the theorem is applied with those choices held fixed.
+\end{theorem}
+\begin{proof}
+Fix a probability law $q$ on $U\in[-M,M]$, with mean $\mu$ and
+variance $v$. For $L_y(u)=(u-y)^2$, write
+\[
+ dp_y(u)=\frac{e^{-L_y(u)/T}}{\int e^{-L_y/T}\,dq}\,dq(u).
+\]
+The same covariance calculation as for the bounded-label inverse-tilt
+inequality gives
+\begin{equation}
+ \int L_y\,dp_y
+ \ge L_y(\mu)+[1-A_M(y)]v,
+ \qquad
+ A_M(y)=\frac{4(M+|y|)^2}{T}
+              e^{4M(M+|y|)/T}.
+ \label{eq:finite-variance-pointwise-cooling}
+\end{equation}
+For completeness, for independent $U,U'\sim q$ the difference
+$\int L_y\,dq-\int L_y\,dp_y$ equals
+\[
+ \frac{\E[(L_y(U)-L_y(U'))
+        (e^{-L_y(U')/T}-e^{-L_y(U)/T})]}
+      {2\int e^{-L_y/T}\,dq}.
+\]
+The bounds
+$|L_y(u)-L_y(u')|\le2(M+|y|)|u-u'|$ and
+$\operatorname{osc} L_y\le4M(M+|y|)$, together with the mean-value
+theorem and $\E(U-U')^2=2v$, give the subtracted quantity at most
+$A_M(y)v$. Since $\int L_y\,dq=L_y(\mu)+v$, this proves
+\eqref{eq:finite-variance-pointwise-cooling}.
+
+If $|y|\le M$, then
+$A_M(y)\le e^{1/32}/16<1$, so
+$L_y(\mu)\le\int L_y\,dp_y$.
+If $|y|>M$, the squared-loss range over $[-M,M]$ has length exactly
+$4M|y|$. Both $L_y(\mu)$ and $\int L_y\,dp_y$ lie in this range.
+Therefore, for every real $y$,
+\begin{equation}
+ L_y(\mu)\le\int L_y\,dp_y
+              +4M|y|\mathbf1_{\{|y|>M\}}.
+ \label{eq:finite-variance-one-step}
+\end{equation}
+This step requires no conditional tail bound or independence between
+$q$ and the input.
+
+Introduce $n+1$ observations, retaining exactly the same prior,
+output range $M$, and temperature $T$ as the $n$-sample learner.
+Let $Q^+$ be the enlarged-sample posterior and $Q^{-i}$ the posterior
+with observation $i$ omitted. Conditional on the other observations
+and $X_i$, push $Q^{-i}$ forward through $w\mapsto f_w(X_i)$ to get
+$q$. Updating by the omitted observation gives exactly the pushforward
+of $Q^+$ through the same map. Apply
+\eqref{eq:finite-variance-one-step}, average, and sum over $i$.
+Exchangeability and independence of the held-out observation give
+\[
+ \E R(\bar f_{S_n})
+ \le\E\int\frac1{n+1}\sum_{i=1}^{n+1}(f_w(X_i)-Y_i)^2\,dQ^+(w)
+       +4M\E[|Y|\mathbf1_{\{|Y|>M\}}].
+\]
+For each realized enlarged sample the Gibbs variational inequality
+bounds the posterior average total empirical loss by the comparison
+average total empirical loss plus
+$T\operatorname{KL}(\rho\|\pi)$; the posterior KL is nonnegative
+and may be dropped. Take expectations and divide by $n+1$.
+All risks and averages are integrable because predictions are bounded
+and $\E Y^2<\infty$. The posterior normalizer is positive for every
+realized sample. This proves the theorem.
+\end{proof}
+
+\begin{lemma}[Projection of an arbitrary real-valued comparator]
+\label{lem:finite-variance-projection}
+Let $s_M$ clip to $[-M,M]$. For every pair of real numbers $a,y$,
+\begin{equation}
+ (s_M(a)-y)^2\le(a-y)^2+(|y|-M)_+^2.
+ \label{eq:pointwise-projection-transfer}
+\end{equation}
+Consequently $R(s_M\circ g)\le R(g)+
+\E[Y^2\mathbf1_{\{|Y|>M\}}]$ for every real-valued comparator.
+\end{lemma}
+\begin{proof}
+If $|y|\le M$, projection cannot increase distance to $y$.
+If $y>M$, clipping $a<-M$ also decreases its distance to $y$;
+for $a>M$ the loss increase is
+$(y-M)^2-(a-y)^2\le(y-M)^2$.
+The case $y<-M$ is symmetric.
+\end{proof}
+
+\begin{corollary}[A coefficient-one real-valued oracle]
+\label{cor:finite-variance-comparator}
+Use an output family $f_{w,M}=M\clip(z_w)$, with the same parameter
+prior for every $M$, and temperature $T=256M^2$.
+Suppose a deterministic real-valued comparator $g$ admits a
+comparison law with
+\[
+ \E_\rho\left\|\frac{f_{w,M}-s_M\circ g}{M}\right\|_{L^2(P_X)}^2
+ \le\eta_{n,M}:=\frac1{(n+1)^4(1+M)^4},
+ \qquad \operatorname{KL}(\rho\|\pi)\le K_{n,M}(g).
+\]
+Then, for a numerical $A$,
+\begin{align}
+ \E R(\bar f_{S_n,M})\le R(g)
+ &+\frac{256M^2 K_{n,M}(g)}{n+1}
+ +5\E[Y^2\mathbf1_{\{|Y|>M\}}]\notag\\
+ &+\frac{A(1+\sqrt{\E Y^2})}{(n+1)^2}.
+ \label{eq:finite-variance-real-oracle}
+\end{align}
+Infima over all deterministic comparators may be taken on the right.
+\end{corollary}
+\begin{proof}
+Put $g_M=s_M\circ g$. Its risk is at most
+$2M^2+2\E Y^2$. The comparison MSE is at most $M^2\eta_{n,M}$,
+so Cauchy--Schwarz gives
+\[
+ \int R(f_{w,M})\,d\rho
+ \le R(g_M)+2M\sqrt{R(g_M)\eta_{n,M}}+M^2\eta_{n,M}.
+\]
+The last two terms are at most
+$A(1+\sqrt{\E Y^2})/(n+1)^2$, since
+$M(M+\sqrt{\E Y^2})/(1+M)^2\le1+\sqrt{\E Y^2}$.
+Apply Theorem~\ref{thm:finite-variance-posterior} and
+Lemma~\ref{lem:finite-variance-projection}.
+\end{proof}
+
+\paragraph{Instantiation by the neural comparison law.}
+For a raw formula comparator $g$, apply the comparison theorem to
+$g/M$ when $M\ge1$. This decreases its readout coefficient cap and
+leaves its hidden computation unchanged. The clipped normalized
+comparison satisfies the hypothesis above with
+\[
+ K_{n,M}(g)\le
+ K_0\log\!\left[K_1(n+1)^4(1+M)^4\right],
+\]
+where $K_0,K_1$ are the formula resources in
+\eqref{eq:resources}. The same statement holds for a shared network
+using its actual formula expansion. Thus the finite-second-moment
+extension uses the same dense independent coordinate prior and the
+same all-width comparison, with an explicitly growing output range
+and observation variance. No bound on $\E[Y\mid X]$ is required.
+
+\paragraph{Tail regimes.}
+For a sub-Gaussian marginal envelope
+$\Pr(|Y|>t)\le2e^{-t^2/(2K^2)}$, choosing
+$M_n=K\sqrt{16\log(e(n+1))}$ makes the tail term
+$O(K^2/(n+1)^2)$ and changes the complexity remainder only by a
+logarithmic factor. If $\E|Y|^p\le V_p$ for some $p>2$, the tail is
+at most $V_p M^{2-p}$, giving an explicit tradeoff with the
+$M^2K_{n,M}/n$ term. With only a finite second moment,
+any deterministic $M_n\to\infty$ makes the tail vanish, without a
+uniform rate over all such label laws.
+
+\begin{corollary}[Universal squared-risk consistency at arbitrary widths]
+\label{cor:levy-universal-consistency}
+Let $X$ have any Borel probability law on a compact cube and let
+$\E Y^2<\infty$. Use the fixed small-intensity L\'evy fan-in
+coordinate prior and ReLU hidden activation. Prescribe any finite
+width sequence $N_n\to\infty$, at any rate, and fix a hidden depth
+$H\ge1$. Choose $0<b<1/2$, output range $M_n=n^b$, and
+\[
+ f_{w,n}=M_n\clip(z_w),\qquad T_n=256M_n^2.
+\]
+Use all observations with their unchanged real labels in the
+likelihood $\exp[-\sum_i(f_{w,n}(X_i)-Y_i)^2/T_n]$ and return its
+ordinary posterior mean. Then
+\begin{equation}
+ \lim_{n\to\infty}\E R(\bar f_{S_n,n})
+ =\E\bigl(Y-\E[Y\mid X]\bigr)^2.
+ \label{eq:levy-universal-consistency}
+\end{equation}
+No input-density or anti-concentration assumption is needed.
+There is one prescribed architecture at each sample size and no
+prior over architectures.
+\end{corollary}
+\begin{proof}
+Fix any finite-width shallow ReLU function $g$ with finite
+coefficients. On the compact input cube it is bounded. Its
+nonnegative hidden features pass exactly through any fixed number
+of ReLU identity layers. For all sufficiently large $n$, $N_n$
+contains this fixed implementation and $M_n$ exceeds its output
+bound. The normalized comparison $g/M_n$ has no larger coefficient
+cap than a fixed constant depending on $g$.
+The width-independent uniform L\'evy comparison theorem, used at the
+precision in Corollary~\ref{cor:finite-variance-comparator}, therefore
+has $K_{n,M_n}(g)\le A_g\log(n+1)$.
+The complexity term is
+$O_g(n^{2b-1}\log(n+1))\to0$, and the label-tail term vanishes by
+integrability of $Y^2$. Thus
+\[
+ \limsup_n\E R(\bar f_{S_n,n})\le R(g)
+\]
+for every such $g$.
+Shallow ReLU networks with a constant input are uniformly dense in
+continuous functions on a compact cube. Continuous functions are
+dense in $L^2(P_X)$, and $\E[Y\mid X]\in L^2(P_X)$ by Jensen's
+inequality. Hence the infimum of $R(g)$ over these networks equals
+the Bayes squared risk. Every predictor has risk at least that
+quantity, proving \eqref{eq:levy-universal-consistency}.
+\end{proof}
+
+The same proof permits varying learner depth $H_n$ whenever
+\[
+ (H_n+1)\log\{(n+1)(H_n+1)\}=o(n^{1-2b}),
+\]
+using the stable-padding comparison for each fixed shallow teacher.
+In particular, polynomially growing depths with exponent strictly
+less than $1-2b$ are allowed. The conclusion is consistency, with no
+uniform convergence rate over all finite-second-moment label laws.

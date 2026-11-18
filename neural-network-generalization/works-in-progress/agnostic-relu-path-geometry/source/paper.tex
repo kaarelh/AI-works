@@ -1,0 +1,95 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,mathtools,microtype}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Path-norm geometry of Gaussian ReLU posteriors},pdfauthor={ChatGPT-6 Astra; Claude Opus 5.5; Kaarel Hänni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\title{Path-norm geometry of Gaussian ReLU posteriors}
+\author{ChatGPT-6 Astra \and Claude Opus 5.5 \and Kaarel H\"anni \and
+Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{17 November 2026}
+\begin{document}\maketitle
+\begin{abstract}
+We study exact Bayesian regression with a one-hidden-layer ReLU network,
+independent Gaussian weights, a Gaussian likelihood, and a raw linear
+readout. For one-dimensional inputs, normalizing each incoming row
+transforms the function prior exactly into independent uniform ridge
+directions with independent Laplace amplitudes. This identifies a
+quantitative connection to convex path-norm regression: when learner
+width $N$ is at least sample size $n$, the actual posterior's expected empirical
+loss plus path penalty exceeds the full convex optimum by at most
+$C\lambda\nu\log(e/(\lambda\nu))$. Here $\nu\in(0,1]$ is the hidden
+Gaussian variance and $\lambda\in(0,1/2]$ is the normalized likelihood
+penalty. The same bound controls expected squared training-vector distance to
+the unique convex fitted vector. A direct Gaussian argument extends
+these empirical conclusions to every input dimension, with an explicit
+dimension factor. Conditional on directions and training
+predictions, excess amplitude mass has a Gamma-type tail. These facts
+do not imply bounded predictions between observations. We construct
+four bounded data pairs for which every minimum full-path-norm
+interpolant has an arbitrarily large excursion; at an explicit
+likelihood schedule, the ordinary Gaussian posterior mean does too,
+uniformly over all eligible widths and scales. A final conditional
+variance bound separates last-layer uncertainty from the unresolved
+variation in hidden-feature posterior means. The results concern
+finite architectures and do not change the prior or introduce an
+architecture mixture.
+\end{abstract}
+
+\section{Empirical fit and predictions between observations}
+A path penalty is often used to understand why an overparameterized
+ReLU network can favor a simpler fit. For Bayesian learning, however,
+three objects must be distinguished: the posterior's parameter
+representation, the minimum path mass needed for its training
+predictions, and its function away from the training inputs. The
+results here quantify the first two relationships and give a precise
+limitation of an inference from them to the third.
+
+We use the ordinary posterior after the given sample. The input domain
+is $[-1,1]$, and the regression output is unbounded: neither the
+likelihood nor prediction uses an output clipping operation. All
+results are deterministic in the observed sample except for the
+posterior randomness being averaged. In particular, the range
+counterexample does not assert that its four-point configuration is
+likely under a well-spread IID design.
+
+A normalized ridge is $x\mapsto(\theta_1x+\theta_2)_+$ with
+$\theta_1^2+\theta_2^2=1$. The mass of an implementation is the sum
+of absolute readout amplitudes. Minimizing that mass over all
+implementations of a function gives its full path norm; minimizing
+only subject to a training vector can give a different value. We
+keep that distinction explicit in the statements below.
+
+\input{posterior-objective-reductions}
+\input{fiber-tails}
+\input{training-vector-concentration}
+\input{general-dimensional-objective}
+\input{full-path-range-obstruction}
+\input{posterior-range-obstruction}
+\input{readout-variance}
+
+\section{What the reductions leave open}
+The training-vector result applies at every finite width $N\ge n$,
+with constants independent of width. In the strong-prior limit
+$\nu\to0$ at fixed $\lambda$, both its objective gap and its
+training-prediction discrepancy vanish. At fixed $\nu$, they also
+vanish as $\lambda\to0$. These are statements about empirical
+prediction and penalized empirical loss; the fitted vector and its
+minimum-mass function extensions need not have stable extrapolation.
+
+The four-point construction rules out a deterministic claim that
+bounded labels force a bounded minimum-path fit or bounded posterior
+mean. Its proof uses a large empty interval together with nearby
+contradictory observations. A sharper random-design analysis could
+still exploit the rarity of that configuration, or the regularization
+cost of fitting close contradictory labels. The conditional variance
+calculation shows that one must also distinguish Gaussian readout
+uncertainty from the variation of the readout's conditional mean as
+hidden weights change. No new population upper rate is claimed here.
+
+\end{document}

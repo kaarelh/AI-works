@@ -1,0 +1,33 @@
+# Independent integrated mathematical review — 18 November 2026
+
+Reviewer: agnostic_proof_audit. Result: passes for the exact five included sources in the adjacent manifest.
+
+The model retains independent Gaussian coordinates at all mean-field-or-stronger finite scales, first-layer constant input, no internal biases, raw linear output in both likelihood and returned prediction, and an observable evidence calibration. I checked the normalization omega=N/nu, the physical likelihood variance n*lambda*nu/N, normalized output/label free energy, root/fallback, and sub-Gaussian label-tail transfer against the independently reviewed smooth-activation Gaussian theorem. The normalized closure preserves the prior, energies, dictionaries and comparison entropies. The imported common statistical event covers every eligible finite width and every 0<nu<=1. The larger displayed A_n safely dominates the exact teacher cylinder action at fixed H.
+
+The Boolean compiler preserves raw outputs, uses integer-margin tanh restoration, and explicitly realizes affine offsets by an exact constant wire. Its global raw envelope and coefficient/width powers are valid. The continuous bounded-density box compiler has a global raw envelope because at most 2^d expanded boxes overlap, while every other soft indicator is uniformly tiny. Copying the signed indicators preserves that envelope and accuracy at any larger fixed hidden depth. The new slab-box proof correctly counts activation and output-level hyperplanes, bounds rounding and boundary strips by slab anti-concentration, and obtains the stated R powers for width and coefficient cap. Uniform sphere laws satisfy the stated slab constants. No ambient density is required in that case.
+
+The proof-only comparator projection risk inequality handles marginal sub-Gaussian labels without clipping actual observations. A deterministic population near-minimizer has bounded risk because zero is available; applying the imported theorem to this one compiled network preserves leading coefficient one and the all-width/all-scale event. The Boolean growth condition, density and slab exponent inequalities, and the explicit polynomial-width table all check. The compiled widths are o(n), so N>=n suffices. The Boolean finite-sample corollary follows from A<=K^(4b) and theta proportional to (d+1)^2/n, with logarithmic precision and confidence factors retained.
+
+The wrapper accurately states high-probability posterior-averaged and mean risk, fixed learner depth, raw prediction, original Gaussian prior, and the quantitative input assumptions needed for coefficient-free comparison. There is no arbitrary-law continuous coefficient-free claim, no fixed-observation-variance claim, and no polynomial joint unrestricted-depth/width or computational-efficiency assertion.
+
+This is a conventional independent mathematical source review, not Lean verification.
+
+Final abstract precision check: “At a suitable fixed learner depth” accurately retains the Boolean depth overhead and the continuous H>=2 requirement. Only this wrapper wording changed; the five-source manifest has been refreshed.
+
+
+## Sharper univariate shallow-ReLU extension — 18 November 2026
+
+The six-source snapshot in the adjacent manifest passes. The added section explicitly changes the learner to one hidden ReLU layer while retaining independent Gaussian coordinates, raw likelihood/mean and all finite scales 0<nu<=1. Its Q normalization gives omega Q=chi-square(3N), path variation at most Q/2, linear energy-ball capacity and uniformly bounded native pointwise variance. Neuronwise homogeneity gives the exact width-N mean implementation Q=2P at every eligible width. The all-coordinate Gaussian variance shrink has normalized KL at most 2P+6log(1/eta), and the three independent perturbation terms give the stated uniform RMS estimate. Thus the imported shallow path-variation free-energy oracle applies, including the sub-Gaussian label normalization.
+
+I checked the knot-cluster compiler at the boundary as well as in the interior. Its disjoint replacement intervals have length at least t, remaining affine intervals inherit the slope bound from the longer original segment, and the total bad probability is at most 3 kappa K t^alpha. The explicit ReLU representation uses at most 2K+2 neurons and path variation O((K+1)/t). Clipping a width-C shallow teacher produces at most 3C+2 breakpoints, so the compiled width is at most 6C+6. The choice t=(kappa sqrt(n))^(-1/(alpha+1)) balances approximation and path-oracle costs, yielding the displayed term and its square; the sufficient fixed-accuracy sample exponent follows. A fixed deterministic near-minimizer and summable confidence allocation preserve the simultaneous width statement without making the learner depend on C or the regularity constants.
+
+The added abstract sentence correctly identifies this as a separate shallow ReLU learner, rather than extending the tanh theorem without changing activation. The four older proof modules remain byte-identical to the five-source snapshot.
+
+
+## Localized and schedule-sharpness integration — 18 November 2026
+
+This ten-source snapshot passes and is preserved as the baseline before the separately audited local-envelope refinement. The added design/localized modules correspond to the independently reviewed sources; differences are headings, cross-references, line breaks and a correct elementary hat-Gram explanation. The main result and abstract distinguish the declared-C coefficient-one schedule from the universal near-leading and coefficient-one schedules. The new schedule-specific lower-bound module is byte-identical to its independently reviewed original and makes no all-temperature or fixed-target claim.
+
+The added marginal-sub-Gaussian transfer is valid. It clips labels only in the proof while retaining exactly the original X marginal, so both density bounds are preserved. Normalizing the observable retains the prior and energy identity; physically implementing M_n*q costs the explicitly noted extra M_n in balanced comparison energy, which changes only logarithmic factors. The actual raw population-risk difference is controlled by the deterministic posterior Q^2 bound and the label L2 tail. Bounded proof comparators transfer by the pointwise projection inequality and label-tail moments. The common training-label event and clipped-law statistical event therefore give the stated raw results. The near-leading version is conservatively stated for total comparison risk after this transfer.
+
+The old six-source proof modules are unchanged except for the wrapper integration. The exact manifest covers all ten active sources. Mathematical review is not formal verification.

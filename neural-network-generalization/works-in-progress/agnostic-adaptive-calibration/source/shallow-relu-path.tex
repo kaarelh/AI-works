@@ -1,0 +1,75 @@
+\section{A sharp path-variation specialization for one hidden ReLU layer}
+\label{sec:shallow-ReLU-path}
+For one hidden layer, the original independent Gaussian prior already gives a quadratic path-variation oracle without a soft gain penalty. Inputs lie in the Euclidean unit ball of $\R^d$, labels are in $[-1,1]$, and
+\[
+ z_w(x)=\sum_{j=1}^N v_j\operatorname{ReLU}(w_j\cdot x),\qquad
+ w_{ji}\sim\mathcal N(0,\tau^2/d),\quad
+ v_j\sim\mathcal N(0,\tau^2/N^2),\quad0<\tau\le1.
+\]
+All coordinates are independent. A constant input coordinate can encode a first-layer bias after normalizing the augmented input ball. For a comparison implementation $g$, write
+\[
+ P=\sum_{j=1}^C|v_j|\|w_j\|_2.
+\]
+
+\begin{corollary}[Quadratic path variation with additive input dimension]
+There is a free-energy calibration, independent of the comparison width, coefficients, and risk, such that the ordinary raw posterior mean has
+\[
+ R(\widehat f)\le R(g)+\widetilde O\left(
+ (P+\sqrt d+1)\sqrt{R(g)/n}
+ +(P+\sqrt d+1)^2/n\right)
+\]
+with probability at least $1-\delta$, simultaneously for every $N\ge C$ and every $0<\tau\le1$. Thus a sufficient sample count for excess $\varepsilon$ is
+\[
+ \widetilde O\left((P^2+d+1)
+             \{R(g)/\varepsilon^2+1/\varepsilon\}\right).
+\]
+Only logarithms in $n,d,P,1/\varepsilon,1/\delta$ are suppressed. In particular, bounded first-row norms and readout coefficients give quadratic dependence on comparison width. The Gaussian prior remains unchanged.
+\end{corollary}
+\begin{proof}
+Use the energy and precision normalization
+\[
+ u=\frac dN\|W\|_F^2,\qquad q=N\|v\|^2,
+ \qquad Q=\frac{u+q}{\sqrt d},\qquad
+ \omega=\frac{N\sqrt d}{\tau^2}.
+\]
+Then $\omega Q$ has a chi-square law with $N(d+1)$ degrees of freedom. Its normalized degrees of freedom are at most
+\[
+ D_0=(d+1)/\sqrt d.
+\]
+Moreover $P(w)\le\|W\|_F\|v\|=\sqrt{uq/d}\le Q/2$, so $|z_w(x)|\le Q/2$. The one-layer path class has worst-case Rademacher complexity at most $K_1Q/\sqrt n$ for an absolute $K_1$: ReLU contraction and absolute convexification reduce to Euclidean-unit linear features. The centered independent readout also gives prior population and empirical risk at most two.
+
+Positive rescaling of each teacher neuron makes its two weighted energy contributions equal, without changing the function. At every $N\ge C$, zero-pad the remaining neurons. The resulting first-layer and readout means satisfy
+\[
+ u=q=\sqrt dP,\qquad Q=2P.
+\]
+Use these means and multiply every native coordinate variance by $\eta^2$, for $0<\eta<1$. Its normalized Gaussian relative entropy is bounded by
+\[
+ \frac2\omega\operatorname{KL}(\rho\|\mu)
+ =2P+\frac{N(d+1)}\omega(\eta^2-1-\log\eta^2)
+ \le2P+2D_0\log(1/\eta).
+\]
+For the uniform perturbation error, first-layer noise has expected squared Frobenius norm $\eta^2\tau^2N$, and readout noise has expected squared norm $\eta^2\tau^2/N$. Independence, ReLU Lipschitzness, and the displayed mean energies give
+\[
+ \left(\E_\rho\|z_w-g\|_{\infty}^2\right)^{1/2}
+ \le\eta\tau d^{1/4}\sqrt P
+       +\eta\tau d^{-1/4}\sqrt P+\eta^2\tau^2
+ \le2\eta d^{1/4}\sqrt P+\eta^2.
+\]
+Take $\eta=[64n(d+1)(P+1)^2]^{-1}$. Since $|g|\le P$, the empirical squared-risk increase is at most $1/(2n)$. Therefore, with Gaussian observation variance $n\lambda/\omega$,
+\[
+ F_S(\lambda)\le\widehat R_S(g)+1/(2n)+\lambda T_g,
+ \qquad T_g=6+2P+2D_0\log(1/\eta).
+\]
+
+Apply the chi-square-energy adaptive certificate with capacity radius linear in $Q$ (the $r=2$ case). Its root is
+\[
+ \widehat\lambda^2
+ =256a_n^2[2F_S(\widehat\lambda)+\widehat\lambda(K_n+1)],
+\]
+where $a_n=\widetilde O(n^{-1/2})$, $K_n=O(D_0+\log(n(D_0+1)))$, and the certificate's additive coefficient is $c_0=1/8+D_0\log2/4$. Its empirical comparison budget is
+\[
+ \mathcal B_g=2T_g+K_n+1+c_0
+             =\widetilde O(P+\sqrt d+1).
+\]
+The weighted-objective tail proof uses only $\omega Q\sim\chi^2$ and $N(d+1)/\omega\le D_0$; it does not require $D_0\le1$. The smooth-loss event and fixed-comparator Bernstein step therefore give the stated population bound. These events are common to all widths and scales because the path-capacity class already contains all widths, and the displayed bounds use only $\tau\le1$. Jensen transfers posterior-average risk to the ordinary mean.
+\end{proof}

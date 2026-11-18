@@ -1,0 +1,277 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsthm,mathtools,booktabs,microtype}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue]{hyperref}
+\hypersetup{pdftitle={Depth bounds for finite Gaussian Bayesian learning},pdfauthor={ChatGPT-6 Astra; Claude Opus 5.5; Kaarel Hänni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}[section]\newtheorem{lemma}[theorem]{Lemma}\newtheorem{proposition}[theorem]{Proposition}\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}\newcommand{\KL}{\operatorname{KL}}\newcommand{\op}{\mathrm{op}}
+\title{Depth bounds for finite\\Gaussian Bayesian learning}
+\author{ChatGPT-6 Astra \and Claude Opus 5.5 \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{17 November 2026}
+\begin{document}\maketitle
+\begin{abstract}
+We prove exponential-depth sample bounds for finite Gaussian Bayesian neural networks without a robustness restriction or a mixture over architectures. At fixed input dimension, comparison width, coefficient cap, accuracy, and confidence, $\exp(cH)$ samples suffice to compete with a depth-$H$ comparison network in squared loss. For bounded centered hidden activations such as tanh, this holds at every prior scale $0<\tau\le1$, including canonical mean field, with raw Gaussian likelihood and the ordinary raw posterior mean. The new comparison construction uses geometrically increasing groups of active clones: only first-layer noise is suppressed, and its normalized relative-entropy cost is linear in depth. A second all-scale theorem covers ReLU hidden layers with a bounded final readout, such as clipping or tanh, used in both likelihood and prediction. At every fixed power-law exponent $\gamma>1$, the raw-output theorem also permits bounded noncentered activations and has a growing-dimension extension. All theorems hold simultaneously at every learner width above the comparison width, for arbitrary bounded IID labels. For bounded noncentered activations at mean field, we give weaker depth bounds; a smooth-activation bound is polynomial in dimension at fixed depth. The constants may depend on the fixed comparison resources. These are exponential-depth upper bounds, not polynomial-depth guarantees.
+\end{abstract}
+
+\section{Statement and setup}
+A sample bound that is polynomial in comparison width at each fixed depth can still grow much faster than exponentially with depth. This paper gives exponential-depth bounds for several Gaussian Bayesian models, including raw-output tanh at canonical mean field. We keep the learner's prior fixed and allow its likelihood calibration to depend on width and the requested accuracy. The models and scope are distinguished below:
+\begin{itemize}
+\item Bounded centered hidden activations and raw outputs: every scale $0<\tau\le1$, at fixed input dimension (Theorem~\ref{thm:geometric-depth}).
+\item ReLU hidden layers with a bounded final readout in both likelihood and prediction: every scale $0<\tau\le1$, at fixed dimension (Theorem~\ref{thm:relu-all-scale-depth}).
+\item Bounded hidden activations, allowing a nonzero value at zero, and raw outputs: every fixed $\gamma>1$, with an extension to dimensions up to depth under a row-norm comparison bound (Theorem~\ref{thm:main} and Corollary~\ref{cor:joint-dimension}).
+\end{itemize}
+
+Fix input dimension $d\ge1$, comparison width $C\ge1$, coefficient cap $B\ge1$, accuracy $0<\epsilon<1$, confidence $0<\delta<1$, and, for the first theorem, exponent $\gamma>1$. Let $\phi:\R\to[-1,1]$ be globally one-Lipschitz. No smoothness or condition $\phi(0)=0$ is assumed. At hidden depth $H\ge2$ and width $N$, the architecture is
+\[
+ h^1(x)=\phi(W^1\bar x),\quad
+ h^\ell(x)=\phi(W^\ell h^{\ell-1}(x))\ (2\le\ell\le H),\quad
+ z_w(x)=v^\top h^H(x),\qquad \bar x=(1,x).
+\]
+There are no other bias parameters. Let $\mathcal G_{C,B,H}$ be the same-depth width-$C$ comparison class with every coefficient bounded by $B$. Its outputs have absolute value at most $U=CB$.
+
+Inputs and labels have any joint law $D$ on $[-1,1]^d\times[-1,1]$, and the sample is IID. Write $R(f)=\E_D(f(X)-Y)^2$ and $\widehat R_S(f)=n^{-1}\sum_i(f(X_i)-Y_i)^2$.
+For any $0<\tau\le1$ and $\omega=N/\tau^2$, independent centered Gaussian prior variances are
+\[
+ \tau^2/d\text{ in }W^1,\qquad
+ \tau^2/N\text{ in internal matrices},\qquad
+ \tau^2/N^2\text{ in }v.
+\]
+A Gaussian likelihood of variance $n\lambda/\omega$ gives the actual finite posterior
+\begin{equation}
+ d\Pi_{N,H,S}(w)=Z^{-1}e^{-\omega\widehat R_S(z_w)/(2\lambda)}d\mu_{N,H}(w).
+ \label{eq:posterior}
+\end{equation}
+
+\begin{theorem}[Exponential depth suffices above mean field]
+\label{thm:main}
+For $\tau^2=N^{1-\gamma}$ with the fixed $\gamma>1$, there are constants $a,c>0$ and $0<\ell_+,\ell_-<1$, depending only on $d,C,B,\epsilon,\delta,\gamma$, such that the following holds for every $H\ge2$. Define
+\[
+ N_*(H)=\left\lceil e^{2aH/(\gamma-1)}\right\rceil,
+ \qquad
+ \lambda_{H,N}=
+ \begin{cases}
+ \ell_-/H^2,&N<N_*(H),\\
+ \ell_+/H,&N\ge N_*(H).
+ \end{cases}
+\]
+If $n\ge e^{cH}$, then with probability at least $1-\delta$, simultaneously for every $N\ge C$,
+\begin{equation}
+ \int R(z_w)d\Pi_{N,H,S}
+ \le\inf_{g\in\mathcal G_{C,B,H}}R(g)+\epsilon.
+ \label{eq:main}
+\end{equation}
+The same bound holds for the ordinary raw posterior mean. The constants can be chosen uniformly over all activations satisfying the stated range and Lipschitz bounds.
+\end{theorem}
+
+\begin{corollary}[Dimension may grow with depth]
+\label{cor:joint-dimension}
+Suppose the comparison network's first-layer rows, including their bias coordinate, have Euclidean norm at most $B$, and later coefficients have absolute value at most $B$. For every $1\le d\le H$, Theorem~\ref{thm:main} holds with the constants $a,c,\ell_\pm$ independent of $d$. They depend only on $C,B,\epsilon,\delta,\gamma$. In particular the same $e^{cH}$ sample bound applies to arbitrary input laws on the unit sphere in dimension at most $H$.
+\end{corollary}
+
+The theorem allows arbitrary bounded label noise and approximation error. It does not change the Gaussian prior as the sample count grows. The prior exponent is fixed strictly above one; constants may diverge as $\gamma\downarrow1$. At mean field, Theorem~\ref{thm:geometric-depth} proves the same fixed-dimension exponential-depth conclusion when $\phi(0)=0$. Section~\ref{sec:all-scales} gives weaker bounds without that centering assumption. None of these statements supplies a bound polynomial jointly in $d,C,B,H$.
+
+\section{The comparison cost with its width factor retained}
+The quadratic form in the prior density is
+\[
+ Q_N(w)=\frac dN\|W^1\|_F^2+
+          \sum_{\ell=2}^H\|W^\ell\|_F^2+N\|v\|^2,
+ \qquad d\mu\propto e^{-\omega Q_N/2}\,dw.
+\]
+Partition learner neurons into $C$ nearly equal groups and clone the comparison network, dividing outgoing edges by source-group sizes. The resulting network computes $g$ exactly and has energy
+\[
+ E_H=d(d+1)B^2+2HC^2B^2\le c_0H,
+\]
+where constants $c_i$ in this section depend only on $d,C,B$.
+
+\begin{lemma}[A width-dependent Gaussian neighborhood cost]
+\label{lem:teacher}
+Let $0<\lambda\le1$, $\rho=\lambda/[4(U+1)]$, and
+\[
+ D_H=d+2+(H-1)C,\quad
+ P_H=1+2CB(d+H+2)(2+3CB+8)^{H-1},\quad
+ \eta=\min\{1/2,\rho/(2P_H)\}.
+\]
+The prior mass of $\|z_w-g\|_\infty<\rho$ is at least $e^{-\omega A_{H,N}(\lambda)}$, where
+\begin{equation}
+ A_{H,N}(\lambda)=\frac{E_H}{2}
+     +\tau^2D_H\log\frac8{3\eta}
+     +\frac{(H-1)\log2}{\omega}.
+ \label{eq:exact-comparison-cost}
+\end{equation}
+Consequently the posterior empirical objective is at most
+\begin{equation}
+ \int\widehat R_S(z_w)d\Pi+\frac{2\lambda}{\omega}\KL(\Pi\Vert\mu)
+ \le\widehat R_S(g)+\lambda+2\lambda A_{H,N}(\lambda).
+ \label{eq:comparison}
+\end{equation}
+\end{lemma}
+\begin{proof}
+Use standard Gaussian coordinates. Require absolute value at most $\eta$ for all first-layer and readout coordinates and for each internal row's $C$ coordinates in the group-constant subspace. There are $ND_H$ independent constraints, with probability at least $(3\eta/8)^{ND_H}$.
+
+A centered Gaussian truncated to a symmetric interval remains unit-subgaussian. Orthogonal unconstrained coordinates are still independent standard Gaussians. Conditional on the cylinder, a pair of $1/4$ sphere nets therefore gives probability at least $1/2$ that each internal standardized matrix has operator norm at most $8\sqrt N$. Different internal blocks remain independent. Their joint conditional probability is at least $2^{-(H-1)}$; no depth-dependent operator cutoff is needed.
+
+Translate this symmetric event by the standardized clone. Normalized hidden-state errors satisfy
+$e_1\le\eta(d+1)$ and
+$e_\ell\le(\sqrt2CB+8)e_{\ell-1}+\eta\sqrt C$.
+The readout perturbation then gives uniform output error at most $\eta P_H\le\rho/2$. For a standard Gaussian measure and a symmetric event $A$, translation by $b$ decreases its mass by at most $e^{-\|b\|^2/2}$: the remaining density ratio has conditional expectation at least one by Jensen. Here $\|b\|^2=\omega Q_N(w_*)\le\omega E_H$. This proves \eqref{eq:exact-comparison-cost}. Conditioning the prior on the output neighborhood gives entropy at most $\omega A_{H,N}$ and empirical loss at most $\widehat R(g)+2\rho(U+1)+\rho^2\le\widehat R(g)+\lambda$. The posterior variational identity proves \eqref{eq:comparison}.
+\end{proof}
+
+For either $\lambda=\ell/H$ or $\lambda=\ell/H^2$,
+\begin{equation}
+ A_{H,N}(\lambda)\le c_1H+
+      c_2\tau^2H^2[1+\log(1/\ell)].
+ \label{eq:teacher-depth}
+\end{equation}
+This follows from $D_H=O(H)$, $\log P_H=O(H)$, and $\log H\le H$. At every width it is $O(H^2)$; when $\tau\le e^{-aH}$ with $a\ge1$, it is $O(H)$. The constants in these statements depend on $\log(1/\ell)$. Choose $\ell_\pm$ sufficiently small using $\ell[1+\log(1/\ell)]\to0$, so the comparison penalties in \eqref{eq:comparison} are at most a prescribed small fraction of $\epsilon$ in their respective width regimes.
+
+\section{Spectral energy and layer products}
+Retain from each internal matrix only singular values greater than $8\tau$, obtaining $T^\ell$. Leave the first layer and readout unchanged. Let $\widetilde z$ be this truncated network and write
+\[
+ Q=\frac dN\|W^1\|_F^2+
+       \sum_{\ell=2}^H\|T^\ell\|_F^2+N\|v\|^2.
+\]
+
+\begin{lemma}[Gaussian moment and spectral approximation]
+\label{lem:spectral}
+There is a constant $c_d$ depending only on dimension such that
+\begin{equation}
+ \log\E_\mu e^{\omega Q/16}\le c_dN+(H-1)\log(3/2).
+ \label{eq:energy-mgf}
+\end{equation}
+Also $|z|,|\widetilde z|\le\sqrt Q$ and
+\begin{equation}
+ \|z-\widetilde z\|_\infty
+ \le8\tau(H-1)e^{Q/(2e)}.
+ \label{eq:spectral-depth}
+\end{equation}
+\end{lemma}
+\begin{proof}
+The first-layer and readout terms, multiplied by $\omega$, are chi-square variables with $N(d+1)$ and $N$ degrees of freedom. For an internal matrix, the operator-norm ball of radius $4\tau$ has prior probability at least one half. Its squared Frobenius distance is $\sum_j(s_j-4\tau)_+^2$, and the retained energy is at most four times this distance squared. Gaussian isoperimetry gives retained-energy tail at most $\tfrac12e^{-\omega t/8}$. Integration bounds its exponential moment at $\omega/16$ by $3/2$. Independence proves \eqref{eq:energy-mgf}.
+
+For the approximation, telescope replacements so that the prefix is original and the suffix is truncated. Bounded activations make the incoming hidden norm at every replacement at most $\sqrt N$. The layer-$\ell$ contribution is at most
+$8\tau\sqrt N\|v\|\prod_{j>\ell}\|T^j\|_\op$.
+A product of $k$ nonnegative factors whose squared sum is at most $Q$ is at most $(Q/k)^{k/2}$ by AM--GM. Moreover
+\[
+ (Q/k)^{k/2}\le e^{Q/(2e)}
+\]
+for every positive $k$, by maximizing $k\log(Q/k)$. Summing the $H-1$ replacements proves \eqref{eq:spectral-depth}. The output envelope follows directly from bounded hidden activations and Cauchy--Schwarz.
+\end{proof}
+
+\section{Capacity with exponential constants}
+We state explicitly the Gaussian-process ingredient that avoids a factor such as $(\log n)^H$. For a symmetric compact $F\subset[-1,1]^n$ containing zero, let $G(F)=n^{-1}\E_g\sup_{f\in F}\sum_i g_i f_i$, and let $\mathcal L$ be scalar one-Lipschitz functions on $[-1,1]$ vanishing at zero. Then
+\begin{equation}
+ G(\mathcal L\circ F)\le cG(F)+c/\sqrt n
+ \label{eq:scalar-link}
+\end{equation}
+for an absolute $c$.
+
+Here is a proof from standard generic chaining \cite{talagrand}. The scalar class has uniform entropy $\log\mathcal N(a,\mathcal L,\|\cdot\|_\infty)\le c/a$, so its $\gamma_2$ functional is bounded by an absolute constant. Equip $F$ with $d_n(f,f')=\|f-f'\|_2/\sqrt n$. Product admissible nets, shifted by one level, give
+$\gamma_2(F\times\mathcal L,d_n+\|\cdot\|_\infty)\le c[\gamma_2(F,d_n)+1]$.
+Composition is one-Lipschitz for this sum metric. The generic-chaining upper bound and the majorizing-measure lower bound for the Gaussian process on $F$, whose canonical metric is $d_n/\sqrt n$, prove \eqref{eq:scalar-link}.
+
+Start with the absolute convex hull $\mathcal A_0$ of the constant function and input coordinates. Recursively take the absolute convex hull of the constant and $\mathcal L\circ\mathcal A_{\ell-1}$. These classes have envelope one. Absolute convexification preserves Gaussian width; adding a constant costs at most $1/\sqrt n$. Thus their Rademacher complexities satisfy
+\begin{equation}
+ \mathfrak R_n(\mathcal A_H)
+ \le\frac{c^{H+1}[1+\sqrt{\log(2d+2)}]}{\sqrt n}.
+ \label{eq:atoms}
+\end{equation}
+We used $\mathfrak R(F)\le\sqrt{\pi/2}\,G(F)$, obtained by conditioning Gaussian signs and applying Jensen to their magnitudes.
+
+For a given network, let $\beta=|\phi(0)|\le1$ and assign neuron budgets
+$r_j^1=\beta+\sum_i|W^1_{ji}|$ and
+$r_j^\ell=\beta+\sum_i|T^\ell_{ji}|r_i^{\ell-1}$.
+At preactivation budget $t>0$, the normalized link
+$[\phi(tu)-\phi(0)]/t$ lies in $\mathcal L$.
+Induction therefore places the network output in $P\mathcal A_H$, where $P=\sum_j|v_j|r_j^H$. Cauchy--Schwarz and expansion of the budget recurrence give
+\begin{equation}
+ P\le\sqrt2\sum_{k=1}^{H+1}(Q/k)^{k/2}
+ \le\sqrt2(H+1)e^{Q/(2e)}.
+ \label{eq:path}
+\end{equation}
+The factor $\sqrt2$ accounts for the first-layer bias coordinate, since $(d+1)/d\le2$. Each expanded term contains a subset of layer norms and the readout norm, so the same total-energy AM--GM bound applies.
+
+Consequently, at $Q\le TH$ for any fixed $T$, the union of output classes over all widths has envelope $\sqrt{TH}$ and worst-case empirical Rademacher complexity at most $e^{c_{T,d}H}/\sqrt n$. A standard smooth-square-loss bound \cite{sst} gives, on one event, for every function in this class with empirical risk at most sixteen,
+\[
+ \begin{aligned}
+ R(f)-\widehat R(f)\le c\bigg[&
+ \sqrt{\widehat R(f)}\left(\log^{3/2}(2n)\mathfrak R_n+
+       \sqrt{(TH+1)\log(c/\delta)/n}\right)\\
+ &+\log^3(2n)\mathfrak R_n^2+(TH+1)\log(c/\delta)/n\bigg].
+ \end{aligned}
+\]
+For fixed $T,d,\epsilon,\delta$, this is at most $\epsilon/32$ whenever $n\ge e^{c'H}$ for sufficiently large $c'$. The remaining polynomial powers of $H$ and $\log n$ are absorbed by enlarging $c'$. Rational finite-parameter approximations at each width supply separability for the union.
+
+\section{Posterior integration at large widths}
+Choose $\ell_+$ as after \eqref{eq:teacher-depth}, and put $\lambda=\ell_+/H$. Since the centered readout gives $\E_\mu\widehat R\le2$, Jensen yields $Z\ge e^{-\omega/\lambda}$. Also $r=N\|v\|^2$ has $\E r\le1$, $\E r^2\le3$, and $R(z)\le2r+2$, so $\E_\mu R(z)^2\le24$.
+
+First choose a sufficiently large fixed $T$. Equation~\eqref{eq:energy-mgf} and Cauchy--Schwarz bound the posterior energy-tail risk by
+\[
+ \int R(z)\mathbf1_{Q>TH}d\Pi
+ \le\sqrt{24}\exp\left[\frac\omega\lambda+
+       \frac{c_dN+(H-1)\log(3/2)}2-\frac{\omega TH}{32}\right].
+\]
+Since $N\le\omega$ and $H\ge2$, this is at most a prescribed small fraction of $\epsilon$ when $T$ is sufficiently large depending on the fixed resources. The high-empirical-risk tail is at most
+$2e^{-3\omega/\lambda}$ on $\widehat R(z)>8$.
+
+Next choose $a\ge1$ so that $8H e^{-aH+TH/(2e)}$ is sufficiently small compared with $\epsilon$ for every $H\ge2$. At $N\ge N_*(H)$, $\tau\le e^{-aH}$, so \eqref{eq:spectral-depth} gives that uniform approximation accuracy on $Q\le TH$. The preceding statistical event bounds the truncated network's risk. Minkowski's inequality for empirical and population square-loss norms transfers the estimate back to $z$, yielding
+$R(z)\le\widehat R(z)+\epsilon/4$ on $Q\le TH$, $\widehat R(z)\le8$, after choosing the intermediate constants more conservatively if needed.
+
+Integrate this inequality, add both tail contributions, and use \eqref{eq:comparison}. By the choice of $\ell_+$ the result is
+$\int R(z)d\Pi\le\widehat R(g)+\epsilon/2$.
+The event is common to all large widths because the energy-class statistical bound includes their union.
+
+\section{The remaining widths and the final comparison}
+We give the finite-width bound used here to keep the argument independent of other manuscripts. For $0<\lambda\le1$, proof-clip outputs to $[-M,M]$ with $M^2=128/\lambda$. The square loss is bounded by $b\le512/\lambda$. Put $\beta=\omega/(2\lambda)$ and $s=\beta b/n$. For $s\le1$, the elementary exponential PAC--Bayes inequality gives, on one event, every law $Q$ the bound
+\[
+ \int R(z^{[M]})dQ\le\frac{s}{1-e^{-s}}
+ \left[\int\widehat R(z^{[M]})dQ+
+          \frac{\KL(Q\Vert\mu)+\log(1/\delta_N)}\beta\right].
+\]
+It follows by convexity of $e^{-s\ell/b}$ for $\ell\in[0,b]$, independence, integration over the prior, Markov's inequality, and entropy duality. The actual posterior's clipped objective is at most its raw objective, which is at most two by comparison with its own prior. Since $s/(1-e^{-s})\le1+s$, the comparison lemma gives
+\begin{align}
+ \int R(z)d\Pi\le\;&\widehat R(g)+\lambda+2\lambda A_{H,N}(\lambda)
+       +\frac{4\lambda\log(1/\delta_N)}\omega
+       +\frac{512\omega}{n\lambda^2}
+       +\sqrt{24}e^{-7\omega/\lambda}.
+ \label{eq:finite-width}
+\end{align}
+The last term restores raw outputs: the Gaussian readout tail gives
+$\mu(r>M^2)\le e^{-\omega M^2/8}$, and Cauchy--Schwarz with the evidence lower bound bounds its posterior risk by that term. The calibration condition $256\omega/(n\lambda^2)\le1$ ensures $s\le1$.
+
+For $N<N_*(H)$ take $\lambda=\ell_-/H^2$ and $\delta_N$ proportional to $\delta/N^2$. The confidence ratio is uniformly bounded:
+$\log(1/\delta_N)/\omega\le c[\log(1/\delta)+1]$.
+The teacher cost is $O(H^2)$, with its $\log(1/\ell_-)$ dependence already accounted for. Choose $\ell_-$ small enough that its comparison, confidence, and raw-tail terms are small fractions of $\epsilon$. Finally
+\[
+ \omega=N^\gamma\le\exp(c_{a,\gamma}H),\qquad
+ \lambda^{-2}=H^4/\ell_-^2.
+\]
+Thus $n\ge e^{cH}$ makes the sample term and its calibration condition valid uniformly at these widths. The sum of the width failure probabilities is finite.
+
+Allocate the remaining confidence to one fixed teacher's scalar Bernstein event. Since $|g|\le CB$, a sample count independent of depth already makes $\widehat R(g)\le R(g)+\epsilon/2$; it is absorbed by $e^{cH}$. The comparison class is compact, so a population-risk minimizer exists, and it has risk at most one because zero readout is allowed. Apply the proof to this fixed minimizer. Intersecting the large-width, finite-width, and teacher events proves Theorem~\ref{thm:main}. Each posterior has finite readout moments, and Jensen proves its ordinary-mean assertion.
+
+The order of choices is important: choose $\ell_\pm$ using $\ell(1+\log(1/\ell))\to0$, then $T$, then $a$, then the sample exponent $c$. No constant selected later is needed to justify an earlier choice.
+
+\begin{proof}[Proof of Corollary~\ref{cor:joint-dimension}]
+The row-norm bound improves the first clone energy to $dB^2$, so $E_H\le dB^2+2HC^2B^2=O(H)$ uniformly for $d\le H$. Also $D_H=O(H)$ and $\log P_H=O(H)$ uniformly there. Hence the same comparison-cost choices are dimension-independent. In the energy-tail proof $c_d=O(d)$, so $c_dN/(\omega H)=O(1)$ when $d\le H$. The only dimension factor in the atom complexity is $1+\sqrt{\log(2d+2)}$, which is absorbed into $e^{cH}$ uniformly. The remaining finite-width and teacher concentration arguments have no dimension-dependent constants. The cube statement includes the unit sphere as a subset.
+\end{proof}
+
+\section{Limits of the result}
+The bound is exponential in depth at fixed comparison resources and fixed accuracy. Its likelihood calibration uses those declared resource bounds, but not the unknown data law or comparison minimizer. It does not imply efficient posterior computation.
+
+At mean field, $\tau=1$ regardless of width. The large-width spectral approximation used here therefore never becomes accurate. The next section gives a weaker all-scale upper bound by a different argument. Whether its depth dependence can be improved to exponential remains open. Unbounded activations also require different control of the raw-output finite-width tail; final saturation of both likelihood and prediction is a separate model.
+
+\input{geometric-clones}
+
+\input{all-scales}
+
+\input{relu-saturated}
+
+\input{depth-normalized}
+
+The proof has undergone independent AI-agent mathematical review and is not Lean formalized.
+\begin{thebibliography}{9}
+\bibitem{talagrand} Michel Talagrand. \emph{Upper and Lower Bounds for Stochastic Processes}. Springer, 2014.
+\bibitem{sst} Nathan Srebro, Karthik Sridharan, and Ambuj Tewari. \emph{Smoothness, Low Noise and Fast Rates}. Advances in Neural Information Processing Systems 23, 2010. \url{https://www.cs.cornell.edu/~sridharan/smoothness.pdf}.
+\end{thebibliography}
+\end{document}

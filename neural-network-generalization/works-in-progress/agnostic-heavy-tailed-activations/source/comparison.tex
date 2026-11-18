@@ -1,0 +1,45 @@
+\section{A conditional comparison measure}
+\label{sec:comparison}
+Fix a comparator $g\in\calG_{m,B}$ and precision $0<\epsilon\le1$. We construct a measure $\nu$ absolutely continuous with respect to the original independent-coordinate prior. It is independent of the data. Unlike the prior, the comparison measure can have dependencies across layers.
+
+\subsection{Embeddings}
+Unroll the comparator into a formula by duplicating a neuron whenever different parents use it. There are $m^{H-\ell+1}$ node occurrences in hidden layer $\ell$ and one scalar readout. The total number of nodes is at most $M=(m+1)^H$.
+
+If $N\ge M$, partition each hidden layer into disjoint index groups, one per node occurrence, with every group of size at least $N/(2M)$. Choose one index uniformly and independently from each group. If $m\le N<M$, use the original comparator at fixed physical positions instead. Its number of selected rows at each layer is no larger than the corresponding formula count.
+
+Conditional on an assignment, selected first-layer rows have independent uniform coordinates of radius $\epsilon$ around the teacher coefficients. At every selected later row, including the readout, each designated child coefficient has the law $Q_c$ from Lemma~\ref{lem:distinguished}. The other coordinates will be conditioned according to the preceding layer.
+
+\subsection{Adaptive cutoffs}
+For every neuron, selected or not, define the absolute path bound
+\begin{equation}
+ R_j^1=b+A\sum_{k=0}^d|W_{jk}^1|,\qquad
+ R_j^\ell=b+A\sum_{k=1}^N|W_{jk}^\ell|R_k^{\ell-1},
+ \qquad T_j^\ell=\max\{1,R_j^\ell\}.
+ \label{eq:path-bound}
+\end{equation}
+Since $|\phi(t)|\le b+A|t|$, this bounds $\sup_{x\in[-1,1]^d}|h_j^\ell(x)|$.
+
+At every undesignated coordinate entering a selected row in layer $\ell\ge2$, use its prior law conditioned on
+\begin{equation}
+ |W_{jk}^\ell|\le\epsilon/T_k^{\ell-1}.
+ \label{eq:adaptive-cutoff}
+\end{equation}
+The scalar readout is a selected row and uses the same rule. Unselected rows keep their native conditional product law.
+
+This gives a valid feedforward probability measure: all cutoffs are measurable functions of preceding layers. Conditional on preceding layers, the incoming coordinates of a row are independent. Every background coordinate is centered; every designated coefficient has its exact teacher mean and is independent of the preceding layers.
+
+\begin{lemma}[Embedding entropy still cancels]\label{lem:embedding-entropy}
+Different full index assignments have disjoint comparison supports. For their uniform mixture,
+\[
+ \KL(\nu\|\mu_N)
+ =\text{average component KL}-\text{assignment entropy}.
+\]
+Each designated internal or readout edge cancels its $\log N$ density cost against its child's index entropy, leaving at most a $\log(2M)$ cost.
+\end{lemma}
+\begin{proof}
+In a selected parent row, a designated edge has magnitude greater than $\epsilon$, while every undesignated edge has magnitude at most $\epsilon/T_k\le\epsilon$. Starting at the scalar readout, the unique large coordinate in each designated child group therefore identifies that child's chosen index. Repeating this step down the network decodes the whole assignment. The adaptive cutoffs cannot affect this decoding.
+
+On a component's support the mixture density equals its component density times its assignment probability. Integrating the logarithm proves the entropy identity. Every non-root formula node has one parent, so its group entropy cancels exactly one designated-edge $\log N$ term. In the small-width branch there is no assignment entropy, but $\log N\le\log M$ gives the same upper bound directly.
+\end{proof}
+
+The remaining task is to bound the expected entropy of the adaptive background cutoffs. The next section establishes the moments needed for this and for the risk comparison.

@@ -1,0 +1,3 @@
+# Independent wrapper scope follow-up — 18 November 2026
+
+The current abstract, introductory definition of f0 and README now explicitly impose |f0|<=1 for the main bounded-output theorem. The conditional sub-Gaussian noise is stated around that bounded conditional mean, and the qualitative universal-consistency corollary retains the same premise. These statements match the previously reviewed theorem bodies. The separately described growing-output-range appendix has its own marginal sub-Gaussian label assumption and is not conflated with the main fixed-range learner. This is a presentation clarification only; no theorem or proof source is changed by this follow-up.

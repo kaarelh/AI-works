@@ -1,0 +1,30 @@
+\section{A dimension-free capacity bound}
+Let $\mathcal F_t$ be the union over all positive widths $N$ of supported networks with $Q_N\le t$, at fixed hidden depth. Put
+\[
+ K_H=1+\sqrt{2H\log2}.
+\]
+
+\begin{lemma}[Capacity and amplitude]
+\label{lem:capacity}
+On every input sample in $\mathcal X$,
+\[
+ \widehat\Rad_n(\mathcal F_t)\le\frac{tK_H}{\sqrt n},\qquad
+ |z_w(x)|\le P(w)\le Q_N(w)/2.
+\]
+The same capacity bound holds for worst-case samples, with no dimension dependence.
+\end{lemma}
+\begin{proof}
+The amplitude statement follows from~\eqref{eq:energy-lower}. To bound capacity, normalize every hidden feature by its forward path mass: divide $h_j^\ell$ by $a_j^\ell$, discarding zero-mass coordinates. ReLU homogeneity makes every first-row Euclidean norm at most one, every internal absolute row sum at most one, and the transformed readout's absolute coefficient sum equal to $P(w)\le t/2$.
+
+Let $\mathcal A_0$ be the sample vectors of all Euclidean-unit-norm linear functions. Recursively let $\mathcal A_\ell$ be the closed absolute convex hull of the coordinatewise ReLU images of $\mathcal A_{\ell-1}$. Every normalized hidden feature belongs to its corresponding class. For $M_\ell=\sup_{f\in\mathcal A_\ell}\sum_i\epsilon_if_i$ and $s>0$, exponential scalar contraction gives
+\[
+ \E e^{sM_\ell}\le2\E e^{sM_{\ell-1}}.
+\]
+Indeed, absolute convexification gives a maximum of positive and negative suprema. Its exponential is at most their summed exponentials, which have equal expectation. Contraction for either supremum has constant one: conditional on other signs, Lipschitzness controls the sum of the two coordinate suprema, and $|\phi(t)|\le|t|$ controls their maximum; these imply the inequality for the sum of exponentials.
+
+At the initial layer, $M_0=\|\sum_i\epsilon_iX_i\|_2$. Jensen gives $\E M_0\le\sqrt n$. Changing sign $i$ changes $M_0$ by at most $2\|X_i\|_2\le2$, so the bounded-difference exponential inequality gives
+\[
+ \E e^{sM_0}\le e^{s\sqrt n+s^2n/2}.
+\]
+This last inequality also follows directly by applying Hoeffding's lemma to the Doob martingale of $M_0$. Iterating the contraction, taking logarithms, and optimizing $s$ yields $\E M_H\le\sqrt nK_H$. Multiply by the readout absolute sum at most $t/2$ and divide by $n$; the displayed capacity bound leaves a harmless factor two of slack. Separability follows from countable dense parameter subclasses at each width and a countable union over widths.
+\end{proof}

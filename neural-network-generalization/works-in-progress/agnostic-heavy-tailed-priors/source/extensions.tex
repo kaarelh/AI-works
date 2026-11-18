@@ -1,0 +1,110 @@
+\section{Other heavy-tailed densities and an activation obstruction}
+\label{sec:extensions}
+\subsection{Bounded Lipschitz activations without smoothness}
+\begin{corollary}[The bounded nonsmooth case]\label{cor:bounded-lipschitz}
+Suppose the hidden activation is bounded by one and globally Lipschitz, without assuming two derivatives. Let the output link be any fixed bounded Lipschitz map into $[-1,1]$. At the same fixed temperature as Theorem~\ref{thm:fast-oracle}, with probability at least $1-\delta$,
+\[
+ R(\bar f_{S,\beta})\le R_0+(1+\eta)A_*
+ +\frac C\eta\left(
+ \frac{(1+\sigma^2)\{K^{\mathrm{Lip}}_{m,B}+\log(2/\delta)\}}n
+ \right)^{(2-\alpha)/2}.
+\]
+The resource $K^{\mathrm{Lip}}_{m,B}$ has the same polynomial orders in $d,m,B$ as~\eqref{eq:complexity}, with constants adjusted for the activation and output link. Smoothness improves the dependence on $\eta$ in the main theorem, but is unnecessary for its sample-size power.
+\end{corollary}
+\begin{proof}
+The variance induction in Lemma~\ref{lem:perturbation} uses only Lipschitzness and bounded hidden features. Thus, after a Lipschitz output link, a comparison law can satisfy
+\[
+ \sup_x\E_\nu|f_w(x)-g(x)|^2\le r,\qquad
+ \KL(\nu\|\mu_N)\le K^{\mathrm{Lip}}_{m,B}r^{-q},
+ \qquad q=\frac\alpha{2-\alpha},
+\]
+by choosing $\epsilon$ proportional to $(r/S_{m,B})^{1/(2-\alpha)}$.
+Use the bounded regression reference $f_0$ and the squared triangle inequality:
+\[
+ a_\nu:=\E_\nu A(f_w)
+ \le(1+\eta/8)A(g)+(1+8/\eta)r.
+\]
+The relative-loss PAC--Bayes and comparison-concentration lemmas then give the same proof as Theorem~\ref{thm:fast-oracle}, except that its leading approximation factor is bounded by
+$(1+\eta/8)^2/(1-\eta/8)\le1+\eta$ and the remainder is at most
+\[
+ \frac C\eta\left[r+\frac{(1+\sigma^2)
+              \{K^{\mathrm{Lip}}_{m,B}r^{-q}+\log(2/\delta)\}}n\right].
+\]
+Optimize at $r=[(1+\sigma^2)(K^{\mathrm{Lip}}_{m,B}+\log(2/\delta))/n]^{1/(q+1)}$, using bounded risk when this exceeds one.
+\end{proof}
+
+\begin{corollary}[A sharp expectation bound without smoothness]
+In the bounded-Lipschitz setting above, put $q=\alpha/(2-\alpha)$,
+$u=(1+\sigma^2)K^{\rm Lip}_{m,B}/(n+1)$ and $A_g=R(g)-R_0$.
+At the fixed temperature $\beta_*=1/[256(1+\sigma^2)]$,
+\[
+ \E R(\bar f_{S_n,\beta_*})
+ \le R(g)+C\{A_g^{q/(2q+1)}u^{1/(2q+1)}
+                         +u^{1/(q+1)}\}.
+\]
+The infimum over deterministic comparators can be taken directly.
+\end{corollary}
+\begin{proof}
+The mean-square comparison gives risk at most
+$R(g)+2\sqrt{A_g r}+r$ and KL at most $K^{\rm Lip}_{m,B}r^{-q}$.
+Apply Theorem~\ref{thm:generic-expectation}. For $u\le1$, choose $r$ as the smaller of $u^{1/(q+1)}$ and $(u/\sqrt{A_g})^{1/(q+1/2)}$, omitting the latter when $A_g=0$. These choices bound the approximation and KL terms by the two displayed powers. For $u>1$, bounded excess risk suffices.
+\end{proof}
+
+\subsection{Comparable densities and symmetric stable laws}
+The Student formula is a convenient explicit choice, rather than an essential part of the argument.
+
+\begin{corollary}[A class of independent-coordinate priors]\label{cor:comparable-density}
+All preceding conclusions remain valid if the base Student density is replaced by any symmetric density $p$ satisfying
+\begin{equation}
+ c_-(1+t^2)^{-(1+\alpha)/2}
+ \le p(t)\le c_+(1+t^2)^{-(1+\alpha)/2}
+ \quad(t\in\R),
+ \label{eq:comparable-density}
+\end{equation}
+for fixed $0<c_-\le c_+<\infty$. The constants may additionally depend on $c_-,c_+$. Coordinates remain independent and a row of fan-in $F$ still uses scale $F^{-1/\alpha}$.
+\end{corollary}
+\begin{proof}
+The proof of Lemma~\ref{lem:truncation} uses only symmetry, a positive lower density near zero, the upper tail bound $C u^{-\alpha}$, the truncated second-moment bound $C u^{2-\alpha}$, and the lower density bound~\eqref{eq:density-lower}. Each follows from~\eqref{eq:comparable-density}, with modified constants. All later steps depend only on those estimates. In particular, one does not compare the full product density to the Student product density, which would incur an unnecessary factor per unused coordinate.
+\end{proof}
+
+A familiar example is the symmetric $\alpha$-stable law with characteristic function $\E e^{itT}=e^{-|t|^\alpha}$. Its density is positive and continuous, and its tail satisfies
+\[
+ p(t)\sim\frac{\Gamma(1+\alpha)\sin(\pi\alpha/2)}{\pi|t|^{1+\alpha}}
+ \quad(|t|\longrightarrow\infty);
+\]
+these standard stable-density facts imply~\eqref{eq:comparable-density} \cite{zolotarev}.
+For this family the fan-in scale is particularly natural: a sum of $F$ independent copies scaled by $F^{-1/\alpha}$ has exactly the original stable law. More generally, conditional on bounded hidden values $h_j$, the next preactivation is stable with scale
+\[
+ \left(\frac1F\sum_{j=1}^F|h_j|^\alpha\right)^{1/\alpha}\le1.
+\]
+Thus bounded hidden activations also keep the native layer scales controlled.
+
+\input{native-scale}
+
+\subsection{Why unbounded ReLU is different for this prior}
+The bounded-hidden assumption has a concrete role. With the same Cauchy fan-in scaling, an unbounded ReLU hidden layer can amplify the raw output scale as width increases. A final tanh or clip alone does not repair the resulting fixed-temperature posterior.
+
+\begin{proposition}[A one-layer Cauchy--ReLU obstruction]\label{prop:relu-obstruction}
+Replace the hidden activation by ReLU, keep one hidden layer, a final tanh or clip to $[-1,1]$, and the independent Cauchy prior with scales $1/(d+1)$ and $1/N$. Fix a temperature $\beta>0$. There is a noiseless distribution with a width-one, coefficient-bound-one teacher for which no width-uniform vanishing-risk oracle for the ordinary final posterior mean can hold at this temperature.
+\end{proposition}
+\begin{proof}
+Take $d=1$, the single input $x=0$, and the constant label $c=1/2$. A width-one teacher with readout weight one and first-layer bias $c$ for clipping, or $\operatorname{arctanh}(c)<1$ for a tanh output, produces $c$ exactly. Under the prior, the hidden values are IID
+\[
+ h_j=\max\{0,B_j\},\qquad B_j\sim\operatorname{Cauchy}(1/2).
+\]
+They are nonnegative and have infinite mean. Hence $S_N=N^{-1}\sum_{j=1}^Nh_j\to\infty$ almost surely. One way to see this is to apply the strong law to $\min\{h_j,K\}$ for every integer $K$, and then let $K$ increase.
+
+Conditional on the hidden values, stability of the independent readout weights gives
+\[
+ z_N\mid(h_j)\sim\operatorname{Cauchy}(S_N).
+\]
+Therefore the distribution of $\psi(z_N)$ converges to equal point masses at $-1$ and $1$. For any fixed $n$, the bounded continuous likelihood weight $e^{-\beta n(f-c)^2}$ can be passed through this limit. The ordinary posterior mean consequently converges, as $N\to\infty$, to
+\[
+ \frac{e^{-\beta n(1-c)^2}-e^{-\beta n(1+c)^2}}
+      {e^{-\beta n(1-c)^2}+e^{-\beta n(1+c)^2}}
+ =\tanh(2\beta n c).
+\]
+Its squared test error tends to $(\tanh(2\beta n c)-c)^2$. Letting $n$ increase after taking this width limit gives $(1-c)^2>0$, whereas the comparator risk is zero. For arbitrarily large sample sizes one can therefore choose a finite learner width with error bounded below by a positive constant. This contradicts any bound tending to zero with $n$ uniformly in width for this fixed-temperature learner.
+\end{proof}
+
+This proposition concerns the Cauchy fan-in prior and a fixed likelihood temperature. It does not exclude ReLU guarantees under other priors or different temperature choices. It explains why the bounded-hidden theorem is not automatically an all-activation theorem.

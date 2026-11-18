@@ -1,0 +1,85 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,mathtools,booktabs,microtype}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={A path-variation prior in Gaussian Bayesian ReLU networks},pdfauthor={ChatGPT-6 Astra; Claude Opus 5.5; Kaarel Hänni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}[section]\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{definition}\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}\newcommand{\E}{\mathbb E}\newcommand{\Prob}{\mathbb P}
+\newcommand{\Rad}{\mathfrak R}\newcommand{\KL}{\operatorname{KL}}
+\newcommand{\op}{\mathrm{op}}\newcommand{\VarPath}{\mathcal V}
+\title{A path-variation prior\\in Gaussian Bayesian ReLU networks}
+\author{ChatGPT-6 Astra \and Claude Opus 5.5 \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{17 November 2026}
+\begin{document}\maketitle
+\begin{abstract}
+We construct a finite Gaussian Bayesian ReLU learner whose induced function prior is quantitatively controlled by minimal path variation. Each learner has one fixed dense architecture. Internal matrices are conditioned to have absolute spectral norm at most one; positive homogeneity permits every ReLU function to satisfy this condition after neuron rescaling, without changing width or depth. A path-flow balancing identity makes the minimum normalized quadratic energy converge exactly to twice minimal path variation as learner width grows. Precision-normalized negative log probabilities of uniform function neighborhoods obey corresponding two-sided bounds. Labels may follow any bounded IID law. With a Gaussian likelihood calibrated from observed free energy, the ordinary raw posterior mean satisfies an agnostic oracle inequality. A teacher with path variation $P$, hidden depth $H$, and population squared loss $R_*$ needs $\widetilde O(H(1+P)^2(R_*/\varepsilon^2+1/\varepsilon))$ samples for excess at most $\varepsilon$. Inputs lie in a Euclidean unit ball; the bound is independent of input dimension at every learner width above the teacher width. A stable width-$C$ teacher with bounded endpoint norms has $P=O(C)$, giving quadratic width and linear depth. General small networks can have much larger path variation. The prior uses explicitly different endpoint and internal Gaussian scales and does not mix over network sizes.
+\end{abstract}
+
+\section{What the prior should prefer}
+A small neural network may approximate a regression function well even when no small network fits it exactly. A useful Bayesian guarantee should compare test loss with such approximations. This paper supplies an explicit dense Gaussian learner with an approximation guarantee controlled by a standard network quantity: path variation.
+
+The conclusion is also a statement about the induced prior on functions. At a fixed approximation scale, negative log prior probability is bounded above and below by minimal path variation, after normalization by the Gaussian precision and up to logarithmic terms. An exact variational identity describes the associated quadratic energy. The learning guarantee is a consequence of this structure and a capacity estimate, rather than a definition of the phrase ``path-variation prior.''
+
+We use a norm condition on internal parameters. It is stronger than ordinary spectral nonexpansiveness because it does not rely on cancellation of signs. For ReLU, however, the condition removes no representable functions at a fixed width and depth: a positive rescaling of individual neurons enforces it. This reparametrization can change coefficient sizes and prior probabilities, which is precisely relevant to the prior-ordering result.
+
+\section{Architecture, input convention, and path variation}
+Let $\mathcal X$ be a compact subset of the Euclidean unit ball in $\R^d$, $d\ge1$. There are $H\ge1$ hidden ReLU layers, a scalar linear readout, and common hidden width $N$:
+\[
+ h^1(x)=\phi(W^1x),\qquad h^\ell(x)=\phi(W^\ell h^{\ell-1}(x)),\quad
+ z_w(x)=v^{\mathsf T}h^H(x),\qquad\phi(t)=\max\{t,0\}.
+\]
+The first matrix is $N$ by $d$ and the internal matrices are $N$ by $N$. A constant input coordinate may be included in $x$. For ordinary first-layer biases on a unit-ball input $x_0$, use $x=(1,x_0)/\sqrt2$ and count the extra coordinate in $d$. There are no internal biases. Total affine depth is $L=H+1$.
+
+For a network of any finite width, let $a^1_i=\|W^1_{i,:}\|_2$. Its mixed path variation is
+\begin{equation}
+ P(w)=|v|^{\mathsf T}|W^H|\cdots|W^2|a^1.
+ \label{eq:pathnorm}
+\end{equation}
+For $H=1$, the intervening product is empty. Absolute values on matrices and vectors are entrywise. The Euclidean norm at the first layer matches the input unit ball. In particular $|z_w(x)|\le P(w)$ on $\mathcal X$.
+
+For a function $f$ realizable at depth $H$, define $\VarPath_H(f)$ as the infimum of $P(w)$ over all finite-width depth-$H$ implementations of $f$ on $\mathcal X$. For a width bound $N$ and accuracy $\delta\ge0$, define
+\begin{equation}
+ \VarPath_{H,N,\delta}(f)=
+ \inf\{P(w):\operatorname{width}(w)\le N,\ \|z_w-f\|_{\infty,\mathcal X}\le\delta\}.
+ \label{eq:approx-variation}
+\end{equation}
+The infimum of an empty set is infinity. These are implementation complexity measures, not probabilities.
+
+\section{The Gaussian prior}
+The internal support condition is
+\begin{equation}
+ \bigl\||W^\ell|\bigr\|_{\op}\le1\qquad(2\le\ell\le H).
+ \label{eq:support}
+\end{equation}
+For any $\gamma\ge1$, put $\omega=N(d+1)+(H-1)N^{\gamma+1}$. At $\gamma=1$, this is exactly the number of Gaussian parameter coordinates. Before conditioning on~\eqref{eq:support}, all Gaussian coordinates are independent and centered, with
+\begin{equation}
+ \operatorname{Var}(W^1_{ji})=\frac N\omega,\qquad
+ \operatorname{Var}(W^\ell_{ji})=N^{-\gamma}\ (\ell\ge2),\qquad
+ \operatorname{Var}(v_j)=\frac1{\omega N}.
+ \label{eq:prior}
+\end{equation}
+The input convention is why no factor $1/d$ appears in the first variance. Denote the conditioned prior by $\pi_{N,\gamma}$.
+
+Define endpoint energy and total normalized energy by
+\begin{align}
+ u_N&=\frac1N\|W^1\|_F^2,\qquad q_N=N\|v\|_2^2,\qquad Q_N=u_N+q_N,\notag\\
+ E_N(w)&=Q_N(w)+\frac{N^\gamma}{\omega}\sum_{\ell=2}^H\|W^\ell\|_F^2.
+ \label{eq:energy}
+\end{align}
+The prior density on its support is proportional to $e^{-\omega E_N(w)/2}$. The endpoint energy is independent of this normalization; the internal coefficient is at most $1/((H-1)N)$ when $H>1$.
+
+To compare with a teacher of width $C$, the only width requirement is $N\ge C$; there is no additional input-dimension threshold. There is no distribution over learner widths and no limiting operation in those results.
+
+\input{flow-balancing}
+\input{comparison}
+\input{function-prior}
+\input{capacity}
+\input{adaptive-oracle}
+\input{interpretation}
+\begin{thebibliography}{9}
+\bibitem{sst} Nathan Srebro, Karthik Sridharan and Ambuj Tewari. \emph{Smoothness, Low Noise and Fast Rates}. Advances in Neural Information Processing Systems 23, 2010. \url{https://www.cs.cornell.edu/~sridharan/smoothness.pdf}.
+\end{thebibliography}
+\end{document}

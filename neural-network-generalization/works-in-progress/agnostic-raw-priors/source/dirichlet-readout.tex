@@ -1,0 +1,109 @@
+\section{A normalized Gaussian readout with uniform sub-Gaussian tails}
+\label{sec:Dirichlet-readout}
+This section changes only the final readout of the continuous neuron-gate model. Hidden gates remain independent $\operatorname{Gamma}(\kappa/N,1)$ variables, hidden activations are tanh, and the hidden edge/bias factors may be either standard Gaussian or a fixed Student law of more than two degrees of freedom. Only the final readout factors and its bias must be Gaussian. At the final hidden layer let
+\begin{equation}
+ S_j\stackrel{\rm iid}{\sim}\operatorname{Gamma}(\kappa/N,1),
+ \qquad P_j=\frac{S_j}{\sum_iS_i},
+ \qquad z_w(x)=G_0+\sum_{j=1}^N\sqrt{P_j}\,G_jh_j^H(x).
+ \label{eq:Dirichlet-readout-model}
+\end{equation}
+Thus $P$ has a symmetric Dirichlet law of total concentration $\kappa$. The actual readout has a fixed total conditional variance budget. It remains absolutely continuous with full support: there is no hard bound on its weights or outputs. The learner's likelihood and prediction use the raw $z_w$, with no final clipping or saturation. This is a distinct continuous hierarchical prior, not an architecture mixture.
+
+\begin{lemma}[Uniform raw supremum moments]\label{lem:Dirichlet-raw-moment}
+For every $p\ge1$, every finite $N$, every depth $H$, and every input set,
+\[
+ \left\|\sup_x|z_w(x)|\right\|_{L^p(\mu_N)}\le C_\kappa\sqrt p.
+\]
+In particular $\E\exp(c_\kappa\sup_x|z_w(x)|^2)\le C_\kappa$ for a positive constant $c_\kappa$.
+\end{lemma}
+\begin{proof}
+Since $|h_j^H|\le1$,
+\[
+ \sup_x|z_w(x)|\le|G_0|+Z,
+ \qquad Z=\sum_j\sqrt{P_j}|G_j|.
+\]
+Write $T=\sum_jS_j$. Gamma--Dirichlet factorization gives
+$T\sim\operatorname{Gamma}(\kappa,1)$ independent of $P$ and all $G_j$.
+Consequently
+\[
+ Q:=\sum_j\sqrt{S_j}|G_j|=\sqrt T\,Z,
+ \qquad \E Q^p=\E T^{p/2}\,\E Z^p.
+\]
+For $a=\kappa/N$, the characteristic function of $\sqrt{S_j}G_j$ is
+$(1+t^2/2)^{-a}$. This is the law of the difference of two independent
+$\operatorname{Gamma}(a,\sqrt2)$ variables, with rate $\sqrt2$.
+Its absolute value is stochastically dominated by their sum. Independence across coordinates therefore implies
+\[
+ Q\ \le_{\rm st}\ \operatorname{Gamma}(2\kappa,\sqrt2).
+\]
+Hence $\|Q\|_p\le C_\kappa p$, whereas
+$\|\sqrt T\|_p\ge c_\kappa\sqrt p$. Division in the moment identity gives
+$\|Z\|_p\le C_\kappa\sqrt p$. Add the Gaussian bias. Expanding the exponential in even moments proves the last claim after taking its constant sufficiently small.
+\end{proof}
+
+Let the raw comparator have the same hidden depth, widths $m_\ell\le m\le N$, coefficient cap $B\ge1$, and final hidden width $k=m_H$. Use the earlier counts $P,V,Q=P+V+H$; the symbol $P$ for a count is distinguished from the vector $P_j$ by its lack of an index. Write $v_j$ for its readout coefficients and $b_g$ for its output bias.
+
+\begin{lemma}[All-width raw comparison]\label{lem:Dirichlet-comparison}
+For every $0<r\le1$, a sample-independent law $\rho_r$ satisfies
+\[
+ \E_{\rho_r}\|z_w-g\|_\infty^2\le r,
+\]
+and, for Student hidden factors,
+\begin{equation}
+ \KL(\rho_r\|\mu_N)
+ \le C Q\log\frac{C(m+1)(B+2)W}{r}
+       +C\left[\left(\sum_j|v_j|\right)^2+b_g^2\right],
+ \label{eq:Dirichlet-comparison-cost}
+\end{equation}
+where
+\[W=(H+2)\{C(d+m+2)(B+2)\}^{H+2}.
+\]
+The constants are independent of learner width and depth. The displayed quadratic term is at most $C(k^2+1)B^2$ and concerns only readout coefficients; it adapts to the readout absolute-sum norm. Gaussian hidden factors add $CP_{\rm hid}B^2$, where $P_{\rm hid}$ counts the hidden coefficient positions; Student hidden factors have only the displayed logarithmic dependence on their coefficient cap.
+\end{lemma}
+\begin{proof}
+Use the previously proved neuron-gate comparison in every hidden layer except the outgoing gates of the final hidden layer. It provides the selected feature errors at scalar precision $\epsilon$ and incurs the Student hidden-block cost $(V-k)\log N+CQ\log(C(m+1)(B+2)/\epsilon)$ before averaging placements. Gaussian hidden factors instead add $CP_{\rm hid}B^2$. The final gate costs below supply the remaining $k\log N$, and all of them cancel together.
+
+For a fixed placement, put $L=\sum_j|v_j|$. If $L>0$, set
+\[
+ \omega_j=\frac{|v_j|+L/k}{2L};
+\]
+if $L=0$, set $\omega_j=1/k$. Then $\sum_j\omega_j=1$, $\omega_j\ge1/(2k)$, and $\sum_jv_j^2/\omega_j\le2L^2$. Put each final selected latent gate uniformly on $[(1-\epsilon)\omega_j,(1+\epsilon)\omega_j]$. Condition the sum $T_B$ of all inactive final gates to be at most $\epsilon^2$. If there are inactive gates, their proportions conditional on $T_B$ are Dirichlet with parameters $a=\kappa/N$, total shape $b=(N-k)a\le\kappa$. Gamma ratios give
+\[
+ \E\left[\sum_{j\,\mathrm{inactive}}\sqrt{S_j}\ \middle|\ T_B=t\right]
+ =\sqrt t\,(N-k)
+    \frac{\Gamma(a+1/2)\Gamma(b)}{\Gamma(a)\Gamma(b+1/2)}
+ \le C_\kappa\sqrt t.
+\]
+The inequality is uniform even as $b\downarrow0$: the two ratios are bounded by $Ca$ and $C/b$, respectively. Further condition
+$\sum_{\rm inactive}\sqrt{S_j}\le C_1\epsilon$, with $C_1$ large. Its conditional probability is at least $1/2$. If there are no inactive gates, both conditions are vacuous. The total entropy of these two conditions is $C\log(C/\epsilon)$.
+
+For a selected gate, the gamma density on its interval is at least
+$c(\kappa/N)\omega_j^{\kappa/N-1}$. Its uniform density is $1/(2\epsilon\omega_j)$.
+The selected-gate entropy is therefore at most
+\[
+ \log N+C\log(C/\epsilon)+(\kappa/N)\log(2k).
+\]
+Choose $\epsilon\le c/(m+1)$. Then the selected gates exceed $1/(4k)$ and every inactive gate is at most $\epsilon^2<1/(4k)$. Disjoint per-vertex groups identify their roles. The uniform placement mixture cancels all selected $\log N$ costs exactly as before, up to $CV\log(2m)$.
+
+The total final gate sum lies in
+$[1-\epsilon,1+\epsilon+\epsilon^2]$. Thus on every selected coordinate
+\[
+ \left|\sqrt{P_j}-\sqrt{\omega_j}\right|
+ \le C\epsilon\sqrt{\omega_j},
+ \qquad
+ \sum_{\rm inactive}\sqrt{P_j}\le C\epsilon.
+\]
+Put its Gaussian readout factor uniformly within $\epsilon$ of
+$v_j/\sqrt{\omega_j}$, and the output bias uniformly within $\epsilon$ of $b_g$.
+The selected effective coefficient differs from $v_j$ by at most
+$C\epsilon(B+1)$, while its magnitude is at most $C(B+1)$.
+The factor KL cost is
+$Ck\log(C/\epsilon)+C\sum_jv_j^2/\omega_j+Cb_g^2\le Ck\log(C/\epsilon)+CL^2+Cb_g^2$.
+
+All final gates are independent of their own hidden features. For the inactive readout, weighted Cauchy and the deterministic bound on the sum of square-root proportions imply an $L^2$ uniform contribution at most $C\epsilon$, since the features are bounded and Gaussian factors have unit second moment. Selected feature errors and coefficient perturbations contribute at most $Cm(B+1)$ times the hidden-feature error plus $Cm(B+1)\epsilon$. The previous depth-uniform stability estimate therefore bounds the raw uniform RMS error by $CW\epsilon$.
+
+Take $\epsilon=\sqrt r/[C(m+1)(B+2)W]$. This enforces the marker restriction and the required accuracy. Substitution in the entropy estimates proves~\eqref{eq:Dirichlet-comparison-cost} after enlarging its numerical constant.
+\end{proof}
+
+\paragraph{Why normalization does not select an architecture.}
+The final Dirichlet vector is a continuous allocation of a fixed Gaussian variance budget among all $N$ readout coordinates. Every coordinate remains nonzero almost surely. The selected/inactive decomposition above belongs only to a comparison law used in the proof. The native learner has one prescribed dense architecture.

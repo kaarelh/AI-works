@@ -1,0 +1,11 @@
+Independent exact-source mathematical and statement-correspondence review by /root/agnostic_proof_audit, 18 November 2026.
+
+All six current TeX modules pass. This is conventional mathematical review, not Lean verification.
+
+The scalar finite-variation Poisson laws are absolutely continuous, full-support, centered, and finite-variance. Background suppression and designated unbiased coordinates have the stated latent-Poisson relative entropy and support separation. Fixed coordinate cutoffs suffice: each fixed-embedding comparison is a product law. Native first and second absolute moments at time 1/F control all unused features, including unbounded globally Lipschitz activations.
+
+For a formula, every hidden occurrence has one outgoing edge, so its placement entropy cancels exactly one log N designated-edge cost. Support decoding is unambiguous from the readout downward. The formula fits directly in the intermediate-width branch. For a dense shared teacher, the large-width formula and the small-width original DAG both obey the exact occurrence/edge budget S=sum_{j=1}^H m^j, since (H-1)m^2+m<=S. No architecture mixture is introduced into the learner.
+
+The coupled path-second-moment and centered-error recurrences close with one depth-independent sufficiently large D. The same holds for expected uniform error. Consequently normalized precision appears only through a logarithm in KL. The fixed-temperature relative-loss proof yields coefficient one on irreducible noise and 1+eta on approximation error, with the displayed nearly 1/n resource. The entire-cube prior-mass theorem and adaptive-input exact-sign online consequence have the correct separate observation conventions. Their expectation statement explicitly requires queries before fresh prediction randomness.
+
+The scalar variance-gamma alternative is valid: independent Gamma(c/F,1) differences have the stated Levy density, and the designated cost is linear rather than logarithmic in B. Formula complexity is explicitly distinguished from general DAG circuit complexity. Fixed finite architecture is chosen before data; width-uniform constants are not a common event for arbitrary data-dependent width choice. Small wording issues about zero-input neurons and near-minimizer confidence were corrected before this snapshot.

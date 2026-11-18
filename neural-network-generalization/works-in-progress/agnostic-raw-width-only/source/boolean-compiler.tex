@@ -1,0 +1,72 @@
+\section{A coefficient-free Boolean compiler}
+\begin{lemma}\label{lem:raw-Boolean-tanh}
+There is a numerical $b\ge2$ such that the following holds.  Let $g$ be any
+ReLU network of width $C\ge1$ and hidden depth $h\ge1$, with arbitrary
+finite real coefficients and affine biases.  On $\{-1,1\}^d$, for every
+$0<\epsilon<1$ and every $H\ge b(h+1)$ there is a tanh network $q$ of
+hidden depth $H$, with a raw affine readout, satisfying
+\[
+ \sup_x|q(x)-\operatorname{clip}(g(x),[-1,1])|\le\epsilon,
+ \qquad |q(x)|\le1+\epsilon,
+\]
+and
+\[
+ m,B\le\left[4(d+1)(C+1)^h
+              +\lceil\log_2(32/\epsilon)\rceil+2\right]^b.
+\]
+The coefficient and width bounds do not grow with the additional learner
+depth $H$.  On the entire input cube the same raw implementation satisfies
+$|q|\le4$, because its signed-bit readout has coefficient sum below two
+and constant offset of magnitude below two.
+\end{lemma}
+\begin{proof}
+Use the coefficient-free unweighted-majority circuit compiler of
+\cite{booleancompiler}. Its precise input is an arbitrary-real ReLU
+network on $d$ Boolean coordinates, of width $C$ and depth $h$; it outputs
+a numerical-constant-depth-per-layer threshold circuit whose size is
+polynomial in $4(d+1)(C+1)^h+\log(1/\epsilon)$, independently of all
+original coefficient magnitudes.  The construction lifts input-to-node
+path products to independent coefficients, fixes the finite Boolean
+activation patterns, and uses integer linear programming bounds to
+replace the resulting affine forms.  Constant-depth integer arithmetic
+then evaluates them.  It does not assume that arbitrary deep real weights
+can be rounded within the original architecture.  Its depth
+is $O(h+1)$, its size including wires is polynomial in the bracketed
+quantity, and a linear readout of its output bits, with absolute
+coefficient sum less than four, approximates the clipped target to
+$\epsilon/2$.  For a threshold gate with $r$ inputs and threshold $j$,
+the signed-bit affine input is
+\[
+ \ell(\sigma)=\sum_{i=1}^r\sigma_i-(2j-r-1).
+\]
+It has margin at least one on exact signs.  If the circuit size is $S$,
+choose $\delta=\min\{\epsilon/16,1/[8(S+1)]\}$ and
+$k=\log(2/\delta)$.  Replacing each gate by $\tanh(k\ell)$ preserves
+signed-bit error at most $\delta$ at every layer: incoming error changes
+$\ell$ by at most $1/8$, and $2e^{-7k/4}\le\delta$.
+Copying signed bits with $\tanh(k\sigma)$ restores the same accuracy, so
+arbitrary further depth causes no accumulation.
+
+Before the tanh replacement, round the final clipped rational value to
+$t=\lceil\log_2(128/\epsilon)\rceil$ binary places. If its signed
+numerator is $A$ and positive denominator is $Q$, compute
+$\lfloor2^t\min\{|A|,Q\}/Q\rfloor$ by the constant-depth threshold
+circuit for integer division~\cite{hab}, then mask its magnitude bits
+by the sign of $A$ (zero has sign zero).  This changes the value by at
+most $2^{-t}$ and leaves only $2(t+1)$ potentially nonzero readout bits.
+The input word lengths affect the circuit size, which is still polynomial
+in the displayed resource, but not this final number of bits.  Enlarging
+$b$ absorbs the additional constant-depth block.  For arbitrary additional
+learner depth, copy only these final signed bits.  Their readout variation
+plus bias remains less than four.
+
+An exact constant $c_0=\tanh(1)$ can be carried by the weight $1/c_0$;
+alternatively the model's affine biases supply offsets directly.
+Converting the Boolean readout to signed bits gives a nonconstant
+coefficient sum less than two, so its raw reconstruction error is at
+most $2\delta$.  The triangle inequality proves the claimed raw output
+error before any clipping.  The width is $S+1$, gate coefficients are
+at most $k$, and bias/constant-wire coefficients at most $(S+1)k/c_0$.
+Enlarging a numerical exponent $b$ gives all bounds.
+\end{proof}
+

@@ -1,0 +1,169 @@
+\section{Finite-variance labels suffice for a confidence oracle}
+\label{sec:finite-variance-midpoint}
+The same raw Gaussian learner has a high-probability oracle assuming only
+$\mathbb E Y^2<\infty$. This extension pays a polynomial confidence factor.
+It makes no expected-risk claim and does not clip observed labels.
+
+\begin{lemma}[A second-moment weighted empirical-process bound]
+\label{lem:weighted-second-moment}
+Let $m(X,Y)$ be any fixed square-integrable multiplier and let
+$\mathcal H=\{x\mapsto\phi(\theta\cdot\widetilde x):\theta\in\mathbb R^D\}$
+be the bounded monotone ridge class. Then
+\[
+ \mathbb E\left[\sup_{h\in\mathcal H}
+             |(P-P_n)(mh)|^2\right]
+ \le\frac{C_\phi D\,\mathbb E m^2}{n}.                 \tag{FV1}
+\]
+No tail assumption or independence of $m$ and $X$ is needed.
+\end{lemma}
+\begin{proof}
+Let $S'$ be an independent ghost sample. Jensen's inequality and
+coordinatewise swapping of the two samples using independent Rademacher
+signs give
+\begin{align*}
+ \mathbb E\sup_h|(P-P_n)(mh)|^2
+ &\le\mathbb E_{S,S'}\sup_h|(P_n'-P_n)(mh)|^2\\
+ &\le4\mathbb E_{S,\epsilon}\sup_h
+           \left|n^{-1}\sum_i\epsilon_i m_i h(X_i)\right|^2.
+\end{align*}
+For the last inequality, apply the triangle inequality after inserting
+the signs, then $(a+b)^2\le2a^2+2b^2$.
+All quantities are integrable, since the feature envelope is bounded
+and $m$ has a second moment.
+
+Condition on $S$. The weighted VC covering argument in (WM1) bounds
+the conditional mean of the Rademacher supremum by
+$C_\phi\sqrt{D\sum_i m_i^2}/n$.
+Changing one sign changes this supremum by at most $2K|m_i|/n$.
+The bounded-difference variance inequality therefore bounds its
+conditional variance by $C K^2\sum_i m_i^2/n^2$.
+Adding variance and squared mean, then averaging over $S$, proves (FV1).
+As usual, continuity of the activation gives a countable determining
+parameter subclass, so the empirical suprema are measurable.
+\end{proof}
+
+\begin{theorem}[An unclipped finite-variance oracle]
+\label{thm:finite-variance-midpoint}
+Use the independent Gaussian model and resource $A_n(g)$ of (AD1), with
+any input law on the cube and any fixed finite comparison network $g$.
+Suppose $\mathbb E Y^2\le M_2<\infty$. Let $0<\delta<1/2$ and put
+\[
+ \ell_n=\log\frac{e n(1+M_2)}\delta,
+ \qquad
+ b_n^{\rm fv}=\frac{C_\phi D(M_2+1)\ell_n^4}{n\delta}.  \tag{FV2}
+\]
+In the nontrivial range $A_n(g)b_n^{\rm fv}\le c_\phi$, with probability
+at least $1-\delta$, simultaneously for all $0<\nu\le1$, all
+$n^{-2}\le\lambda\le1$ with $\lambda\ge C_\phi b_n^{\rm fv}$,
+and all $N\lambda\ge C_\phi$,
+\[
+ R(\mathbb E_{\Pi_\lambda}f)\le\Pi_\lambda R(f)
+ \le R(g)+C_\phi\{\lambda A_n(g)+b_n^{\rm fv}/\lambda\}
+       +C_\phi(M_2+1)n^{-10}.                         \tag{FV3}
+\]
+There is no comparison-output cap. The prior, likelihood, observed
+labels, and raw posterior predictions are unchanged.
+\end{theorem}
+\begin{proof}
+As in (WM2), it suffices to prove the result for
+$R(g)\le R(0)+1\le M_2+1$. Otherwise use zero at the same likelihood
+scale; $A_n(0)\le A_n(g)$ and $R(0)\le R(g)$.
+Use the same variation-weighted Gaussian comparison pack and mean
+$u=g_\sigma$. Its error is $C_\phi n^{-20}$ uniformly, so
+\[
+ \mathbb E(u-Y)^2
+ \le(\sqrt{R(g)}+C_\phi n^{-20})^2
+ \le C_\phi(M_2+1).
+\]
+Apply (FV1) to $m=u-Y$ and use Markov's inequality. With failure
+probability at most $\delta/3$, the common ridge supremum $Z$ satisfies
+\[
+ Z^2\le C_\phi D(M_2+1)/(n\delta)\le C_\phi b_n^{\rm fv}.
+\]
+Both $f$ and $u$ belong to signed ridge hulls with variations at most
+$\sqrt{Q_G}$ and $V$. Thus
+\[
+ |(P-P_n)[(u-Y)(f-u)]|\le(\sqrt{Q_G}+V)Z,
+\]
+and Young's inequality gives the exact analogue of (WM6), with
+$b_n^{\rm fv}$ in place of $b_n$. Fubini is justified by
+$\mathbb E|u-Y|<\infty$ and the bounded ridge features.
+
+Separately, Markov's inequality gives
+\[
+ P_nY^2\le3M_2/\delta
+\]
+with failure probability at most $\delta/3$ (when $M_2=0$, it holds
+almost surely). On that event the native empirical risk is at most
+$3M_2/\delta+K^2$. Write $L=1+M_2/\delta$.
+Jensen's inequality gives
+$Z_\lambda\ge\exp[-C_\phi\omega L/(2\lambda)]$.
+The native readout energy still has $\omega Q_G\sim\chi^2_N$.
+Its Gaussian tail therefore makes all posterior risk, empirical-loss,
+and quadratic-distance integrals on
+\[
+ Q_G>Q_*:=C_\phi n^{22}(1+M_2/\delta)^2
+\]
+negligible, uniformly for $\lambda\ge n^{-2}$.
+Indeed this cutoff dominates $C_\phi L/\lambda$; beyond it the
+posterior tail is at most $e^{-c\omega Q_G}$.
+The relevant integrands are bounded by a constant times
+$Q_G+F^2+M_2+P_nY^2+1$, where $F\le K V$ and
+$F^2\le C_\phi A_n\lesssim n$ in the nontrivial range.
+Their omitted integrals are bounded by $C_\phi(M_2+1)n^{-10}$.
+
+Apply the squared-norm SST event to the classes $\mathcal F_q-u$ at
+dyadic radii through $2Q_*$, assigning total failure $\delta/3$.
+Their number is $O_\phi(\ell_n)$, so the logarithmic budget in (FV2)
+suffices. This event uses only the inputs; its conclusion is
+\[
+ (P_X-P_n)(f-u)^2\le\tfrac16P_n(f-u)^2
+ +\frac{C_\phi D\ell_n^4}{n}\{Q_G+(F+1)^2\}.
+\]
+Since $\lambda\ge C_\phi b_n^{\rm fv}$, absorb its energy term into
+a small multiple of $\lambda Q_G$ and its constant term into
+$C_\phi\lambda A_n$.
+
+The three events have joint probability at least $1-\delta$.
+On their intersection, combine the relative-risk identity, the weighted
+multiplier bound, and the unchanged exact midpoint objective (AD9).
+The same curvature and readout-energy absorption as in (WM2) proves
+(FV3). The population smoothing error is bounded by
+$C_\phi(\sqrt{M_2+1}+1)n^{-20}$ via the residual $L^2$ triangle
+inequality. Jensen proves the statement for the ordinary raw mean.
+Each event is fixed independently of the eligible $N,\nu,\lambda$,
+which proves the asserted simultaneity.
+\end{proof}
+
+\paragraph{Rates.}
+Balancing the two terms with
+$\lambda=C_\phi\sqrt{b_n^{\rm fv}/A_n(g)}$ gives
+\[
+ R(\mathbb E_{\Pi_\lambda}f)\le\Pi_\lambda R(f)
+ \le R(g)+\widetilde O_\phi\left(
+       \sqrt{\frac{(d+1)(M_2+1)A_n(g)}{n\delta}}\right). \tag{FV4}
+\]
+At fixed $d,B,M_2,\delta$, this is $\widetilde O(C/\sqrt n)$ against
+all width-$C$ coefficient-bounded shallow teachers. As before, select a
+deterministic population near-minimizer to obtain a class-infimum
+oracle with exact leading coefficient one.
+In particular, for every fixed coefficient cap $B$ and every finite
+second-moment label law, the single schedule $\lambda=n^{-3/4}$ has
+confidence-level-$1-\delta$ excess $\widetilde O(n^{-1/4})$ against all
+width-$n^{1/4}$ comparison networks, simultaneously at every $N\ge c_\phi n$
+and $0<\nu\le1$, once $n$ is sufficiently large.
+The constants and the starting sample size may depend on $M_2,\delta$;
+this fixed schedule does not require knowing $M_2$.
+This is a confidence statement with a polynomial dependence on
+$1/\delta$, not an expected-risk guarantee.
+
+At fixed $M_2$ and confidence, the growing-resource corollary and
+universal schedule after (WM8) remain valid with the same powers of
+$n$. Indeed $b_n^{\rm fv}$ is still $\widetilde O(1/n)$; inserting
+$\lambda_n=\log^7(e n/\delta)/n$ in (FV3) gives a remainder tending
+to zero whenever $A_n=\widetilde O(n^{2(a+b)})$ with $a+b<1/2$.
+The constants and starting sample size may depend on $M_2,\delta$,
+but this schedule does not require the second-moment bound as input.
+The ReLU-to-hardtanh compiler instead has the condition $a+2b<1/2$.
+These remain high-probability statements, not assertions about expected
+risk under arbitrary heavy-tailed labels.

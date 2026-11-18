@@ -1,0 +1,115 @@
+\section{A full-support Gaussian comparison}
+Let $D_{\mathrm{int}}=(H-1)N^2$ and $D_{\mathrm{end}}=N(d+1)$. The internal marginal of the prior has density
+\begin{equation}
+ \nu(dX)\ \propto\
+ \exp\left[-\frac12\sum_{\ell=2}^HN^\gamma\|X^\ell\|_F^2\right]
+ G(X)^{-D_{\mathrm{end}}/2}
+ \exp\left[-\frac\omega2\{G(X)^2-1\}\right]dX.
+ \label{eq:internal-marginal}
+\end{equation}
+For $H=1$ there are no internal coordinates and $G=1$.
+
+\begin{lemma}[A width-independent internal gain moment]
+\label{lem:gain-moment}
+For $0<t<1$, the internal prior satisfies
+\begin{equation}
+ \E_\nu\exp\left[\frac{\omega t}{2}(G^2-1)\right]
+ \le(1-t)^{-D_{\mathrm{int}}/2}.
+ \label{eq:gain-mgf}
+\end{equation}
+Consequently $\E_\nu G^2\le1+D_{\mathrm{int}}/\omega\le2$.
+\end{lemma}
+\begin{proof}
+For $0<c\le1$, each factor in $G(cX)$ is $\max\{1,c\||X^\ell|\|_{\op}\}$. If none exceeds one, $G(cX)=1$. Otherwise their product is at most $cG(X)$: if $k\ge1$ factors exceed one, its factor $c^k$ is at most $c$, and every omitted factor in $G(X)$ is at least one. Therefore
+\[
+ G(cX)\le\max\{1,cG(X)\},\qquad
+ G(cX)^2-1\le c^2(G(X)^2-1).
+\]
+The Gaussian quadratic potential and $\log G$ also decrease under this scaling. Put $c=\sqrt{1-t}$ and change variables $Y=cX$ in the normalizing integral of~\eqref{eq:internal-marginal}. Its Jacobian is $c^{D_{\mathrm{int}}}$, and the preceding inequalities lower-bound the transformed integral by the original normalizer times
+$c^{D_{\mathrm{int}}}\E_\nu e^{\omega t(G^2-1)/2}$. This proves~\eqref{eq:gain-mgf}.
+
+Jensen gives
+$\omega t\E(G^2-1)/2\le-(D_{\mathrm{int}}/2)\log(1-t)$.
+Divide by $t$ and let $t$ decrease to zero. The moment is finite by~\eqref{eq:gain-mgf}, and $D_{\mathrm{int}}\le\omega$, proving the claim.
+\end{proof}
+
+\begin{lemma}[A uniform function tube and its entropy]
+\label{lem:comparison}
+Let $g$ have width $C$, depth $H$, and mixed path variation $P$. At every $N\ge C$, every $\gamma\ge1$, and every $0<\eta<1$, there is a law $\rho_{g,\eta}$ relative to the full-support prior such that
+\begin{align}
+ \frac2\omega\KL(\rho_{g,\eta}\|\pi_{N,\gamma})
+ &\le3P+1+2\log(1/\eta),\label{eq:comparison-entropy}\\
+ \left(\int\|z_w-g\|_{\infty,\mathcal X}^2d\rho_{g,\eta}\right)^{1/2}
+ &\le6(H+1)(P+1)\eta.\label{eq:comparison-uniform}
+\end{align}
+\end{lemma}
+\begin{proof}
+Use the exact implementation from Lemma~\ref{lem:clone}, with raw endpoint energies $u_N=q_N=P$ and internal matrices $A^\ell$ satisfying $\||A^\ell|\|_{\op}\le1$. Draw the whole internal tuple $X$ from its actual marginal~\eqref{eq:internal-marginal}, and set
+\[
+ W^\ell=T_\eta X^\ell=(1-\eta)A^\ell+\eta X^\ell.
+\]
+Conditional on this transformed tuple, draw the first layer and readout independently with the cloned means and $\eta^2$ times the respective conditional prior covariances.
+
+Convexity of $W\mapsto\max\{1,\||W|\|_{\op}\}$ gives
+\[
+ g_\ell(T_\eta X)\le1-\eta+\eta g_\ell(X)\le g_\ell(X).
+\]
+Thus $G(T_\eta X)\le G(X)$. In fact,
+$G(T_\eta X)\le1+\eta(G(X)-1)$, by expanding the product of $1+\eta(g_\ell(X)-1)$ and using $\eta^j\le\eta$ for $j\ge1$.
+
+The density~\eqref{eq:internal-marginal} is centrally symmetric, so $\E X=0$. Its affine Jacobian is $\eta^{D_{\mathrm{int}}}$. Writing the exact log-density ratio, the internal relative entropy is
+\begin{align*}
+ D_{\mathrm{int}}\log(1/\eta)
+ &+\frac12\sum_{\ell=2}^HN^\gamma\left[(1-\eta)^2\|A^\ell\|_F^2
+                      -(1-\eta^2)\E\|X^\ell\|_F^2\right]\\
+ &+\frac{D_{\mathrm{end}}}{2}\E\log\frac{G(T_\eta X)}{G(X)}
+  +\frac\omega2\E\left[G(T_\eta X)^2-G(X)^2\right].
+\end{align*}
+The last two terms are nonpositive. After normalization by $2/\omega$, the mean cost is at most
+$N^\gamma(H-1)C/\omega\le C/N\le1$.
+
+The conditional endpoint Gaussian entropy has normalized mean cost
+$2P\E G(T_\eta X)\le2\sqrt2P\le3P$, by Lemma~\ref{lem:gain-moment}. Its covariance cost is at most $2D_{\mathrm{end}}\log(1/\eta)/\omega$. Since
+\[
+ \frac{D_{\mathrm{int}}+D_{\mathrm{end}}}{\omega}
+ =\frac{(H-1)N^2+N(d+1)}{(H-1)N^{\gamma+1}+N(d+1)}\le1,
+\]
+the chain rule proves~\eqref{eq:comparison-entropy}. All normalizers cancel in the exact marginal or conditional density ratios.
+
+For the uniform error, first hold the internal tuple fixed. Write $G_T=G(T_\eta X)$ and $M_\ell=\|T_\eta X^\ell\|_{\op}\le g_\ell(X)$. The propagated first-layer noise, with hidden norms divided by $\sqrt N$, has squared expectation at most
+\[
+ \E\left[\frac{\prod_{\ell=2}^HM_\ell^2}{N}
+                  \|W^1-W^{1,*}\|_F^2\right]
+ \le\eta^2\frac{Nd}{\omega}\E G_T\le\sqrt2\eta^2.
+\]
+Here the conditional first-layer covariance contains $G_T^{-1}$ and $\prod M_\ell\le G_T$. This estimate handles its dependence on the whole internal tuple.
+
+For internal perturbations,
+$\|T_\eta X^\ell-A^\ell\|_{\op}\le2\eta g_\ell(X)$.
+The teacher hidden states have norm at most $\sqrt{NP}$. Telescoping the compositions, each layer's normalized error is at most
+$2\eta\sqrt P\,g_\ell(X)\prod_{j>\ell}g_j(X)\le2\eta\sqrt P\,G(X)$.
+Summing and using $\E G^2\le2$ gives root mean squared normalized error at most $3(H-1)\eta\sqrt P$. No independence between internal layers is required. The cloned readout therefore contributes at most
+$2\eta\sqrt P+3(H-1)\eta P$ to output error.
+
+Conditional on internals, the readout noise is independent of the first layer, has expected squared norm $\eta^2/(\omega G_T)$, and every hidden-state norm is bounded by $G_T\|W^1\|_F$. Thus
+\begin{align*}
+ \E\sup_x|(v-v^*)^{\mathsf T}h^H(x)|^2
+ &\le\eta^2\frac{NP}{\omega}\E G_T
+             +\eta^4\frac{N^2d}{\omega^2}\\
+ &\le\eta^2(2P+1).
+\end{align*}
+Minkowski and elementary square-root bounds now give~\eqref{eq:comparison-uniform} with the stated slack.
+\end{proof}
+
+For learning, set
+\begin{equation}
+ \eta_n=\frac1{64n(H+1)(P+1)^2},\qquad
+ T_g=6+3P+2\log(1/\eta_n).
+ \label{eq:teacher-budget}
+\end{equation}
+The uniform error in~\eqref{eq:comparison-uniform} is at most $3/[32n(P+1)]$. Because $|g|\le P$ and $|Y|\le1$, the expected empirical squared-loss increase is at most $1/(2n)$. The Gibbs variational formula consequently gives
+\begin{equation}
+ F_S(\lambda)\le\widehat R_S(g)+\frac1{2n}+\lambda T_g
+ \qquad(\lambda>0).
+ \label{eq:free-energy-comparison}
+\end{equation}

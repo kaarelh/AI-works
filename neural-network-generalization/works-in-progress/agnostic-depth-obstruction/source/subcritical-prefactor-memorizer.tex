@@ -1,0 +1,94 @@
+\section{A matching function memorizer at every subcritical prefactor}
+\label{sec:subcritical-prefactor-memorizer}
+Fix $0<\nu<1$, so that the Gaussian prior has $s=\nu/N$. A relative covariance spike $R^2$ evolves a directional correlation and variance by
+\[
+ v=\nu\{q+(R^2-1)r^2\},\qquad
+ q'=F(v),\qquad r'=\sqrt\nu Rr(1-q').
+\]
+Its precision-normalized entropy cost per hidden layer is
+$\nu\{R^2-1-\log R^2\}$. In particular, the effective critical gain $R^2=1/\nu$ has cost exactly $\kappa(\nu)=1-\nu+\nu\log\nu$.
+
+\begin{theorem}[A near-baseline covariance memorizer below criticality]
+\label{thm:subcritical-prefactor-memorizer}
+Fix $0<\nu<1$, a relative accuracy $\delta>0$, a finite output bound $A_0$, and an output tolerance $\tau>0$. There are $\eta,C>0$ and a depth threshold such that, for every
+\[
+ D\le\eta H,\qquad N\ge e^{CH},\qquad s=\nu/N,
+\]
+and every $f:\mathcal X_D\to[-A_0,A_0]$, a comparison law $\rho$ satisfies
+\[
+ 2s\KL(\rho\|\mu_s)\le(1+\delta)\kappa(\nu)H,
+\]
+\[
+ \left(\E_\rho\max_{x\in\mathcal X_D}|z_w(x)-f(x)|^2\right)^{1/2}
+ \le\tau.
+\]
+Constants can be chosen uniformly when $\nu$ ranges over any compact subinterval of $(0,1)$.
+\end{theorem}
+\begin{proof}
+Lemma~\ref{lem:prefactor-native-kernel} gives the native first-feature eigenvalue bound, and Lemma~\ref{lem:prefactor-unit-seed} encodes every seed function $u(x)\in[-1,1]$ in a unit direction. The initial scalar correlation is $r_1=\zeta_Du$, with $\zeta_D\ge e^{-C_\nu(D+1)}$ and $\zeta_D\le\sqrt{q_1}/2$, and the deterministic first variance is $q_1=F(2\nu/d)$. Finite-width discrepancies will be controlled at the end.
+
+We construct one deterministic scalar schedule from the endpoint $u=1$. Choose a sufficiently small fixed $\epsilon>0$, to be specified from $\delta,\nu$. Initially use native transitions $R=1$ until $q\le\epsilon/8$. Since $q'\le\nu q$, this takes only $O_{\nu,\epsilon}(1)$ steps. The correlation is multiplied during these steps by positive factors bounded below by constants depending only on $\nu,\epsilon$, so it remains at least $c_{\nu,\epsilon}e^{-C_\nu(D+1)}$.
+
+If its squared correlation is below $\epsilon/64$, use the constant relative spike
+\[
+ R^2=(1+\epsilon)/\nu.
+\]
+While $q\le\epsilon/8$ and $r^2\le\epsilon/64$, the preactivation variance obeys
+\[
+ v=\nu q+(1+\epsilon-\nu)r^2
+ \le\frac\epsilon{64}(1+7\nu+\epsilon)\le\epsilon/8
+\]
+provided $\epsilon\le1-\nu$. Thus $q'\le\epsilon/8$, and, for small enough $\epsilon$,
+\[
+ r'^2=(1+\epsilon)r^2(1-q')^2
+       \ge(1+\epsilon/2)r^2.
+\]
+The squared correlation reaches $\epsilon/64$ within $C_{\nu,\epsilon}(D+1)$ steps. At its first crossing it is at most $\epsilon/32$, and the variance $q_0$ is at most $\epsilon/8$. If the threshold was already met after the native burn, no growth steps are needed. In either case
+\[
+ \epsilon/64\le r_0^2\le q_0\le\epsilon/8,
+ \qquad r_0^2/q_0\ge1/8.
+\]
+Choose $\eta$ small enough and then $H$ large enough that this stage ends before $H/2$.
+
+For all remaining layers hold the variance exactly at this $q_0$. Write $v_0=F^{-1}(q_0)$ and $e=q_0-r^2$, and choose
+\[
+ R^2=1+\frac{v_0/\nu-q_0}{r^2}.
+\]
+The next variance is $q_0$ exactly. The exact defect recursion is
+\[
+ e'=J(q_0)+\nu e(1-q_0)^2,
+ \qquad J(q)=q-F^{-1}(q)(1-q)^2=O(q^3),\quad J(q)\ge0.
+\]
+Its stationary defect is at most $Cq_0^3/(1-\nu)$. Choose $\epsilon$ sufficiently small that this is at most $q_0/16$. Starting with defect at most $7q_0/8$, the recursion keeps $r^2\ge q_0/8$ at every holding step. After $O_{\nu,\epsilon}(1)$ such steps it also gives $e\le C_\nu q_0^3$.
+For these later steps,
+\[
+ \nu R^2=\frac{v_0-\nu e}{q_0-e}
+        =1+O_\nu(q_0)\le1+C_\nu\epsilon.
+\]
+All earlier holding spikes are bounded by a fixed constant depending on $\nu$, since $r^2\ge q_0/8$ and $F^{-1}(q_0)\le2q_0$.
+
+The normalized growth-layer action is
+\[
+ \nu h((1+\epsilon)/\nu)=\kappa(\nu)+O_\nu(\epsilon),
+ \qquad h(t)=t-1-\log t.
+\]
+The same bound holds in the holding stage after its fixed transient. The native burn costs zero, and the fixed transient costs only $O_{\nu,\epsilon}(1)$. Therefore the total covariance cost is at most
+\[
+ [\kappa(\nu)+C_\nu\epsilon]H+O_{\nu,\epsilon}(1).
+\]
+The final endpoint correlation has magnitude at least $\sqrt{\epsilon/512}$. Choose readout factor $B=A_0/r_H(1)$, whose normalized mean-shift cost $B^2$ is a fixed constant. Choose $\epsilon$ so small that $C_\nu\epsilon\le\delta\kappa(\nu)/4$, and then take $H$ large enough to absorb the fixed transient and readout costs into the remaining relative allowance.
+
+For this fixed schedule the final correlation is a continuous odd function of the seed $u$. The intermediate value theorem therefore supplies pointwise seeds realizing every $f(x)\in[-A_0,A_0]$ exactly in the scalar recursion.
+
+The finite-width realization is Lemma~\ref{lem:prefactor-finite-realization} with every internal row covariance multiplied by $\nu$. Specifically, use
+\[
+ (\nu/N)[I+(R_\ell^2-1)e_{\ell-1}e_{\ell-1}^{\mathsf T}],
+\]
+normalize the Gaussian directional coordinates by $\sqrt{N/\nu}/R_\ell$, and give the readout mean $B e_H/\sqrt N$ and its native covariance $\nu I/N^2$. The chain-rule normalized entropy is exactly
+\[
+ \frac{2\nu\log2}{N}
+ +\nu\sum_\ell h(R_\ell^2)+B^2.
+\]
+The schedule's relative spikes and readout factor are bounded by constants depending only on fixed $\nu,\delta,A_0$. Conditional concentration and a uniform scalar Lipschitz bound therefore give the desired expected maximum error at every width $N\ge e^{CH}$, as in Lemma~\ref{lem:prefactor-finite-realization}. The readout maximum-noise term is $O(\nu\log m/N)$. Increasing $H$ and $C$ absorbs initial conditioning entropy into the remaining allowance.
+All choices above use constants uniform on compact prefactor intervals, proving the last assertion.
+\end{proof}

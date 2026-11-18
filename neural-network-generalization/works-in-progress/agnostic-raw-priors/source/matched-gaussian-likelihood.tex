@@ -1,0 +1,172 @@
+\section{The exactly matched Gaussian likelihood}
+\label{sec:matched-gaussian-likelihood}
+The preceding fractional-posterior argument uses a likelihood variance larger than the noise variance. A separate finite-dictionary testing argument reaches the exactly matched variance. Its rate is looser, but remains independent of learner width and polynomial jointly in teacher complexity and depth for the normalized-readout priors.
+
+Suppose $Y=f_0(X)+\xi$, where $|f_0|\le B_0$ and, conditional on $X$, $\xi\sim N(0,\sigma^2)$ for a fixed known $\sigma>0$. All observations are iid. The actual posterior uses
+\[
+ \Pi_S(df)\propto\exp\left\{-\frac1{2\sigma^2}
+                    \sum_{i=1}^n(f(X_i)-Y_i)^2\right\}\mu(df).
+\]
+Assume the native prior has a uniformly sub-Gaussian raw supremum:
+\begin{equation}
+ \mathbb E_\mu\exp(F(f)^2/S_0^2)\le M_0,
+ \qquad F(f)=\|f\|_\infty,
+ \label{eq:matched-native-envelope}
+\end{equation}
+for fixed $S_0,M_0$. Assume also that for every $q\ge1$ and $0<\epsilon\le1/2$ there is a deterministic finite dictionary $\mathcal D(q,\epsilon)$, independent of learner width, satisfying
+\[
+ \mu\left\{\inf_{g\in\mathcal D(q,\epsilon)}
+                      \|f-g\|_\infty>\epsilon\right\}\le e^{-q}.
+\]
+Write $\mathcal H(q,\epsilon)=\log(2|\mathcal D(q,\epsilon)|)$.
+
+\begin{theorem}[Matched-variance raw posterior contraction]
+\label{thm:matched-gaussian-likelihood}
+Fix $n\ge2$ and $0<\delta<1/2$. Suppose a sample-independent comparison law obeys
+\[
+ \KL(\rho\|\mu)\le K,\qquad K\ge1+B_0^2,
+ \qquad a_\rho(x):=\mathbb E_\rho(f(x)-f_0(x))^2\le V,
+ \qquad \mathbb E_Xa_\rho(X)\le n^{-4}.
+\]
+The approximation requirement is in population squared error; it need not hold uniformly over inputs. Put
+\[
+ \epsilon=\min\{n^{-2},\sigma/(4\sqrt n)\},\qquad
+ \overline K=K+C_\sigma(1+V)\log(16/\delta),\qquad
+ q=C\left[\overline K+\log\frac{n+2}{\delta}+1\right].
+\]
+Then, with probability at least $1-\delta$,
+\begin{equation}
+ \int R(f)\,\Pi_S(df)
+ \le\sigma^2+
+ \frac{C(1+q)\left[\overline K+\mathcal H(q,\epsilon)
+                                 +\log((n+2)/\delta)\right]}n.
+ \label{eq:matched-gaussian-hp}
+\end{equation}
+The ordinary raw posterior mean obeys the same bound. The constants depend only on $S_0,M_0,\sigma$ and not on learner width, input dimension, hidden depth or the comparison budget.
+\end{theorem}
+
+\begin{proof}
+Write $e_f=f-f_0$, $a(x)=a_\rho(x)$ and $b(x)=\mathbb E_\rho e_f(x)$, so $b^2\le a$. Let $L_f$ be the likelihood and let $Z_{\rm rel}=\int(L_f/L_{f_0})\,d\mu$. The variational lower bound gives
+\[
+ Z_{\rm rel}\ge
+ \exp\left\{-K-\frac1{2\sigma^2}\sum_i a(X_i)
+                         +\frac1{\sigma^2}\sum_i\xi_i b(X_i)\right\}.
+\]
+Let $\ell=\log(16/\delta)$. Since $0\le a\le V$ and $\mathbb E a\le n^{-4}$, Bernstein's inequality gives
+\[
+ \sum_i a(X_i)\le n^{-3}+\sqrt{2Vn^{-3}\ell}+CV\ell
+                      \le C(1+V)\ell
+\]
+except with probability $\delta/16$. Conditional on the inputs, $\sum_i\xi_i b(X_i)$ is centered Gaussian with variance at most $\sigma^2\sum_i a(X_i)$. Its lower-tail bound, on the same input event, therefore proves
+\begin{equation}
+ \Pr\{Z_{\rm rel}<e^{-\overline K}\}\le\delta/8.
+ \label{eq:matched-evidence-event}
+\end{equation}
+This is the only place the population-only comparison error enters the denominator estimate.
+
+Take $M=C\sqrt q$ so that $\mu(F>M)\le e^{-q}$. Let $\mathcal G$ be the set where $F\le M$ and the dictionary approximation error is at most $\epsilon$. Its complement has prior mass at most $2e^{-q}$. The Gaussian envelope and Cauchy--Schwarz give
+\[
+ \int (F+B_0)^2\mathbf1_{\mathcal G^c}\,d\mu
+                       \le C(1+K)e^{-q/2}.
+\]
+Exact specification provides the simple weighted likelihood identity
+\[
+ \mathbb E_{f_0}\int W(f)\frac{L_f}{L_{f_0}}\,d\mu(f)
+                        =\int W(f)\,d\mu(f)
+\]
+for every nonnegative deterministic $W$, by Tonelli and the change of Gaussian data law. On the evidence event, the posterior integral of $W$ is at most $e^{\overline K}\int W L_f/L_{f_0}\,d\mu$. With $W=(F+B_0)^2\mathbf1_{\mathcal G^c}$, Markov's inequality and the definition of $q$ show, except with probability $\delta/8$ outside the already counted evidence failure, that
+\begin{equation}
+ \Pi_S[\mathcal A(f)\mathbf1_{\mathcal G^c}]\le n^{-2}.
+ \label{eq:matched-sieve-tail}
+\end{equation}
+No fractional likelihood or approximate likelihood-ratio moment is used.
+
+Discard dictionary entries with supremum larger than $M+\epsilon$. Every $f\in\mathcal G$ still has a retained approximant. Set
+$B_*=16\sigma^2+(M+B_0+\epsilon)^2+1\le C(1+q)$.
+For a retained dictionary entry $g$, use the likelihood-ratio test
+\[
+ \varphi_g=\mathbf1\left\{
+  \sum_i(g(X_i)-f_0(X_i))
+          \left(Y_i-\frac{g(X_i)+f_0(X_i)}2\right)\ge0\right\}.
+\]
+Its type-I error under $f_0$ is at most
+\[
+ \left[\mathbb E_Xe^{-(g-f_0)^2/(8\sigma^2)}\right]^n
+                    \le e^{-n\mathcal A(g)/B_*}.
+\]
+If instead $\|f-g\|_\infty\le\epsilon$, Gaussian exponential Markov gives the robust type-II bound
+\begin{align*}
+ P_f(1-\varphi_g)
+ &\le e^{n\epsilon^2/\sigma^2}
+       \left[\mathbb E_Xe^{-(g-f_0)^2/(16\sigma^2)}\right]^n\\
+ &\le e\,e^{-n\mathcal A(g)/B_*}.
+\end{align*}
+To obtain the first line, apply Markov to minus one half of the log likelihood ratio for $g$. The perturbation term is bounded using
+$\epsilon|u|/2\le u^2/16+\epsilon^2$.
+For both final inequalities, use $|g-f_0|\le M+B_0+\epsilon$ and
+$1-e^{-t}\ge t/(1+t)$. The definition of $\epsilon$ makes its positive exponential factor at most $e$.
+
+For a risk threshold $s\ge4\epsilon^2$, take the maximum test over entries with $\mathcal A(g)\ge s/4$. Every $f\in\mathcal G$ with $\mathcal A(f)>s$ has such an approximant. Writing $D=|\mathcal D(q,\epsilon)|$, the resulting test $\varphi$ has
+\[
+ P_{f_0}(\varphi=1)\le D e^{-ns/(4B_*)},\qquad
+ \sup_{f\in\mathcal G:\mathcal A(f)>s}P_f(\varphi=0)
+                 \le e\,e^{-ns/(4B_*)}.
+\]
+Exact specification of the Gaussian likelihood is used at the next step:
+\[
+ \mathbb E_{f_0}\left[(1-\varphi)
+       \int_{\mathcal G\cap\{\mathcal A>s\}}
+                        \frac{L_f}{L_{f_0}}\,d\mu(f)\right]
+ =\int_{\mathcal G\cap\{\mathcal A>s\}}P_f(\varphi=0)\,d\mu(f).
+\]
+Choose
+\[
+ s=4\epsilon^2+\frac{C B_*}{n}
+           \left[\overline K+\log(2D)+\log\frac{n+2}{\delta}\right].
+\]
+The test's type-I error is then at most $\delta/8$. Markov's inequality for the last numerator shows, except with probability $\delta/8$, that when $\varphi=0$ its value is at most $e^{-\overline K}n^{-2}$. On the evidence event \eqref{eq:matched-evidence-event}, the posterior mass of $\mathcal G\cap\{\mathcal A>s\}$ is consequently at most $n^{-2}$. Thus
+\[
+ \Pi_S[\mathcal A(f)\mathbf1_{\mathcal G}]
+                     \le s+(M+B_0)^2n^{-2}.
+\]
+Add \eqref{eq:matched-sieve-tail} and union bound the four failure events. The resulting expression is bounded by the remainder in \eqref{eq:matched-gaussian-hp}. Adding the noise floor and applying Jensen proves the theorem.
+\end{proof}
+
+\begin{corollary}[All-width polynomial-depth bounds]
+\label{cor:matched-neural-polynomial}
+Consider the normalized Gaussian-readout neural prior with bounded tanh hidden activations, independent Gamma neuron gates, and either Student or Gaussian hidden factors. Its actual likelihood variance is the true observation-noise variance $\sigma^2$. At every learner width at least the width of the implementing teacher, the theorem gives a polynomial-depth and polynomial-teacher-complexity raw learning guarantee.
+
+More explicitly, let $K$ be the all-width comparison entropy budget at the precision required by the theorem, and inflate it if necessary so that $K\ge1+B_0^2$. Let $V$ bound its pointwise comparison squared error around $f_0$, and put
+\[
+ \overline K=K+C_\sigma(1+V)\log(16/\delta),\qquad
+ q=C[\overline K+\log((n+2)/\delta)+1],\qquad
+ L=H+q+1+\log\frac{d+1}{\epsilon}.
+\]
+For Student hidden factors the excess-risk bound is at most
+\[
+ \frac{C(1+q)}n
+   \left[\overline K+dHL^2+H^2L^3+\log\frac{n+2}{\delta}\right].
+\]
+For Gaussian hidden factors, replace $dHL^2+H^2L^3$ by
+\[
+ C(dL+HL^2)\left[(H+1)\log((d+1)(L+1))
+                                      +\log(1/\epsilon)\right].
+\]
+These displayed bounds contain no learner-width term. At fixed $H,d$, bounded $V$, and suppressing logarithms, they have respectively fourth- and third-degree dependence on a comparison budget $K$ that dominates the remaining logarithmic terms.
+\end{corollary}
+\begin{proof}
+The normalized readout has a sub-Gaussian raw supremum with constants independent of $N,H,d$. Apply the Student-hidden or Gaussian-hidden compression theorem and the corresponding width-independent comparison law. Uniform comparison error is a special case of the population condition, with bounded $V$; a population approximation compiler with a bounded pointwise comparison second moment is also admissible. Those comparison costs depend polynomially on teacher width and depth and logarithmically on the required precision, except for the already stated readout variation resource. Substitution gives the displayed formulas.
+\end{proof}
+
+\paragraph{An expectation version.}
+For these same neural priors, conditioning on the hidden features and normalized gates gives a centered Gaussian process with kernel diagonal at most $V_*=2$. Under the correctly specified Gaussian likelihood, its conditional posterior variance at any input is at most $V_*$ and its conditional posterior mean obeys
+\[
+ |m_\theta(x)|^2\le V_*Y^\top(K_\theta+\sigma^2I)^{-1}Y
+                    \le V_*\|Y\|_2^2/\sigma^2.
+\]
+The first inequality is the positive-semidefinite covariance Cauchy--Schwarz bound. Averaging over the posterior of the hidden variables therefore gives, for every sample,
+\[
+ \Pi_S\mathcal A(f)\le
+        2V_*+2V_*\|Y\|_2^2/\sigma^2+2B_0^2.
+\]
+Its sample second moment has square root at most $C n(1+B_0^2)$. Use the high-probability theorem with $\delta=n^{-8}/16$, and apply Cauchy--Schwarz on its failure event. This adds at most $C(1+B_0^2)n^{-3}$ in expectation. Hence the same two displayed polynomial bounds, with that confidence choice and an additional negligible term, also control expected posterior-averaged raw risk and expected raw-mean risk. The Gaussian likelihood is exactly matched throughout; no fractional temperature or output transformation is introduced.

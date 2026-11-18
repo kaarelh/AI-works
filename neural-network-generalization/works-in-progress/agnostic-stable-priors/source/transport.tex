@@ -1,0 +1,106 @@
+\section{Transport inside the conditioned Gaussian prior}
+\begin{lemma}[An exact conditional-Gaussian transport identity]
+\label{lem:transport}
+Let $K\subset\R^p$ be a convex centrally symmetric set with positive Gaussian measure, and let $P$ have density proportional to $\mathbf1_K(x)e^{-\alpha\|x\|_2^2/2}$, where $\alpha>0$. Fix $a\in K$ and $0<\eta<1$. If $X\sim P$ and $Y=(1-\eta)a+\eta X$, then $Y\in K$ and
+\begin{align}
+ \KL(\mathcal L(Y)\|P)
+ &=p\log(1/\eta)+\frac\alpha2\bigl[(1-\eta)^2\|a\|_2^2-(1-\eta^2)\E\|X\|_2^2\bigr]\notag\\
+ &\le p\log(1/\eta)+\frac\alpha2\|a\|_2^2.
+ \label{eq:transport}
+\end{align}
+For $K=\R^p$, the alternative $Y=a+\eta X$ satisfies the same upper bound.
+\end{lemma}
+\begin{proof}
+Convexity gives support containment. Symmetry gives $\E X=0$. The affine transformation has Jacobian determinant $\eta^p$, and the conditional Gaussian's normalizing constant is the same in numerator and denominator of the density ratio. Thus
+\[
+ \log\frac{d\mathcal L(Y)}{dP}(Y)
+ =p\log(1/\eta)+\frac\alpha2(\|Y\|_2^2-\|X\|_2^2).
+\]
+Taking expectations proves the identity. The unconditioned variant has mean-square difference $\|a\|^2-(1-\eta^2)\E\|X\|^2$ instead. Approximation from the interior, or the same density formula directly, includes boundary choices of $a$.
+\end{proof}
+
+No lower bound on the probability of $K$ is used. This is essential when a row-norm condition has very small probability under an unconditioned wide Gaussian layer.
+
+\begin{lemma}[Teacher cloning and its normalized cost]
+\label{lem:cloning}
+For every $g\in\mathcal G$ and every $N\ge C$, an exact clone of $g$ satisfies the same support condition, has readout absolute sum at most $CB$, and obeys
+\[
+ \frac dN\|W^{1,*}\|_F^2\le d(d+1)B^2,\qquad
+ \sum_{\ell=2}^H\|W^{\ell,*}\|_F^2\le2(H-1)C,\qquad
+ N\|v^*\|_2^2\le2C^2B^2.
+\]
+In particular $|g|\le U:=VCB$. Define
+\begin{equation}
+ E_H=\frac{d(d+1)B^2+2(H-1)C}{H}+2C^2B^2.
+ \label{eq:EH}
+\end{equation}
+\end{lemma}
+\begin{proof}
+Partition each learner layer into $C$ groups of sizes $k_i\in\{\lfloor N/C\rfloor,\lceil N/C\rceil\}$. Copy a first-layer teacher row into every neuron in its group. Replace a teacher edge $a_{ji}$ by $a_{ji}/k_i$ on every edge between the corresponding source and destination groups. Replace the readout coefficient $u_j$ by $u_j/k_j$ on each copy. Every hidden copy exactly reproduces its teacher activation, and every absolute row sum is unchanged.
+
+The first-layer bound follows by summing the coefficient bound. Since $k_j/k_i\le2$, each internal layer has squared Frobenius norm at most twice the teacher's. Its rows have Euclidean norm at most their absolute sum, which is at most one, so this costs at most $2C$ per layer. Finally $k_j\ge N/(2C)$ gives $N\|v^*\|_2^2\le2C\|u\|_2^2\le2C^2B^2$. The readout absolute sum is preserved exactly.
+\end{proof}
+
+Put
+\begin{equation}
+ \eta=\frac1{8n(U+1)(2UH+V)},\qquad
+ T=E_H+2\left(1+\frac{d+1}{H}\right)\log(1/\eta).
+ \label{eq:T}
+\end{equation}
+
+\begin{lemma}[A width-uniform comparison measure]
+\label{lem:comparison}
+For every $g\in\mathcal G$, every $N\ge C$, and every $\gamma\ge1$, there is a probability measure $\rho_g$ such that
+\begin{equation}
+ \frac2\omega\KL(\rho_g\|\pi_{N,\gamma})\le T,
+ \qquad
+ \int\widehat R_S(z_w)d\rho_g\le\widehat R_S(g)+\frac1{2n}
+ \label{eq:comparison}
+\end{equation}
+for every possible sample in the bounded input-label domain.
+\end{lemma}
+\begin{proof}
+Start from the exact clone. For each conditioned internal row, independently draw $X$ from its actual conditioned prior and use $(1-\eta)a+\eta X$, where $a$ is the cloned teacher row. In the general zero-origin case use the same construction for the conditioned first-layer rows. In the bounded activation case, use first-layer Gaussians with cloned means and $\eta^2$ times the original covariance. The independent readout comparison Gaussian likewise has mean $v^*$ and covariance $\eta^2$ times its original covariance.
+
+Apply Lemma~\ref{lem:transport} row by row. The total dimension term is
+\[
+ \frac{2\{N(d+2)+(H-1)N^2\}}{HN^\kappa}\log(1/\eta)
+ \le2\left(1+\frac{d+1}{H}\right)\log(1/\eta).
+\]
+For $H=1$ there are no internal coordinates and $\kappa=\gamma\ge1$; for $H\ge2$, $\kappa\ge2$. The first and internal mean costs, divided by $\omega$, are $N^{\gamma-\kappa}/H$ times their respective cloned energies. The readout cost is exactly $N\|v^*\|_2^2$. Since $\kappa\ge\gamma$, Lemma~\ref{lem:cloning} bounds their sum by $E_H$. This proves the relative-entropy assertion.
+
+For the loss assertion, fix $x$ and compare every hidden coordinate with its exact cloned value. In the bounded activation case, each first-layer preactivation perturbation has variance at most $2\eta^2$, because $N^{1-\gamma}\le1$ and $\|\bar x\|_2^2/d\le2$. Therefore its activation perturbation has $L^2(\rho_g)$ norm at most $\sqrt2\eta$. In the general case, each first-row difference has absolute sum at most $2A\eta/K_\phi$, so the activation error is deterministically at most $2A\eta$.
+
+Let $e_\ell$ be the maximum, over neurons, of the $L^2(\rho_g)$ norm of the activation error at layer $\ell$. The random current-layer rows are independent of earlier layers. If $W$ is such a row and $\Delta_i$ are preceding errors, its gain bound gives
+\[
+ \E\left|K_\phi\sum_i W_i\Delta_i\right|^2
+ \le\E\sum_i K_\phi|W_i||\Delta_i|^2\le e_{\ell-1}^2.
+\]
+In the bounded activation case take $K_\phi=1$. The row difference from its teacher row has absolute sum at most $2\eta/K_\phi$. Since the teacher coordinates are bounded by $V$, its contribution after activation is at most $2V\eta$. Minkowski therefore yields
+\[
+ e_H\le2VH\eta.
+\]
+The cloned readout's absolute sum is at most $CB$. Its independent Gaussian perturbation contributes variance at most $\eta^2V^2/\omega$. Hence
+\begin{equation}
+ \left(\int|z_w(x)-g(x)|^2d\rho_g\right)^{1/2}
+ \le(2UH+V)\eta=\frac1{8n(U+1)}.
+ \label{eq:output-error}
+\end{equation}
+No maximum of $N$ Gaussian first-layer errors was taken; the per-neuron $L^2$ recursion is why the estimate remains uniform in width.
+
+At any observation, $|g(x)-y|\le U+1$. Expanding squared loss and using~\eqref{eq:output-error}, its expected increase is at most $1/(4n)+1/[64n^2(U+1)^2]\le1/(2n)$. Averaging proves the second assertion of~\eqref{eq:comparison}.
+\end{proof}
+
+\begin{lemma}[Readout tails and entropy]
+\label{lem:entropy}
+Put $M=2\log2$. For every probability measure $\rho$ of finite relative entropy with respect to $\pi_{N,\gamma}$,
+\[
+ \int q_Nd\rho\le\frac4\omega\KL(\rho\|\pi_{N,\gamma})+M,
+ \qquad
+ \pi_{N,\gamma}(q_N>u)\le e^{-\omega(u-M)/4}.
+\]
+\end{lemma}
+\begin{proof}
+Support conditioning leaves the independent Gaussian readout unchanged. Thus $\omega q_N$ is chi-square with $N$ degrees of freedom and
+$\log\int e^{\omega q_N/4}d\pi=(N/2)\log2\le\omega M/4$, because $N\le\omega$. The entropy variational inequality and Markov's inequality give the conclusions.
+\end{proof}

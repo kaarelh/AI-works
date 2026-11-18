@@ -1,0 +1,338 @@
+\section{A product-prior midpoint argument for shallow tanh networks}
+\label{sec:tanh-product-midpoint}
+This result uses the unchanged independent Gaussian prior, a raw squared-loss
+likelihood, and the ordinary raw posterior mean. It does not use positive
+homogeneity. The midpoint construction requires an explicit lower bound
+on the learner width.
+
+Let $X\in[-1,1]$, $|Y|\le1$, and suppose the input density is bounded
+above and below by fixed positive constants. Write
+\[
+ f_w(x)=\frac1N\sum_{j=1}^N G_j\tanh(a_jx+b_j),\qquad
+ (a_j,b_j,G_j)\stackrel{\rm iid}{\sim}N(0,\nu I_3),\quad0<\nu\le1.
+\]
+Thus the physical readout weights $v_j=G_j/N$ have variance $\nu/N^2$.
+Set $\omega=N/\nu$ and
+\[
+ Q(w)=N^{-1}\sum_j(a_j^2+b_j^2+G_j^2),\qquad
+ Q_G(w)=N^{-1}\sum_jG_j^2.
+\]
+The actual posterior is
+\[
+ d\Pi_\lambda(w)=Z_\lambda^{-1}
+ \exp\{-\omega\widehat R(f_w)/(2\lambda)\}\,d\mu(w),
+ \qquad \widehat R(f)=n^{-1}\sum_i(f(X_i)-Y_i)^2.
+\]
+Write $R(f)=\mathbb E(f(X)-Y)^2$ for population squared risk.
+Its physical observation variance is $n\lambda\nu/N$.
+
+\begin{lemma}[Replacing a random subset of neuron packs]
+\label{lem:tanh-subset-midpoint}
+Let $q$ be any law on one neuron pack with finite relative entropy
+against $\mu_0=N(0,\nu I_3)$ and finite $M_q=\mathbb E_qG^2$.
+Put $g_q(x)=\mathbb E_q[G\tanh(ax+b)]$. For $N\ge2$, let
+$k=\lfloor N/2\rfloor$ and $p=k/N\in[1/3,1/2]$. Then
+\begin{align}
+ &\Pi_\lambda[\widehat R(f)-\widehat R(g_q)]
+ +p\Pi_\lambda\|f-g_q\|_n^2
+ +\frac{2\lambda\nu}{N}\operatorname{KL}(\Pi_\lambda\Vert\mu)
+ \nonumber\\
+ &\hspace{12mm}\le
+ 2\lambda\nu\operatorname{KL}(q\Vert\mu_0)
+ +\frac{p}{N-1}\Pi_\lambda Q_G+\frac{M_q}{N}.
+ \tag{TM1}
+\end{align}
+\end{lemma}
+\begin{proof}
+Choose uniformly a $k$-subset $I$ of $\{1,\ldots,N\}$. Keep the
+packs in $I$ from a posterior draw and replace the other packs by
+independent draws from $q$. Call the resulting law $\rho$.
+The product-measure Shearer inequality gives the averaged subset
+entropy bound; see, for example, Caputo and Parisi~\cite{entropy-shearer},
+Lemma 4.2. The following chain-rule proof supplies the continuous-state
+form for these Gaussian packs:
+
+\[
+ \mathbb E_I\operatorname{KL}((\Pi_\lambda)_I\Vert\mu_0^{\otimes I})
+ \le p\operatorname{KL}(\Pi_\lambda\Vert\mu).
+\]
+Indeed, expand each marginal entropy by its coordinate chain rule.
+Convexity shows that conditioning a coordinate on only the preceding
+coordinates belonging to $I$ costs no more, on average, than conditioning
+on all preceding coordinates. Each coordinate belongs to $I$ with
+probability $p$. Sum these inequalities. Product additivity conditional
+on $I$, followed by convexity over $I$, gives
+\[
+ \operatorname{KL}(\rho\Vert\mu)
+ \le p\operatorname{KL}(\Pi_\lambda\Vert\mu)
+ +(1-p)N\operatorname{KL}(q\Vert\mu_0).                 \tag{TM2}
+\]
+Conditional on the original packs, the mean new output is
+$pf+(1-p)g_q$. The variance formula for a sample sum without replacement
+and $|G\tanh(ax+b)|\le|G|$ give
+\[
+ \operatorname{Var}(f_{\rm new}(x)\mid w)
+ \le \frac{p(1-p)}{N-1}Q_G(w)+\frac{1-p}{N}M_q.
+\]
+The squared-loss identity therefore implies
+\begin{align*}
+ \rho\widehat R(f)\le{}&p\Pi_\lambda\widehat R(f)
+ +(1-p)\widehat R(g_q)-p(1-p)\Pi_\lambda\|f-g_q\|_n^2\\
+ &+\frac{p(1-p)}{N-1}\Pi_\lambda Q_G+\frac{1-p}{N}M_q.
+\end{align*}
+Use the minimizing property of the actual Gibbs posterior for
+$\rho\widehat R+(2\lambda\nu/N)\operatorname{KL}(\rho\Vert\mu)$,
+insert (TM2), and divide by $1-p$.
+\end{proof}
+
+\begin{lemma}[A bounded-coefficient comparison pack]
+\label{lem:tanh-teacher-pack}
+Let
+\[
+ g(x)=\sum_{i=1}^C c_i\tanh(\alpha_i x+\beta_i),\qquad
+ |c_i|,|\alpha_i|,|\beta_i|\le B,\quad B\ge1,
+ \qquad \|g\|_\infty\le1.
+\]
+For $0<\sigma<1$, take a uniform index $i\in\{1,\ldots,C\}$,
+then independently draw
+\[
+ (a,b)\sim N((\alpha_i,\beta_i),\sigma^2 I_2),\qquad
+ G\sim N(Cc_i,\nu).
+\]
+Its mean function $g_\sigma$ is independent of $\nu$ and satisfies
+\[
+ \|g_\sigma-g\|_\infty\le2CB\sigma,\qquad M_q\le C^2B^2+1,
+\]
+\[
+ \nu\operatorname{KL}(q\Vert\mu_0)
+ \le C_0\{C^2B^2+1+\log(1/\sigma)\}.                    \tag{TM3}
+\]
+Its Lipschitz constant and second-derivative variation are at most
+$C_0(CB^2+1)$.
+\end{lemma}
+\begin{proof}
+The mean of $G$ gives a Gaussian smoothing of each teacher ridge.
+Lipschitz continuity of tanh and Cauchy--Schwarz bound the uniform
+error by $2CB\sigma$. The second moment is immediate. Convexity bounds
+the mixture entropy by the mean component entropy. The exact Gaussian
+formula, multiplied by $\nu$, is
+\[
+ \tfrac12\{\alpha_i^2+\beta_i^2+C^2c_i^2
+ +2\sigma^2-2\nu-2\nu\log(\sigma^2/\nu)\}.
+\]
+Use $\nu\log\nu\le0$ and $0<\nu\le1$.
+Finally $\int_{\mathbb R}|\tanh''u|\,du=2$ gives
+$\|[c\tanh(ax+b)]''\|_{\rm TV}\le2|ca|$ on the input interval;
+integrate this and the first-derivative bound over the smoothing.
+\end{proof}
+
+\begin{proposition}[Strong empirical comparison]
+\label{prop:tanh-strong-objective}
+Set
+\[
+ A_n=1+C^2B^2+\log(n(CB+1)),\qquad
+ \sigma=\frac{n^{-20}}{CB+1}.
+\]
+There are absolute constants $c_0,C_0>0$ such that, whenever
+$0<\lambda\le1$ and $N\lambda\ge c_0$,
+\[
+ \Pi_\lambda[\widehat R(f)-\widehat R(g_\sigma)]
+ +\tfrac13\Pi_\lambda\|f-g_\sigma\|_n^2
+ +c_0^{-1}\lambda\Pi_\lambda Q
+ \le C_0\lambda A_n.                                   \tag{TM4}
+\]
+\end{proposition}
+\begin{proof}
+Since $\omega Q\sim\chi^2_{3N}$, the entropy inequality gives
+\[
+ \operatorname{KL}(\Pi_\lambda\Vert\mu)
+ \ge\frac{\omega}{4}\Pi_\lambda Q-\frac{3N}{2}\log2.
+\]
+Insert this and (TM3) in (TM1). The variance term is at most
+$C\Pi_\lambda Q/N$, absorbed by half the resulting $\lambda Q/2$
+penalty when $N\lambda$ is large enough. The remaining $M_q/N$
+term is at most $C\lambda A_n$.
+\end{proof}
+
+\paragraph{The bounded-variation statistical interface.}
+The univariate localized squared-loss estimates apply to every continuous
+function whose supremum, Lipschitz constant, and second-derivative
+variation are bounded by a common radius. They apply here because
+\[
+ \|f_w\|_\infty\le\sqrt{Q_G},\qquad
+ \operatorname{Lip}(f_w)\le Q/2,\qquad
+ \|f_w''\|_{\rm TV}\le Q.                               \tag{TM5}
+\]
+Cauchy--Schwarz proves the first bound; $2|Ga|\le G^2+a^2$ and the
+preceding tanh integral prove the other two. Thus use radius
+$C(1+Q+A_n)$ in the same bounded-variation class.
+Specifically, at a fixed small tolerance, the localized multiplier
+and design-norm inequalities give, uniformly in $f$,
+\begin{align}
+ R(f)-R(g_\sigma)\le{}&
+ \widehat R(f)-\widehat R(g_\sigma)
+ +\tfrac16\|f-g_\sigma\|_n^2+c\lambda Q+C\lambda A_n\nonumber\\
+ &+\widetilde Cn^{-4/3}\lambda^{-2/3}
+ +\widetilde Cn^{-3}(Q+A_n)^2
+ +\widetilde Cn^{-3}\lambda^{-1}+\widetilde Cn^{-1}.       \tag{TM6}
+\end{align}
+Choose $c$ smaller than the penalty constant in (TM4).
+The hypotheses are $A_n\le n^4$ and
+$\lambda\ge\widetilde Cn^{-13/8}$.
+This is a function-class statement, not a ReLU-specific step.
+Its entropy is
+$\log N_\infty(\epsilon)\lesssim\sqrt{P/\epsilon}\log(CP/\epsilon)$;
+the noise multiplier costs $\widetilde O(P^{2/5}n^{-4/5})$;
+the localized design multiplier adds
+$\widetilde O(Pn^{-13/8}+P^{1/2}n^{-3/2})$; and the two-sided
+design norm comparison costs $\widetilde O(P^2n^{-3})$.
+Young's inequality against $\lambda P$ gives (TM6).
+These are the localized bounded-variation and design-norm lemmas
+of Sections~\ref{sec:sharp-design} and~\ref{sec:localized-proof}. The comparator is bounded by
+$1+2n^{-20}$, changing only absolute constants. Keeping the quadratic
+distance, rather than replacing it by approximation risks, is what
+preserves the exact leading comparator coefficient.
+
+\begin{theorem}[A sharp raw tanh oracle at sufficiently large width]
+\label{thm:tanh-midpoint-oracle}
+Fix a deterministic comparator $g$ as above. For
+$n^{-2}\le\lambda\le1$ with $\lambda\ge\widetilde Cn^{-13/8}$
+and $A_n\le n^4$, on an event of probability at least $1-\delta$,
+simultaneously for all $0<\nu\le1$ and all $N\ge c_0/\lambda$,
+\begin{align}
+ R(\mathbb E_{\Pi_\lambda}f)\le\Pi_\lambda R(f)
+ \le R(g)+\widetilde O\left(
+ \lambda A_n+n^{-4/3}\lambda^{-2/3}
+ +n^{-3}\lambda^{-2}+n^{-3}A_n^2+n^{-1}\right).           \tag{TM7}
+\end{align}
+Constants depend only on the two input-density bounds. The tildes
+suppress fixed powers of logarithms in $n,1/\delta,C,B$.
+\end{theorem}
+\begin{proof}
+The native empirical risk is at most two since tanh is bounded and
+$\mathbb E_\mu f_w(x)^2\le\nu/N\le1$. Jensen bounds the free energy
+by two. Deterministically,
+\[
+ \Pi_\lambda Q^2\le C(1+\lambda^{-2}).
+\]
+Indeed $Z_\lambda\ge e^{-\omega/\lambda}$, whereas the chi-square
+Chernoff bound gives $\mu(Q>u)\le e^{-c\omega u}$ above a fixed
+threshold. Integrate
+$\min(1,e^{\omega/\lambda-c\omega u})$.
+Truncating at a sufficiently large polynomial multiple of $1/\lambda$
+makes all omitted risk and energy terms $O(n^{-10})$ and reduces the
+shell logarithms to the stated logarithms. Integrate (TM6), use (TM4),
+discard its remaining nonnegative distance and energy terms, and use
+the moment bound. Finally $R(g_\sigma)\le R(g)+Cn^{-20}$ and Jensen
+proves the raw-mean claim. Statistical events involve only the common
+function classes and the fixed, $\nu$-independent function $g_\sigma$.
+\end{proof}
+
+\begin{corollary}[An explicit bounded-coefficient polynomial]
+\label{cor:tanh-midpoint-poly}
+In the nontrivial range $A_n\le c n^{3/2}$, choose sufficiently large
+fixed logarithmic factors in
+\[
+ \lambda=\widetilde\Theta\left(
+ \max\{A_n^{-3/5}n^{-4/5},\ A_n^{-1/3}n^{-1}\}\right),
+ \qquad N\ge c_0/\lambda.
+\]
+Then
+\[
+ R(\mathbb E_{\Pi_\lambda}f)\le\Pi_\lambda R(f)
+ \le R(g)+\widetilde O\left(A_n^{2/5}n^{-4/5}
+                         +A_n^{2/3}n^{-1}\right).        \tag{TM8}
+\]
+At fixed coefficient cap $B$, a sufficient sample size for excess
+$\varepsilon$ is
+\[
+ n\ge\widetilde O\left(C\varepsilon^{-5/4}
+                         +C^{4/3}\varepsilon^{-1}\right),             \tag{TM9}
+\]
+with the displayed learner-width condition. The remainder is
+$\widetilde O(C^{4/5}n^{-4/5}+C^{4/3}/n)$.
+The same bound holds against the infimum risk over this bounded-output,
+coefficient-bounded teacher class: choose a deterministic population-risk
+near-minimizer before invoking the probability statement. This does not
+assert a common event for every data-selected comparator.
+\end{corollary}
+\begin{proof}
+The first scale balances $\lambda A_n$ against
+$n^{-4/3}\lambda^{-2/3}$, and the second balances it against
+$n^{-3}\lambda^{-2}$. Taking their maximum bounds both inverse-scale
+terms by the displayed sum. Also $n^{-3}A_n^2\le A_n^{2/3}/n$ when
+$A_n\le n^{3/2}$. The second scale is at least $n^{-3/2}$, above
+the $n^{-13/8}$ floor. At fixed $B$, $A_n=\widetilde O(C^2)$.
+\end{proof}
+
+\paragraph{Other bounded activations.}
+The same result holds for any fixed bounded globally Lipschitz activation
+$\phi$ whose weak first derivative has finite total variation on
+$\mathbb R$. Constants may depend on its supremum, Lipschitz constant,
+and derivative variation. Indeed the subset argument is unchanged,
+its replacement variance is at most
+$\|\phi\|_\infty^2[p(1-p)Q_G/(N-1)+(1-p)M_q/N]$,
+and
+\[
+ \operatorname{Lip}(f)\le\tfrac12\operatorname{Lip}(\phi)Q,
+ \qquad
+ \|f''\|_{\rm TV}\le\tfrac12\operatorname{TV}(\phi')Q.
+\]
+Gaussian teacher smoothing uses only Lipschitz continuity. Thus logistic
+sigmoid and hardtanh are also covered, with the same exponents and
+with $N\lambda$ exceeding an activation-dependent constant.
+No assumption $\phi(0)=0$ is needed. This paragraph does not extend
+the midpoint variance bound to unbounded ReLU or GELU activations.
+
+\begin{corollary}[Marginally sub-Gaussian labels]
+\label{cor:tanh-midpoint-subgaussian}
+Suppose instead that $\E\exp(Y^2/s_Y^2)\le2$. Keep the same teacher
+class, including $\|g\|_\infty\le1$ and its coefficient cap $B$.
+The powers of $A_n,n$ and the fixed-$B$ sample polynomial in
+Corollary~\ref{cor:tanh-midpoint-poly} remain valid up to additional
+logarithmic factors. Define
+\[
+ M_n=\max\{1,s_Y\sqrt{c\log(n/\delta)}\},\qquad
+ \lambda=M_n^2\lambda',
+\]
+where $\lambda'$ is the displayed optimized schedule with sufficiently
+large logarithmic factors. The sufficient learner-width condition is
+$N\lambda'\ge c_0$, and the physical observation variance is
+$nM_n^2\lambda'\nu/N$. The event remains common to all such $N$
+and every $0<\nu\le1$. The bounded-activation extension has the
+same conclusion with activation-dependent constants, including its
+width threshold. Observed labels, the prior and raw predictions
+are unchanged.
+\end{corollary}
+\begin{proof}
+Clip labels to $Y_M$ only in the analysis, keeping the original input
+law, and study $f/M_n$ against $Y_M/M_n$. Use the same physical
+comparison pack as in Lemma~\ref{lem:tanh-teacher-pack}. Its normalized
+mean is $g_\sigma/M_n$, still independent of $\nu$. In (TM1), the
+replacement variance is divided by $M_n^2$, while the entropy terms
+have the same coefficients with $\lambda'$ in place of $\lambda$.
+Thus $N\lambda'\ge c_0$ suffices for the strong objective inequality,
+with path-energy penalty proportional to $\lambda'\Pi Q$ and
+comparison resource $C\lambda'A_n$. The normalized function bounds
+in (TM5) only improve. Its prior empirical risk is at most two for tanh, and at most a fixed
+activation-dependent constant in the extension, so the same moment estimate
+$\Pi Q^2\le C(1+(\lambda')^{-2})$ holds.
+
+Apply the fixed-tolerance statistical proof and multiply normalized
+risks by $M_n^2$. This changes only logarithmic factors and preserves
+the leading coefficient one. The smoothing error of the bounded
+physical teacher is negligible at the chosen $\sigma$. On the event
+that all training labels have magnitude at most $M_n$, this is exactly
+the actual posterior. For the population transfer use
+$|f(x)|^2\le\|\phi\|_\infty^2 Q_G\le\|\phi\|_\infty^2 Q$
+(with $\|\phi\|_\infty=1$ for tanh) and Cauchy--Schwarz; the raw risk difference
+between $Y$ and $Y_M$ is at most
+\[
+ C(1+(\lambda')^{-1})\{\E(Y-Y_M)^2\}^{1/2}
+       +\E|Y^2-Y_M^2|.
+\]
+A sufficiently large fixed $c$ makes this negligible for all the
+stated polynomial schedules. The bounded comparator's corresponding
+risk transfer is smaller. The input density never changes, and the
+common-width and common-scale event follows as before.
+\end{proof}

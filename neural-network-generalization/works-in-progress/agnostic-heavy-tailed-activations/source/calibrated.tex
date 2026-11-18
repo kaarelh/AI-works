@@ -1,0 +1,74 @@
+\section{A coefficient-one oracle for bounded labels}
+\label{sec:calibrated}
+The fixed-temperature theorem separates the noise floor and allows the factor $1+\eta$ on approximation error. For bounded labels, the same prior also gives a coefficient-one oracle through an observable temperature calibration. No smoothness is needed, but its general-risk rate is slower.
+
+Assume throughout this section that $Y\in[-1,1]$. Define
+\[
+ F_S(\beta)=-\frac1{\beta n}\log Z_{S,\beta},\quad
+ \mathcal B_n=\{2^{-j}:3\le j\le\lceil\log_2(64n)\rceil\},\quad
+ \ell=\log(2|\mathcal B_n|/\delta),\quad
+ c_\beta=\frac{1-e^{-4\beta}}{4\beta}.
+\]
+Choose a grid point minimizing the observable score
+\begin{equation}
+ \mathcal C_S(\beta)=\frac{F_S(\beta)+\ell/(\beta n)}{c_\beta}.
+ \label{eq:calibrated-score}
+\end{equation}
+Break ties by the grid order. This selects one Gaussian likelihood and one ordinary posterior; it does not average across temperatures.
+
+\begin{theorem}[An observable coefficient-one oracle]\label{thm:coefficient-one}
+Let $q=a/(2-a)$, $T=K_{m,B}+\ell$, and $u=(T/n)^{1/(q+1)}$.
+For every fixed architecture and comparator class as in Theorem~\ref{thm:fast-oracle}, with probability at least $1-\delta$,
+\begin{equation}
+ R(\bar f_{S,\widehat\beta})
+ \le \int R(f_w)\,d\Pi_{S,\widehat\beta}(w)
+ \le R_*+C\{\sqrt{R_*u}+u\},
+ \qquad R_*=\min_{g\in\calG_{m,B}}R(g).
+ \label{eq:coefficient-one}
+\end{equation}
+The rule uses neither the comparator nor $K_{m,B}$ or $R_*$. Constants are uniform over learner width.
+\end{theorem}
+\begin{proof}
+For $0\le l\le4$, convexity gives
+$e^{-\beta l}\le1-(1-e^{-4\beta})l/4$.
+For every fixed network, independence therefore implies
+\[
+ \E_S\exp\{\beta n[c_\beta R(f_w)-\whR_S(f_w)]\}\le1.
+\]
+Integrate against the prior, use Markov's inequality and relative entropy, and union-bound over the grid. With probability at least $1-\delta/2$, simultaneously at all grid points and for all posterior laws,
+\[
+ c_\beta\E_\rho R(f_w)\le\E_\rho\whR_S(f_w)
+       +\frac{\KL(\rho\|\mu_N)+\ell}{\beta n}.
+\]
+At the Gibbs posterior this gives $\E_{\Pi_{S,\beta}}R(f_w)\le\mathcal C_S(\beta)$.
+
+Fix a population-risk-minimizing $g$ and write $R=R(g)$. If $u>1$, bounded risk gives the theorem after increasing $C$. Suppose $u\le1$. Lemma~\ref{lem:l2-comparison} at mean-square precision $u$ gives, for every training sample,
+\[
+ \E_\nu\whR_S(f_w)
+ \le\whR_S(g)+2\sqrt{\whR_S(g)u}+u,
+ \qquad \KL(\nu\|\mu_N)\le K_{m,B}u^{-q}.
+\]
+This is just Cauchy--Schwarz applied to the cross term of the squared loss.
+
+Take the analytical temperature
+\[
+ \beta_*=\frac1{16}\sqrt{\frac u{R+u}}.
+\]
+It is at most $1/16$ and at least $1/(36n)$, because $R\le4$ and $u\ge1/n$. The grid contains a $\beta\in[\beta_*/2,\beta_*]$.
+The free-energy variational formula gives
+\[
+ F_S(\beta)+\frac\ell{\beta n}
+ \le\whR_S(g)+2\sqrt{\whR_S(g)u}+u+\frac{T u^{-q}}{\beta n}.
+\]
+Since $u^{q+1}=T/n$, the last term equals $u/\beta$ and is at most
+$32\sqrt{u(R+u)}\le32(\sqrt{Ru}+u)$.
+Also $\beta R\le\sqrt{Ru}/16$ and $c_\beta^{-1}\le1+3\beta$.
+
+For the one fixed teacher, bounded-loss Bernstein concentration gives, on another event of probability at least $1-\delta/2$,
+\[
+ \sqrt{\whR_S(g)}\le\sqrt R+C\sqrt{\ell/n}.
+\]
+Because $\ell/n\le u$, substituting this bound in the displayed score leaves at most $R+C(\sqrt{Ru}+u)$. The selected score is no larger. Jensen gives the ordinary posterior-mean claim.
+\end{proof}
+
+When $R_*=0$, the coefficient-one oracle has the same $n^{-(1-a/2)}$ rate as the fixed-temperature theorem. For positive comparator risk, its displayed rate is $n^{-(1-a/2)/2}$, with a square-root dependence on that risk. The fixed-temperature theorem can be substantially better when most of the test loss is irreducible label noise.

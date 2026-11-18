@@ -1,0 +1,50 @@
+\subsection{The regression function can have one hidden layer}
+\label{sec:shallow-teacher-rate}
+The slow rate is genuinely a learner-depth effect: the true regression function need not become deeper when the learner does.
+
+\begin{corollary}[One shallow teacher at every learner depth]
+\label{cor:shallow-teacher-rate}
+In Theorems~\ref{thm:simple-teacher-rate} and~\ref{thm:fixed-law-rate}, and in the Gaussian-noise Corollary~\ref{cor:gaussian-noise-rate}, replace the target by the fixed function
+\[
+ g_*(x)=\tanh(x_1).
+\]
+All rate and mixture conclusions remain valid, with changed positive constants. This target has a width-one, one-hidden-layer implementation with unit coefficients. On the support of the data law, it also has an exact width-two implementation at every hidden learner depth $H$, with one universal finite coefficient cap independent of $H$. Consequently the Gaussian-noise model remains realizable in the deep learner architecture.
+\end{corollary}
+\begin{proof}
+The statistical arguments used the target only through boundedness, fixed positive distance from the affine feature span, and a bounded-coefficient neural implementation. For $g_*$ the affine residual is the same expression as \eqref{eq:fixed-affine-residual}, with $u_j=\tanh(t_j)$ instead of its $H$-fold iterate. It is strictly positive because $\tanh t/t$ is strictly decreasing. All noise, Fourier comparison, occupancy, and projected-sector steps therefore apply without modification.
+
+Here is an exact deep implementation on the four possible first-coordinate values. Put $a=1/4$, $b=3/4$, and
+\[
+ F=\begin{pmatrix}\tanh a&\tanh b\\ \tanh(2a)&\tanh(2b)\end{pmatrix},
+ \qquad c=(a,b)F^{-1},\qquad
+ W=\begin{pmatrix}1\\2\end{pmatrix}c.
+\]
+The matrix $F$ is invertible: the ratio $\tanh(2t)/\tanh t=2/(1+\tanh^2t)$ strictly decreases for $t>0$, so its two columns are independent. The first hidden layer computes $(\tanh T,\tanh(2T))$. For the two positive input values its output columns form $F$, and
+\[
+ WF=\begin{pmatrix}a&b\\2a&2b\end{pmatrix}
+       =\operatorname{arctanh}(F),\qquad \tanh(WF)=F.
+\]
+Oddness supplies the two negative values. Repeating the same matrix $W$ in every subsequent hidden layer therefore preserves these feature values exactly. The readout $(1,0)$ returns $\tanh T$.
+
+All coefficients are bounded by the explicit finite constant
+$B_*:=\max\{2,2\|(a,b)F^{-1}\|_\infty\}$, independent of depth. In fact $B_*<4$. For example, the elementary interval bounds
+\[
+ .244<\tanh(1/4)<.245,\quad .635<\tanh(3/4)<.636,
+\]
+\[
+ .462<\tanh(1/2)<.463,\quad .905<\tanh(3/2)<.906
+\]
+give $|\det F|>.0714$, $|c_1|<.121/.0714<2$, and $|c_2|<.025/.0714<1/2$. This construction agrees with $g_*$ on the data support; it is not asserted to agree at every real first-coordinate value.
+\end{proof}
+
+\begin{corollary}[No joint polynomial in learner depth and inverse accuracy]
+\label{cor:no-joint-depth-accuracy}
+For the Gaussian neural family considered here, there is no sample bound polynomial jointly in input dimension, learner depth, and inverse excess accuracy that works at every sufficiently large learner width, uniformly over data laws, even when the conditional mean has a width-one, one-hidden-layer unit-coefficient implementation. This remains true with Gaussian observation noise, arbitrary data-dependent likelihood-temperature mixing, and the allowed broad Gaussian affine output component.
+\end{corollary}
+\begin{proof}
+Suppose such a polynomial bound had degree $q$ in inverse accuracy. Choose $H$ and then a fixed $D$ so large that $2\rho_Dq<1$. Apply Corollary~\ref{cor:shallow-teacher-rate} with the fixed-law Gaussian-noise construction. Along its subsequence the excess is at least $n_m^{-2\rho_D-o(1)}$ with probability tending to one, simultaneously over the stated large widths and all temperature mixtures. Taking an accuracy smaller by a fixed factor than this lower bound makes the purported sample requirement at most $n_m^{2\rho_Dq+o(1)}=o(n_m)$, a contradiction. The dimension and chosen depth are fixed before sending $m$ to infinity, so their polynomial factors do not affect this comparison.
+\end{proof}
+
+For a concrete choice, $D=4H$ gives input dimension $d=4H+2$, $2\rho_D=2/H+1/H^2$, and $\kappa_D=2-1/(2H^2)<2$. Thus all widths $N\ge n_m^2$ eventually satisfy the requirement, with excess at least $n_m^{-2/H-1/H^2-o(1)}$ on the fixed Gaussian-noise problem.
+
+This is a statement about the exponent of the accuracy dependence. It does not establish an exponential-depth lower bound at one fixed positive accuracy. The target itself is shallow; the growing family of inexpensive noise-fitting functions available to a deeper unrestricted learner creates the tradeoff. Restricting the learner's support changes that family and is outside this negative theorem.

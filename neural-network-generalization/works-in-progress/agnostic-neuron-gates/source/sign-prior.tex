@@ -1,0 +1,38 @@
+\section{The exact sign prior and online mistakes}
+\label{sec:ard-sign-prior}
+The circuit-complexity converse also applies to the exact sign-function prior under an all-input margin convention. It does not require an upper bound on raw network outputs.
+
+Fix a nonempty prescribed input set $\mathcal X\subseteq[-1,1]^d$ and a margin $a>0$. Let
+\[
+ M_a=\{w:|z_w(x)|\ge a\text{ for every }x\in\mathcal X\}.
+\]
+The unconditioned neuron-gate prior has
+\begin{equation}
+ \mu_N(M_a)\ge e^{-Q_0},\qquad
+ Q_0=C\left[H+\log(d+1)+\log(1+a)+\log(1+a^{-1})\right],
+ \label{eq:ard-margin-normalizer}
+\end{equation}
+uniformly in learner width. To see this, condition the sum of the last-layer gates, which is exactly $\operatorname{Gamma}(\kappa,1)$, to be at most
+\[
+ \epsilon=\min\{1/4,a/[C(d+1)K^H]\}.
+\]
+Its negative log probability is at most $C\log(C/\epsilon)$. The last-layer features are independent of these gates, and have expected uniform magnitude at most $C(d+1)K^H$. Thus the readout contribution excluding its bias has conditional expected uniform magnitude at most $a/8$, with a sufficiently large constant. With conditional probability at least $3/4$ its magnitude is at most $a/2$. Independently restrict the readout bias to $[7a/4,9a/4]$. The Student density gives negative log probability at most $C[1+\log(1+a)+\log(1+a^{-1})]$. The resulting function is at least $a$ on the entire input cube, proving \eqref{eq:ard-margin-normalizer}.
+
+\begin{corollary}[The margin-conditioned circuit converse]
+\label{cor:ard-margin-converse}
+Let $f:\mathcal X\to\{-1,1\}$ have conditional sign prior mass
+\[
+ p=\mu_N\{f(x)z_w(x)\ge a\text{ for all }x\in\mathcal X\mid M_a\}>0.
+\]
+Then $f$ is the exact sign of a rational-weight network of hidden depth $H$, width at most $CL_*$ and coefficient bit length at most $CHL_*$, where
+\[
+ L_*=H+1+\log\frac{d+1}{p\min\{1/2,a/2\}}+Q_0.
+\]
+For ReLU and Boolean inputs, this gives an ordinary Boolean circuit of size polynomial in $d,H,L_*$, with no exponential dependence on depth.
+\end{corollary}
+\begin{proof}
+The unconditioned joint event has mass at least $p e^{-Q_0}$. Apply native compression at failure probability half this mass and tolerance $\tau=\min\{1/2,a/2\}$. Its good set intersects the joint event, and the compressed function has the same strict sign at every prescribed input. This proves the rational-network statement.
+
+For ReLU on Boolean inputs, evaluate the dyadic network using exact signed integer arithmetic with a common power-of-two denominator. At each layer the required bit length increases by at most the coefficient bit bound plus $O(\log(d+U+1))$, where $U\le CL_*$ is the compressed width. Comparisons with zero implement ReLU exactly. Schoolbook addition and multiplication therefore produce an ordinary Boolean circuit of polynomial size in the number of coefficients, depth and coefficient bit length. All of these resources are polynomial in $d,H,L_*$ by Theorem~\ref{thm:ard-native-compression}.
+\end{proof}
+

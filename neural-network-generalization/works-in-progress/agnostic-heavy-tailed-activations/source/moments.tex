@@ -1,0 +1,205 @@
+\section{Path moments, entropy and risk}
+\label{sec:moments}
+Throughout this section, first fix an embedding. All bounds will be uniform over embeddings, so they also hold for their mixture.
+
+\begin{lemma}[Selected first moments and native fractional moments]
+\label{lem:path-moments}
+Let $S_\ell$ be the largest $\E R_j^\ell$ over selected hidden neurons, and put
+\[
+ P_\ell=\frac1N\sum_{j=1}^N\E(T_j^\ell)^{\alpha_{\ell+1}}
+ \qquad(1\le\ell\le H).
+\]
+Under the comparison law,
+\begin{align}
+ S_\ell&\le C_\ell(d+1)(B+6)D^{\ell-1},\\
+ P_\ell&\le C_\ell\left[(d+1)
+       +\{(d+1)(B+6)D^{\ell-1}\}^{\alpha_{\ell+1}}\right].
+ \label{eq:path-moments}
+\end{align}
+where $C_\ell$ may depend on depth, the tail indices and the activation, but not on $d,m,B,N,\epsilon$.
+\end{lemma}
+\begin{proof}
+A selected first-layer row satisfies $R_j^1\le b+A(d+1)(B+1)$. For an unselected row, let $p=\alpha_2<\min\{1,\alpha_1\}$. Subadditivity and the finite $p$th coordinate moment give
+\[
+ \E(R_j^1)^p
+ \le C\{1+(d+1)\E|W_{jk}^1|^p\}
+ \le C\{1+(d+1)^{1-p/\alpha_1}\}\le C(d+1).
+\]
+This proves the initial case, including $P_1$.
+
+For a later selected row, conditional on preceding layers, Lemma~\ref{lem:small-coordinate} gives
+\begin{align*}
+ \E\sum_{\mathrm{background}}|W_{jk}^\ell|R_k^{\ell-1}
+ &\le \frac{C\epsilon^{1-\alpha_\ell}}N
+          \sum_k(T_k^{\ell-1})^{\alpha_\ell}.
+\end{align*}
+Here and below conditional expectations are with respect to the current incoming row. Designated coefficients have absolute value at most $B+5$. Therefore
+\begin{equation}
+ S_\ell\le b+Am(B+5)S_{\ell-1}+CA P_{\ell-1},
+ \label{eq:selected-first-moment}
+\end{equation}
+using $\epsilon\le1$.
+
+At an unselected row, take $p=\alpha_{\ell+1}<\alpha_\ell<1$. Lemma~\ref{lem:absolute-sum} conditionally on preceding layers gives
+\[
+ \E[(T_j^\ell)^p\mid\text{preceding layers}]
+ \le C\left[1+
+   \left(\frac1N\sum_k(T_k^{\ell-1})^{\alpha_\ell}\right)^{p/\alpha_\ell}
+ \right].
+\]
+Jensen's inequality applies because $p/\alpha_\ell<1$. At a selected row, $\E(T_j^\ell)^p\le1+S_\ell^p$. Consequently
+\begin{equation}
+ P_\ell\le C\{1+P_{\ell-1}^{p/\alpha_\ell}+S_\ell^p\}.
+ \label{eq:fractional-moment}
+\end{equation}
+Induction first bounds $S_\ell$ by the displayed geometric majorant, because all powers in the fractional recurrence are below one. To retain the sharper bound on $P_\ell$, raise its preceding bound to $p/\alpha_\ell$: the teacher term becomes $\{(d+1)(B+6)D^{\ell-2}\}^{p}$, while the dimension term is at most $d+1$. Together with $S_\ell^p$, these are bounded by~\eqref{eq:path-moments}.
+\end{proof}
+
+The strict tail decrease has a precise use here. We request a moment of order $\alpha_{\ell+1}$ from a native layer of index $\alpha_\ell$, never a moment at its own tail index. Selected nodes have stronger moments because their incoming background coordinates are conditionally truncated.
+
+\begin{lemma}[The comparison entropy]\label{lem:comparison-entropy}
+For the comparison measure, uniformly over every finite $N\ge m$,
+\begin{equation}
+ \KL(\nu\|\mu_N)
+ \le C\left[
+ U_{m,B}\epsilon^{-a}
+ +(d+1)M\log\frac{CM(d+1)(B+6)}\epsilon
+ \right],
+ \qquad a=\alpha_2.
+ \label{eq:comparison-entropy}
+\end{equation}
+\end{lemma}
+\begin{proof}
+At a background coordinate entering layer $\ell$, its conditional KL is
+$-\log\Pp\{|W|\le\epsilon/T_k^{\ell-1}\}$, bounded by
+$C\epsilon^{-\alpha_\ell}(T_k^{\ell-1})^{\alpha_\ell}/N$.
+Thus a selected row costs at most $C\epsilon^{-\alpha_\ell}P_{\ell-1}$ after expectation.
+
+The number of selected rows entering layer $\ell\ge2$ is at most $m^{H-\ell+1}$, with one row at $\ell=H+1$. Since $\alpha_\ell\le a$ and $\epsilon\le1$, the total background cost is bounded by
+\[
+ C\epsilon^{-a}\sum_{\ell=2}^{H+1}m^{H-\ell+1}
+ \left[(d+1)+\{(d+1)(B+6)D^{\ell-2}\}^{\alpha_\ell}\right].
+\]
+Use $D\le C_A m(B+6)$, $\alpha_\ell<1$, and $d+1\ge1$. The second summand in each term is bounded by
+\[
+ C(d+1)m^{H-\ell+1+\alpha_\ell(\ell-2)}
+       (B+6)^{\alpha_\ell(\ell-1)}
+ \le C(d+1)(m+1)^{H-1}(B+6)^{aH}.
+\]
+The first summands satisfy the same bound. Summing the fixed number of layers gives $C U_{m,B}\epsilon^{-a}$.
+
+Use the relative-entropy chain rule for the feedforward conditional law. Lemma~\ref{lem:embedding-entropy} cancels the designated-edge $\log N$ terms in the large-width branch, while $\log N\le\log M$ suffices in the small-width branch. There are at most $M$ designated internal/readout edges and $M(d+1)$ first-layer coordinates. Their interval density costs give the logarithmic term in~\eqref{eq:comparison-entropy}. The moment bounds show that every conditional entropy expectation used in this chain rule is finite.
+\end{proof}
+
+\begin{lemma}[Pointwise raw perturbation moments]\label{lem:raw-perturbation}
+Let $z_g$ denote the comparator's raw readout. Uniformly over the input cube,
+\begin{equation}
+ \E_\nu|z_w(x)-z_g(x)|^2
+ \le V_{m,B}\epsilon^{2-a}.
+ \label{eq:raw-rms}
+\end{equation}
+If $\phi'$ exists and is globally Lipschitz, the constant in $V_{m,B}$ may be enlarged so that also
+\begin{equation}
+ \left|\E_\nu[z_w(x)-z_g(x)]\right|
+ \le V_{m,B}\epsilon^{2-a}.
+ \label{eq:raw-bias}
+\end{equation}
+\end{lemma}
+\begin{proof}
+Teacher hidden values satisfy
+\[
+ \sup_x|h_j^{*,\ell}(x)|
+ \le C(d+1)(B+6)D^{\ell-1}.
+\]
+Fix an input and let $v_\ell$ be the largest selected-neuron second moment of the error. In the first layer,
+$v_1\le A^2(d+1)\epsilon^2/3$.
+
+At a later selected node, write the preactivation error as
+\[
+ \Delta=\sum_{j=1}^m c_j(h_j-h_j^*)+Z.
+\]
+Conditionally on preceding layers, $Z$ is centered, and its variance is bounded by
+\begin{equation}
+ \E[Z^2\mid\text{preceding layers}]
+ \le17\epsilon^2\sum_{\mathrm{designated}}|h_j|^2
+ +\frac{C\epsilon^{2-\alpha_\ell}}N
+       \sum_k(T_k^{\ell-1})^{\alpha_\ell}.
+ \label{eq:adaptive-variance}
+\end{equation}
+For a background term, this follows because its conditional variance is at most
+$C(\epsilon/T_k)^{2-\alpha_\ell}/N$, while $|h_k|^2\le T_k^2$.
+No second moment of an unselected hidden feature is required.
+
+Conditional centering removes the cross term with the preceding-layer error. Since
+$|h_j|^2\le2|h_j-h_j^*|^2+2|h_j^*|^2$, Lipschitzness yields
+\begin{align}
+ v_\ell\le A^2\bigg[&(m^2B^2+34m\epsilon^2)v_{\ell-1}\\
+ &+Cm(d+1)^2(B+6)^2D^{2\ell-4}\epsilon^2
+ +C P_{\ell-1}\epsilon^{2-\alpha_\ell}\bigg].
+ \label{eq:variance-recursion}
+\end{align}
+Induction, $\epsilon^2\le\epsilon^{2-a}$, $\alpha_\ell\le a$, and Lemma~\ref{lem:path-moments} give the following bound. In the active-noise term, $m(B+6)^2\le D^2$ absorbs the apparent extra coefficient factor; the first-layer error itself has no such factor:
+\[
+ v_\ell\le C_\ell(d+1)^2D^{2\ell-2}\epsilon^{2-a}.
+\]
+The readout obeys the same recursion with activation Lipschitz constant one. Its additional factor is bounded by a constant times $D^2$, proving~\eqref{eq:raw-rms}.
+
+For the smooth case, let $J$ be a Lipschitz constant for $\phi'$, and let $b_\ell$ be the largest absolute selected-neuron mean error. Centering of the first-layer preactivation error gives
+$b_1\le J(d+1)\epsilon^2/6$. Taylor's inequality at a later teacher preactivation gives
+\[
+ b_\ell\le AmB\,b_{\ell-1}+\frac J2\E\Delta^2.
+\]
+The already established variance bounds control the second term, yielding
+$b_\ell\le C_\ell(d+1)^2D^{2\ell-2}\epsilon^{2-a}$.
+The readout bias is at most $mB\,b_H$, because all its coefficient perturbations and adaptive backgrounds are conditionally centered. This proves~\eqref{eq:raw-bias}. Every estimate is uniform over embeddings and hence holds for their mixture.
+\end{proof}
+
+\begin{lemma}[A data-independent mean-square comparison]\label{lem:l2-comparison}
+For each $g\in\calG_{m,B}$, $0<r\le1$ and finite $N\ge m$, there is a measure $\nu_{g,r,N}\ll\mu_N$, independent of the observations, satisfying
+\begin{equation}
+ \sup_x\E_\nu|f_w(x)-g(x)|^2\le r,\qquad
+ \KL(\nu\|\mu_N)\le K_{m,B}r^{-q},
+ \qquad q=\frac a{2-a}.
+ \label{eq:l2-comparison}
+\end{equation}
+No smoothness assumption is needed.
+\end{lemma}
+\begin{proof}
+A Lipschitz output link gives $\E|f_w-g|^2\le L_\psi^2V_{m,B}\epsilon^{2-a}$ by Lemma~\ref{lem:raw-perturbation}. Choose $\epsilon=(r/(L_\psi^2V_{m,B}))^{1/(2-a)}$, increasing constants so $\epsilon\le1$. Substitute into~\eqref{eq:comparison-entropy}. The power term is $C U_{m,B}V_{m,B}^{a/(2-a)}r^{-q}$, and $r^q\log(1/r)\le1/(eq)$ absorbs the logarithmic term. This is precisely the resource~\eqref{eq:resources}.
+\end{proof}
+
+\begin{lemma}[A data-independent risk comparison]\label{lem:comparison}
+For each $g\in\calG_{m,B}$, every $0<r\le1$ and every finite $N\ge m$, there is $\nu_{g,r,N}\ll\mu_N$, independent of the observations, such that
+\begin{equation}
+ \E_\nu(f_w(x)-y)^2\le(g(x)-y)^2+r
+ \quad(x\in[-1,1]^d,\ |y|\le1),\qquad
+ \KL(\nu\|\mu_N)\le K_{m,B}r^{-q},
+ \label{eq:risk-comparison}
+\end{equation}
+with exponent $q=2a/(2-a)$ in general, or $q=a/(2-a)$ if $\phi\in C^{1,1}$ and the output link has the sharper regularity specified in Section~2.
+\end{lemma}
+\begin{proof}
+For a Lipschitz output link with constant $L_\psi$, the loss
+$\ell_y(z)=(\psi(z)-y)^2$ is $4L_\psi$-Lipschitz for $|y|\le1$.
+Thus~\eqref{eq:raw-rms} gives risk increase at most
+$4L_\psi\sqrt{V_{m,B}}\,\epsilon^{(2-a)/2}$.
+Choose $\epsilon$ to make this at most $r$ and use~\eqref{eq:comparison-entropy}. Its power term becomes
+\[
+ C U_{m,B}V_{m,B}^{a/(2-a)}r^{-2a/(2-a)}.
+\]
+
+For the sharper case, squared loss after the output link satisfies
+\[
+ \ell_y(z+u)\le\ell_y(z)+d_y(z)u+C_\psi u^2,
+ \qquad |d_y(z)|\le D_\psi,
+\]
+with fixed constants. For clipping, one may use $D_\psi=4,C_\psi=1$, because $\ell_y(z)-z^2$ is concave. For a bounded smooth link with $|\psi'|\le L_\psi$ and $\operatorname{Lip}(\psi')\le J_\psi$, take
+$D_\psi=4L_\psi$ and $C_\psi=L_\psi^2+2J_\psi$.
+Equations~\eqref{eq:raw-rms}--\eqref{eq:raw-bias} therefore give risk increase at most $C V_{m,B}\epsilon^{2-a}$. The chosen cutoff now makes the entropy power term
+\[
+ C U_{m,B}V_{m,B}^{a/(2-a)}r^{-a/(2-a)}.
+\]
+In both cases the same resource~\eqref{eq:resources} suffices. The remaining logarithm of $1/r$ is absorbed using $r^q\log(1/r)\le1/(eq)$. All cutoff choices are at most one after increasing the fixed constants.
+\end{proof}
+
+The pointwise comparison concerns bounded reference labels. To handle unbounded observed labels, the next section applies it with $y=f_0(x)$, then concentrates the comparison-averaged relative loss.

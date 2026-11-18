@@ -1,0 +1,86 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,mathtools,booktabs}
+\usepackage[margin=1in]{geometry}
+\usepackage{microtype}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Bayesian neural networks compete with narrow approximations},pdfauthor={ChatGPT-6 Astra; Claude Opus 5.5; Kaarel H\"anni; Dmitry Vaintrob}}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\newcommand{\R}{\mathbb R}
+\newcommand{\KL}{\operatorname{KL}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\title{Bayesian neural networks compete with narrow approximations}
+\author{ChatGPT-6 Astra \and Claude Opus 5.5 \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{18 November 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+We give an approximation oracle for Bayesian neural networks with one prescribed architecture and independent finite-variance L\'evy weight coordinates. With only a finite second moment for the labels, one can compete with arbitrary-coefficient shallow ReLU teachers of width $n^{1/8}$ at every learner width at least $n^{1/8}+1$. The ordinary posterior mean, trained on all $n$ original observations, has expected risk at most the best such teacher risk plus $\widetilde O(n^{-1/2})$ and a vanishing marginal label-tail term. This holds uniformly over prescribed learner depths up to $n^{1/4}$, at fixed input dimension, for arbitrary Boolean-input laws and for continuous laws satisfying slab anticoncentration. The output range and Gaussian observation variance follow explicit deterministic schedules; there is no architecture mixture, holdout, or data-dependent temperature choice.
+
+With a bounded conditional mean and conditionally sub-Gaussian noise, a single fixed likelihood suffices. Shallow teachers then have expected estimation cost $\widetilde O((C^2+H)/n)$ at every $N\ge C+1$, at fixed input dimension and regularity. One input dimension improves this to $\widetilde O((C+H)/n)$ with a constant-factor width allowance. Higher-depth teachers admit polynomial-width comparison at every sufficiently large learner width. Formula teachers whose biases enter only in the first layer admit a jointly polynomial width--depth bound without widening their graph.
+
+The proof combines cheap prior neighborhoods, coefficient-free compactification, and a sharp expectation inequality for the final posterior mean. The prior has full support and no robustness restriction. A separate validation-selected posterior supplies coefficient-one high-probability guarantees at every teacher-realizable width; that posterior trains on half the sample. All guarantees concern exact Bayesian prediction rather than efficient computation.
+\end{abstract}
+
+\section{Introduction}
+A regression target need not be exactly represented by a small neural network for a complexity-based learning guarantee to be useful. The relevant question is whether a single Bayesian learner can compete with the best narrow approximation, even when its own architecture is much wider and the approximating network has unrestricted coefficient magnitudes.
+
+The main finite-variance result is Corollary~\ref{cor:finite-variance-growing-width}. Its comparison functions are ordinary real-valued shallow ReLU networks, with no coefficient or output bound. The learner uses output range $M_n=n^{1/8}$ and Gaussian observation variance $128n^{1/4}$, keeps the same independent-coordinate parameter prior, and conditions on every original label. Its expected risk is bounded by the best width-$\lfloor n^{1/8}\rfloor$ comparison risk, an $\widetilde O(n^{-1/2})$ term, and
+$5\E[Y^2\mathbf1_{\{|Y|>n^{1/8}\}}]$, which tends to zero for every finite-second-moment label law. It covers every prescribed $N\ge\lfloor n^{1/8}\rfloor+1$, including arbitrarily larger widths. No teacher resource or noise model is supplied to the learner.
+
+A fixed output scale and fixed observation variance give sharper finite-sample bounds when the conditional mean is bounded and the centered noise is conditionally sub-Gaussian. We write
+\[
+ R(f)=\E(f(X)-Y)^2,\quad f_0(x)=\E[Y\mid X=x],\quad
+ R_0=\E(Y-f_0(X))^2,\quad A(f)=R(f)-R_0.
+\]
+Theorem~\ref{thm:shallow-additive-depth} gives the additive $C^2+H$ resource for shallow teachers at every realizable learner width. Corollary~\ref{cor:pure-Bayes-growing-width} treats arbitrary fixed teacher depth with a slower polynomially growing comparison-width class. The formula-network result in Section~\ref{sec:formula-compactification} is polynomial jointly in teacher width and depth, at unchanged width; its no-fanout condition is a condition on the comparison graph, not on the learner's prior. Theorems stated under the fixed-scale noise assumptions are distinguished from the finite-variance extension throughout.
+
+All these primary results concern the ordinary mean of one final posterior trained on all observations, with a deterministic likelihood choice. Their sharp coefficient-one conclusion is in expectation over the sample. Theorem~\ref{thm:all-width-holdout} provides a different, high-probability guarantee at general teacher depth: select one variance using independent validation observations and return the posterior trained on the other half. It does not imply the same bound after an all-data refit.
+
+Section~\ref{sec:deterministic-all-width} also supplies an all-data expectation theorem at every realizable width for arbitrary fixed teacher depth. It uses a finite-parameter argument at smaller learner widths and may prescribe an extremely small observation variance there. This completes an existence statement, while leaving open a comparably useful fixed-likelihood theorem at those widths.
+
+The architecture is fixed before data in every case. There is no prior over network sizes, and no claim of efficient posterior computation. The prior has full support and finite second moments; its non-Gaussian shape supplies favorable approximation cost without a support restriction to robust or sparse networks. General coefficient-free compilation can still be expensive in teacher depth, although additional learner depth has only an additive polynomial cost. On continuous domains, input regularity has a concrete role: Proposition~\ref{prop:close-input-obstruction} gives a width-one target on two sufficiently close inputs for which every realized sample leaves constant posterior-mean error. Thus a uniform coefficient-free width-only rate cannot hold over all input distributions on a continuous domain.
+
+\paragraph{Related work.}
+Dense independent heavy-tailed Bayesian neural-network priors are established tools. Castillo and Egels~\cite{castillo-egels} prove posterior and variational contraction for deterministic dense architectures and independent heavy-tailed weights, including Cauchy laws. Their results concern prescribed architecture/scaling regimes and structured smoothness classes. Nguyen, Westerhout and Arbel~\cite{nguyen} study sample-size-independent shallow ReLU priors with random finite width. L\'evy random expansions also have a substantial statistical history~\cite{wolpert}. Our target is the every-prescribed-width agnostic comparison with arbitrary-coefficient neural-network approximants, and the coefficient-free compilers needed to obtain it. Ordinary and fractional Gaussian posteriors differ here only by their observation variance; that terminology is not a novelty claim. The sharp expectation argument adapts the leave-one-out exponential-weights method of H\o gsgaard, Rebeschini and Wegel~\cite{hrw}; the arbitrary-prior and conditional sub-Gaussian extension is proved in Appendix~\ref{sec:all-data-expectation}.
+
+Coefficient reduction itself is also established. Maass~\cite{maass} proves polynomial-bit, same-size representations for fan-out-one networks with Boolean outputs on finite rational input sets. Vardi and Shamir~\cite{vardi-shamir} obtain polynomial-weight approximations of arbitrary-weight constant-depth ReLU networks with polynomial width and a constant-factor depth increase under discrete and regular continuous input assumptions. Brand, Ganian and Rocton~\cite{brand-ganian-rocton} reduce weights on edges leaving hidden neurons of out-degree one to signs, and use the resulting linear structure for exact training. We use related reductions for real-valued comparisons, track their prior costs, and combine them with the Bayesian risk inequalities proved here.
+
+\input{./model-and-compilers}
+\input{./finite-variance-main}
+\input{./compiler-resources}
+\input{./shallow-Boolean}
+\input{./shallow-continuous-grid}
+\input{./additive-depth}
+\input{./univariate-splines}
+\input{./formula}
+\input{./close-input-obstruction}
+\input{./all-width-results}
+\input{./deterministic-all-width}
+
+\appendix
+\input{./scalar-output-padding}
+\input{./bounded-reset-padding}
+\input{./all-data-expectation}
+\input{./finite-variance-transfer}
+\input{./log-comparison-statistics}
+
+\begin{thebibliography}{99}
+\bibitem{levy-core} ChatGPT-6 Astra, Claude Opus 5.5, Kaarel H\"anni, and Dmitry Vaintrob. \emph{Fast agnostic learning with infinitely divisible neural-network priors}. 2026. \href{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/works-in-progress/agnostic-levy-fanin}{Source and verification record}.
+\bibitem{boolean} ChatGPT-6 Astra, Claude Opus 5.5, Kaarel H\"anni, and Dmitry Vaintrob. \emph{A width-only approximation guarantee for Bayesian neural networks on Boolean inputs}. 2026. Coefficient-free Boolean compilation theorem. \href{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/works-in-progress/agnostic-width-only-boolean}{Source and verification record}.
+\bibitem{regular} ChatGPT-6 Astra, Claude Opus 5.5, Kaarel H\"anni, and Dmitry Vaintrob. \emph{Learning narrow-network approximations with Gaussian Bayesian ReLU networks}. 2026. Polyhedral approximation under hyperplane anticoncentration. \href{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/works-in-progress/agnostic-width-only-regular}{Source and verification record}.
+\bibitem{pdim} Peter L. Bartlett, Nick Harvey, Christopher Liaw, and Abbas Mehrabian. Nearly-tight VC-dimension and pseudodimension bounds for piecewise linear neural networks. \emph{Journal of Machine Learning Research} 20(63):1--17, 2019.
+\bibitem{brand-ganian-rocton} Cornelius Brand, Robert Ganian, and Mathis Rocton. New complexity-theoretic frontiers of tractability for neural network training. \emph{Advances in Neural Information Processing Systems} 36, 2023. Lemmas~1--2. \url{https://papers.neurips.cc/paper_files/paper/2023/hash/b07091c16719ad3990e3d1ccee6641f1-Abstract-Conference.html}.
+\bibitem{maass} Wolfgang Maass. Bounds for the computational power and learning complexity of analog neural nets. \emph{SIAM Journal on Computing} 26(3):708--732, 1997. Theorem~2.1. \url{https://doi.org/10.1137/S0097539793256041}.
+\bibitem{vardi-shamir} Gal Vardi and Ohad Shamir. Neural networks with small weights and depth-separation barriers. \emph{Advances in Neural Information Processing Systems} 33:19433--19442, 2020. \url{https://papers.nips.cc/paper/2020/file/e1fe6165cad3f7f3f57d409f78e4415f-Paper.pdf}.
+\bibitem{castillo-egels} Isma\"el Castillo and Paul Egels. Posterior and variational inference for deep neural networks with heavy-tailed weights. \emph{Journal of Machine Learning Research} 26(122):1--58, 2025. \url{https://www.jmlr.org/papers/v26/24-0894.html}.
+\bibitem{nguyen} Hien Duy Nguyen, Jacob Westerhout, and Julyan Arbel. Sieve-free ReLU Bayesian priors with near-minimax posterior contraction. arXiv:2610.23308, 2026.
+\bibitem{wolpert} Robert L. Wolpert, Merlise A. Clyde, and Chong Tu. Stochastic expansions using continuous dictionaries: L\'evy adaptive regression kernels. \emph{Annals of Statistics} 39(4):1916--1962, 2011.
+\bibitem{hrw} M. M. H\o gsgaard, Patrick Rebeschini, and T. Wegel. Aggregation with exponential weights is optimal in expectation. arXiv:2607.02247, 2026.
+\end{thebibliography}
+\end{document}

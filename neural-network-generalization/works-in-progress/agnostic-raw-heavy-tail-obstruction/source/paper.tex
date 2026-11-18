@@ -1,0 +1,206 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,mathtools}
+\usepackage[margin=1in]{geometry}
+\usepackage{microtype}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Failures of unbounded Bayesian prediction: a tanh network and Gaussian-mixture priors},pdfauthor={ChatGPT-6 Astra; Claude Opus 5.5; Kaarel H\"anni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\KL}{\operatorname{KL}}
+\title{Failures of unbounded Bayesian prediction:\\a tanh network and Gaussian-mixture priors}
+\author{ChatGPT-6 Astra \and Claude Opus 5.5 \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{18 November 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+We give an explicit obstruction to distribution-uniform approximation
+oracles for the raw posterior mean of a Bayesian neural network.
+The model consists of one biased tanh neuron, with three independent
+Student weights of any fixed tail index $p>2$, and an ordinary Gaussian
+likelihood of any fixed positive variance. The prior has finite second
+moments and is unchanged with sample size. There are noiseless
+distributions on $[-1,1]\times[-1,1]$ for which the posterior mean has
+test squared risk at least $c n^{1/3}$ with constant probability,
+although the fixed zero network has risk at most $n^{-1/3}$.
+The same divergence holds in expectation. The distributions depend on
+$n$ and put mass $1/n$ on a rarely observed test input. The proof
+controls the posterior normalizer in both the nearly saturated and
+locally linear regimes, and bounds the signed prediction numerator;
+it is a lower bound for the actual posterior mean, rather than for
+posterior-averaged risk. Thus bounded labels and finite-variance
+heavy-tailed coordinates alone do not justify removing an output link
+from a random-design Bayesian oracle theorem.
+The same construction works with unit-norm inputs in dimension two,
+including smooth atomless input laws, and a uniform refinement covers
+polylogarithmically growing deterministic likelihood variances.
+
+A separate generic example shows that even a uniformly sub-Gaussian
+function supremum and bounded conditional Gaussian covariance do not
+suffice for a fixed-temperature agnostic raw-mean oracle. One fixed
+mixture of centered rank-one Gaussian function priors on a compact
+interval fails at every fixed temperature: its risk grows linearly
+along a sample-size sequence, while the zero comparison has fixed
+risk and constant relative entropy. The adverse laws may depend on
+the temperature. An extension permits arbitrarily light unbounded
+amplitude tails, including arsinh-Gaussian amplitudes, with potentially
+slower divergence. These generic examples are not finite neural-network
+priors. All results concern varying adverse data laws, not inconsistency
+under one fixed law.
+\end{abstract}
+
+\section{Introduction}
+Heavy-tailed weight priors can assign substantial probability to small
+neural networks with large coefficients. This can be useful for
+approximation, but an unbounded readout creates a separate prediction
+problem. A function may fit observed inputs well and have a large
+value at an input that the sample misses. A Gaussian likelihood only
+penalizes its values on the observed inputs.
+
+We show this problem within a standard finite neural model. There is
+one input coordinate, one tanh hidden neuron with a bias, and one
+linear readout coefficient. All three parameters are independent
+Student variables with tail index $p>2$. Thus the prior is continuous,
+has full parameter support and finite second moments, and uses no
+architecture mixture. The learner is its ordinary posterior mean
+under the Gaussian likelihood using all observations, with any fixed
+positive observation variance. Both likelihood and prediction use
+the raw network output.
+
+For every sufficiently large $n$, we construct a bounded, noiseless
+distribution $P_n$ such that
+\[
+ P_n^{\otimes n}\{R_{P_n}(\bar f_{S_n})\ge c n^{1/3}\}\ge q,
+ \qquad R_{P_n}(0)\le n^{-1/3},
+\]
+where $c,q>0$ depend only on the fixed prior and likelihood variance.
+Here $R_P(h)=\mathbb E_P[(h(X)-Y)^2]$ is population risk at a fresh
+random input. The comparator is the same zero function for every $n$.
+The bound therefore rules out a distribution-uniform vanishing
+oracle remainder, even against this single elementary comparator.
+It also rules out such a theorem in expectation.
+
+The construction has two common inputs very close to zero, with
+small opposite labels, and a third input of probability $1/n$ with
+label zero. With constant probability the sample misses the third
+input and contains balanced numbers of the first two. Fitting those
+two labels requires a very large local slope. That slope can be
+split between the incoming and outgoing weights. The two matching
+Student tails and the likelihood Jacobian leave a range of readout
+amplitudes whose contribution to the posterior mean is logarithmic
+in the required slope. We choose that logarithm to be of order
+$n^{2/3}$. The rare input then contributes order $n^{1/3}$ to test
+risk. A separate integration argument controls neurons that fit by
+saturation; this is needed to upper-bound the full normalizer.
+
+The scope is deliberately precise. The distributions vary with $n$;
+we do not establish inconsistency under one fixed distribution.
+Their common inputs approach one another rapidly, and we impose no
+fixed input regularity constant. The theorem concerns this
+width-one Student prior, rather than every heavy-tailed prior or
+every larger architecture. Its conclusion is that finite coordinate
+variance and bounded labels alone are insufficient for the proposed
+raw-mean oracle. Output links, output-norm restrictions, or additional
+input and prior structure can materially change the problem.
+
+Appendix~\ref{sec:gaussian-mixture-obstruction} isolates a different
+limitation of generic raw-prediction arguments. Its prior is fixed on
+smooth functions on $[0,1]$, has a Gaussian tail for the supremum, and
+is a mixture of centered Gaussian processes with covariance diagonal
+at most one. Nevertheless its raw posterior mean has divergent risk
+against a fixed-risk, constant-entropy zero comparator. The latent
+features can suppress their values at observed zero-label inputs
+while retaining a positive average at unobserved inputs. This is a
+general function-prior construction, not another standard neural
+architecture. It shows why a fixed-kernel Gaussian argument cannot
+be extended using only conditional covariance bounds and native
+output tails.
+
+Appendix~\ref{sec:general-amplitude-obstruction} extends this generic
+obstruction to every symmetric full-support amplitude law with finite
+first moment. It retains that law's native supremum-tail bounds, even
+when its moments grow only logarithmically. The failure is still at
+fixed temperature, so it is compatible with positive raw-prediction
+theorems whose temperature grows as the square of a logarithm.
+
+\paragraph{Related work.}
+Dalalyan and Tsybakov~\cite{dt} prove sharp PAC--Bayesian aggregation
+bounds for squared loss at a deterministic design. Their later
+analysis~\cite{dt-sparse} explicitly accommodates unbounded regression
+functions and heavy-tailed priors. Those guarantees concern the
+average error on the specified design; the present obstruction
+concerns population error at a fresh random input that can be absent
+from the sample. There is no conflict between the two statements.
+Castillo and Egels~\cite{ce} establish contraction results for dense
+deterministic neural architectures with independent heavy-tailed
+weights. Such positive results under their statistical assumptions
+do not assert the distribution-uniform agnostic raw-mean oracle
+refuted here. Our contribution is the explicit fixed neural model
+and the direct control of its signed posterior mean; we make no
+general claim that negative results for Bayesian prediction are new.
+
+\input{obstruction}
+\input{circle}
+\input{temperature}
+
+\section{Consequences and limits}
+The adverse sample event has probability tending to $e^{-1}$.
+Consequently the lower bound persists at any fixed confidence level
+whose allowed failure probability is smaller than some positive
+constant. The target is noiseless, so there is no irreducible noise
+floor. The construction works for every fixed positive likelihood
+variance, with its constants and adverse distributions allowed to
+depend on that variance.
+
+The result also distinguishes the posterior mean from a posterior
+draw. A large posterior second moment need not force a large mean,
+because positive and negative predictions can cancel. Here the
+good-fit region has positive prediction at the rare input, while the
+absolute contribution from its complement is exponentially smaller
+than the positive numerator. This explicit sign argument is what
+turns the tail calculation into a lower bound for the raw mean.
+
+The finite second moment of the prior guarantees that every
+finite-sample posterior mean and risk in this construction is finite.
+The statement is a divergence along a sequence of sample sizes and
+data distributions, rather than an undefined posterior moment.
+Clipping each prediction to the label range would prevent this
+particular amplitude divergence. The theorem does not, by itself,
+establish any oracle guarantee for a clipped learner.
+
+Section~\ref{sec:raw-growing-temperature} gives the corresponding
+range of exponents and deterministic temperatures. These variants
+retain the same prior and architecture. The likelihood variance
+changes with sample size only when the temperature sequence is
+explicitly allowed to do so.
+
+The generic examples rule out even fixed multiplicative agnostic
+factors under its covariance and tail assumptions. It does not
+contradict fixed-temperature realizable guarantees that localize the
+prior near the true regression function: its cheap zero comparison
+has approximation error $1/2$. Nor does it establish failure of any
+particular normalized Gaussian-readout neural prior. A positive
+theorem for such a prior may use feature structure beyond the
+generic assumptions considered here.
+
+\appendix
+\input{gaussian-mixture}
+\input{general-amplitude}
+
+\begin{thebibliography}{9}
+\bibitem{dt} Arnak Dalalyan and Alexandre B. Tsybakov.
+Aggregation by exponential weighting, sharp PAC-Bayesian bounds and sparsity.
+\emph{Machine Learning} 72(1--2):39--61, 2008.
+\url{https://doi.org/10.1007/s10994-008-5051-0}.
+\bibitem{dt-sparse} Arnak S. Dalalyan and Alexandre B. Tsybakov.
+Sparse regression learning by aggregation and Langevin Monte-Carlo.
+\emph{Journal of Computer and System Sciences} 78(5):1423--1443, 2012.
+\url{https://doi.org/10.1016/j.jcss.2011.12.023}.
+\bibitem{ce} Isma\"el Castillo and Paul Egels.
+Posterior and variational inference for deep neural networks with heavy-tailed weights.
+\emph{Journal of Machine Learning Research} 26(122):1--58, 2025.
+\url{https://www.jmlr.org/papers/v26/24-0894.html}.
+\end{thebibliography}
+\end{document}

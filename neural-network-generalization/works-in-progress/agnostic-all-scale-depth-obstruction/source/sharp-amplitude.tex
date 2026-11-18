@@ -1,0 +1,165 @@
+\section{A sharper small-amplitude comparison}
+\label{sec:sharp-amplitude}
+The constant initial variance shrink in Theorem~\ref{thm:main} is unnecessary when depth is long enough relative to the prescribed amplitude. Starting with the native first layer gives a comparison cost linear in small amplitude.
+
+\begin{lemma}[The reciprocal bound on a larger variance interval]
+\label{lem:inverse-large}
+Lemma~\ref{lem:inverse} remains valid uniformly for $0<v\le1$, after changing its absolute constant.
+\end{lemma}
+\begin{proof}
+The lower bound $\tanh^2(\sqrt v Z)\ge(v/4)\min\{Z^2,1\}$ holds for every $v\le1$. Hence $F(v)\ge c_0v$ for an absolute $c_0>0$, while $F(v)\le v$. The normalized variable $U$ is therefore at most $Z^2/c_0$ and at least $\min\{Z^2,1\}/4$. Every step of the earlier proof is unchanged.
+\end{proof}
+
+\begin{theorem}[Linear cost for a small prescribed output]
+\label{thm:small-amplitude}
+There are absolute constants $a_0,C_0>0$ such that, whenever
+\[
+ 0<|a|\le a_0,\qquad H\ge C_0/|a|,\qquad N\ge8,
+\]
+there is a law $\rho\ll\mu$ satisfying
+\begin{align}
+ \frac2N\KL(\rho\|\mu)&\le C_0|a|+C_0H/N,\label{eq:linear-amplitude-cost}\\
+ \E_\rho z&=a,\qquad \E_\rho(z-a)^2\le |a|/N.\label{eq:linear-amplitude-error}
+\end{align}
+The first layer retains its exact native Gaussian law.
+\end{theorem}
+\begin{proof}
+For this proof put $q_{-1}=1$ and $q_j=F(q_{j-1})$. The upper drift estimate $F(q)\le q-cq^2$ is valid for all $q\le1$, by the same restriction to $|Z|\le1$ used in Lemma~\ref{lem:drift}. Thus
+\[
+ \frac1{q_{j+1}}\ge\frac1{q_j}+c,
+ \qquad q_j\le\frac1{1/q_0+cj}.
+\]
+The sequence enters $(0,1/64]$ after an absolute number of steps. Choose $a_0>0$ sufficiently small that the first index $m$ with $q_m\le|a|$ occurs after this entry. The lower drift estimate then gives
+\[
+ |a|/2\le q_m\le|a|,\qquad m\le C/|a|.
+\]
+Increase $C_0$ so the depth hypothesis ensures $H\ge m+1$.
+
+Let $M=\lfloor(H+m-1)/2\rfloor$. Use the mean-variance schedule
+\[
+ q_0,q_1,\ldots,q_M,q_{M-1},\ldots,q_m,
+\]
+appending one repeated $q_m$ if needed to obtain exactly $H$ hidden layers. The first layer is native, with preactivation variance one. Every forward transition has deterministic covariance factor one. Every reverse transition lies in the small-variance regime and has the factor analyzed in~\eqref{eq:finite-action}. Consequently its total deterministic cost is at most
+\[
+ C\sum_{j=m}^{M-1}q_j^2+Cq_m^2\le Cq_m\le C|a|.
+\]
+The possible repeated endpoint has cost $O(q_m^2)$, because its factor is $q_{m-1}/q_m=1+O(q_m)$.
+
+Use the same exact feedback covariances~\eqref{eq:control}. Lemma~\ref{lem:inverse-large} makes the total finite-width correction at most $CH/N$, including the early forward transitions. The final conditional readout shift has normalized entropy
+\[
+ a^2\E\widehat q_H^{-1}\le\frac{a^2}{q_m}(1+C/N)\le C|a|.
+\]
+Its conditional output mean is exactly $a$, and its average output variance is $q_m/N\le|a|/N$. This proves both assertions.
+\end{proof}
+
+\section{Matching upper tails for the unchanged prior}
+\label{sec:matching-upper}
+Under the original independent Gaussian prior, the empirical hidden squared norms
+$q_\ell=\|h^\ell\|^2/N$ form a Markov chain. Conditional on $q_\ell=q$,
+\[
+ q_{\ell+1}\ \stackrel{d}=\ \frac1N\sum_{i=1}^N\tanh^2(\sqrt q\,Z_i).
+\]
+They lie in $[0,1]$, and the first one is also at most one.
+
+\begin{lemma}[An exponential supermartingale with quantitative drift]
+\label{lem:variance-supermartingale}
+There are absolute constants $\theta,b>0$ such that
+\begin{equation}
+ \E[e^{\theta N q_{\ell+1}}\mid q_\ell=q]
+ \le e^{\theta Nq-bNq^2}\qquad(0\le q\le1).
+ \label{eq:variance-supermartingale}
+\end{equation}
+In particular $e^{\theta Nq_\ell}$ is a positive supermartingale.
+\end{lemma}
+\begin{proof}
+Put $U=\tanh^2(\sqrt qZ)$. We have $U\le qZ^2$, and for every integer $k\ge2$,
+\[
+ \E|U-\E U|^k\le2^k\E U^k
+ \le4^kq^k k!.
+\]
+Expanding the exponential series gives, whenever $|t|q\le1/8$,
+\[
+ \log\E e^{t(U-\E U)}\le32t^2q^2.
+\]
+The global upper drift estimate $F(q)\le q-cq^2$ holds on $[0,1]$. Choose
+$0<\theta\le\min\{1/8,c/64\}$ and set $b=\theta c/2$. Independence of the $N$ rows yields
+\[
+ \E e^{\theta Nq_{\ell+1}}
+ \le\exp\{N[\theta F(q)+32\theta^2q^2]\}
+ \le\exp\{\theta Nq-bNq^2\}.
+\]
+The case $q=0$ is immediate.
+\end{proof}
+
+\begin{lemma}[Decay to a small variance with exponential confidence]
+\label{lem:variance-tail}
+There are absolute constants $C,c>0$ such that for $0<r\le1/4$,
+\begin{equation}
+ H\ge C/r\quad\Longrightarrow\quad
+ \Pr_\mu(q_H\ge r)\le C e^{-cNr}.
+ \label{eq:variance-tail}
+\end{equation}
+\end{lemma}
+\begin{proof}
+First consider a chain started with $q\le R$, where $0<R\le1$. If it already lies below $R/2$, nothing is required. Otherwise stop at the first time it reaches $q\le R/2$ or $q\ge2R$. Before stopping, $q\ge R/2$, so~\eqref{eq:variance-supermartingale} shows that
+\[
+ \exp\{\theta N q_{t\wedge\tau}+(bNR^2/4)(t\wedge\tau)\}
+\]
+is a supermartingale. On $\{\tau>T\}$, it is at least
+$\exp\{\theta NR/2+bNR^2T/4\}$. Its initial value is at most $e^{\theta NR}$, so
+\[
+ \Pr(\tau>T)\le\exp\{\theta NR/2-bNR^2T/4\}.
+\]
+The positive supermartingale $e^{\theta Nq_t}$ also gives probability at most $e^{-\theta NR}$ of reaching $2R$ before the lower endpoint. This follows by optional stopping at a finite horizon and then letting the horizon increase. Consequently, for an absolute $K$,
+\begin{equation}
+ \Pr\{\text{the chain has not reached }R/2
+              \text{ within }\lceil K/R\rceil\text{ steps}\}
+ \le2e^{-c_1NR}.
+ \label{eq:phase-descent}
+\end{equation}
+The same bound holds conditional on any starting stopping time with $q\le R$.
+
+Apply~\eqref{eq:phase-descent} at successive dyadic levels
+$R_j=2^{-j}$, starting from $q_1\le1$. Stop when $R_J\le r/4$ for the first time. Then $R_J>r/8$, and the total allowed time is at most
+$\sum_{j<J}\lceil K/R_j\rceil\le C/r$.
+The probability any phase fails is bounded by
+\[
+ 2\sum_{j<J}e^{-c_1NR_j}\le C_2e^{-c_2Nr}
+\]
+when $Nr\ge1$: the levels are geometrically spaced and the last starting level exceeds $r/4$. If $Nr<1$, the desired assertion follows by increasing $C_2$.
+
+After reaching $q\le r/4$, the supermartingale in Lemma~\ref{lem:variance-supermartingale} bounds the probability of ever returning to $q\ge r$ by $e^{-3\theta Nr/4}$. Combining this with the phase bound proves~\eqref{eq:variance-tail} at every later time, after adjusting the absolute constant in the depth requirement to include the first layer.
+\end{proof}
+
+\begin{theorem}[Laplace-order one-input tails at critical scaling]
+\label{thm:laplace-tails}
+There are absolute $a_0,c,C>0$ such that, for $0<a\le a_0$ and $H\ge C/a$,
+\begin{equation}
+ \Pr_\mu(|z|\ge a)\le C e^{-cNa}.
+ \label{eq:laplace-upper}
+\end{equation}
+If in addition $N\ge C H/a$, then for either sign of $a$,
+\begin{equation}
+ e^{-CN|a|}\le
+ \mu\{|z-a|\le|a|/4\}\le C e^{-cN|a|}.
+ \label{eq:laplace-neighborhood}
+\end{equation}
+Thus the precision-normalized one-output neighborhood cost is of order amplitude, rather than amplitude squared times depth, in this critical deep regime.
+\end{theorem}
+\begin{proof}
+On $q_H\le a$, the conditional Gaussian readout has variance at most $a/N$, so
+\[
+ \Pr(|z|\ge a)\le\Pr(q_H>a)+2e^{-Na/2}.
+\]
+Lemma~\ref{lem:variance-tail} proves~\eqref{eq:laplace-upper}.
+
+For the lower neighborhood bound use Theorem~\ref{thm:small-amplitude}. Its output variance is at most $|a|/N$, so the comparison law puts probability at least $3/4$ on the radius-$|a|/4$ neighborhood once $N|a|\ge64$. Its normalized entropy is at most $C|a|+CH/N$. The width hypothesis absorbs the second term into the first, and the binary relative-entropy inequality gives the lower bound. The upper bound follows from~\eqref{eq:laplace-upper} with threshold $3|a|/4$, after enlarging the depth constant. Negative prescribed outputs are covered by symmetry.
+\end{proof}
+
+\begin{corollary}[Small second moment and larger noncentral tails]
+The unchanged prior satisfies $\E z^2\le C/(NH)$ for an absolute constant $C$. This is compatible with Theorem~\ref{thm:laplace-tails}: its amplitude regime has $H|a|$ bounded below, and its tail exponent is of order $N|a|$, rather than the order $NHa^2$ suggested by a Gaussian with that variance.
+\end{corollary}
+\begin{proof}
+Put $m_\ell=\E q_\ell$. The global drift and Jensen give
+$m_{\ell+1}\le m_\ell-cm_\ell^2$, so $m_H\le C/H$ by taking reciprocals. Conditional on hidden weights, the centered readout has variance $q_H/N$. Averaging proves the claim. The displayed comparison of exponents concerns the noncentral tail regime; it is not a rejection of a central-limit approximation on its own scale.
+\end{proof}

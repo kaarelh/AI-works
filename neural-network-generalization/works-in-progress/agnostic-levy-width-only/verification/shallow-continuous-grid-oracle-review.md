@@ -1,0 +1,5 @@
+# Independent review of continuous shallow compactification
+
+Reviewer: `/root/oracle_calibration`, 18 November 2026. I independently checked the exact source authored by `/root/agnostic_proof_audit`.
+
+The bounded-integer polyhedron lemma follows from the active-row minimum-norm representation and integer Gram determinant. Multiplying rational-grid constraints by Q gives the required integer matrix without assuming rational teacher outputs. The closed activation masks preserve ReLU semantics at zero. Counting activation and regionwise clipping hyperplanes from both networks bounds the bad-cell probability uniformly in their coefficient magnitudes; affine agreement at grid vertices then implies equality outside these cells. The risk comparison cancels the irreducible noise, and the logarithmic coefficient cap gives the displayed quadratic-width, nearly linear-depth resource through stable padding. The final-tanh truncation extension also checks, including the raw threshold M, its additional logarithmic cost, and the same-width threshold. No substantive gap found. This is not a Lean verification.

@@ -1,0 +1,127 @@
+\section{A coefficient-free oracle for an independent Student prior}
+\label{sec:Student-Boolean-oracle}
+Let $X\in\{-1,1\}^d$ and $|Y|\le1$, with arbitrary joint law. The learner has hidden tanh activation, width $N$, hidden depth $H$, a constant input feature, no internal biases, a scalar linear readout, and final clipping to $[-1,1]$. Denote its bounded output by $f_w$. The width and depth are fixed before observing the data.
+
+For $0<\alpha<2$, every parameter coordinate in a row of fan-in $F$ is independent with density obtained by scaling
+\[
+ p_\alpha(t)=c_\alpha(1+t^2)^{-(1+\alpha)/2}
+\]
+by $F^{-1/\alpha}$. Thus $F=d+1$ in the first layer and $F=N$ internally and in the readout. This is a fixed, continuous, full-support prior $\pi_N$. It contains no distribution over architectures. The posterior and ordinary mean are
+\[
+ d\Pi_{S,\beta}=Z_{S,\beta}^{-1}
+  e^{-\beta n\widehat R_S(f_w)}d\pi_N(w),
+ \qquad \widehat f_{S,\beta}(x)=\int f_w(x)d\Pi_{S,\beta}(w).
+\]
+The physical Gaussian observation variance is $1/(2\beta)$. Clipping is part of the network mean used by the likelihood.
+
+We import the Student-prior comparison theorem~\cite{student} in the following precise form. For every bounded-coefficient tanh teacher of hidden width $m\le N$, depth $H$, coefficient cap $B\ge1$, and final clipping, and every $0<r\le1$, there is a comparison law such that
+\begin{equation}
+ \E_\nu\widehat R_S(f_w)\le\widehat R_S(g)+r,
+ \qquad \operatorname{KL}(\nu\Vert\pi_N)\le K_{m,B}r^{-q},
+ \qquad q=\alpha/(2-\alpha),
+ \label{eq:Student-comparison}
+\end{equation}
+where, at fixed $\alpha,H$,
+\begin{equation}
+ K_{m,B}=\widetilde O_{\alpha,H}\left(
+ (m+1)^H\{(d+1)^q(1+mB)^{2Hq}+d+1\}\right).
+ \label{eq:Student-resource}
+\end{equation}
+The logarithmic factors involve only $d,m,B$ and constants depending on $\alpha,H$, not learner width or original teacher coefficients. The comparison is uniform over every finite $N\ge m$. The theorem applies to tanh because it is bounded with bounded first and second derivatives.
+
+\subsection{The two observable certificates}
+Put $F_S(\beta)=-(\beta n)^{-1}\log Z_{S,\beta}$. The Student theorem supplies an ordinary final-posterior certificate on the grid
+\[
+ \mathcal B_n=\{2^{-j}:3\le j\le\lceil\log_2(64n)\rceil\}.
+\]
+For $c_\beta=(1-e^{-4\beta})/(4\beta)$ and the explicit confidence logarithm $\ell_n=\log(8|\mathcal B_n|/\delta)$, the certificate is
+\[
+ B_{\rm imp}(S)=\min_{\beta\in\mathcal B_n}
+                \frac{F_S(\beta)+\ell_n/(\beta n)}{c_\beta}.
+\]
+Its minimizing grid value is denoted $\beta_{\rm imp}$. A bounded-loss exponential inequality proves that this certificate bounds the posterior-average risk on one event for the entire grid. With comparison resource $K$, it has the leading-one oracle
+\begin{equation}
+ B_{\rm imp}\le R(g)+C_q\left[
+ \left(\frac{(K+\ell_n)R(g)}n\right)^{1/(q+2)}
+       +\left(\frac{K+\ell_n}n\right)^{1/(q+1)}\right].
+ \label{eq:Student-certificate-oracle}
+\end{equation}
+This imported statement includes bounded-loss Bernstein concentration for one fixed comparison function. The temperature selection knows none of the comparison resources.
+
+For smaller widths, use a finite-parameter certificate. The external sigmoid-network theorem of Karpinski and Macintyre~\cite{karpinski} gives a polynomial bound on VC dimension in the number of parameters and computational units. A safe consequence for tanh networks, including a final variable threshold, is
+\begin{equation}
+ \operatorname{Pdim}(\mathcal F_{N,H})
+ \le c\{W_N+d+1\}^4,
+ \qquad W_N=N(d+2)+(H-1)N^2.
+ \label{eq:tanh-pseudodimension}
+\end{equation}
+One may instead retain the sharper order $(W_NU_N)^2$, where $U_N$ is the number of computational units. Tanh is an affine transformation of the logistic sigmoid, and pseudodimension is VC dimension after adding the variable threshold input and one affine output. Final clipping does not increase it. We use the stated classical theorem as an external input, without a coefficient restriction.
+
+Let $\widehat r_N=\inf_{f\in\mathcal F_{N,H}}\widehat R_S(f)$. Full support and continuity imply $F_S(\beta)\to\widehat r_N$ as $\beta\to\infty$. Choose the first integer $j\ge0$ with
+\[
+ F_S(2^j)\le\widehat r_N+1/n,
+ \qquad\beta_{\rm par}=2^j.
+\]
+This value is finite, positive and measurable, by density of rational parameter vectors and continuity of the finite-sample likelihood. Relative VC uniform convergence for bounded squared loss gives the observable certificate
+\[
+ B_{\rm par}=F_S(\beta_{\rm par})+
+       c\sqrt{F_S(\beta_{\rm par})a_N}+ca_N,
+ \qquad a_N=\frac{C_0[(W_N+d+1)^4\log(en)+\log(8/\delta)]}{n}.
+\]
+Here $C_0$ and the certificate constant $c$ are fixed sufficiently large numerical constants supplied by the stated VC inequality; they are chosen once, independently of the data and all comparison parameters. This bounds posterior-average risk at the data-dependent temperature. The learner selects the smaller of $B_{\rm imp}$ and $B_{\rm par}$ and returns the ordinary mean of that one posterior. No averaging across temperatures or architectures occurs.
+
+\begin{theorem}[A Student-prior width-only guarantee]
+\label{thm:Student-Boolean-width}
+There is a numerical $b\ge2$ such that the following holds. Let $d,C,h\ge1$, $H\ge b(h+1)$, and fix any learner width $N\ge2C+1$ before observing the data. Let $\mathcal G_{C,h}$ be the class of arbitrary-coefficient, width-$C$, hidden-depth-$h$ ReLU networks with biases and a scalar affine readout, and put
+\[
+ R_* =\inf_{g\in\mathcal G_{C,h}}R(g),\qquad
+ Q_\varepsilon=4(d+1)(C+1)^h+
+                      \lceil\log_2(1024/\varepsilon)\rceil+2.
+\]
+For every $0<\varepsilon\le1$, the selected Student/tanh posterior satisfies
+\[
+ R(\widehat f_S)\le R_*+\varepsilon
+\]
+with probability at least $1-\delta$, provided
+\begin{equation}
+ n\ge\widetilde O_{\alpha,H}\left(
+  \mathcal J_\varepsilon
+   \{R_*\varepsilon^{-(q+2)}+\varepsilon^{-(q+1)}\}\right),
+ \quad
+ \mathcal J_\varepsilon=(d+1)^{q+5}
+             Q_\varepsilon^{b[H(1+4q)+8]},
+ \quad q=\frac\alpha{2-\alpha}.
+ \label{eq:Student-Boolean-samples}
+\end{equation}
+Constants are independent of learner width and of every original ReLU coefficient magnitude. The prior and calibration use none of $C,h$, the comparison coefficients, $R_*$, or $\varepsilon$.
+\end{theorem}
+\begin{proof}
+Choose a deterministic $g$ with $R(g)\le R_*+\varepsilon/32$. Lemma~\ref{lem:tanh-Boolean-compiler}, at uniform tolerance $\varepsilon/64$, gives a tanh comparison network $q_g$ whose clipped output has risk at most $R(g)+\varepsilon/16$, width $m\le Q_\varepsilon^b$, and coefficient cap $B\le Q_\varepsilon^b$. Pad to the prescribed hidden depth using the compiler's bit-copying layers.
+
+If $N\ge m$, insert this comparison in \eqref{eq:Student-certificate-oracle}. Its resource obeys
+\[
+ K_{m,B}\le\widetilde O_{\alpha,H}\left(
+ (d+1)^{q+1}Q_\varepsilon^{bH(1+4q)}\right).
+\]
+The sample budget \eqref{eq:Student-Boolean-samples} therefore makes the excess at most $\varepsilon/4$. The $O(\varepsilon)$ increase in comparison risk contributes only to the $\varepsilon^{-(q+1)}$ sample term.
+
+If $2C+1\le N<m$, Lemma~\ref{lem:narrow-tanh-embedding} puts $s(g)$ in the uniform closure of the bounded-output tanh class $\mathcal F_{N,H}$. Consequently $\widehat r_N\le\widehat R_S(s(g))$, without needing any coefficient bound on that narrow approximation. Bounded-loss concentration for the fixed function $s(g)$ and the parameter certificate give
+\[
+ B_{\rm par}\le R(s(g))+
+ \widetilde O\left(\sqrt{R(s(g))V_m/n}+V_m/n\right),
+ \quad V_m\le c_H(d+1)^4(m+1)^8.
+\]
+Here \eqref{eq:tanh-pseudodimension} and $N<m$ were used. Since $R(s(g))\le R(g)$, a sufficient sample budget is
+$\widetilde O(V_m[R_*\varepsilon^{-2}+\varepsilon^{-1}])$.
+This is dominated by \eqref{eq:Student-Boolean-samples}: $q>0$, $\varepsilon\le1$, and $\mathcal J_\varepsilon$ includes the coefficient-controlled comparison resource and the conservative parameter-count resource.
+
+Both branches use the same learner, which selects the smaller valid certificate. Allocate confidence among the two certificate events and the fixed-comparator concentration events. The prior in each PAC--Bayes application is fixed before the sample. This proves the assertion for every prescribed eligible width, with the same width-independent sample bound.
+\end{proof}
+
+For Cauchy coordinates, $q=1$, so the accuracy dependence is
+$\widetilde O(\operatorname{poly}_{h,H}(d,C)
+ [R_*\varepsilon^{-3}+\varepsilon^{-2}])$.
+For $\alpha=1/2$ it is
+$\widetilde O(\operatorname{poly}_{h,H}(d,C)
+ [R_*\varepsilon^{-7/3}+\varepsilon^{-4/3}])$.
+The teacher-width degrees are conservative, but no original coefficient cap enters them. The probability statement is for each architecture fixed before the sample, with constants uniform in $N$; it does not claim one common event for arbitrary data-dependent selection from infinitely many learner widths.

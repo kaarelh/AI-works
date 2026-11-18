@@ -1,0 +1,73 @@
+\section{The wide limit is a random formula}
+\label{sec:wide-formula-limit}
+The distinction between shared circuits and formulas has a structural explanation for independent sparse coordinates. At any fixed resolution, the ancestors of the output become a tree as learner width tends to infinity. This does not by itself give a lower bound on learning a particular function: a function may have several very different implementations.
+
+\begin{theorem}[A random-formula limit]
+\label{thm:wide-formula-limit}
+Fix input dimension $d$, hidden depth $H$, the globally Lipschitz activation, and the scalar L\'evy prior. The pushforwards of $\mu_N$ to raw network functions converge weakly on $C([-1,1]^d)$ as $N\to\infty$. For each fixed $\epsilon>0$, their approximation obtained by deleting internal/readout jumps of magnitude at most $\epsilon$ converges in total variation to a finite random formula law. The limiting formula has Poisson offspring of mean
+\[
+ \Lambda_\epsilon=\mathfrak n\{|u|>\epsilon\}
+\]
+at each internal row and at the readout, independent edge weights with law
+$\mathfrak n(du)\mathbf1_{|u|>\epsilon}/\Lambda_\epsilon$, and independent native first-layer random features at its leaves. Its hidden depth is at most $H$. For the truncated laws, a total-variation error bound is
+\[
+ \frac{C(H+1)^3(1+\Lambda_\epsilon)^{2H}}{N},
+\]
+truncated at one. The full limiting prior is the limit in distribution of these finite random-formula laws as $\epsilon\downarrow0$. For the bounded metric $d(f,g)=\min\{1,\|f-g\|_\infty\}$, its Wasserstein distance from the width-$N$ function prior is at most $C_H(1+\log N)^{2H}/N$ for $N\ge2$, with fixed-depth constants independent of width.
+\end{theorem}
+\begin{proof}
+Keep the first layer native, and truncate only the remaining hidden layers and readout. A truncated incoming row is exactly a Poisson collection of jumps of total intensity $\Lambda_\epsilon$: each jump chooses its child index uniformly from $N$ coordinates, and its magnitude and sign have the displayed law. Incoming rows are independent.
+
+Generate instead an independent depth-$H$ Poisson tree, with fresh first-layer random features at the bottom. Couple it to the finite-width network by assigning each newly generated hidden vertex an independent uniform index in its layer. Until an index is reused in the same layer, all visited rows are fresh and their laws agree exactly with the corresponding independent tree rows. Conditional on the tree size $S$, a union bound gives collision probability at most $S^2/(2N)$. For a Poisson branching process, the generation second moments satisfy
+\[
+ \E Z_{j+1}^2=\Lambda_\epsilon^2\E Z_j^2
+                         +\Lambda_\epsilon\E Z_j,
+ \qquad \E Z_j=\Lambda_\epsilon^j.
+\]
+Consequently $\E S^2\le C(H+1)^3(1+\Lambda_\epsilon)^{2H}$. On the event of no collisions the two functions agree identically, which proves the total-variation claim. Multiple jumps choosing one coordinate are included among the collision events.
+
+The first-moment truncation argument in the compression theorem also applies when the first layer is left native. Uniformly in $N$,
+\[
+ \E\|z_N-z_N^{(\epsilon)}\|_\infty
+ \le C\epsilon(H+1)K^{H+1}
+\]
+for a fixed $K$ depending only on the activation and scalar law. Use the bounded complete metric
+$d(f,g)=\min\{1,\|f-g\|_\infty\}$ on the function space. The corresponding Wasserstein distance between the full and truncated laws is bounded by the same expression. The limiting tree laws are therefore Cauchy in this metric as $\epsilon\downarrow0$: compare two truncation levels through the finite-width coupling and then let $N\to\infty$. Completeness of the Wasserstein space over this bounded complete Polish metric gives their limiting law. The same triangle inequality proves convergence of the original function priors to it. In fact the distance from a truncated tree law to the limiting law is at most $C\epsilon(H+1)K^{H+1}$. Taking $\epsilon=1/N$ and using $\Lambda_\epsilon\le C\log(C/\epsilon)$ gives the stated quantitative rate.
+\end{proof}
+
+\begin{corollary}[Fixed-data posterior limit]
+Append any continuous final link into $[-1,1]$, use a fixed Gaussian likelihood variance, and fix a finite observed data set. The corresponding posterior laws of raw functions converge weakly to the posterior obtained by tilting the limiting prior in Theorem~\ref{thm:wide-formula-limit}. Bounded posterior-mean predictions converge at every input.
+\end{corollary}
+\begin{proof}
+For the fixed data set, the likelihood is a bounded, strictly positive continuous functional of the raw function. Its normalizer converges to a positive number. Integrating bounded continuous functions against the normalized likelihood proves posterior convergence; evaluating the bounded final link at an input gives the prediction assertion.
+\end{proof}
+
+\begin{proposition}[The finite-width cost of a shared motif]
+\label{prop:shared-motif}
+Fix a layered output-relevant graph $G$ with $V$ distinct hidden vertices and $E$ internal/readout edges. Put $J=E-V\ge0$. At resolution $0<\epsilon\le1$, let $A_G$ be the event that the network contains an injective embedding of $G$ in which every indicated weight has absolute value greater than $\epsilon$. Under either independent scalar prior in this paper,
+\[
+ \mu_N(A_G)\le\lambda_\epsilon^E N^{-J},
+ \qquad\lambda_\epsilon=C\log(C/\epsilon).
+\]
+Additional coefficient restrictions only decrease this probability. With a final link into $[-1,1]$ and Gaussian likelihood written as $\exp[-\sum_i(f(X_i)-Y_i)^2/T]$, its posterior probability obeys
+\[
+ \Pi_{S_n}(A_G)
+ \le \exp\left[\frac4T\sum_{i=1}^n(1+|Y_i|)\right]
+             \lambda_\epsilon^E N^{-J}.
+\]
+In particular, for labels bounded by $B_Y$, assigning posterior mass at least $\delta$ to this shared motif requires
+\[
+ n\ge\frac{T}{4(1+B_Y)}
+   \left[J\log N-E\log\lambda_\epsilon-\log(1/\delta)\right]_+.
+\]
+\end{proposition}
+\begin{proof}
+For signed beta-prime weights the scalar estimates above give
+$\Pr(|W|>\epsilon)\le\lambda_\epsilon/N$. For L\'evy increments, split at jump size $\epsilon/2$. The probability of a larger jump is at most $\Lambda(\epsilon/2)/N$. The remaining absolute jump sum has expectation at most $C\epsilon/N$, so Markov's inequality bounds the probability it exceeds $\epsilon/2$ by $C/N$. This proves the same estimate.
+
+There are at most $N^V$ injective placements of the hidden vertices. For each placement the $E$ distinct indicated coordinates are independent, so their probability is at most $(\lambda_\epsilon/N)^E$. The union bound proves the first claim. The squared-loss oscillation over predictions in $[-1,1]$ is at most $4(1+|Y_i|)$ for each observation. The posterior-to-prior likelihood ratio is therefore at most the displayed exponential factor, giving the remaining conclusions.
+\end{proof}
+
+The factor $N^{-J}$ matches the uncancelled $J\log N$ in a direct shared-circuit comparison. A tree embedding has one outgoing edge per hidden occurrence and $J=0$. A shared computation has at least one extra outgoing edge and $J>0$. Independent coordinates make each such edge rare separately, while a vertex contributes only one choice of location.
+
+This is an obstruction to retaining a prescribed shared implementation at fixed resolution, not a proof that its function needs $\Omega(\log N)$ samples. A formula can compute the same function, and the posterior may use that representation instead. Proving a function-level lower bound would require an additional lower bound on all sufficiently accurate formula representations and their prior mass. The limiting tree description identifies that remaining question without assuming such a complexity separation.

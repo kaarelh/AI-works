@@ -1,0 +1,119 @@
+\section{A fixed-temperature oracle for noisy regression}
+\label{sec:noisy-regression}
+We now prove Theorem~\ref{thm:fast-oracle}. The central quantity is the excess risk above the regression function, which removes the irreducible noise from the complexity penalty.
+
+Write $f_0(x)=\E[Y\mid X=x]$, $\xi=Y-f_0(X)$, and
+\[
+ R_0=\E\xi^2,\qquad
+ A(f)=\E(f(X)-f_0(X))^2=R(f)-R_0.
+\]
+The assumption is $|f_0|\le1$ and
+\begin{equation}
+ \E[e^{t\xi}\mid X]\le e^{\sigma^2t^2/2}
+ \quad\text{for every }t\in\R.
+ \label{eq:conditional-subgaussian}
+\end{equation}
+No Gaussian assumption is needed. Bounded labels in $[-1,1]$ satisfy this with $\sigma^2=1$ by conditional Hoeffding. Gaussian label noise of variance at most $\sigma^2$ is another example.
+
+Let $s=1+\sigma^2$ and $\beta=\eta/(32s)$, where $0<\eta\le1$. Every network output $f_w$ remains bounded, although the labels need not be. The posterior is still~\eqref{eq:posterior}; its Gaussian observation variance is the constant $16s/\eta$, independent of sample size and learner width.
+
+\begin{lemma}[A relative-loss PAC--Bayes inequality]\label{lem:relative-pac}
+With probability at least $1-\delta/2$, simultaneously for every probability measure $\rho$ on weights,
+\begin{equation}
+ c_\beta^{\mathrm{rel}}\E_\rho A(f_w)
+ \le\E_\rho[\whR_S(f_w)-\whR_S(f_0)]
+       +\frac{\KL(\rho\|\mu_N)+\log(2/\delta)}{\beta n},
+ \label{eq:relative-pac}
+\end{equation}
+where
+\[
+ c_\beta^{\mathrm{rel}}=\frac{1-e^{-4\beta(1-2\beta\sigma^2)}}{4\beta}
+       \ge1-4s\beta=1-\eta/8.
+\]
+\end{lemma}
+\begin{proof}
+Fix $f=f_w$ and put $e=f-f_0$. The difference of squared losses is $e(X)^2-2\xi e(X)$. Conditional sub-Gaussianity gives
+\[
+ \E[e^{-\beta\{(f(X)-Y)^2-(f_0(X)-Y)^2\}}\mid X]
+ \le e^{-\beta(1-2\beta\sigma^2)e(X)^2}.
+\]
+Since $0\le e^2\le4$, convexity on that interval yields
+\[
+ \E e^{-\beta\{(f(X)-Y)^2-(f_0(X)-Y)^2\}}
+ \le e^{-\beta c_\beta^{\mathrm{rel}} A(f)}.
+\]
+The lower bound on $c_\beta^{\mathrm{rel}}$ follows from $1-e^{-u}\ge u-u^2/2$ and the chosen range of $\beta$. Independence, integration against the prior, Markov's inequality and the entropy variational inequality prove~\eqref{eq:relative-pac}. The individual squared losses have finite expectation under~\eqref{eq:conditional-subgaussian}; their difference has the exponential moment just established.
+\end{proof}
+
+The comparison measure may itself be averaged before applying concentration. This is useful because the perturbation lemma is naturally a statement about its expected risk.
+
+\begin{lemma}[Concentration for a fixed comparison law]\label{lem:comparison-concentration}
+Let $\nu$ be any fixed probability measure on bounded predictions, independent of the data, and let $a=\E_\nu A(f_w)$. With probability at least $1-e^{-\ell}$,
+\begin{equation}
+ \E_\nu[\whR_S(f_w)-\whR_S(f_0)]
+ \le a+C\sqrt{sa\ell/n}+Cs\ell/n.
+ \label{eq:comparison-bernstein}
+\end{equation}
+\end{lemma}
+\begin{proof}
+Set
+\[
+ v(x)=\E_\nu(f_w(x)-f_0(x))^2,\qquad
+ b(x)=\E_\nu(f_w(x)-f_0(x)).
+\]
+Then $0\le v\le4$, $b^2\le v$, and one comparison-averaged excess loss is $L=v(X)-2\xi b(X)$, of mean $a$. For $0\le t\le1/(16s)$, conditional sub-Gaussianity gives
+\[
+ \E e^{t(L-a)}
+ \le e^{-ta}\E e^{(t+2\sigma^2t^2)v(X)}
+ \le\exp\left\{a\left[\frac{e^{4(t+2\sigma^2t^2)}-1}{4}-t\right]\right\}
+ \le e^{6sa t^2}.
+\]
+For the last inequality, put $u=t+2\sigma^2t^2\le9t/8$, use $4u\le1$ and $e^{4u}-1\le4u+16u^2$. Chernoff's bound for the independent observations then gives~\eqref{eq:comparison-bernstein}, with an absolute constant. Equivalently, optimize over $t\le1/(16s)$ to obtain a square-root term and a linear term.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:fast-oracle}]
+Fix a deterministic risk-minimizing $g\in\calG_{m,B}$ and write $A_*=A(g)$. The minimum exists by compactness of the bounded coefficient cube and dominated convergence. For $0<r\le1$, Lemma~\ref{lem:l2-comparison} supplies a data-independent law with
+\[
+ \E_\nu\E_X|f_w(X)-g(X)|^2\le r,\qquad
+ \KL(\nu\|\mu_N)\le K_{m,B}r^{-q},\quad q=a/(2-a).
+\]
+The squared triangle inequality, with its freely chosen approximation slack, gives
+\begin{equation}
+ a_\nu:=\E_\nu A(f_w)
+ \le(1+\eta/8)A_*+(1+8/\eta)r.
+ \label{eq:l2-triangle}
+\end{equation}
+This is the step that removes any smoothness requirement.
+
+At the Gibbs posterior, the right side of~\eqref{eq:relative-pac} equals
+$F_{S,\beta}-\whR_S(f_0)+\log(2/\delta)/(\beta n)$.
+The free-energy variational formula and the comparison law bound it by
+\[
+ \E_\nu[\whR_S(f_w)-\whR_S(f_0)]
+       +\frac{K_{m,B}r^{-q}+\log(2/\delta)}{\beta n}.
+\]
+Apply Lemma~\ref{lem:comparison-concentration} with $\ell=\log(2/\delta)$ and Young's inequality. On the intersection of the two events,
+\[
+ c_\beta^{\mathrm{rel}}\E_{\Pi_{S,\beta}}A(f_w)
+ \le(1+\eta/8)a_\nu
+       +\frac{Cs\ell}{\eta n}
+       +\frac{32sK_{m,B}r^{-q}}{\eta n}.
+\]
+Substitute~\eqref{eq:l2-triangle} and divide by
+$c_\beta^{\mathrm{rel}}\ge1-\eta/8$. For $0<\eta\le1$,
+\[
+ \frac{(1+\eta/8)^2}{1-\eta/8}\le1+\eta.
+\]
+All other terms are bounded by
+\[
+ \frac C\eta\left(r+\frac{sK_{m,B}r^{-q}}n+\frac{s\ell}n\right).
+\]
+Let $u=[s\{K_{m,B}+\ell\}/n]^{1/(q+1)}$. If $u\le1$, take $r=u$, obtaining remainder $Cu/\eta$. If $u>1$, the bound $A(f_w)\le4$ gives the result after increasing $C$. Adding $R_0$ and applying Jensen proves the general theorem.
+
+For the optional smooth refinement, Lemma~\ref{lem:comparison} instead gives
+$a_\nu\le A_*+r$ with the same exponent $q=a/(2-a)$. The same calculation then leaves
+$C[r+s(K_{m,B}r^{-q}+\ell)/(\eta n)]$. Choosing
+$r=[s\{K_{m,B}+\ell\}/(\eta n)]^{1/(q+1)}$ proves the sharper dependence on $\eta$, with the bounded-risk fallback when this exceeds one.
+\end{proof}
+
+The unknown regression function appears only inside the proof. The learner uses neither $f_0$, $R_0$, nor the comparator. The prescribed likelihood variance depends only on the chosen approximation factor $1+\eta$ and a known conditional sub-Gaussian proxy $\sigma^2$; an upper bound on that proxy is sufficient.

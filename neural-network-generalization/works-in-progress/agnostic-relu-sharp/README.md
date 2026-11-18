@@ -4,39 +4,37 @@
 
 Authors: ChatGPT-6 Astra, Claude Opus 5.5, Kaarel Hänni, Dmitry Vaintrob. Authors are listed in alphabetical order.
 
-This paper gives matching strict exponent thresholds for a dense Gaussian Bayesian ReLU network to compete in squared loss with the best smaller network. The positive result covers arbitrary bounded labels and ordinary raw-output posterior means. The negative result uses one data law that defeats **every** likelihood temperature, including a temperature chosen after seeing the data.
+A Bayesian ReLU network with a fixed dense Gaussian architecture can compete in squared loss with smaller approximating networks, but the allowed growth of their width and weights has a sharp boundary in substantial prior regimes. Above that boundary, one noisy distribution defeats every likelihood temperature and even arbitrary data-dependent mixtures of temperatures, prior scales, and sufficiently large learner widths.
 
-## Main result
+## The threshold
 
-Let `H≥1` be the number of hidden layers and `L=H+1` the depth including the linear readout. Compare with teachers of width at most `n^a` and coefficient bound `n^b`.
+Let `H≥1` count hidden layers, with total depth `L=H+1` including the linear readout. Compare with teachers of width `n^a` and coefficient cap `n^b`.
 
-| Growth condition | Result |
+| Comparison class | Result |
 |---|---|
-| `H a + (H+1)b < 1/2` | An explicit likelihood calibration gives a coefficient-one oracle bound at every learner width above the teacher width. At fixed dimension and depth, the excess is `Õ(n^(-(1−2Ha−2(H+1)b)/(H+1)))`. |
-| `H a + (H+1)b > 1/2`, with `a>0` | A single law forces excess MSE at least `1/100`, with high probability, simultaneously for every temperature and every learner width above `O(n^a+n log n)`. Its conditional mean is a globally bounded teacher in the comparator class. |
+| `H a + (H+1)b < 1/2` | An explicit likelihood calibration gives a coefficient-one oracle bound for the ordinary raw posterior mean, with excess `Õ(n^(-(1−2Ha−2(H+1)b)/(H+1)))`. This holds at every eligible width for actual finite `γ≥2`, and at every `γ≥1` with one hidden layer. A strong-prior version also holds. |
+| `H a + (H+1)b > 1/2`, `a>0` | One law forces positive constant excess for **every mixture** of the allowed raw posterior means. The conclusion is simultaneous for all widths above `O(n^a+n log n)`, every finite prior base variance `0<σ²≤1/N`, and every positive likelihood temperature. |
 
-Both directions hold for **actual finite Gaussian posteriors at every canonical exponent `γ≥2`**. With one hidden layer they hold at every `γ≥1`. The negative direction extends to **every `γ≥1` at every hidden depth**, at the larger width threshold `N_nat=O_H(n^a+n^(2−1/L) polylog(n))`. This includes mean field. Corresponding strong-prior results also hold. The equality case remains open.
+The negative scale range includes all canonical exponents `γ≥1` and any additional stronger prefactor. It requires no width or prior-strength limit. The mixture may depend on the training sample, validation data, or the data law. It may also contain components whose raw posterior means are clipped to `[-1,1]` before mixing. Clipping only after mixing, and averaging clipped posterior draws, are distinct conventions; the mixture theorem does not cover those. Individual posteriors satisfy stronger constant lower bounds for those clipped-draw conventions too.
 
-A separate fixed-width corollary uses a width-4 teacher with coefficient cap `n^b`, where `b>1/(2(H+1))`. Thus the literal width-only oracle guarantee, without coefficient restrictions, fails for this learner family.
+At a fixed coefficient cap the critical width exponent is `a=1/(2H)`. If width and cap both grow as `n^a`, it is `a=1/(4H+2)`. Equality remains open. For multiple hidden layers, the matching positive boundary at finite `1≤γ<2` remains open; weaker positive results throughout that interval are available in the [joint activation paper](../agnostic-lipschitz-oracles/).
 
-With a fixed coefficient cap, the critical width power is `a=1/(2H)`. If width and coefficient cap both grow as `n^a`, it is `a=1/(4H+2)`.
+The positive bounds have polynomial dimension dependence. The lower bound uses `d=ceil(log2 n)+2`, and therefore concerns a guarantee uniform over dimensions and input laws, rather than a lower bound at one fixed dimension. Input covariance eigenvalues lie between `1/20` and one.
 
-The positive bounds have polynomial dimension dependence. The lower bound uses `d=Θ(log n)`, so “sharp” concerns guarantees uniform over input laws and dimensions; this is not a lower bound at one fixed dimension. The negative law is discrete, lies in the real input cube, and has covariance eigenvalues in `[1/20,1]`.
+## What the lower bound rules out
 
-## Model and proof ideas
+The counterexample's conditional mean is exactly a globally bounded small ReLU teacher. At every sufficiently large integer sample count, its Bayes squared risk is `9/10`, and every allowed mixture has excess at least `1/300000` with probability tending to one. A separate variant confines label noise to any fixed input mass `p∈(0,9/10]`, with Bayes risk `p` and mixture excess at least `p³ exp(−2p)/600000`. This is localized regression noise, not independent Boolean label flips.
 
-Each learner has a specified fully connected architecture with independent centered Gaussian weights, first-layer biases supplied by a constant input, and no internal biases. Teachers with biases at every layer are included by an exact constant-neuron construction that adds one neuron per hidden layer, at unchanged depth and coefficient cap `B≥1`. The Gaussian observation likelihood is calibrated jointly with the prior. There is no distribution over network sizes and no all-input margin conditioning.
+A width-four teacher already suffices if its coefficient cap grows as `n^b` with `b>1/(2(H+1))`. Thus width alone cannot support a distribution-uniform oracle guarantee for this learner family. With unit-bounded coefficients, the growing-width result rules out one sample polynomial jointly in teacher width, depth, and input dimension, even when prior scale and temperature are selected or mixed after seeing the data. It does not establish an exponential-depth lower bound at one fixed teacher width or settle the Boolean-classification depth question.
 
-Positive homogeneity allows an exact teacher implementation with energy proportional to `m^(2H/(H+1)) B²`, up to the displayed depth and dimension factors. A product-of-layer-norm capacity bound then gives the oracle inequality. A Gaussian comparison distribution around that implementation extends the positive theorem to the stated finite priors.
+## Model and proof
 
-For the lower bound, an exact Boolean-coordinate memorizer is cheap in energy, while a narrow bounded tent function supplies an expensive signal. Putting noise and that signal in one distribution forces a tradeoff that no temperature resolves. The posterior-mean argument controls residuals or prediction differences directly. To extend the negative result throughout `γ≥1`, a shifted Gaussian memorizer retains the prior covariance: paired ReLU populations transmit their conditional mean difference exactly, while their finite-width fluctuations have an explicit variance bound. This avoids shrinking all Gaussian coordinates.
+The prior has independent Gaussian coordinates with variances `Nσ²/d`, `σ²`, and `σ²/N` in the first layer, internal layers, and readout. The likelihood has observation variance `nλσ²` and uses raw squared error. Internal layers have no biases; a constant input supplies first-layer biases. Ordinary biased comparison MLPs compile exactly using one extra constant neuron per hidden layer, at unchanged depth and coefficient cap. No distribution over architectures is used in the positive results.
 
-A further corollary confines all label noise to an input event of any fixed probability `p∈(0,0.9]`. Its Bayes MSE is `p`, and the same all-temperature failure has excess at least `p² exp(−p)/256`. Noisy labels and the difficult signal keep unit amplitude; the difficult signal occupies less input mass as `p` decreases. This is localized regression noise, not independent label flips, and the input-conditioning constant may depend on `p`.
+Positive homogeneity gives a balanced teacher implementation with energy proportional to `m^(2H/(H+1)) B²`. A norm-capacity estimate and a Gaussian comparison law give the positive result.
 
-## Scope
+The negative construction combines a steep bounded tent signal with a cheap noisy component. Its memorizer has many first-layer features but only two active neurons in each later hidden layer. Narrowing Gaussian noise only in rows entering those active neurons controls approximation error at a cost independent of learner width; the rest of the dense Gaussian network remains present. This gives the full finite mean-field-or-stronger scale range at width `O(n log n)`.
 
-These are results for noisy real-valued regression. They do not settle the Boolean-classification depth question. They imply that this unrestricted learner family has no universal sample polynomial jointly in teacher width, teacher depth, and dimension, even with unit-bounded teacher coefficients and data-dependent temperature selection. They do not prove exponential depth dependence at one fixed teacher width.
+For mixtures, the key identity is specific to the Gaussian readout and likelihood. If `y` is the training-label vector and `f` the raw posterior mean's training predictions, then `y·f≥||f||²`. Empirical failure against the conditional mean therefore gives a common linear population witness for all temperatures and scales. Averaging cannot cancel that witness.
 
-For multiple hidden layers, the sharp positive threshold in the canonical finite interval `1≤γ<2` remains open. The negative threshold now holds there. The [joint activation paper](../agnostic-lipschitz-oracles/) gives weaker positive bounds throughout that interval at fixed input dimension. A mixture of posteriors over temperatures followed by raw averaging is also outside the negative theorem.
-
-The arguments have independent AI-agent mathematical review and reproducible source builds. They are not Lean verified or externally peer reviewed. Run `./build.sh` to rebuild the PDF.
+These are information-theoretic results for exact inference. They do not supply an efficient sampler. The papers have conventional mathematical proofs and independent AI-agent checks; they are not Lean verified or externally peer reviewed. Run `./build.sh` for a clean three-pass PDF build.

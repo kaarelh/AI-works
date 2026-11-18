@@ -1,0 +1,142 @@
+\section{A rate obstruction for one fixed, width-one teacher}
+\label{sec:simple-teacher-rate}
+The preceding constant-excess examples let teacher coefficients or width grow. A different obstruction already applies to a fixed width-one regression function with unit coefficients. It rules out a uniform $1/n$ oracle remainder at sufficiently large hidden depth, even after arbitrary temperature mixing. The result also allows a broad Gaussian affine output skip, so it is not an artifact of omitting an independent output bias.
+
+\paragraph{Optional affine output component.}
+In this section the prediction may be
+\[
+ F_{w,b}(x)=z_w(x)+b^{\mathsf T}(1,x),
+\]
+where $b$ is independent of the neural parameters and has any centered Gaussian covariance with operator norm at most a fixed $M\ge1$. Degenerate covariance, including $b=0$, is allowed. The likelihood variance remains $n\lambda\sigma^2$. Thus the theorem includes the original neural learner, an independent Gaussian output bias, and Gaussian direct linear input-to-output connections. There is still one fixed neural architecture at each learner width.
+
+\begin{lemma}[A sector inequality after removing affine features]
+\label{lem:projected-sector}
+Let $P_S$ be the orthogonal projection in $\R^n$ onto the complement of the training vectors of all affine input functions. Every ordinary raw posterior mean training vector $f$ satisfies
+\[
+ y^{\mathsf T}f\ge\|f\|_2^2+\lambda\|P_Sf\|_2^2.
+\]
+\end{lemma}
+\begin{proof}
+Condition on the hidden features, and let $H_S$ be their $n$ by $N$ matrix. The joint Gaussian readout and affine posterior is a linear ridge posterior. Its normal equations imply
+\[
+ y^{\mathsf T}f\ge\|f\|_2^2+n\lambda N\|v\|_2^2,
+\]
+where $v$ is the conditional posterior mean neural readout. The omitted affine-prior penalty is nonnegative; for singular Gaussian covariance, write the normal equations on its support. Since $P_S$ annihilates every affine output vector,
+\[
+ \|P_Sf\|_2^2=\|P_SH_Sv\|_2^2
+ \le\|H_S\|_F^2\|v\|_2^2\le nN\|v\|_2^2,
+\]
+using bounded hidden activations. Averaging over the hidden-parameter posterior and applying Jensen to both squared norms proves the claim.
+\end{proof}
+
+\begin{theorem}[No uniform fast remainder even for a fixed simple teacher]
+\label{thm:simple-teacher-rate}
+Fix $H\ge3$ and a fixed integer $D$ for which
+\[
+ \rho_D=\max\{2/D,(1+2/D)/H\}<1/2.
+\]
+Put $d=D+2$ and $g_H(x)=\tanh^{\circ H}(x_1)$. This is a fixed width-one teacher with all nonzero coefficients equal to one. Along sample counts $n=4J^D$, with even $J\to\infty$, there are input laws on the unit sphere in $\R^d$ with uniformly nondegenerate covariance and labels
+\[
+ Y=g_H(X)+\varepsilon/4,
+\]
+where $\varepsilon$ is an independent fair sign, such that the following holds. For some positive constants $c,C$ depending only on $D,H,M$, with probability at least
+\[
+ 1-Ce^{-c n^{1-2\rho_D}}-Ce^{-c n^{1/3}}-C/n,
+\]
+every probability mixture of ordinary raw posterior means over all
+\[
+ N\ge C n^{(1+2/D)(2-1/H)}\log n,\qquad
+ 0<\sigma^2\le1/N,\qquad \lambda>0
+\]
+has
+\[
+ R(F)-R(g_H)\ge c n^{-2\rho_D}.
+\]
+The mixture may depend arbitrarily on the data and may include any of the allowed affine-skip Gaussian covariances. Here $R(g_H)=1/16$ exactly. In particular, no likelihood-temperature selection or mixture gives a distribution-uniform remainder $O(\operatorname{polylog}(n)/n)$ for these learners, even against this one fixed teacher.
+\end{theorem}
+\begin{proof}
+Let $T$ be uniform on $\{-3/4,-1/4,1/4,3/4\}$. Independently choose each coordinate of $z\in\R^D$ uniformly from the $J$ midpoint grid values in $[-r_D,r_D]$, now with $r_D=1/(2\sqrt D)$. Set
+\[
+ X=(T,z,\sqrt{1-T^2-\|z\|_2^2}).
+\]
+All $n=4J^D$ input atoms have probability $1/n$ and lie on the unit sphere. The square root is at least $\sqrt3/4$. Symmetry makes the input covariance diagonal. The $T$ variance is $5/16$, each $z$ variance is at least $1/(16D)$, and the last coordinate has variance at least $1/64$: conditional on $z$, its values at the two possible absolute $T$ values differ by at least $1/4$. These bounds are uniform in $J$.
+
+Write $g=g_H$ and $a=1/4$. Then $|g(X)|\le3/4$ and $|Y|\le1$. The target is independent of $n$, and its exact Bayes risk is $a^2=1/16$.
+
+We first record that $g$ has fixed positive distance from the affine feature span. Put $t_1=1/4$, $t_2=3/4$, and $u_j=\tanh^{\circ H}(t_j)$. The function $\tanh t/t$ is strictly decreasing for $t>0$, and this property persists under composition. Therefore $u_1/t_1>u_2/t_2$. Oddness in $T$ and symmetry of $z$ show that the population affine projection of $g$ uses only $T$. Its squared residual is
+\begin{equation}
+ r_H=\frac{(t_2u_1-t_1u_2)^2}{2(t_1^2+t_2^2)}>0.
+ \label{eq:fixed-affine-residual}
+\end{equation}
+The augmented input Gram matrix is uniformly positive definite. Indeed its only nontrivial mean block concerns the constant and last coordinate; that block has determinant equal to the last-coordinate variance, so its smallest eigenvalue is at least $1/128$. The other eigenvalues are the coordinate variances displayed above. Bounded-variable concentration for the empirical Gram matrix, target moments, and their finite-dimensional Schur complement consequently gives, with failure at most $C_{D,H}e^{-c_{D,H}n}$,
+\begin{equation}
+ \|P_S g(S)\|_2^2/n\ge r_H/2.
+ \label{eq:empirical-affine-residual}
+\end{equation}
+For clarity, no asymptotic dimension theorem is needed here: every Gram entry is an average of variables bounded by one, the matrix dimension is fixed, its population smallest eigenvalue has a fixed lower bound, and inversion and the Schur complement are uniformly continuous on a sufficiently small neighborhood of that matrix.
+
+For the noise-fitting comparison, prescribe each observed atom's empirical label mean, and zero at unobserved atoms. The rectangular discrete Fourier expansion on the four-point $T$ grid and the $J^D$ nuisance grid has coefficient absolute sum at most $\sqrt n$. Its largest frequencies have magnitude $O_D(J)$. Lemma~\ref{lem:fourier-native}, with fixed $t=a/1000$, thus gives a comparison Gaussian for the neural parameters with energy $O_{D,H}(n^{\rho_D})$, the stated width threshold, and pointwise output RMS error at most $t$.
+
+If an affine Gaussian output component is present, retain its zero mean and shrink its covariance by a fixed factor so that its output variance is at most $t^2$ at every unit-sphere input. This is possible uniformly over covariance operator norm at most $M$. The relative entropy of this finite-dimensional Gaussian covariance change is at most a constant $C_{D,M,t}$, including on the support of a singular covariance. Its normalized variational cost is $2\lambda\sigma^2C_{D,M,t}\le2\lambda C_{D,M,t}$. Thus a comparison law for the full learner has pointwise output RMS error at most $2t$ and variational penalty at most $\lambda K_n$, where
+\[
+ 1\le K_n\le C_{D,H,M}n^{\rho_D}.
+\]
+Take the explicit deterministic upper bound as $K_n$, and put
+\[
+ \tau_n=\frac{a^2}{100K_n}.
+\]
+In particular $\tau_n\ge c_{D,H,M}n^{-\rho_D}$ and $\tau_n\to0$.
+
+As before, with failure at most $e^{-n^{1/3}/2}+1/n$, the sample has at least $n/3$ singleton atoms and its counts obey $\sum_jk_j^2\le4n$. For every $\lambda\le\tau_n$, the Gibbs comparison gives posterior expected count-weighted residual against the empirical atom means at most
+\[
+ 4t^2+\lambda K_n\le4t^2+a^2/100<a^2/50.
+\]
+Each singleton mean differs from $g$ by exactly $a$. Jensen and reverse triangle, restricted to these singleton atoms, therefore imply that every raw posterior mean has
+\begin{equation}
+ \|f(S)-g(S)\|_2^2/n
+ \ge a^2(\sqrt{1/3}-\sqrt{1/50})^2>a^2/10.
+ \label{eq:simple-low-error}
+\end{equation}
+
+Define the common noise-target alignment
+\[
+ \Delta_S=\frac1n\sum_i(Y_i-g(X_i))g(X_i).
+\]
+Conditional on inputs, its summands are independent centered variables bounded in magnitude by $a$. Hoeffding gives
+\begin{equation}
+ |\Delta_S|\le r_H\tau_n/8
+ \label{eq:alignment-good}
+\end{equation}
+except on probability at most $2\exp[-n r_H^2\tau_n^2/(128a^2)]$.
+
+We now construct one linear separator valid at every temperature. Write
+\[
+ \ell(f-g)=\frac1n(y-2g(S))^{\mathsf T}(f(S)-g(S)).
+\]
+Lemma~\ref{lem:projected-sector} gives
+\[
+ \ell(f-g)\ge\frac{\|f(S)-g(S)\|_2^2+\lambda\|P_Sf(S)\|_2^2}{n}-\Delta_S.
+\]
+For $\lambda\ge\tau_n$, minimizing the numerator over all vectors $f(S)$ gives exactly
+$[\lambda/(1+\lambda)]\|P_Sg(S)\|_2^2$.
+Using \eqref{eq:empirical-affine-residual}, \eqref{eq:alignment-good}, and $\tau_n\le1$, we get
+\[
+ \ell(f-g)\ge r_H\tau_n/8.
+\]
+For $\lambda\le\tau_n$, \eqref{eq:simple-low-error} and \eqref{eq:alignment-good} give the same inequality for all sufficiently large $n$. This separator is therefore common to every width, prior scale, covariance choice, and likelihood temperature in the theorem.
+
+On the uniform input atoms, let
+\[
+ h(x)=\sum_{i:X_i=x}(Y_i-2g(x)).
+\]
+Then $\ell(f-g)=\langle h,f-g\rangle_{L^2(D_X)}$, and $|Y_i-2g(X_i)|\le1$ gives
+$\|h\|_{L^2(D_X)}^2\le n^{-1}\sum_jk_j^2\le4$.
+Averaging the separator over any data-dependent mixture and applying Cauchy--Schwarz proves
+\[
+ R(F)-R(g)=\|F-g\|_{L^2(D_X)}^2
+ \ge r_H^2\tau_n^2/256\ge c_{D,H,M}n^{-2\rho_D}.
+\]
+As in Lemma~\ref{lem:separator}, all relevant integrals are automatically finite on observed atoms; arbitrary extensions on the other atoms cannot remove the lower bound. Combining the sample events proves the stated confidence bound because $n\tau_n^2\ge c n^{1-2\rho_D}$.
+\end{proof}
+
+For every fixed $H\ge3$ and every sufficiently small $\varepsilon>0$, one can choose a fixed $D$ with $2\rho_D<2/H+\varepsilon<1$. The theorem then rules out a uniform remainder smaller than a constant times $n^{-(2/H+\varepsilon)}$, despite the teacher having width one and unit coefficients. The data law still changes with sample count. This does not rule out a parametric rate on each fixed finite-support law, nor does it concern a learner with an additional broad prior feature already equal to this nonlinear teacher. Its purpose is to show that the width-independent agnostic bound cannot generally have a $1/n$ remainder for the specified Gaussian neural family, even with ordinary affine output features added.

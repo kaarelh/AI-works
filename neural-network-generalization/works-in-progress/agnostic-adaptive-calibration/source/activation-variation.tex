@@ -1,0 +1,195 @@
+\section{A sharper logarithmic bound from derivative variation}
+\label{sec:bv-activations}
+A signed-hinge decomposition avoids the additional sample-size logarithms in the preceding general Lipschitz argument when the activation derivative has finite total variation. This gives an alternative proof for the standard activations below, including nonzero activation offsets.
+
+Assume $\phi:\R\to\R$ is globally $K$-Lipschitz and its almost-everywhere derivative has a bounded-variation representative $g$ on $\R$. Write
+\[
+ a=\phi(0),\qquad V_1=\operatorname{TV}(g),\qquad
+ M=\max\{1,K+V_1\},\qquad T=2+|a|+2M.
+\]
+A Lipschitz function is locally absolutely continuous, so its derivative determines all increments by integration. We may take $|g|\le K$, including its one-sided limits. ReLU is allowed: its derivative has one jump and the corresponding distributional second derivative is a unit point mass. The following safe constants illustrate the scope; numerical sharpness is not needed.
+\begin{center}
+\begin{tabular}{llll}
+\toprule
+Activation & $\phi(0)$ & Lipschitz bound $K$ & derivative variation bound $V_1$ \\
+\midrule
+Tanh & $0$ & $1$ & $2$ \\
+ReLU & $0$ & $1$ & $1$ \\
+GELU, $x\Phi(x)$ & $0$ & $2$ & $3$ \\
+Sigmoid, $(1+e^{-x})^{-1}$ & $1/2$ & $1/4$ & $1/2$ \\
+Softplus, $\log(1+e^x)$ & $\log2$ & $1$ & $1$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+For GELU, $\phi''(x)=(2-x^2)\varphi(x)$, where $\varphi$ is the standard Gaussian density, so $\int|\phi''|\le\E(2+G^2)=3$; also $|\phi'|=|\Phi+x\varphi|\le2$. The other variation bounds follow from monotonicity on each side of the derivative's single maximum, or from a single jump.
+
+\subsection{Normalized activations are mixtures of centered hinges}
+For $t\in[-1,1]$, put
+\[
+ h_t(u)=\operatorname{ReLU}(u-t)-\operatorname{ReLU}(-t),
+ \qquad -1\le u\le1.
+\]
+Each $h_t$ vanishes at zero, is 1-Lipschitz, and is bounded by one. The identity function is $h_{-1}$ on this interval.
+
+\begin{lemma}[A scale-independent signed mixture]
+\label{lem:bv-profile}
+For every $s>0$, the function
+\[
+ u\longmapsto\frac{\phi(su)-\phi(0)}{Ms},\qquad u\in[-1,1],
+\]
+belongs to the closed absolute convex hull of the centered hinges $h_t$, $t\in[-1,1]$.
+\end{lemma}
+\begin{proof}
+Let $\mu=dg$ be the finite signed distributional derivative measure, and let $\nu_s$ be its restriction to $(-s,s)$ pushed forward by $x\mapsto x/s$. The fundamental theorem for bounded-variation functions gives, on $[-1,1]$,
+\begin{equation}
+ \frac{\phi(su)-\phi(0)}s
+   =g(-s+)u+\int_{(-1,1)}h_t(u)\,d\nu_s(t).
+ \label{eq:bv-representation}
+\end{equation}
+One way to check the identity is to differentiate both sides almost everywhere: the derivative on the right is $g(-s+)+\nu_s((-1,u))=g(su)$ except at a null set, and both sides vanish at zero. Endpoint atoms are absorbed into the one-sided slope or do not affect the interval's interior. Continuity extends equality to the endpoints.
+
+The absolute coefficient mass in \eqref{eq:bv-representation} is at most $K+V_1\le M$. Since $u=h_{-1}(u)$, division by $M$ gives the assertion. The integral is approximated by finite signed mixtures uniformly: $t\mapsto h_t$ is continuous in uniform norm and its signed mixing measure is finite. Zero belongs to the absolute convex hull and supplies any unused mass.
+\end{proof}
+
+\subsection{A width-independent capacity estimate}
+On a list of $n$ inputs, let $\mathcal A_0$ be the closed absolute convex hull of the $d+1$ coordinate sample vectors of $\bar x=(1,x)$. Recursively let
+\[
+ \mathcal A_\ell=\overline{\operatorname{aconv}}\left(
+ \{\mathbf1\}\cup\{h_t(f):f\in\mathcal A_{\ell-1},\ -1\le t\le1\}\right).
+\]
+Every class is symmetric, contains zero, and lies in $[-1,1]^n$.
+
+\begin{lemma}[Capacity of the normalized feature classes]
+\label{lem:bv-feature-capacity}
+For $H\ge0$,
+\begin{equation}
+ \operatorname{Rad}_n(\mathcal A_H)
+ \le\frac{2^H}{\sqrt n}
+       \left[\sqrt{2\log(2(d+1))}+4\right].
+ \label{eq:bv-feature-capacity}
+\end{equation}
+\end{lemma}
+\begin{proof}
+Write $\operatorname{Rad}_n(\mathcal B)=n^{-1}\E_\epsilon\sup_{f\in\mathcal B}\sum_i\epsilon_if_i$. For a symmetric class this also equals the version with an absolute value. The starting class is the convex hull of $2(d+1)$ vectors of Euclidean norm at most $\sqrt n$, so its complexity is at most $\sqrt{2\log(2(d+1))/n}$.
+
+Let $\mathcal A$ be any symmetric class as above and $\mathcal H(\mathcal A)=\{h_t(f):f\in\mathcal A,t\in[-1,1]\}$. Scalar Rademacher contraction for ReLU, with constant one for the ordinary supremum, gives
+\[
+ \operatorname{Rad}_n(\{\operatorname{ReLU}(f-t):f\in\mathcal A,t\in[-1,1]\})
+ \le\operatorname{Rad}_n(\mathcal A)+\E|\textstyle\sum_i\epsilon_i|/n.
+\]
+The subtracted scalar ranges over $[-1,0]$. Its Rademacher complexity is $\E|\sum_i\epsilon_i|/(2n)$. Splitting the supremum therefore gives
+\[
+ \operatorname{Rad}_n(\mathcal H(\mathcal A))
+ \le\operatorname{Rad}_n(\mathcal A)+\frac3{2\sqrt n}.
+\]
+This class contains zero. Its positive and negative suprema are nonnegative and have equal expectations, so absolute convexification costs at most a factor two. Adding the constant vector costs at most $1/\sqrt n$. Thus
+\[
+ \operatorname{Rad}_n(\mathcal A_\ell)
+ \le2\operatorname{Rad}_n(\mathcal A_{\ell-1})+4/\sqrt n.
+\]
+Iterating proves \eqref{eq:bv-feature-capacity}. All classes on a fixed finite input list are compact after closure, so no separability issue enters these finite-dimensional suprema.
+\end{proof}
+
+Use the usual full weighted energy
+\[
+ Q_N=\frac dN\|W^1\|_F^2+\sum_{\ell=2}^H\|W^\ell\|_F^2+N\|v\|_2^2,
+ \qquad L=H+1.
+\]
+\begin{theorem}[A common energy-ball capacity for all BV-derivative activations]
+\label{thm:bv-capacity}
+For every $q\ge0$, let $\mathcal Z_q$ be the union of raw network outputs over all widths with $Q_N\le q$. Then
+\begin{align}
+ \sup_{z\in\mathcal Z_q}\|z\|_\infty
+ &\le T^H(1+q)^{L/2},\notag\\
+ \operatorname{Rad}_n(\mathcal Z_q)
+ &\le(2T)^H\left[\sqrt{2\log(2(d+1))}+4\right]
+       \frac{(1+q)^{L/2}}{\sqrt n}.
+ \label{eq:bv-capacity}
+\end{align}
+There is no dependence on learner width in either bound.
+\end{theorem}
+\begin{proof}
+Define nonnegative coordinate budgets
+\[
+ \rho^0=\mathbf1_{d+1},\qquad
+ \rho^\ell=|a|\mathbf1_N+M|W^\ell|\rho^{\ell-1}.
+\]
+An induction shows that hidden neuron $j$'s sample vector lies in $\rho_j^\ell\mathcal A_\ell$. Indeed its preactivation is $s f$ with $s=(|W^\ell|\rho^{\ell-1})_j$ and $f\in\mathcal A_{\ell-1}$. If $s>0$, Lemma~\ref{lem:bv-profile} and the constant component $a$ put its activation in $(|a|+Ms)\mathcal A_\ell$. If $s=0$, its activation is exactly $a$, and the same conclusion holds. A zero budget gives a zero neuron. The output sample vector consequently belongs to $P\mathcal A_H$, where $P=|v|^{\mathsf T}\rho^H$.
+
+Put $b_\ell=\|\rho^\ell\|_2/\sqrt N$. The full energy gives
+\[
+ b_1\le|a|+M\sqrt{(d+1)/d}\sqrt{Q_N},\qquad
+ b_\ell\le|a|+M\sqrt{Q_N}\,b_{\ell-1}.
+\]
+Since $d\ge1$ and $T\ge|a|+2M$, induction yields
+$b_\ell\le T^\ell(1+Q_N)^{\ell/2}$. Therefore
+\[
+ P\le\sqrt N\|v\|_2 b_H
+ \le T^H(1+Q_N)^{L/2}.
+\]
+The amplitude follows from $\mathcal A_H\subset[-1,1]^n$, and the Rademacher estimate from Lemma~\ref{lem:bv-feature-capacity}. The argument is uniform over every input list and every width. Countable rational parameter approximations with strict energy inequalities, followed by continuity, give a countable determining subclass of the actual network union.
+\end{proof}
+
+\subsection{Gaussian teacher neighborhoods without a zero-origin assumption}
+At canonical Gaussian scale $s=N^{-\gamma}$, the first, internal, and readout variances are $Ns/d,s,s/N$. Assume $Ns\le1$ and $sD_N\le D_0$, where $D_N=N(d+2)+(H-1)N^2$ and $D_0=d+H+1$. These inequalities hold for every $\gamma\ge2$, and for every $\gamma\ge1$ when $H=1$.
+
+Balanced cloning of a width-$m$, coefficient-$B$ teacher works for every activation, including nonzero offsets: every neuron belongs to a nonempty clone group and has exactly its teacher preactivation. It gives
+\[
+ E=d(d+1)B^2+2Hm^2B^2
+\]
+as an upper bound on full weighted energy. By Theorem~\ref{thm:bv-capacity}, take $U=T^H(1+E)^{L/2}$ as an output amplitude bound.
+
+\begin{lemma}[A comparison measure for a general Lipschitz activation]
+\label{lem:bv-comparison}
+Put
+\[
+ B_0=1+|a|+2\max\{1,K\}(\sqrt E+1),\qquad
+ K_g=2L B_0^H,\qquad
+ A_{g,n}=E+1+2D_0\log[4K_g(U+1)n].
+\]
+At every eligible width and scale, and every $\lambda\ge1/n$,
+\begin{equation}
+ F_S(\lambda)\le\widehat R_S(g)+\lambda A_{g,n}.
+ \label{eq:bv-comparison}
+\end{equation}
+\end{lemma}
+\begin{proof}
+Perturb the exact clone by a Gaussian with covariance $\varepsilon^2$ times the prior covariance. Write $b_\ell$ for the normalized $L^2$ size of its random hidden state and $\Delta_\ell$ for its normalized $L^2$ difference from the exact state. Independence of the current Gaussian perturbation, the inequality $Ns\le1$, and $|\phi(t)|\le|a|+K|t|$ give
+\[
+ b_1\le|a|+\sqrt2K(\sqrt E+\varepsilon),\qquad
+ b_\ell\le|a|+K(\sqrt E+\varepsilon)b_{\ell-1}.
+\]
+For $0<\varepsilon\le1$, these imply $b_\ell\le B_0^\ell$. Lipschitzness also gives
+\[
+ \Delta_1\le\sqrt2K\varepsilon,\qquad
+ \Delta_\ell\le K\sqrt E\Delta_{\ell-1}+K\varepsilon b_{\ell-1}
+ \le2\max\{1,K\}\ell\varepsilon B_0^{\ell-1}.
+\]
+The readout contributes at most $\sqrt E\Delta_H+\varepsilon b_H\le\varepsilon K_g$ to output root mean square error. Only $s\le1$ is used for the readout noise term.
+
+Choose $\varepsilon=[4K_g(U+1)n]^{-1}$. The expected empirical loss is at most $\widehat R_S(g)+1/n$. The exact Gaussian relative-entropy formula gives normalized cost at most
+\[
+ 2s\operatorname{KL}(\rho\Vert\mu)
+ \le E+2D_0\log(1/\varepsilon).
+\]
+Substitute this comparison Gaussian into the free-energy variational identity and use $1/n\le\lambda$. This proves \eqref{eq:bv-comparison}.
+\end{proof}
+
+\subsection{The resulting joint activation oracle}
+The preceding two results verify the full-energy Gaussian free-energy theorem with
+\[
+ r=L,\qquad V=T^H,\qquad
+ \kappa=(2T)^H\left[\sqrt{2\log(2(d+1))}+4\right],
+ \qquad D_0=d+H+1.
+\]
+A uniform prior-risk bound is also available: with $A_0=\max\{1,K,|a|\}$, conditional Gaussian second moments give
+$\E_\mu\widehat R_S\le1+2(4A_0^2)^H$.
+Thus the same single free-energy root, with these constants, yields
+\begin{equation}
+ R(\widehat f_n)\le\inf_g\left\{R(g)+\widetilde O\left(
+ A_{g,n}R(g)^{1-1/L}n^{-1/L}+A_{g,n}^L/n\right)\right\}.
+ \label{eq:bv-oracle}
+\end{equation}
+The precise simultaneous interpretation uses the population minimizer of each integer width and coefficient cap and a countable Bernstein union, as in the Gaussian theorem. The prediction is the ordinary mean of raw posterior outputs, and the stronger posterior-average risk obeys the same bound. The event is simultaneous over all eligible widths and every $\gamma\ge2$, or every $\gamma\ge1$ at one hidden layer. The learner knows the activation and architectural depth, but not the comparison cap or risk. No first-layer zero-origin assumption, support restriction, or architecture mixture is used.
+
+At fixed dimension and depth, $A_{g,n}=\widetilde O(E)$, so an exactly fitting teacher gives $\widetilde O(E^L/n)$. Dimension enters polynomially through the explicit comparison and capacity constants. The factors exponential in $H$ are displayed; this argument does not assert polynomial dependence jointly on width and depth. Tanh's sharper depth exponent and ReLU's smaller homogeneous implementation budget remain useful refinements of this common argument.

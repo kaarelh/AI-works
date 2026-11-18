@@ -1,0 +1,98 @@
+\section{Uniform function neighborhoods and total sign mistakes}
+\label{sec:uniform}
+The same comparison construction approximates a comparator uniformly on the entire input cube. Here the absolute first moment of truncated background coordinates is more useful than their centered variance.
+
+\begin{lemma}[Expected uniform approximation]\label{lem:uniform-approximation}
+For a constant of the same allowed dependence as above, put
+\[
+ W_{m,B}=C(d+1)D^H.
+\]
+The comparison law at precision $\epsilon$ satisfies
+\begin{equation}
+ \E_\nu\sup_{x\in[-1,1]^d}|z_w(x)-z_g(x)|
+ \le W_{m,B}\epsilon^{1-a}.
+ \label{eq:uniform-approximation}
+\end{equation}
+\end{lemma}
+\begin{proof}
+First fix an embedding. Let $e_\ell$ be the largest expected uniform hidden-coordinate error at a selected node. The first-layer error is deterministically at most $A(d+1)\epsilon$. The triangle inequality, $|W-c|\le9\epsilon$ on designated edges, and the adaptive truncated first-moment estimate give
+\[
+ e_\ell\le AmB\,e_{\ell-1}
+      +9Am\epsilon S_{\ell-1}
+      +CA\epsilon^{1-\alpha_\ell}P_{\ell-1}.
+\]
+Because $\alpha_\ell\le a<1$, both $\epsilon$ and $\epsilon^{1-\alpha_\ell}$ are at most $\epsilon^{1-a}$. The moment bounds and $D\ge Am(B+6)$ yield
+\[
+ e_\ell\le C_\ell(d+1)D^{\ell-1}\epsilon^{1-a}.
+\]
+The coefficient factor in the active error is absorbed by $m(B+6)\le D$. The readout obeys the same triangle inequality with activation constant one, giving~\eqref{eq:uniform-approximation}. Averaging over embeddings preserves the bound.
+\end{proof}
+
+\begin{theorem}[Width-uniform mass of a uniform function neighborhood]
+\label{thm:uniform-mass}
+For every $0<t\le1$ and every finite $N\ge m$,
+\begin{equation}
+ \mu_N\left\{\sup_{[-1,1]^d}|z_w-z_g|\le t\right\}
+ \ge e^{-Q_{m,B,t}},
+ \label{eq:uniform-mass}
+\end{equation}
+where one may take
+\begin{equation}
+ Q_{m,B,t}
+ =C\left[
+ U_{m,B}\left(\frac{2W_{m,B}}t\right)^{a/(1-a)}
+ +(d+1)M\log\!\left(
+ \frac{CM(d+1)(B+6)W_{m,B}}t\right)\right].
+ \label{eq:uniform-mass-resource}
+\end{equation}
+This resource is polynomial in $d,m,B,1/t$ at fixed depth and tail indices, without a dependence on the number of input points.
+\end{theorem}
+\begin{proof}
+Choose $\epsilon=(t/(2W_{m,B}))^{1/(1-a)}\le1$. Markov's inequality and Lemma~\ref{lem:uniform-approximation} give comparison probability at least $1/2$ to the uniform approximation event. Its comparison KL is bounded by Lemma~\ref{lem:comparison-entropy}. For an event $E$ with $\nu(E)\ge1/2$, binary relative entropy gives
+\[
+ \KL(\nu\|\mu_N)\ge\frac12\log(1/\mu_N(E))-\log2.
+\]
+Substitution proves~\eqref{eq:uniform-mass-resource}, after changing constants.
+\end{proof}
+
+\begin{corollary}[A margin function receives substantial sign prior mass]
+\label{cor:sign-mass}
+Let $\mathcal X$ be a nonempty compact subset of the input cube, and suppose
+$f:\mathcal X\to\{\pm1\}$ has a comparator satisfying
+$f(x)z_g(x)\ge2\kappa$ on $\mathcal X$, with $\kappa>0$.
+Use $t=\min\{1,\kappa/2\}$ in~\eqref{eq:uniform-mass-resource}. Then
+\[
+ \mu_N\{\operatorname{sign}z_w=f\text{ on }\mathcal X,\ 
+                      \min_{\mathcal X}|z_w|>\kappa\}
+ \ge e^{-Q_{m,B,t}}.
+\]
+The same lower bound holds for the sign-function prior if the weight prior is initially conditioned on $\min_{\mathcal X}|z_w|>\kappa$.
+\end{corollary}
+\begin{proof}
+On the uniform approximation event, $f(x)z_w(x)\ge2\kappa-t>\kappa$.
+The conditioning event has positive prior mass, and its probability is at most one. Compactness and continuity make these uniform events measurable; the target sign is continuous on $\mathcal X$ because it has a positive teacher margin.
+\end{proof}
+
+The set $\mathcal X$ may be the Boolean cube, a disconnected continuous support, or another compact domain. A continuous nonconstant sign function cannot have a nonzero margin everywhere on a connected domain; the corollary does not remove that elementary restriction.
+
+\begin{corollary}[Every-sequence mistake bounds]\label{cor:online}
+Use either sign prior in Corollary~\ref{cor:sign-mass}, and condition exactly on each noiseless sign observation $f(X_t)$. On every realized query sequence,
+\[
+ \sum_{t\ge1}-\log p_t\le Q_{m,B,t_0},
+ \qquad t_0=\min\{1,\kappa/2\},
+\]
+where $p_t$ is the posterior probability of the correct sign before its reveal. Thus majority prediction makes at most $Q_{m,B,t_0}/\log2$ mistakes, and the number of steps with $p_t\le c$ is at most $Q_{m,B,t_0}/(-\log c)$ for every $0<c<1$.
+
+Fresh posterior-sampled predictions have expected total mistake count at most $Q_{m,B,t_0}$, provided the next query is chosen before that prediction's fresh randomness. The query may depend on all earlier predictions and observations. No IID or stationarity assumption is needed.
+\end{corollary}
+\begin{proof}
+If $\pi$ is the induced function prior, posterior normalizers telescope along every finite realized history:
+\[
+ \prod_{j=1}^T p_j
+ =\pi\{h:h(X_j)=f(X_j)\text{ for every }j\le T\}
+ \ge\pi(f)\ge e^{-Q_{m,B,t_0}}.
+\]
+Take logarithms and increase $T$. A majority mistake has $p_t\le1/2$; a confidence failure has $p_t\le c$. For fresh posterior sampling, the conditional mistake probability is $1-p_t\le-\log p_t$. The tower property and monotone convergence prove the expected-count bound.
+\end{proof}
+
+This sign-learning corollary uses the same weight prior but a different observation model from the noisy-regression theorem. It concerns exact noiseless sign conditioning. The bounded output links tanh and clipping preserve the raw readout's sign.

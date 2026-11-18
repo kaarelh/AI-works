@@ -1,0 +1,97 @@
+\section{Only two channels need to cross the extra learner layers}
+\label{sec:two-channel-padding}
+The last hidden width of a comparison implementation can be much
+smaller than its largest hidden width. Scalar output permits a useful
+compiler: after completing the teacher computation, carry its positive
+and negative parts through the additional layers.
+
+\begin{lemma}[Two-channel output compiler]
+\label{lem:two-channel-compiler}
+Let a ReLU teacher have hidden depth $h$, width at most $m$, linear
+scalar readout $z_g$, coefficient cap $B\ge1$, and rooted formula
+size $S$ before the readout. There is an implementation of the same
+raw function with hidden depth $h+1$, width at most $m$,
+coefficient cap $B$, and rooted formula size at most $2S+2$.
+Its last hidden layer has at most two relevant neurons and its final
+nonzero final readout coefficients belong to $\{-1,1\}$.
+At any larger hidden depth $H$, exact identity relays give rooted
+formula size at most
+\begin{equation}
+ 2S+2+2(H-h-1)=2S+2(H-h).
+ \label{eq:two-channel-formula-size}
+\end{equation}
+\end{lemma}
+\begin{proof}
+Add the two hidden neurons
+$q_+=\operatorname{ReLU}(z_g)$ and
+$q_-=\operatorname{ReLU}(-z_g)$ and use readout $q_+-q_-$.
+Each new neuron has one copy of the teacher's readout formula as its
+input, proving the occurrence count. Its incoming coefficients are
+just the teacher's readout coefficients with a possible sign change.
+Both outputs are nonnegative, so one-predecessor ReLU identity relays
+preserve them exactly and add two formula occurrences per layer.
+If $m=1$, the last teacher feature is nonnegative and $z_g=v h^h$ has constant sign. One added channel $\operatorname{ReLU}(|v|h^h)$ and final coefficient $\operatorname{sgn}(v)$ suffice, using only width one and no more formula occurrences. The final observation link, including clipping to $[-1,1]$, is unchanged.
+\end{proof}
+
+\begin{corollary}[Padding cost depends on scalar output, not hidden width]
+\label{cor:two-channel-prior-padding}
+For the fixed small-intensity L\'evy fan-in prior, let $H\ge h$ and
+$N\ge m$. Define $S_*=S+H-h+1$ and
+\begin{align}
+ \mathcal J^{\mathrm{scalar}}_n
+ =A(d+1)S_*\bigl[&(h+2)\log\{A(m+1)(B+8)\}\notag\\
+ &+\log\{A S_*(d+1)(H+1)(B+8)(n+1)\}\bigr].
+ \label{eq:scalar-padding-resource}
+\end{align}
+For conditionally sub-Gaussian labels as in the all-data expectation
+oracle, the ordinary final posterior mean obeys
+\begin{equation}
+ \E R(\bar f_{S_n})
+ \le R(g)+\frac{A(1+\sigma^2)(1+\mathcal J^{\mathrm{scalar}}_n)}{n+1}.
+ \label{eq:scalar-padding-oracle}
+\end{equation}
+Here $g$ is the teacher's bounded observed output. The same fixed
+prior and likelihood are used at every comparison resource.
+\end{corollary}
+\begin{proof}
+When $H=h$, apply the original teacher comparison.
+Otherwise apply Lemma~\ref{lem:two-channel-compiler} and then the
+stable-padding comparison proof. Its relay argument tracks the
+selected last-layer features and their native bulk background. The
+count of new designated formula occurrences is the number of
+relevant last-layer features times the number of relay layers.
+There are now two such features, not $m$, so the actual count is
+\eqref{eq:two-channel-formula-size}. The first-moment stability
+recurrence is unchanged: each selected relay has one designated
+coefficient equal to one, and the native background contracts because
+its total first absolute moment is at most $1/4$.
+Thus substitute teacher depth $h+1$, actual formula size $2S+2$,
+and two terminal channels into the same proof. Its logarithmic
+precision factor is bounded by the brackets in
+\eqref{eq:scalar-padding-resource}. Applying the sharp all-data
+expectation theorem gives \eqref{eq:scalar-padding-oracle}.
+\end{proof}
+
+\begin{corollary}[An additive width-and-depth resource in one dimension]
+\label{cor:univariate-additive-depth}
+Under the assumptions and the fixed posterior of
+Theorem~\ref{thm:univariate-levy-oracle}, its conclusion improves to
+\begin{equation}
+ \E R(\bar f_{S_n})
+ \le\inf_{\substack{C\ge1:\,6C+6\le N}}
+ \left\{\inf_{g\in\mathcal G_C}R(g)
+ +\frac{A(1+\sigma^2)(C+H+1)}{\alpha(n+1)}
+       \log\!\bigl[e\kappa(C+1)(H+1)(n+1)\bigr]\right\}.
+ \label{eq:univariate-additive-depth}
+\end{equation}
+\end{corollary}
+\begin{proof}
+The bounded-slope spline compiler has depth one, width
+$m\le6C+6$, formula size $S\le m$, and
+$\log(B+8)\le A\alpha^{-1}
+\log[e\kappa(C+1)(n+1)]$ at $L^1$ accuracy $(n+1)^{-1}$.
+Apply Corollary~\ref{cor:two-channel-prior-padding} with $h=1$ and
+absorb its $4/(n+1)$ approximation error as before. If $H=1$ the
+original one-layer comparison gives the same bound directly.
+\end{proof}
+

@@ -1,0 +1,130 @@
+\section{The transition from square-root to linear depth}
+\label{sec:prefactor-window}
+The common obstruction can be sharpened when the variance prefactor is
+known to stay below one by a possibly depth-dependent gap. The transition
+occurs at a gap of order $H^{-1/2}$; no fixed separation from one is needed.
+
+\begin{theorem}[A uniform critical-window obstruction]
+\label{thm:prefactor-window}
+There are absolute constants $a,c,C>0$ and $H_0$ with the following
+property. For any integer $H\ge H_0$ and any prescribed
+$0\le\Delta<1$, put
+\[
+ D=\left\lfloor c(\sqrt H+\Delta H)\right\rfloor,
+ \qquad d=D+2,\qquad n=4\cdot2^D.
+\]
+Let $X$ be uniform on $\mathcal U_D$, and let
+\[
+ Y=\frac a4(2+\tanh X_1)+a\epsilon,
+ \qquad \Pr(\epsilon=1)=\Pr(\epsilon=-1)=\tfrac12,
+\]
+with independent noise. With probability at least $9/10$ over $n$ IID
+observations, every Gaussian learner of Theorem~\ref{thm:all-scale-learning}
+with
+\[
+ N\ge n^C,\qquad 0<Ns\le1-\Delta,\qquad\lambda>0
+\]
+has excess population squared loss at least $a^2/4096$.
+The same statement covers its raw posterior mean, the two clipped
+prediction conventions, and arbitrary well-defined data-dependent
+mixtures over the allowed widths, scales and temperatures.
+All constants are independent of $\Delta$. The conditional mean has
+width two, one hidden layer, and uniformly bounded coefficients.
+\end{theorem}
+
+Thus the sample obstruction is
+$\exp(\Omega(\sqrt H+\Delta H))$. At $\Delta=0$ it is the all-scale
+square-root-depth obstruction. At a fixed positive gap it is exponential
+in depth. In the intermediate range it gives a quantitative crossover,
+while input dimension grows as $\sqrt H+\Delta H$. It is not a
+fixed-input-dimension lower bound.
+
+\begin{proof}
+Use the notation of the proof of Theorem~\ref{thm:all-scale-learning}:
+$\nu=Ns$, $b=1-\nu\ge\Delta$,
+$\kappa=1-\nu+\nu\log\nu$, and $B=\kappa(H-1)$.
+The elementary bound $\kappa\ge b^2/2$ gives, for $H\ge2$,
+\begin{align}
+ \frac{bD}{B+a}
+ &\le c\left(\frac1{\sqrt a}+4\right),
+ \label{eq:window-linear-ratio}\\
+ \frac{D^2}{H(B+a)}
+ &\le 2c^2\left(\frac1a+4\right),
+ \label{eq:window-quadratic-ratio}\\
+ \frac{\kappa(d+1)}{B+a}
+ &\le 2c(H^{-1/2}+\Delta)+\frac6H.
+ \label{eq:window-first-ratio}
+\end{align}
+To verify the first inequality, split $D\le c\sqrt H+c\Delta H$.
+Maximizing $b/[a+(H-1)b^2/2]$ bounds the first contribution by
+$c\sqrt{H/[2a(H-1)]}\le c/\sqrt a$.
+If $\Delta>0$, the second is at most
+$2c(\Delta/b)H/(H-1)\le4c$; if $\Delta=0$ it vanishes.
+For the second inequality use
+$D^2\le2c^2(H+\Delta^2H^2)$ and
+$B\ge\Delta^2(H-1)/2$; again the term containing $\Delta$ is zero
+when $\Delta=0$.
+The third follows from $\kappa/(B+a)\le1/(H-1)$ and $d+1=D+3$.
+
+The uniform function comparison applies because
+$D+\log H\le c_0H$ after choosing $c$ small enough and then $H_0$
+large enough. Its width requirement
+$C_\varepsilon H^{C_\varepsilon}e^{C_\varepsilon D}$ is absorbed by
+$N\ge n^C$ uniformly in $\Delta$: $D\ge c\sqrt H/2$ for large $H$.
+The same observation absorbs every finite-width concentration error.
+
+Retain the same temperature division
+$\lambda_0=\Lambda a^2/(B+a)$. The low-temperature proximity bound is
+exactly \eqref{eq:allscale-low-error}. In its square, divide by $a^2$.
+The only previously used estimates that involved $D$ were the
+first-layer term $\kappa(d+1)$, the growing-prefix term $bD$, and
+the quadratic term $D^2/H$. Equations
+\eqref{eq:window-linear-ratio}--\eqref{eq:window-first-ratio}
+replace those three estimates. The $\log H$ terms are still uniformly
+vanishing, using
+\[
+ \frac b{B+a}\le\frac1{\sqrt{2a(H-1)}},\qquad
+ \frac1{B+a}\le\frac1a.
+\]
+The resulting uniform limiting error is at most
+\[
+ C\Lambda\left\{(2-t)+a+c+\frac c{\sqrt a}
+       +\frac{c^2}a+\frac ua\right\}
+   +C\frac ua+C\frac\varepsilon a+C(\varepsilon/a)^2.
+\]
+Choose $\Lambda$ first, then $t<2$ sufficiently close to two,
+then $a>0$ small, then $c>0$ small, and finally $u,\varepsilon>0$
+small. These choices make this bound arbitrarily small, independently
+of $\Delta$. Increasing $H_0,C$ gives the same proximity $a/1000$
+as before.
+
+The high-temperature argument does not use $D$ except through
+$\log n/N$, which still tends uniformly to zero at the stated width.
+The alternatives $B\ge a$ and $B<a$ therefore give the same proximity
+to zero, with the same constants. Finally the singleton-input noise
+witness has the same probability and population conversion on the
+$n$-point uniform law for every $D$. It gives excess $a^2/4096$ for
+all allowed predictions, and is preserved by the stated mixtures
+and clipping conventions exactly as in the all-scale proof.
+\end{proof}
+
+\begin{corollary}[The same crossover for the observation-model extensions]
+\label{cor:prefactor-window-extensions}
+The order $n=\exp(\Omega(\sqrt H+\Delta H))$, the width threshold $N\ge n^C$, and uniformity over $0<Ns\le1-\Delta$ also hold for each of the following extensions, with their existing prediction conventions and adjusted absolute constants:
+\begin{enumerate}
+\item Final clipping or tanh inside both likelihood and prediction, with bounded independent noise, as in Corollary~\ref{cor:all-scale-bounded-likelihood}.
+\item Arbitrary independent Gaussian affine output components under the raw likelihood, with bounded independent noise, as in Theorem~\ref{thm:all-scale-affine-likelihood}.
+\item Correctly specified Gaussian observation noise and arbitrary independent Gaussian affine output components under the raw likelihood, as in Corollary~\ref{cor:all-scale-gaussian-affine}.
+\end{enumerate}
+Constants are uniform in $\Delta$. Mixtures are permitted exactly within the prediction families stated in those results. This does not add clipping of an arbitrary affine prediction or a bounded link after an affine skip.
+\end{corollary}
+\begin{proof}
+In the bounded-output comparison, inverse tanh enlarges the fixed amplitude cap only from $2a$ to $3a$. In the Gaussian-noise comparison, clipping the empirical atom means enlarges it to $32a$. Thus their comparison errors have the same form as \eqref{eq:allscale-comparison-error}, with larger fixed coefficients on $a^2$, $b(D+\log H)$ and $(D+\log H)^2/H$. The three ratios \eqref{eq:window-linear-ratio}--\eqref{eq:window-first-ratio} therefore control every dimension-dependent term in their low-temperature arguments as well. The fixed tolerance and amplitude constants can be chosen smaller in the same order as above, independently of $\Delta$.
+
+For affine output components, Gaussian integration replaces the sample norm by a contraction norm. Its proximity estimates are uniform in that contraction and depend on $D$ only through the same comparison error. The high-temperature bounds and Gaussian-noise clipping error are unchanged. The remaining input Gram and affine sign-pattern failure bounds have the forms
+\[
+ C(D+3)^2 e^{-c n/(D+3)^4},\qquad
+ \exp\{C(D+5)\log(2n)-c n\},
+\]
+and tend uniformly to zero because $n=4\cdot2^D$ and $D\ge c\sqrt H/2$. Occupancy, bounded-noise alignment and Gaussian clipping events also tend uniformly to probability one. Their common witnesses and empirical-to-population conversions are unchanged. The finite-width comparison requirement remains $C_\varepsilon H^{C_\varepsilon}e^{C_\varepsilon D}$ and is absorbed by $N\ge n^C$. This proves each extension with exactly its previously specified prediction scope.
+\end{proof}

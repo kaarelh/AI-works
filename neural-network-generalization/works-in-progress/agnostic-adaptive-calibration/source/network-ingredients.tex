@@ -1,0 +1,151 @@
+\section{The neural-network ingredients}
+\label{sec:network-ingredients}
+We verify the hypotheses of the abstract theorem, including the comparison cost, without referring to a separate manuscript.
+
+\subsection{Gaussian moments and comparison neighborhoods}
+The parameter dimension in \eqref{eq:energy} is
+\[
+ D_N=N(d+2)+(H-1)N^2.
+\]
+When $s=N^{-\gamma}$ and $\gamma\ge2$, or when $H=1$ and $\gamma\ge1$, one has
+\begin{equation}
+ Ns\le1,\qquad D_Ns\le D_0:=d+H+1.
+ \label{eq:dimension-speed}
+\end{equation}
+Under the prior, $Q_N=s\chi^2_{D_N}$. The independent centered readout makes the prior prediction mean zero. For tanh, its conditional variance is $(s/N)\|h^H\|^2\le s$, hence its prior expected empirical loss is at most two. For ReLU, conditional Gaussian symmetry gives
+\[
+ \E\frac{\|h^1\|^2}N\le Ns,\qquad
+ \E\frac{\|h^\ell\|^2}N=\frac{Ns}{2}\E\frac{\|h^{\ell-1}\|^2}N.
+\]
+The readout multiplies the last normalized second moment by $s$. Thus its prior output second moment is at most $s$, and again $M=2$ is valid.
+
+\begin{lemma}[Exact implementations at every larger width]
+\label{lem:teacher-implementation}
+A width-$m$ teacher of depth $L=H+1$ and coefficient cap $B\ge1$ has, at every learner width $N\ge m$, an exact implementation of energy at most $E_\phi$ in \eqref{eq:intro-tanh-energy} or \eqref{eq:intro-relu-energy}, respectively. Its output is bounded by
+\begin{equation}
+ U_{\tanh}=mB,\qquad U_{\mathrm{ReLU}}=(d+1)m^HB^L.
+ \label{eq:teacher-amplitudes}
+\end{equation}
+\end{lemma}
+\begin{proof}
+Partition each learner hidden layer into $m$ groups of sizes
+$k_j\in\{\lfloor N/m\rfloor,\lceil N/m\rceil\}$. Copy each teacher first-layer row into its group. Replace a teacher edge leaving group $j$ by the original weight divided by $k_j$, on every corresponding edge. Divide each readout weight similarly. Every clone has its teacher activation, so the output is unchanged. The first weighted layer energy is at most $d(d+1)B^2$. Each internal layer and the readout have energy at most $2m^2B^2$, since group-size ratios are at most two and $k_j\ge N/(2m)$. This proves the tanh budget.
+
+For ReLU, first zero-pad the teacher into the learner architecture, multiply its first matrix by $\sqrt N$, and divide its readout by $\sqrt N$. Homogeneity preserves the exact function. The weighted layer energies are now bounded by
+\[
+ d m(d+1)B^2,\quad m^2B^2\text{ in each internal layer},\quad mB^2.
+\]
+Their product is at most $d(d+1)m^{2H}B^{2L}$. A zero layer gives the zero function. Otherwise multiply each layer by a positive factor, with product one, to make all weighted layer energies equal to their geometric mean. This again preserves the function and gives \eqref{eq:intro-relu-energy}.
+The amplitude estimates follow by direct propagation through the original teacher: tanh features are bounded by one, while ReLU contributes at most a factor $mB$ at each layer after the first, whose amplitude is at most $(d+1)B$.
+\end{proof}
+
+\begin{lemma}[A Gaussian teacher neighborhood]
+\label{lem:teacher-neighborhood}
+Let $g$ have an exact implementation of energy at most $E$ and amplitude at most $U$. Set
+\begin{equation}
+ K_g=\sqrt2L(\sqrt E+1)^H,
+ \qquad A_{g,n}=E+1+2D_0\log[4K_g(U+1)n].
+ \label{eq:teacher-cost}
+\end{equation}
+For every sample, every eligible width and scale in \eqref{eq:dimension-speed}, and every $\lambda\ge1/n$,
+\begin{equation}
+ F_S(\lambda)\le\widehat R_S(g)+\lambda A_{g,n}.
+ \label{eq:teacher-freeenergy}
+\end{equation}
+\end{lemma}
+\begin{proof}
+Let $w_*$ denote the exact implementation and perturb it by an independent Gaussian with covariance $\varepsilon^2$ times the prior covariance, $0<\varepsilon\le1$. The activations tanh and ReLU are both one-Lipschitz and vanish at zero. Normalize hidden Euclidean norms by $\sqrt N$. Every deterministic internal operator norm, and the normalized readout norm, is at most $\sqrt E$. If $b_\ell$ is the $L^2$ normalized size of the perturbed hidden layer, independence of the current Gaussian perturbation gives
+\[
+ b_1\le\sqrt2(\sqrt E+\varepsilon),\qquad
+ b_\ell\le(\sqrt E+\varepsilon)b_{\ell-1},
+ \qquad b_\ell\le\sqrt2(\sqrt E+\varepsilon)^\ell.
+\]
+For the normalized $L^2$ difference $\Delta_\ell$ from the deterministic state,
+\[
+ \Delta_1\le\sqrt2\varepsilon,\qquad
+ \Delta_\ell\le\sqrt E\Delta_{\ell-1}+\varepsilon b_{\ell-1}
+ \le\sqrt2\ell\varepsilon(\sqrt E+\varepsilon)^{\ell-1}.
+\]
+The readout therefore gives pointwise output root mean square error at most
+$\sqrt E\Delta_H+\varepsilon b_H\le\varepsilon K_g$.
+Only $Ns\le1$ and $s\le1$ were used in the noise bounds.
+
+Choose the fixed perturbation size $\varepsilon=1/[4K_g(U+1)n]$. Minkowski, or direct expansion of square loss, gives expected empirical loss at most $\widehat R_S(g)+1/n\le\widehat R_S(g)+\lambda$. For the comparison Gaussian $\rho$, the exact Gaussian relative-entropy formula gives
+\[
+ 2\lambda s\KL(\rho\Vert\mu)
+ \le\lambda E+2\lambda D_0\log(1/\varepsilon).
+\]
+Apply the variational formula \eqref{eq:freeenergy} with this fixed perturbation. This yields \eqref{eq:teacher-freeenergy}.
+\end{proof}
+
+\subsection{Tanh capacity}
+For this subsection only, omit the first-layer energy and put
+\[
+ Q_N^+=\sum_{\ell=2}^H\|W^\ell\|_F^2+N\|v\|_2^2,
+ \qquad D_n^{\tanh}=\sqrt{2(d+1)\log(n+1)}+\frac{H-1}{2}.
+\]
+
+\begin{lemma}[Tanh norm capacity]
+\label{lem:tanh-capacity}
+On every list of $n$ inputs,
+\begin{equation}
+ \Rad_n\left(\bigcup_N\{z_w:Q_N^+\le q\}\right)
+ \le (q/H)^{H/2}\frac{D_n^{\tanh}}{\sqrt n}.
+ \label{eq:tanh-capacity}
+\end{equation}
+In particular, \eqref{eq:abstract-capacity} holds for the full energy with $r=H$, $V=1$, and $\kappa_n=D_n^{\tanh}/H^{H/2}$, including $r=1$ when $H=1$.
+\end{lemma}
+\begin{proof}
+Fix the input list. Rademacher complexity is unchanged by taking closed convex hulls. For $t\in[0,1]$, write $\clip_t(u)=\max(-t,\min(t,u))$. If $\operatorname{Clip}(A)$ applies a common such threshold to vectors of a bounded set $A\subset\R^n$, the identity
+$\clip_t(u)=(|u+t|-|u-t|)/2$, contraction, and symmetry of the Rademacher signs give
+\begin{equation}
+ \Rad(\operatorname{Clip}(A))\le\Rad(A)+\frac1{2\sqrt n}.
+ \label{eq:variable-clip}
+\end{equation}
+Indeed, split the supremum between the two absolute-value expressions and contract each. Their added terms sum to
+$\E|\sum_i\epsilon_i|/(2n)\le1/(2\sqrt n)$.
+
+For $a>0$ and $|u|\le1$ there is the positive mixture identity
+\begin{equation}
+ \frac{\tanh(au)}a=
+ \int_0^1\clip_t(u)\,2a\tanh(at)\operatorname{sech}^2(at)dt
+ +\operatorname{sech}^2(a)\clip_1(u).
+ \label{eq:tanh-mixture}
+\end{equation}
+Its weights are nonnegative and sum to one. Integration by parts with $\tanh^2(at)$ verifies the formula for $u\ge0$; oddness gives the rest.
+
+Let $\mathcal F_1$ be the closed convex hull of all first-layer tanh feature vectors, with unrestricted first-layer rows. Recursively take
+$\mathcal F_\ell=\overline{\operatorname{conv}}\operatorname{Clip}(\mathcal F_{\ell-1})$. These sets are symmetric, convex, contain zero, and lie in $[-1,1]^n$. With $\rho^1=\boldsymbol1_N$ and
+$\rho^\ell=|W^\ell|\rho^{\ell-1}$, induction using \eqref{eq:tanh-mixture} puts neuron $j$'s sample vector in $\rho^\ell_j\mathcal F_\ell$. For a positive scaling, divide its preactivation by that scaling to obtain a convex signed combination of earlier normalized features; a zero scaling forces a zero neuron.
+The output sample vector consequently lies in
+$P(w)\mathcal F_H$, where
+\[
+ P(w)=|v|^{\mathsf T}|W^H|\cdots|W^2|\boldsymbol1_N
+ \le\sqrt N\|v\|_2\prod_{\ell=2}^H\|W^\ell\|_F
+ \le(Q_N^+/H)^{H/2}.
+\]
+The last inequality is arithmetic--geometric mean on the $H$ energy terms.
+
+A real random variable with distribution function $(1+\tanh t)/2$ gives
+$\tanh u=\E\operatorname{sign}(u-T)$. Thus $\mathcal F_1$ lies in the convex hull of affine-halfspace sign vectors on the inputs. There are at most $(n+1)^{d+1}$ such vectors by the halfspace growth bound. The finite-class Rademacher bound gives complexity at most
+$\sqrt{2(d+1)\log(n+1)/n}$. Apply \eqref{eq:variable-clip} $H-1$ times, and then multiply by the preceding bound on $P(w)$.
+Finally $|z_w|\le\sqrt{Q_N^+}\le(1+Q_N)^{H/2}$. This verifies the stated abstract parameters. All suprema have countable determining subclasses: rational parameter approximations with strict energy inequalities are dense, and the width union is countable.
+\end{proof}
+
+\subsection{ReLU capacity}
+\begin{lemma}[ReLU norm capacity]
+\label{lem:relu-capacity}
+For $r=L=H+1$, \eqref{eq:abstract-capacity} holds with
+\begin{equation}
+ V=1,\qquad \kappa_n=2^H\sqrt{\frac{d+1}{d}}L^{-L/2}.
+ \label{eq:relu-capacity-constant}
+\end{equation}
+\end{lemma}
+\begin{proof}
+Let $P=\|v\|_2\prod_{\ell=1}^H\|W^\ell\|_F$. The weighted first-layer and readout factors cancel $N$, and arithmetic--geometric mean gives
+$P\le d^{-1/2}(Q_N/L)^{L/2}$. Lipschitzness and positive homogeneity imply
+$|z_w(x)|\le\sqrt{d+1}P\le Q_N^{L/2}$, since
+$\sqrt{(d+1)/d}L^{-L/2}\le1$.
+
+Positive homogeneity normalizes all hidden Frobenius norms to one and leaves the readout norm at most $P$. A zero layer gives the zero function. For unit $P$, optimize the readout to replace the signed sum on a fixed sample by the Euclidean norm of the signed hidden-feature sums. Write each final hidden row as its norm times a unit row. Homogeneity and the sum-of-squares Frobenius constraint bound that Euclidean norm by the supremum of a single unit-row signed sum. Absolute Rademacher contraction for ReLU bounds its expectation by twice that of the network with a linear readout and one fewer hidden layer. Repeat this $H$ times. The remaining unit-norm linear class on $\bar x$ has complexity at most $\sqrt{(d+1)/n}$. Multiplication by $P$ yields the stated bound. These optimizations allow the supremum over all widths at each step. Readout sign reversal makes the absolute and ordinary conventions agree for the output class. Continuity and rational parameter approximations provide a countable determining subclass.
+\end{proof}

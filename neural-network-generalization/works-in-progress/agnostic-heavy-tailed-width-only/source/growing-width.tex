@@ -1,0 +1,49 @@
+\section{A polynomial-width approximation oracle and consistency}
+\label{sec:growing-width}
+The multiplicative approximation slack can vanish with sample size without changing the parameter prior. This yields a direct asymptotic version of comparison with all width-$\operatorname{poly}(n)$ networks.
+
+\begin{corollary}[Coefficient-one comparison with a growing width class]
+\label{cor:polynomial-growing-width}
+In the Boolean setting, fix $d,h,H$ and the tail indices, and let
+\[
+ k=b h[H(1+a+4p)+4].
+\]
+Choose any $u,v>0$ with $uk+(p+1)v<1$. Use
+$\eta_n=1/\log(en)$ in the same two-score learner. Then at every prescribed learner width $N\ge\lfloor n^u\rfloor+1$, for all sufficiently large $n$,
+\[
+ R(\widehat f_n)\le
+ \inf_{g\in\mathcal G_{\lfloor n^u\rfloor,h}}R(g)
+       +\frac1{\log(en)}+O(n^{-v})
+\]
+with probability at least $1-\delta$. The weight prior does not depend on $n$ other than through its prescribed architecture's fan-in normalization. The implicit-branch Gaussian observation variance is $16(1+\sigma^2)\log(en)$; the parameter branch may choose a different positive variance.
+
+Under the continuous slab assumption, the same conclusion holds if
+\[
+ u(dh+1)k_H+v\left(p+1+\frac{b_H}{\alpha_{\rm reg}}\right)<1.
+\]
+The dimension and slab constants are fixed in this assertion. In both cases the learner uses neither $u$, the comparison width, nor any original coefficient cap.
+\end{corollary}
+\begin{proof}
+Set $C=\lfloor n^u\rfloor$ and $\varepsilon=n^{-v}$ in the respective finite-sample theorem. The strict exponent inequalities absorb all logarithms, including $\eta_n^{-1}$ and the compiler's precision cost. The zero function belongs to every comparison class, so $A_*\le\E f_0(X)^2\le1$. Therefore
+$R_0+(1+\eta_n)A_*\le\inf_gR(g)+1/\log(en)$.
+The continuous teacher factor $T$ is $O_{d,h}(C^{dh+1})$, giving its stated exponent. If desired, choose failure probabilities summable in $n$; their extra logarithms preserve both conclusions almost surely for all sufficiently large $n$.
+\end{proof}
+
+The guarantee has coefficient one on the best growing-class risk and a vanishing additive remainder. Both terms are displayed explicitly.
+
+The native heavy-tail theorem also gives a simpler consistency conclusion, with no input-distribution regularity and no likelihood-variance schedule.
+\begin{corollary}[Consistency at every diverging prescribed width schedule]
+\label{cor:universal-consistency}
+Fix a ReLU hidden depth $H\ge1$, admissible tail indices, $0<\eta\le1$, and a conditional noise proxy $\sigma^2$. Let $X$ have any Borel probability law on $[-1,1]^d$, let $f_0\in[-1,1]$, and retain the conditional sub-Gaussian noise assumption. For every deterministic sequence of widths $N(n)\to\infty$, use the native layerwise prior and the single fixed Gaussian observation variance $16(1+\sigma^2)/\eta$. Then the ordinary final posterior mean based on the first $n$ observations satisfies
+\[
+ R(\widehat f_n)\longrightarrow R_0
+ \qquad\text{almost surely}.
+\]
+There is no upper restriction on the rate at which $N(n)$ grows. The conclusion is for each prescribed width schedule, rather than a simultaneous assertion allowing arbitrary data-dependent architecture choice.
+\end{corollary}
+\begin{proof}
+Finite one-hidden-layer ReLU networks with biases are dense in the continuous functions on a compact cube~\cite{universal}. Continuous functions are dense in $L^2(P_X)$ for any Borel probability on this compact domain. Final clipping does not increase squared distance to bounded $f_0$, and identity padding embeds a shallow ReLU network at depth $H$. Hence there is a countable sequence of finite, bounded-coefficient comparison implementations $g_j$ with $A(g_j)\to0$.
+
+For every fixed $j$, the schedule eventually satisfies $N(n)\ge\operatorname{width}(g_j)$. Apply the native squared-comparison oracle at failure probability $n^{-2}$. Its resource for this fixed comparator is finite and independent of learner width, so its remainder tends to zero. Borel--Cantelli gives
+$\limsup_n R(\widehat f_n)\le R_0+(1+\eta)A(g_j)$ almost surely. Intersect these probability-one events over the countable sequence and let $j\to\infty$. The universal lower bound $R(f)\ge R_0$ proves convergence.
+\end{proof}

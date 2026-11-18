@@ -1,0 +1,139 @@
+\section{Coefficient-free approximation oracles}
+\label{sec:coefficient-free-oracle}
+Let $\mathcal G_{C,h}$ be the class of real-valued ReLU networks with
+hidden width at most $C$ and hidden depth $h$, arbitrary finite real
+coefficients, and affine biases.  There is no norm or robustness restriction
+on these comparison networks.  Their output is raw and can be unbounded
+as their coefficients vary.  Only the input domain is compact.
+
+We first make the accuracy and architecture requirements explicit.  For
+$n\ge2$ set
+\[
+ M_n=\max\{1,K_Y\sqrt{20\log(n+2)}\},\qquad \epsilon_n=(n+2)^{-8}.
+\]
+On Boolean inputs use
+\[
+ k_B=4(d+1)(C+1)^h+\lceil\log_2(32/\epsilon_n)\rceil+2,
+ \qquad m_B=\lceil c k_B^b\rceil,
+ \qquad H_B=\lceil b(h+1)\rceil.
+\]
+For continuous inputs with density at most $\kappa$ relative to uniform
+measure on the cube, put
+\begin{align*}
+ J&=\left\lceil\log_2\frac{c\max\{1,\kappa\}d(C+1)^h}{\epsilon_n}\right\rceil,\\
+ k_D&=4(dJ+1)(C+1)^h+\lceil\log_2(32/\epsilon_n)\rceil+2,\\
+ m_D&=\lceil c k_D^b\rceil,\qquad H_D=2J+\lceil b(h+1)\rceil+3.
+\end{align*}
+For the slab condition~\eqref{eq:digital-slab-assumption}, use instead
+\[
+ F=(hC+\lceil8/\epsilon_n\rceil+1)(C+1)^{dh},\qquad
+ J_S=\left\lceil\log_2\max\left\{8,
+ 4\sqrt d(8\kappa F/\epsilon_n)^{1/\alpha}\right\}\right\rceil,
+\]
+and define $k_S,m_S,H_S$ by the density formulas with $J$ replaced by $J_S$.
+Here $b,c$ are fixed numerical constants large enough for the compiler
+lemmas.  Enlarging them is allowed once, before applying the theorem.
+
+\begin{theorem}[Raw Bayesian regression against arbitrary coefficients]
+\label{thm:raw-width-oracle}
+Assume $\E\exp(Y^2/K_Y^2)\le2$.  Use the single prior
+\eqref{eq:normalized-raw-prior}, posterior \eqref{eq:raw-posterior}, and
+$T_n=t_0\sqrt n$ from Proposition~\ref{prop:raw-network-oracle}.
+The following statements hold for every architecture fixed before the data.
+\begin{enumerate}
+\item If $X\in\{-1,1\}^d$ has any distribution, take $m_*=m_B$ and
+$H_*=H_B$.
+\item If $X\in[-1,1]^d$ has density at most $\kappa$ relative to the
+uniform probability measure, take $m_*=m_D$ and $H_*=H_D$.
+\item If $P_X$ satisfies the slab condition~\eqref{eq:digital-slab-assumption},
+take $m_*=m_S$ and $H_*=H_S$. This includes the sphere laws in
+Corollary~\ref{cor:digital-cube-sphere}.
+\end{enumerate}
+For every $N\ge m_*$ and $H\ge H_*$, and all $n$ above a fixed
+threshold depending only on the label envelope and prior parameters,
+\begin{equation}\label{eq:coefficient-free-raw-risk}
+ \E_S R(\widehat f_S)\le
+ \inf_{g\in\mathcal G_{C,h}} R(g)
+                 +c\mathcal B_n n^{-1/2}+c(n+1)^{-2},
+\end{equation}
+where $t_n=\lceil\log_2(128/\epsilon_n)\rceil$ and
+\begin{align*}
+ \mathcal B_n={}&\left[(d+1)^2(J_*+2)^4
+ +(d+1)(h+1)(m_*+1)^2+(H+1)(t_n+2)^2\right]\Lambda_n^2+M_n^2,\\
+ \Lambda_n={}&c(1+\alpha^{-1})\left[J_*+
+ \log\frac{(H+2)(m_*+2)(d+2)(\kappa+2)(M_n+2)}{\epsilon_n}\right].
+\end{align*}
+Use $J_*=0,\alpha=1,\kappa=1$ in the Boolean case;
+$J_*=J,\alpha=1$ in the density case; and $J_*=J_S$ with the stated
+slab constants in the third case.
+The constants depend on the fixed scalar prior laws and $K_Y$; no
+coefficient of a comparison network enters the bound.  The learner does
+not use $C,h,\kappa$, the comparison network, or these resource bounds to
+choose its temperature. The density and slab conditions are alternatives;
+the former gives a smaller sufficient depth for cube-supported laws.
+\end{theorem}
+\begin{proof}
+Fix a comparison network $g$.  Pointwise projection onto $[-M_n,M_n]$
+satisfies
+\[
+ (\operatorname{clip}_{M_n}g-Y)^2
+ \le(g-Y)^2+(|Y|-M_n)_+^2.
+\]
+The label-tail assumption and the choice of $M_n$ make the expectation
+of the last term at most $c(n+1)^{-4}$.  Apply the compiler to $g/M_n$, and Lemma~\ref{lem:stable-compiler-resource}
+with raw target $g$, range $M_n$, and precision $\epsilon_n$.
+It gives a sample-independent law $\rho$ supported on raw outputs of
+supremum at most $6M_n$, with
+\[
+ \E_\rho\|z_w-\operatorname{clip}_{M_n}g\|_{L^2(P_X)}^2
+                       \le cM_n^2\epsilon_n,
+ \qquad \operatorname{KL}(\rho\|\mu_{N,H})\le c\mathcal B_n.
+\]
+The label-tail bound and Cauchy--Schwarz therefore give
+$\int R(z_w)\rho(dw)\le R(g)+c(n+1)^{-2}$.
+For all sufficiently large $n$, $6M_n$ lies inside the analytical cutoff
+$c_0n^{1/4}$ of \eqref{eq:raw-supported-oracle}.  That inequality proves
+\eqref{eq:coefficient-free-raw-risk} for the fixed $g$.
+Taking a deterministic sequence of population-risk near-minimizers proves
+the infimum statement.  This last step is an
+infimum of numerical upper bounds; no data-dependent selection of a
+comparison network is required.
+\end{proof}
+
+\begin{corollary}[A growing-width comparison class]\label{cor:raw-growing-width}
+Fix $d,h,K_Y$ and, in the continuous cases, the applicable regularity
+constants $\kappa$ and $\alpha$.  Let
+\[
+ u=\frac1{8bh},\qquad C_n=\lfloor n^u\rfloor.
+\]
+For all sufficiently large $n$, every prescribed $N\ge n$, and every
+prescribed learner depth in the ranges below, the same single posterior
+satisfies
+\begin{equation}\label{eq:growing-class-raw}
+ \E_S R(\widehat f_S)
+ \le\inf_{g\in\mathcal G_{C_n,h}}R(g)
+                     +\widetilde O(n^{-1/4}).
+\end{equation}
+On Boolean inputs the permitted range is
+$b(h+1)\le H\le n^{1/4}$.  Under either continuous assumption it is
+$c_{d,h,\kappa,\alpha}\log(n+2)\le H\le n^{1/4}$, with $\alpha=1$
+for the density case.
+The tilde suppresses powers of logarithms; constants may depend on the
+fixed quantities above and the fixed prior laws.  The prior uses one
+prescribed dense architecture, the likelihood has deterministic variance
+$t_0\sqrt n/2$, and the predictor is the raw posterior mean on all data.
+\end{corollary}
+\begin{proof}
+Both compiler widths satisfy $m_*=\widetilde O(n^{1/8})$, so $N\ge n$
+is sufficient.  At fixed input dimension and teacher depth the resource is
+$\mathcal B_n=\widetilde O(m_*^2+H)=\widetilde O(n^{1/4})$.
+Division by $\sqrt n$ gives the result.  The lower bound on continuous
+learner depth is exactly the logarithmic input-quantization overhead.
+\end{proof}
+
+The inequality compares the final raw Bayesian predictor with the best
+approximation in a growing width class.  It does not assert that a learner
+can match that class with no estimation remainder, or that the learner
+width may be arbitrarily small.  Here the explicit sufficient threshold
+is $N\ge m_*$, with the simpler $N\ge n$ in the corollary.  The constants
+and powers are theoretical; no claim of practical sample counts is made.

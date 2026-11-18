@@ -1,0 +1,94 @@
+\section{Boolean circuits without an additional depth factor}
+\label{sec:digital-circuits}
+For ReLU, a Boolean circuit admits an error-restoring implementation. This gives the nearly linear edge-count resource even when the original Boolean circuit has arbitrary depth and sharing. No stability property is required of a prior draw.
+
+Consider a layered Boolean circuit with fan-in at most two, using AND, NOT and COPY gates. Count every copy or delay explicitly, let $S$ be the number of its non-input gates, and let $h$ be its depth. Let $I$ be the number of distinct input coordinates it uses. Its output is encoded as a sign in $\{-1,1\}$. The following implementation has initial Boolean-feature nodes $a_i=\operatorname{ReLU}((1+x_i)/2)$, a constant node $c=1$, and two hidden ReLU layers per Boolean layer. In the first of these two layers use
+\[
+ \begin{array}{c|c|c}
+ &r&s\\ \hline
+ \mathrm{AND}(a,b)&\operatorname{ReLU}(4(a+b)-5c)&
+                     \operatorname{ReLU}(4(a+b)-6c)\\
+ \mathrm{NOT}(a)&\operatorname{ReLU}(2c-4a)&
+                     \operatorname{ReLU}(c-4a)\\
+ \mathrm{COPY}(a)&\operatorname{ReLU}(4a-c)&
+                     \operatorname{ReLU}(4a-2c).
+ \end{array}
+\]
+The second layer returns $\operatorname{ReLU}(r-s)$. Carry one constant wire through every physical layer by an identity ReLU. The final readout is $2a-c$. Exact Boolean inputs give the prescribed output, all coefficients have magnitude at most six, and every row has at most three used coefficients. Identity layers can pad the output bit and constant to any larger hidden depth $H\ge2h+1$.
+
+Let $V_*,E_*,E_{1,*}$ be the hidden-vertex, internal/readout-edge and used-input-edge counts of this particular implementation. Then
+\[
+ V_*+E_*+E_{1,*}\le C(S+I+H+1),\qquad
+ J_*=E_*-V_*\ge0.
+\]
+Its maximum layer width is at most twice the original Boolean layer width plus one, except that the initial feature layer has width $I+1$. We assume the learner width contains this implementation. As before, irrelevant vertices may be removed.
+
+\begin{lemma}[Digital restoration under total row perturbation]
+\label{lem:digital-restoration}
+There are numerical $t_0>0$ and $C$ with the following property. Add an arbitrary input-dependent perturbation to every selected row's preactivation, and to the final linear readout. If the sum of their uniform absolute magnitudes on the Boolean cube is at most $t\le t_0$, then the resulting output is uniformly within $Ct$ of the exact Boolean output. All selected hidden values remain bounded by a numerical constant. The constants do not depend on circuit size or depth.
+\end{lemma}
+\begin{proof}
+The constant wire is within $t$ of one, because ReLU is one-Lipschitz and its identity updates have total perturbation at most $t$. At a Boolean layer, suppose every input bit is within $K t$ of its exact value, for a fixed numerical $K$. If $t_0$ is small enough, the inequalities deciding which of the two displayed hinges are active have the same strict signs as on exact bits. For example, an AND gate with at least one zero input has both hinge preactivations negative; with both inputs one, both are positive. For NOT and COPY the same alternatives hold. When both hinges are positive, their difference is exactly the incoming constant-wire value plus the difference of their row perturbations; when both are negative, their outputs are zero. The output ReLU adds at most its own row perturbation to the resulting error. Thus the new bit error is bounded by $t$ plus the sum of the three perturbation magnitudes of that gate, at most $2t$. Choosing $K\ge4$ closes the induction, including the first Boolean-feature layer. Intermediate hinge values are bounded by a numerical constant. Extra identity layers add only their portion of the total perturbation budget. The readout $2a-c$ adds a fixed factor and its own perturbation, proving the claim.
+\end{proof}
+
+Choose the fixed intensity of the scalar prior small enough that its native first absolute row moment satisfies $M_1\le1/2$. For the signed beta-prime alternative below, it suffices that $c_0/(p-1)\le1/2$.
+
+\begin{lemma}[Digital comparison with logarithmic precision cost]
+\label{lem:digital-comparison}
+For every $0<t\le1$, the Boolean implementation has a data-independent comparison law such that, with $f_w=\operatorname{clip}_{[-1,1]}z_w$,
+\[
+ \E_\rho\sup_{x\in\{-1,1\}^d}|f_w(x)-f(x)|\le t,
+\]
+\begin{equation}
+ \KL(\rho\|\mu_N)
+ \le J_*\log N+E_{1,*}\log(d+1)
+       +C(S+I+H+1)\log\frac{C(S+I+H+1)}t.
+ \label{eq:digital-entropy}
+\end{equation}
+Moreover the original raw-output prior satisfies
+\begin{equation}\begin{aligned}
+ -\log\mu_N\{f(x)z_w(x)\ge1/2\text{ for all Boolean }x\}
+ \le C\big[&J_*\log N+E_{1,*}\log(d+1)\\
+       &+(S+I+H+1)\log(C(S+I+H+1))\big].
+ \end{aligned}\label{eq:digital-margin-mass}
+\end{equation}
+\end{lemma}
+\begin{proof}
+Use the same designated/background comparison as in Lemma~\ref{lem:dag-entropy}, at precision $\epsilon$. Fix one embedding. For analysis only, cap the activation of every selected hidden vertex to a numerical interval $[0,K_0]$, with $K_0$ larger than the uniform bound in Lemma~\ref{lem:digital-restoration}. Unselected native rows remain unchanged. This cap is not applied to the actual learner or to the comparison law.
+
+Let $P_\ell$ be the average over learner nodes of the expected uniform absolute activation in this modified computation. The selected nodes contribute at most $K_0$ to this average. Layer independence and the native first absolute moment give
+\[
+ P_1\le K_0+M_1,\qquad P_\ell\le K_0+M_1P_{\ell-1},
+\]
+so $P_\ell\le C$ uniformly in depth and width. At each selected row, subtract the intended teacher affine expression evaluated on the modified preceding features. The residual consists of at most three designated coefficient errors and a background weighted sum. Its expected uniform absolute magnitude is at most $C\epsilon$: designated perturbations have expected magnitude $C\epsilon$ and multiply bounded selected features; the background contribution is bounded by $C\epsilon P_{\ell-1}$. First-layer residuals use only bounded input coordinates, and the readout obeys the same estimate. Consequently the expected sum of all selected-row and readout residual magnitudes is at most $C(V_*+1)\epsilon$.
+
+If this sum is at most $u\le t_0$, Lemma~\ref{lem:digital-restoration} applies inductively. All selected activations stay strictly below the cap, so the modified computation equals the actual one on the whole Boolean cube. Its raw output error is at most $Cu$. Markov's inequality therefore gives
+\[
+ \E_\rho\|f_w-f\|_\infty
+ \le Cu+\frac{C(V_*+1)\epsilon}{u}.
+\]
+Take $u$ a sufficiently small fixed multiple of $t$, and $\epsilon$ a sufficiently small fixed multiple of $t^2/(V_*+1)$. Lemma~\ref{lem:dag-entropy} proves \eqref{eq:digital-entropy}. The argument is uniform in the embedding and hence applies to its entropy-saving mixture.
+
+For the margin statement, take $u$ to be a fixed small numerical constant and $\epsilon=c/(V_*+1)$. The comparison probability of raw uniform error at most $1/2$ is at least one half. Binary relative entropy and Lemma~\ref{lem:dag-entropy} give \eqref{eq:digital-margin-mass}.
+\end{proof}
+
+\begin{corollary}[Boolean-circuit approximation oracle]
+\label{cor:digital-oracle}
+Under the observation model of Theorem~\ref{thm:dag-statistical}, use the final clipping link. The same ordinary fixed-temperature posterior obeys
+\begin{align*}
+ \E R(\bar f_{S_n})\le R(f)+\frac{C(1+\sigma^2)}{n+1}
+ \big[&J_*\log N+E_{1,*}\log(d+1)\\
+ &+(S+I+H+1)\log\{C(n+1)(S+I+H+1)\}\big].
+\end{align*}
+The comparator $f$ may be any Boolean circuit of the displayed realizable resources; it need not equal the conditional mean. Thus the expected excess-risk resource is nearly linear in the size of a bounded-fan-in Boolean implementation, with logarithmic learner-width dependence and no additional multiplicative depth factor.
+\end{corollary}
+\begin{proof}
+Use Lemma~\ref{lem:digital-comparison} at $t=(n+1)^{-1}$ and the sharp all-data expectation theorem. Bounded-function risk differences are at most four times their $L^1$ distance to each other when the conditional mean lies in $[-1,1]$.
+\end{proof}
+
+\begin{corollary}[An online sign-prediction consequence]
+Start from the same unconditioned parameter prior, or first condition it on $|z_w(x)|\ge1/2$ at every Boolean input. Then condition exactly on each observed target sign. Along any input sequence, including adaptively chosen inputs, the Bayesian sign predictor has total log loss at most the right-hand side of \eqref{eq:digital-margin-mass}. If each input is selected before that round's fresh prediction randomness, its expected total number of posterior-sampled mistakes is at most this quantity. Its majority predictor makes at most this quantity divided by $\log2$ mistakes, and the number of rounds assigning the correct label probability at most $2/3$ is at most this quantity divided by $\log(3/2)$.
+\end{corollary}
+\begin{proof}
+The native prior mass of the target sign function is at least its margin-event mass in \eqref{eq:digital-margin-mass}. The optional all-input margin conditioning has positive probability and preserves this lower bound, since its normalizer is at most one. The product of successive correct-label probabilities is the prior probability of consistency with the revealed labels, which is at least the target mass. Thus total log loss is bounded by its negative logarithm. Use $1-p\le-\log p$, and charge $\log2$ or $\log(3/2)$ to the respective rounds. Repeated inputs contribute no further loss after their signs have been revealed.
+\end{proof}

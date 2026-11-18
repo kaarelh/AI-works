@@ -1,0 +1,95 @@
+\section{Coefficient-free comparison resources}
+\label{sec:compiler-resources}
+We use $C\ge1$ for teacher width, $h\ge1$ for teacher hidden depth, and $H$ for learner hidden depth. The comparison class $\mathcal G_{C,h}$ consists of outputs clipped to $[-1,1]$ of ReLU networks with at most these width and depth bounds, arbitrary finite real weights, hidden biases, and an affine readout. A constant wire converts their hidden biases to the learner's convention, using width at most $C+1$. ReLU identity layers pad them exactly to depth $H\ge h$. Bounds for this clipped class also upper-bound the risk infimum over the corresponding original real-valued teachers, since clipping decreases squared distance to $f_0\in[-1,1]$.
+
+Let $b\ge2$ be the numerical compiler constant in \eqref{eq:Boolean-compiler}, increase it to an integer if needed, and set
+\[
+ a=2b(b+1),\qquad
+ Q_n=4(d+1)(C+1)^h+\lceil\log_2(16(n+1)^2)\rceil+2.
+\]
+Define two deterministic resources:
+\begin{align}
+ \mathcal B_{C,h,H,d}(n)
+ &=c(d+1)(h+1)\{Q_n^{a(h+1)}+H+1\}
+       \log\{e(d+1)(H+1)(n+1)Q_n\},\label{eq:Boolean-resource}\\
+ \mathcal C_{C,h,H,d,\kappa,\alpha}(n)
+ &=c_{d,\alpha}(T_C+H+1)
+       \log\{e\kappa(H+1)(T_C+1)(n+1)\},
+ \quad T_C=(Ch+1)(C+1)^{dh}.
+ \label{eq:continuous-resource}
+\end{align}
+Here and below numerical constants can be enlarged uniformly. In particular $\mathcal B$ and $\mathcal C$ are at least one. Additional learner depth enters additively, up to logarithms.
+
+\begin{lemma}[Comparison implementations and their actual formula sizes]
+\label{lem:compiler-resources}
+For every $g\in\mathcal G_{C,h}$ and $n\ge1$:
+\begin{enumerate}
+\item On the Boolean cube, if $H\ge b(h+1)$, there is a depth-$H$ comparison implementation of width at most $Q_n^b$, with population risk at most $R(g)+4/(n+1)^2$. Its logarithmic prior-comparison cost at accuracy $1/(n+1)$ is at most $\mathcal B_{C,h,H,d}(n)$.
+\item Under \eqref{eq:slab-regularity}, if $H\ge\max\{h,4\}$, there is a depth-$H$ comparison implementation of width at most $3T_C$, with population risk at most $R(g)+4/(n+1)^2$. Its logarithmic prior-comparison cost at accuracy $1/(n+1)$ is at most $\mathcal C_{C,h,H,d,\kappa,\alpha}(n)$.
+\end{enumerate}
+Each statement applies at every learner width at least the stated comparison width. The accuracy, implementations, and their coefficients are used only in the proof; the actual prior and likelihood do not depend on them.
+\end{lemma}
+\begin{proof}
+Use the corresponding compiler with $\zeta=(n+1)^{-2}$. Bounded squared-risk differences are at most four times the $L^1$ approximation error, giving the risk claims.
+
+For the Boolean compiler, $H_*\le b(h+1)$ and $m,B\le Q_n^b$. Unrolling its finite computation gives at most $(m+1)^{H_*+1}$ hidden occurrences. Since $m+1\le Q_n^{b+1}$, this is at most $Q_n^{a(h+1)}$. The two-channel compiler of Lemma~\ref{lem:two-channel-compiler} carries only the positive and negative scalar outputs through further layers. Thus the actual formula resource at depth $H$ is at most
+\[
+ c\{Q_n^{a(h+1)}+H+1\}.
+\]
+If $H=H_*$ use the original comparison; otherwise apply Corollary~\ref{cor:two-channel-prior-padding}. Its logarithmic stability cost uses base depth $H_*+1=O(h+1)$ rather than total learner depth. This gives \eqref{eq:Boolean-resource}.
+
+For the continuous compiler, the coarse estimate $m^{H_*}$ is unnecessary. Write its activation cells as $P_j$, with $r_j\le Ch$ facets. Its two final mask hinges per cell use the following formula resources. Unrolling one fourth-layer hinge produces one fourth-layer node, four third-layer nodes, $r_j+4$ second-layer nodes, and $2r_j+8$ first-layer nodes: in total $3r_j+17$. The two hinges therefore use at most $34(r_j+1)$ occurrences. There are at most $(C+1)^{dh}$ cells, so the four-layer compiler has at most $34T_C$ occurrences. Apply the two-channel scalar-output compiler and then relay only its two nonnegative outputs. The actual formula resource at learner depth $H$ is at most
+\[
+ c(T_C+H+1).
+\]
+The coefficient cap obeys
+\[
+ \log(B+8)\le c_{d,\alpha}
+       \log\{e\kappa(T_C+1)(n+1)\}.
+\]
+Apply Corollary~\ref{cor:two-channel-prior-padding} with original compiled depth four. This proves \eqref{eq:continuous-resource}. Neither estimate pays an exponential cost for the added identity layers.
+\end{proof}
+
+\begin{theorem}[A sharp all-data width-only expectation oracle]
+\label{thm:compiled-expectation}
+Use the fixed prior \eqref{eq:fanin-prior}, the fixed Gaussian observation variance $128s_0$, where $s_0=1+\sigma^2$, and all $n$ IID observations. Let $\bar f_{S_n}$ be the ordinary final posterior mean.
+\begin{enumerate}
+\item For Boolean inputs with arbitrary input law, if $H\ge b(h+1)$ and $N\ge Q_n^b$, then
+\[
+ \E_{S_n}R(\bar f_{S_n})
+ \le\inf_{g\in\mathcal G_{C,h}}R(g)
+    +\frac{c s_0\mathcal B_{C,h,H,d}(n)}{n+1}.
+\]
+\item Under \eqref{eq:slab-regularity}, if $H\ge\max\{h,4\}$ and $N\ge3T_C$, then
+\[
+ \E_{S_n}R(\bar f_{S_n})
+ \le\inf_{g\in\mathcal G_{C,h}}R(g)
+    +\frac{c s_0\mathcal C_{C,h,H,d,\kappa,\alpha}(n)}{n+1}.
+\]
+\end{enumerate}
+The architecture is fixed before observing the data. There is no dependence on $N$ in the remainder, no selection of likelihood variance, no sample splitting, and no prior over network sizes.
+\end{theorem}
+\begin{proof}
+For a fixed original teacher choose the deterministic compiled implementation in Lemma~\ref{lem:compiler-resources}. Apply its stable-padding comparison at $t=(n+1)^{-1}$. The comparison's averaged risk is at most the compiled risk plus $4/(n+1)$. The sharp all-data inequality of Theorem~\ref{thm:sharp-all-data-expectation} then gives the stated resource divided by $n+1$. Its proof uses the same fixed architecture and prior at sample sizes $n$ and $n+1$; no architecture schedule is needed for the auxiliary posterior. The constants are uniform in the original teacher coefficients, so the infimum over deterministic teachers may be taken afterward.
+\end{proof}
+
+\begin{corollary}[Competing with a polynomially growing width class]
+\label{cor:pure-Bayes-growing-width}
+Fix the input dimension $d$, teacher depth $h$, and noise proxy $\sigma^2$. In the continuous case also fix $\kappa,\alpha$. There are constants $u>0$, $v>0$, a fixed learner depth $H=O(h+1)$, and a fixed Gaussian observation variance such that, for every sufficiently large $n$ and every prescribed finite width $N\ge n$, the all-$n$ posterior mean satisfies
+\begin{equation}
+ \E_{S_n}R(\bar f_{S_n})
+ \le \inf_{g\in\mathcal G_{\lfloor n^u\rfloor,h}}R(g)+O(n^{-v}).
+ \label{eq:pure-Bayes-growing-width}
+\end{equation}
+This uses the one fixed fan-in prior family \eqref{eq:fanin-prior}. It uses no holdout, temperature selection, averaging over sample sizes or temperatures, or architecture mixture.
+
+One explicit choice is $v=1/2$ and
+\[
+ u=\frac1{4a h(h+1)}\quad\text{for Boolean inputs},\qquad
+ u=\frac1{4(dh+1)}\quad\text{under slab regularity}.
+\]
+For Boolean inputs take $H=\lceil b(h+1)\rceil$; for slab-regular inputs take $H=\max\{h,4\}$. More generally the rates allow any positive $u,v$ satisfying $a h(h+1)u+v<1$ in the Boolean case, or $(dh+1)u+v<1$ in the continuous case, with a sufficiently small $u$ to fit the stated compiled width. The architecture may depend on $n$, but must be selected before seeing its observations.
+\end{corollary}
+\begin{proof}
+For the stated Boolean choice, $Q_n=\widetilde O(n^{uh})$, so the resource is $\widetilde O(n^{1/4})$ and $Q_n^b=o(n)$. In the continuous case $T_C=O(n^{u(dh+1)})=O(n^{1/4})$, again with resource $\widetilde O(n^{1/4})$ and compiled width $o(n)$. Therefore every $N\ge n$ satisfies the respective width requirement for all sufficiently large $n$. The remainder is $\widetilde O(n^{-3/4})$, which is $O(n^{-1/2})$. The strict-inequality variants follow from the same substitution. All hidden constants may depend on the fixed displayed parameters, but not on $N$ or on the original coefficient magnitudes.
+\end{proof}

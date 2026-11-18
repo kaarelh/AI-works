@@ -1,0 +1,33 @@
+\section{Uniform shallow-class risk comparisons at every depth}
+\label{sec:uniform-risk-comparison}
+We now use the bounded response of the covariance construction rather than requiring it to approximate large teacher values. This removes the teacher-output-envelope assumption, while the high-gain schedule removes the logarithmic minimum-depth restriction.
+
+\begin{proposition}[Risk comparison without an output envelope]
+\label{prop:uniform-risk-comparison}
+Fix $d$, a teacher coefficient cap $B_{\rm teach}\ge1$, and a prescribed accuracy. Put $D_C=1+\log(2+C)$. There are constants $a_0,a_1,a_2$ and a width threshold at most
+$(2+C)^{a_0}(H+1)^{a_0}$, uniform over every shallow teacher of width $C$ with that coefficient cap, such that every larger learner width admits a comparison law with the following properties.
+For bounded labels, its empirical risk is at most the teacher empirical risk plus the prescribed accuracy, for every deterministic sample. Its normalized relative entropy is at most
+\begin{align}
+ A_{H,C,\nu}&\le a_1[1+(1-\nu)^2H+D_C^2/H],
+     &&H\ge a_0D_C,\label{eq:risk-action-large-depth}\\
+ A_{H,C,\nu}&\le a_1H\exp(a_2D_C/H),
+     &&1\le H<a_0D_C.\label{eq:risk-action-small-depth}
+\end{align}
+For a fixed sub-Gaussian label envelope, the same empirical comparison holds on one common label-moment and label-tail event, with constants depending additionally on that envelope. This event is independent of the teacher, learner width, and prefactor.
+\end{proposition}
+\begin{proof}
+We first treat $H\ge2$. Choose a fixed label cutoff $T$: for bounded labels use $T=1$; for a sub-Gaussian envelope choose it so that $\E Y^2\mathbf1_{\{|Y|>T\}}$ is small. Bernstein gives one event on which this empirical tail average is also small and the empirical absolute and squared label moments are bounded by fixed constants. All these choices are independent of teacher width.
+
+Choose the response readout factor $B_0$ using Lemma~\ref{lem:attenuation-loss}; it depends only on dimension, cutoff, and accuracy. Approximate the shallow teacher $g$ by a Gaussian-feature mean $g_0$ with uniform error at most a sufficiently small fixed multiple of
+$\epsilon/(1+CB_{\rm teach}+S)$, where $S$ is the fixed label-moment bound. The Gaussian balls may have radius inverse-polynomial in $C$. Hence their coefficient density satisfies
+\[
+ \log(e+Q)\le c_{d,B_{\rm teach},\epsilon,S}D_C.
+\]
+The empirical loss difference between $g_0$ and $g$ is small on the same event, since $|g|\le CB_{\rm teach}$ automatically.
+
+Set $D=\log(e+C_dQ/B_0)$. Use the moderate-gain schedule when its depth condition holds, and the high-gain schedule otherwise. The exact response $f=B_0r_H(g_0/B_0)$ is a same-sign attenuation. Lemma~\ref{lem:attenuation-loss} gives its required empirical-risk comparison to $g_0$, uniformly over prefactors. Lemma~\ref{lem:global-state-propagation} approximates this bounded response in pointwise mean square at polynomial width in $H,e^D$. Take its accuracy small enough to control the remaining empirical loss difference using the common label moments. This step does not require $B_0$ to exceed the magnitude of $g_0$: the global state estimate replaces the local stability bounds used in the earlier pointwise-function theorems.
+
+The Gaussian comparison laws and their entropy computations are unchanged. Their normalized actions are those of the moderate-gain and high-gain constructions, with fixed readout factor $B_0$. Since $D\le cD_C$, they give \eqref{eq:risk-action-large-depth} and \eqref{eq:risk-action-small-depth} after increasing constants. Their width thresholds are polynomial in $H,e^D$, hence polynomial in $H,C$.
+
+For $H=1$, draw canonical first-layer Gaussian features and give the readout conditional mean $\psi(W_i)/N$, retaining its native covariance. The normalized entropy is at most $Q^2+(d+1)\kappa(\nu)$, and the pointwise variance around $g_0$ is at most $(Q^2+1)/N$. Choose approximation accuracy inverse-polynomial in $1+CB_{\rm teach}+S$ to transfer squared loss. Both the required width and entropy are at most $\exp(cD_C)$, which has the form claimed at $H=1$. This completes every depth.
+\end{proof}

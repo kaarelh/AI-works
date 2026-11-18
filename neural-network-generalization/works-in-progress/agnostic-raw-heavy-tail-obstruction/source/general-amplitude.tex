@@ -1,0 +1,129 @@
+\section{Arbitrarily light unbounded tails do not suffice at fixed temperature}
+\label{sec:general-amplitude-obstruction}
+The preceding Gaussian-mixture construction is not specific to Gaussian
+amplitude tails. Even much lighter unbounded tails cannot, by themselves,
+imply a general fixed-temperature raw-prediction oracle. The following
+is still a generic function-prior example, not a counterexample for a
+particular finite neural-network prior.
+
+\begin{theorem}[One fixed prior for every fixed temperature]
+\label{thm:general-amplitude-obstruction}
+Let $G$ have any symmetric full-support law on $\mathbb R$ with
+$\mathbb E|G|<\infty$. There is one centered prior $\mu$ on smooth
+functions on $[0,1]$, independent of temperature, such that
+\[
+ \mathbb E_\mu\Psi(\|f\|_\infty)
+       \le\mathbb E\Psi(|G|)
+\]
+for every nonnegative increasing function $\Psi$.
+For every fixed $T>0$ there is a sequence of noiseless data laws,
+with labels in $\{0,1\}$ and sample sizes $n_j\to\infty$, for which
+the ordinary raw Gaussian-likelihood posterior mean satisfies
+\[
+ \mathbb P\{R(\bar f_{S_{n_j}})\ge c_Tj^2\}\longrightarrow1.
+\]
+The zero predictor has risk $1/2$ and a comparison law of entropy
+at most $\log2$ under this one prior. In particular the conclusion applies to
+$G=\operatorname{arsinh}(Z)$ with $Z$ standard Gaussian, whose moments
+grow only logarithmically. The adverse law sequence is allowed to
+depend on $T$; one fixed law or one law sequence defeating all
+$T$ is not asserted.
+\end{theorem}
+\begin{proof}
+For each integer $j\ge1$, set
+$r_j=\mathbb P\{j\le G\le9j/8\}>0$.
+Choose an integer
+\[
+ n_j\ge2^j+j^2\{1+\log(1/r_j)\},\qquad M_j=n_j^3,
+\]
+increasing with $j$, if necessary by increasing it further.
+For each $k\ge1$ let $p_k=2^{-k}/1000$.
+Choose disjoint open intervals $I_{j,k}\subset(0,1)$ and, inside
+each, $M_j+1$ disjoint nonnegative smooth bump functions
+$\zeta_{j,k,i}$ of maximum one. Let $x_{j,k,i}$ be points at which
+the respective bumps equal one. For independent Bernoulli$(p_k)$
+bits $B_1,\ldots,B_{M_j}$, define
+\[
+ \psi_{j,k,B}(x)=\frac1j\zeta_{j,k,0}(x)
+                         +\sum_{i=1}^{M_j}B_i\zeta_{j,k,i}(x).
+\]
+The prior has an atom of mass $1/2$ at zero and, for each $(j,k)$,
+mass $w_{j,k}=2^{-j-k-1}$ on $f=G\psi_{j,k,B}$, independently
+drawing $G$ and the bits. These weights sum to one. Every individual
+function is smooth and supported in one interval, and
+$\|\psi_{j,k,B}\|_\infty\le1$. Symmetry centers the prior and
+proves the asserted tail comparison.
+
+Fix $T>0$ and choose $k$ such that
+$p=p_k\le1/[1000(T+1)]$. For each $j$, put probability $1/2$ on
+$x_{j,k,0}$ with label one, and probability $1/(2M_j)$ on each
+$x_{j,k,i}$, $i\ge1$, with label zero. Every inactive prior branch
+is identically zero at these inputs. Let $K$ count the common input
+in a sample of size $n=n_j$. The event $K\ge n/3$ has probability
+tending to one. We work on this event.
+
+Within the active branch, integrating observed bits gives the
+amplitude likelihood
+\[
+ \exp[-K(G/j-1)^2/T]L(G),\qquad
+ L(G)=\prod_{i\,\mathrm{seen}}
+       \{(1-p)+p\exp(-k_iG^2/T)\},
+\]
+where $k_i$ is the observed multiplicity of rare input $i$.
+For every $G$, $(1-p)^n\le L(G)\le1$.
+Its branch normalizer $D_j$ is therefore bounded below by
+\[
+ D_j\ge r_j\exp[-n/(64T)](1-p)^n
+       \ge r_j\exp[-n/(64T)-2pn].
+\]
+If $G\le j/2$, the common-input squared error is at least $1/4$.
+Consequently the active-branch posterior $Q_j$ satisfies
+\[
+ Q_j\{G\le j/2\}
+ \le r_j^{-1}\exp[-n/(12T)+n/(64T)+2pn]
+ \le r_j^{-1}e^{-n/(20T)}.
+\]
+For negative amplitudes the common-input error is at least one, so
+\[
+ \mathbb E_{Q_j}[|G|\mathbf1_{\{G<0\}}]
+       \le(\mathbb E|G|)r_j^{-1}e^{-n/(4T)}.
+\]
+The last two numerical bounds follow from
+$p\le1/[1000(T+1)]$. Since
+$\log(1/r_j)\le n_j/j^2$, both right sides tend to zero.
+It follows that $\mathbb E_{Q_j}G\ge j/4$ for all sufficiently
+large $j$.
+
+The combined inactive branches have likelihood $e^{-K/T}$.
+The posterior odds of the active branch are at least
+\[
+ \frac{w_{j,k}}{1-w_{j,k}}\frac{D_j}{e^{-K/T}}
+       \ge\frac{w_{j,k}}{1-w_{j,k}}r_j e^{n/(4T)}
+       \longrightarrow\infty.
+\]
+Here $-\log w_{j,k}=O(j+k)$, $n_j\ge2^j$, and
+$-\log r_j\le n_j/j^2$. Thus active posterior mass is at least
+one half eventually. At an unobserved rare input, its bit retains
+its independent Bernoulli$(p)$ law, even after conditioning on the
+amplitude and all observed data. The full raw posterior mean there is
+therefore at least $p j/8$. At least $M_j-n_j$ rare inputs are
+unobserved, and their total population mass is at least $1/4$.
+The resulting squared risk is at least $p^2j^2/256$, proving the
+claim with $c_T=p_k^2/256$.
+
+The zero predictor has exactly risk $1/2$. The zero function has prior probability at least $1/2$, giving the
+stated comparison entropy. All posterior
+means exist because the likelihood is bounded and
+$\mathbb E|G|<\infty$; the displayed lower bounds remain valid if
+some population risks are infinite.
+\end{proof}
+
+The theorem preserves any prescribed native tail control obtainable
+from a symmetric unbounded amplitude law. For the asinh-Gaussian
+choice it is therefore compatible with the logarithmic-temperature
+positive oracle: it only rules out a generic conclusion at fixed
+$T$. Its function prior uses a countable mixture of feature families
+for the counterexample; it is not the fixed-architecture neural prior
+used in that positive result. The quantitative divergence here is
+measured in $j$, and its sample sizes can be much larger than in the
+Gaussian-amplitude example.

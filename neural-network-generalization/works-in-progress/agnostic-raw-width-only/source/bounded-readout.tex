@@ -1,0 +1,110 @@
+\section{A readout with bounded absolute-weight sum}
+\label{sec:bounded-readout-endpoint}
+A readout restriction gives a faster fixed-likelihood alternative when the
+regression function is bounded.  This is a different prior with bounded
+readout support, not an improvement of the unrestricted-support prior in
+the main theorem.  It requires no final output activation.
+
+Keep the gamma-gated Student hidden layers.  At the readout use
+\[
+ P\sim\operatorname{Dirichlet}(\vartheta/N,\ldots,\vartheta/N),\qquad
+ z_w(x)=b+\sum_{j=1}^N P_jU_jh_j^H(x),
+\]
+where $b,U_1,\ldots,U_N$ are independent uniform variables on $[-1,1]$,
+independent of $P$ and the hidden layers.  Thus the readout coefficients
+have absolute sum at most one, $|b|\le1$, and $|z_w(x)|\le2$ on every
+input.  The weights are dense almost surely, but their support is
+restricted.  The raw affine output is used directly in the Gaussian
+likelihood and in its ordinary posterior mean.
+
+\begin{proposition}[Fixed-likelihood expected oracle under a readout restriction]
+\label{prop:bounded-readout-width}
+Assume $Y=f_0(X)+\xi$, with $|f_0|\le1$ and centered conditional
+$\sigma^2$-sub-Gaussian noise.  Use any fixed temperature
+$T\ge1024(1+\sigma^2)$, with physical Gaussian likelihood variance
+$T/2$.  Under any input setting of Theorem~\ref{thm:raw-width-oracle},
+for every eligible compiled width $N\ge m_*$ and depth $H\ge H_*$,
+\[
+ \E_S R(\widehat f_S)
+ \le\inf_{g\in\mathcal G_{C,h}}R(g)
+                +\frac{cT\mathcal B_n^{(1)}}{n+1}+c(n+1)^{-2},
+\]
+where $\mathcal B_n^{(1)}$ is the resource in the main theorem with its
+proof range $M_n$ replaced by one.  In particular, at fixed $d,h$,
+input regularity and noise bound, the remainder is
+\[
+ \widetilde O\left(\frac{(1+\sigma^2)(C^{2bh}+H)}n\right).
+\]
+For $C_n=\lfloor n^{1/(4bh)}\rfloor$, $H\le n^{1/2}$ and every
+prescribed $N\ge n$, the remainder is $\widetilde O(n^{-1/2})$.
+The previous lower depth thresholds still apply.  The prior family and
+likelihood variance are fixed, and the returned predictor uses all
+observations.  This is an expected-risk statement.
+\end{proposition}
+\begin{proof}
+First modify only the compiler's final encoding.  A value $a\in[-1,1]$
+can be rounded, with error at most $2^{1-t}$, to
+\begin{equation}\label{eq:unit-variation-digital-readout}
+ q=\sum_{r=1}^t2^{-r}s_r-2^{-t},\qquad s_r\in\{-1,1\}.
+\end{equation}
+Indeed encode
+$k=\min\{2^t-1,\lfloor2^{t-1}(a+1)\rfloor\}$ in $t$ binary digits,
+and replace each binary digit by its signed version.  The raw affine
+readout in \eqref{eq:unit-variation-digital-readout} has absolute
+coefficient sum plus absolute bias exactly one.  The same expression
+remains in $[-1,1]$ when all $s_r\in[-1,1]$.
+For a rational clipped compiler output $a=A/Q$, the required rounding is
+one constant-depth integer-division block.  Thus the width, depth and
+precision bounds of the earlier compilers remain unchanged after
+increasing their numerical constants.  Set $t$ large enough that the
+additional error is at most the requested compiler accuracy.
+
+Here is the readout comparison replacing the Gaussian-factor step in
+Lemma~\ref{lem:raw-bit-comparison}.  Let $v_r=2^{-r}$ and
+$L=\sum_rv_r=1-2^{-t}$.  Choose selected latent-gate centers
+\[
+ w_r=v_r+(1-L)/t,\qquad
+ \sum_rw_r=1,\qquad w_r\ge2^{-t}/t,
+\]
+and uniform-factor centers $u_r=v_r/w_r$.  Then
+$0\le u_r\le1-2^{-t}/t$.  Put each selected gate within relative
+precision $\eta$ of $w_r$, its selected uniform factor within absolute
+precision $\eta$ of $u_r$, and the bias within $\eta$ of $-2^{-t}$.
+Take $\eta$ smaller than the desired functional precision and than
+$c2^{-t}/t$.  Condition the total inactive latent-gate mass to be at
+most $\eta$, reducing it further if needed for marker separation.
+Its gamma small-ball cost is $O(\log(1/\eta)+t+\log(t+1))$.
+The normalized selected coefficients then have total absolute error
+$O(\eta)$, and the inactive contribution is deterministically $O(\eta)$
+because $|U_jh_j^H|\le1$.
+
+Each selected latent gate costs $\log N+O(\log(1/\eta))+
+(\vartheta/N)\log(1/w_r)$.  Summing the last term costs at most
+$c(t+\log(t+1))$, since $N\ge t$.  The standard disjoint location
+mixture cancels the selected $\log N$ terms.  The uniform-factor and
+bias intervals cost $O((t+1)\log(1/\eta))$.  All these costs are
+polynomial in logarithmic precision, because
+$\log(1/\eta)=O(t+\log(1/\delta)+\log(t+1))$.
+The hidden prefix and restoring digital comparison are unchanged.
+Consequently their comparison law has entropy at most
+$c\mathcal B_n^{(1)}$ and population squared discrepancy
+$O((n+2)^{-8})$ from $\operatorname{clip}_{[-1,1]}g$.
+It is automatically supported on raw outputs in $[-2,2]$.
+
+Because $|f_0|\le1$, projection onto $[-1,1]$ cannot increase
+$\E(g-f_0)^2$, hence cannot increase squared test risk.  The comparison
+error changes risk by $O((n+1)^{-2})$, using
+$R(f)-R(g)=\E[(f-f_0)^2-(g-f_0)^2]$ and the bounded comparison outputs.
+The all-data exponential-weights expected-risk theorem for predictions
+in $[-2,2]$, after rescaling its unit-range statement, gives
+\[
+ \E_S R(\widehat f_S)\le\rho R+
+                   \frac{T\KL(\rho\|\mu)}{n+1}
+ \quad\text{when }T\ge1024(1+\sigma^2).
+\]
+This is the bounded-prediction theorem used in~\cite{rawprior}; the bound
+on predictions here comes from the readout prior, not an output link.
+Substitute the comparison law and take population near-minimizers.
+Finally $\mathcal B_n^{(1)}=\widetilde O(C^{2bh}+H)$ gives the stated
+rates and growing-class substitution.
+\end{proof}

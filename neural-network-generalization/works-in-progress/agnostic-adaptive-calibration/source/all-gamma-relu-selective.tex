@@ -1,0 +1,93 @@
+\section{A sharper ReLU comparison cost at every scale}
+\label{ag-sec:relu-selective}
+Positive homogeneity and a sparse comparison mean improve the teacher budget without restricting the learner prior. Only this section assumes ReLU.
+
+\begin{lemma}[A balanced sparse teacher]
+\label{ag-lem:relu-balanced}
+A width-$m$, coefficient-$B$ teacher has an exact implementation at every $N\ge m$, with at most $m$ active coordinates per hidden layer, and total energy
+\[
+ E_{\rm R}=L[d(d+1)]^{1/L}m^{2H/L}B^2.
+\]
+Each layer's weighted energy is at most $e=E_{\rm R}/L$. Its output amplitude is at most $U_{\rm R}=(d+1)m^HB^L$.
+\end{lemma}
+\begin{proof}
+Place the teacher into the first $m$ coordinates of every hidden layer. Multiply the first-layer mean matrix by $\sqrt N$ and the readout by $1/\sqrt N$, preserving the output by ReLU homogeneity. The weighted layer energies become $d\|A_1\|_F^2,\|A_2\|_F^2,\ldots,\|A_H\|_F^2,\|c\|_2^2$, whose product is at most $d(d+1)m^{2H}B^{2L}$. If one is zero, use the zero implementation. Otherwise rescale the layers by positive factors with product one to make all energies equal to their geometric mean. This preserves both the function and its active support. The amplitude bound follows directly from the original coefficient-bounded teacher.
+\end{proof}
+
+\begin{lemma}[Selective perturbation of a sparse mean network]
+\label{ag-lem:relu-profile-comparison}
+Let $N/\omega\le1$ and let a deterministic ReLU network $w_*$
+have, at layer $\ell$, at most $m_\ell\le N$ active coordinates.
+Assume its first-layer mean is supported on the active rows, each
+internal mean matrix is supported on active current rows and active
+preceding columns, and its readout is supported on the final active
+coordinates. Suppose every weighted layer energy is at most $e$.
+For $0<r\le1$, retain all prior Gaussian variances except those
+entering active hidden rows and all readout variances, whose standard
+deviations are multiplied by $r$. Center the resulting product Gaussian
+law $\nu_r$ at $w_*$. Then, with $L=H+1$,
+\begin{align*}
+ (2/\omega)\operatorname{KL}(\nu_r\Vert\mu)
+ &\le Q_N(w_*)+2\left(d+2+\sum_{\ell=2}^Hm_\ell\right)\log(1/r),\\
+ \sup_{x\in[-1,1]^d}
+ \left(\mathbb E_{\nu_r}|z_w(x)-z_{w_*}(x)|^2\right)^{1/2}
+ &\le\sqrt2 Lr(e+1)^{H/2}.
+\end{align*}
+\end{lemma}
+\begin{proof}
+There are
+$k=m_1(d+1)+N\sum_{\ell=2}^Hm_\ell+N$ narrowed coordinates.
+The exact Gaussian entropy formula and $N/\omega\le1$ give
+\[
+ (2/\omega)\operatorname{KL}(\nu_r\Vert\mu)
+ =Q_N(w_*)+(1/\omega)k(r^2-1-2\log r)
+ \le Q_N(w_*)+2\left(d+2+\sum_{\ell=2}^Hm_\ell\right)\log(1/r).
+\]
+Fix an input and set $S_\ell=\|h^\ell\|_2^2/N$. The normalized
+first mean-layer squared norm is at most $2e$; its Gaussian noise
+contributes at most two to its expected squared norm. Centering of
+all Gaussian noise and $\operatorname{ReLU}(t)^2\le t^2$ imply
+$\mathbb E S_1\le2(e+1)$. Each later mean matrix has operator norm
+at most $\sqrt e$, and its conditional noise contributes at most
+$(N/\omega)S_{\ell-1}\le S_{\ell-1}$. Hence
+$\mathbb E S_\ell\le2(e+1)^\ell$.
+
+Let $P_\ell$ project onto that layer's active coordinates, and put
+$\Delta_\ell=(\mathbb E\|P_\ell h^\ell-h_*^\ell\|_2^2/N)^{1/2}$.
+The deterministic hidden state is supported on the active coordinates.
+Lipschitzness and conditional independence give
+\[
+ \Delta_1\le\sqrt2r,\qquad
+ \Delta_\ell\le\sqrt e\,\Delta_{\ell-1}
+       +r\sqrt{m_\ell/\omega}\sqrt{\mathbb E S_{\ell-1}}
+ \le\sqrt e\,\Delta_{\ell-1}
+       +\sqrt2r(e+1)^{(\ell-1)/2}.
+\]
+Thus $\Delta_\ell\le\sqrt2\ell r(e+1)^{(\ell-1)/2}$.
+The supported mean readout has $\sqrt N\|v_*\|_2\le\sqrt e$,
+while its independent perturbation contributes output variance
+$(r^2/\omega)S_H$. Consequently the total root mean square output
+error is at most
+$\sqrt e\,\Delta_H+r\sqrt{(1/\omega)\mathbb E S_H}
+\le\sqrt2 Lr(e+1)^{H/2}$.
+\end{proof}
+
+\begin{corollary}[Homogeneous resource dependence for every $\gamma\ge1$]
+\label{ag-cor:relu-cost}
+For ReLU, Theorem~\ref{ag-thm:main} holds with the following sharper comparison cost in place of $A_{m,b,n}$:
+\[
+ A^{\rm R}_{m,b,n}=1+E_{\rm R}
+ +2[d+2+(H-1)m]\log[4K_e(U_{\rm R}+1)n],
+ \qquad K_e=\sqrt2L(e+1)^{H/2},
+\]
+where $B=b$ in the teacher quantities. The same replacement is made in $\mathcal B_{m,b,n}$. Its remainder is
+\[
+ \widetilde O\left(
+ m^{2H/L}b^2 R^{1-1/L}n^{-2/[L(d+2)]}
+       +m^{2H}b^{2L}n^{-2/(d+2)}\right)
+\]
+at fixed dimension and depth. In particular the noiseless resource power is $m^{2H}b^{2L}$, and at positive fixed risk the growing-cap sufficient range is $H\alpha+L\beta<1/(d+2)$ for $m\le n^\alpha,b\le n^\beta$.
+\end{corollary}
+\begin{proof}
+Apply Lemma~\ref{ag-lem:relu-profile-comparison} to the balanced teacher, with all active sizes equal to $m$, and choose $r=1/[4K_e(U_{\rm R}+1)n]$. Its pointwise root mean square output error is at most $1/[4(U_{\rm R}+1)n]$. Expanding square loss gives comparison expected empirical loss at most $\widehat R_S(g)+1/n$. The relative-entropy bound and \eqref{ag-eq:variational} therefore give $F_S(\lambda)\le\widehat R_S(g)+\lambda A^{\rm R}_{m,b,n}$ whenever $\lambda\ge1/n$. The selected root meets this condition. Every subsequent step of Theorem~\ref{ag-thm:main} uses only this comparison and $(U_{\rm R}+1)^2\le C E_{\rm R}^L$, so it applies unchanged with $r=L$. Finally $2H/L\ge1$, hence the logarithmic covariance cost is of order at most $\widetilde O(E_{\rm R})$, proving the displayed powers.
+\end{proof}

@@ -1,0 +1,149 @@
+\section{Full-energy capacity for every Lipschitz activation}
+\label{sec:all-lipschitz-full-energy}
+A scalar covering argument removes the bounded-variation condition on the
+activation derivative, at the expense of additional logarithms in sample
+size. The activation need only be globally Lipschitz.
+
+For a set $F\subset[-1,1]^n$, write
+$\mathfrak R(F)=n^{-1}\mathbb E_\epsilon\sup_{f\in F}\sum_i\epsilon_i f_i$
+and let $d_n(f,g)=\|f-g\|_2/\sqrt n$. Let $\mathcal L$ be all scalar
+one-Lipschitz functions on $[-1,1]$ which vanish at zero.
+
+\begin{lemma}[An unknown scalar Lipschitz link]
+\label{lem:unknown-link}
+There is an absolute $C$ such that, for every symmetric nonempty
+$F\subset[-1,1]^n$ and $n\ge2$,
+\[
+ \mathfrak R(\{\psi\circ f:f\in F,\ \psi\in\mathcal L\})
+ \le C\log^{3/2}(2n)\mathfrak R(F)+C/\sqrt n.
+\]
+\end{lemma}
+\begin{proof}
+We may take closures in the compact cube. Let
+$G(F)=n^{-1}\mathbb E_g\sup_{f\in F}\sum_i g_i f_i$, with independent
+standard Gaussian coordinates. Conditioning on their magnitudes and
+using the Rademacher contraction principle gives
+\[
+ G(F)\le\mathbb E\max_i|g_i|\,\mathfrak R(F)
+       \le C\sqrt{\log(2n)}\,\mathfrak R(F).
+\]
+Gaussian Sudakov minoration, applied to a maximal separated subset,
+therefore gives for $0<a\le2$
+\[
+ \log\mathcal N(a,F,d_n)
+ \le CnG(F)^2/a^2
+ \le Cn\log(2n)\mathfrak R(F)^2/a^2.
+\]
+The scalar class $\mathcal L$ has
+$\log\mathcal N(a,\mathcal L,\|\cdot\|_\infty)\le C/a$ for
+$0<a\le1$. One can discretize a grid of spacing proportional to $a$,
+quantize function values at the same scale, and count only sequences
+whose successive quantized increments have bounded integer magnitude;
+the initial value is fixed at zero. Representatives may be chosen from
+the original class in each nonempty cell.
+
+Composition of these two covers yields
+\[
+ \log\mathcal N(3a,\mathcal L\circ F,d_n)
+ \le Cn\log(2n)\mathfrak R(F)^2/a^2+C/a.
+\]
+The truncated Dudley entropy bound for Rademacher processes now implies
+\[
+ \mathfrak R(\mathcal L\circ F)
+ \le4\alpha+\frac C{\sqrt n}\int_\alpha^2
+          \sqrt{\log\mathcal N(a,\mathcal L\circ F,d_n)}\,da.
+\]
+Choose $\alpha=n^{-1/2}$. The first entropy term integrates as
+$C\sqrt{\log(2n)}\mathfrak R(F)\log(2/\alpha)$, while the second
+integrates to $C/\sqrt n$. This proves the claim. Gaussian Sudakov
+minoration and the truncated Dudley bound are standard Gaussian and
+Rademacher process inequalities~\cite{talagrand}; their metrics and normalizations have
+been stated explicitly here.
+\end{proof}
+
+Let $\mathcal A_0$ be the closed absolute convex hull of the constant
+function one and the $d$ coordinate functions on the input cube.
+Recursively define
+\[
+ \mathcal A_\ell=\overline{\operatorname{aconv}}
+   \bigl(\{1\}\cup\{\psi\circ f:f\in\mathcal A_{\ell-1},
+                                     \psi\in\mathcal L\}\bigr).
+\]
+These are symmetric classes with envelope one. Absolute convexification
+preserves the Rademacher supremum of a symmetric class. Adding the
+constant atom increases its expected supremum by at most $1/\sqrt n$.
+Lemma~\ref{lem:unknown-link} and the finite-coordinate bound consequently
+show, on every input sample,
+\begin{equation}
+ \widehat{\mathfrak R}_n(\mathcal A_H)
+ \le \frac{C^{H+1}\log^{3H/2}(2n)
+                      [1+\sqrt{\log(2d+2)}]}{\sqrt n}.
+ \label{eq:all-lipschitz-atom-rad}
+\end{equation}
+The same bound holds for worst-case empirical complexity.
+
+Now let $\phi$ be globally $A$-Lipschitz, $A\ge1$, and put
+$\beta=|\phi(0)|$. At a nonzero preactivation budget $t$, the normalized
+profile
+\[
+ \psi_t(u)=\frac{\phi(tu)-\phi(0)}{At},\qquad -1\le u\le1,
+\]
+belongs to $\mathcal L$. Assign neuron budgets
+\[
+ r_j^1=\beta+A\sum_i|W^1_{ji}|,\qquad
+ r_j^\ell=\beta+A\sum_i|W^\ell_{ji}|r_i^{\ell-1},\qquad
+ P=\sum_j|v_j|r_j^H.
+\]
+A zero budget gives the zero feature. Otherwise its feature divided by
+its budget is a convex combination of the appropriately signed constant atom and a
+normalized profile applied to an absolute convex combination from the
+preceding class. Induction proves $z_w\in P\mathcal A_H$.
+
+For the usual weighted energy
+$Q_N=(d/N)\|W^1\|_F^2+\sum_{\ell\ge2}\|W^\ell\|_F^2+N\|v\|^2$,
+Cauchy--Schwarz and $\||W|\|_{\rm op}\le\|W\|_F$ give
+\[
+ \|r^1\|_2/\sqrt N\le\beta+\sqrt2A\sqrt{Q_N},\qquad
+ \|r^\ell\|_2/\sqrt N
+    \le\beta+A\sqrt{Q_N}\|r^{\ell-1}\|_2/\sqrt N.
+\]
+Hence, with $T=2+\beta+2A$ and $L=H+1$,
+\[
+ P\le T^H(1+Q_N)^{L/2}.
+\]
+Combining this with \eqref{eq:all-lipschitz-atom-rad} gives
+\begin{equation}
+ \widehat{\mathfrak R}_n(\{z_w:Q_N(w)\le q\})
+ \le\frac{C_{H,A,\beta}\log^{3H/2}(2n)
+          [1+\sqrt{\log(2d+2)}]}{\sqrt n}(1+q)^{L/2},
+ \qquad |z_w|\le T^H(1+q)^{L/2}.
+ \label{eq:all-lipschitz-full-energy-rad}
+\end{equation}
+The classes include all learner widths. For statistical separability,
+use rational-parameter approximations of the actual networks, at each
+integer width. Continuity of a Lipschitz activation makes these uniformly
+dense on the compact input cube. The enlarged atom classes are only a
+capacity bound; their finite-sample closures are compact subsets of the
+finite-dimensional sample cube.
+
+For the Gaussian comparison, set $E=d(d+1)B^2+2Hm^2B^2$ and $U=T^H(1+E)^{L/2}$. The perturbation proof in Lemma~\ref{lem:bv-comparison} uses only Lipschitzness and the activation offset, so it applies with this $U$, $B_0=1+\beta+2A(\sqrt E+1)$ and $K_g=2LB_0^H$. Its free-energy cost is
+\[
+ A_{g,n}=E+1+2(d+H+1)\log[4K_g(U+1)n].
+\]
+A uniform prior-risk bound is $1+2(4A_0^2)^H$, with $A_0=\max\{1,A,\beta\}$. Use these constants and the displayed capacity bound in the abstract theorem. The countable-cap population argument of Theorem~\ref{thm:network-main} remains valid because the statistical constant includes the envelope factor $T^H$, and $(U+1)^2$ is at most a fixed multiple of $T^{2H}(1+E)^L$.
+
+The full-energy Gaussian posterior argument therefore applies with
+$r=L$ to every globally Lipschitz activation, without a condition on
+its derivative or its value at zero. The additional
+$\log^{3H/2}(2n)$ only changes logarithmic factors in the calibration
+and oracle. At deep scales $\gamma\ge2$, and at every scale
+$\gamma\ge1$ for one hidden layer, the same teacher comparison and
+free-energy root give
+\[
+ R(\widehat f_n)\le R(g)+\widetilde O_{H,A,\beta,d}
+   \left(A_g R(g)^{1-1/L}n^{-1/L}+A_g^L/n\right).
+\]
+The prior remains one fixed dense independent Gaussian architecture.
+The bounded-variation derivative proof remains useful because it avoids
+these additional depth-dependent logarithmic powers. Tanh's separate
+bounded-activation argument can retain its sharper depth exponent.

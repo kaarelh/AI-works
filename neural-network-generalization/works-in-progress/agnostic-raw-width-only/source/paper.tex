@@ -1,0 +1,147 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,mathtools,microtype}
+\usepackage[margin=1in]{geometry}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue]{hyperref}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}
+\newcommand{\KL}{\operatorname{KL}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\title{Raw Bayesian neural-network regression competes with narrow approximations}
+\author{ChatGPT-6 Astra \and Claude Opus 5.5 \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{17 November 2026}
+\hypersetup{pdftitle={Raw Bayesian neural-network regression competes with narrow approximations},pdfauthor={ChatGPT-6 Astra; Claude Opus 5.5; Kaarel Hänni; Dmitry Vaintrob}}
+\begin{document}\maketitle
+\begin{abstract}
+Can Bayesian neural-network regression compete with the best approximation
+of width polynomial in the sample size, when the comparison network may
+have arbitrarily large coefficients?  We give a positive result for one
+continuous full-support prior on a prescribed dense tanh architecture.
+Hidden outgoing weights have continuous gamma multipliers and Student
+factors; the Gaussian readout has a Dirichlet allocation of its variance.
+The likelihood uses raw squared errors and prediction is the ordinary raw
+posterior mean after all observations.  For marginally sub-Gaussian labels,
+a deterministic Gaussian observation variance proportional to $\sqrt n$
+gives a coefficient-one expected-risk oracle.  At fixed input dimension
+and comparison depth $h$, it competes with arbitrary-coefficient ReLU
+networks of width $n^u$ for some $u>0$, with a vanishing polynomial
+remainder, at every prescribed learner width $N\ge n$.
+With only a finite second label moment, a data-calibrated observation
+variance gives a slower vanishing oracle for a growing width class.
+The input distribution may be arbitrary on the Boolean cube, or satisfy
+slab anticoncentration on a continuous domain, including uniform spheres.
+A binary-input compiler avoids a power-of-accuracy width cost; it uses
+logarithmic extra depth for continuous inputs.  Margin-restoring tanh gates
+make the comparison cost additive in extra learner depth.  For noisy
+realizable conditional means, a separate theorem keeps one fixed likelihood
+variance and gives an almost $1/n$ rate at fixed teacher resources.
+For exactly Gaussian noise, a further theorem uses its true variance
+without inflation, with a larger complexity polynomial.  For marginally
+sub-Gaussian labels with bounded conditional mean, a separate full-support
+readout with faster-decreasing tails gives a nearly inverse-sample agnostic
+complexity penalty at observation variance proportional to $\log^2 n$.
+Removing the conditional-mean bound adds an explicit $n^{-1+o(1)}$ term.
+The learners use no output clipping, architecture mixture, or holdout
+selection.
+\end{abstract}
+
+\section{Approximation quality rather than exact realizability}
+A complicated regression function can still admit a useful narrow-network
+approximation.  A learning guarantee should then compare test risk with
+that approximation's risk, rather than require the target itself to have
+small complexity.  Width alone is a demanding measure: a narrow network
+may use arbitrarily large real coefficients, encode steep transitions, or
+have large raw outputs.
+
+This paper proves such a comparison for one fixed family of Bayesian tanh
+networks.  The prior is specified in Section~\ref{sec:raw-model}.  It is
+hierarchical in continuous weights and has full support on a prescribed
+dense architecture.  It is not the independent Gaussian weight prior.
+The observation model is ordinary Gaussian regression with a specified
+sample-size-dependent variance.  Both its likelihood and final posterior
+mean use unrestricted real outputs.
+
+The main theorem bounds expected test risk by the best raw ReLU-network
+risk plus an estimation remainder, with coefficient exactly one on the
+comparison risk.  At fixed input dimension and comparison depth, its
+resource is
+\[
+ \widetilde O\big(C^{2bh}+H\big),
+\]
+where $C$ is comparison width, $h$ is comparison hidden depth, $H$ is
+learner hidden depth, and $b$ is a numerical constant from a Boolean
+arithmetic compiler.  Its statistical penalty is this resource divided
+by $\sqrt n$.  For example, taking
+\[
+ C_n=\lfloor n^{1/(8bh)}\rfloor,\qquad H\le n^{1/4},\qquad N\ge n
+\]
+gives a remainder $\widetilde O(n^{-1/4})$.  Boolean inputs require only
+$H\ge O(h)$; continuous inputs require $H\ge c\log n$.  The latter
+requirement is explicit and cannot be suppressed by calling learner
+depth fixed.
+
+Under only a finite second label moment, Theorem~\ref{thm:raw-finite-variance-width}
+gives a slower vanishing comparison using a variance calibrated from the
+observed labels.  Its output remains raw and its coefficient on comparison
+risk is still one.
+
+There are three ingredients.  A raw-posterior oracle charges a useful
+comparison neighborhood by its entropy relative to the weight prior.
+A coefficient-free Boolean compiler turns arbitrary real coefficients
+into finite digital computation.  A tanh binary quantizer extends that
+compiler to continuous inputs, while restoring digital margins prevents
+padding to larger learner depth from repeatedly amplifying errors.
+Clipping occurs only in this proof's comparison construction; sub-Gaussian
+label tails make that comparison step inexpensive.  It never changes
+the observed labels or the actual learner.
+
+The main statistical conclusion is in expectation over the training
+sample.  It is not a claim of efficient posterior computation, a
+pointwise risk domination with no estimation term, or a guarantee at
+all widths as small as the uncompiled teacher.  The explicit threshold
+is the compiled width, and $N\ge n$ is a simple sufficient choice in
+the growing-class corollary.
+
+\paragraph{Relation to earlier results.}
+Dense Bayesian neural networks with heavy-tailed weights and deterministic
+architectures already have posterior-contraction guarantees for structured
+smoothness classes\cite{castillo-egels}.  The present comparison target is
+different: arbitrary-coefficient finite-depth ReLU approximations, a
+coefficient-one agnostic risk inequality, every sufficiently large
+prescribed width, and an ordinary raw posterior mean.  The prior and
+sample-size-dependent observation variance are part of the theorem; the
+result is not asserted for every reasonable prior.  The underlying
+coefficient-reduction idea also has earlier precedents in neural
+complexity theory\cite{maass,vardi-shamir}.  We use a precise finite-input
+compiler\cite{booleancompiler} and standard threshold arithmetic
+\cite{hab}, and prove the continuous quantization and Bayesian comparison
+consequences needed here.
+
+\input{model-and-oracle}
+\input{main-oracles}
+\input{finite-variance}
+\input{boolean-compiler}
+\input{quantized-input}
+\input{slab-quantized-input}
+\input{restoring-bits}
+\input{stable-resources}
+\input{fixed-temperature}
+\input{matched-variance}
+\input{extensions}
+\input{bounded-readout}
+\input{asinh-width}
+\input{asinh-confidence}
+\input{independent-coordinates}
+
+\begin{thebibliography}{99}
+\bibitem{rieck-nedelman} James R. Rieck and Jerry R. Nedelman. A log-linear model for the Birnbaum--Saunders distribution. \emph{Technometrics} 33(1):51--60, 1991. \url{https://doi.org/10.1080/00401706.1991.10484769}.
+\bibitem{leiva-sinh} Víctor Leiva, Filidor Vilca-Labra, and N. Balakrishnan. A skewed version of the non-central sinh-normal distribution and its properties and application. Technical report, Universidade Estadual de Campinas, 2007. Section 1 gives the sinh-normal parameterization. \url{https://www.ime.unicamp.br/sites/default/files/pesquisa/relatorios/rp-2007-14.pdf}.
+\bibitem{rawprior} ChatGPT-6 Astra, Claude Opus 5.5, Kaarel H\"anni, and Dmitry Vaintrob. \emph{Raw-output Bayesian learning with continuous shrinkage priors}. Research manuscript, November 2026. Normalized Gaussian readout, all-width comparison neighborhoods, and raw posterior tail transfer. \url{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/works-in-progress/agnostic-raw-priors}.
+\bibitem{booleancompiler} ChatGPT-6 Astra, Claude Opus 5.5, Kaarel H\"anni, and Dmitry Vaintrob. \emph{A width-only approximation guarantee for Bayesian neural networks on Boolean inputs}. Research manuscript, November 2026. The coefficient-free Boolean compiler and its constant-depth threshold-arithmetic refinement. \url{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/works-in-progress/agnostic-width-only-boolean}.
+\bibitem{hab} William Hesse, Eric Allender, and David A. Mix Barrington. Uniform constant-depth threshold circuits for division and iterated multiplication. \emph{Journal of Computer and System Sciences} 65(4):695--716, 2002.
+\bibitem{maass} Wolfgang Maass. Bounds for the computational power and learning complexity of analog neural nets. \emph{SIAM Journal on Computing} 26(3):708--732, 1997.
+\bibitem{vardi-shamir} Gal Vardi and Ohad Shamir. Neural networks with small weights and depth-separation barriers. \emph{Advances in Neural Information Processing Systems} 33:19433--19442, 2020.
+\bibitem{castillo-egels} Isma\"el Castillo and Paul Egels. Posterior and variational inference for deep neural networks with heavy-tailed weights. \emph{Journal of Machine Learning Research} 26(122):1--58, 2025. \url{https://www.jmlr.org/papers/v26/24-0894.html}.
+\end{thebibliography}
+\end{document}

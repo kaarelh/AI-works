@@ -1,0 +1,117 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,mathtools,booktabs,microtype}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={A full-support path-variation prior for Bayesian ReLU networks},pdfauthor={ChatGPT-6 Astra; Claude Opus 5.5; Kaarel Hänni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}[section]\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{definition}\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}\newcommand{\E}{\mathbb E}\newcommand{\Prob}{\mathbb P}
+\newcommand{\Rad}{\mathfrak R}\newcommand{\KL}{\operatorname{KL}}
+\newcommand{\op}{\mathrm{op}}\newcommand{\VarPath}{\mathcal V}
+\title{A full-support path-variation prior\\for Bayesian ReLU networks}
+\author{ChatGPT-6 Astra \and Claude Opus 5.5 \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{17 November 2026}
+\begin{document}\maketitle
+\begin{abstract}
+We construct a Bayesian ReLU learner with a full-support prior on one fixed dense architecture and an agnostic oracle controlled by path variation. Start with independent centered Gaussian coordinates and apply a soft penalty for internal amplification and its product with endpoint quadratic energy. No parameters are excluded by a norm constraint. Conditional on the internal matrices, the endpoint coordinates remain Gaussian with gain-normalized variances. The precision-normalized negative log probabilities of function neighborhoods have two-sided bounds in terms of minimal approximate path variation, with no additional learner-width factor. Inputs lie in a Euclidean unit ball and labels may follow any bounded IID law. A likelihood selected from observed free energy gives the ordinary raw posterior mean population loss at most the comparison loss plus $\widetilde O((1+P)\sqrt{HR_*/n}+(1+P)^2H/n)$. Here $P$ is teacher path variation, $H$ hidden depth, and $R_*$ comparison risk. A gain-controlled width-$C$ teacher has $P=O(C)$, so quadratic width and linear depth suffice. The conclusion holds at every learner width above the teacher width and every internal exponent $\gamma\ge1$. A second version keeps the usual layerwise Gaussian base scales and gives a quadratic-width, cubic-depth bound. Its prior is a softly reweighted Gaussian, not the unchanged independent Gaussian tuple. An ordinary-spectral-gain variant retains cancellation between signed weights and gives an oracle with only logarithmic depth cost at fixed input dimension, at the price of dimension-dependent width and accuracy exponents. There is no distribution over network sizes.
+\end{abstract}
+
+\section{A function prior without excluding parameter values}
+A Bayesian approximation guarantee should compare with a small network even when no small network exactly fits the data. This paper constructs such a learner with a full-support prior on a single dense architecture. Its complexity measure is path variation, an established rescaling-invariant measure for ReLU networks.
+
+Internal matrices may have arbitrarily large norms. A soft amplification penalty reduces prior density when their combined gain amplifies endpoint quadratic energy. Equivalently, the endpoint conditional variances decrease with internal gain. This makes the endpoint energy control path variation while retaining an exact chi-square distribution for that energy. A quantitative Gaussian comparison then proves both a function-prior statement and a sample-complexity oracle.
+
+The prior differs from independent Gaussian coordinates by one explicit soft penalty. We state the normalization explicitly. It is independent of the teacher, target accuracy, and sample, and it imposes no bound on path variation or on coefficient size. Only the likelihood scale is selected from the data.
+
+There are two prior scalings. The main construction matches endpoint precision to the full parameter volume. Section~\ref{sec:original-scale-variant} keeps the usual independent Gaussian base scales and uses a selective comparison. For fixed input dimension and endpoint coefficient bounds, and teacher path variation $P=O(C)$, their sample guarantees are
+\[
+ \begin{array}{c|c}
+ \text{Gaussian base scaling}&\text{sufficient samples, up to logarithms}\\\hline
+ \text{endpoint precision matched to parameter volume}
+    &C^2H(R_*/\varepsilon^2+1/\varepsilon)\\
+ \text{usual layerwise scales, as in~\eqref{eq:usual-base-scales}}
+    &C^2H^3(R_*/\varepsilon^2+1/\varepsilon).
+ \end{array}
+\]
+Both priors include an explicitly stated soft gain penalty. Neither bound is claimed for the unchanged independent Gaussian prior.
+
+\section{Architecture, input convention, and path variation}
+Let $\mathcal X$ be a compact subset of the Euclidean unit ball in $\R^d$, $d\ge1$. There are $H\ge1$ hidden ReLU layers, a scalar linear readout, and common hidden width $N$:
+\[
+ h^1(x)=\phi(W^1x),\qquad h^\ell(x)=\phi(W^\ell h^{\ell-1}(x)),\quad
+ z_w(x)=v^{\mathsf T}h^H(x),\qquad\phi(t)=\max\{t,0\}.
+\]
+The first matrix is $N$ by $d$ and the internal matrices are $N$ by $N$. A constant input coordinate may be included in $x$. For ordinary first-layer biases on a unit-ball input $x_0$, use $x=(1,x_0)/\sqrt2$ and count the extra coordinate in $d$. There are no internal biases. Total affine depth is $L=H+1$.
+
+For a network of any finite width, let $a^1_i=\|W^1_{i,:}\|_2$. Its mixed path variation is
+\begin{equation}
+ P(w)=|v|^{\mathsf T}|W^H|\cdots|W^2|a^1.
+ \label{eq:pathnorm}
+\end{equation}
+For $H=1$, the intervening product is empty. Absolute values on matrices and vectors are entrywise. The Euclidean norm at the first layer matches the input unit ball. In particular $|z_w(x)|\le P(w)$ on $\mathcal X$.
+
+For a function $f$ realizable at depth $H$, define $\VarPath_H(f)$ as the infimum of $P(w)$ over all finite-width depth-$H$ implementations of $f$ on $\mathcal X$. For a width bound $N$ and accuracy $\delta\ge0$, define
+\begin{equation}
+ \VarPath_{H,N,\delta}(f)=
+ \inf\{P(w):\operatorname{width}(w)\le N,\ \|z_w-f\|_{\infty,\mathcal X}\le\delta\}.
+ \label{eq:approx-variation}
+\end{equation}
+The infimum of an empty set is infinity. These are implementation complexity measures, not probabilities.
+
+\section{The full-support Gaussian prior with a soft gain penalty}
+For internal matrices define
+\[
+ g_\ell(W)=\max\{1,\||W^\ell|\|_{\op}\},\qquad
+ G(W)=\prod_{\ell=2}^H g_\ell(W).
+\]
+For $H=1$ the empty product is one. For any $\gamma\ge1$, put
+\[
+ \omega=N(d+1)+(H-1)N^{\gamma+1}.
+\]
+Let $\pi^0_{N,\gamma}$ have independent centered Gaussian coordinates, with first-layer variance $N/\omega$, internal variance $N^{-\gamma}$, and readout variance $1/(\omega N)$. Define raw endpoint energies
+\[
+ u_N=\frac1N\|W^1\|_F^2,\qquad q_N=N\|v\|_2^2.
+\]
+Our prior is the soft reweighting
+\begin{equation}
+ \pi_{N,\gamma}(dw)=\frac1{Z_0}
+ \exp\left[-\frac\omega2\bigl\{(G(W)-1)(u_N+q_N)+(G(W)^2-1)\bigr\}\right]\pi^0_{N,\gamma}(dw).
+ \label{eq:prior}
+\end{equation}
+The normalizer satisfies $0<Z_0\le1$. This density is positive at every finite parameter vector. It mixes over neither widths nor depths.
+
+Define the gain-normalized endpoint energy and full normalized energy by
+\begin{align}
+ Q_N&=G(u_N+q_N),\notag\\
+ E_N(w)&=Q_N(w)+G(W)^2-1+\frac{N^\gamma}{\omega}\sum_{\ell=2}^H\|W^\ell\|_F^2.
+ \label{eq:energy}
+\end{align}
+The parameter density is proportional to $e^{-\omega E_N(w)/2}$. The terms $(G-1)(u_N+q_N)$ and $G^2-1$ penalize amplification rather than enforcing an internal norm bound. The second term gives a width-independent moment bound for internal gain; the first links endpoint energy to function complexity.
+
+Conditional on the internal matrices, the first layer and readout are independent centered Gaussians with variances
+\begin{equation}
+ \operatorname{Var}(W^1_{ji}\mid W^2,\ldots,W^H)=\frac{N}{\omega G},\qquad
+ \operatorname{Var}(v_j\mid W^2,\ldots,W^H)=\frac1{\omega NG}.
+ \label{eq:conditional-prior}
+\end{equation}
+The internal marginal is its independent Gaussian base tilted by $G^{-N(d+1)/2}e^{-\omega(G^2-1)/2}$, divided by $Z_0$. These conditional identities account for every normalization factor in the proof.
+
+A comparison with width $C$ needs only $N\ge C$, without an input-dimension threshold or a limiting operation.
+
+\input{flow-balancing}
+\input{comparison}
+\input{function-prior}
+\input{capacity}
+\input{adaptive-oracle}
+\input{original-scale-variant}
+\input{ordinary-spectral-variant}
+\input{interpretation}
+\begin{thebibliography}{9}
+\bibitem{sst} Nathan Srebro, Karthik Sridharan and Ambuj Tewari. \emph{Smoothness, Low Noise and Fast Rates}. Advances in Neural Information Processing Systems 23, 2010. \url{https://www.cs.cornell.edu/~sridharan/smoothness.pdf}.
+\bibitem{path-sgd} Behnam Neyshabur, Ruslan Salakhutdinov and Nathan Srebro. \emph{Path-SGD: Path-Normalized Optimization in Deep Neural Networks}. Advances in Neural Information Processing Systems 28, 2015. \url{https://arxiv.org/abs/1506.02617}.
+\bibitem{barron-klusowski} Andrew R. Barron and Jason M. Klusowski. \emph{Complexity, Statistical Risk, and Metric Entropy of Deep Nets Using Total Path Variation}. 2019. \url{https://arxiv.org/abs/1902.00800}.
+\bibitem{spectral-normalization} Takeru Miyato, Toshiki Kataoka, Masanori Koyama and Yuichi Yoshida. \emph{Spectral Normalization for Generative Adversarial Networks}. International Conference on Learning Representations, 2018. \url{https://arxiv.org/abs/1802.05957}.
+\end{thebibliography}
+\end{document}

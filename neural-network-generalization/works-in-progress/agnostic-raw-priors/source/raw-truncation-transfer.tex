@@ -1,0 +1,163 @@
+\section{A faster raw oracle for sub-Gaussian labels}
+\label{sec:raw-truncation-transfer}
+A native uniform-output tail also permits a second statistical argument.
+It uses a bounded prior only as an auxiliary object in the proof. The
+actual prior, Gaussian likelihood, and posterior mean remain unbounded.
+
+\begin{lemma}[Bounded predictions with arbitrary finite-variance labels]
+\label{lem:bounded-finitevariance-loo}
+Let $\pi$ be any prior on functions taking values in $[-M,M]$, with
+$M\ge1$, and use temperature $T\ge256M^2$. For IID observations with
+$\E Y^2<\infty$, the ordinary posterior mean trained on all $n$
+observations obeys
+\[
+ \E R(\bar f_n)\le\int R(f)\,d\rho
+       +\frac{T\KL(\rho\Vert\pi)}{n+1}
+       +4\E[Y^2\mathbf1_{\{|Y|>M\}}]
+\]
+for every deterministic comparison law $\rho$.
+\end{lemma}
+\begin{proof}
+For a distribution $q$ on $[-M,M]$ with mean $m$ and variance $v$,
+let $p_y(du)\propto e^{-(u-y)^2/T}q(du)$. If $|y|\le M$, the
+covariance identity and the mean-value theorem give
+\[
+ \E_{p_y}(u-y)^2\ge(m-y)^2+
+ \left[1-\frac{4(M+|y|)^2}{T}
+           e^{4M(M+|y|)/T}\right]v\ge(m-y)^2.
+\]
+For completeness, write $L=(u-y)^2$, $w=e^{-L/T}$. Then
+$\E_{p_y}L=\E_qL+\operatorname{Cov}_q(L,w)/\E_qw$.
+The two-copy covariance identity, $|L(u)-L(u')|\le
+2(M+|y|)|u-u'|$, and
+$|w(u)-w(u')|\le e^{-\min L/T}|L(u)-L(u')|/T$
+bound the possible decrease by
+$4(M+|y|)^2e^{\operatorname{range}(L)/T}v/T$.
+The displayed conservative range bound proves the inequality.
+If $|y|>M$, the squared-loss range over $[-M,M]$ is exactly
+$4M|y|\le4y^2$, so the same inequality holds with additive error
+$4y^2\mathbf1_{\{|y|>M\}}$.
+
+Apply this scalar assertion to each prediction from the posterior
+trained on the other $n$ points of an IID sample of size $n+1$.
+Exchangeability identifies its expected mean loss with the left side.
+After the extra likelihood factor, each term uses the full posterior
+on $n+1$ observations. Its expected empirical risk is at most
+$\int R\,d\rho+T\KL(\rho\Vert\pi)/(n+1)$ by the variational
+inequality. The prior, $M$, and $T$ are held fixed at their
+$n$-specific values throughout this leave-one-out argument.
+\end{proof}
+
+\begin{theorem}[Sub-Weibull priors and a raw sub-Gaussian-label oracle]
+\label{thm:raw-tail-oracle}
+Suppose a centered function prior satisfies, uniformly over a family
+of finite architectures,
+\[
+ \|U(f)\|_{L^p(\mu)}\le A p^r\quad(p\ge1),\qquad r>0,
+ \qquad U(f)=\sup_x|f(x)|.
+\]
+Assume $\E e^{Y^2/K_Y^2}\le2$. There are constants $c_0,c_1,c_2$,
+depending only on $A,r,K_Y$, such that the following holds. Put
+\[
+ b=\frac1{2r+1},\qquad q_n=c_0n^b,\qquad
+ M_n=eAq_n^r,\qquad T_n=256M_n^2=c_1n^{1-b}.
+\]
+Use the actual unrestricted prior and the raw Gaussian-likelihood
+posterior with temperature $T_n$. If a deterministic comparison
+function $g$ obeys $\|g\|_\infty\le M_n/2$, and a law $\rho$
+satisfies
+\[
+ \E_\rho\|f-g\|_\infty^2
+       \le\frac{(n+1)^{-4}}{1+\|g\|_\infty^2},
+ \qquad\KL(\rho\Vert\mu)\le K_n(g),
+\]
+then its ordinary raw posterior mean satisfies
+\begin{equation}
+ \E R(\bar f_{S_n})\le R(g)+c_2 n^{-b}K_n(g)
+                                  +c_2(n+1)^{-2}.
+ \label{eq:raw-tail-oracle}
+\end{equation}
+The prior is not truncated, and no output link is used in the learner.
+\end{theorem}
+\begin{proof}
+Let $E_n=\{U\le M_n\}$. Markov's inequality at moment $q_n$ gives
+$\mu(E_n^c)\le e^{-q_n}$. The auxiliary prior
+$\mu_n=\mu(\cdot\mid E_n)$ has outputs bounded by $M_n$.
+The comparison's probability of $E_n^c$ is at most
+$4(n+1)^{-4}/M_n^2$, so it is at most $1/2$ after increasing $c_0$.
+Condition the comparison on $E_n$. The KL chain rule against the
+partition $(E_n,E_n^c)$ gives
+\[
+ \KL(\rho(\cdot\mid E_n)\Vert\mu_n)
+        \le\KL(\rho\Vert\mu)/\rho(E_n)\le2K_n(g).
+\]
+Its mean squared approximation error increases by at most two.
+Cauchy--Schwarz consequently bounds its risk by
+$R(g)+C_{K_Y}(n+1)^{-2}$. Lemma~\ref{lem:bounded-finitevariance-loo}
+now bounds the auxiliary posterior-mean risk by
+\[
+ R(g)+\frac{2T_nK_n(g)}{n+1}
+   +C_{K_Y}(n+1)^{-2}
+   +4\E[Y^2\mathbf1_{\{|Y|>M_n\}}].
+\]
+The last term is at most $C_{A,r,K_Y}(n+1)^{-2}$ after increasing
+$c_0$, by the sub-Gaussian label tail.
+
+It remains to compare the two actual prediction rules. Let $m_S$ be
+the unrestricted posterior mean and $m_{S,E}$ the mean under
+$\mu_n$. The latter posterior is exactly the former conditioned on
+$E_n$. Centering of the native prior and the bound
+$V:=\sup_x\E_\mu f(x)^2\le A^22^{2r}$ imply
+\[
+ Z_S\ge\exp[-(nV+\sum_iY_i^2)/T_n].
+\]
+Therefore, uniformly over inputs,
+\begin{align*}
+ |m_S-m_{S,E}|
+ &\le Z_S^{-1}\E_\mu[(U+M_n)\mathbf1_{E_n^c}]\\
+ &\le C_A(1+M_n)
+     \exp\{(nV+\sum_iY_i^2)/T_n-q_n/2\}=:D_S.
+\end{align*}
+The second inequality uses Cauchy--Schwarz and the fixed native second
+moment. For $T_n\ge2K_Y^2$, Lyapunov's inequality gives
+\[
+ \E e^{2\sum_iY_i^2/T_n}
+ \le\exp(2nK_Y^2\log2/T_n).
+\]
+Choose $c_0$ large enough that
+$q_n\ge8n(V+K_Y^2)/T_n+C\log(n+1)+C\log(1+M_n)$ for every $n$.
+This is possible: both $q_n$ and $n/T_n$ are constant multiples of
+$n^b$, and increasing $c_0$ increases the former while decreasing
+the latter. It follows that
+$\E[2(M_n+\E|Y|)D_S+D_S^2]\le C(n+1)^{-2}$.
+Finally
+\[
+ R(m_S)\le R(m_{S,E})+
+                   2(M_n+\E|Y|)D_S+D_S^2.
+\]
+Combining the estimates proves \eqref{eq:raw-tail-oracle}. The
+auxiliary truncation has disappeared from the conclusion and from the
+specified learning algorithm.
+\end{proof}
+
+\begin{corollary}[A comparison already inside the analytical cutoff]
+\label{cor:raw-supported-comparison}
+Under the prior and label assumptions of
+Theorem~\ref{thm:raw-tail-oracle}, let $T_n,M_n$ be its deterministic
+temperature and cutoff. If a sample-independent law $\rho$ is supported
+on $\{U\le M_n\}$, then
+\[
+ \E R(\bar f_{S_n})\le\int R(f)\,d\rho(f)
+       +\frac{T_n\KL(\rho\Vert\mu)}{n+1}+C(n+1)^{-2}.
+\]
+No uniform approximation to a particular comparator is needed; a
+population-risk comparison is enough.
+\end{corollary}
+\begin{proof}
+Use $\rho$ directly in the auxiliary bounded-prior theorem. Since it
+is already supported on $E_n$,
+$\KL(\rho\Vert\mu(\cdot\mid E_n))=
+ \KL(\rho\Vert\mu)+\log\mu(E_n)\le\KL(\rho\Vert\mu)$.
+The label tail and actual-versus-auxiliary posterior transfer are
+exactly those in the preceding proof, independent of the comparison.
+\end{proof}

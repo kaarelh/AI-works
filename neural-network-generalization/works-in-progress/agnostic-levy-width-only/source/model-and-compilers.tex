@@ -1,0 +1,87 @@
+\section{The fixed prior and the two comparison compilers}
+\label{sec:levy-model-compilers}
+The learner has ReLU hidden activation, one prescribed width $N$ and hidden depth $H$, and a constant input coordinate $\bar x=(1,x)$. There are no internal biases. Its raw readout and bounded output are
+\[
+ h^1=\operatorname{ReLU}(W^1\bar x),\quad
+ h^\ell=\operatorname{ReLU}(W^\ell h^{\ell-1}),\quad
+ z_w=v^\top h^H,\qquad f_w=s(z_w),
+\]
+where $s$ clips to $[-1,1]$. The bounded output enters both the likelihood and prediction. In the finite-variance extension we instead use $f_{w,M}=M s(z_w)$ with a stated deterministic $M$; the parameter prior below is unchanged.
+
+Fix the symmetric L\'evy measure
+\begin{equation}
+ \mathfrak n(du)=\frac{du}{8|u|(1+|u|)^3},\qquad u\ne0.
+ \label{eq:prior-Levy-measure}
+\end{equation}
+Let $L_t$ be the absolutely convergent sum of Poisson jumps with intensity $t\mathfrak n$, with zero drift and no Gaussian component. Every weight entering a neuron of fan-in $F$ independently has law
+\begin{equation}
+ \mu_F=\mathcal L(L_{1/F}).
+ \label{eq:fanin-prior}
+\end{equation}
+Thus $F=d+1$ in the first layer and $F=N$ thereafter, including the readout. This completely specifies the parameter prior $\pi_N$. Its scalar laws are absolutely continuous, have full support, and have no atom at zero. In particular, the network is dense almost surely. Direct integration gives
+\[
+ \int |u|\mathfrak n(du)=\int u^2\mathfrak n(du)=1/8,
+ \qquad \E L_{1/F}=0,\qquad
+ \operatorname{Var}(L_{1/F})=1/(8F).
+\]
+The variance has the usual fan-in scale, but the law is not a scalar multiple of one fixed random variable: the time of an infinitely divisible family changes with fan-in. The Poisson description defines each independent coordinate law; there is no prior over architectures.
+
+The following exact interface is proved in the companion prior analysis~\cite{levy-core}. For every bounded-output ReLU implementation $g$ of width $m\le N$, hidden depth $H$, coefficient cap $B\ge1$, and every $0<r\le1$, there is a data-independent comparison law satisfying
+\begin{equation}
+ \sup_{x\in[-1,1]^d}\E_\rho|f_w(x)-g(x)|^2\le r,
+ \qquad \operatorname{KL}(\rho\|\pi_N)\le K_0\log(K_1/r).
+ \label{eq:levy-native-interface}
+\end{equation}
+One may take
+\begin{align}
+ D&=C(m+1)(B+8),\quad V=C(d+1)^2D^{2H+2},\notag\\
+ K_0&=C(d+1)(S+1),\qquad
+ K_1=C(S+1)(d+1)(B+8)V.
+ \label{eq:levy-native-resources}
+\end{align}
+Here $S$ is the number of hidden occurrences in the rooted formula obtained by unrolling the chosen implementation; the conservative choice $S=\sum_{\ell=1}^H m^\ell$ always suffices. The numerical constants do not depend on any width, on depth, or on $B$. The count $S$ may come from a shared implementation of width $m$: the comparison proof embeds its formula at large learner widths and its original shared graph at smaller widths. The logarithm of $K_1$ is only linear in depth and logarithmic in the coefficient cap. The construction is uniform over every finite $N\ge m$, including widths too small to hold the entire unrolled formula simultaneously.
+
+The small fixed intensity in \eqref{eq:prior-Levy-measure} also permits a sharper identity-padding estimate. If an implementation has depth $h_*$, width $m$, coefficient cap $B$, and actual formula size $S_*$, put $S^+=S_*+m(H-h_*)+1$. At any $H\ge h_*$ and $N\ge m$ there is a comparison law with
+\begin{align}
+ \E_\rho\sup_x|f_w(x)-g(x)|&\le t,\notag\\
+ \operatorname{KL}(\rho\|\pi_N)&\le
+ C(d+1)S^+\notag\\[-2mm]
+ &\quad\times\left[(h_*+1)\log\{C(m+1)(B+8)\}\right.\notag\\
+ &\hspace{32mm}\left.+\log\frac{CS^+(d+1)(H+1)(B+8)}t\right].
+ \label{eq:stable-padding-interface}
+\end{align}
+This is the stable-padding theorem of~\cite{levy-core}. Its proof uses first absolute moments: a designated relay has positive support and mean one, while the native unselected rows have total expected absolute incoming gain at most $1/8$. Relay errors therefore grow only linearly in their number once the proof-only coordinate precision is chosen inversely proportional to that number. There is no restriction on the support of the network prior.
+
+To remove the original teacher coefficients, we use two independently proved compilers. They change only the comparison implementation in the proof.
+
+\paragraph{Boolean inputs.}
+There is a numerical integer $b\ge2$ such that every width-$C$, hidden-depth-$h$ ReLU network with arbitrary finite real coefficients and biases has, at tolerance $0<\zeta\le1$, a ReLU implementation $q$ satisfying
+\begin{equation}
+ \begin{gathered}
+ \sup_{x\in\{-1,1\}^d}|s(q(x))-s(g(x))|\le\zeta,
+ \quad H_*\le b(h+1),\quad m,B\le Q^b,\\
+ \quad Q=4(d+1)(C+1)^h+\lceil\log_2(16/\zeta)\rceil+2.
+ \end{gathered}
+ \label{eq:Boolean-compiler}
+\end{equation}
+It has a constant input, no internal biases, and pads exactly to any larger hidden depth. This is the coefficient-free Boolean compiler of~\cite{boolean}; its bounded coefficients follow from implementing its unweighted-majority circuit with ReLU gates. The construction is existential and nonuniform. Its precision cost is logarithmic.
+
+\paragraph{Continuous inputs.}
+Suppose the input law on $[-1,1]^d$ satisfies
+\begin{equation}
+ \Pr(|u^\top X-t|\le s)\le\kappa s^\alpha
+ \quad(\|u\|_2=1,\ t\in\mathbb R,\ s>0),
+ \qquad\kappa\ge1,\quad0<\alpha\le1.
+ \label{eq:slab-regularity}
+\end{equation}
+Put $T_C=(Ch+1)(C+1)^{dh}$. The polyhedral compiler of~\cite{regular} gives
+\begin{equation}
+ \E|q(X)-s(g(X))|\le\zeta,
+ \quad |q|\le1,\quad H_*=4,\quad
+ m\le3T_C,\quad
+ B\le C_{d,\alpha}(\kappa T_C/\zeta)^{1/\alpha}.
+ \label{eq:continuous-compiler}
+\end{equation}
+It too has a constant input and no internal biases, and pads to larger depths. The construction uses normalized facet ramps on the teacher's affine activation cells and caps each affine output slope. There are at most $(C+1)^{dh}$ cells, with at most $Ch$ facets per cell; the slab assumption bounds the exceptional region. Although this compiler's coefficient cap is polynomial in inverse accuracy, its cost in \eqref{eq:levy-native-interface} is only logarithmic. Bounded-density cube laws satisfy \eqref{eq:slab-regularity}, as do uniform sphere laws in dimension at least three with $\alpha=1$, and the circle with $\alpha=1/2$.
+
+Both compilers approximate the clipped teacher. Since the conditional mean belongs to $[-1,1]$, clipping any original real-valued teacher cannot increase its population squared risk. For bounded $f_0$, the approximation risks of two bounded functions differ by at most four times their $L^1(P_X)$ distance. These observations transfer the compiler estimates to regression risk even when the observed labels are unbounded.

@@ -1,0 +1,152 @@
+\section{A high-probability raw oracle under conditional noise control}
+\label{sec:asinh-high-probability}
+The expected leading-one oracle has a complementary confidence
+statement. The latter uses a slightly larger coefficient on the
+approximation error and assumes conditional, rather than merely
+marginal, noise control.
+
+\begin{theorem}[A high-probability logarithmic-temperature oracle]
+\label{thm:asinh-high-probability}
+Let a centered prior satisfy
+$\|F\|_q\le A\log(q+1)$, $F=\sup_x|f(x)|$.
+Suppose $Y=f_0(X)+\xi$, with $|f_0|\le B_0$ and centered conditional
+$\sigma^2$-sub-Gaussian noise. Fix $0<\eta\le1/2$ and
+$0<\delta<1/2$. There are constants depending only on $A,B_0,\sigma$
+such that the following choice is valid:
+\[
+ q_n=C\left[n+\log\frac{n+2}{\delta}\right],\qquad
+ M_n=eA\log(e+q_n)+B_0+6,\qquad
+ T_n=\frac C\eta(M_n^2+\sigma^2).
+\]
+Use the actual unbounded prior and raw Gaussian likelihood at
+$T_n$. With probability at least $1-\delta$, simultaneously for every
+comparison law $\rho$ supported on $\{F\le M_n\}$,
+\begin{align}
+ R(\bar f_{S_n})\le\Pi_{S_n}R(f)
+ &\le R_0+(1+\eta)\rho\mathcal A(f)
+    +\frac{CT_n}{n}\left[\KL(\rho\|\mu)+\log\frac3\delta\right]
+    +n^{-2},\label{eq:asinh-hp-oracle}\\
+ R_0&=\E\xi^2,\qquad
+ \mathcal A(f)=\E_X(f(X)-f_0(X))^2.\notag
+\end{align}
+The comparison law may be data-dependent on this common event.
+For a family of architectures the statement applies to each prescribed
+finite architecture; it does not assert one event for all widths.
+The actual prior, posterior and returned prediction are never clipped.
+\end{theorem}
+\begin{proof}
+Put $E_n=\{F\le M_n\}$ and use the deterministic proof-only prior
+$\mu_E=\mu(\cdot\mid E_n)$. Here $M_n\ge B_0$.
+For any function in this prior let $D=f(X)-f_0(X)$, so
+$D^2\le4M_n^2$, and write its single-observation excess loss as
+$Z_f=D^2-2\xi D$. Set $\beta=1/T_n$.
+Conditional noise moment bounds give
+\[
+ \E e^{-\beta Z_f}\le\E_X e^{-\beta(1-2\beta\sigma^2)D^2},
+ \qquad
+ \E e^{\beta Z_f}\le\E_X e^{(\beta+2\beta^2\sigma^2)D^2}.
+\]
+For a variable $0\le V\le b$, convexity yields
+$\E e^{tV}\le1+(e^{tb}-1)\E V/b$ for either sign of $t$.
+Using $1+s\le e^s$ and the elementary expansion bounds for the
+exponentials therefore gives
+\[
+ \E e^{-\beta Z_f}\le e^{-\beta c_-\mathcal A(f)},
+ \qquad
+ \E e^{\beta Z_f}\le e^{\beta c_+\mathcal A(f)},
+ \quad
+ c_-\ge1-\eta/16,\quad c_+\le1+\eta/16,
+\]
+after choosing the temperature constant sufficiently large.
+These constants can be chosen simultaneously for every $f$ in the
+bounded prior. Independence of observations, integration over
+$\mu_E$, Markov's inequality and the entropy variational inequality
+then give, except on two events each of probability $\delta/3$,
+simultaneously for all laws $\pi,\rho\ll\mu_E$,
+\begin{align*}
+ c_-\pi\mathcal A
+ &\le\pi[\widehat R(f)-\widehat R(f_0)]
+      +\frac{T_n}{n}\{\KL(\pi\|\mu_E)+\log(3/\delta)\},\\
+ \rho[\widehat R(f)-\widehat R(f_0)]
+ &\le c_+\rho\mathcal A
+      +\frac{T_n}{n}\{\KL(\rho\|\mu_E)+\log(3/\delta)\}.
+\end{align*}
+The bounded-prior posterior $\Pi_E$ minimizes empirical risk plus
+$T_n\KL/n$. Substituting it in the first inequality and using any
+comparison in the second yields
+\[
+ \Pi_E\mathcal A
+ \le\frac{c_+}{c_-}\rho\mathcal A
+       +\frac{2T_n}{c_-n}
+            \{\KL(\rho\|\mu_E)+\log(3/\delta)\}.
+\]
+Here $c_+/c_-\le1+\eta$, and a comparison supported on $E_n$ has
+$\KL(\rho\|\mu_E)=\KL(\rho\|\mu)+\log\mu(E_n)
+\le\KL(\rho\|\mu)$.
+
+It remains to remove the proof-only restriction. Native centering and
+the fixed second moment $V_0=A^2\log^2 3$ imply, for every sample,
+\[
+ Z_S\ge\exp[-(nV_0+\sum_iY_i^2)/T_n].
+\]
+The conditional noise assumption and bounded $f_0$ imply a marginal
+exponential-square bound $\E e^{Y^2/K_Y^2}\le2$ for a constant
+$K_Y$ depending only on $B_0,\sigma$. Increase the temperature
+constant so that $T_n\ge2K_Y^2$. Then
+$\E Z_S^{-1}\le\exp[C n/T_n]$.
+Moment $q_n$ gives $\mu(E_n^c)\le e^{-q_n}$, while the fixed
+native fourth moment and Cauchy--Schwarz give
+\[
+ \mu[(F+B_0)^2\mathbf1_{E_n^c}]
+        \le C_{A,B_0}e^{-q_n/2}.
+\]
+The likelihood is at most one, so
+\[
+ \E_S\Pi_{S_n}[\mathcal A(f)\mathbf1_{E_n^c}]
+       \le C\exp[C n/T_n-q_n/2].
+\]
+The chosen $q_n$ makes this at most $\delta/(3n^2)$.
+Markov gives a third event, of failure at most $\delta/3$, on which
+the actual posterior's discarded approximation risk is at most
+$n^{-2}$. Its conditional law on $E_n$ is exactly $\Pi_E$, and
+\[
+ \Pi\mathcal A=\Pi(E_n)\Pi_E\mathcal A+
+                   \Pi[\mathcal A\mathbf1_{E_n^c}]
+              \le\Pi_E\mathcal A+n^{-2}.
+\]
+This proves the posterior-average bound on the intersection of the
+three events. Jensen gives the raw posterior-mean bound, and adding
+$R_0$ gives \eqref{eq:asinh-hp-oracle}.
+\end{proof}
+
+\begin{corollary}[A high-probability neural approximation bound]
+\label{cor:asinh-neural-hp}
+Use the asinh-readout prior with bounded hidden activation tanh and
+Student hidden factors. Under the conditional-noise assumptions above,
+for each prescribed finite width $N\ge m$, every same-depth comparator
+from Corollary~\ref{cor:asinh-neural} satisfies, with probability at
+least $1-\delta$,
+\[
+ R(\bar z_{S_n})\le\Pi_{S_n}R(z)
+ \le R_0+(1+\eta)\mathcal A(g)
+   +\frac{C[\mathcal K_n^{\rm light}(g)+\log(3/\delta)]}{\eta n}
+       \left[\sigma^2+
+          \log^2\left(e+n+\log\frac1\delta\right)\right]
+   +\frac{C}{\eta n^2}.
+\]
+Constants may depend on the fixed prior and the bound $B_0$.
+The temperature depends only on these known noise/range bounds,
+$n,\eta,\delta$, and not on teacher resources.
+\end{corollary}
+\begin{proof}
+Use Lemma~\ref{lem:asinh-growing-comparison} with range one and
+uniform squared approximation error $(n+1)^{-4}$. It gives a law
+supported on $F\le6\le M_n$, of entropy at most
+$C\mathcal K_n^{\rm light}(g)$. Young's inequality gives
+$\rho\mathcal A\le(1+\eta/8)\mathcal A(g)
++C\eta^{-1}(n+1)^{-4}$.
+Apply Theorem~\ref{thm:asinh-high-probability} with its accuracy
+parameter reduced by a fixed factor; the product of approximation
+coefficients is then at most $1+\eta$. The stated precision and
+entropy errors are absorbed by the displayed remainder.
+\end{proof}

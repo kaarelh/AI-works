@@ -1,0 +1,141 @@
+\section{Arbitrary Gaussian affine output components at every scale}
+\label{sec:all-scale-affine-likelihood}
+An independently regularized output bias or direct linear input map does not remove the common obstruction. The proof uses the geometry of a capped affine fit and a uniform sign-pattern bound on the singleton observations.
+
+\begin{theorem}[The all-scale obstruction with affine output skips]
+\label{thm:all-scale-affine-likelihood}
+The conclusion of Theorem~\ref{thm:all-scale-learning} holds, after adjusting its absolute constants and replacing its excess lower bound by $2^{-60}a^2$, when the learner predicts
+\[
+ z_w(x)+b^{\mathsf T}(1,x),
+\]
+where $b$ has any independent centered Gaussian prior with a finite positive semidefinite covariance matrix. The statement concerns ordinary raw posterior means under the Gaussian likelihood. It is simultaneous over every such covariance, every $N\ge n^C$, every $0<s\le1/N$, and every positive likelihood temperature, and it survives arbitrary well-defined data-dependent mixtures of these predictions. Singular covariance, including no affine component, is permitted.
+
+The data law and conditional mean are the same as in Theorem~\ref{thm:all-scale-learning}; in particular the conditional mean is a fixed width-two shallow tanh function. The input set lies on the unit sphere and the sample count remains $\exp(\Omega(\sqrt H))$.
+\end{theorem}
+
+\begin{lemma}[The geometry of the affine proximal reference]
+\label{lem:affine-prox-geometry}
+Let $b$ be the empirical atom-mean label vector and let
+\[
+ B=(I+\Phi\Sigma\Phi^{\mathsf T}/(n\lambda s))^{-1},
+\]
+where $\Phi$ is the affine training-feature matrix and $\Sigma\succeq0$ is finite. For $c>0$, let $u$ minimize
+\[
+ J_B(u)=\|B^{1/2}(b-u)\|_n^2+\lambda c\|u\|_\infty
+\]
+over sample vectors constant on repeated inputs. Put
+\[
+ f_1=(I-B)b+Bu,\qquad f_0=(I-B)b.
+\]
+Then $\|u\|_\infty\le\|b\|_\infty$. There are an affine function $h$ and a cap $t\ge0$ for which
+\[
+ f_1=h+\operatorname{clip}(b-h,[-t,t]).
+\]
+Both reference vectors obey the ordinary sector inequality
+\[
+ \langle b,f_j\rangle_n\ge\|f_j\|_n^2,
+ \qquad j\in\{0,1\}.
+\]
+\end{lemma}
+\begin{proof}
+The candidate $u=b$ has objective $\lambda c\|b\|_\infty$. Every candidate with larger sup norm has strictly greater penalty alone, so it cannot minimize. Gaussian least-squares completion gives
+\[
+ \|B^{1/2}(b-u)\|_n^2
+ =\min_v\{\|b-u-\Phi\Sigma^{1/2}v\|_n^2
+                                      +\lambda s\|v\|^2\}.
+\]
+At the optimum set $h=\Phi\Sigma^{1/2}v=(I-B)(b-u)$ and $t=\|u\|_\infty$. With $h,t$ fixed, the least-squares minimizing $u$ is exactly the coordinatewise clipping of $b-h$ to $[-t,t]$. Repeated observations have identical $b,h$, so this minimizer belongs to the required atom-constant subspace. This proves the asserted form of $f_1=h+u$.
+
+Varying the optimizer along scalar multiples of $u$ gives
+\[
+ \langle u,B(b-u)\rangle_n
+                   =\tfrac12\lambda c\|u\|_\infty\ge0.
+\]
+Writing $v=b-u$, direct algebra yields
+\[
+ \langle b,f_1\rangle_n-\|f_1\|_n^2
+ =\langle u,Bv\rangle_n+\langle v,(B-B^2)v\rangle_n\ge0,
+\]
+because $0\prec B\preceq I$. The same inequality for $f_0$ follows from $0\preceq I-B\preceq I$.
+\end{proof}
+
+\begin{lemma}[Every capped affine fit has a fixed empirical error]
+\label{lem:capped-affine-error}
+For the sample law of Theorem~\ref{thm:all-scale-learning}, with probability tending to one as $H\to\infty$, every affine function $h$ and every $t\ge0$ satisfy
+\[
+ \left\|h+\operatorname{clip}(b-h,[-t,t])-g(S)\right\|_n^2
+                          \ge2^{-24}a^2.
+\]
+The event depends only on the observed sample, not on a prior or a temperature.
+\end{lemma}
+\begin{proof}
+The population squared distance of $\tanh T$ from affine functions of the inputs is
+\[
+ r_*=
+ \frac{\{(3/4)\tanh(1/4)-(1/4)\tanh(3/4)\}^2}
+      {2\{(1/4)^2+(3/4)^2\}}>1/4096.
+\]
+Indeed the nuisance coordinates are independent centered signs, the last sphere coordinate is even in $T$, and the only odd affine direction is $T$. The constant part of $g=a/2+(a/4)\tanh T$ is affine, so its squared affine residual is $a^2r_*/16>a^2/65536$.
+
+Use the whitened affine features $(1,T,z,\sqrt{3/4-T^2})$, which span the same affine functions as the actual sphere coordinates. Their population Gram matrix has a fixed positive minimum eigenvalue: the nuisance block is the identity, the $T$ variance is $5/16$, and the constant/even-coordinate block is a fixed invertible two-by-two matrix. Bounded-entry concentration for this Gram matrix and for the moments of $g/a$ therefore gives
+\[
+ \inf_{h\text{ affine}}\|h(S)-g(S)\|_n\ge a/512
+\]
+with probability tending to one. For an explicit sufficient estimate, entry errors $O((D+3)^{-2})$ preserve the Gram inverse and the positive Schur complement; a union bound has failure at most $C(D+3)^2e^{-c n/(D+3)^4}$. Work on this event and put $\delta=a/1024$.
+
+If $t\le\delta$, clipping changes $h(S)$ in empirical norm by at most $\delta$. Hence the prediction's distance from $g(S)$ is at least $a/1024$, which is stronger than the claimed lower bound.
+
+Suppose now $t\ge\delta$. With probability tending to one, at least $n/3$ inputs occur exactly once. Conditional on all input observations, their independent label-noise signs remain fair. For a singleton at $x$, write $d_x=h(x)-g(x)$. If $d_x\ge0$ and the noise sign is positive, then
+\[
+ h(x)+\operatorname{clip}(g(x)+a-h(x),[-t,t])-g(x)
+   =\operatorname{clip}(a,[d_x-t,d_x+t])\ge\min(a,t)\ge\delta.
+\]
+If $d_x<0$ and the noise sign is negative, the analogous error is at most $-\delta$.
+
+The patterns $\operatorname{sgn}(h(x)-g(x))$ on the singleton inputs, with zero assigned the positive sign, range over at most $(2n)^{D+5}$ possibilities. This follows, for example, by viewing them as halfspace labels of the augmented vectors $((1,x),g(x))$ and applying the elementary hyperplane-arrangement bound. For each fixed pattern, a Chernoff bound shows that at least one third of the singleton noise signs match it except on probability $e^{-c n}$. A union bound therefore gives this matching property simultaneously for every affine $h$, with failure at most $\exp\{C(D+5)\log(2n)-c n\}$, which tends to zero. At least $n/9$ singleton errors consequently have magnitude at least $\delta$, uniformly for all $h$ and all $t\ge\delta$. The squared empirical error is at least $\delta^2/9>2^{-24}a^2$.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:all-scale-affine-likelihood}]
+Integrating the affine Gaussian block gives the exact marginal neural posterior with loss
+\[
+ \widehat R_B(z)=\|B^{1/2}(y-z(S))\|_n^2,
+\]
+where $B$ is as above. Its determinant factor is independent of the neural weights and cancels from the marginal posterior. If $m_z$ is the marginal neural mean, the total posterior mean on the sample is
+\[
+ f=(I-B)y+Bm_z=(I-B)b+Bm_z.
+\]
+The second identity holds because the within-atom residual $y-b$ is orthogonal to every affine feature and hence is fixed by $B$.
+
+The baseline-plus-amplitude argument applies in the $B$ inner product. The prior zero comparison is at most $\widehat R_B(0)+s\le4a^2+s$. The joint entropy floor is unchanged, since it concerns the neural prior. If the raw support maximum is at most the threshold, its $B$-norm sample vector is also at most that threshold. Lemma~\ref{lem:affine-prox-geometry} gives a proximal reference $u$ with sup norm at most $2a$; extending it by zero off the observed atoms permits exactly the same uniform finite-function comparison. Contraction by $B^{1/2}$ does not increase its RMS error. The quadratic-gap estimate holds in the $B$ norm.
+
+It follows, using the same single temperature cutoff and uniform estimates as in Theorem~\ref{thm:all-scale-learning}, that the constants can be chosen so that for each low-temperature learner and some $p\in[0,1]$,
+\[
+ \|B^{1/2}(m_z-pu)\|_n\le2^{-28}a.
+\]
+The requested smaller fixed tolerance is obtained by the same choices of the fixed amplitude, support coefficient, width threshold, and likelihood cutoff constants. All estimates are uniform in $B$, since $0\prec B\preceq I$. For the high-temperature branch, its indicator argument uses $\E\|B^{1/2}z(S)\|_n^2\le18a^2$, and its amplitude argument directly bounds the neural support maximum. These give $\|Bm_z\|_n\le2^{-28}a$, uniformly in $B$. Therefore every full posterior mean is within $2^{-28}a$ of either $f_0$, or the convex combination $(1-p)f_0+pf_1$, from Lemma~\ref{lem:affine-prox-geometry}.
+
+Let $w=b-2g(S)$. On an event of probability tending to one, the noise alignment satisfies
+\[
+ |\langle b-g(S),g(S)\rangle_n|\le2^{-27}a^2
+\]
+by conditional Hoeffding. Both references have squared empirical error at least $2^{-24}a^2$ by Lemma~\ref{lem:capped-affine-error}. Their sector inequalities imply
+\begin{align*}
+ \langle w,f_j-g(S)\rangle_n
+ &\ge\|f_j-g(S)\|_n^2
+                -\langle b-g(S),g(S)\rangle_n\\
+ &\ge2^{-25}a^2.
+\end{align*}
+This same linear witness holds for every convex combination of the references. Since $\|w\|_n\le2a$, the posterior approximation error reduces it by at most $2^{-27}a^2$. Thus every allowed posterior mean satisfies
+\[
+ \langle w,f-g(S)\rangle_n\ge2^{-26}a^2.
+\]
+The witness is independent of the affine covariance, width, scale, and temperature, and therefore survives arbitrary mixtures.
+
+For the population conversion, define
+\[
+ h_S(x)=\sum_{i:X_i=x}\{Y_i-2g(x)\}.
+\]
+The uniform input law assigns each atom mass $1/n$, so $\langle h_S,f-g\rangle_{L^2(P_X)}=\langle w,f-g(S)\rangle_n$. On the occupancy event $n^{-1}\sum_xk_x^2\le4$, and $|Y_i-2g(X_i)|\le2a$, we have $\|h_S\|_{L^2(P_X)}^2\le16a^2$. Cauchy--Schwarz gives excess risk at least $2^{-56}a^2$, leaving slack for the stated $2^{-60}a^2$. All sample events have total failure below one tenth after increasing the fixed depth threshold, because $n=4\cdot2^{\lfloor c\sqrt H\rfloor}$ dominates every polynomial in $D$. This proves the theorem.
+\end{proof}
+
+The affine theorem concerns raw Gaussian observation models and raw posterior means. Clipping a general affine prediction can create a nonlinear component, and this proof does not automatically extend to that convention or to a bounded link applied after the affine skip.

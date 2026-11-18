@@ -1,0 +1,218 @@
+\section{A sharp shallow Gaussian oracle on arbitrary input laws}
+\label{sec:general-shallow-sharp}
+This section uses the Gaussian model, normalized path mass $P$, and
+empirical midpoint inequality (GM1) of the preceding section. Inputs
+have any probability law on $[-1,1]^d$; initially $|Y|\le1$.
+There is no density, smoothness, or input-separation assumption.
+All constants below are numerical. Put
+\[
+ b_n=\frac{c_0\log^4(\mathrm e(n+1)(d+1)/\delta)}n,
+ \qquad \lambda_n=c_1\{\sqrt{b_n}+(d+2)b_n\},                 \tag{GS1}
+\]
+where $c_0,c_1$ are sufficiently large fixed numerical constants.
+The nontrivial finite-sample theorem assumes $\lambda_n\le1$.
+For each fixed $d,\delta$, this holds for all sufficiently large $n$.
+The likelihood schedule knows neither the comparison coefficients nor
+its path mass or risk. Its physical observation variance remains
+$n\lambda_n\nu/N$.
+
+\begin{lemma}[Dimension-free atomic and multiplier bounds]
+\label{lem:general-shallow-statistics}
+Let
+\[
+ \mathcal H_d=\{x\mapsto d^{-1/2}(\theta\cdot\bar x)_+:
+                              \|\theta\|_2=1\}.
+\]
+Its elements are bounded by $\sqrt2$, and the absolute convex hull
+with coefficient mass at most $p$ has empirical Rademacher complexity
+at most $Cp/\sqrt n$, for every input sample.
+For any deterministic finite shallow ReLU function $g$ satisfying
+$R(g)\le2$, with probability at least $1-\delta/2$,
+\[
+ \sup_{u\in\mathcal H_d}
+ |(\mathbb P_n-\mathbb P)[(g(X)-Y)u(X)]|
+ \le C\left\{\sqrt{\frac{\log(4/\delta)}n}
+       +(P_g+1)\frac{\log(4/\delta)}n\right\}.              \tag{GS2}
+\]
+Here $\mathbb P$ denotes the joint input-label law; $P_g$ is path
+mass and is unrelated to the probability notation.
+\end{lemma}
+\begin{proof}
+ReLU contraction and $\|\bar x\|_2/\sqrt d\le\sqrt2$ give
+\[
+ \frac1n\mathbb E_\epsilon\sup_{\|\theta\|=1}
+ \left|\sum_i\epsilon_i d^{-1/2}(\theta\cdot\bar X_i)_+\right|
+ \le\frac Cn\mathbb E_\epsilon
+           \left\|\sum_i\epsilon_i\bar X_i/\sqrt d\right\|_2
+ \le C/\sqrt n.
+\]
+Absolute convexification multiplies this by $p$.
+
+For (GS2), write $a_i=g(X_i)-Y_i$. The weighted contraction inequality
+has the same proof, since each scalar map
+$s\mapsto a_i(s/a_i)_+$, for $a_i\ne0$, is $1$-Lipschitz and vanishes
+at zero; zero $a_i$ contributes zero. Conditional on the data, its
+bound is $C\sqrt{\sum_i a_i^2}/n$. Symmetrization and Jensen therefore
+bound the expected supremum of the centered empirical process by
+$C\sqrt{R(g)/n}\le C/\sqrt n$.
+Each summand has variance at most $2R(g)\le4$ and absolute envelope
+at most $C(P_g+1)$, because $|g|\le\sqrt2P_g$.
+The bounded empirical-process Bernstein inequality (Bousquet's
+inequality~\cite{bousquet}) gives, with $t=\log(4/\delta)$, the bound
+\[
+ C\left[n^{-1/2}+\sqrt{t/n}
+       +\sqrt{(P_g+1)t/n^{3/2}}+(P_g+1)t/n\right].
+\]
+The mixed square-root term is at most a constant times
+$\sqrt{t/n}+(P_g+1)t/n$, proving (GS2).
+Continuous parameterization on the compact sphere supplies a
+countable determining subclass; no measurability issue arises.
+\end{proof}
+
+\begin{lemma}[A relative square-norm event]
+With probability at least $1-\delta/2$, uniformly over all finite
+shallow ReLU functions $h$ of path mass $P_h\le 4n^5$,
+\[
+ \mathbb E h(X)^2-\mathbb P_n h(X)^2
+ \le\tfrac14\mathbb P_n h(X)^2+C b_n(P_h+1)^2.              \tag{GS3}
+\]
+\end{lemma}
+\begin{proof}
+Apply the smooth nonnegative-loss Rademacher bound of Srebro,
+Sridharan, and Tewari~\cite[Theorem~1]{sst} to square loss with zero labels on path balls
+of radii $1,2,4,\ldots,2^{\lceil\log_2(4n^5)\rceil}$.
+On a radius-$p$ ball the loss is bounded by $2p^2$, is $2$-smooth,
+and the preceding lemma gives worst-case Rademacher complexity
+$Cp/\sqrt n$. Allocate confidence equally among these
+$O(\log n)$ balls. The resulting upper deviation is bounded by
+\[
+ C\sqrt{\mathbb P_nh^2}\,p\sqrt{b_n}+C p^2b_n.
+\]
+Young's inequality and the least dyadic radius containing $h$ prove
+(GS3). This event depends only on a function class, so it is common
+to every learner width and Gaussian scale.
+\end{proof}
+
+\begin{lemma}[A uniform posterior energy cutoff]
+For $N\ge n$, $0<\nu\le1$, $n^{-2}\le\lambda\le1$, there is a
+numerical constant $A$ such that, for
+\[
+ q_*=A\{d+2+\lambda^{-1}\},
+\]
+every sample with $|Y_i|\le1$ satisfies
+\[
+ \Pi_\lambda[(1+Q^2)\mathbf1_{\{Q>q_*\}}]\le n^{-40}.     \tag{GS4}
+\]
+\end{lemma}
+\begin{proof}
+The prior is centered and has pointwise output variance at most
+$\nu^2/N$, so its empirical risk is at most two. Consequently
+$Z\ge\exp(-\omega/\lambda)$. With $D=(d+2)N$,
+$\mathbb E_\mu e^{\omega Q/4}=2^{D/2}$.
+The elementary bound
+\[
+ (1+Q^2)\mathbf1_{Q>q}
+ \le C(1+\omega^{-2})e^{\omega Q/4-\omega q/8}
+\]
+therefore gives
+\[
+ \Pi_\lambda[(1+Q^2)\mathbf1_{Q>q}]
+ \le C(1+\omega^{-2})
+       \exp\{\omega/\lambda+D\log2/2-\omega q/8\}.
+\]
+Use $D/\omega=\nu(d+2)\le d+2$, $\omega\ge n$, and enlarge $A$.
+The exponent is then sufficiently negative to imply (GS4),
+uniformly in all the stated parameters.
+\end{proof}
+
+\begin{theorem}[A coefficient-one path oracle]
+\label{thm:general-shallow-sharp}
+Suppose (GS1) satisfies $\lambda_n\le1$. For any deterministic finite
+shallow ReLU comparator $g$, at every $N\ge n$ and $0<\nu\le1$,
+with probability at least $1-\delta$,
+\begin{align}
+ R(\bar z_{\lambda_n})\le\Pi_{\lambda_n}R(z)
+ \le R(g)+C\lambda_n\left[
+ P_g+1+(d+2)\log((n+1)(d+1))\right].                     \tag{GS5}
+\end{align}
+The event can be chosen common to all the eligible learner widths
+and Gaussian scales. The prior and prediction are unchanged; the
+likelihood scale is deterministic and independent of the comparator.
+\end{theorem}
+\begin{proof}
+First assume $R(g)\le2$ and $\lambda_n(P_g+1)\le c$ for a sufficiently
+small fixed constant $c$. In particular $P_g\le n^4$.
+Intersect (GS2) and (GS3), and write $h=z-g$ and $P=P(z)$.
+Since $h$ has path mass at most $P+P_g$, expand the squared-loss
+difference and use these events to obtain
+\begin{align*}
+ R(z)-R(g)\le{}&\widehat R(z)-\widehat R(g)
+       +\tfrac14\mathbb P_n(z-g)^2+C b_n(P+P_g+1)^2\\
+       &+C(P+P_g)\{\sqrt{b_n}+(P_g+1)b_n\}.
+\end{align*}
+For $Q\le q_*$, $P\le q_*/2$. The chosen scale satisfies
+\[
+ b_nq_*\le c'\lambda_n,\qquad
+ \sqrt{b_n}+(P_g+1)b_n\le c'\lambda_n,
+\]
+with $c'$ as small as needed by increasing $c_1$.
+Indeed $\lambda_n\ge c_1\sqrt{b_n}$ and
+$\lambda_n\ge c_1(d+2)b_n$; also
+$b_n(P_g+1)\le c b_n/\lambda_n$.
+The comparator-only terms obey
+$b_n(P_g+1)^2\le C\lambda_n(P_g+1)$.
+Hence on this energy set
+\begin{align*}
+ R(z)-R(g)\le{}&\widehat R(z)-\widehat R(g)
+       +\tfrac14\mathbb P_n(z-g)^2
+       +\tfrac12\lambda_n P+C\lambda_n(P_g+1).
+\end{align*}
+All path masses here are at most $4n^5$ after increasing a harmless
+minimum sample constant; $\lambda_n\le1$ implies $d\le Cn$.
+
+Integrate on $\{Q\le q_*\}$ and use (GM1).
+Replacing the restricted empirical integral by its full integral
+costs at most $\widehat R(g)\Pi(Q>q_*)$ because the other summands
+are nonnegative. The population tail costs at most
+$C\Pi[(1+Q^2)\mathbf1_{Q>q_*}]$.
+Here $\widehat R(g)\le C(P_g+1)^2$ is polynomial in $n$; (GS4)
+makes both corrections negligible. Discard the remaining positive
+empirical-distance and path terms in (GM1). This proves (GS5).
+
+For completeness, apply exactly the same proof to $g=0$ (without
+requiring $\lambda_n\le c$): its multiplier has bounded envelope,
+and all constants are absorbed by (GS1). This gives
+\[
+ \Pi R(z)\le R(0)+C\lambda_n[1+(d+2)\log((n+1)(d+1))].
+\]
+If $R(g)>R(0)$ this already implies (GS5).
+If $\lambda_n(P_g+1)>c$, use $R(0)\le1$ and enlarge the constant
+on $\lambda_n(P_g+1)$ to dominate the possible difference between
+$R(0)$ and $R(g)$. This handles all remaining comparators, including
+ones with $P_g>n^4$. Jensen gives the posterior-mean conclusion.
+\end{proof}
+
+\paragraph{Width and coefficient budgets.}
+For an ordinary affine-output shallow teacher of width at most $C$
+whose coefficients and biases have magnitude at most $B\ge1$, one
+constant neuron implements its output bias and
+$P_g\le2d(C+1)B^2$. Thus at fixed $d,B$, (GS5) has remainder
+$\widetilde O((C+1)/\sqrt n)$, with no density assumption and no
+cap on teacher or learner outputs. More explicitly the remainder is
+\[
+ \widetilde O\left(
+ \left[n^{-1/2}+\frac d n\right]
+                  [d(C+1)B^2+d]\right).                 \tag{GS6}
+\]
+The algorithm does not use $C$ or $B$. For every fixed declared
+budget class, choose a deterministic population-risk minimizer before
+applying (GS5); one exists by continuity on its compact finite
+parameter set. Alternatively, a single deterministic $n^{-10}$-near
+minimizer suffices, with its tolerance absorbed in the remainder.
+For simultaneous integer budgets, keep the same scale (GS1), apply
+the multiplier event to the at most $n^4$ pairs $1\le C,B\le n^2$
+with failure allocation $\delta/[2(n+1)^4]$, and enlarge the fixed
+constants already used in $b_n$. This changes only its logarithmic
+constant, not the scale between classes. Larger budgets have
+$\lambda_n d(C+1)B^2\ge c$, so the zero-comparator event gives their
+stated resource bound directly. No prior over these classes is used.

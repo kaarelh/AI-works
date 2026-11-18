@@ -1,0 +1,9 @@
+Independent exact-source mathematical and statement-correspondence review by /root/agnostic_proof_audit, 18 November 2026.
+
+All six included sources pass. This is a prior-probability theorem, not merely a learning bound, and is conventional mathematical review rather than Lean verification.
+
+The copied scalar and embedding arguments retain their checked hypotheses. The new first-moment path and uniform-error recurrences close with a single depth-independent sufficiently large D. Binary relative entropy turns the product comparison into the displayed entire-cube lower mass. Shared networks retain their explicit formula-expansion cost.
+
+The sharpened upper-compression proof correctly uses T=ceil(C L log(eL)): it dominates the row intensity and the logarithm of the stopped ancestry size, so the conditional union bound still has failure at most delta/4. Uniform small-jump truncation, fresh-row exploration independence, reused rows, large-jump cutoff, and dyadic quantization give the stated size [C L log(eL)]^(H+2), coefficient bits CL^3, and finite dictionary cardinality. No log learner-width factor is introduced.
+
+The neighborhood-mass converse follows by intersection at exceptional mass p/2. The new exact margin-sign version needs no upper raw-output bound: uniform compression error below kappa preserves every sign. Conditioning on the all-input margin event is handled by the explicit width-one positive ReLU chain, whose neighborhood gives the stated width-independent normalization cost Q0. The rational ReLU formula can be evaluated by a Boolean arithmetic circuit with polynomial overhead in its size, depth and coefficient precision. The theorem explicitly distinguishes a positive-margin sign event from unrestricted signs and distinguishes formula complexity from shared circuit complexity. Main abstract and introductory scope match these statements.

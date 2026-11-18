@@ -1,0 +1,17 @@
+# Independent posterior-objective reductions audit
+
+18 November 2026 — agnostic_proof_audit. Mathematical review, not formal verification or a new population-risk theorem.
+
+The exact PR1–PR3 module passes.
+
+The polar pushforward is exact: incoming Gaussian radius squared is exponential with mean2nu, independent of its uniform direction. Multiplying that radius by the independent readout gives characteristic function (1+nu²t²/N²)^(-1), hence independent Laplace amplitudes of scale nu/N. The likelihood factors through these amplitudes and directions, so the same pushforward describes the actual posterior, free energy, and entropy identity.
+
+PR1: for fixed directions, the linear coarea factor is constant on each affine training-prediction fiber. Since the likelihood is also constant there, its conditional density is proportional to exp(-omega||c||1) relative to affine Hausdorff measure. In orthonormal nullspace coordinates centered at an L1 minimizer, the potential is coercive, convex, and almost everywhere differentiable. The boundary term in the divergence identity vanishes by its exponential tails. Convexity gives u dot grad V>=V(u)-V(0), hence expected excess mass at most (N-rank A)/omega<=nu. The zero-dimensional case is immediate, and the regular-conditional statement is appropriately restricted to almost every fiber.
+
+PR2 attainment: signed unit-ridge training vectors form a compact dictionary. Compact bounded-mass prediction sets and coercivity of the positive path penalty give an attained optimum; an optimal linear-dependence reduction needs at most n atoms. The zero candidate gives J*<=1, empirical risk<=1, and P*<=1/(2lambda). Therefore the optimum fits at every N>=n.
+
+The balanced Gaussian center has weighted energy2P*, hence mean-shift entropy omega P*. Shrinking all3N native variances by epsilon² incurs at most3N log(1/epsilon). The uniform RMS perturbation bound C epsilon sqrt(nu P*)+C epsilon²nu follows from the balanced sums and the native Gaussian scales. At epsilon=(lambda nu)², lambda<=1/2 and nu<=1, this is O(lambda nu). Empirical squared-loss transfer then costs O(lambda nu), since the optimal empirical risk is at most one. The Gibbs comparison proves PR3 with error C lambda nu log(e/(lambda nu)).
+
+For the converse objective control, the exact Laplace moment is E exp(t omega P)=(1-t)^(-N). Its entropy inequality gives the stated coefficient2lambda t on expected actual representation mass. Radial integration by parts in the amplitude coordinates gives E P=nu-lambda^(-1)E P_n[z(z-Y)]. Completing the scalar square yields E P<=nu+1/(4lambda). Setting1-t=lambda nu is valid in the stated range and loses only O(lambda nu) in the coercive mass term; the remaining entropy term is O(lambda nu log(e/(lambda nu))). Combining with PR3 gives the upper bound in PR2. Its lower bound follows pointwise from the definition of the global empirical optimum, since actual representation mass is at least its minimal training-vector mass.
+
+Scope: PR1 is an excess-mass statement on fixed-direction fibers, and PR2 is an expected empirical-objective statement for the actual posterior. Neither supplies a uniform population envelope, stable distance to a fiber minimizer, an IID lower bound, or a new learning rate. The final discussion explicitly retains this limitation and is consistent with the separately reviewed four-point deterministic range obstruction. Frozen Gaussian sources were not modified.

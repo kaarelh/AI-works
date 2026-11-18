@@ -1,0 +1,29 @@
+\section{The same Boolean resource for tanh and sigmoid}
+\label{sec:saturating-Boolean}
+Bounded saturating activations give an even simpler digital implementation. In this section no small-intensity condition on the scalar prior is required.
+
+\begin{proposition}[Saturating Boolean gates]
+\label{prop:saturating-Boolean}
+The Boolean expected-risk and online sign-prediction conclusions of Section~\ref{sec:digital-circuits} also hold for tanh and logistic sigmoid hidden activations. A layered fan-in-two Boolean circuit of depth $h$ needs at most $h$ hidden layers and one additional constant wire per layer. Padding uses saturated COPY gates. The learner width must contain this implementation. Coefficients and row fan-in are bounded by numerical constants, and the resource is again
+\[
+ J_*\log N+E_{1,*}\log(d+1)
+       +C(S+H+1)\log\{C(n+1)(S+H+1)\}.
+\]
+Here the counts are those of the saturating implementation, so they need not equal the ReLU counts. The observation likelihood and prediction use a final clipping link. The exact sign-prediction conclusion instead uses the all-input raw margin convention already specified.
+\end{proposition}
+\begin{proof}
+For tanh encode true and false by values in $[0.9,1]$ and $[-1,-0.9]$. Carry a constant in $[0.9,1]$. The gate preactivations are
+\[
+ 4(a+b-c)\quad\hbox{for AND},\qquad -4a\quad\hbox{for NOT},
+ \qquad4a\quad\hbox{for COPY},\qquad4c\quad\hbox{for the constant}.
+\]
+For AND, the expression $a+b-c$ is at least $0.8$ when both inputs are true and at most $-0.8$ otherwise. The other margins are larger. Any added preactivation perturbation of magnitude at most $0.1$ therefore preserves the encoding intervals after tanh. The first layer uses the exact Boolean input signs and constant coordinate, so it starts the induction. The readout $2a$ has the correct sign and magnitude at least $1.8$ before a readout perturbation; clipping it gives the exact Boolean target whenever that perturbation is at most $0.1$.
+
+For the logistic sigmoid $\sigma(t)=(1+e^{-t})^{-1}$, encode false in $[0,0.1]$ and true in $[0.9,1]$, with a constant in $[0.9,1]$. Use preactivations
+\[
+ 20(a+b-1.5c),\quad20(0.5c-a),\quad20(a-0.5c),\quad20c
+\]
+for AND, NOT, COPY and the constant. The corresponding preactivation signs have absolute margins at least five before a perturbation of size $0.1$, and the output remains in its prescribed encoding interval. Initially replace each input bit by $(1+x_i)/2$ inside the first gate's affine expression, so no extra hidden layer is needed. The readout $4a-2c$ has magnitude at least $1.4$ with the correct sign. Again clipping is exactly correct on the good event. All coefficients and numbers of used input coordinates per row are bounded by numerical constants.
+
+For either activation all selected and native hidden features are bounded in absolute value by one. In the same comparison construction, every selected-row or readout residual therefore has expected uniform magnitude at most $C\epsilon$, at every depth, without a condition on the native row moment. A union bound and Markov's inequality show that all these residuals are at most $0.1$ with probability at least $1-C(V_*+1)\epsilon$. On this event the clipped output is exactly the target everywhere on the Boolean cube. Taking $\epsilon=ct/(V_*+1)$ gives expected uniform clipped-output error at most $t$ and entropy \eqref{eq:digital-entropy}, with the new resource counts. The margin lower bound uses a fixed positive success probability. Apply the same statistical and online arguments as before.
+\end{proof}

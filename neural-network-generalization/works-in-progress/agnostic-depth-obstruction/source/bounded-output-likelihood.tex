@@ -1,0 +1,22 @@
+\section{Bounded outputs in the likelihood}
+\label{sec:bounded-output-likelihood}
+Clipping a prediction after conditioning is different from using a bounded output in the observation model. The same obstruction also applies to two common versions of the latter convention.
+
+\begin{corollary}[A final clipping or tanh activation]
+\label{cor:bounded-output-likelihood}
+Let $\psi$ be either clipping to $[-1,1]$ or tanh. Replace the Gaussian likelihood in Theorem~\ref{thm:main} by
+\[
+ \Pi(dw)\propto\exp\left\{-\frac1{2\lambda s n}
+              \sum_i(\psi(z_w(X_i))-Y_i)^2\right\}\mu_{N,s}(dw),
+\]
+and predict by $\mathbb E_\Pi\psi(z_w(x))$. For clipping, use the same conditional mean $g(x)=\tanh X_1$; for a final tanh, use $g(x)=\tanh(\tanh X_1)$. In both cases let $Y=g(X)+\epsilon/4$ with independent fair signs. The conclusion of Theorem~\ref{thm:main}, including its fixed positive excess loss and the uniformity over all widths, scales, and temperatures, holds after adjusting its absolute constants. Arbitrary data-dependent mixtures of these posterior means are also covered.
+\end{corollary}
+\begin{proof}
+First consider the small-prefactor range $Ns\le c_0$. Both choices of $\psi$ are odd, one-Lipschitz, and zero at zero. The prior prediction $\psi(z)$ is therefore centered with second moment at most $s$, giving the same zero comparison. Also $|\psi(z)|\le|z|$, so the operator-energy floor and posterior tail argument remain valid for the bounded prediction.
+
+For clipping, all empirical atom means lie in a fixed compact subinterval of $(-1,1)$. Use the same native memorizer for those means and contract its approximation error through $\psi$. For a final tanh, the labels have magnitude at most $\tanh(\tanh(3/4))+1/4<1$. Apply the native memorizer instead to the inverse-tanh of the empirical atom means. These transformed values are bounded by an absolute constant. The memorizer theorem permits any fixed output bound, and the final tanh contracts its RMS error. In each case the resulting Gaussian comparison has energy at most $(1+\delta)H$ and arbitrarily small fixed prediction error, with the constants allowed to change.
+
+Apply the segment lemma to the prediction $\psi(z)$ and the same operator energy. The proof only uses the squared-loss variational identity, the zero comparison, the memorizer comparison, and the energy floor; it does not require a Gaussian conditional readout. The sample witness is unchanged in form. For the final-tanh target, $\|g(S)\|_n^2\ge1/64$, while the independent noise still gives singleton error energy at least $1/64$ on the same count event. Its noise alignment concentrates as before. Thus the numerical witness argument in Section~\ref{sec:assembly} still proves the fixed excess bound. Linearity preserves the witness under mixtures. Section~\ref{sec:all-subcritical-prefactors} extends the same result to every fixed range $Ns\le\nu_{\max}<1$, using its event-entropy floor and matching covariance comparison.
+\end{proof}
+
+For a final tanh, the prediction in this statement is the mean of the bounded network output. It is not tanh applied to the mean of the linear readout. The Gaussian-affine-skip extension of the preceding section concerns the raw Gaussian observation model and is not included in this corollary.

@@ -1,0 +1,106 @@
+\section{A readout-tail and teacher-complexity tradeoff}
+\label{sec:power-readout-tradeoff}
+The square-root Dirichlet Gaussian readout is one member of a continuous family. Fix $p>1$, put $\alpha=1-1/p$, and give every readout factor, including its bias, the symmetric density $c_p\exp(-|u|^p)$. Keep the hidden layers and their continuous neuron gates unchanged. For a final Dirichlet vector of concentration $\kappa$, use
+\[
+ z(x)=G_0+\sum_{j=1}^NP_j^\alpha G_jh_j^H(x),
+ \qquad P_j=\frac{S_j}{\sum_iS_i},\qquad
+ S_j\stackrel{\rm iid}{\sim}\operatorname{Gamma}(\kappa/N,1).
+\]
+Assume $|h_j^H|\le M_\phi$. Constants in this section may depend on the fixed $p,\kappa,M_\phi$; they are independent of $N,H,d$. In particular they are not asserted to remain bounded as $p\downarrow1$.
+
+\begin{lemma}[A native raw Weibull envelope]
+\label{lem:power-readout-envelope}
+For every $q\ge1$,
+\[
+ \left\|\sup_x|z(x)|\right\|_{L^q(\mu_N)}
+       \le C_p q^{1/p}.
+\]
+Equivalently, after changing constants,
+$\mathbb E\exp(c_p\|z\|_\infty^p)\le C_p$ uniformly in learner width, depth and input dimension.
+\end{lemma}
+\begin{proof}
+Write $a=\kappa/N$, $T=\sum_jS_j$, and
+\[
+ Z=\sum_jP_j^\alpha|G_j|,\qquad
+ A=\sum_jS_j^\alpha|G_j|=T^\alpha Z.
+\]
+Gamma--Dirichlet factorization makes $T\sim\operatorname{Gamma}(\kappa,1)$ independent of $Z$. We first prove that $A$ has a width-independent exponential moment. For a sufficiently small fixed $t>0$, Young's inequality gives
+\[
+ t s^\alpha|u|\le \frac s2+C_p t^p|u|^p,
+ \qquad C_p t^p\le\frac12.
+\]
+Using $e^v-1\le ve^v$ before integrating over the readout factor gives
+\[
+ \mathbb E_G[e^{t s^\alpha|G|}-1]
+ \le t s^\alpha e^{s/2}
+              \mathbb E[|G|e^{C_p t^p|G|^p}]
+ \le C_p t s^\alpha e^{s/2}.
+\]
+Thus, uniformly for $0<a\le\kappa\le1$,
+\[
+ \mathbb E[e^{t S^\alpha|G|}-1]
+ \le\frac{C_p}{\Gamma(a)}
+            \int_0^\infty s^{a+\alpha-1}e^{-s/2}\,ds
+ \le C_p a.
+\]
+The last step uses $\alpha>0$ fixed and $\Gamma(a)^{-1}\le Ca$. This small-shape factor is essential: bounding the one-coordinate moment merely by a fixed constant would not be sufficient. Independence across coordinates now gives
+\[
+ \mathbb E e^{tA}\le(1+C_pa)^N\le e^{C_p\kappa}.
+\]
+Consequently $\|A\|_q\le C_p q$. Also
+$\|T^\alpha\|_q\ge c_pq^\alpha$ by the gamma moment formula, for all $q\ge1$. Since $T$ and $Z$ are independent,
+\[
+ \|Z\|_q=\frac{\|A\|_q}{\|T^\alpha\|_q}
+          \le C_p q^{1-\alpha}=C_p q^{1/p}.
+\]
+Finally $\|z\|_\infty\le|G_0|+M_\phi Z$, and the readout bias has the same $q^{1/p}$ moment bound. The exponential assertion follows by expanding its power series and using these moments.
+\end{proof}
+
+\begin{lemma}[Readout comparison cost]
+\label{lem:power-readout-comparison}
+The normalized-readout comparison construction continues to work with the same hidden-block precision and entropy costs. If the teacher's final hidden width is $k$, its readout coefficients are $v_1,\ldots,v_k$, and its bias is $b_g$, the additional nonlogarithmic readout cost is at most
+\begin{equation}
+ C_p k^{p-1}\sum_{j=1}^k|v_j|^p+C_p|b_g|^p+C_pk.
+ \label{eq:power-readout-resource}
+\end{equation}
+For $|v_j|,|b_g|\le B$, this is at most $C_p(k^p+1)(B^p+1)$. All selected-vertex placement costs still cancel, for every learner width above the teacher width. No learner output bound or support restriction is introduced.
+\end{lemma}
+\begin{proof}
+Let $\epsilon$ be the scalar comparison precision. Put every selected final latent gate uniformly in $[(1-\epsilon)/k,(1+\epsilon)/k]$. Condition the sum of inactive final gates to be at most $\epsilon^{1/\alpha}$. Its gamma small-ball entropy cost is at most $C_p\log(C_p/\epsilon)$. Conditional on this sum, the inactive proportions are Dirichlet. Their gamma moment formula gives, uniformly even when their total concentration tends to zero,
+\[
+ \mathbb E\left[\sum_{\rm inactive}S_j^\alpha\ 
+                      \middle|\ \sum_{\rm inactive}S_j=t\right]
+ \le C_p t^\alpha.
+\]
+Indeed the two relevant gamma ratios are bounded by $Ca$ and $C_p/b$ when an individual shape is $a$ and the total inactive shape is $b$. Further conditioning on
+$\sum_{\rm inactive}S_j^\alpha\le C_p\epsilon$
+costs at most $\log2$, by Markov's inequality. If no inactive gate is present these conditions are vacuous.
+
+The total latent gate sum is $1+O(\epsilon)$, so each selected $P_j^\alpha$ differs from $k^{-\alpha}$ by at most $C_p\epsilon k^{-\alpha}$, and
+$\sum_{\rm inactive}P_j^\alpha\le C_p\epsilon$.
+Selected gates are distinguishable from inactive ones once $\epsilon\le c_p/(k+1)$; the same disjoint-group placement mixture therefore cancels the $k\log N$ selected-gate entropy. None of this uses identifiability after passing from latent variables to actual weights.
+
+Put the selected readout factor uniformly within $\epsilon$ of $k^\alpha v_j$, and the bias within $\epsilon$ of $b_g$. Its relative entropy against density $c_p e^{-|u|^p}$ is at most
+\[
+ C_p\log(C_p/\epsilon)+C_p|k^\alpha v_j|^p+C_p.
+\]
+Since $\alpha p=p-1$, summing gives \eqref{eq:power-readout-resource}. Effective selected coefficients have error $C_p\epsilon(|v_j|+1)$. Bounded hidden features and the deterministic inactive sum bound give uniform inactive RMS contribution $C_p\epsilon$, by weighted Cauchy--Schwarz and the finite second moment of the readout factors. Thus the previous hidden-layer stability and final precision choice remain valid, with constants depending on $p$.
+\end{proof}
+
+\paragraph{A variation-sensitive allocation.}
+The same construction improves the readout resource to
+$C_p(\sum_j|v_j|)^p+C_p|b_g|^p+C_pk$ if the selected gate centers are allowed to follow the teacher's readout magnitudes. For $L_v=\sum_j|v_j|>0$, use
+\[
+ w_j=\frac{|v_j|+L_v/k}{2L_v},\qquad
+ \sum_jw_j=1,\qquad w_j\ge\frac1{2k},
+\]
+and put the selected latent gate within relative precision $\epsilon$ of $w_j$. Its readout factor is centered at $v_j/w_j^\alpha$. The gate entropy and marker separation obey the same bounds because of the displayed floor, while
+\[
+ \sum_j\frac{|v_j|^p}{w_j^{p-1}}
+ \le 2^{p-1}L_v^p.
+\]
+All perturbation estimates remain valid with $k^{-\alpha}$ replaced by $w_j^\alpha$. When $L_v=0$, use the uniform allocation and zero factor centers. Thus the result can be stated in terms of readout variation, even when a coordinatewise cap is a loose description of the teacher.
+
+\paragraph{Statistical interpretation.}
+In a raw-output posterior theorem obtained by truncating the prior and applying the bounded-output all-data oracle, a native envelope with tail $\exp(-cM^p)$ permits the balance
+$T\asymp n^{2/(p+2)}$, up to logarithmic factors. The resulting comparison penalty is of order $n^{-p/(p+2)}$. The preceding lemmas identify the exact prior-tail and readout-complexity inputs to that argument; its statistical hypotheses and proof are those of the raw-output oracle theorem. The case $p=2$ has a quadratic readout-width cost and the square-root sample rate. The case $p=4$ has quartic readout-width cost and rate $n^{-2/3}$. Larger $p$ improves the exponent of sample size but worsens the readout complexity polynomial. This does not uniformly improve the width-growth range: the Gaussian choice is especially favorable when the hidden comparator already has a quadratic parameter-count resource.

@@ -1,0 +1,39 @@
+\section{The infinite-width limit retains shared neurons}
+\label{sec:ard-wide-limit}
+The neuron-gated prior also has a precise large-width interpretation. Its contrast with an independent sparse-coordinate prior is that the retained objects are whole neurons, shared by every row that uses them.
+
+\begin{proposition}[A gamma-process circuit limit]
+\label{prop:ard-wide-limit}
+Fix input dimension, hidden depth, activation and scalar prior parameters. As $N\to\infty$, the raw function laws of the neuron-gated prior converge weakly on $C([-1,1]^d)$. At any fixed gate threshold $\epsilon>0$, the truncated laws converge in total variation to the following finite random network:
+\begin{itemize}
+\item Each hidden layer has an independent Poisson number of retained neurons, with mean
+$\Lambda_\epsilon=\kappa\int_\epsilon^\infty s^{-1}e^{-s}\,ds$.
+\item Their gates are independent with density
+$\kappa s^{-1}e^{-s}\mathbf1_{s>\epsilon}/\Lambda_\epsilon$.
+\item All edge factors and biases between the retained neurons have the original independent Student laws. Each retained gate multiplies the complete outgoing column of its neuron.
+\end{itemize}
+Thus a retained hidden feature is reused by all of its parents, rather than duplicated into independent branches. The full limiting function law is obtained by letting $\epsilon\downarrow0$. Equivalently each layer has a gamma-process gate cloud of intensity $\kappa s^{-1}e^{-s}\,ds$, with finite total gate mass almost surely.
+\end{proposition}
+\begin{proof}
+For $a=\kappa/N$, the native gate density is
+$f_a(s)=s^{a-1}e^{-s}/\Gamma(a)$. On $(\epsilon,\infty)$,
+\[
+ Nf_a(s)\longrightarrow\kappa s^{-1}e^{-s}
+\]
+in $L^1$, by dominated convergence. The retained count in a layer is binomial with parameter $q_N=\Pr(S>\epsilon)$, and $Nq_N\to\Lambda_\epsilon$. Binomial-to-Poisson convergence holds in total variation. Conditional on the count, the retained gates are independent with density $f_a\mathbf1_{s>\epsilon}/q_N$, which converges in total variation to the displayed density.
+
+The retained index sets depend only on gates. Therefore all factors and biases of the induced subnetwork remain independent at their native laws, independently of the retained gates. Couple the finitely many layer counts and gates, and then use identical factor arrays whenever the counts agree. This proves total-variation convergence of the truncated network functions. In particular it preserves every use of one retained neuron by several later neurons.
+
+The native truncation estimate in Theorem~\ref{thm:ard-native-compression} is uniform in $N$ and tends to zero with $\epsilon$. Using the bounded metric $\min\{1,\|f-g\|_\infty\}$, the limiting truncated laws are consequently Cauchy in Wasserstein distance, and the same triangle inequality proves convergence of the full finite-width laws.
+
+For the equivalent gate-cloud construction, assign independent Student factors and biases to the countably many atoms in each of the finitely many layers. The gate cloud has total mass $\operatorname{Gamma}(\kappa,1)$ and expected discarded mass $\kappa\int_0^\epsilon e^{-s}ds\le\kappa\epsilon$. The same path majorants give finite expected uniform absolute sums at every row. Thus the recursive infinite sums converge uniformly almost surely, define continuous functions, and have the same truncation limit just obtained.
+\end{proof}
+
+\begin{corollary}[The approximation oracle also holds at infinite width]
+For any fixed finite data set and bounded Lipschitz final output, the Gaussian-likelihood posterior of the finite-width network converges weakly to the posterior under the limiting function prior. Posterior-mean predictions converge pointwise. Every expected-risk oracle in this paper that is uniform in finite learner width therefore holds for this infinite-width learner as well. The width-independent function-neighborhood and finite-dictionary bounds also pass to the limiting prior.
+\end{corollary}
+\begin{proof}
+For the fixed data set, its likelihood is a bounded, strictly positive continuous functional of the raw function, so normalized likelihood tilting preserves weak convergence. Bounded output evaluations give pointwise convergence of posterior means. The test losses are dominated by $\E(1+|Y|)^2<\infty$, independently of the training sample and width. Dominated convergence therefore passes the expected-risk inequalities to the limit. Closed uniform neighborhoods and the finite union of closed dictionary-approximation neighborhoods pass their probability lower bounds by the closed-set direction of Portmanteau.
+\end{proof}
+
+This limiting description is a consequence of the continuous fixed-architecture parameter prior. No discrete width or architecture is sampled by the finite learner. It nevertheless makes the prior's modeling assumption transparent: neuron-level group shrinkage preserves shared computations. An independent sparse-edge prior instead develops a tree-like output ancestry at fixed resolution. The two priors therefore encode different preferences even when their coordinate variances have comparable width scales.

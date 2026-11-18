@@ -1,0 +1,146 @@
+\section{Coefficient-free formula networks at unchanged width}
+\label{sec:formula-compactification}
+A ReLU formula network is a layered scalar-output network in which each hidden neuron has at most one outgoing edge. The input coordinates may be reused. We first use the learner's convention: a constant input is available in the first layer, but there are no later hidden biases and the final readout is linear. Its output is clipped to $[-1,1]$. Write $S$ for its number of hidden neurons after deleting vertices with no path to the readout, and $L_1$ for the number in its first hidden layer. A width-$C$, hidden-depth-$h$ formula has $L_1\le C$ and $S\le Ch$.
+
+\begin{lemma}[Exact formula compactification]
+\label{lem:formula-compactification}
+On the Boolean cube, every such formula has an exact implementation on the same graph in which all edges between hidden neurons and all readout edges belong to $\{-1,1\}$, while the first-layer coefficients have magnitude at most
+\[
+ B_P=(2P)^{2P},\qquad P=(d+1)L_1.
+\]
+The formula's original coefficients may be arbitrary finite real numbers. Zero functions may instead use one zero hidden chain.
+\end{lemma}
+\begin{proof}
+Delete vertices whose unique outgoing edge is zero. Starting at the readout and moving backwards, absorb the absolute value of each neuron's unique outgoing weight into all its incoming coefficients, using positive homogeneity of ReLU. Replace that outgoing weight by its sign. No conflicting normalization is possible because the edge is unique. The resulting internal and readout edges are $\pm1$; only first-layer coefficients remain unconstrained.
+
+Fix the normalized formula's activation mask at every Boolean input. Treat its $P$ first-layer coefficients as variables. Every preactivation is linear in those variables: substitute the prescribed zero-or-identity activation at each earlier node. Every variable has at most one path to any later neuron, so each coefficient of this linear expression is $0$ or $\pm1$. Impose the closed inequalities preserving every activation mask. Impose the clipped-output equalities or inequalities exactly as in the shallow compactification: equality at an output in $(-1,1)$, and the corresponding inequality at $\pm1$.
+
+The original normalized first layer makes this finite linear system feasible. Its right sides lie in $[-1,1]$ and its coefficient matrix is integral with entries $0,\pm1$. The minimum-norm integer-polyhedron lemma gives a feasible first layer bounded by $B_P$. Closed masks suffice because a preactivation reaching zero contributes zero in either convention. The reconstructed formula therefore has exactly the original clipped output at every Boolean input.
+\end{proof}
+
+The following sharper prior-comparison estimate avoids multiplying a logarithmic coefficient cost by depth. Its proof uses the fact that the normalized formula has internal column $\ell^1$ norms at most one.
+
+\begin{lemma}[Contracting formula comparison]
+\label{lem:contracting-formula-comparison}
+Use the fixed L\'evy fan-in prior with first absolute jump moment $M_1\le1/4$. Let a comparison formula have $S\ge1$ hidden occurrences, $L_1$ first-layer nodes, first-layer coefficient cap $B\ge1$, internal and readout weights $\pm1$, and width at most $N$. Put $P=(d+1)L_1$. For every $0<t\le1$, a data-independent comparison law satisfies
+\[
+ \E_\rho\sup_{x\in[-1,1]^d}|f_w(x)-g(x)|\le t,
+ \qquad
+ \operatorname{KL}(\rho\|\pi_N)
+ \le c(d+1)(S+1)\log\frac{c(d+1)(S+1)(P+1)(B+8)}t.
+\]
+The constant is independent of depth, width, and the first-layer coefficient cap.
+\end{lemma}
+\begin{proof}
+We use the designated-coordinate and background-coordinate laws of the L\'evy comparison construction. At a coordinate with desired mean $a$, the designated law has mean $a$, lies within $c\varepsilon$ of $a$, and has entropy cost at most $\log F+c\log(c(B+8)/\varepsilon)$. For $a=\pm1$ and sufficiently small $\varepsilon$, its sign is fixed and $\E|W|=1$. A background coordinate entering a selected row has first absolute moment at most $c\varepsilon/F$; its row-normalized entropy cost is $c\log(c/\varepsilon)$. All these coordinates are independent at a fixed embedding. Native unselected coordinates obey $\E|W|\le M_1/F$.
+
+First fix an embedding. Let $U_\ell$ be the sum, over the selected formula nodes in layer $\ell$, of expected uniform absolute activation. Let $p_\ell$ be the average expected uniform absolute activation over all $N$ nodes, and let $m_\ell$ be the number of selected nodes in that layer. The first layer satisfies
+\[
+ U_1\le cPB,\qquad p_1\le M_1+U_1/N.
+\]
+At every subsequent layer, uniqueness of outgoing formula edges and $\E|W|=1$ give
+\[
+ U_\ell\le U_{\ell-1}+c\varepsilon m_\ell p_{\ell-1},\qquad
+ p_\ell\le M_1p_{\ell-1}+U_\ell/N.
+\]
+For the second inequality, bound the unselected rows by the native gain and count the selected rows separately; double-counting only enlarges the bound. Consequently
+\[
+ p_\ell\le c+cN^{-1}\max_{j\le\ell}U_j.
+\]
+Since $\sum_\ell m_\ell=S$, summing the first recurrence and choosing $\varepsilon\le c_0/(S+1)$ with small numerical $c_0$ yields
+\[
+ \max_\ell U_\ell\le c(PB+1),\qquad
+ \max_\ell p_\ell\le c(1+PB/N).
+\]
+No exponential-in-depth factor occurs.
+
+Let $E_\ell$ be the sum of expected uniform discrepancies between selected activations and the deterministic formula at layer $\ell$. The first-layer discrepancy is at most $cP\varepsilon$. At later layers, split a designated product into its mean-edge action on the previous discrepancy and its coordinate perturbation on the actual previous activation. Unique outgoing edges give
+\[
+ E_\ell\le E_{\ell-1}+c\varepsilon U_{\ell-1}
+                     +c\varepsilon m_\ell p_{\ell-1}.
+\]
+There are at most $S$ nonempty layers. The same estimate for the readout, followed by the one-Lipschitz output clip, gives
+\[
+ \E_\rho\sup_x|f_w(x)-g(x)|
+ \le c\varepsilon(S+1)(PB+1).
+\]
+Take $\varepsilon=c_1t/[(S+1)(PB+1)]$ with a small enough numerical $c_1$; this also enforces the earlier cutoff condition.
+
+At $N\ge2(S+1)$ use the random disjoint-group embeddings of the native comparison theorem. The formula has exactly one outgoing designated edge per hidden occurrence, so the embedding entropy cancels the $\log N$ coordinate costs and leaves at most
+$c(d+1)(S+1)\log(c(d+1)(S+1)(B+8)/\varepsilon)$.
+At $N<2(S+1)$ use the original graph directly and bound each uncanceled $\log N$ by $\log(2(S+1))$. The same entropy bound results. Substituting $\varepsilon$ proves the lemma after enlarging its numerical constant. The output approximation estimates above hold for every fixed embedding, hence also for their mixture.
+\end{proof}
+
+\begin{theorem}[A pure Bayesian formula oracle, polynomial jointly in width and depth]
+\label{thm:formula-expected-oracle}
+Use the fixed L\'evy prior, clipped output in likelihood and prediction, and fixed Gaussian observation variance $128s_0$, where $s_0=1+\sigma^2$. Let the input distribution be arbitrary on the Boolean cube, with bounded conditional mean and conditionally sub-Gaussian observation noise. At every prescribed learner width $N\ge C$ and hidden depth $h$, the ordinary posterior mean trained on all $n$ observations obeys
+\begin{align*}
+ \E R(\bar f_{S_n})\le\inf_g R(g)
+ &+\frac{c s_0(d+1)(Ch+1)}{n+1}
+ \left[C(d+1)\log\{2C(d+1)\}\right.
+ \\[-1mm]&\hspace{24mm}\left.+\log\{e(d+1)(Ch+1)(n+1)\}\right].
+\end{align*}
+The infimum is over clipped width-$C$, depth-$h$ ReLU formula networks with the input-bias-only convention and arbitrary finite coefficients. Thus, up to logarithms, the excess cost is $s_0 C^2(d+1)^2h/n$. There is no robustness restriction on the prior and no selection of temperature or architecture.
+\end{theorem}
+\begin{proof}
+Apply Lemma~\ref{lem:formula-compactification}, then Lemma~\ref{lem:contracting-formula-comparison} with $t=(n+1)^{-1}$. The output comparison changes squared risk by at most $4t$ because outputs and the conditional mean lie in $[-1,1]$. Its entropy is at most the displayed resource, since $P\le C(d+1)$ and $S\le Ch$. The sharp all-data expectation theorem completes the proof. Take the infimum over deterministic teachers; no confidence union is needed for an expectation oracle.
+\end{proof}
+
+\begin{theorem}[Formula teachers on a regular continuous domain]
+\label{thm:formula-continuous-oracle}
+Assume the slab condition $P_X\{|u\cdot X-t|\le r\}\le\kappa r^\alpha$ on $[-1,1]^d$, with $\kappa\ge1$, $0<\alpha\le1$. Keep the same fixed prior, likelihood, and input-bias-only formula convention. Put
+\[
+ P=C(d+1),\qquad S=Ch,\qquad
+ L_n=\log(2P)+\frac{\log\{e\kappa(S+2)(n+1)\}
+                         +dh\log(C+1)}\alpha.
+\]
+For every prescribed learner width $N\ge C$ and hidden depth $h$, the ordinary all-data posterior mean satisfies
+\[
+ \E R(\bar f_{S_n})\le\inf_g R(g)
+ +\frac{c s_0(d+1)(S+1)}{n+1}
+       \left[P L_n+\log\{e(d+1)(S+1)(n+1)\}\right],
+\]
+where the infimum is over clipped width-$C$, depth-$h$ ReLU formula networks with arbitrary finite coefficients. In particular, the dependence is polynomial jointly in teacher width, teacher depth, dimension, and $1/\alpha$, and logarithmic in $\kappa$.
+\end{theorem}
+\begin{proof}
+Normalize the original formula's unique outgoing edges to $\pm1$. On the rational cube grid of denominator $Q$, impose its closed activation masks and clipped-output constraints. Multiplying by $Q$ makes every constraint coefficient an integer of magnitude at most $Q$, with right side of magnitude at most $Q$. The bounded-polyhedron lemma gives first-layer coefficients at most $(2PQ)^{2P+2}$ without changing the graph or its normalized internal edges.
+
+A width-$C$, depth-$h$ ReLU network has at most $(C+1)^{d\ell}$ full-dimensional affine regions after layer $\ell$. Indeed, each previous convex polyhedral region is cut by at most $C$ affine hyperplanes in the next layer, creating at most $\sum_{j=0}^d\binom Cj\le(C+1)^d$ new regions. For each node on every previous region, extend its nontrivial preactivation-zero hyperplane to all of space. Add the two nontrivial raw-output clipping hyperplanes on each final region. A safe bound on the number of hyperplanes for one network is
+$(Ch+2)(C+1)^{dh}$. Count both the original and compactified networks, giving
+\[
+ M\le2(Ch+2)(C+1)^{dh}.
+\]
+Identically zero or constant affine pieces create no change of piece and need no hyperplane. The listed hyperplanes cover every activation or clipping boundary.
+
+A closed grid cell not meeting these hyperplanes is a region on which both clipped outputs are affine or constant. Exact agreement at its vertices therefore implies agreement throughout the cell. The union of bad cells lies within distance $2\sqrt d/Q$ of the listed hyperplanes. Choose
+\[
+ Q=\left\lceil2\sqrt d\,[32\kappa M(n+1)]^{1/\alpha}\right\rceil.
+\]
+The two bounded functions disagree with probability at most $1/[32(n+1)]$, so their population squared risks differ by at most $1/[4(n+1)]$. Also
+\[
+ \log Q\le c\left[\log(2d)+
+      \frac{\log\{e\kappa(S+2)(n+1)\}+dh\log(C+1)}\alpha\right],
+ \qquad \log B\le cP L_n.
+\]
+Apply the contracting formula comparison, whose proof depends on the graph and normalized edges rather than the original coefficient sizes, at $t=(n+1)^{-1}$. Its entropy and the sharp expectation oracle give the displayed remainder. The grid and comparison law are deterministic given the teacher, input law, and sample count; they do not depend on the realized sample. Taking the infimum over teachers is therefore legitimate.
+\end{proof}
+
+\paragraph{Allowing hidden biases.}
+There is also a coefficient-free, jointly polynomial guarantee for formula teachers with arbitrary hidden biases and an affine readout. It has a looser depth polynomial and uses one constant wire. To see this on the Boolean cube, retain every normalized hidden bias and the output bias among the LP variables. The same unique-path argument keeps every matrix coefficient in $\{0,\pm1\}$. The number of variables is at most
+\[
+ P_b=C(d+h)+1,
+\]
+and the same bound $B=(2P_b)^{2P_b}$ follows. A constant hidden wire represents all biases in width $C+1$. Unrolling its contributions adds at most one chain of length $h$ for each original node and for the readout, so a safe actual formula bound is
+$S_b\le(h+1)(Ch+1)$.
+Apply the generic stable-padding comparison with base depth $h$, width $C+1$, and coefficient cap $B$. At learner depth $h$ and every $N\ge C+1$, its expected excess is at most
+\[
+ \frac{c s_0(d+1)(h+1)(Ch+1)}{n+1}
+ \left[(h+1)P_b\log(2P_b)
+              +\log\{e(d+1)(h+1)(Ch+1)(n+1)\}\right].
+\]
+This is polynomial jointly in width, depth, and dimension, with quadratic width dependence up to logarithms. For slab-regular continuous inputs the same grid argument applies: replace $P\log(2P)$ in the coefficient-cap estimate by
+\[
+ P_b\left[\log(2P_b)+
+       \frac{\log\{e\kappa(Ch+2)(n+1)\}+dh\log(C+1)}\alpha\right].
+\]
+No changed learner prior or robustness restriction is needed. The sharper $\widetilde O(C^2(d+1)^2h/n)$ statement above uses the explicit input-bias-only convention; it is not asserted for general hidden biases by this conservative argument.

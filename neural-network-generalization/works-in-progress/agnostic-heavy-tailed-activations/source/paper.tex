@@ -1,0 +1,257 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,mathtools,booktabs,microtype}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Agnostic learning with layerwise heavy-tailed neural-network priors},pdfauthor={ChatGPT-6 Astra; Claude Opus 5.5; Kaarel Hänni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}[section]\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}\newcommand{\Pp}{\mathbb P}
+\newcommand{\KL}{\operatorname{KL}}\newcommand{\clip}{\operatorname{clip}}
+\newcommand{\whR}{\widehat R}\newcommand{\calG}{\mathcal G}
+\title{Agnostic learning with layerwise heavy-tailed\\neural-network priors}
+\author{ChatGPT-6 Astra \and Claude Opus 5.5 \and Kaarel H\"anni \and
+Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{17 November 2026}
+\begin{document}\maketitle
+\begin{abstract}
+We prove a common agnostic learning theorem for dense Bayesian neural networks with any fixed globally Lipschitz hidden activation, including ReLU, GELU, tanh, sigmoid and softplus. The prior has independent continuous heavy-tailed coordinates in one fixed architecture. Tail indices decrease strictly through the network; a row of fan-in $F$ and tail index $\alpha$ uses scale $F^{-1/\alpha}$. A fixed bounded output link, such as tanh or clipping, enters a Gaussian likelihood whose variance is independent of sample size and learner width. At every finite learner width above comparator width, the ordinary final posterior mean achieves the label-noise floor plus $(1+\eta)$ times the best smaller network's approximation error, with a polynomial remainder. If the second-layer tail index is $a<1$, the remainder is of order $n^{-(2-a)/2}$ for every globally Lipschitz activation, with no smoothness requirement. A complementary all-data expectation theorem has coefficient exactly one on comparator risk, with an explicit approximation-dependent rate. The comparator-complexity factor is polynomial in width, coefficient bound and input dimension at fixed depth. The proof conditionally truncates background weights according to preceding feature magnitudes. Decreasing tail indices make the required fractional moments finite, while the multiplicity of small-network embeddings compensates their coordinate probabilities. A uniform approximation version also gives substantial prior mass to small-network neighborhoods on the entire input cube and polynomial total sign-prediction mistakes for margin teachers on prescribed input sets.
+\end{abstract}
+
+\section{Why layerwise tails help}
+A small network can approximate a complicated regression function without fitting all of its noise. We seek a Bayesian learning guarantee that competes with that approximation at every larger learner width, using one fixed dense architecture and independent weight coordinates.
+
+Heavy-tailed fan-in priors offer many potential implementations of a smaller network. A prescribed order-one edge has probability of order $1/N$ in a width-$N$ row, but there are order $N$ possible locations for it. This compensation can make a small function neighborhood's prior probability independent of learner width.
+
+Unbounded activations introduce another issue. A preceding hidden feature can itself be heavy-tailed. For example, with Cauchy weights and ReLU, the absolute hidden values have infinite mean; their average grows with width, and the next Cauchy readout scale can diverge. We use a strictly smaller tail index in each later layer. The next layer then requires only a fractional moment that the preceding layer possesses.
+
+The learner does not truncate its weights or choose an architecture from a prior. Truncation appears only in a comparison measure used to lower-bound a function neighborhood's prior probability. The actual weight prior remains an independent continuous product distribution with full support.
+
+\paragraph{Related work.}
+Castillo and Egels~\cite{castillo-egels} prove adaptive posterior contraction for dense ReLU networks with independent heavy-tailed weights and deterministic architectures, under prescribed architecture and shrinkage regimes. Thus dense independent heavy-tailed priors without an architecture or sparsity hyperprior are already an established approach. Our target here is a finite-sample agnostic oracle against arbitrary smaller bounded-weight networks, with constants uniform over every prescribed finite learner width above comparator width and fan-in normalization that does not depend on sample size. The model-specific step is the width-uniform function-neighborhood calculation. The distinction is not between an ordinary and a fractional Gaussian likelihood: tempering a Gaussian likelihood is equivalent to increasing its observation variance.
+
+\section{Model and theorem}
+Fix hidden depth $H\ge1$, total depth $L=H+1$, and input dimension $d\ge1$. Let $\phi:\R\to\R$ be globally $A$-Lipschitz, with $A\ge1$ and $b=|\phi(0)|$. The activation need not be bounded or vanish at zero.
+
+Fix a bounded output link $\psi:\R\to[-1,1]$. For the general theorem it may be any fixed Lipschitz function. For the sharper smooth-activation theorem, take either $\psi=\clip_{[-1,1]}$ or a continuously differentiable link with bounded derivative and Lipschitz derivative. Tanh is an example in both cases. The dense width-$N$ learner is
+\begin{equation}
+ h^1=\phi(W^1\bar x),\quad
+ h^\ell=\phi(W^\ell h^{\ell-1})\ (2\le\ell\le H),\quad
+ z_w=v^\top h^H,\quad f_w=\psi(z_w),\qquad \bar x=(1,x).
+ \label{eq:network}
+\end{equation}
+The first layer includes a bias coordinate. A constant wire can compile later biases when the activation admits a nonzero constant value; this uses one additional neuron and a fixed change in coefficient bounds.
+
+Choose tail indices satisfying
+\begin{equation}
+ 0<\alpha_L<\cdots<\alpha_2<\min\{1,\alpha_1\},
+ \qquad \alpha_1<2,\qquad a=\alpha_2.
+ \label{eq:tail-indices}
+\end{equation}
+For each index, let
+\[
+ p_\alpha(t)=c_\alpha(1+t^2)^{-(1+\alpha)/2}.
+\]
+All prior coordinates are independent. In layer $\ell$, a coordinate has law $F^{-1/\alpha_\ell}T$, where $T$ has density $p_{\alpha_\ell}$ and $F$ is that row's fan-in: $d+1$ in the first layer and $N$ subsequently. This defines one prior $\mu_N$ for each prescribed finite architecture. The tail indices and architecture are fixed before observing data.
+
+The joint law of $(X,Y)$ is arbitrary subject to $X\in[-1,1]^d$, a bounded conditional mean $f_0(x)=\E[Y\mid X=x]\in[-1,1]$, and conditionally centered sub-Gaussian noise $\xi=Y-f_0(X)$:
+\begin{equation}
+ \E[e^{t\xi}\mid X]\le e^{\sigma^2t^2/2}\quad(t\in\R).
+ \label{eq:noise-assumption}
+\end{equation}
+Labels may be unbounded. Define the noise floor $R_0=\E\xi^2$ and squared risk $R(f)=\E(f(X)-Y)^2$. Let $S$ consist of $n\ge2$ IID observations.
+
+For a fixed $0<\eta\le1$, use the temperature
+\[
+ \beta=\frac{\eta}{32(1+\sigma^2)}
+\]
+and the ordinary posterior
+\begin{equation}
+ d\Pi_{S,\beta}(w)=Z_{S,\beta}^{-1}
+ e^{-\beta\sum_{i=1}^n(f_w(X_i)-Y_i)^2}\,d\mu_N(w),
+ \qquad \bar f_{S,\beta}(x)=\int f_w(x)\,d\Pi_{S,\beta}(w).
+ \label{eq:posterior}
+\end{equation}
+The Gaussian observation variance is the fixed constant $16(1+\sigma^2)/\eta$. It does not scale with $n$ or $N$. The output link is inside the likelihood.
+
+A comparator in $\calG_{m,B}$ has the same depth, activation, first-layer bias convention and output link, width $m\le N$, and coefficients bounded by $B\ge1$. Put
+\begin{align}
+ D&=1+Am(B+6),& M&=(m+1)^H,\\
+ U_{m,B}&=C(d+1)(m+1)^{H-1}(B+6)^{aH},&
+ V_{m,B}&=C(d+1)^2D^{2H},\\
+ K_{m,B}&=C\left[
+ U_{m,B}V_{m,B}^{a/(2-a)}
+ +(d+1)M\log\!\big(CM(d+1)(B+6)V_{m,B}\big)
+ \right].
+ \label{eq:resources}
+\end{align}
+Constants $C\ge1$ may depend on $H$, the fixed tail indices, $A,b$ and the fixed output link, but not on $d,m,B,N,n$. In the smooth case they may also depend on a Lipschitz constant for $\phi'$. Different occurrences may denote different sufficiently large constants.
+
+\begin{theorem}[One fixed prior and likelihood for Lipschitz activations]
+\label{thm:fast-oracle}
+Fix a finite learner width $N$ before drawing the sample, a comparator class with $m\le N$, $B\ge1$, and $0<\delta<1$. Let
+\[
+ A_*=\min_{g\in\calG_{m,B}}\{R(g)-R_0\}.
+\]
+Write $q=a/(2-a)$. With no smoothness assumption on either activation or output link, with probability at least $1-\delta$,
+\begin{equation}
+ R(\bar f_{S,\beta})
+ \le \int R(f_w)\,d\Pi_{S,\beta}(w)
+ \le R_0+(1+\eta)A_*
+ +\frac C\eta\left(
+ \frac{(1+\sigma^2)\{K_{m,B}+\log(2/\delta)\}}n
+ \right)^{1/(q+1)}.
+ \label{eq:main-oracle}
+\end{equation}
+The constants are uniform over all finite $N\ge m$. The learner uses neither comparator parameters nor the unknown regression function.
+If $\phi'$ is globally Lipschitz and the output link satisfies the sharper condition above, the remainder may instead be taken as
+\[
+ C\left(\frac{(1+\sigma^2)\{K_{m,B}+\log(2/\delta)\}}{\eta n}
+ \right)^{1/(q+1)}.
+\]
+This improves the dependence on $\eta$; the sample-size power is the same.
+\end{theorem}
+
+\begin{theorem}[A sharp expected-risk oracle using all observations]
+\label{thm:expected-oracle}
+At the fixed temperature $\beta_*=1/[256(1+\sigma^2)]$, write
+$q=a/(2-a)$ and $A_g=R(g)-R_0$. For every fixed comparator $g\in\calG_{m,B}$,
+\begin{align}
+ \E_{S_n}R(\bar f_{S_n,\beta_*})
+ \le R(g)+C\bigg[
+ &A_g^{q/(2q+1)}
+ \left(\frac{(1+\sigma^2)K_{m,B}}{n+1}\right)^{1/(2q+1)}
+ \nonumber\\
+ &+\left(\frac{(1+\sigma^2)K_{m,B}}{n+1}\right)^{1/(q+1)}
+ \bigg].
+ \label{eq:expected-oracle}
+\end{align}
+If the hidden activation and output link satisfy the smooth condition of Theorem~\ref{thm:fast-oracle}, the bracket can instead be replaced by
+\[
+ C\left(\frac{(1+\sigma^2)K_{m,B}}{n+1}\right)^{1/(q+1)}.
+\]
+Both statements are uniform over all finite $N\ge m$ and concern the ordinary final posterior trained on all $n$ observations. The infimum over deterministic comparators and their resource classes may be taken directly.
+\end{theorem}
+\begin{proof}
+The L2 comparison lemma gives risk at most
+$R(g)+2\sqrt{A_g r}+r$ and KL at most $K_{m,B}r^{-q}$.
+The generic all-data expectation theorem of Section~\ref{sec:sharp-expectation-proof} therefore bounds risk by
+\[
+ R(g)+2\sqrt{A_g r}+r+\frac{256(1+\sigma^2)K_{m,B}r^{-q}}{n+1}.
+\]
+Put $u=(1+\sigma^2)K_{m,B}/(n+1)$. If $u\le1$, take $r$ to be the smaller of $u^{1/(q+1)}$ and $(u/\sqrt{A_g})^{1/(q+1/2)}$, omitting the second choice when $A_g=0$. The square-root, linear and entropy terms give the two powers in~\eqref{eq:expected-oracle}, up to constants depending on the fixed tail indices. If $u>1$, bounded excess risk gives the conclusion directly. In the smooth case the direct risk comparison is $R(g)+r$, so taking $r$ of order $u^{1/(q+1)}$ proves its sharper bound.
+\end{proof}
+
+This is an expectation guarantee with coefficient exactly one on comparator risk. For example, at $a=1/2$, smooth activations give rate $n^{-3/4}$ at arbitrary approximation error. With only Lipschitzness, the remainder is of order $A_g^{1/5}n^{-3/5}+n^{-3/4}$, suppressing comparator resources. The high-probability near-sharp theorem above retains rate $n^{-3/4}$ for all Lipschitz activations.
+
+\begin{corollary}[Automatic adaptation to the comparator]\label{cor:structural-oracle}
+The same fixed-temperature learner satisfies, with probability at least $1-\delta$,
+\[
+ R(\bar f_{S,\beta})-R_0
+ \le\inf_{\substack{1\le m\le N\\B\in\mathbb N,\ B\ge1}}
+ \left\{(1+\eta)A_{m,B}
+ +\frac C\eta\left(
+ \frac{(1+\sigma^2)\{K_{m,B}+\log(CmB/\delta)\}}n
+ \right)^{1-a/2}\right\},
+\]
+where $A_{m,B}=\min_{g\in\calG_{m,B}}(R(g)-R_0)$.
+\end{corollary}
+\begin{proof}
+Allocate failure probabilities proportional to $\delta/(m^2B^2)$ in Theorem~\ref{thm:fast-oracle} and take a union bound. The prior, likelihood and prediction rule do not depend on those proof-only allocations or on the comparator class. Integer coefficient caps cover all finite real caps by rounding upward.
+\end{proof}
+
+For example, take $\alpha_1=1$, $\alpha_2=1/2$, and strictly decreasing later indices in $(1/4,1/2)$. Then the rate is $n^{-3/4}$ for ReLU, GELU, softplus, SiLU and tanh alike. These are remainders in an oracle with factor $1+\eta$ on approximation error above the noise floor. The factor on irreducible noise is exactly one.
+
+At bounded coefficients and fixed input dimension, the displayed resource has teacher-width degree
+\begin{equation}
+ \max\left\{H,\ H-1+\frac{2Ha}{2-a}\right\},
+ \label{eq:width-degree}
+\end{equation}
+up to logarithms. For $a=1/2$ this is $\max\{H,5H/3-1\}$. At fixed $m,d$, the coefficient-bound degree is at most $aH+2Ha/(2-a)$, apart from logarithms; it tends to zero as a fixed tail index $a$ is chosen smaller. The constants can depend badly on depth and on small gaps between successive tail indices. No polynomial-depth guarantee is asserted.
+
+\begin{corollary}[Competing with polynomially growing comparator classes]
+\label{cor:growing-comparators}
+Fix the depth, input dimension, activation, output link, tail indices and noise proxy. Put
+\[
+ q=\frac a{2-a},\qquad w=H-1+2Hq,\qquad b_*=aH+2Hq.
+\]
+Suppose nonnegative $u,v$ satisfy
+\[
+ \max\{Hu,\ wu+b_*v\}<1.
+\]
+For any deterministic learner-width schedule $N(n)\ge\lfloor n^u\rfloor$, use
+$\eta_n=1/\log(en)$ in the prescribed likelihood. With probability at least $1-\delta$ along an IID sample sequence,
+\[
+ R(\bar f_{S_n,\beta_n})
+ \le\min_{g\in\calG_{\lfloor n^u\rfloor,n^v}}R(g)+o(1).
+\]
+The remainder is uniform over the allowed input-label laws and learner widths at fixed noise proxy and confidence. The prior has no sample-size-dependent change other than the prescribed architecture; the likelihood variance grows only as $\log n$.
+\end{corollary}
+\begin{proof}
+The explicit resource is at most
+$\widetilde O(n^{\max\{Hu,wu+b_*v\}})$, so its statistical remainder times $\eta_n^{-1}=\log(en)$ tends to zero. The additional approximation-factor contribution is at most $4\eta_n$, because both the comparator and conditional mean lie in $[-1,1]$. Apply Theorem~\ref{thm:fast-oracle} with failure probabilities proportional to $\delta/n^2$ and take a union bound; the additional logarithms do not change the limit.
+\end{proof}
+
+The probability statement is for each architecture fixed before the data, with constants uniform in its width. It does not supply one common event for unrestricted data-dependent choice among infinitely many widths. Exact posterior inference need not be computationally efficient.
+
+\input{scalar}
+\input{comparison}
+\input{moments}
+\input{noise}
+\input{expectation}
+\input{calibrated}
+\input{uniform}
+
+\section{Why the output is bounded}
+\label{sec:raw-mean}
+A bounded output link is substantive for these priors. Without it, an ordinary posterior mean need not exist even after Gaussian-likelihood training.
+
+\begin{proposition}[An unobserved ReLU feature can leave the raw mean undefined]
+\label{prop:undefined-raw-mean}
+Consider one ReLU hidden layer, a raw linear output, and a Gaussian likelihood on that raw output. Suppose the first-layer coordinate prior has an everywhere positive continuous density, and an independent readout coordinate has a symmetric power tail of index at most one. For any finite set of training inputs on the unit sphere and any different test point on that sphere, both positive and negative first moments of the raw posterior prediction at that test point are infinite. In particular, for a nonatomic sphere input law in dimension $d\ge2$, the raw posterior mean is undefined at almost every test input after every finite training sample.
+\end{proposition}
+\begin{proof}
+Fix a test point $x$ distinct from all training points $x_i$, and put
+$r=\max_i x^\top x_i<1$. The hidden weight vector $w=x$ and bias
+$b_0=-(1+r)/2$ give
+\[
+ w^\top x_i+b_0<0\quad\text{for every training point},\qquad
+ w^\top x+b_0=(1-r)/2>0.
+\]
+These strict inequalities persist on an open neighborhood of $(w,b_0)$.
+Thus a chosen hidden neuron is exactly inactive on the training sample and positive at the test point on an event of positive prior probability. The Gaussian likelihood is positive at every finite parameter vector, so this event also has positive posterior probability.
+
+Conditional on the other parameters on that event, the likelihood does not depend on the chosen readout coefficient at all. That coefficient retains its original symmetric heavy-tailed law. The test output is a positive multiple of it plus a finite offset. A symmetric power tail of index at most one has infinite positive and negative first moments, and the same is true after this affine transformation. Tonelli's theorem proves both infinite posterior moments. A nonatomic sphere law gives probability one to a test point distinct from a finite training set.
+\end{proof}
+
+\section{Consistency under arbitrary predetermined width growth}
+\begin{corollary}[Risk consistency]\label{cor:consistency}
+Assume the union of the finite comparator classes is dense in the bounded regression functions under $L^2(D_X)$. Fix the depth, tail indices, noise proxy and $0<\eta\le1$, and let $N(n)\to\infty$ be any deterministic sequence of finite learner widths. The ordinary final posterior mean at the fixed temperature of Theorem~\ref{thm:fast-oracle} satisfies
+\[
+ R(\bar f_{S_n,\beta})\longrightarrow R_0
+ \quad\text{almost surely}
+\]
+along an IID sample sequence.
+\end{corollary}
+\begin{proof}
+Choose a deterministic countable sequence of finite comparators with approximation errors tending to zero. For any one comparator, eventually $N(n)$ exceeds its width. Apply Theorem~\ref{thm:fast-oracle} with failure probability $n^{-2}$ and use Borel--Cantelli. Its remainder tends to zero, independently of the growth rate of $N(n)$. Intersect these probability-one events over the countable comparator sequence and then send its approximation error to zero. Every predictor has risk at least $R_0$, so the limit follows.
+\end{proof}
+
+For ReLU hidden layers and a final tanh or clip, the density assumption holds on compact input domains: the standard one-hidden-layer universal approximation theorem supplies continuous approximants, positive ReLU hidden features can be copied through additional fixed-depth layers, and continuous functions are dense in $L^2$ of a finite Borel measure. For a tanh output link, first shrink a continuous target slightly into $(-1,1)$ and approximate its inverse-tanh transform. The standard neural approximation fact used here is documented in~\cite{leshno}. This is a qualitative consistency corollary; the earlier explicit oracle is the quantitative statement.
+
+\section{Scope}
+The main result covers bounded and unbounded hidden activations through one argument. Its bounded output link can be smooth, including tanh; clipping is optional. It does not assert finite untruncated predictive moments for the heavy-tailed raw readout.
+
+The tail schedule is a substantive prior choice. Smaller exponents mean heavier tails. Strict decrease is what supplies the finite fractional moments used by the proof. A same-index Cauchy prior with an unbounded ReLU hidden layer does not satisfy those moment conditions and can fail even on a constant noiseless target at a fixed likelihood temperature.
+
+The assumptions permit arbitrary conditional sub-Gaussian label noise and model misspecification. A comparator merely approximates the conditional mean; it need not interpolate the observed labels. Neither the comparison distribution, its adaptive cutoffs nor its averaging over embeddings changes the learner's independent product prior.
+
+The proof has received independent AI-agent mathematical review. It has not been formalized in Lean. The accompanying verification directory records the exact reviewed sources and build.
+\begin{thebibliography}{9}
+\bibitem{leshno} M. Leshno, V. Ya. Lin, A. Pinkus, and S. Schocken. Multilayer feedforward networks with a nonpolynomial activation function can approximate any function. \emph{Neural Networks} 6(6), 861--867, 1993.
+\bibitem{hogsgaard} M. M. H\o gsgaard, P. Rebeschini, and T. Wegel. Aggregation with Exponential Weights is Optimal in Expectation. arXiv:2607.02247, 2026.
+\bibitem{castillo-egels} I. Castillo and P. Egels. Posterior and Variational Inference for Deep Neural Networks with Heavy-Tailed Weights. \emph{Journal of Machine Learning Research} 26(122), 1--58, 2025.
+\bibitem{zolotarev} V. M. Zolotarev. \emph{One-dimensional Stable Distributions}. Translations of Mathematical Monographs, vol. 65. American Mathematical Society, 1986.
+\end{thebibliography}
+\end{document}

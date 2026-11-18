@@ -1,0 +1,72 @@
+\section{A Gaussian residual operator bound}
+\label{sec:residual}
+Fix any probability measure $\xi$ on the input cube. It need not be known to the learner. All Hilbert norms in this section are in $L^2(\xi)$.
+
+For an actual hidden layer, let
+\[
+ Q(x,y)=N^{-1}\sum_{i=1}^Nh_i(x)h_i(y),
+ \qquad T c=N^{-1/2}\sum_i c_i h_i.
+\]
+Then $Q=TT^*$ as an integral operator and $\operatorname{tr}Q\le1$. At a spectral cutoff $\eta$, retain eigenvalues at least $\eta$, with factors $F_j=\sqrt{\lambda_j}e_j$. There are at most $1/\eta$ of them. The corresponding right-singular vectors $u_j\in\R^N$ are orthonormal and satisfy $T u_j=F_j$. Thus
+\[
+ F_j=N^{-1}\sum_i b_{ij}h_i,\qquad b_{ij}=\sqrt N u_j(i),
+ \qquad N^{-1}\sum_i b_ib_i^\top=I.
+\]
+The residual kernel $E=Q-\sum_jF_j\otimes F_j$ is positive, has operator norm at most $\eta$, and has pointwise variance
+$v(x)=Q(x,x)-\|F(x)\|^2\in[0,1]$.
+
+Conditional on this preceding layer, the next Gaussian preactivation rows have the decomposition
+\begin{equation}
+ Z_i(x)=a_i\cdot F(x)+Z_i^0(x),
+ \quad a_i\sim N(0,\tau^2I),\quad Z_i^0\sim\mathrm{GP}(0,\tau^2E),
+ \label{eq:direct-decomposition}
+\end{equation}
+independently over rows and between the two parts. Define
+\[
+ m_i(x)=\E[\phi(Z_i(x))\mid a_i],\qquad
+ r_i(x)=\phi(Z_i(x))-m_i(x),\qquad
+ R c=N^{-1/2}\sum_i c_i r_i.
+\]
+
+\begin{lemma}[Residual feature concentration]
+\label{lem:direct-residual}
+For $K\ge1$, conditional on the preceding layer and every value of the latent vectors $(a_i)$, with probability at least $1-2e^{-NK/\tau^2}$,
+\begin{align}
+ \|R\|_\op&\le C[\omega^{-1/2}+\sqrt{\eta(K+1)}],\notag\\
+ \left\|N^{-1}\sum_i\left(\phi(Z_i)^2-\E[\phi(Z_i)^2\mid a_i]\right)\right\|_{L^2(\xi)}
+ &\le C[\omega^{-1/2}+\sqrt{\eta K}].
+ \label{eq:direct-residual}
+\end{align}
+\end{lemma}
+\begin{proof}
+Fix a unit vector $c\in\R^N$. Conditional residual rows are independent and centered, and Gaussian Poincar\'e gives conditional pointwise variance at most $\tau^2v(x)$ because $\phi$ is 1-Lipschitz. Thus each residual row has integrated second moment at most $\tau^2$, and $\E\|Rc\|\le\tau/\sqrt N=\omega^{-1/2}$. As a function of all residual Gaussian coordinates, $\|Rc\|$ is Lipschitz with constant at most $\tau\sqrt{\eta/N}$. To verify this, dualize the Hilbert norm. The derivative of $\langle f,Rc\rangle$ in row $i$ has squared Gaussian-coordinate norm
+\[
+ \frac{c_i^2\tau^2}{N}
+ \langle f\phi'(Z_i),E(f\phi'(Z_i))\rangle
+ \le\frac{c_i^2\tau^2\eta}{N}\|f\|_2^2.
+\]
+Sum over rows and take $\|f\|_2=1$. Gaussian concentration therefore gives
+\[
+ \Pr(\|Rc\|>\omega^{-1/2}+t\mid(a_i))
+ \le e^{-Nt^2/(2\tau^2\eta)}.
+\]
+A $1/2$-net of the unit sphere of $\R^N$ has at most $5^N$ points, and the operator norm is at most twice the maximum over this net. Choose $t=\sqrt{2\eta(K+\tau^2\log5)}$ and use a union bound. This proves the first assertion, uniformly over all coefficient vectors, including coefficients subsequently selected from the same residual realization.
+
+For the second, Gaussian Poincar\'e gives the centered squared-feature Hilbert average expected norm at most $2\omega^{-1/2}$. Since $\phi^2$ is 2-Lipschitz, its norm is Gaussian-Lipschitz with constant at most $2\tau\sqrt{\eta/N}$. Concentration gives the stated bound directly. Infinite-dimensional Gaussian fields cause no additional issue: here every residual field is a linear image of finitely many row-weight coordinates, and the Hilbert-valued maps are Lipschitz.
+\end{proof}
+
+The standard Gaussian norm event
+\begin{equation}
+ \|W^1\|_F^2\le NK,\qquad
+ \max_{2\le\ell\le H}\|W^\ell\|_\op^2\le K,\qquad
+ N\|v\|^2\le K
+ \label{eq:norm-event}
+\end{equation}
+has prior failure at most $(H+1)e^{-NK/(16\tau^2)}$ for a sufficiently large numerical lower bound on $K$. Its proof uses a chi-square tail for the first layer and readout and the Gaussian operator-norm tail for each internal matrix.
+
+There is also an exact latent Gram bound on this event. If $V$ has the retained preceding right-singular vectors as columns, then $a_i=\sqrt N(WV)_{i,*}$, so
+\begin{equation}
+ N^{-1}\sum_i a_ia_i^\top=V^\top W^\top WV\preceq K I.
+ \label{eq:actual-latent-gram}
+\end{equation}
+No independence between the retained current factors and their residuals is assumed. The sphere net in Lemma~\ref{lem:direct-residual} was taken precisely to control these adaptively selected coefficient vectors.

@@ -1,0 +1,62 @@
+\section{A nearly linear depth cost for contractive comparison rows}
+The unconditional theorem permits arbitrary bounded coefficients. A natural condition on the comparison network alone improves its depth cost further. The prior remains exactly the same and is not conditioned on this property.
+
+\begin{theorem}[Contractive internal teacher rows]\label{thm:stable-teachers}
+Suppose every internal hidden row of the comparator satisfies
+\[
+ A\sum_j|a^\ell_{ij}|\le1\qquad(2\le\ell\le H).
+\]
+The first layer, all biases, and the readout may have arbitrary coefficients bounded by $B$. Then all comparison, learning and uniform-neighborhood conclusions hold with $W$ replaced by
+\[
+ W_{\rm st}=C(1+L_\psi)(d+1)(m+1)^2(B+1)^2(H+1)^2,
+\]
+and $K_1$ replaced by $C(m+1)(B+2)W_{\rm st}$. Here $C$ may depend on the fixed activation and scalar laws. In particular the statistical resource is
+\[
+ C\big[(d+1)m+Hm^2+1\big]
+       \log\{C(d+1)(m+1)(B+1)(H+1)n\}.
+\]
+For fixed input dimension this has dominant width--depth dependence
+$\widetilde O(m^2H)$.
+\end{theorem}
+\begin{proof}
+Use exactly the same comparison laws as before, with precision
+$\epsilon\le c/[(m+1)(H+1)]$. Let $S_\ell$ denote the largest selected feature's $L^2$ uniform magnitude, and let $P_\ell$ denote the largest such magnitude over all learner features. Put $R=C(d+1)(B+1)$, with constants allowed to depend on the fixed activation and scalar laws. The first layer has $S_1,P_1\le R$.
+
+For a selected row, write its effective coefficient as
+$S_jG_{ij}=a_{ij}+\Delta_{ij}$. Since $|S_j-1|\le\epsilon$,
+$|G_{ij}-a_{ij}|\le\epsilon$, and $\sum_j|a_{ij}|\le1/A$,
+\[
+ A\sum_j|\Delta_{ij}|\le C(m+1)\epsilon.
+\]
+The inactive contribution has $L^2$ uniform norm at most $\mu\epsilon P_{\ell-1}$, as before. Biases add at most a fixed multiple of $R$. Thus
+\begin{align*}
+ S_\ell&\le CR+\{1+C(m+1)\epsilon\}S_{\ell-1}
+                  +C\epsilon P_{\ell-1},\\
+ P_\ell&\le CR+C(m+1)S_{\ell-1}+C\epsilon P_{\ell-1}.
+\end{align*}
+The second inequality bounds native rows using their finite factor moment and includes selected rows by enlarging $C$.
+
+If $C\epsilon\le1/2$, the second recurrence gives
+$P_\ell\le C(m+1)\max\{R,S_1,\ldots,S_\ell\}$. Substitution in the first and discrete Gronwall give
+\[
+ \max_{\ell\le H}S_\ell\le CR(H+1),\qquad
+ \max_{\ell\le H}P_\ell\le C(m+1)R(H+1),
+\]
+provided the constant in the precision restriction is sufficiently small.
+
+For discrepancies, keep the deterministic teacher coefficients on the previous error and put the coefficient perturbations on the actual previous features. Contractivity then gives
+\[
+ e_\ell\le e_{\ell-1}
+       +C\epsilon\{1+(m+1)S_{\ell-1}+P_{\ell-1}\}.
+\]
+Starting from $e_1\le A(d+1)\epsilon$ and summing yields
+$e_H\le C\epsilon(m+1)R(H+1)^2$.
+The readout's deterministic coefficient sum is at most $mB$. Its own gate/factor errors and inactive contribution therefore give
+\[
+ \left(\E\|z-z_g\|_\infty^2\right)^{1/2}
+ \le C\epsilon(d+1)(m+1)^2(B+1)^2(H+1)^2.
+\]
+Multiplication by the output-link Lipschitz constant proves the claimed stability factor. Taking $\epsilon=\sqrt r/(4W_{\rm st})$, with a sufficiently large fixed constant in $W_{\rm st}$, also enforces the precision restriction. The entropy proof is unchanged, and all statistical and prior-mass consequences follow by substitution.
+\end{proof}
+
+This condition is a statement about a useful implementation of the comparator. It is not a claim that every small Boolean circuit has such an implementation, or that the Bayesian posterior is supported on contractive networks.

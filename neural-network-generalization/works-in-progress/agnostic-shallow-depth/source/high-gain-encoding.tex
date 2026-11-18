@@ -1,0 +1,40 @@
+\section{Encoding below the logarithmic depth threshold}
+\label{sec:high-gain-encoding}
+Large prefix gains also admit a controlled comparison. Their relative entropy is larger, but a total-energy covering argument can use that cost efficiently when depth is at most a constant times the logarithmic encoding norm.
+
+\begin{theorem}[High-gain comparison at short depths]
+\label{thm:high-gain-echo}
+Use the feature representation, output bound, and readout choice of Theorem~\ref{thm:quantitative-echo}, and put $D=\log(e+C_dQ/\mathcal B)$. For every $H\ge2$ and every prefactor $0<\nu\le1$, a comparison with pointwise mean-square error at most $\varepsilon^2$ exists at every
+\[
+ N\ge C_d(1+\mathcal B/\varepsilon)^{C_d}H^{C_d}e^{C_dD},
+\]
+and has normalized entropy
+\[
+ 2s\KL(\rho\|\mu_{H,N,s})
+       \le C_d\{1+\mathcal B^2+H\exp(C_dD/H)\}.
+\]
+The constants are independent of the prefactor. At $H=1$ a direct comparison instead has cost at most $Q^2+(d+1)\kappa(\nu)$ and mean-square error at most $(Q^2+1)/N$ from the represented function.
+\end{theorem}
+\begin{proof}
+First suppose $H\ge4$. Use exactly the three-block schedule from Theorem~\ref{thm:quantitative-echo}, with $M=\lfloor(H-1)/3\rfloor$ and prefix gain $R=e^{D/M}$. We no longer assume $D/H$ is small. The native baseline and its derivative product do not depend on the covariance spikes, so $L_H\ge c_de^D\sqrt H$ still holds. Before a middle-block transition with $j\ge1$ such transitions remaining,
+\[
+ L_\ell/L_H\le C_d/(H R^j).
+\]
+The indexing includes the transition about to be performed. Consequently, with $\alpha=R^2-1$,
+\[
+ \alpha\sum_{j=1}^M R^{-2j}=1-R^{-2M}\le1.
+\]
+Each middle-block variance disturbance lasts at most $H$ steps, so its extra-spike contribution to the cumulative variance is at most $C_ds_0^2/H$, with no small-gain assumption. The $\beta$ contribution is at most $\sum r_\ell^2\le C_ds_0^2/H$ by geometric persistence. Burn and reverse contributions retain their previous bounds. Thus the same dimension-only cubic response estimate holds, and the same fixed readout factor achieves the requested deterministic approximation.
+
+The entropy contribution of the middle block above its baseline is at most $M\alpha\le H\exp(C_dD/H)$. All other contributions are bounded by $C_d(H+\mathcal B^2)$, which are absorbed by the displayed cost. The native first-feature encoding still fits inside a unit direction because $L_H\ge c_de^D\sqrt H$.
+
+For the finite-width statement, if $H\ge C_dD$ use the polynomial-width proof already given. Otherwise $H\le C_dD$. On the admissible scalar domain $0\le q\le1$, $|r|\le1$, the Jacobian of a middle transition is bounded by $C_dR^3$ in ordinary norm: its entries have magnitudes at most $1$, $2R^2$, $R$, and $3R^3$, respectively. Its $M$-step amplification is at most
+\[
+ C_d^M R^{3M}\le\exp\{C_d(H+D)\}\le e^{C_dD}.
+\]
+The burn has polynomial amplification. The reverse block has polynomial amplification on the same envelopes as before; alternatively its global derivative product is bounded by $C_d^M(\prod R_t)^3\le e^{C_dH}H^{C_d}$, which suffices in this short-depth branch. The at most two appended native transitions contribute a bounded factor. Thus all local state errors are amplified by at most $H^{C_d}e^{C_dD}$. Conditional concentration remains uniform even when $R$ is large: hidden squares are bounded, the directional Gaussian $\xi$ is standardized, and $\xi\tanh(G)$ has a universal sub-Gaussian envelope. Enforcing correspondingly small local errors gives the displayed polynomial-in-$e^D$ width. The normalized first-feature summands are bounded because their direction norm is at most one half. Bad-event readout errors are controlled by the fixed factor $\mathcal B$, exactly as before.
+
+For $H=2$ or $3$, use all $H-1$ transitions as a gain block with product $e^D$. Every native derivative product over this fixed number of steps is bounded below by a positive dimension-dependent constant. Hence $L_H\ge c_de^D$, and the remaining-response ratios are bounded by $C_dR^{-j}$. The same geometric identity gives cumulative variance $O_d(s_0^2)$, and therefore cubic distortion. Cost and propagation are bounded by $e^{C_dD}$, which fit the displayed formulas after increasing the dimension-only constant.
+
+Finally let $H=1$. Inflate the first-layer covariance to $I/d$ and conditionally give the readout its native covariance and mean $\psi(W_i)/N$. The mean output is the empirical feature average. Its sampling variance is at most $Q^2/N$, and the native readout adds at most $1/N$. Its normalized readout entropy is $\E N\sum_i[\psi(W_i)/N]^2=\E\psi(W)^2\le Q^2$. The first-layer entropy is $(d+1)\kappa(\nu)$. This proves the last assertion.
+\end{proof}

@@ -1,0 +1,105 @@
+\section{The obstruction with Gaussian label noise}
+\label{sec:canonical-Gaussian-noise}
+The same failure occurs when the conditional label distribution is Gaussian, so that the observation likelihood has the correct functional form. The likelihood variance may still be chosen arbitrarily, including its true value.
+
+\begin{corollary}[A correctly specified Gaussian observation model]
+\label{cor:canonical-Gaussian-noise}
+There are absolute $a,c,C>0$ and $H_0$ such that the construction of Theorem~\ref{thm:canonical-learning} with
+\[
+ Y=g(X)+aZ,\qquad Z\sim\mathcal N(0,1)\text{ independent of }X,
+ \qquad g(X)=\frac a4(2+\tanh X_1),
+\]
+satisfies, with probability at least $9/10$,
+\[
+ R(\widehat f)\ge a^2+\frac{a^2}{512^2}
+\]
+simultaneously for every $N\ge n^C$ and every positive likelihood variance, after $n=4\cdot2^{\lfloor c\sqrt H\rfloor}$ IID samples. The clipped predictions and arbitrary mixtures listed in Theorem~\ref{thm:canonical-learning} satisfy the same bound.
+\end{corollary}
+\begin{proof}
+We give the changes needed to accommodate unbounded labels. Set
+\[
+ A=16a,\qquad \Lambda_0=2^{20},\qquad
+ \delta=2^{-80},\qquad \varepsilon=2^{-50}a.
+\]
+Choose the fixed amplitude $a$ sufficiently small and then $c$ sufficiently small. Theorem~\ref{thm:canonical-function-memorizer}, now with comparison amplitude bound $A$, and Corollary~\ref{cor:sup-entropy} ensure, at all sufficiently large $H$ and all $N\ge n^C$,
+\[
+ \kappa\ge4-\delta,\qquad e_0\le\delta a/2,
+ \qquad e_2\le\delta a/2,
+\]
+with the notation of Lemma~\ref{lem:canonical-posterior-prox}. Every comparison output bounded by $A$ has expected maximum squared approximation error at most $\varepsilon^2$ and entropy cost at most $4\|v\|_\infty+e_2$. The fixed-accuracy comparison threshold is polynomial in $H$ and $e^D$, and is therefore covered by $N\ge n^C$ for an increased absolute exponent and sufficiently large $H$. Increase the thresholds so that $1/N\le a^2$.
+
+For any observed labels, let $b$ and $u_\lambda$ be as in Lemma~\ref{lem:canonical-prox}. The minimizing cap may now exceed $A$. Define
+\[
+ v_\lambda=\operatorname{clip}(u_\lambda,[-A,A]),\qquad
+ T_S=\frac1n\sum_i(|b_i|-A)_+^2.
+\]
+Since $u_\lambda$ is itself a clipped version of $b$, reducing its cap gives
+\begin{equation}
+ J_\lambda(v_\lambda)-J_\lambda(u_\lambda)\le T_S.
+ \label{eq:Gaussian-cap-error}
+\end{equation}
+Indeed the supremum penalty decreases. At an atom where clipping changes the value, the increase in its squared-error term is
+$(|b|-A)^2-(|b|-t_\lambda)_+^2\le(|b|-A)^2$.
+The function $y\mapsto(|y|-A)_+^2$ is convex, so averaging within repeated-input groups also gives
+\[
+ T_S\le\frac1n\sum_i(|Y_i|-A)_+^2.
+\]
+
+Work first on the event $\widehat R_S(0)\le6a^2$. A comparison law for $v_\lambda$, extended by zero at unseen inputs, changes its empirical risk by at most
+\[
+ \zeta\le2\|v_\lambda-Y\|_S\varepsilon+\varepsilon^2
+ \le2(16+\sqrt6)a\varepsilon+\varepsilon^2
+ <38a\varepsilon+\varepsilon^2.
+\]
+Repeating the variational argument in Lemma~\ref{lem:canonical-posterior-prox}, using~\eqref{eq:Gaussian-cap-error}, yields
+\[
+ \E_\Pi\|z(S)-u_\lambda\|_S^2
+ \le T_S+\zeta+\lambda\{(4-\kappa)A+e_0+e_2\}.
+\]
+Consequently, on the further event $T_S\le2^{-50}a^2$, every
+$0<\lambda\le\Lambda_0a$ obeys
+\[
+ \E_\Pi\|z(S)-u_\lambda\|_S^2
+ \le2^{-50}a^2+38\cdot2^{-50}a^2+2^{-100}a^2
+            +17\cdot2^{-60}a^2
+ <2^{-40}a^2.
+\]
+The ordinary posterior mean is therefore within $a/10000$ of $u_\lambda$ in empirical norm. Each clipped prediction is within the same distance of $\operatorname{clip}(u_\lambda,[-1,1])$, by contraction and Jensen. These reference predictions are nonpositive wherever a singleton label is negative.
+
+For $\lambda>\Lambda_0a$, the prior comparison gives $F_S\le7a^2$. The entropy floor then implies
+\[
+ \E_\Pi\|z\|_{\infty,\mathcal U_D}
+ \le\frac{7a^2}{\kappa\lambda}+\frac{e_0}{\kappa}
+ <a/10000.
+\]
+All the stated posterior predictions are uniformly within this distance of zero.
+
+It remains to check that the sample events have high probability. Since $|g|\le a$, the event $n^{-1}\sum_iZ_i^2\le2$ implies $\widehat R_S(0)\le6a^2$ and has probability tending to one. Also
+\[
+ \E\frac{T_S}{a^2}
+ \le\E(|Z|-15)_+^2
+ \le\E[Z^2\mathbf1_{|Z|>15}]
+ =2\{15\varphi(15)+\overline\Phi(15)\}
+ <2^{-150},
+\]
+where $\varphi$ and $\overline\Phi$ are the standard Gaussian density and upper tail; the last bound follows from $\overline\Phi(t)\le\varphi(t)/t$. Markov gives
+$\Pr(T_S>2^{-50}a^2)<2^{-100}$.
+
+With probability tending to one, at least $n/3$ observations are singleton inputs. On these observations the noises are independent, and
+\[
+ \Pr(-2\le Z\le-1)\ge e^{-2}/\sqrt{2\pi}>1/20.
+\]
+A Chernoff bound therefore ensures at least $n/100$ singleton observations with $Z\le-1$, with probability tending to one. Let their index set be $A_S$. At each such observation, $Y=g+aZ<0$, whereas $g>a/4$. All four events hold jointly with probability at least $9/10$ for sufficiently large $H$.
+
+Use the witness $w_i=-\mathbf1_{i\in A_S}$. Every capped empirical reference, and its clipping, has nonpositive coordinates on $A_S$, so every stated posterior prediction satisfies
+\[
+ \langle w,\widehat f-g\rangle_S
+ \ge a/400-a/10000>a/512.
+\]
+The same witness persists under arbitrary probability mixtures and clipping after mixing: their reference predictions remain nonpositive on $A_S$, and their empirical approximation errors remain at most $a/10000$ by convexity and contraction. The references are bounded on the finite observed sample by its largest label magnitude, so this argument also covers well-defined general mixtures.
+
+Each singleton atom has population probability $1/n$. Translating this witness to the population and applying Cauchy--Schwarz as in Theorem~\ref{thm:canonical-learning} gives
+$\|\widehat f-g\|_{L^2(P_X)}^2\ge a^2/512^2$. Finally $R(\widehat f)=a^2+\|\widehat f-g\|_2^2$ for the independent Gaussian noise.
+\end{proof}
+
+At the true observation variance $a^2$, the corresponding likelihood parameter is $\lambda=Na^2/n$. The corollary allows this choice as well as every other positive value, including data-dependent choices. Thus the obstruction is not caused by a mismatch between the likelihood family and the conditional noise distribution.

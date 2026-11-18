@@ -1,0 +1,15 @@
+# Independent integrated mathematical review — 18 November 2026
+
+Reviewer: agnostic_proof_audit. Result: passes for the exact five included sources in the adjacent manifest.
+
+The model retains independent Gaussian coordinates at all mean-field-or-stronger finite scales, first-layer constant input, no internal biases, raw linear output in both likelihood and returned prediction, and an observable evidence calibration. I checked the normalization omega=N/nu, the physical likelihood variance n*lambda*nu/N, normalized output/label free energy, root/fallback, and sub-Gaussian label-tail transfer against the independently reviewed smooth-activation Gaussian theorem. The normalized closure preserves the prior, energies, dictionaries and comparison entropies. The imported common statistical event covers every eligible finite width and every 0<nu<=1. The larger displayed A_n safely dominates the exact teacher cylinder action at fixed H.
+
+The Boolean compiler preserves raw outputs, uses integer-margin tanh restoration, and explicitly realizes affine offsets by an exact constant wire. Its global raw envelope and coefficient/width powers are valid. The continuous bounded-density box compiler has a global raw envelope because at most 2^d expanded boxes overlap, while every other soft indicator is uniformly tiny. Copying the signed indicators preserves that envelope and accuracy at any larger fixed hidden depth. The new slab-box proof correctly counts activation and output-level hyperplanes, bounds rounding and boundary strips by slab anti-concentration, and obtains the stated R powers for width and coefficient cap. Uniform sphere laws satisfy the stated slab constants. No ambient density is required in that case.
+
+The proof-only comparator projection risk inequality handles marginal sub-Gaussian labels without clipping actual observations. A deterministic population near-minimizer has bounded risk because zero is available; applying the imported theorem to this one compiled network preserves leading coefficient one and the all-width/all-scale event. The Boolean growth condition, density and slab exponent inequalities, and the explicit polynomial-width table all check. The compiled widths are o(n), so N>=n suffices. The Boolean finite-sample corollary follows from A<=K^(4b) and theta proportional to (d+1)^2/n, with logarithmic precision and confidence factors retained.
+
+The wrapper accurately states high-probability posterior-averaged and mean risk, fixed learner depth, raw prediction, original Gaussian prior, and the quantitative input assumptions needed for coefficient-free comparison. There is no arbitrary-law continuous coefficient-free claim, no fixed-observation-variance claim, and no polynomial joint unrestricted-depth/width or computational-efficiency assertion.
+
+This is a conventional independent mathematical source review, not Lean verification.
+
+Final abstract precision check: “At a suitable fixed learner depth” accurately retains the Boolean depth overhead and the continuous H>=2 requirement. Only this wrapper wording changed; the five-source manifest has been refreshed.

@@ -1,0 +1,112 @@
+\section{One hidden layer}
+\label{sec:one-hidden}
+One hidden layer admits a sharper elementary capacity estimate for the same activation class, including nonzero $\phi(0)$.
+
+\begin{lemma}[Normalized ridge atoms]
+\label{lem:normalized-atoms}
+Put $R_d=\sqrt{d+1}$. The class
+\[
+ \mathcal A=\left\{x\mapsto
+   \frac{\phi(w\cdot\bar x)-\phi(0)}{\|w\|_2}:w\ne0\right\}
+\]
+has envelope $R_d$ and worst-case empirical Rademacher complexity at most $C_\phi(d+1)/\sqrt n$.
+\end{lemma}
+\begin{proof}
+Write $w=ru$ with $\|u\|=1$ and $r>0$. Extend the atom continuously to $r=0$ by $\phi'(0)u\cdot\bar x$. The integral formula
+\[
+ A_{r,u}(x)=\int_0^1\phi'(tr(u\cdot\bar x))(u\cdot\bar x)dt
+\]
+shows that it is $R_d$-Lipschitz in $u$ and $\tfrac12\sup|\phi''|R_d^2$-Lipschitz in $r$, uniformly over inputs. The first claim also follows directly from the Lipschitz property of $\phi$ before dividing by $r$. Since $|\phi|\le1$, every $r>2/a$ gives an atom uniformly bounded by $a$.
+
+For $0<a\le R_d$, cover the unit sphere in $u$ at scale $a/(4R_d)$ and the interval $0\le r\le2/a$ at scale $a/[2(1+\sup|\phi''|)R_d^2]$. Together with the zero function for the tail, this gives
+\[
+ \log\mathcal N(Ca,\mathcal A,\|\cdot\|_\infty)
+ \le C(d+1)\log(C_\phi R_d/a).
+\]
+Dudley's entropy integral is at most $C_\phi R_d\sqrt{(d+1)/n}$, proving the assertion.
+\end{proof}
+
+For a one-hidden-layer network on the norm event, write $c_i=Nv_i$, and use finite averages over its $N$ rows. Then
+\[
+ z=\phi(0)\E c+\E[c\|w\|A_w],\qquad
+ |\E c|\le\sqrt K,\qquad
+ \E|c|\|w\|\le\sqrt{\E c^2\E\|w\|^2}\le K.
+\]
+Thus the output class is contained in a constant-function interval of radius $\sqrt K$ plus $K$ times the symmetric convex hull of $\mathcal A$. Its Rademacher complexity is at most $C_\phi(d+1)K/\sqrt n$, while actual outputs are bounded by $\sqrt K$.
+
+\paragraph{The localized shallow certificate.}
+The same norm-good sets have prior complements at most $C_\phi e^{-c_\phi\omega K}$ at every width and scale. On the objective region $\widehat R+\beta\lambda K\le u$, the smooth-square-loss bound \eqref{eq:smooth-loss} below gives deviation at most $\beta\lambda K$ whenever
+\[
+ n\ge C_\phi(d+1)^2\log^c(C_\phi n/\delta)\,u/\lambda^2.
+\]
+Its leading term is $C_\phi\sqrt u\,K/\sqrt n$; the squared term is absorbed using $\lambda K\le C u$. Confidence terms are smaller because $K$ has a positive constant lower cutoff. Prebuild dyadic norm and risk levels. The localized prior-tail and entropy argument in Section~\ref{sec:localized-direct-oracle} then gives $\int R\,d\Pi\le F_S(\lambda)+C_\phi\lambda+n^{-3}$ at the root $\lambda^2=\theta_n[2F_S(\lambda)+b_n\lambda]$. This proves the main theorem's $H=1$ case, with $(v_1,\rho_1)=(2,1)$ and oracle remainder
+\[
+ C_\phi\big[\mathcal A_{g,n}\sqrt{R(g)\theta_n}+\mathcal A_{g,n}^2\theta_n\big]+n^{-3}.
+\]
+In particular its zero-risk rate is $\widetilde O(n^{-1})$ for the full bounded smooth activation class. The fixed-calibration monotone result below remains useful because it has a larger growing-comparison range.
+
+We record the resulting fixed-calibration statement separately from the evidence-calibrated deeper theorem. For $0<\lambda\le\epsilon\le1$ define
+\[
+ \begin{aligned}
+ \ell_n&=\log\frac{en(d+1)}{\lambda\epsilon\delta},\\
+ \mathcal B_g&=R(g)+2\lambda A_g(\lambda)
+ +C_\phi[\epsilon+\lambda\log(C_\phi/\delta)]\\
+ &\quad +(U_g+1)\sqrt{\frac{2R(g)\log(8/\delta)}n}
+ +\frac{2(U_g+1)^2\log(8/\delta)}{3n}.
+ \end{aligned}
+\]
+\begin{proposition}[Fixed-calibration shallow oracle]
+\label{prop:shallow}
+For sufficiently small $\lambda$, the posterior with likelihood variance $n\lambda\tau^2/N$ satisfies
+$\int R(z_w)d\Pi\le\mathcal B_g$, and the same bound holds for the raw posterior mean, on an event of probability at least $1-\delta$ common to every $N\ge m$ and $0<\tau\le1$, provided
+\[
+ n\ge C_\phi(d+1)^2\ell_n^{18}/\lambda^2.
+\]
+If the activation is also monotone, the smaller sufficient budget is
+\[
+ n\ge C_\phi(d+1)\ell_n^{18}/(\lambda\epsilon).
+\]
+Consequently the generic fixed-teacher rate is $\widetilde O(n^{-1/2})$. For monotone activations, comparison width $n^\alpha$ and coefficient cap $n^\beta$ are allowed with vanishing excess whenever $\alpha+\beta<1/2$.
+\end{proposition}
+\begin{proof}
+We give the statistical argument to specify the calibration and its uniformity. A standard smooth-square-loss Rademacher bound \cite{sst} says that a fixed function class of envelope $\sqrt K$ and worst-case empirical Rademacher complexity $\mathfrak r_n$ satisfies, on one sample event,
+\begin{equation}
+ \begin{aligned}
+ R(f)-\widehat R(f)\le C\bigg[&\sqrt{\widehat R(f)}
+ \left(\log^{3/2}(2n)\mathfrak r_n+\sqrt{(K+1)\log(2/\delta')/n}\right)\\
+ &+\log^3(2n)\mathfrak r_n^2+(K+1)\log(2/\delta')/n\bigg].
+ \end{aligned}
+ \label{eq:smooth-loss}
+\end{equation}
+Apply it at dyadic norm levels $K$ up to a sufficiently large multiple of $1/\lambda$. The preceding normalized-atom estimate gives $\mathfrak r_n\le C_\phi(d+1)K/\sqrt n$. The generic budget makes the deviation, for empirical risk at most eight, at most $\lambda K/64+C_\phi\epsilon$.
+
+For a monotone activation a sharper dictionary bound applies. If its endpoint limits are $l_-,l_+$, it is the constant $(l_++l_-)/2$ plus a positive mixture of shifted signs of total mass $(l_+-l_-)/2$. Their absolute masses sum to at most one. A decreasing activation is handled by changing sign. Thus its ridge dictionary lies in the symmetric convex hull of affine-halfspace dichotomies. Sauer--Shelah and the finite-class Rademacher bound give dictionary complexity $C\sqrt{(d+1)\log(n+1)/n}$. The readout has $\ell^1$ norm at most $\sqrt K$, giving output-class complexity $C\sqrt{K(d+1)\log(n+1)/n}$. The identity
+\[
+ \sup_{K>0}\frac{K}{(\epsilon+\lambda K)^2}=\frac1{4\lambda\epsilon}
+\]
+then yields the monotone budget and the same deviation bound.
+
+For completeness, pass from these level bounds to the posterior without restricting the prior. Norm-good sets have complements at most $C e^{-\omega K/32}$ at every width. Define $Q_S$ to be twice the largest failed level, with a constant lower cutoff, and use the largest level as a terminal exceptional state. Prior tail integration gives
+$\log\E_\mu e^{\omega Q_S/128}\le C_\phi\omega$.
+Entropy duality and the teacher comparison imply
+\[
+ \int[\widehat R+\lambda Q_S/64]d\Pi
+ \le\widehat R(g)+2\lambda A_g(\lambda)+C_\phi\lambda.
+\]
+The centered readout gives $Z\ge e^{-\omega/\lambda}$, while $R(z)\le2N\|v\|^2+2$ and the Gaussian readout imply $\E_\mu R^2\le24$. Therefore the posterior risk on empirical risk above eight, and on the terminal norm-bad event, is at most $C_\phi e^{-c_\phi/\lambda}$. Integrate the level deviation on the remaining states and apply the scalar teacher Bernstein inequality. This proves the proposition on one sample event for all widths/scales. For the monotone growing-resource claim choose $\lambda=n^{-t}$ and $\epsilon=n^{-u}$ with $2(\alpha+\beta)<t<1$ and $0<u\le t$, $t+u<1$.
+\end{proof}
+
+Tanh and sigmoid satisfy the monotone hypothesis. Bounded smooth nonmonotone activations such as sine are covered by the generic atom argument; their unrestricted ridge dictionaries need not have finite VC dimension.
+
+\paragraph{A second fixed-calibration option at two hidden layers.}
+The deeper program argument also permits a useful alternative calibration when $H=2$. For $0<\lambda\le\epsilon\le1$, the same oracle expression $\mathcal B_g$, with depth-dependent constants, follows if
+\[
+ n\ge C_H(d+1)^2\ell_n^{18}\lambda^{-6}\epsilon^{-2}.
+\]
+Indeed use finite dictionaries from Proposition~\ref{prop:programs} at approximation accuracy $a=c_H(\epsilon+\lambda K)$ and apply finite-class Bernstein at each dyadic norm level. Since $p_H+1=6$ and $q_H+2=8$, its sample budget is bounded by
+\[
+ C_H(d+1)^2\ell_n^{18}\sup_{K>0}
+ \frac{K^6}{(\epsilon+\lambda K)^8}
+ \le C_H(d+1)^2\ell_n^{18}\lambda^{-6}\epsilon^{-2}.
+\]
+The root-risk approximation transfer costs $O(a)$ on bounded empirical-risk levels. The same prior-tail and variational argument just proved applies to the sample-dependent good sets from Proposition~\ref{prop:programs}, whose mass bounds hold for each fixed sample. It therefore covers all finite widths and scales. This option gives the larger growing-resource range $\alpha+\beta<1/12$, by taking $6t+2u<1$ and $2(\alpha+\beta)<t$. The evidence-calibrated main theorem instead supplies the sharper $n^{-1/4}$ zero-risk rate without declaring a comparison class.

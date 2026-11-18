@@ -1,0 +1,121 @@
+\section{A shallower teacher and many additional learner layers}
+\label{sec:padding}
+The generic formula resource already has polynomial learner-depth dependence when additional layers only relay existing computations. A fixed small L\'evy intensity gives a sharper bound: the cost of those extra layers is nearly linear.
+
+In this section the activation is ReLU or tanh. Both are $1$-Lipschitz, vanish at zero, and satisfy $|\phi(t)|\le|t|$. Choose the same fixed prior as before with
+\begin{equation}
+ M_1=\int|u|\,\nu(du)=\frac{2c}{p-1}\le\frac14.
+ \label{eq:padding-intensity}
+\end{equation}
+This is only a choice of the scalar intensity constant. It imposes no support restriction on a neural network.
+
+Let a teacher have hidden depth $h\ge1$, width $m$, coefficient cap $B\ge1$, and actual rooted formula size at most $S$. A learner has any prescribed depth $H\ge h$ and width $N\ge m$. Put
+\[
+ q=H-h,\qquad S'=S+mq,\qquad D_0=C(m+1)(B+8).
+\]
+Define
+\begin{align*}
+ \mathcal J_n=C(d+1)(S'+1)\big[&(h+1)\log D_0\\
+ &+\log\{C(S'+1)(d+1)(q+1)(B+8)(n+1)\}\big].
+\end{align*}
+Constants in this section are independent of $h,H,m,B,N,n$.
+
+\begin{theorem}[Nearly linear overhead for extra learner depth]
+\label{thm:stable-padding}
+For either ReLU or tanh and the intensity choice~\eqref{eq:padding-intensity}, the ordinary final posterior mean at temperature $\beta_*=1/[256(1+\sigma^2)]$ satisfies
+\[
+ \E_{S_n}R(\bar f_{S_n,\beta_*})
+ \le R(g)+\frac{C(1+\sigma^2)(1+\mathcal J_n)}{n+1}.
+\]
+The high-probability companion at $\beta_\eta=\eta/[32(1+\sigma^2)]$ satisfies
+\[
+ R(\bar f_{S_n,\beta_\eta})
+ \le R_0+(1+\eta)\{R(g)-R_0\}
+ +\frac{C(1+\sigma^2)}{\eta n}
+       \left[\mathcal J_n+\log\frac2\delta\right]
+\]
+with probability at least $1-\delta$. Both statements hold uniformly over every prescribed finite $N\ge m$ and $H\ge h$. For an arbitrary width-$m$ teacher one may take $S=\sum_{j=1}^h m^j$. The only nearly linear dependence on the extra learner depth is through $S'=S+m(H-h)$ and a logarithm of $H-h+1$.
+\end{theorem}
+
+\begin{proof}
+It suffices to construct, for each $0<t\le1$, a data-independent comparison with
+\begin{align}
+ &\E_Q\sup_x|f_w(x)-g(x)|\le t,\nonumber\\
+ &\KL(Q\|\mu_N)\le C(d+1)(S'+1)
+ \left[(h+1)\log D_0+
+ \log\frac{C(S'+1)(d+1)(q+1)(B+8)}t\right].
+ \label{eq:padding-comparison}
+\end{align}
+For $q=0$ this follows from the uniform comparison proof already given.
+Assume $q\ge1$. Unroll the teacher and append $q$ single-predecessor relay layers to each relevant last-layer feature. The number of added occurrences is at most $mq$. Use the same disjoint embedding construction as before; the small-width branch uses the original teacher with relay layers. It remains to control the relay precision without an exponentially growing stability factor.
+
+Fix an embedding. At the end of the teacher portion, the absolute path bounds and its expected uniform error obey
+\[
+ S_0:=\max_{\rm selected}\E R_j\le U,\qquad
+ P_0:=N^{-1}\sum_j\E R_j\le U,\qquad
+ e_0\le U\epsilon,\qquad
+ U=C(d+1)D_0^{h+1}.
+\]
+These follow from the previous path and uniform-error lemmas, enlarging $D_0$ by a fixed constant.
+
+For a relay coefficient equal to one, take $\epsilon\le1/8$.
+The designated law then has positive support and mean one, hence
+$\E|W|=1$. At an unselected native row, independence gives
+$\E R_j\le M_1P_{\rm prev}$. A selected relay row therefore satisfies
+\begin{equation}
+ S_\ell\le S_{\ell-1}+C\epsilon P_{\ell-1},\qquad
+ P_\ell\le M_1P_{\ell-1}+S_\ell.
+ \label{eq:relay-first-moments}
+\end{equation}
+The same bounds hold for the first relay if its designated coefficient lies in $(0,1]$ and its entire support is positive. Since $M_1\le1/4$, induction gives
+\[
+ S_\ell\le U(1+C'\epsilon)^\ell,\qquad
+ P_\ell\le2U(1+C'\epsilon)^\ell.
+\]
+In particular these are bounded by $C U$ for all $\ell\le q$ whenever
+$\epsilon q\le1$. This uses only first moments, and no layerwise support condition.
+
+For ReLU, use exact identity relays. Its teacher last-layer features are nonnegative, so the target is unchanged. Expected uniform error satisfies
+\[
+ e_\ell\le e_{\ell-1}
+    +C\epsilon(S_{\ell-1}+P_{\ell-1}),
+\]
+by Lipschitzness, independence, and the first absolute moments of designated perturbations and background weights. The readout then gives
+\[
+ \E\sup_x|f_w(x)-g(x)|
+ \le C L_\psi m(B+1)(q+1)U\epsilon.
+\]
+Choose $\epsilon$ to make this at most $t$, also enforcing
+$\epsilon\le1/8$ and $\epsilon q\le1$. Its inverse logarithm is at most a fixed multiple of
+\[
+ (h+1)\log D_0+\log\frac{C(d+1)(q+1)(B+8)}t.
+\]
+The coefficient cap remains $B$. Substitution in the embedding entropy bound proves~\eqref{eq:padding-comparison}.
+
+For tanh, let $u$ denote a teacher last-layer feature, so $|u|\le1$.
+In the first extra layer use coefficient $\delta$ on its designated edge, in the remaining relay layers use one, and multiply the corresponding final readout coefficient by $\delta^{-1}$. Choose
+\[
+ \delta=\min\left\{1,\sqrt{\frac{t}{C L_\psi m(B+1)(q+1)}}\right\}.
+\]
+The ideal relay value is $\delta u$. Since
+$|\tanh v-v|\le|v|^3/3$, $q$ deterministic relays have total raw error at most
+$q\delta^3/3$ before the final readout amplification.
+Take $\epsilon\le\delta/8$. The first relay's designated law has positive support and mean $\delta\le1$, so~\eqref{eq:relay-first-moments} continues to hold. Comparing each selected relay directly to the ideal value $\delta u$ gives
+\[
+ e_q\le\delta e_0+CqU\epsilon+q\delta^3/3.
+\]
+After the readout, including its own perturbations and background,
+\[
+ \E\sup_x|f_w(x)-g(x)|
+ \le C L_\psi m(B+1)
+       \{U\epsilon+qU\epsilon/\delta+q\delta^2\}.
+\]
+Choose the absolute constant in $\delta$ sufficiently large and then take
+$\epsilon\le c\,t\delta/[L_\psi m(B+1)(q+1)U]$, also imposing the preceding cutoff requirements. The right side is at most $t$.
+The designated coefficient cap is at most $B/\delta+1$. Both
+$\log(1/\epsilon)$ and $\log(B/\delta+9)$ are bounded by a fixed multiple of the same logarithmic expression displayed above. The comparison entropy again gives~\eqref{eq:padding-comparison}. The learner's prior and likelihood do not depend on these proof-only relay coefficients or cutoffs.
+
+For the expected-risk statement take $t=(n+1)^{-1}$.
+Because outputs and $f_0$ lie in $[-1,1]$, the pointwise squared-risk difference averaged over the comparison is at most $4t$. Apply the generic sharp expectation theorem and~\eqref{eq:padding-comparison}.
+For the high-probability statement take $t=1/n$ and apply the relative-loss PAC--Bayes and fixed-comparison concentration lemmas. Here the comparison excess is at most $A(g)+4/n$, so the same proof as Theorem~\ref{thm:main} gives its displayed remainder. This completes both claims.
+\end{proof}

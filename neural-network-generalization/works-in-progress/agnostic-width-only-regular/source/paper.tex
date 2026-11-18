@@ -1,0 +1,46 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,booktabs,microtype}
+\usepackage[colorlinks=true]{hyperref}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\mathbbR}{\mathbb R}
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\title{Learning narrow-network approximations\\with Gaussian Bayesian ReLU networks}
+\author{ChatGPT-6 Astra \and Claude Opus 5.5 \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{18 November 2026}
+\hypersetup{pdftitle={Learning narrow-network approximations with Gaussian Bayesian ReLU networks},pdfauthor={ChatGPT-6 Astra; Claude Opus 5.5; Kaarel H\"anni; Dmitry Vaintrob}}
+\begin{document}
+\maketitle
+\begin{abstract}
+We give a Gaussian Bayesian neural-network learner an approximation guarantee measured only by the width and depth of a comparison network, without bounding its coefficients. The learner has one fixed dense architecture and an unrestricted independent Gaussian weight prior. A fixed final saturation is used in both the Gaussian likelihood and posterior prediction; a positive observation variance is selected from two empirical certificates. For bounded labels and an input law with density at most $\kappa$ relative to the uniform cube, the posterior mean competes with every width-$C$, hidden-depth-$h$ ReLU network, at every learner width $N\ge C+1$ and every prior exponent $\gamma\ge1$. At fixed input dimension $d$ and learner depth $H$, a sufficient sample count for additive error $\varepsilon$ is $\widetilde O_{d,H}(\kappa^{dp}(C+1)^{h(d+1)p}\varepsilon^{-(d+1)p})$, where $p=\max\{d+2,d(H+1)/2\}$. The learner depth must accommodate both the teacher and an $O(\log d)$ approximation construction. The proof combines a shifted multiscale interpolation of arbitrary-weight teachers with a Gaussian free-energy certificate and finite-parameter generalization. There is no prior over network sizes. The theorem places no restriction on Gaussian prior support.
+\end{abstract}
+
+\section*{The guarantee and its scope}
+The best narrow network may have positive test loss, even when it captures useful structure in the data. An approximation oracle asks a Bayesian learner to approach that loss after enough observations, including when its own architecture is much wider. A width bound by itself allows arbitrarily large comparison coefficients; a useful statement must therefore account for sharp features without hiding a coefficient cap.
+
+Theorem~\ref{thm:all-width-regular-Gaussian} supplies such an oracle under a regular input law. Its sample count is polynomial in comparison width at fixed dimension and depth, independent of learner width, and valid for noisy bounded responses. It applies to a Gaussian prior with independent coordinates throughout $\gamma\ge1$. The observation variance is calibrated from the training sample, and a fixed final saturation bounds each network output. These conventions are part of the learner.
+
+The proof uses two different reasons that a posterior can generalize. At large widths, a network built by multiscale interpolation has a controlled Gaussian comparison cost. At smaller widths, ordinary parameter counting controls all bounded network outputs. The learner compares observable certificates for two positive temperatures and returns one posterior. The proof does not select the architecture or average over network sizes.
+
+The dimensional dependence is substantial, and the result assumes a bounded-density input law. These hypotheses allow bounded-complexity approximations of sharp comparison functions. The theorem does not assert a coefficient-free oracle for arbitrary atomic input laws, nor does it concern an unbounded linear readout used directly in the likelihood.
+
+\paragraph{Prior coefficient-reduction results.}
+Coefficient reduction is not new to this analysis. Maass~\cite{maass} gives polynomial-bit, same-size representations for fan-out-one networks with Boolean outputs on finite rational input sets. Vardi and Shamir~\cite{vardi-shamir} approximate arbitrary-weight constant-depth ReLU networks by polynomial-weight, polynomial-width networks with a constant-factor depth increase under discrete and regular continuous input assumptions. The purpose here is to track the resources needed by the specified Bayesian prior and turn such approximations into an agnostic learning guarantee at every eligible learner width.
+
+\input{all-width-saturation}
+\input{width-only-regular}
+\input{hyperplane-regularity}
+\input{smooth-output}
+\appendix
+\input{gaussian-certificate}
+\input{selective-comparison}
+\begin{thebibliography}{99}
+\bibitem{vapnik} Vladimir N. Vapnik. \emph{Statistical Learning Theory}. Wiley, 1998. Relative uniform-convergence bounds for VC classes.
+\bibitem{bartlettvc} Peter L. Bartlett, Nick Harvey, Christopher Liaw and Abbas Mehrabian. Nearly-tight VC-dimension and pseudodimension bounds for piecewise linear neural networks. \emph{Journal of Machine Learning Research} 20(63):1--17, 2019. \url{https://jmlr.org/papers/v20/18-910.html}.
+\bibitem{maass} Wolfgang Maass. Bounds for the computational power and learning complexity of analog neural nets. \emph{SIAM Journal on Computing} 26(3):708--732, 1997. \url{https://doi.org/10.1137/S0097539793256041}.
+\bibitem{vardi-shamir} Gal Vardi and Ohad Shamir. Neural networks with small weights and depth-separation barriers. \emph{Advances in Neural Information Processing Systems} 33:19433--19442, 2020. \url{https://papers.nips.cc/paper/2020/file/e1fe6165cad3f7f3f57d409f78e4415f-Paper.pdf}.
+\end{thebibliography}
+\end{document}

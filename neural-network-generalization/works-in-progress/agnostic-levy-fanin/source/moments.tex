@@ -1,0 +1,95 @@
+\section{Uniform path moments and approximation}
+\label{sec:moments}
+All estimates first concern one fixed embedding, uniformly over its location. They then hold for its mixture. Let $C$ denote constants depending only on the fixed L\'evy measure; activation constants are displayed through
+\[
+ D=C(1+A+b)(m+1)(B+8).
+\]
+Increase this fixed constant whenever needed. It never depends on the depth.
+
+Define nonnegative absolute path bounds
+\[
+ R_j^1=b+A\sum_{k=0}^d|W_{jk}^1|,\qquad
+ R_j^\ell=b+A\sum_k|W_{jk}^\ell|R_k^{\ell-1}.
+\]
+For every input in the cube, $|h_j^\ell(x)|\le R_j^\ell$. Write
+$S_\ell=\max_{\rm selected}\E(R_j^\ell)^2$ and
+$P_\ell=N^{-1}\sum_j\E(R_j^\ell)^2$.
+An empty maximum can be replaced by zero.
+
+\begin{lemma}[Depth-uniform path bound]\label{lem:path}
+With a sufficiently large fixed choice of $D$,
+\begin{equation}
+ S_\ell+P_\ell\le(d+1)^2D^{2\ell}
+ \qquad(1\le\ell\le H).
+ \label{eq:path-bound}
+\end{equation}
+\end{lemma}
+\begin{proof}
+For a native row, condition on the preceding path bounds $r_k$. Independence and the scalar moment bounds give
+\begin{align*}
+ \E\left(\sum_k|W_k|r_k\right)^2
+ &\le\frac{C}{N}\sum_k r_k^2
+       +\frac{C}{N^2}\left(\sum_k r_k\right)^2\\
+ &\le\frac{C}{N}\sum_k r_k^2.
+\end{align*}
+For the selected row's background part, the same calculation uses
+$\E|W|\le C\epsilon/N$ and $\E W^2\le C\epsilon^2/N$, and gives at most
+$C\epsilon^2N^{-1}\sum_k r_k^2$.
+A row has at most $m$ designated predecessors, with coefficients bounded by $B+8$. Hence
+\begin{align}
+ S_\ell&\le C\{b^2+A^2m^2(B+8)^2S_{\ell-1}
+                         +A^2\epsilon^2P_{\ell-1}\},\\
+ P_\ell&\le C\{b^2+A^2P_{\ell-1}+S_\ell\}.
+ \label{eq:path-recursion}
+\end{align}
+The first layer has
+$S_1+P_1\le C(1+A+b)^2(d+1)^2(B+8)^2$ by the same calculation with fan-in $d+1$ and constant input magnitudes. Choose the constant in $D^2$ larger than the sum of the coefficients in the coupled recurrences, with room for their additive terms. Induction proves~\eqref{eq:path-bound}; the terms are bounded at each step by a fixed multiple of the preceding $D^{2\ell-2}$ scale, so no depth-dependent prefactor is introduced.
+\end{proof}
+
+Let $z_g$ be the comparator's raw readout, and let a star denote its hidden values. At a selected row the preactivation error can be written
+\[
+ \Delta=\sum_{j=1}^m a_j(h_j-h_j^*)+Z.
+\]
+Conditional on preceding layers, $Z$ is centered. Its variance is bounded by
+\begin{equation}
+ \E[Z^2\mid\text{preceding layers}]
+ \le C\epsilon^2\sum_{\rm designated}|h_j|^2
+       +\frac{C\epsilon^2}{N}\sum_{\rm background}|h_j|^2.
+ \label{eq:new-noise-variance}
+\end{equation}
+This uses unbiased designated coefficients and centered independent background coordinates. They are independent of preceding layers.
+
+\begin{lemma}[Pointwise mean-square approximation]\label{lem:rms}
+Uniformly over inputs in the cube,
+\begin{equation}
+ \E_Q|z_w(x)-z_g(x)|^2
+ \le C(d+1)^2D^{2H+2}\epsilon^2.
+ \label{eq:raw-rms}
+\end{equation}
+\end{lemma}
+\begin{proof}
+Let $v_\ell$ be the largest selected hidden-neuron mean-square error at the fixed input. The first layer satisfies
+$v_1\le CA^2(d+1)\epsilon^2$.
+Conditional centering removes the cross term between the propagated error and $Z$, so Lipschitzness gives
+\[
+ v_\ell\le A^2m^2B^2v_{\ell-1}
+          +CA^2\epsilon^2\{mS_{\ell-1}+P_{\ell-1}\}.
+\]
+Choose the constant in $D^2$ so that the propagated-error coefficient and the forcing coefficients together are smaller than its available multiplicative factor. Lemma~\ref{lem:path} then gives
+$v_\ell\le C(d+1)^2D^{2\ell}\epsilon^2$ by induction with a constant independent of depth. The readout has the same recurrence with outer Lipschitz constant one and adds one power $D^2$. This proves the result. No smoothness or bound on $\phi$ is used.
+\end{proof}
+
+\begin{lemma}[Logarithmic-cost comparison]\label{lem:comparison}
+For every comparator in Theorem~\ref{thm:main}, every $0<r\le1$, and every finite $N\ge m$, there is a data-independent measure $Q_{g,r,N}\ll\mu_N$ with
+\begin{equation}
+ \sup_{x\in[-1,1]^d}\E_Q|f_w(x)-g(x)|^2\le r,\qquad
+ \KL(Q\|\mu_N)\le K_0\log(K_1/r),
+ \label{eq:l2-comparison}
+\end{equation}
+where $K_0,K_1$ are as in~\eqref{eq:resources}. The same conclusion holds for a width-$m$ shared implementation whose rooted formula expansion has at most $S$ occurrences; in particular $S=M(m,H)$ is always sufficient.
+\end{lemma}
+\begin{proof}
+The output link's Lipschitz constant gives mean-square error at most
+$V\epsilon^2$, with $V$ in~\eqref{eq:resources}. Take
+$\epsilon=\sqrt{r/V}\le1$ and substitute into Lemma~\ref{lem:entropy}. Enlarging the fixed constants gives exactly~\eqref{eq:l2-comparison}. Lemmas~\ref{lem:path}--\ref{lem:rms} apply equally to the original shared teacher used in the small-width branch.
+\end{proof}

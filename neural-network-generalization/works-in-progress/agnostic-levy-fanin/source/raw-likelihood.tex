@@ -1,0 +1,163 @@
+\section{Raw Gaussian likelihood with bounded posterior prediction}
+\label{sec:raw-likelihood-clipped-prediction}
+This result does not alter the observation model by clipping its outputs. It applies to the ordinary Gaussian likelihood of the raw network output, and clips each posterior draw only when making a prediction.
+
+Let $Y=f_0(X)+\xi$, where $|f_0|\le1$, $\E[\xi\mid X]=0$, and
+\[
+ \E[e^{t\xi}\mid X]\le e^{\sigma^2t^2/2}\qquad(t\in\mathbb R).
+\]
+Let $\mu$ be any fixed prior on finite measurable real-valued functions. For $\beta>0$, form the actual raw-output Gaussian posterior
+\[
+ \Pi_S(df)=Z_S^{-1}\exp\left[-\beta\sum_{i=1}^n(f(X_i)-Y_i)^2\right]\mu(df),
+ \qquad
+ \widehat f_S(x)=\int\operatorname{clip}(f(x),[-1,1])\Pi_S(df).
+\]
+The Gaussian observation variance is $1/(2\beta)$. There is no clipping inside this likelihood. Write $R_0=\E\xi^2$ for the irreducible squared risk.
+
+\begin{theorem}[A raw-likelihood comparison inequality]
+\label{thm:raw-likelihood-comparison}
+Let $0<\eta<1$, $0<\delta<1$, and choose $0<\beta<1/(2\sigma^2)$, with the upper restriction omitted if $\sigma=0$. Put
+\[
+ c_\beta=1-2\beta\sigma^2,\qquad
+ K_\beta=\frac{4\beta}{1-e^{-4c_\beta\beta}}.
+\]
+Suppose a comparison law $\rho$ is fixed independently of the observations, has finite $\KL(\rho\|\mu)$, and satisfies
+\[
+ v(x):=\int(f(x)-f_0(x))^2\rho(df)\le V<\infty
+ \quad\hbox{for every input},\qquad
+ L_\rho=\E_Xv(X).
+\]
+With probability at least $1-\delta$,
+\begin{align*}
+ R(\widehat f_S)-R_0\le K_\beta\Bigg[
+ &(1+\eta)L_\rho+\frac{\KL(\rho\|\mu)+\log(2/\delta)}{\beta n}\\
+ &+\frac{16(V+\sigma^2+1)\log(2/\delta)}{\eta n}\Bigg].
+\end{align*}
+In particular, taking $\beta=\eta/[32(1+\sigma^2)]$ gives $K_\beta\le1+\eta$ and a noise-separated leading-constant oracle with a remainder of order
+\[
+ \frac{(1+\sigma^2)\KL(\rho\|\mu)
+       +(V+\sigma^2+1)\log(2/\delta)}{\eta n}.
+\]
+The prediction is the mean of clipped posterior draws. The statement does not assert the same bound for the raw posterior mean or for clipping that mean.
+\end{theorem}
+
+\begin{proof}
+For a fixed raw function define its empirical excess loss relative to $f_0$ by
+\[
+ \widehat L_S(f)=\frac1n\sum_i
+       \{(f(X_i)-Y_i)^2-(f_0(X_i)-Y_i)^2\}.
+\]
+Conditional on $X$, the noise assumption gives
+\[
+ \E_\xi e^{-\beta[(f-Y)^2-(f_0-Y)^2]}
+ \le e^{-c_\beta\beta(f-f_0)^2}.
+\]
+Set
+\[
+ D_\beta(f)=-\beta^{-1}\log
+           \E_Xe^{-c_\beta\beta(f(X)-f_0(X))^2}.
+\]
+Independence over the sample yields
+$\E_S e^{\beta n[D_\beta(f)-\widehat L_S(f)]}\le1$.
+Integrate against the fixed prior, use Markov's inequality, and apply the relative-entropy variational inequality. With probability at least $1-\delta/2$, simultaneously for every posterior law $\pi$,
+\[
+ \int D_\beta(f)\pi(df)
+ \le\int\widehat L_S(f)\pi(df)
+       +\frac{\KL(\pi\|\mu)+\log(2/\delta)}{\beta n}.
+\]
+The raw Gaussian posterior minimizes the right-hand objective before its confidence term. The empirical loss of $f_0$ is a constant in that optimization and cancels. Consequently, on the same event,
+\begin{equation}
+ \int D_\beta(f)\Pi_S(df)
+ \le\int\widehat L_S(f)\rho(df)
+       +\frac{\KL(\rho\|\mu)+\log(2/\delta)}{\beta n}.
+ \label{eq:raw-generalized-risk}
+\end{equation}
+This step uses the actual raw posterior, not a posterior for a bounded surrogate likelihood.
+
+For every real $u$ and $f_0(x)\in[-1,1]$,
+\[
+ |\operatorname{clip}(u)-f_0(x)|^2
+ \le\min\{|u-f_0(x)|^2,4\}
+ \le\frac4{1-e^{-4c_\beta\beta}}
+            \{1-e^{-c_\beta\beta|u-f_0(x)|^2}\}.
+\]
+The final inequality follows because $(1-e^{-tx})/x$ decreases on $x>0$. Averaging in $X$ gives
+\[
+ \E_X|\operatorname{clip}(f)-f_0|^2
+ \le\frac4{1-e^{-4c_\beta\beta}}(1-e^{-\beta D_\beta(f)})
+ \le K_\beta D_\beta(f).
+\]
+Jensen's inequality and the conditional mean-zero noise then imply
+\[
+ R(\widehat f_S)-R_0
+ \le K_\beta\int D_\beta(f)\Pi_S(df).
+\]
+
+It remains to control only the integrated comparison loss. Put
+$m(x)=\int(f(x)-f_0(x))\rho(df)$, so $m(x)^2\le v(x)$. Its one-observation excess is
+\[
+ Z=v(X)-2\xi m(X),\qquad \E Z=L_\rho.
+\]
+For $t>0$ the conditional Gaussian-type noise bound gives
+\[
+ \E e^{tZ}\le\E_Xe^{(t+2\sigma^2t^2)v(X)}.
+\]
+Take $t=\eta/[16(V+\sigma^2+1)]$ and $a=t+2\sigma^2t^2$. Then $aV\le1/8$ and
+$a+a^2V\le t(1+\eta)$.
+For $0\le v\le V$, convexity of $e^{av}$ on this interval and $e^u-1\le u+u^2$ for $0\le u\le1/8$ give
+\[
+ \E e^{tZ}\le1+(a+a^2V)L_\rho
+             \le e^{t(1+\eta)L_\rho}.
+\]
+The same assertion is immediate if $V=0$. Exponential Markov for the independent observations therefore yields, with probability at least $1-\delta/2$,
+\[
+ \int\widehat L_S(f)\rho(df)
+ \le(1+\eta)L_\rho+
+       \frac{16(V+\sigma^2+1)\log(2/\delta)}{\eta n}.
+\]
+Combine this with \eqref{eq:raw-generalized-risk}.
+
+For the stated choice of $\beta$, $c_\beta\ge1-\eta/16$ and $4c_\beta\beta\le\eta/8$. The inequality $1-e^{-x}\ge x(1-x/2)$ gives
+\[
+ K_\beta\le[(1-\eta/16)(1-\eta/16)]^{-1}\le1+\eta
+ \qquad(0<\eta<1).
+\]
+This proves the theorem.
+\end{proof}
+
+\begin{corollary}[Bounded raw teachers]
+\label{cor:raw-likelihood-bounded-teacher}
+Suppose $|g|\le1$ and a sample-independent comparison satisfies
+\[
+ \sup_x\int(f(x)-g(x))^2\rho(df)\le r^2,\qquad
+ \KL(\rho\|\mu)\le\mathcal K.
+\]
+Then $V\le(2+r)^2$ and, for every $0<\theta<1$,
+\[
+ L_\rho\le(1+\theta)\E(g-f_0)^2+(1+\theta^{-1})r^2.
+\]
+Consequently the preceding theorem gives a leading constant arbitrarily close to one on the teacher's excess risk, plus an approximation term of order $r^2/\theta$ and a complexity term of order $(\mathcal K+\log(1/\delta))/n$, with explicit constants depending on the chosen leading-constant slack and the noise envelope. It uses the raw Gaussian likelihood and the mean of clipped posterior draws.
+\end{corollary}
+\begin{proof}
+Minkowski's inequality gives the pointwise bound $v(x)^{1/2}\le|g(x)-f_0(x)|+r\le2+r$. The displayed population comparison follows from $(a+b)^2\le(1+\theta)a^2+(1+\theta^{-1})b^2$, applied under the joint law of input and comparison draw.
+\end{proof}
+
+\begin{corollary}[The L\'evy prior with a raw observation model]
+Fix the finite learner architecture before sampling, use the independent L\'evy coordinate prior of this paper, and suppose a formula comparator's raw output $z_g$ lies in $[-1,1]$ throughout the input cube. Form the raw Gaussian posterior
+\[
+ d\Pi^{\rm raw}_{S_n,\beta}(w)\propto
+ \exp\left[-\beta\sum_i(z_w(X_i)-Y_i)^2\right]d\mu_N(w),
+ \qquad \beta=\frac{\eta}{256(1+\sigma^2)}.
+\]
+Predict by $\widehat f(x)=\int\clip_{[-1,1]}(z_w(x))\,d\Pi^{\rm raw}_{S_n,\beta}(w)$.
+Then, with probability at least $1-\delta$,
+\[
+ R(\widehat f)\le R_0+(1+\eta)\{R(z_g)-R_0\}
+ +\frac{C(1+\sigma^2)}{\eta n}
+       \left[K_0\log(K_1n)+\log\frac2\delta\right],
+\]
+with the same formula resources up to fixed constants, uniformly over all finite $N\ge m$. Dense comparators use $S=M(m,H)$ as before.
+\end{corollary}
+\begin{proof}
+The raw comparison of Lemma~\ref{lem:rms}, with $\epsilon$ chosen to give mean-square error $1/n$, has KL at most $K_0\log(K_1n)$. Its integrated raw relative loss is bounded pointwise by $(2+1/\sqrt n)^2\le9$. Apply Theorem~\ref{thm:raw-likelihood-comparison} with its slack parameter $\eta/8$ and the weighted-triangle corollary with $\theta=\eta/8$. The product of the three approximation factors is at most $(1+\eta/8)^3\le1+\eta$, and all remaining terms are bounded by the displayed remainder. The prior and likelihood retain the raw-output model throughout.
+\end{proof}

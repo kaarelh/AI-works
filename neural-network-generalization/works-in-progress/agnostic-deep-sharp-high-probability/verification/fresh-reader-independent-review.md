@@ -1,0 +1,21 @@
+# Independent audit: row-contractive deep posterior oracle
+
+Reviewed `deep-midpoint/source/paper.tex`, `transfer.tex`, and `statistics.tex` on 18 November 2026. No substantive mathematical gap found.
+
+The prior and teacher restrictions match: each internal row and the readout has absolute row sum at most one; the first row is either unrestricted with a bounded activation, or is similarly capped when the activation is one-Lipschitz and vanishes at zero. Thus raw predictions are bounded in the likelihood. Row conditioning is part of the actual prior, and different rows remain independent.
+
+The scalar beta-prime truncation, placement, and scaling estimates are uniform in fan-in. The capped-row insertion law leaves enough norm slack to accommodate all designated perturbations and its background. Its useful cutoff is explicitly `r≤c/(k+1)`; I suggested recording this in the lemma, because its proof uses `η=C0(k+1)r≤1/2`. The later global choice `r=cε/Q0` already ensures the requirement.
+
+The source-preserving transfer argument checks. Absolute downstream influences have total mass at most one in each layer. Conditioning only the placement indices on low selected influence costs at most `log 2` and does not tilt the source posterior. Overwriting rows in increasing depth is crucial and valid: at each step all later weights remain the original ones, so the original downstream influences control its change. The changed feature values are bounded by two. Halving the source and deleting the selected final coefficients gives the stated `3V/N` error.
+
+For the teacher contribution, internal absolute row sums at most one propagate the maximum predecessor error without multiplying it. Summing local row discrepancies over the relevant graph costs `O(Q0 r)`, including the first-layer coordinates. This does not hide an exponential or unspecified depth factor.
+
+The KL accounting is correct. Selected old rows are independent of surviving rows under the reference prior, though no independence of the source posterior is assumed. Every replaced capped row has a pointwise density bound; the sole readout marginalization normalizer cancels against the target conditioning normalizer. A fixed placement costs `N^E`. Averaging over layerwise ordered placements gives a factor at least `(N/2)^V`. Starting from the readout and following the fixed teacher graph backward, every relevant hidden vertex is reached, and each capped parent row has at most `1/r` marked coordinates. At most `r^(-E)` compatible edge choices remain. Shared vertices impose consistency and do not create extra choices. This gives the explicit `N^(E−V)` factor and the announced logarithmic residual for shared computations.
+
+Direct localization uses the same insertion laws, leaves irrelevant native hidden rows untouched, and makes the total background readout mass small. Bounded hidden features then make its uniform approximation error `O(Q0r)` independently of depth. The law is deterministic given the teacher and precision.
+
+The statistical conversion passes independently: the Gibbs midpoint offset, doubled-temperature relative-loss exponential bound, shifted-normalizer rewrite, and direct comparison all have the correct signs and constants. At `T=2048s`, the negative empirical-distance coefficient is `−1/8`. The empirical label event contributes `O(sqrt(s) V/N)` to the transfer error, with the large-confidence-log case covered by bounded excess risk. The final Gaussian variance is `T/2`, and all observations enter the returned posterior. Posterior-average risk control implies the mean bound by Jensen.
+
+Finally, the ReLU absolute-path-variation normalization is exact. Dividing each nonzero hidden feature by its absolute incoming path mass makes its new row norm one; the transformed readout norm equals the original total path variation. Zero-path vertices have identically zero ReLU output and can be removed. Width, depth, and nonzero edge counts are preserved, provided any constant wires for biases are included in the path count as stated.
+
+The scope is a row-conditioned prior and a matching variation-restricted teacher class. The explicit `J log N` term means the deep result is not a width-independent remainder for arbitrary shared computation graphs. The paper states that distinction correctly.

@@ -1,0 +1,160 @@
+\section{A subquadratic width polynomial under a two-sided density bound}
+\label{sec:localized-results}
+The preceding theorem needs only an upper density bound. If the input
+law has density bounded away from zero as well, localization gives a
+stronger guarantee for the same shallow ReLU learner. Throughout this
+section assume
+\[
+ 0<p_-\le p_X(x)\le p_+<\infty\quad(-1\le x\le1).
+\]
+Initially $|Y|\le1$. Write $f_0(x)=\E[Y\mid X=x]$,
+$R_0=\E(Y-f_0(X))^2$, and $A(g)=R(g)-R_0$.
+The comparison class $\mathcal G_C$ contains all shallow width-$C$
+ReLU functions with arbitrary finite coefficients. All conclusions
+below control the posterior-average raw risk and therefore the
+ordinary raw posterior mean. The prior and observations are unchanged.
+Only the likelihood scale differs from the evidence calibration used
+in the preceding sections.
+
+\begin{theorem}[A localized width-only Gaussian oracle]
+\label{thm:localized-width}
+Let $1\le C\le n$ be a declared comparison-width budget. There is a
+deterministic likelihood scale depending on $n,C,\delta$ and the stated
+density bounds, but not on the comparison coefficients or its risk,
+such that, with probability at least $1-\delta$, simultaneously for
+every $N\ge6C+6$ and $0<\nu\le1$,
+\begin{equation}
+ R(\bar z_S)\le\Pi_SR(z)
+ \le\inf_{g\in\mathcal G_C}R(g)
+       +\widetilde O\left((C+1)^{2/5}n^{-3/10}\right).
+ \label{eq:localized-budget}
+\end{equation}
+In the nontrivial regime, put
+\[
+ e_{n,C}=\widetilde c(C+1)^{2/5}n^{-3/10},\qquad
+ \lambda\asymp\left(\frac{e_{n,C}}{C+1}\right)^2,
+\]
+with sufficiently large fixed logarithmic factors. The physical
+Gaussian observation variance is $n\lambda\nu/N$.
+A sufficient sample size for excess risk $\varepsilon$ is
+\begin{equation}
+ n\ge\widetilde O\left((C+1)^{4/3}\varepsilon^{-10/3}\right).
+ \label{eq:localized-samples}
+\end{equation}
+Thus the width exponent at fixed accuracy is $4/3$. Any prescribed
+$C_n=n^u$, $u<3/4$, gives a vanishing additive remainder with the
+single deterministic scale
+$\lambda_n=\widetilde\Theta(n^{-3/5-6u/5})$.
+\end{theorem}
+
+\begin{corollary}[Schedules that do not use the comparison width]
+\label{cor:localized-universal}
+One sufficiently large fixed power $k$ in
+$\lambda=n^{-3/2}\log^k(n/\delta)$ gives, on a common event for all
+comparison widths satisfying $(C+1)\sqrt\lambda\le1$, all
+$N\ge6C+6$, and all $0<\nu\le1$,
+\begin{align}
+ R(\bar z_S)\le\Pi_SR(z)
+ \le{}&R_0+\{1+O(1/\log n)\}\inf_{g\in\mathcal G_C}A(g)\\
+ &+\widetilde O((C+1)n^{-3/4}+n^{-1/3})+O(1/\log n).
+ \label{eq:localized-universal}
+\end{align}
+Hence every fixed growth $C_n=n^u$, $u<3/4$, is allowed by one
+schedule without knowing $C$. Its additive logarithmic term is
+weaker in accuracy than the declared-budget polynomial bound.
+A different universal schedule,
+$\lambda=\widetilde\Theta(n^{-3/5})$, gives the coefficient-one bound
+\[
+ R(\bar z_S)\le\Pi_SR(z)\le\inf_{g\in\mathcal G_C}R(g)
+       +\widetilde O\left((C+1)n^{-3/10}
+                          +(C+1)^2n^{-9/10}\right).
+\]
+\end{corollary}
+
+The bounds are asymptotic statements in the displayed nontrivial
+regimes; the proof gives explicit sufficiently large logarithmic
+powers and sample conditions. A fixed $\lambda=1$ handles the finitely
+many excluded small sample sizes by the same Gaussian energy bound.
+There is no mixture over comparison widths or likelihood scales.
+The declared-budget schedule in Theorem~\ref{thm:localized-width} uses
+$C$; the schedules in Corollary~\ref{cor:localized-universal} do not.
+
+\paragraph{Proof structure.}
+The spline compiler in Lemma~\ref{lem:spline-path} has bounded output,
+risk increment $O(Ct)$ and path variation $O((C+1)/t)$. The new step
+controls empirical quadratic norms through the total variation of the
+second derivative, rather than a global output envelope.
+Section~\ref{sec:sharp-design} proves this norm comparison with
+remainder $\widetilde O(\eta^{-5}n^{-3}P^2)$.
+Section~\ref{sec:localized-proof} combines it with localized multiplier
+bounds and the exact Gaussian posterior energy identity. Substitution
+of the stated schedules proves the theorem and corollary. The common
+sample events are function-class events independent of $N,\nu$.
+For each declared $C$, choose a deterministic approximate risk minimizer;
+a summable confidence allocation over the integer budgets makes the
+claims simultaneous, changing only logarithms.
+
+\begin{corollary}[Marginally sub-Gaussian labels]
+\label{cor:localized-subgaussian}
+Suppose instead that $\E\exp(Y^2/s_Y^2)\le2$ for a fixed known upper
+bound $s_Y$. The coefficient-one conclusions
+\eqref{eq:localized-budget}--\eqref{eq:localized-samples} and the second
+conclusion of Corollary~\ref{cor:localized-universal} hold with additional
+logarithmic factors and constants depending on $s_Y$. The first
+conclusion holds in the possibly weaker form
+\[
+ R(\bar z_S)\le\Pi_SR(z)
+ \le\{1+O(1/\log n)\}\inf_{g\in\mathcal G_C}R(g)
+       +\widetilde O((C+1)n^{-3/4}+n^{-1/3})+O(1/\log n).
+\]
+Observed labels and the returned predictions remain unrestricted.
+The physical likelihood scale is $\lambda=M_n^2\lambda'$, where
+$M_n=\max\{1,s_Y\sqrt{c\log(n/\delta)}\}$ and $\lambda'$ is the
+corresponding bounded-label schedule, with enlarged logarithmic factors.
+\end{corollary}
+\begin{proof}
+Set $Y_M=\clip(Y,[-M_n,M_n])$ only in the analysis. Its joint law
+with $X$ has exactly the original input density. With probability
+at least $1-\delta/4$, every training label already lies in this
+interval, so the actual posterior is exactly the posterior for the
+clipped-label sample. Analyze its observable $z/M_n$ and labels
+$Y_M/M_n$. The parameter prior stays unchanged. Its path variation is
+at most $Q/2$, its prior empirical risk is at most two, and its Gaussian
+energy identity is the same as in Section~\ref{sec:localized-proof}.
+A normalized bounded spline comparator $q$ is implemented physically
+as $M_nq$; its balanced energy is $2M_nP(q)$. The extra factor $M_n$
+and the Gaussian comparison precision cost are logarithmic in $n/\delta$.
+Thus every step of the localized argument has the same powers of $n,C$,
+with enlarged logarithmic factors. Multiplication by $M_n^2$ converts
+normalized risks back to physical risks without changing the leading
+coefficient. For the universal schedule, enlarge the fixed logarithmic
+power further so that its normalized design remainder is at most
+$1/(M_n^2\log n)$; its physical contribution is then still
+$O(1/\log n)$. The multiplicative approximation slack stays
+$O(1/\log n)$ under risk rescaling.
+
+For completeness, this is a transfer of population risks as well as
+training posteriors. The deterministic bound
+$\Pi_SQ^2\le C(1+(\lambda')^{-2})$ holds on the clipped training sample.
+Since $|z(x)|\le Q/\sqrt2$,
+\[
+ |\Pi_SR_Y(z)-\Pi_SR_{Y_M}(z)|
+ \le C(1+(\lambda')^{-1})\{\E(Y-Y_M)^2\}^{1/2}
+           +\E|Y^2-Y_M^2|.
+\]
+The right side is negligible for a sufficiently large fixed $c$ in
+$M_n$, uniformly over the learner width and scale. No law is conditioned
+on a label event. For an arbitrary raw comparison function $g$, the
+pointwise projection inequality
+\[
+ (\clip(g,[-M_n,M_n])-Y)^2
+ \le(g-Y)^2+(|Y|-M_n)_+^2
+\]
+first bounds its clipped risk by $R(g)$ plus a label-tail term.
+Changing that bounded comparator's labels from $Y$ to $Y_M$ costs
+at most $2M_n\E|Y-Y_M|+\E|Y^2-Y_M^2|$.
+The clipped comparator still has at most $3C+2$ affine breakpoints.
+These observations justify the same coefficient-free compiler and
+risk infimum. A union with the clipped-label statistical event and
+the all-training-labels event completes the proof.
+\end{proof}

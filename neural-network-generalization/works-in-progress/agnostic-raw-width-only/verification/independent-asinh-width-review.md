@@ -1,0 +1,13 @@
+# Independent coefficient-free asinh compiler review — 18 November 2026
+
+The exact asinh-width.tex passes. The imported supported-law raw log-moment theorem has been independently checked in full. Conditional Minkowski gives the required logarithmic native supremum moments for this full-support readout.
+
+The scaled signed-bit encoding has raw variation plus bias at most M. Its selected factor centers lie in [0,M], so the asinh-Gaussian scalar interval cost is O(exp(CM)+log(1/eta)). Inactive weighted absolute factors have conditional expectation O(eta^2); the stated constant-probability conditioning is valid, preserves location cancellation and costs only a constant factor in entropy/error. It gives a comparison supported within 3M and the asserted population approximation. Additional small gate centers and precision logarithms fit the existing compiler resource.
+
+Projection is risk-improving when |f0|<=1. Under marginal sub-Gaussian labels alone the pointwise clipping-risk inequality instead incurs a negligible label tail. The population comparison cross term is controlled for deterministic near-minimizers, since zero belongs to the comparison class. The supported comparison fits inside the analytical O(log n) native cutoff once n is sufficiently large (or after enlarging its fixed constant).
+
+The bounded-mean resource is Otilde(C^(2bh)+H). In the general marginal-label case the extra (t+1)exp(C sqrt(log n))/n is explicitly n^(-1+o(1)), not claimed polylogarithmic. The displayed C_n=n^(1/(4bh)), H<=n^(1/2), N>=n substitution gives Otilde(n^-1/2), retaining the compiler lower-depth requirements. Prior support and actual predictions remain unbounded; only the comparison construction uses clipping. This is a coefficient-one expected all-data oracle at T_n of order log^2 n, not a fixed-temperature or sharp high-probability claim.
+
+Follow-up: the scalar asinh-Gaussian law is identified as sinh-normal SHN(2,0,1) under an explicit transformation convention, with prior literature attribution. The density, law, theorem, and proof are unchanged. Exact hashes refreshed for this terminology/bibliography update.
+
+Scalar-family follow-up: the reusable sufficient conditions (symmetry, full support, logarithmic Lq moments, and an exp(−c exp(cM)) compact-interval density lower bound) support exactly the same tail and comparison steps. Both arsinh(Z/2) and normalized exp(−a cosh(bu)) densities satisfy them. Their negative-log-density second derivatives are respectively 4 cosh(2u)−sech²(u)≥3 and ab² cosh(bu)≥ab². The remark correctly limits strong log-concavity to scalar factors, not the hierarchical prior, and leaves the primary theorem/model unchanged.

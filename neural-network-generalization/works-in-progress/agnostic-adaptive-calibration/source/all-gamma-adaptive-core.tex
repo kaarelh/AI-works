@@ -1,0 +1,166 @@
+\section{Free-energy calibration and one statistical event}
+\label{ag-sec:adaptive-core}
+For one width and prior scale define the empirical free energy
+\[
+ F_S(\lambda)=-\frac{2\lambda}{\omega}\log
+ \int e^{-\omega\widehat R_S(z_w)/(2\lambda)}d\mu(w).
+\]
+The Gibbs variational identity gives
+\begin{equation}
+ F_S(\lambda)=\inf_\rho\left\{\int\widehat R_S(z_w)d\rho
+                    +\frac{2\lambda}{\omega}\KL(\rho\Vert\mu)\right\}.
+ \label{ag-eq:variational}
+\end{equation}
+In particular $0\le F_S(\lambda)\le R_0$. We suppress $S$ where it causes no ambiguity. The Gaussian likelihood's parameter-independent normalizing factor is omitted in this definition. The calibration below is therefore not maximum marginal-likelihood selection of a Gaussian noise variance.
+
+Put $\rho_d=(d+2)/2$. There are two valid choices of exponents:
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Activation & $p$ & $q$ \\
+\midrule
+Any fixed globally Lipschitz $\phi$ & $L\rho_d$ & $(L-1)\rho_d$ \\
+Tanh refinement & $\max\{d+2,1+dL/2\}$ & $p-\rho_d$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+In both cases let $r=p/\rho_d\ge2$; thus $q/p=1-1/r$.
+Define
+\begin{align}
+ C_{\rm tail}&=R_0+\sqrt{V_0(H+1)},&
+ b_n&=\max\{16,4\log(C_{\rm tail}n^3)\},\notag\\
+ U_0&=2R_0+1,&
+ \theta_n&=C_{d,H,A}\frac{\log^6(2n/\delta)}n.
+ \label{ag-eq:calibration-constants}
+\end{align}
+Here and below $C_{d,H,A}$ is a sufficiently large fixed constant depending only on the displayed parameters. Its choice is fixed before sampling. We initially suppose
+\begin{equation}
+ \theta_n b_n^p U_0^q\le1.
+ \label{ag-eq:admissibility}
+\end{equation}
+For fixed $d,H,A,\delta$, this holds at every sufficiently large sample count. A final remark supplies a bounded-risk fallback when it fails.
+
+\begin{lemma}[One measurable likelihood calibration]
+\label{ag-lem:root}
+For every sample, width, and scale, there is a unique positive solution of
+\begin{equation}
+ \lambda^p=\theta_n[2F_S(\lambda)+\lambda b_n]^q.
+ \label{ag-eq:root}
+\end{equation}
+This solution is measurable in the sample. Under \eqref{ag-eq:admissibility}, putting $u=2F_S(\lambda)+\lambda b_n$, it satisfies
+\begin{equation}
+ 1/n\le\lambda\le1/b_n,\qquad 16\lambda\le u\le U_0.
+ \label{ag-eq:root-range}
+\end{equation}
+\end{lemma}
+\begin{proof}
+The variational representation shows that $F$ is finite, concave, and continuous on $(0,\infty)$. Its Laplace representation shows that $F(\lambda)/\lambda$ is nonincreasing. Consequently
+\[
+ \Psi(\lambda)=\frac{\lambda^p}{[2F(\lambda)+\lambda b_n]^q}
+ =\frac{\lambda^{\rho_d}}{[2F(\lambda)/\lambda+b_n]^q}
+\]
+is continuous and strictly increasing. Its limit at zero is zero, because it is at most $\lambda^{\rho_d}/b_n^q$; its limit at infinity is infinity, because $F\le R_0$. The positive root is unique. For each fixed $t>0$, the event $\{\lambda<t\}$ is $\{\Psi_S(t)>\theta_n\}$, proving measurability.
+
+At $\lambda=1/b_n$, the bracket in the first denominator is at most $U_0$, so \eqref{ag-eq:admissibility} gives $\Psi(1/b_n)\ge\theta_n$. Thus the root is at most $1/b_n$. Its equation also implies $\lambda^{\rho_d}\ge\theta_n b_n^q\ge1/n$. Since $\rho_d\ge1$, this implies $\lambda\ge1/n$. The bounds on $u$ now follow.
+\end{proof}
+
+\begin{lemma}[A weighted joint tail]
+\label{ag-lem:joint-tail}
+For the root in Lemma~\ref{ag-lem:root}, define
+\[
+ J_\lambda(w)=\widehat R_S(z_w)+\lambda K(w)/16.
+\]
+Then, deterministically for every sample,
+\begin{equation}
+ \int R(z_w)\one_{\{J_\lambda>u\}}d\Pi_{S,\lambda}(w)\le n^{-3}.
+ \label{ag-eq:joint-tail}
+\end{equation}
+\end{lemma}
+\begin{proof}
+If $J_\lambda>u$, then either $\widehat R_S>u/2$ or $K>8u/\lambda$. The latter threshold is at least128 by \eqref{ag-eq:root-range}. On the first event, the likelihood is at most $e^{-\omega u/(4\lambda)}$, so its posterior raw-risk integral is at most
+\[
+ R_0\exp\left[\frac{\omega F(\lambda)}{2\lambda}
+                      -\frac{\omega u}{4\lambda}\right].
+\]
+On the second event, bound the likelihood by one and apply Cauchy--Schwarz to the prior. The prior fourth-moment estimate and norm tail give an upper bound
+\[
+ \sqrt{V_0(H+1)}\exp\left[\frac{\omega F(\lambda)}{2\lambda}
+                      -\frac{\omega u}{4\lambda}\right].
+\]
+Since $u=2F(\lambda)+\lambda b_n$ and $\omega\ge1$, their sum is at most $C_{\rm tail}e^{-b_n/4}\le n^{-3}$. This argument neither bounds the full parameter dimension nor replaces the posterior by a norm-restricted learner.
+\end{proof}
+
+\begin{lemma}[A common empirical-loss and norm certificate]
+\label{ag-lem:common-statistical}
+For a sufficiently large choice of $C_{d,H,A}$ in \eqref{ag-eq:calibration-constants}, there is an event of probability at least $1-\delta/2$ on which the following assertion holds simultaneously for all widths, all prior scales, and every positive $\lambda,u$ satisfying
+\[
+ 1/n\le\lambda\le1/b_n,\qquad16\lambda\le u\le U_0,
+ \qquad\lambda^p\ge\theta_n u^q.
+\]
+Every parameter vector with $J_\lambda(w)\le u$ satisfies
+\begin{equation}
+ R(z_w)\le\widehat R_S(z_w)+\lambda K(w)/16.
+ \label{ag-eq:local-statistical}
+\end{equation}
+\end{lemma}
+\begin{proof}
+Construct dyadic norm levels $k_j=128\cdot2^j$ through a level at least $32U_0n$, and dyadic uniform accuracies through a level below $c_1/n$, beginning at $1/2$. Constants $c_1>0$ below depend only on $d,H,A$. There are $O_{d,H,A}(\log^2(2n))$ pairs. For each pair use the deterministic cover from \eqref{ag-eq:general-activation-cover}, and apply Lemma~\ref{ag-lem:finite-cover-bernstein} with its share of failure probability $\delta/2$. This defines one event from fixed finite classes before the sample is observed.
+
+Fix now any admissible $\lambda,u$ and any $w$ with $J_\lambda(w)\le u$. Choose a norm level
+\[
+ K(w)\le k\le2K(w)\le32u/\lambda.
+\]
+Choose a grid accuracy $a$ within a factor two of
+\[
+ a_* = c\lambda k/\sqrt u,
+\]
+where $c>0$ is sufficiently small. Since $k\ge128$, $\lambda\ge1/n$, and $u\le U_0$, this accuracy exceeds $c_1/n$ after choosing $c_1$ small enough. Since $\lambda k\le32u$, one also has $a_*\le32c\sqrt{U_0}<1/2$. Thus the chosen pair occurs in the deterministic list.
+
+Let $h$ be a cover center within $a$ of $z_w$. Its empirical risk obeys
+$\sqrt{\widehat R_S(h)}\le\sqrt u+a\le C\sqrt u$.
+Its square loss is bounded by $C k^\beta$, with $\beta=L$ for a general activation and $\beta=1$ for tanh. In the latter case, $|z_w|\le\sqrt K$ because tanh hidden outputs are bounded by one; the same covers and Lipschitz estimates still apply. Write
+\[
+ a_0=\beta+dL/2,
+ \qquad T_n=\log(2n/\delta).
+\]
+The cover bound and the finite allocation of failure probabilities give
+\[
+ \frac{k^\beta}{n}\log\frac{|\mathcal C_{k,a}|}{\eta_{k,a}}
+ \le C\frac{T_n^6}{n}\,
+        u^{d/2}\lambda^{-d}k^{a_0-d}.
+\]
+The deliberately generous power six also absorbs all fixed constants and grid-count logarithms. Hence the square-root Bernstein term is at most $\varepsilon\lambda k$, for any fixed sufficiently small $\varepsilon>0$, provided
+\begin{equation}
+ n\ge C_{d,H,A}T_n^6
+      u^{\rho_d}\lambda^{-2\rho_d}k^{a_0-2\rho_d}.
+ \label{ag-eq:shell-condition}
+\end{equation}
+The linear Bernstein term is then at most $C\varepsilon^2\lambda k$, since $\lambda k\le32u$. It also follows that $R(h)\le C u$. Minkowski for population and empirical root risks therefore transfers the estimate from $h$ to $z_w$ with extra cost at most
+\[
+ C(a\sqrt u+a^2)\le Cc\lambda k.
+\]
+Choose $c,\varepsilon$ small enough that the total cost is at most $\lambda k/32\le\lambda K(w)/16$.
+
+It remains to verify \eqref{ag-eq:shell-condition}. In the general case $a_0=L\rho_d=p\ge2\rho_d$. Using $k\le32u/\lambda$, its right side is bounded by
+$C_{d,H,A}T_n^6 u^{p-\rho_d}\lambda^{-p}$.
+For tanh, if $a_0\ge2\rho_d$ the same argument applies with $p=a_0$. If $a_0<2\rho_d$, use the constant lower bound $k\ge128$ instead, obtaining $C_{d,H,A}T_n^6u^{\rho_d}\lambda^{-2\rho_d}$; here $p=2\rho_d$ and $q=\rho_d$. In every case the required inequality is exactly implied by $\lambda^p\ge\theta_nu^q$, after fixing the constant in $\theta_n$ sufficiently large.
+\end{proof}
+
+\begin{theorem}[Free-energy certificate at every prior scale]
+\label{ag-thm:certificate}
+On the event in Lemma~\ref{ag-lem:common-statistical}, simultaneously for every width $N$ and every $0<\tau\le1$, the root-calibrated actual finite posterior satisfies
+\begin{equation}
+ \int R(z_w)d\Pi_{S,\lambda}(w)
+ \le F_S(\lambda)+2B_H\lambda+n^{-3}.
+ \label{ag-eq:certificate}
+\end{equation}
+Its ordinary raw posterior mean has the same risk bound.
+\end{theorem}
+\begin{proof}
+Integrate \eqref{ag-eq:local-statistical} over $J_\lambda\le u$, extend the nonnegative empirical-loss and norm terms to the whole parameter space, and use \eqref{ag-eq:joint-tail}. The prior exponential moment \eqref{ag-eq:general-activation-norm-mgf} and the entropy inequality give
+\[
+ \frac{\lambda}{16}\int Kd\Pi
+ \le\frac{2\lambda}{\omega}\KL(\Pi\Vert\mu)+2B_H\lambda.
+\]
+The variational identity at its posterior optimizer proves \eqref{ag-eq:certificate}. The raw-risk integral is finite, and Jensen proves the ordinary-mean claim. Every estimate other than the common statistical event is deterministic, so the event is simultaneous over the uncountable scale parameter as stated.
+\end{proof}

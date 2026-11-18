@@ -1,0 +1,11 @@
+# Verification record
+
+The paper has a conventional mathematical proof and independent AI-agent audits. It has not been formalized in Lean.
+
+The controlling review is [the final sixteen-source integration audit](independent-final-sixteen-source-review.md). Its [source hashes](independent-final-sixteen-source-review-hashes.json) identify the exact active LaTeX files reviewed. It checks the match between the stated prior, raw likelihood, posterior prediction, compiler resources, and statistical conclusions, including the continuous-domain depth requirement and the separate deterministic, data-calibrated, and fixed-temperature conventions. It includes the finite-second-moment extension the exactly matched Gaussian-noise likelihood corollary, the compact-readout fixed-temperature endpoint, and the separate full-support asinh-readout oracle with logarithmic-squared temperature. The final confidence appendix gives a separate near-leading-one high-probability bound, its growing-class specialization, and the eventual temperature schedule requiring no known label scale.
+
+Independent checks cover the tanh binary quantizer, the slab/sphere extension, the margin-restoring comparison law, fixed-temperature noisy realizability, the power-readout extension, and the independent-coordinate alternative. The final integration review incorporates those checks. A [separate fresh-reader pass](fresh-reader-scope-review.md) checked the abstract, introduction, model, main quantitative statements, and the fixed-temperature and independent-coordinate distinctions.
+
+The native-prior comparison and raw-tail statistical theorem are imported explicitly from the [raw-prior companion](../../agnostic-raw-priors/). The Boolean arithmetic compiler and standard constant-depth integer division are also stated as external inputs, with references. No claim is made that their complete source proofs have been reproduced in this paper.
+
+A clean three-pass PDF build checks cross-references and LaTeX compilation. `SHA256SUMS` records the publication PDF and source/documentation files. The build is reproducible with the supplied `build.sh`; no computational experiment is used as a substitute for a theorem proof.

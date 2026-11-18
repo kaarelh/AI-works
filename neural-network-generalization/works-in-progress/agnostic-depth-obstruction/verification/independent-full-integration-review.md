@@ -1,0 +1,15 @@
+# Independent review of the complete finite-prior depth obstruction
+
+Reviewed all thirteen included TeX sources and their assembled statements on 18 November 2026. This is an independent mathematical audit, not a Lean formalization. No unresolved substantive gap was found.
+
+The main theorem now holds on the Euclidean unit sphere, simultaneously for every sufficiently large width, every scale 0 < Ns <= c0, and every positive likelihood temperature. The Gaussian-feature lower bound, native-covariance memorizer, operator-energy entropy and posterior tails, segment comparison, and population witness were checked together. The large-temperature branch uses an operator-energy tail rather than readout conjugacy. The same sample event therefore supports the stated clipping conventions and arbitrary well-defined data-dependent mixtures.
+
+The nearly baseline energy ratio, error allocation, witness constants, and uniformity in N, s and temperature are valid. The high-temperature prediction is exponentially small in H. Low-temperature predictions lie within 1/256 of the empirical-label segment. The common witness yields the stated excess 2^-16; the Gaussian-noise and Gaussian-affine-skip variants use their separately specified weaker constants. The affine projection uses whitened coordinates spanning the same affine space, so the unit-sphere normalization does not weaken its Gram estimate.
+
+The ReLU unit-sphere extension was checked separately: the retained even Hermite terms give the stated exponentially small kernel eigenvalue lower bound, the parity-padding monomials span the finite input set, the first-layer variance is 2/d, and the native output variance is (2/d)s(Ns/2)^H. The exact positive-label relay and small-noise perturbation retain nearly baseline energy. The ordinary and affine-skip lower bounds have the stated finite-width and gamma > 1 scope.
+
+The final clip and final tanh likelihood corollaries use bounded-output losses throughout. The objective and energy-floor arguments remain valid because these output maps are odd contractions; for final tanh the comparison interpolates inverse-tanh empirical means in a fixed bounded range. These conclusions do not silently reuse the raw Gaussian affine-skip conjugacy argument.
+
+One proof-text issue was corrected during this review: the fixed-width strong-prior corollary must keep the exact deterministic interpolator fixed as s tends to zero, rather than keeping a mean designed for nonzero native noise. The paragraph now cites the exact interpolation theorem and its small-native-noise perturbation corollary, and absorbs the additive energy constant by increasing the depth threshold. This clarification does not change the result.
+
+The main theorem excludes canonical Ns=1 and does not assert a dimension-independent depth lower bound: input dimension grows linearly with H and required widths are exponential. Its exp(H) sample lower bound has fixed positive excess accuracy and a fixed shallow target. The separate canonical-mean-field paper is not needed for this theorem.

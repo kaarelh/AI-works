@@ -1,0 +1,97 @@
+\section{Finite-width realization of a covariance-controlled signal}
+\label{sec:prefactor-covariance-realization}
+The extension to every fixed mean-field prefactor below one uses centered covariance changes rather than only mean shifts. We give the finite-width construction explicitly. Write
+\[
+ F(q)=\E\tanh^2(\sqrt qG),\qquad \chi(q)=1-F(q),
+ \qquad \nu=Ns\in(0,1).
+\]
+All finite-function norms in this section use the uniform law on $\mathcal X_D$.
+
+\begin{lemma}[The native first-feature kernel]
+\label{lem:prefactor-native-kernel}
+For each fixed $\nu\in(0,1)$, the kernel
+\[
+ K_\nu^{\rm nat}(x,x')=E\tanh(A\cdot(1,x))\tanh(A\cdot(1,x')),
+ \qquad A\sim N(0,(\nu/d)I),
+\]
+has minimum eigenvalue at least $\Lambda=e^{-C_\nu(D+1)}$. Its diagonal is $b_1=F(2\nu/d)$. The constant $C_\nu$ can be chosen uniformly when $\nu$ ranges over a compact subinterval of $(0,1)$.
+\end{lemma}
+\begin{proof}
+Repeat the Hermite argument in Lemma~\ref{lem:gaussian-feature-kernel}, now with preactivation standard deviation $\alpha=\sqrt{2\nu/d}$ and no smoothing. The absolute odd coefficient is
+\[
+ \frac1{\alpha\sqrt{j!}}\int_0^\infty
+       \frac{\omega^j e^{-\omega^2/2}}
+            {\sinh(\pi\omega/(2\alpha))}\,d\omega.
+\]
+Restricting to $[\sqrt j/2,\sqrt j]$ gives a lower bound $e^{-C_\nu d}$ for $1\le j\le D+4$. The normalized preactivation correlations are unchanged. Retain the same monomials $T^a\chi_S(z)$, with $a\in\{0,1,2,3\}$ and the bias power selected to make the total degree odd. Their factorial bound and the fixed four-point Vandermonde lower bound are identical. This gives $\Lambda\ge e^{-C_\nu(D+1)}$. All constants are uniform when $\nu$ stays bounded away from zero.
+\end{proof}
+
+\begin{lemma}[A native unit direction for every finite seed]
+\label{lem:prefactor-unit-seed}
+Fix $\varepsilon>0$, let $m=4\cdot2^D$, and put $\delta_D=\sqrt\Lambda/2$. For every
+\[
+ N\ge C(\Lambda^{-2}+\varepsilon^{-2})\log(8m)+2m,
+\]
+an event under the unchanged first-layer prior has probability at least one half, on which the following hold simultaneously:
+\[
+ \sup_x|\|h^1(x)\|^2/N-b_1|\le\varepsilon;
+\]
+for every $u:\mathcal X_D\to[-1,1]$ there is a measurable unit vector $e_1\in\R^N$ with
+\[
+ e_1^{\mathsf T}h^1(x)/\sqrt N=\delta_Du(x)\quad\text{for every }x.
+\]
+Conditioning on this event costs normalized entropy at most $2\nu\log2/N$.
+\end{lemma}
+\begin{proof}
+Let $H_1$ be the $m$ by $N$ first-feature matrix. Bounded-entry concentration gives the sample kernel $K_N=H_1H_1^{\mathsf T}/N$, as an integral operator for the uniform measure, at least $\Lambda I/2$, simultaneously with the stated diagonal control. The probability is at least one half at the claimed width. For any $u$, the minimum-norm solution of $H_1e=\sqrt N\delta_Du$ has squared norm
+\[
+ \delta_D^2u^{\mathsf T}K_N^{-1}u
+ =\delta_D^2\langle u,(K_N/m)^{-1}u\rangle_{\rm unif}
+ \le\frac{2\delta_D^2}{\Lambda}\|u\|_{\rm unif}^2\le\frac12.
+\]
+As $N>m$, add a nullspace vector orthogonal to this solution to make its norm exactly one. Projecting the coordinate basis into the nullspace and taking the first nonzero projection supplies a measurable choice. The conditioning entropy is at most $\log2$, which gives the normalized cost after multiplication by $2s=2\nu/N$.
+\end{proof}
+
+\begin{lemma}[Exact covariance action and scalar limit]
+\label{lem:prefactor-finite-realization}
+Fix a deterministic schedule $1\le R_\ell^2\le R_*^2$ for $2\le\ell\le H$, a factor $0\le B\le B_*$, and a seed function $u:\mathcal X_D\to[-1,1]$. Define scalar states at each input by
+\[
+ q_1=b_1,\quad r_1=\delta_Du(x),\quad
+ v_\ell=\nu\{q_{\ell-1}+(R_\ell^2-1)r_{\ell-1}^2\},
+\]
+\[
+ q_\ell=F(v_\ell),\qquad
+ r_\ell=\sqrt\nu R_\ell r_{\ell-1}(1-q_\ell).
+\]
+For every fixed $\tau>0$, all sufficiently large widths admit a comparison law $\rho$ with
+\[
+ 2s\operatorname{KL}(\rho\|\mu)
+ \le\frac{2\nu\log2}{N}
+      +\nu\sum_{\ell=2}^H(R_\ell^2-1-\log R_\ell^2)+B^2,
+\]
+\[
+ \left(\E_\rho\max_{x\in\mathcal X_D}|z_w(x)-Br_H(x)|^2\right)^{1/2}
+ \le\tau.
+\]
+If $D=O(H)$ and $\nu,R_*,B_*,\tau$ are fixed, a sufficient width is $N\ge e^{CH}$. The constants can be uniform over compact allowed prefactor intervals and fixed bounds on the other parameters.
+\end{lemma}
+\begin{proof}
+Condition the first layer on Lemma~\ref{lem:prefactor-unit-seed}, with its accuracy chosen below. Given the past and its selected unit direction $e_{\ell-1}$, draw each row of $W^\ell$ independently from the centered Gaussian covariance
+\[
+ \frac\nu N[I+(R_\ell^2-1)e_{\ell-1}e_{\ell-1}^{\mathsf T}].
+\]
+Put $\xi_{\ell i}=\sqrt{N/\nu}(W^\ell e_{\ell-1})_i/R_\ell$ and $e_\ell=\xi_\ell/\|\xi_\ell\|$. The directional coordinates are conditionally independent standard Gaussians. For a previous hidden vector with empirical state $(\widehat q,\widehat r)$, each new preactivation has the joint representation
+\[
+ \sqrt\nu R_\ell\widehat r\,\xi_i+
+             \sqrt{\nu(\widehat q-\widehat r^2)}\,G_i.
+\]
+Its squared-output expectation is $F(v)$, and Stein's identity gives its $\xi_i$-weighted output expectation $\sqrt\nu R_\ell\widehat r(1-F(v))$. These are exactly the claimed scalar update before division by $\|\xi\|/\sqrt N$.
+
+Bounded-variable concentration for squared outputs, sub-Gaussian concentration for $\xi_i\tanh(\cdot)$, and chi-square concentration for $\|\xi\|^2/N$ give update error at most $C\varepsilon$ at all $m$ inputs, with conditional failure probability at most $Cm e^{-cN\varepsilon^2}$. The constants depend only on the fixed spike bound. The scalar map has a fixed Lipschitz bound on $0\le r^2\le q\le1$; thus errors propagate by at most $L^H$ for a fixed $L$. Choose $\varepsilon$ a sufficiently small multiple of $\tau/[(1+B_*)L^H]$, and increase $N$ so the union of all failures has probability at most $c\tau^2/(1+B_*)^2$. The first-layer kernel threshold and accuracy threshold, and these concentration requirements, are all met by $N\ge e^{CH}$.
+
+Finally draw the readout with mean $Be_H/\sqrt N$ and native covariance $\nu I/N^2$. Its centered output noise has coordinate variances at most $\nu/N$, so its expected squared maximum over the support is at most $C\nu\log(2m)/N$. On the hidden good event the mean output is within the requested tolerance. On its complement, both empirical and scalar correlations are bounded by one, so the squared mean-output error is at most $4B_*^2$. These facts yield the expected supremum bound after tightening constants.
+
+Each hidden row changes one covariance eigenvalue relative to the native prior, and has entropy $(R_\ell^2-1-\log R_\ell^2)/2$. There are $N$ rows. The readout mean shift has entropy $NB^2/(2\nu)$. The chain rule adds these and the first-layer conditioning entropy; the directions are measurable functions of preceding parameters, and contribute no additional term. Multiplication by $2\nu/N$ gives the displayed exact action.
+\end{proof}
+
+For any fixed schedule the scalar endpoint $r_H(u)$ is continuous and odd in its initial seed. If $r_H(1)>0$, choosing $B=A/r_H(1)$ and using the intermediate value theorem realizes every prescribed function in $[-A,A]$ at the scalar level. This requires no monotonicity of $r_H(u)$.

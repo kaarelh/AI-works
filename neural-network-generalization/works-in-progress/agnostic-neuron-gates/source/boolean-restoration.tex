@@ -1,0 +1,59 @@
+\section{A sharper resource for Boolean circuits}
+\label{sec:ard-Boolean-restoration}
+Boolean circuits admit comparison implementations whose errors are restored at each logical gate. Under the neuron-gated prior this removes the extra depth factor in the general sensitivity bound, without restricting learner weights.
+
+Consider a layered fan-in-two Boolean circuit, counting all COPY and delay gates explicitly. Let $S$ be its gate count, $h$ its depth and $C$ its maximum layer width. Its input bits are the signs of $x\in\{-1,1\}^d$. There are explicit ReLU, tanh and sigmoid implementations with a bounded final clipping link and numerical coefficient caps. ReLU needs hidden depth $2h$ and width at most $2C$; tanh and sigmoid need depth $h$ and width at most $C$. The implementations pad to larger depths $H$. Let $m$ be their actual maximum width, let $V$ count their hidden vertices, and let $P$ count their dense active blocks and biases as in the general comparison theorem. Put $Q=P+V+H$. In particular,
+\[
+ Q\le C_0\{(d+1)m+m^2H+H\},
+\]
+with a numerical constant $C_0$.
+
+\begin{theorem}[Boolean comparison at nearly parameter-count cost]
+\label{thm:ard-Boolean-restoration}
+For every such implementation and every learner width $N\ge m$, the neuron-gated prior has a data-independent comparison law with
+\[
+ \E_\rho\sup_{x\in\{-1,1\}^d}|f_w(x)-f(x)|\le t,
+ \qquad
+ \KL(\rho\|\mu_N)\le C Q\log\frac{C Q(m+1)}t
+ \quad(0<t\le1).
+\]
+It also assigns the correct raw sign with a fixed positive all-input margin prior mass at least $\exp[-CQ\log(CQ(m+1))]$. Consequently the sharp expected-risk remainder for comparison with this Boolean function is
+\[
+ \frac{C(1+\sigma^2)Q\log\{C(n+1)Q(m+1)\}}{n+1},
+\]
+independently of learner width. The exact Bayesian sign learner has total confidence and majority mistake bounds of the same nearly linear-$Q$ order, along arbitrary input sequences.
+\end{theorem}
+\begin{proof}
+For ReLU encode bits by zero and one. Use two hinges followed by their ReLU difference:
+\[
+ \begin{array}{c|c|c}
+ &r&s\\ \hline
+ \mathrm{AND}(a,b)&\operatorname{ReLU}(4(a+b)-5)&
+                    \operatorname{ReLU}(4(a+b)-6)\\
+ \mathrm{NOT}(a)&\operatorname{ReLU}(2-4a)&
+                    \operatorname{ReLU}(1-4a)\\
+ \mathrm{COPY}(a)&\operatorname{ReLU}(4a-1)&
+                    \operatorname{ReLU}(4a-2).
+ \end{array}
+\]
+The next hidden layer computes $\operatorname{ReLU}(r-s)$. In the first logical layer substitute $(1+x_i)/2$ directly into these affine expressions, requiring no input-feature layer. The final readout is $2a-1$. Extra hidden depth may relay the final nonnegative bit.
+
+There are numerical constants $u_0,K_0$ such that a total uniform preactivation perturbation of size at most $u\le u_0$ over all selected rows and the readout keeps the raw output within $C u$ of the target, and all selected hidden values below $K_0$. Indeed the hinge margins preserve which pair is active. Both-positive hinge differences reset the new bit to one plus that gate's perturbations; both-negative pairs reset it to zero. No previous bit error is amplified once it lies inside the fixed decision margin. Extra identity relays add only their portion of the total perturbation budget.
+
+Fix an embedding in the general comparison law at scalar precision $\epsilon$. For analysis only, cap selected ReLU activations to $[0,K_0+1]$. Let $R_\ell$ be the largest expected uniform magnitude of a modified unselected activation. Its active-parent contribution is at most $C m$, since selected gates are bounded by two, selected features are capped, and each unmodified edge factor has finite first absolute moment. The inactive gate sum is at most $\epsilon$, independently of its own incoming features. Native biases have finite first moment. Hence
+\[
+ R_\ell\le C(m+1)+C\epsilon R_{\ell-1}.
+\]
+The first layer has bound $C(d+1)$, so at the first hidden transition one may retain $C\epsilon(d+1)$; thereafter $R_\ell\le C(m+d+1)$ whenever $C\epsilon\le1/2$. This harmless input term will be absorbed by $Q$ below.
+
+At a selected row, each active product coefficient differs from the teacher coefficient by at most $C\epsilon$, including coefficients that are zero in the teacher. The $m$ capped active features therefore contribute at most $C m\epsilon$ to its uniform residual. The selected bias contributes $\epsilon$. The inactive contribution has expected uniform magnitude at most $C\epsilon R_{\ell-1}$. First-layer residuals have size at most $(d+1)\epsilon$. Thus the expected sum of all selected-row and readout residual magnitudes is at most
+\[
+ C(V+1)(m+d+1)\epsilon\le C Q^2\epsilon.
+\]
+On the event that this sum is at most $u\le u_0$, restoration proves inductively that the cap is never reached, so the modified and actual computations coincide. Their raw output error is at most $Cu$. Since the final clipping link bounds all outputs, Markov's inequality gives expected uniform clipped error at most
+$Cu+C Q^2\epsilon/u$. Take $u=ct$ and $\epsilon=c t^2/Q^2$, reducing the constants if necessary. The general entropy bound is then at most $C Q\log(CQ(m+1)/t)$. A fixed $u$ and $\epsilon=c/Q^2$ give the raw margin probability, by the same event and binary relative entropy.
+
+For tanh, encode signs in $[0.9,1]$ and $[-1,-0.9]$, and use preactivations $4(a+b-1)$, $-4a$ and $4a$ for AND, NOT and COPY. For sigmoid, encode bits in $[0,0.1]$ and $[0.9,1]$, and use $20(a+b-1.5)$, $20(0.5-a)$ and $20(a-0.5)$. Substitute the exact input-bit encoding into first-layer expressions. These gates preserve their encoding intervals under a preactivation error of magnitude $0.1$. The final readouts $2a$ for tanh and $4a-2$ for sigmoid clip exactly to the target signs on this event. Every native feature is bounded, so each selected-row residual has expected uniform magnitude at most $C(m+d+1)\epsilon$ directly; a union bound suffices. The same entropy conclusion follows, with no auxiliary cap.
+
+The expected-risk conclusion follows by applying the sharp all-data theorem at $t=(n+1)^{-1}$. The margin-mass conclusion and exact-sign online argument give the remaining assertions, with the usual nonanticipating requirement for posterior-sampled mistakes.
+\end{proof}

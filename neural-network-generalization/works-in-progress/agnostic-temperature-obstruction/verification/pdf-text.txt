@@ -1,0 +1,2001 @@
+Deep Bayesian tanh networks can learn
+a shallow teacher slowly
+ChatGPT-6 Astra
+
+Claude Opus 5.5
+
+Kaarel Hänni
+
+Dmitry Vaintrob∗
+
+17 November 2026
+
+Abstract
+We construct fixed regression problems on which very wide Gaussian Bayesian tanh networks
+learn slowly even though the true conditional mean is the shallow one-neuron function tanh(x1 ).
+For every hidden learner depth H ≥ 3 and every β > 2/H, a fixed finite-dimensional input
+law and independent Gaussian observation noise force excess squared risk at least n−β along
+a sample subsequence, almost surely. The conclusion holds simultaneously at every learner
+width at least n2 and every mean-field-or-stronger Gaussian prior scale, for every likelihood
+temperature and every data-dependent mixture of their ordinary raw posterior means. A broad
+Gaussian affine output component does not remove the obstruction. The teacher also has an
+exact bounded-coefficient implementation at the learner’s depth on the data support. An explicit
+finite-depth version gives excess at least cH −6 after 4 · 256H observations in input dimension
+4H + 2, at every learner width above eCH . Thus no sample bound polynomial jointly in learner
+depth, input dimension, and inverse excess accuracy can hold uniformly for this family. The
+proof combines inexpensive Fourier noise memorization, Gaussian-readout geometry, and a
+fixed distribution of rare grid blocks. A simpler two-dimensional construction gives constant
+excess for width-two teachers with growing coefficients; a larger fixed dimension recovers sharper
+coefficient-growth thresholds. These are learning-rate and distribution-uniform obstructions, not
+claims of inconsistency or computational hardness.
+
+1
+
+What the negative results say
+
+An agnostic approximation guarantee compares a Bayesian learner’s population loss with the loss
+of the best smaller network, allowing the data to have noise or to lie outside that smaller class.
+Fixed-depth polynomial oracle bounds can provide such comparisons while remaining independent
+of a much larger learner width. This paper asks how fast their remainder can vanish and how it can
+depend on learner depth.
+One conclusion concerns a fixed regression problem. The conditional mean is g∗ (x) = tanh(x1 ),
+which has one hidden neuron and unit coefficients, and the labels have independent Gaussian noise
+of variance 1/16. For any chosen learner depth H ≥ 3 and any exponent β > 2/H, we construct
+a fixed input law on a unit sphere in a fixed finite dimension. Along a deterministic sequence of
+sample counts, every learner of width N ≥ n2 in the specified Gaussian family has excess at least
+n−β , almost surely. Arbitrary temperature selection and averaging do not repair the rate. The
+result even allows independent broad Gaussian affine output features, including an output bias and
+direct linear connections. The construction and its precise width requirements are in Theorem 9.2
+and Corollaries 9.4–9.5.
+∗
+
+Authors are listed in alphabetical order.
+
+1
+
+A second conclusion tracks constants as learner depth grows: in dimension 4H +2, excess remains
+at least cH −6 after 4 · 256H samples, at every learner width above eCH (Theorem 10.1). This is an
+explicit exponential-depth obstruction at inverse-polynomial accuracy. Neither result contradicts a
+polynomial sample bound at each fixed depth or establishes exponential depth dependence at one
+fixed positive accuracy. The input law in the fixed-problem construction is countably supported; no
+claim is made here for a smooth input density.
+The underlying tradeoff is explicit. Small likelihood temperatures fit noisy singleton observations
+using a comparatively inexpensive deep-network memorizer. Larger temperatures shrink the
+nonlinear part of the prediction. Conditional Gaussian readout formulas put all posterior means in
+one quadratic constraint set. This supplies a common linear witness, so averaging individually bad
+predictors cannot evade the obstruction.
+We first give a simpler constant-excess construction in two dimensions. Its teacher coefficients
+grow with sample count, so it addresses width-only guarantees that ignore coefficient size. We then
+give the Gaussian comparison and mixture tools, improve the exponent ranges in fixed dimension,
+and construct the fixed-law slow-rate example. Every learner has one specified dense architecture;
+there is no prior over network sizes.
+
+2
+
+Model and result
+
+Fix H ≥ 2 hidden layers and write L = H + 1, including a scalar linear readout. A width-N network
+on [−1, 1]d has
+h1 = tanh(W 1 (1, x)),
+
+hℓ = tanh(W ℓ hℓ−1 ) (2 ≤ ℓ ≤ H),
+
+zw = v T hH .
+
+There are no internal biases. Its independent centered Gaussian parameter prior has density
+proportional to exp[−QN (w)/(2σ 2 )], where
+QN (w) =
+
+H
+X
+d
+∥W 1 ∥2F +
+∥W ℓ ∥2F + N ∥v∥22 .
+N
+ℓ=2
+
+Thus the coordinate variances are N σ 2 /d, σ 2 , and σ 2 /N in the first layer, subsequent hidden layers,
+and readout respectively. We assume N σ 2 ≤ 1, which includes every canonical scale σ 2 = N −γ with
+γ ≥ 1.
+Given an IID sample S = ((Xi , Yi ))ni=1 , the learner uses a Gaussian likelihood with mean zw (Xi )
+and variance nλσ 2 , where λ > 0. Write
+b S (f ) =
+R
+
+1X
+(f (Xi ) − Yi )2 ,
+n i
+
+RD (f ) = ED (f (X) − Y )2 .
+
+The posterior relative to the Gaussian prior µσ,N is
+b S (zw )/(2λσ 2 )] µσ,N (dw).
+ΠS,λ,σ,N (dw) ∝ exp[−R
+
+Let clip denote clipping to [−1, 1].
+Theorem 2.1 (A fixed shallow teacher can be learned slowly). Fix a hidden learner depth H ≥ 3,
+an exponent β > 2/H, and a finite bound M on the covariance operator norm of an optional
+independent Gaussian affine output component. There are a fixed finite input dimension, one fixed
+
+2
+
+input law on its unit sphere with nondegenerate covariance, and a deterministic sequence nm → ∞
+such that the following holds for one infinite IID data stream:
+G ∼ N (0, 1) independent of X.
+
+Y = tanh(X1 ) + G/4,
+
+Almost surely, for all sufficiently large m, every well-defined data-dependent mixture of ordinary
+raw posterior means over all
+N ≥ n2m ,
+
+0 < σ 2 ≤ 1/N,
+
+λ>0
+
+has population squared loss at least
+1
++ n−β
+m .
+16
+The true conditional mean has a width-one, one-hidden-layer implementation with unit coefficients.
+On the support it also has an exact width-two implementation at hidden depth H, with all coefficients
+bounded by four. The conclusion allows the optional broad Gaussian affine output component,
+including an output bias and direct linear input features.
+Proof. Choose a fixed D so large that 2ρD < β and κD = (1 + 2/D)(2 − 1/H) < 2, where
+ρD = max{2/D, (1 + 2/D)/H}. Also require ρD < 1/2. The fixed-law Gaussian-noise and shallow−2ρ −o(1)
+teacher conclusions proved in Corollaries 9.4 and 9.5 give excess cnm D
+at every width at least
+CnκmD log nm , almost surely eventually. Since the two exponent inequalities are strict, this exceeds
+2
+n−β
+m and its width requirement is below nm for all sufficiently large m.
+Theorem 2.2 (Fixed-dimensional failure at every temperature). Fix H ≥ 2. Suppose Bn ≥ 1 and
+Bn /(n log n) → ∞ along even sample counts. For every sufficiently large even n, there are a law
+Dn on [−1, 1]2 × [−1, 1] and a depth-L tanh teacher gn of width two, with all coefficients bounded by
+Bn , such that:
+1. E[Y | X] = gn (X) and RDn (gn ) = 9/10.
+2. The input covariance is diagonal with eigenvalues in [1/20, 1]. Both endpoints of each coordinate
+occur with positive probability.
+3. There is N0 (n) = OH (n4−2/H log n) such that, with probability at least 1 − 2 exp(−n1/3 /2), the
+inequality
+RDn (fb) ≥ RDn (gn ) + 1/100
+holds simultaneously for every N ≥ N0 (n), every 0 < σ 2 ≤ 1/N , and every λ > 0, for each
+predictor
+Z
+
+Z
+Z
+fb =
+
+zw dΠ,
+
+fb = clip
+
+zw dΠ ,
+
+fb =
+
+clip(zw ) dΠ.
+
+The same lower bound holds for the posterior averages of raw and clipped squared risk.
+For example, Bn = nb works for any fixed b > 1, and Bn = n(log n)1+ε works for every fixed
+ε > 0. The choices of temperature, width, and allowed prior scale may depend on the observed
+sample: the event is simultaneous over these parameters. Corollary 6.3 goes further: arbitrary
+data-dependent mixtures of the raw posterior means also have a constant excess, using a common
+linear separator derived from Gaussian readout geometry.
+The theorem uses one fixed architecture for each learner and no prior over network sizes. Its
+obstruction does not concern a parameter-counting difficulty: the exact regression function has
+width two at every sample count. The growing teacher coefficients provide a steep signal that
+competes with inexpensive memorization of noise. Coefficient-bounded oracle results are therefore
+consistent with this theorem.
+3
+
+3
+
+A finite-feature Gaussian memorizer
+
+The next lemma generalizes a Boolean sign-feature construction to an arbitrary finite evaluation set.
+It keeps every Gaussian variance unchanged.
+Lemma 3.1 (Weighted sign features with native covariance). Let X ⊂ [−1, 1]d be finite, and suppose
+r(x) =
+
+M
+X
+
+αj sign(ωj · (1, x)),
+
+|r(x)| ≤ 1
+
+(x ∈ X ),
+
+j=1
+
+where
+
+j |αj | ≤ A, A ≥ 1, ∥ωj ∥2 ≤ K, and |ωj · (1, x)| ≥ 1 for every j, x. Fix 0 < t ≤ 1/4 and put
+
+P
+
+R2 = max{4, A2/H , 768/t},
+&
+
+(
+
+N0 = max 2M, 8/t2 ,
+
+η=
+
+16A2
+288HR2
+log
+2
+η
+t2
+
+t
+36H 2 RH−1
+
+,
+
+β = 16 + log(16A/η),
+
+)'
+
+.
+
+For every N ≥ N0 and every 0 < σ 2 ≤ 1/N , a parameter mean w0 exists such that
+
+
+sup Eξ∼µσ,N |zw0 +ξ (x) − r(x)|2
+
+QN (w0 ) ≤ K∗ := dβ 2 K 2 + (4H + 1)R2 ,
+
+1/2
+
+≤ t.
+
+x∈X
+
+The comparison law ρ = L(w0 + ξ) has KL(ρ∥µσ,N ) = QN (w0 )/(2σ 2 ).
+Proof. Absorb coefficient signs into the rows and omit zero coefficients. If all coefficients vanish,
+P
+take w0 = 0: the output second moment is at most σ 2 ≤ 1/N ≤ t2 . Otherwise let A0 = j |αj | > 0.
+Allocate groups of integers kj with total N and
+N |αj |
+.
+2A0
+
+kj ≥
+
+For instance start with ⌊N |αj |/(2A0 )⌋ + 1 copies per group and distribute the remainder; N ≥ 2M
+makes this possible. Consequently
+X αj2
+j
+
+kj
+
+≤
+
+2A20
+2A2
+≤
+.
+N
+N
+
+(1)
+
+Give group j first-layer mean row βωj . The first-layer noise preactivation at any input has variance
+at most (d + 1)/d ≤ 2. For a margin-one sign ε, splitting the Gaussian noise G according to
+εG ≥ −β/2 gives
+2
+
+E| tanh(βωj · (1, x) + G) − ε| ≤ 2e−β + 2e−β /16 ≤ 4e−β ≤ η/(4A).
+Let Fb =
+
+P
+
+j (|αj |/kj )
+
+P
+
+1
+−1 P (h1 )2 . Hoeffding’s inequality and (1) show that
+i∈j hi and S1 = N
+i i
+
+|Fb − r(x)| ≤ η,
+
+|S1 − 1| ≤ η
+
+(2)
+
+except on probability at most 4 exp[−N η 2 /(16A2 )]. This is a pointwise probability statement for
+each input; no union over X is needed for the claimed pointwise expected loss.
+Set υ = N σ 2 ≤ 1 and define
+b1 = 1,
+
+q
+
+bℓ = E tanh2 ( υbℓ−1 G),
+4
+
+aℓ = 1 − bℓ
+
+(2 ≤ ℓ ≤ H),
+
+where G is standard Gaussian. The bound log cosh u ≤ u2 /2 gives aℓ ≥ (1 + 2υbℓ−1 )−1/2 > 1/2. Use
+mean weights |αj |/(kj a2 RH−1 ) from group j to every layer-two neuron, mean weights R/(aℓ N ) in
+hidden layers ℓ ≥ 3, and mean readout weights R/N .
+P
+P
+Write Mℓ = N −1 i hℓi and Sℓ = N −1 i (hℓi )2 . Conditional on preceding layers, current neurons
+are independent with law
+tanh(uℓ +
+
+q
+
+υSℓ−1 G),
+
+u2 = Fb /(a2 RH−1 ),
+
+uℓ = RMℓ−1 /aℓ
+
+(ℓ ≥ 3).
+
+At each layer, Hoeffding bounds the errors of Mℓ , Sℓ from their conditional means by η, except on
+2
+probability at most 4e−N η /2 . With (2), all these estimates hold on a pointwise event of probability
+at least
+2
+2
+1 − 4He−N η /(16A ) ≥ 1 − t2 /(72R2 ).
+(3)
+√
+Here are explicit deterministic bounds for the recursion. Put ψ(q, u) = E tanh(u + qG) and
+√
+V (q, u) = E tanh2 (u + qG). The derivative bounds | tanh′′′ | ≤ 2, |(tanh2 )′′ | ≤ 2, and Gaussian
+differentiation imply
+|ψ(q, u) − a(q0 )u| ≤ |u||q − q0 | + |u|3 /3,
+
+|V (q, u) − V (q0 , 0)| ≤ |q − q0 | + u2 ,
+
+√
+where a(q0 ) = E sech2 ( q0 G). For the first inequality, use oddness at u = 0, the heat identity
+√
+√
+∂q Eh(u + qG) = 12 Eh′′ (u + qG), and Taylor expansion in u; the second follows similarly using
+evenness.
+Set jℓ = H − ℓ + 1 and Yℓ = Rjℓ Mℓ for ℓ ≥ 2. As long as the preceding scaled mean differs from
+r(x) by at most one, |uℓ | ≤ 6/Rjℓ . Induction gives
+|Sℓ − bℓ | ≤ Hη + 48R−2jℓ .
+At a mean step the scaled error increases by at most 6Hη + 144R−2jℓ + Rjℓ η. Summing the geometric
+series and including the first error in (2) bounds every accumulated error by
+192/R2 + 9H 2 RH−1 η ≤ t/2 < 1.
+This closes the induction and proves |RMH − r(x)| ≤ t/2 on (3). Off that event it is at most
+R + 1 ≤ 3R. The independent readout noise has conditional variance σ 2 SH ≤ 1/N . Thus
+E|zw0 +ξ (x) − r(x)|2 ≤ t2 /4 + 9R2
+
+t2
++ 1/N ≤ t2 .
+72R2
+
+The first-layer mean energy is at most dβ 2 K 2 . By (1), the second layer costs at most 8R2 ; subsequent
+hidden layers cost at most 4R2 each, and the readout costs R2 . Their sum is at most (4H + 1)R2 .
+The Gaussian mean-shift formula gives the exact relative entropy.
+
+4
+
+The two-dimensional law
+
+Write p = 9/10 and q = 1/10. For even n ≥ 4, take n/2 equally spaced points in each of [−1, −1/2]
+and [1/2, 1], including endpoints, and call their union Zn . Its minimum spacing is at least 1/n.
+Lemma 4.1 (A width-two steep teacher). For sufficiently large B depending on H, there is an odd
+width-two depth-L tanh function g, with coefficients bounded by B, such that, with δ = 4B −L ,
+g(0) = 0,
+
+g(δ) = 1,
+
+g(−δ) = −1,
+5
+
+0 ≤ g(1) ≤ 2Be−2B tanh(1/2) < 1.
+
+Proof. Use two disjoint chains. Their first outputs are u1 (t) = tanh(Bt) and v1 (t) = tanh(Bt/2);
+each later chain edge has weight B. Set g(t) = c(uH (t) − vH (t)), with c = [uH (δ) − vH (δ)]−1 . All
+preactivations at δ are at most 4/B. The mean-value theorem and sech2 s ≥ 1 − s2 give
+2
+(1 − 16/B 2 )H ≤ uH (δ) − vH (δ) ≤ 2/B.
+B
+For B 2 ≥ 32H, the difference is at least 1/B, hence B/2 ≤ c ≤ B. Oddness proves the signs. At
+input one, both chains have all hidden outputs at least a0 = tanh(1/2) when B ≥ 8, and their last
+outputs differ by at most 2e−2Ba0 . This proves the outer bound.
+Define X = (T, Z) as follows. With probability p, take T = 0, choose Z uniformly from Zn ,
+and let Y be an independent fair sign. With probability q, set Z = 0, choose T uniformly from
+{−1, −δ, δ, 1}, and set Y = g(T ), using B = Bn . Its conditional mean is gn (T, Z) = g(T ) and its
+Bayes risk is p. Symmetry gives
+
+
+
+
+Cov(X) = diag q(1 + δ 2 )/2, pEZn Z 2 ,
+whose eigenvalues are in [1/20, 1].
+Let S1 count noisy atoms observed exactly once and ns count signal observations. The standard
+1/3
+occupancy calculation and bounded differences give a sample event of probability at least 1−2e−n /2
+on which
+S1 /n ≥ pe−p − n−1/3 ,
+ns /n ≤ q + n−1/3 .
+(4)
+Indeed ES1 = np(1 − p/n)n−1 ≥ npe−p ; changing one observation changes S1 by at most two.
+McDiarmid gives the first tail, and Hoeffding the second. For all sufficiently large n, this event has
+S1 ≥ n/3.
+On this event define r(z) to equal the empirical label mean at each observed noise atom, zero at
+unobserved noise atoms, and zero at z = 0. Let s1 < · · · < sn+1 be Zn ∪ {0}, write ri = r(si ), and
+put θi = (si + si+1 )/2. The exact staircase identity on these nodes is
+r(z) =
+
+n
+ri+1 − ri
+r1 + rn+1 X
++
+sign(z − θi ).
+2
+2
+i=1
+
+The coefficient mass is at most n + 1. Multiply each threshold
+row by 2n; it then has margin at
+√
+least one at every node and augmented
+√ norm at most 2 2n. The constant uses row (1, 0, 0). Thus
+Lemma 3.1, with A = n + 1, K = 2 2n, and fixed t = 1/1000, applies to all noise atoms and all
+four signal points. It gives an unchanged-covariance comparison Gaussian with
+Kn = OH (n2 log2 n),
+
+N0 (n) = OH (n4−2/H log n),
+
+(5)
+
+and pointwise output root mean square error at most t relative to r. These bounds hold uniformly
+over all N ≥ N0 (n) and all N σ 2 ≤ 1.
+
+5
+
+Every temperature fails
+
+We work throughout on the event (4). For each observed noisy atom let kj be its sample count
+and rj its empirical label mean. If W is the total noisy within-atom squared deviation, then every
+predictor has
+X
+1 X
+b S (f ) = W + 1
+R
+kj (f (0, zj ) − rj )2 +
+(f (Xi ) − Yi )2 .
+n
+n j
+n i signal
+6
+
+5.1
+
+Small temperatures memorize noise
+
+Set τn = 1/(100Kn ), taking Kn to be the explicit upper bound in Lemma 3.1. The Gibbs variational
+identity and the comparison Gaussian give
+Z
+
+b S (zw )dΠ ≤ Eρ R
+b S (zw ) + λKn .
+R
+
+Its noisy residual is at most t2 and its expected loss at each signal input is at most (1 + t)2 .
+Consequently, for every λ ≤ τn ,
+Z
+
+1X
+kj (zw (0, zj ) − rj )2 dΠ ≤ t2 + (q + n−1/3 )(1 + t)2 + 1/100 < 1/5
+n j
+
+for sufficiently large n.
+Jensen preserves this residual bound for the ordinary posterior mean and the mean of clipped
+outputs; clipping the ordinary mean also decreases it because rj ∈ [−1, 1]. The empirical mean
+vector on observed noise atoms has squared norm at least S1 ≥ n/3. Reverse triangle therefore
+gives, for each of the three mean conventions,
+q
+2
+q
+1 X b
+2
+f (0, z) ≥
+1/3 − 1/5 .
+n z∈Z
+n
+
+Since the Bayes predictor is zero on these atoms, population excess is at least
+p
+
+q
+
+1/3 −
+
+2
+
+q
+
+> 1/100.
+
+1/5
+
+Jensen also lower-bounds both corresponding Gibbs risks by the risks of their means.
+
+5.2
+
+Large temperatures miss the steep signal
+
+Lemma 5.1 (A posterior sensitivity bound). For N ≥ d + 1, N σ 2 ≤ 1, and training labels in
+[−1, 1], the half-difference of any of the three posterior mean conventions at inputs differing only by
+±δ in one coordinate is at most
+q
+L
+δ
+√ 2 + 3/λ + 2 log L + 2⌈L/2⌉ .
+d
+
+
+
+
+√
+p
+Proof. Normalize the matrices as A1 = d/N W 1 , Aℓ = W ℓ internally, and AL = N v T . Their
+coordinates have variance σ 2 , and their expected operator norms are at most two. Gaussian
+concentration and a union bound give, for T = maxℓ ∥Aℓ ∥op ,
+2
+
+2
+
+µ(T > 2 + u) ≤ Le−u /(2σ ) .
+The prior expected empirical loss is at most 1 + σ 2 ≤ 2, so Jensen lower-bounds the likelihood
+2
+normalizer by e−3/(2λσ ) . Since likelihood values are at most one, the posterior variable (T − 2)2+ is
+stochastically dominated by 3/λ + 2σ 2 log L plus an exponential variable of mean 2σ 2 . Minkowski
+and exponential moments imply
+Z
+
+T L dΠ
+
+1/L
+
+≤2+
+
+q
+
+3/λ + 2 log L + 2⌈L/2⌉.
+
+Every network’s input sensitivity is at most d−1/2 ℓ ∥Aℓ ∥op ≤ d−1/2 T L . Integrate this bound.
+Clipping is one-Lipschitz, which proves both clipped conventions as well.
+Q
+
+7
+
+For λ ≥ τn , d = 2, and δ = 4Bn−L , Lemma 5.1 and (5) bound the inner-pair half-difference by
+
+
+
+
+OH (δKnL/2 ) = OH (n log n/Bn )L = o(1).
+For sufficiently large n it is at most 1/2. The labels at the two inner signal inputs are +1 and −1.
+Their mean squared prediction error is at least 1/4, and their total probability is q/2. Thus excess is
+at least q/8 = 1/80 > 1/100. This proves every mean statement; Jensen again proves the Gibbs-risk
+statements. All sample estimates were common to widths, scales, and temperatures, completing
+Theorem 2.2.
+
+6
+
+Arbitrary mixtures of temperatures also fail
+
+Individual risk lower bounds need not survive averaging predictors. Here an additional geometric
+property of Gaussian readout posteriors gives a common linear witness, so they do survive.
+Lemma 6.1 (The Gaussian-readout sector). Fix a training sample with label vector y ∈ Rn . Suppose
+the readout has an independent centered Gaussian prior, conditional on all preceding parameters,
+and the likelihood is Gaussian with any positive scalar observation variance. The ordinary posterior
+mean’s training prediction vector f satisfies
+y T f ≥ ∥f ∥22 ,
+
+∥f ∥2 ≤ ∥y∥2 .
+
+Arbitrary mixtures of such prediction vectors satisfy the same inequalities. If |yi | ≤ 1, coordinatewise
+clipping f to [−1, 1] also preserves the first inequality.
+Proof. Conditional on the hidden features, let K be the training covariance induced by the Gaussian
+readout and let ν > 0 be the likelihood variance. The conditional posterior mean prediction is Sy,
+where
+S = K(K + νI)−1 ,
+0 ⪯ S ⪯ I.
+Thus y T Sy ≥ ∥Sy∥22 . Averaging over the posterior of hidden parameters preserves the inequality
+by Jensen; it also preserves f = Ay for a matrix 0 ⪯ A ⪯ I, proving the norm bound. The same
+argument applies to any further mixture. For clipping, each coordinate with |fi | > 1 increases the
+quantity yi fi − fi2 by
+(|fi | − 1)(|fi | + 1 − yi sign fi ) ≥ 0.
+
+Lemma 6.2 (A common separator for mixtures). Let DX have finite support, with atom probabilities
+px > 0, and let g be a regression function on that support. Fix a training sample and suppose its
+target vector gS = (g(Xi ))i obeys y T gS = ∥gS ∥22 . Let a family of predictors fθ satisfy the sector
+inequality of Lemma 6.1 and
+1
+∥fθ (S) − gS ∥22 ≥ c > 0
+for every θ.
+n
+Define
+
+1 X
+h(x) =
+Yi − 2g(x) ,
+V = ∥h∥2L2 (DX ) .
+npx i:X =x
+i
+
+Then every probability mixture F =
+
+R
+
+fθ dπ(θ) has
+∥F − g∥2L2 (DX ) ≥ c2 /V.
+
+The mixing measure may depend arbitrarily on the sample. The prediction integral is automatically
+finite at observed atoms; any extension to unobserved atoms preserves the lower bound.
+8
+
+Proof. The sector inequality and the assumption on gS give
+∥fθ (S) − gS ∥22 ≤ (y − 2gS )T (fθ (S) − gS ).
+Dividing by n expresses the right side as ⟨h, fθ − g⟩L2 (DX ) . It is therefore at least c for every θ, and
+averaging preserves that linear inequality. Integrability on observed atoms follows from the common
+training norm bound. Since h vanishes on unobserved atoms, their predictions do not affect the
+inequality. Cauchy–Schwarz now gives the result; in particular V > 0 whenever the hypotheses hold.
+If a proposed extension has infinite squared risk, the lower bound is immediate.
+The separator lemma only uses a finite-support target and a training-vector property. It does not
+rely on tanh, Gaussian hidden weights, or a particular likelihood temperature. It also accommodates
+an approximate identity y T gS − ∥gS ∥22 ≤ n∆: replace c in the conclusion by c − ∆ > 0.
+Corollary 6.3 (Failure of arbitrary raw-posterior mixtures). Under Theorem 2.2, for sufficiently
+large even n, with probability at least
+1/3 /2
+
+1 − 2e−n
+
+− 2e−n/320 − 1/n,
+
+every probability mixture of the ordinary raw posterior means over the allowed widths, prior scales,
+and likelihood temperatures has excess risk at least 1/200000. The mixing measure may be chosen
+after seeing the data. The conclusion also holds when each component prediction is clipped to [−1, 1]
+before mixing, or when the mixture includes both raw and individually clipped components.
+Proof. Add two conditions to the occupancy event (4): the two inner signal atoms each occur at
+P
+least qn/8 times, and the noisy atom counts satisfy j kj2 ≤ 4n. Each inner count has mean qn/4,
+so a multiplicative Chernoff bound gives total
+extra failure at most 2e−nq/32 = 2e−n/320 .
+P kj 
+P
+For the second condition, let C = j 2 count pairs at the same noisy atom. Then j kj2 ≤
+n + 2C and EC ≤ p2 n/2 ≤ n/2. Disjoint collision indicators are independent. Indicators sharing
+one observation have covariance p3 (1 − p)/n2 , so
+Var(C) ≤ n{p2 /2 + p3 (1 − p)} < n.
+Consequently P( j kj2 > 4n) ≤ P(C − EC > n) ≤ 1/n by Chebyshev.
+Every allowed raw mean has empirical squared error against g at least n/160. In the smalltemperature branch, its weighted noisy prediction norm is at least
+P
+
+n
+
+q
+
+1/3 −
+
+2
+
+q
+
+1/5
+
+> n/160.
+
+The teacher is zero there. In the large-temperature branch, the inner-pair half-difference is at most
+1/2, so the sum of the two squared errors is at least 1/2. Each atom occurs at least qn/8 times,
+giving empirical total at least qn/16 = n/160. Both arguments also apply to each individually
+clipped raw mean.
+Here y T gS = ∥gS ∥22 holds coordinatewise: the teacher is zero on noise atoms and equals the
+observed label on signal atoms. For the separator in Lemma 6.2, the noise contribution to V is
+2
+
+
+
+1 X X
+1 X 2
+Yi  ≤
+k ≤ 4/p.
+pn j i:X =(0,z )
+pn j j
+i
+
+j
+
+9
+
+The signal contribution is at most
+4 X 2 2 4n2s
+k g ≤ 2 ≤ 16q,
+n2 q j signal j j
+n q
+using |gj | ≤ 1 and ns ≤ 2qn for sufficiently large n. Thus V ≤ 4/p + 16q < 7. The separator lemma
+with c = 1/160 gives excess at least 1/(25600 · 7) = 1/179200 > 1/200000. Lemma 6.1 justifies
+the individually clipped components too. Since g is the true conditional mean, squared prediction
+distance is exactly excess squared risk.
+This covers, in particular, a Bayesian hyperprior over likelihood temperature followed by its
+ordinary posterior mean, provided the component networks stay within the stated width and
+prior-scale ranges. It also covers arbitrary validation-based choices of mixture weights. It does
+not assert the same sector property for the mean of individually clipped posterior draws; that is a
+distinct prediction convention.
+
+7
+
+Sharper exponents on a fixed-dimensional sphere
+
+The two-dimensional example uses a staircase whose first-layer energy is quadratic in the sample
+count. A Fourier grid in a larger, but still fixed, dimension reduces that cost. In particular, every
+strict coefficient-growth obstruction obtainable from a logarithmic-dimensional Boolean grid also
+has a counterexample in a fixed dimension chosen from the exponent slack.
+Lemma 7.1 (A tanh convolution for Fourier characters). For 0 ≤ v ≤ 1, define Φv (t) = E tanh(t +
+√
+vG), with G standard Gaussian, and put h0 = π/2. There is κv ∈ [2e−1/2 , 4] such that
+cos t = κ−1
+v
+
+Z
+
+cos u {Φv (t − u + h0 ) − Φv (t − u − h0 )} du.
+
+R
+
+If |t| ≤ T and U ≥ T + h0 + 1, restricting the integral to [−U, U ] changes its value by at most
+C0 e−2(U −T ) , where C0 = 2eπ+2 . Moreover
+U
+X
+√
+1
+E tanh2 (t − u + sh0 + vG) du − (1 − 1/U ) ≤ (C0 /U )e−2(U −T ) .
+4U s∈{−1,1} −U
+
+Z
+
+Proof. Let c0 =
+
+R
+
+R cos u sech
+
+2
+
+u du. Since cos u ≥ 1 − u2 /2,
+Z
+R
+
+u2 sech2 u du ≤
+
+Z
+
+R
+
+sech2 u du = 2, and
+
+4u2 e−2|u| du = 2,
+
+R
+
+we have 1 ≤ c0 ≤ 2. Gaussian convolution multiplies this cosine integral by e−v/2 . The even
+integrable kernel Kv (s) = Φv (s + h0 ) − Φv (s − h0 ) is the integral of Φ′v over an interval of length
+2h0 . Fubini therefore gives
+Z
+
+cos s Kv (s) ds = 2 sin(h0 )e−v/2 c0 =: κv .
+
+R
+
+Its sine integral vanishes by evenness. Changing
+√ variables proves the character identity.
+The inequalities 1 − tanh u ≤ 2e−2u and Ee2 vG = e2v imply 0 ≤ Kv (s) ≤ 2eπ+2 e−2|s| = C0 e−2|s| .
+The two omitted tails integrate to at most C0 e−2(U −T ) ; dividing by κv > 1 preserves this bound.
+For the last assertion, integrate 1 − tanh2 = sech2 . Its full-line integral is two, also after Gaussian
+convolution and translation. The missing tails are at most 4e2 e−2(U −T −h0 ) for each sign, using
+sech2 u ≤ 4e−2|u| . Averaging gives the stated bound.
+10
+
+Lemma 7.2 (Finite Fourier memorization with unchanged covariance). Let X be a finite subset of
+the unit sphere in Rd , with d ≥ 2. Suppose r : X → [−1, 1] has a real Fourier representation
+r(x) =
+
+X
+
+cj cos(ωj · x + ϕj ),
+
+cj ≥ 0,
+
+X
+
+j
+
+cj ≤ C,
+
+C ≥ 1,
+
+j
+
+where |ϕj | ≤ π, ∥ωj ∥2 ≤ Kω , and |ωj · x + ϕj | ≤ T on X . Fix 0 < t ≤ 1/4. For a number
+U ≥ max{2, T + π/2 + 1}, set
+A = 4U C,
+
+R2 ≥ max{4, A2/H , 768/t},
+
+η=
+
+t
+.
+36H 2 RH−1
+
+Suppose CC0 e−2(U −T ) ≤ η/4, where C0 is from Lemma 7.1. At every width
+(
+
+N ≥ max
+
+8 32A2
+16A2
+288HR2
+,
+log(8|X
+|),
+log
+t2
+η2
+η2
+t2
+
+)
+
+,
+
+and every scale N σ 2 ≤ 1, a Gaussian mean shift w0 + ξ, with ξ having the original prior law, satisfies
+
+
+sup E|zw0 +ξ (x) − r(x)|2
+
+1/2
+
+≤ t,
+
+x∈X
+
+with mean energy
+QN (w0 ) ≤ d{Kω2 + (U + π + π/2)2 } + (4H + 1)R2 .
+Its relative entropy is exactly QN (w0 )/(2σ 2 ).
+Proof. The first-layer Gaussian noise variance is the same at every x ∈ X : because ∥(1, x)∥22 = 2, it
+P
+equals v = 2N σ 2 /d ≤ 1. Write C ′ = j cj . If C ′ = 0, the zero shift suffices as before. Otherwise
+sample an index j with probability cj /C ′ , sample u uniformly from [−U, U ], and sample a fair sign
+s. Associate the first-layer mean row
+a = (ϕj − u + sh0 , ωj )
+and the scalar second-layer coefficient
+b=
+
+4U C ′
+s cos u.
+κv
+
+Then |b| ≤ A and ∥a∥22 ≤ Kω2 + (U + π + h0 )2 . By Lemma 7.1, the expected weighted first output
+√
+Ea,b,G b tanh(a · (1, x) + vG) differs from r(x) by at most η/4. The expected squared first output
+differs from b1 := 1 − 1/U by at most η/4, uniformly on X .
+Take N independent pairs (ai , bi ). Hoeffding and a union bound show that some fixed realization
+simultaneously approximates both these expectations to within η/4 at every point of X . Indeed the
+failure probability is at most 4|X | exp[−N η 2 /(32A2 )] ≤ 1/2. Use these fixed rows as the first-layer
+means. Under the actual independent Gaussian row noises, Hoeffding now shows, at each fixed
+input, that
+1 X 1
+1 X 1 2
+bi hi − r(x) ≤ η,
+(h ) − b1 ≤ η
+N i
+N i i
+2
+
+2
+
+except on probability at most 4e−N η /(16A ) .
+Continue the variance recursion from Lemma 3.1, now starting at b1 = 1 − 1/U ∈ [0, 1]. Use
+layer-two mean weights bi /(N a2 RH−1 ), followed by the same later-layer and readout means. All
+11
+
+derivative and concentration estimates in that lemma apply verbatim: they used only a deterministic
+initial variance in [0, 1], initial mean error at most η, and coefficient-square sum at most A2 /N .
+They prove the stated pointwise RMS bound. The second-layer energy is at most 4R2 , and the
+conservative total displayed above follows. The Gaussian shift retains the covariance, giving its
+exact relative entropy.
+Theorem 7.3 (Every strict tanh obstruction has a fixed-dimensional example). Fix H ≥ 2, put
+L = H + 1, and let a > 0, b ≥ 0 satisfy
+L
+.
+2H
+
+Ha + Lb >
+
+There is a fixed integer D ≥ 1, depending only on these exponents and H, with the following property.
+Along sample counts n = J D with even integers J → ∞, a law on the unit sphere in the fixed
+dimension d = D + 2 has conditional mean exactly a depth-L tanh network of width at most na
+and coefficient cap nb . The covariance is diagonal with eigenvalues bounded above and below by
+positive constants depending only on D. It has the individual and mixture excess-risk conclusions of
+Theorem 2.2 and Corollary 6.3, at learner widths
+
+
+
+
+N ≥ OD,H na + n(1+2/D)(2−1/H) log n .
+Thus every allowed raw posterior mean has excess at least 1/100, and every arbitrary mixture
+of raw or individually clipped raw means has excess at least 1/200000, with the stated respective
+high-probability events.
+There is also a width-two version: for every b > 1/(2H), a fixed dimension d suffices for the
+same assertions with teacher coefficient cap nb and no na term in the width threshold.
+Proof. Choose D large enough that
+L
+ρD ,
+2
+
+2 1 + 2/D
+,
+.
+(6)
+D
+H
+√
+Such a fixed choice exists because ρD → 1/H. Put rD = 1/ 2D and let each noise coordinate range
+over the J midpoint grid values
+Ha + Lb >
+
+
+
+
+
+ρD = max
+
+zj = rD (2j + 1 − J)/J,
+
+0 ≤ j < J.
+
+There are n = J D grid points z ∈ [−rD , rD ]D . Embed each noise input as
+X = (0, z,
+
+q
+
+1 − ∥z∥22 ) ∈ RD+2 .
+
+It receives probability p/n and an independent fair sign label. The four signal inputs are
+X = (T, 0,
+
+p
+
+1 − T 2 ),
+
+T ∈ {−1, −δ, δ, 1},
+
+each of probability q/4 and label g(T ) from the two-chain teacher. All inputs have norm one.
+For the growing-width teacher, use m = ⌊na ⌋, B = nb , r = ⌊m/2⌋, and G = rB. The construction
+of Lemma 4.1 extends by replacing each chain neuron with r copies, using weight B on every edge
+within its group. The internal scalar gain becomes G, the readout is rc(uH − vH ), and
+δ = 4/(BGH ),
+
+B/2 ≤ c ≤ B,
+12
+
+|g(1)| ≤ 2Ge−2G tanh(1/2) .
+
+The same mean-value calculation proves these statements. Its width is at most m and all coefficients
+are at most B. Its conditional mean on the constructed law is exactly g(T ), with risk p.
+Symmetry makes all cross-covariances vanish. The T variance is at least q/2. Each noise
+2 (1 − J −2 )/3 ≥ p/(8D). The final sphere coordinate has variance at
+coordinate has variance prD
+√
+least pq/4: noise values are at least 1/ 2, while the two outer signal values are zero and have
+total probability q/2. All variances are at most one. Thus the input covariance is nondegenerate
+independently of n.
+It remains to construct the comparison Gaussian. Given the sample, prescribe the empirical
+noise means on the grid and zero at all four signal inputs. The discrete Fourier interpolant has
+√
+coefficient absolute sum at most n by Parseval and Cauchy–Schwarz. Taking its real part preserves
+the exact real grid values. Multiply it by
+m(z) = 1 −
+
+D
+Y
+
+2
+
+cos
+
+ℓ=1
+
+
+
+πJzℓ
+.
+2rD
+
+
+This mask equals one at every midpoint grid point and zero at z = 0. Its Fourier coefficient
+absolute sum is at most two. Thus the resulting real interpolant has a representation by cosines
+√
+with nonnegative coefficients summing to at most 2 n, after absorbing signs and phases. Every
+frequency has coordinates of magnitude at most 2πJ/rD , hence norm OD (J) and phase magnitude
+on the evaluation set at most T0 = OD (J).
+√
+Apply Lemma 7.2 with fixed t = 1/1000, C = 2 n, and U = T0 + KD,H log(2n), for a sufficiently
+large constant KD,H . Its truncation condition holds for all sufficiently large n: η −1 and C grow at
+most polynomially in n, whereas the added window gives an arbitrarily high inverse polynomial tail.
+Since D is fixed, U = OD,H (n1/D ). The resulting comparison mean energy and width obey
+
+
+
+
+Kn = OD,H n2/D + n(1+2/D)/H = OD,H (nρD ),
+
+
+
+
+N0 = OD,H n(1+2/D)(2−1/H) log n .
+The comparison output has pointwise RMS error at most t on the full support.
+The occupancy event and the small-temperature proof are unchanged, splitting at τn = 1/(100Kn ).
+In the large-temperature branch the inner pair differs only in the T coordinate, so Lemma 5.1 gives
+half-difference
+
+
+OD,H (δKnL/2 ) = OD,H n−Ha−Lb+ρD L/2 = o(1)
+by (6). This proves the individual lower bounds. The four signal atoms are fixed repeated atoms, so
+the sector and occupancy proof of Corollary 6.3 applies without change.
+For the width-two conclusion set r = 1, B = nb , and choose D so that b > ρD /2. Such a
+choice exists precisely under the asserted strict condition b > 1/(2H). The same proof applies, with
+δ = 4B −L and teacher width two.
+The input dimension in Theorem 7.3 is selected once from the fixed exponent gap and then
+remains fixed as n grows. The data law and teacher still vary with n. The theorem does not
+claim the endpoint exponent in one universal fixed dimension, and it does not exclude pointwise
+consistency on a fixed distribution.
+
+8
+
+A rate obstruction for one fixed, width-one teacher
+
+The preceding constant-excess examples let teacher coefficients or width grow. A different obstruction
+already applies to a fixed width-one regression function with unit coefficients. It rules out a uniform
+13
+
+1/n oracle remainder at sufficiently large hidden depth, even after arbitrary temperature mixing.
+The result also allows a broad Gaussian affine output skip, so it is not an artifact of omitting an
+independent output bias.
+Optional affine output component. In this section the prediction may be
+Fw,b (x) = zw (x) + bT (1, x),
+where b is independent of the neural parameters and has any centered Gaussian covariance with
+operator norm at most a fixed M ≥ 1. Degenerate covariance, including b = 0, is allowed. The
+likelihood variance remains nλσ 2 . Thus the theorem includes the original neural learner, an
+independent Gaussian output bias, and Gaussian direct linear input-to-output connections. There
+is still one fixed neural architecture at each learner width.
+Lemma 8.1 (A sector inequality after removing affine features). Let PS be the orthogonal projection
+in Rn onto the complement of the training vectors of all affine input functions. Every ordinary raw
+posterior mean training vector f satisfies
+y T f ≥ ∥f ∥22 + λ∥PS f ∥22 .
+Proof. Condition on the hidden features, and let HS be their n by N matrix. The joint Gaussian
+readout and affine posterior is a linear ridge posterior. Its normal equations imply
+y T f ≥ ∥f ∥22 + nλN ∥v∥22 ,
+where v is the conditional posterior mean neural readout. The omitted affine-prior penalty is
+nonnegative; for singular Gaussian covariance, write the normal equations on its support. Since PS
+annihilates every affine output vector,
+∥PS f ∥22 = ∥PS HS v∥22 ≤ ∥HS ∥2F ∥v∥22 ≤ nN ∥v∥22 ,
+using bounded hidden activations. Averaging over the hidden-parameter posterior and applying
+Jensen to both squared norms proves the claim.
+Theorem 8.2 (No uniform fast remainder even for a fixed simple teacher). Fix H ≥ 3 and a fixed
+integer D for which
+ρD = max{2/D, (1 + 2/D)/H} < 1/2.
+Put d = D + 2 and gH (x) = tanh◦H (x1 ). This is a fixed width-one teacher with all nonzero
+coefficients equal to one. Along sample counts n = 4J D , with even J → ∞, there are input laws on
+the unit sphere in Rd with uniformly nondegenerate covariance and labels
+Y = gH (X) + ε/4,
+where ε is an independent fair sign, such that the following holds. For some positive constants c, C
+depending only on D, H, M , with probability at least
+1−2ρD
+
+1 − Ce−cn
+
+1/3
+
+− Ce−cn
+
+− C/n,
+
+every probability mixture of ordinary raw posterior means over all
+N ≥ Cn(1+2/D)(2−1/H) log n,
+14
+
+0 < σ 2 ≤ 1/N,
+
+λ>0
+
+has
+R(F ) − R(gH ) ≥ cn−2ρD .
+The mixture may depend arbitrarily on the data and may include any of the allowed affine-skip
+Gaussian covariances. Here R(gH ) = 1/16 exactly. In particular, no likelihood-temperature selection
+or mixture gives a distribution-uniform remainder O(polylog(n)/n) for these learners, even against
+this one fixed teacher.
+Proof. Let T be uniform on {−3/4, −1/4, 1/4, 3/4}. Independently choose each√coordinate of z ∈ RD
+uniformly from the J midpoint grid values in [−rD , rD ], now with rD = 1/(2 D). Set
+X = (T, z,
+
+q
+
+1 − T 2 − ∥z∥22 ).
+
+D
+All
+√ n = 4J input atoms have probability 1/n and lie on the unit sphere. The square root is at least
+3/4. Symmetry makes the input covariance diagonal. The T variance is 5/16, each z variance is
+at least 1/(16D), and the last coordinate has variance at least 1/64: conditional on z, its values at
+the two possible absolute T values differ by at least 1/4. These bounds are uniform in J.
+Write g = gH and a = 1/4. Then |g(X)| ≤ 3/4 and |Y | ≤ 1. The target is independent of n,
+and its exact Bayes risk is a2 = 1/16.
+We first record that g has fixed positive distance from the affine feature span. Put t1 = 1/4,
+t2 = 3/4, and uj = tanh◦H (tj ). The function tanh t/t is strictly decreasing for t > 0, and this
+property persists under composition. Therefore u1 /t1 > u2 /t2 . Oddness in T and symmetry of z
+show that the population affine projection of g uses only T . Its squared residual is
+
+rH =
+
+(t2 u1 − t1 u2 )2
+> 0.
+2(t21 + t22 )
+
+(7)
+
+The augmented input Gram matrix is uniformly positive definite. Indeed its only nontrivial mean
+block concerns the constant and last coordinate; that block has determinant equal to the lastcoordinate variance, so its smallest eigenvalue is at least 1/128. The other eigenvalues are the
+coordinate variances displayed above. Bounded-variable concentration for the empirical Gram
+matrix, target moments, and their finite-dimensional Schur complement consequently gives, with
+failure at most CD,H e−cD,H n ,
+∥PS g(S)∥22 /n ≥ rH /2.
+(8)
+For clarity, no asymptotic dimension theorem is needed here: every Gram entry is an average
+of variables bounded by one, the matrix dimension is fixed, its population smallest eigenvalue
+has a fixed lower bound, and inversion and the Schur complement are uniformly continuous on a
+sufficiently small neighborhood of that matrix.
+For the noise-fitting comparison, prescribe each observed atom’s empirical label mean, and
+zero at unobserved atoms. The rectangular discrete Fourier expansion on the four-point T grid
+√
+and the J D nuisance grid has coefficient absolute sum at most n. Its largest frequencies have
+magnitude OD (J). Lemma 7.2, with fixed t = a/1000, thus gives a comparison Gaussian for the
+neural parameters with energy OD,H (nρD ), the stated width threshold, and pointwise output RMS
+error at most t.
+If an affine Gaussian output component is present, retain its zero mean and shrink its covariance
+by a fixed factor so that its output variance is at most t2 at every unit-sphere input. This is possible
+uniformly over covariance operator norm at most M . The relative entropy of this finite-dimensional
+Gaussian covariance change is at most a constant CD,M,t , including on the support of a singular
+covariance. Its normalized variational cost is 2λσ 2 CD,M,t ≤ 2λCD,M,t . Thus a comparison law for
+15
+
+the full learner has pointwise output RMS error at most 2t and variational penalty at most λKn ,
+where
+1 ≤ Kn ≤ CD,H,M nρD .
+Take the explicit deterministic upper bound as Kn , and put
+a2
+.
+100Kn
+
+τn =
+
+In particular τn ≥ cD,H,M n−ρD and τn → 0.
+1/3
+As before, with failure at most e−n /2 + 1/n, the sample has at least n/3 singleton atoms
+P 2
+and its counts obey j kj ≤ 4n. For every λ ≤ τn , the Gibbs comparison gives posterior expected
+count-weighted residual against the empirical atom means at most
+4t2 + λKn ≤ 4t2 + a2 /100 < a2 /50.
+Each singleton mean differs from g by exactly a. Jensen and reverse triangle, restricted to these
+singleton atoms, therefore imply that every raw posterior mean has
+q
+
+∥f (S) − g(S)∥22 /n ≥ a2 ( 1/3 −
+
+q
+
+1/50)2 > a2 /10.
+
+(9)
+
+Define the common noise-target alignment
+∆S =
+
+1X
+(Yi − g(Xi ))g(Xi ).
+n i
+
+Conditional on inputs, its summands are independent centered variables bounded in magnitude by
+a. Hoeffding gives
+|∆S | ≤ rH τn /8
+(10)
+2 τ 2 /(128a2 )].
+except on probability at most 2 exp[−nrH
+n
+We now construct one linear separator valid at every temperature. Write
+
+ℓ(f − g) =
+
+1
+(y − 2g(S))T (f (S) − g(S)).
+n
+
+Lemma 8.1 gives
+∥f (S) − g(S)∥22 + λ∥PS f (S)∥22
+− ∆S .
+n
+For λ ≥ τn , minimizing the numerator over all vectors f (S) gives exactly [λ/(1 + λ)]∥PS g(S)∥22 .
+Using (8), (10), and τn ≤ 1, we get
+ℓ(f − g) ≥ rH τn /8.
+ℓ(f − g) ≥
+
+For λ ≤ τn , (9) and (10) give the same inequality for all sufficiently large n. This separator is
+therefore common to every width, prior scale, covariance choice, and likelihood temperature in the
+theorem.
+On the uniform input atoms, let
+h(x) =
+
+X
+
+(Yi − 2g(x)).
+
+i:Xi =x
+
+Then ℓ(f − g) = ⟨h, f − g⟩L2 (DX ) , and |Yi − 2g(Xi )| ≤ 1 gives ∥h∥2L2 (DX ) ≤ n−1 j kj2 ≤ 4. Averaging
+the separator over any data-dependent mixture and applying Cauchy–Schwarz proves
+P
+
+2 2
+R(F ) − R(g) = ∥F − g∥2L2 (DX ) ≥ rH
+τn /256 ≥ cD,H,M n−2ρD .
+
+16
+
+As in Lemma 6.2, all relevant integrals are automatically finite on observed atoms; arbitrary
+extensions on the other atoms cannot remove the lower bound. Combining the sample events proves
+the stated confidence bound because nτn2 ≥ cn1−2ρD .
+For every fixed H ≥ 3 and every sufficiently small ε > 0, one can choose a fixed D with
+2ρD < 2/H + ε < 1. The theorem then rules out a uniform remainder smaller than a constant times
+n−(2/H+ε) , despite the teacher having width one and unit coefficients. The data law still changes
+with sample count. This does not rule out a parametric rate on each fixed finite-support law, nor
+does it concern a learner with an additional broad prior feature already equal to this nonlinear
+teacher. Its purpose is to show that the width-independent agnostic bound cannot generally have a
+1/n remainder for the specified Gaussian neural family, even with ordinary affine output features
+added.
+
+9
+
+Slow learning on one fixed data law
+
+The rate obstruction can be realized along a subsequence on a single fixed distribution. This removes
+the changing-law qualification from the slow-rate conclusion, while keeping a fixed width-one teacher,
+bounded independent noise, a fixed finite input dimension, and the optional broad Gaussian affine
+output component. The learner widths must still lie in the stated overparameterized range.
+Lemma 9.1 (Weighted occupancy on an active finite support). Let A be a finite set of atoms of a
+probability law, with |A| ≤ n and every atom probability px ≥ 1/n. For n independent draws let kx
+be the counts and define
+1 X kx2
+VA = 2
+.
+n x∈A px
+Then EVA ≤ 2, Var(VA ) ≤ 8/n, and P(VA > 4) ≤ 2/n.
+Proof. Write m = |A| and pA = P(X ∈ A). Decompose
+VA =
+
+2 X 1Xi =Xj ∈A
+1 X 1Xi ∈A
++ 2
+=: DA + OA .
+2
+n i pXi
+n i<j
+pXi
+
+Its expectation is m/n + (1 − 1/n)pA ≤ 2. The diagonal part has variance at most n−3 x∈A p−1
+x ≤
+m/n2 ≤ 1/n. For an unordered collision kernel, the second moment is m and the covariance of two
+kernels sharing one sample index is pA (1 − pA ) ≤ 1/4; disjoint kernels are independent. Counting
+overlapping pairs gives
+Var(OA ) ≤ 2m/n2 + 1/n ≤ 3/n.
+P
+
+Thus Var(VA ) ≤ 2 Var(DA ) + 2 Var(OA ) ≤ 8/n. Chebyshev at a deviation of two proves the final
+claim.
+Theorem 9.2 (One fixed problem forces depth-dependent slow rates). Fix H ≥ 3, a fixed D with
+ρD < 1/2 as in Theorem 8.2, and a covariance cap M for the optional affine output prior. There
+are one probability law D∞ on the unit sphere in RD+2 , one fixed regression function
+gH (x) = tanh◦H (x1 ),
+and a deterministic increasing sequence nm → ∞ with the following property. Draw one infinite IID
+data stream from
+X ∼ D∞ ,
+Y = gH (X) + ε/4,
+17
+
+with independent fair signs ε. Almost surely, for every sufficiently large m, every well-defined
+probability mixture of ordinary raw posterior means trained on the first nm observations, over all
+allowed affine output priors and all
+N ≥ Cn(1+2/D)(2−1/H)
+log nm ,
+m
+
+0 < σ 2 ≤ 1/N,
+
+λ > 0,
+
+satisfies
+2(1 − ρD )
+−→ 0.
+(11)
+Dm2
+The constants c, C > 0 are fixed. The input covariance is nondegenerate, R(gH ) = 1/16, and the
+teacher has width one and unit coefficients. Mixture weights and learner parameters may depend
+arbitrarily on the observed data.
+D −ϵm
+R(F ) − R(gH ) ≥ c n−2ρ
+,
+m
+
+ϵm =
+
+Proof. Use the four-point T coordinate and the sphere embedding from Theorem 8.2. For even J,
+let G(J) be its full 4J D -point input grid. If J ′ is an odd integer multiple of J, the midpoint nuisance
+grid at resolution J is contained in the one at resolution J ′ ; the sphere embedding preserves these
+points exactly.
+Start with J0 = 4 and p1 = 1/8. Recursively choose Jm to be an odd multiple of Jm−1 , at least
+three times larger, and large enough that
+2
+
+2
+
+Jm ≥ p−m
+m ,
+
+Jm ≥ em .
+
+Set Gm = G(Jm ), Bm = Gm \ Gm−1 , and
+nm = ⌈|Bm |/pm ⌉ ,
+
+pm+1 = min{pm /4, n−4
+m }.
+
+Assign total mass pm uniformly to Bm , for m ≥ 1, and assign the remaining mass p0 = 1 − m≥1 pm
+P
+uniformly to G0 . Since m≥1 pm ≤ 1/6, we have p0 ≥ 5/6. This defines one fixed probability law
+on a countable subset of the sphere.
+Every block is the product of the same uniform four-point T set and a sign-symmetric nuisance
+set. Hence T is independent of the nuisance coordinates under this fixed law. The covariance
+and affine-projection arguments from Theorem 8.2 apply: the base block supplies fixed positive
+nuisance-coordinate variances, the sphere coordinate has variance at least 1/64, and the target’s
+population residual from the affine span is the same number rH > 0 in (7).
+Write Mm = |Gm |. The resolution increase gives |Bm | ≥ (2/3)Mm . The construction also gives
+P
+
+2
+
+)
+pm ≥ n−1/(Dm
+,
+m
+
+Mm ≤ 23 nm pm ≤ nm ,
+
+(12)
+
+and every active atom in Gm has probability at least pm /|Bm | ≥ 1/nm . The last assertion follows
+because block atom probabilities decrease with m, including the base block. Moreover
+4
+P(X ∈
+/ Gm ) ≤ pm+1 ≤ 2n−4
+m .
+3
+Thus the first nm observations contain no future-block point except on probability at most 2n−3
+m .
+At sample count n = nm , the number Sm of current-block atoms observed exactly once has
+expectation
+ESm = nm pm (1 − pm /|Bm |)nm −1 .
+For all sufficiently large m this is at least (7/20)nm pm : the atom probability tends to zero and
+(nm − 1)pm /|Bm | < 1. Changing one observation changes Sm by at most two. McDiarmid
+consequently gives
+Sm ≥ nm pm /3
+(13)
+18
+
+except on probability at most exp[−nm p2m /7200]. Lemma 9.1 gives, except on probability at most
+2/nm ,
+1 X
+kx2
+≤ 4.
+(14)
+n2m x∈G P(X = x)
+m
+
+On the event with no future-block observations, a Fourier comparison measure can fit all empirical
+atom means on Gm . Use the same rectangular Fourier expansion, now with Mm grid points, and
+target output RMS tolerance
+√
+a pm
+,
+a = 1/4.
+tm =
+1000
+The native-covariance construction has a valid deterministic energy upper bound
+ρD
+Km ≤ CD,H,M Mm
+
+(15)
+
+for all sufficiently large m. We spell out why shrinking the tolerance does not change this energy
+−o(1)
+o(1)
+exponent. From (12), pm = Mm , so t−1
+m = Mm . The Fourier window can be chosen with
+√
+1/D
+U = OD,H (Mm ), including the logarithmic truncation margin. Its coefficient cap is A = O(U Mm ).
+The term A2/H therefore eventually dominates the tolerance term 768/tm in R2 , and the first-layer
+2/D
+(1+2/D)/H
+and later-layer energy terms remain respectively O(Mm ) and O(Mm
+). Shrinking the
+optional affine output covariance adds only O(log(1/tm )) to the normalized upper bound, which is
+absorbed by (15).
+−1
+The width requirement gains a factor t−2
+m = O(pm ), giving
+κD
+N ≥ Cp−1
+m Mm log Mm ,
+
+κD = (1 + 2/D)(2 − 1/H) > 1.
+
+By (12), the sufficient bound in the theorem, N ≥ C ′ nκmD log nm , dominates this requirement
+uniformly for large m.
+Take a deterministic upper bound in (15) as Km and split temperatures at
+τm =
+
+a2 p m
+.
+100Km
+
+At λ ≤ τm , the variational comparison bounds the posterior expected empirical residual against
+atom means by 4t2m + λKm < a2 pm /50. Using the current-block singletons in (13), the same
+reverse-triangle argument as before gives empirical error against gH at least a2 pm /10 for every raw
+mean.
+At larger temperatures use the projected sector. The empirical affine residual is at least rH /2
+2
+except on probability Ce−cnm . Also, with failure at most 2e−cH nm τm , the noise-target alignment
+obeys |∆S | ≤ rH τm /8. Exactly as in Theorem 8.2, both temperature branches therefore have the
+common linear separator
+1
+(y − 2gH (S))T (f (S) − gH (S)) ≥ rH τm /8.
+nm
+For the low branch use τm = O(pm /Km ) = o(pm ).
+Define the population witness at each atom by
+hm (x) =
+
+X
+1
+(Yi − 2gH (x)).
+nm P(X = x) i:X =x
+i
+
+19
+
+It vanishes off Gm when there are no future observations. Because |Yi − 2gH (Xi )| ≤ 1, (14) gives
+∥hm ∥2L2 (D∞ ) ≤ 4. The separator survives any mixture, hence every such mixture has excess at least
+2 τ 2 /256.
+rH
+m
+Finally, (12) and (15) imply
+2
+
+D 1−ρD
+D −(1−ρD )/(Dm )
+τm ≥ cn−ρ
+≥ cn−ρ
+.
+m pm
+m
+2
+
+This proves (11) on the common events. Their failure probabilities are summable: nm ≥ eDm ,
+1−o(1)
+2 ≥ cn1−2ρD −o(1) with ρ < 1/2. The first Borel–Cantelli lemma therefore
+nm p2m ≥ nm
+, and nm τm
+m
+D
+proves the almost-sure statement along one infinite IID stream.
+For any β > 2ρD , this fixed problem excludes an eventual O(n−β ) excess bound along the
+specified overparameterized widths, even after arbitrary data-dependent temperature mixing. Since
+D can be chosen once to make 2ρD arbitrarily close to 2/H, the obstruction approaches that
+depth-dependent exponent while retaining a fixed finite dimension. The result is a slow-convergence
+theorem, not an inconsistency theorem: the lower bound still tends to zero. It also does not concern
+keeping one finite learner width fixed while sample count tends to infinity; its width range grows
+with the sample subsequence.
+
+9.1
+
+The same obstruction with Gaussian observation noise
+
+The slow-rate conclusion also holds for correctly specified Gaussian observation noise, without changing the energy or width exponents. The comparison distribution may fit a bounded approximation
+to the empirical atom means even though the learner uses the original, unbounded labels.
+Lemma 9.3 (Bounded comparison targets for Gaussian labels). Suppose Yi = g(Xi ) + aGi , where
+|g| ≤ 3/4, a = 1/4, and the Gi are independent standard Gaussians. Conditional on input counts
+kx , let rx be the empirical label mean at an observed atom. For any set B of at most b atoms,
+!
+
+P
+
+X
+
+2
+
+2
+
+kx (rx − clip[−2,2] rx ) > a b/400
+
+X1 , . . . , Xn
+
+≤ e−b/2000 .
+
+x∈B
+
+For unobserved atoms the summand is defined as zero. If all observed atoms have probabilities
+px ≥ 1/n and
+1 X kx2
+V = 2
+≤ 4,
+n x px
+then the population witness
+h(x) =
+
+1 X
+(Yi − 2g(x))
+npx i:X =x
+i
+
+√
+has ∥h∥2L2 (DX ) ≤ 7 except on conditional probability at most e− n .
+
+√
+Proof. For an observed atom, rx = g(x) + aZx / kx with independent standard Gaussians Zx . Since
+2 − |g(x)| ≥ 5a,
+kx (rx − clip[−2,2] rx )2 ≤ a2 (|Zx | − 5 kx )2+ ≤ a2 Wx ,
+p
+
+Wx = (|Zx | − 5)2+ .
+
+The elementary Gaussian tail gives P(Wx > u) ≤ 2e−25/2 e−u/2 . Integration of this tail yields
+EeWx /4 ≤ 1 + 2e−25/2 . Add independent dummy copies if there are fewer than b observed atoms.
+Markov’s inequality gives a failure bound
+exp{b log(1 + 2e−25/2 ) − b/1600} ≤ e−b/2000 .
+20
+
+In the orthonormal
+atom coordinates of L2 (DX ), the witness is a deterministic vector of norm
+√
+at most (3/4) V ≤ 3/2, plus a centered Gaussian vector with coordinate variances
+s2x =
+
+a2 kx
+.
+n2 p x
+
+The sum of these variances is at most a2 V ≤ 1/4, since kx ≤ kx2 for nonzero counts. Moreover
+kx2 /(n2 px ) ≤ 4 and px ≥ 1/n imply
+2a2
+2a2
+max s2x ≤ √ ≤ √ .
+x
+n px
+n
+The Gaussian norm therefore has mean at most 1/2 and, by Gaussian concentration for a Euclidean
+√
+Lipschitz function, exceeds one with probability at most exp[−(1/2)2 /(2 maxx s2x )] ≤ e− n . The
+total witness norm is then at most 5/2, whose square is less than seven.
+Corollary 9.4 (Fixed-law slow rates with Gaussian labels). The fixed input law and teacher in
+Theorem 9.2 also admit the following version. Replace the independent fair-sign noise by independent
+Gaussian noise N (0, 1/16). The same sufficient learner-width threshold
+(1+2/D)(2−1/H)
+N ≥ Cnm
+log nm
+
+and the same excess lower bound
+D −ϵm
+D −o(1)
+R(F ) − R(gH ) ≥ cn−2ρ
+= n−2ρ
+m
+m
+
+hold almost surely for all sufficiently large m, simultaneously for every well-defined data-dependent
+mixture of the allowed ordinary raw posterior means. The optional broad Gaussian affine output
+component is still allowed. The label law is a correctly specified Gaussian regression model for the
+neural architecture; the conclusion ranges over every positive likelihood variance, including the true
+one.
+Proof. Use the notation and common input events of Theorem 9.2. At sample count nm , each old
+atom in Gm−1 has probability at least 1/nm−1 . Also nm ≥ n4m−1 , because pm ≤ n−4
+m−1 . Chernoff
+and a union bound show that every old atom has count at least nm /(2nm−1 ) except on probability
+Mm−1 exp[−nm /(8nm−1 )].
+On this count event, a Gaussian tail bound makes every old empirical atom mean lie in [−2, 2]
+except on probability at most 2Mm−1 exp[−cnm /nm−1 ]. These failure probabilities are summable.
+Apply Lemma 9.3 to the current block Bm . Since |Bm | ≤ nm pm , with an additional summable
+failure probability e−|Bm |/2000 the empirical mean-square cost of clipping all observed atom means
+to [−2, 2] is at most a2 pm /400. There are no future-block observations on the earlier common event.
+Apply the Fourier comparison construction to these clipped means divided by two, with tolerance
+√
+tm /2, where tm = a pm /1000. Multiply only the comparison mean readout weights by two and
+retain the original readout covariance. This gives RMS error at most tm against the clipped means.
+Indeed, writing F0 for the mean-readout output before scaling and ξv for the independent centered
+readout noise,
+E|2F0 + ξvT h − r|2 = 4E|F0 − r/2|2 + E|ξvT h|2
+≤ 4E|F0 + ξvT h − r/2|2 ≤ t2m .
+21
+
+The mean energy increases by at most four and the width requirement only by a fixed factor. The
+optional affine covariance shrink again contributes output RMS at most tm . Thus, including clipping
+error, the comparison empirical RMS against the original atom means is at most
+q
+√
+a pm /400 + 2tm = (1/20 + 1/500)a pm .
+ρD , with width N ≥ CnκD log n .
+A valid deterministic energy bound is still Km ≤ CMm
+m
+m
+2
+Split at τm = a pm /(100Km ). If λ ≤ τm , the variational comparison bounds the posterior
+expected empirical residual against the original atom means by
+
+{(1/20 + 1/500)2 + 1/100}a2 pm < a2 pm /50.
+Conditional on inputs, the noises on the current-block singleton observations are independent
+Gaussians. Their squared norm is at least a2 nm pm /6 except on probability exp(−cnm pm ), by the
+chi-square lower tail and the earlier singleton-count event. Reverse triangle therefore gives empirical
+error against gH at least
+q
+q
+a2 pm ( 1/6 − 1/50)2 > a2 pm /20.
+The noise-target alignment is conditionally Gaussian with variance at most a2 /nm , so |∆S | ≤ rH τm /8
+2 ). The projected-sector proof is valid for every real
+fails with probability at most 2 exp(−cH nm τm
+label vector and gives the same common separator rH τm /8 at every temperature. Lemma 9.3 and
+weighted occupancy now bound its population witness norm squared by seven. Every allowed
+mixture consequently has excess at least
+2 τ2
+rH
+m
+D −ϵm
+.
+≥ cn−2ρ
+m
+448
+
+All additional failure probabilities are summable. Borel–Cantelli proves the asserted almost-sure
+statement.
+The same bounded-comparison argument applies directly to the uniform n-atom laws in Theorem 8.2, with pm = 1 and without the old-block step. It gives the same n−2ρD lower bound and
+width threshold for independent Gaussian labels. These conclusions use ordinary raw posterior
+means; no clipping convention is imposed on the learner or the predictions.
+
+9.2
+
+The regression function can have one hidden layer
+
+The slow rate is genuinely a learner-depth effect: the true regression function need not become
+deeper when the learner does.
+Corollary 9.5 (One shallow teacher at every learner depth). In Theorems 8.2 and 9.2, and in the
+Gaussian-noise Corollary 9.4, replace the target by the fixed function
+g∗ (x) = tanh(x1 ).
+All rate and mixture conclusions remain valid, with changed positive constants. This target has a
+width-one, one-hidden-layer implementation with unit coefficients. On the support of the data law,
+it also has an exact width-two implementation at every hidden learner depth H, with one universal
+finite coefficient cap independent of H. Consequently the Gaussian-noise model remains realizable
+in the deep learner architecture.
+
+22
+
+Proof. The statistical arguments used the target only through boundedness, fixed positive distance
+from the affine feature span, and a bounded-coefficient neural implementation. For g∗ the affine
+residual is the same expression as (7), with uj = tanh(tj ) instead of its H-fold iterate. It is strictly
+positive because tanh t/t is strictly decreasing. All noise, Fourier comparison, occupancy, and
+projected-sector steps therefore apply without modification.
+Here is an exact deep implementation on the four possible first-coordinate values. Put a = 1/4,
+b = 3/4, and
+!
+
+F =
+
+!
+
+tanh a
+tanh b
+,
+tanh(2a) tanh(2b)
+
+c = (a, b)F
+
+−1
+
+,
+
+W =
+
+1
+c.
+2
+
+The matrix F is invertible: the ratio tanh(2t)/ tanh t = 2/(1 + tanh2 t) strictly decreases for t > 0,
+so its two columns are independent. The first hidden layer computes (tanh T, tanh(2T )). For the
+two positive input values its output columns form F , and
+!
+
+WF =
+
+a b
+2a 2b
+
+= arctanh(F ),
+
+tanh(W F ) = F.
+
+Oddness supplies the two negative values. Repeating the same matrix W in every subsequent hidden
+layer therefore preserves these feature values exactly. The readout (1, 0) returns tanh T .
+All coefficients are bounded by the explicit finite constant B∗ := max{2, 2∥(a, b)F −1 ∥∞ }, independent of depth. In fact B∗ < 4. For example, the elementary interval bounds
+.244 < tanh(1/4) < .245,
+
+.635 < tanh(3/4) < .636,
+
+.462 < tanh(1/2) < .463,
+
+.905 < tanh(3/2) < .906
+
+give | det F | > .0714, |c1 | < .121/.0714 < 2, and |c2 | < .025/.0714 < 1/2. This construction agrees
+with g∗ on the data support; it is not asserted to agree at every real first-coordinate value.
+Corollary 9.6 (No joint polynomial in learner depth and inverse accuracy). For the Gaussian neural
+family considered here, there is no sample bound polynomial jointly in input dimension, learner
+depth, and inverse excess accuracy that works at every sufficiently large learner width, uniformly
+over data laws, even when the conditional mean has a width-one, one-hidden-layer unit-coefficient
+implementation. This remains true with Gaussian observation noise, arbitrary data-dependent
+likelihood-temperature mixing, and the allowed broad Gaussian affine output component.
+Proof. Suppose such a polynomial bound had degree q in inverse accuracy. Choose H and then a
+fixed D so large that 2ρD q < 1. Apply Corollary 9.5 with the fixed-law Gaussian-noise construction.
+−2ρ −o(1)
+Along its subsequence the excess is at least nm D
+with probability tending to one, simultaneously
+over the stated large widths and all temperature mixtures. Taking an accuracy smaller by a fixed
+2ρ q+o(1)
+factor than this lower bound makes the purported sample requirement at most nm D
+= o(nm ),
+a contradiction. The dimension and chosen depth are fixed before sending m to infinity, so their
+polynomial factors do not affect this comparison.
+For a concrete choice, D = 4H gives input dimension d = 4H + 2, 2ρD = 2/H + 1/H 2 , and
+κD = 2 − 1/(2H 2 ) < 2. Thus all widths N ≥ n2m eventually satisfy the requirement, with excess at
+−2/H−1/H 2 −o(1)
+least nm
+on the fixed Gaussian-noise problem.
+This is a statement about the exponent of the accuracy dependence. It does not establish an
+exponential-depth lower bound at one fixed positive accuracy. The target itself is shallow; the
+growing family of inexpensive noise-fitting functions available to a deeper unrestricted learner creates
+the tradeoff. Restricting the learner’s support changes that family and is outside this negative
+theorem.
+23
+
+10
+
+Exponential learner-depth cost at inverse-polynomial accuracy
+
+The preceding fixed-depth asymptotics can be made uniform as the learner depth grows. The
+resulting sample lower bound is exponential in learner depth even though the target remains a single
+shallow neuron. The requested excess accuracy decreases only polynomially with depth.
+Theorem 10.1 (An explicit depth lower bound). Fix a finite covariance bound M for the optional
+independent Gaussian affine output component. There are constants c, C > 0 and an integer H0 ,
+depending at most on M , such that the following holds for every integer H ≥ H0 . Put
+n = 4 · 256H .
+
+d = 4H + 2,
+
+There is a uniform n-atom input law on the unit sphere in Rd , with covariance smallest eigenvalue
+at least 1/(64H), for which
+G ∼ N (0, 1) independent of X.
+
+Y = tanh(X1 ) + G/4,
+
+With probability at least 9/10 over n IID training observations, every well-defined data-dependent
+probability mixture of ordinary raw posterior means over all
+N ≥ eCH ,
+
+0 < σ 2 ≤ 1/N,
+
+λ>0
+
+has population squared loss at least
+1
++ cH −6 .
+16
+The optional affine output component is allowed throughout. The target has a width-one, one-hiddenlayer implementation with unit coefficients, and an exact width-two implementation with coefficient
+cap four at every hidden depth on the data support.
+Proof. Take the uniform law from Theorem 8.2, with nuisance dimension D = 4H and grid resolution
+J = 4. Thus T is uniform
+on {±1/4,
+±3/4}, the nuisance coordinates are independent midpoint
+√
+√
+grid values in [−1/(2 D), 1/(2 D)], and
+X = (T, z,
+
+q
+
+1 − T 2 − ∥z∥22 ).
+
+There are exactly n = 4J D = 4 · 256H atoms. The previous covariance calculation gives diagonal
+coordinate variances at least 5/16, 1/(16D), and 1/64 respectively. The true target is g∗ (x) =
+tanh(x1 ), and its population residual from affine input functions is the positive absolute constant
+r∗ =
+
+{(3/4) tanh(1/4) − (1/4) tanh(3/4)}2
+.
+2{(1/4)2 + (3/4)2 }
+
+The deep width-two implementation was established in Corollary 9.5.
+We first make the Fourier comparison constants explicit enough to track depth. For any prescribed
+√
+grid values in [−1, 1], the discrete Fourier expansion has coefficient absolute sum at most n. Its
+frequencies can be chosen
+√ with T -coordinate magnitude at most 3π and each nuisance-coordinate
+magnitude at most 6π D. Consequently
+Kω ≤ 100H,
+
+|ω · x + ϕ| ≤ 100H + π ≤ 102H
+
+for H ≥ 3. Take the fixed constants
+a = 1/4,
+
+R = 106 ,
+
+t = a/1000,
+24
+
+U = 1000H,
+
+and apply Lemma 7.2 with tolerance t/2. Here
+√
+A = 4U n = 8000H 16H ,
+
+η=
+
+t/2
+.
+36H 2 RH−1
+
+The required lower bound on R holds uniformly for H ≥ 3. Indeed
+A2/H = 256(8000H)2/H ≤ 256(24000)2/3 < 3 · 105 < R2 ,
+and 768/(t/2) = 6,144,000 < R2 . The truncation requirement also holds uniformly: its left side is
+at most
+√
+n C0 e−2(1000H−102H) = 2C0 exp{H log 16 − 1796H},
+which is less than η/4 for every H ≥ 3. This follows directly by taking logarithms, using log R < 14,
+log C0 < 6, and log H ≤ H.
+The mean energy in Lemma 7.2 is therefore at most
+d{(100H)2 + (1000H + 3π/2)2 } + (4H + 1)1012 ≤ C0′ H 3
+for an absolute constant C0′ . Its required width is at most
+C1 H 7 (256 · 1012 )H ≤ eC2 H
+for an absolute C2 and all sufficiently large H. This follows by substituting A and η into the
+displayed width conditions of that lemma; the logarithmic factors there are O(H).
+Given the sample, clip each empirical atom mean to [−2, 2]. Apply this Fourier construction to
+half of those clipped values, and double only the comparison mean readout as in Corollary 9.4. Its
+mean energy increases by at most four and its output RMS against clipped means is at most t. If
+an affine Gaussian output component is present, shrink its covariance by the fixed factor
+s = min{1, t2 /(2M )}.
+Because ∥(1, x)∥2 = 2, its output RMS is at most t. Its relative entropy is at most 12 (d + 1)(s − 1 −
+log s) = OM (H), also for singular covariance by working on its support. Since σ 2 ≤ 1/N ≤ 1, its
+normalized variational penalty is absorbed into a deterministic bound
+KH = C3 (M )H 3 ≥ 1.
+This bound is uniform over every allowed width and scale.
+Lemma 9.3, now with b = n, bounds the empirical clipping cost by a2 /400 except on probability
+−n/2000
+e
+. The total comparison empirical RMS against the original atom means is at most a/20 + 2t.
+Put
+a2
+τH =
+= cM H −3 .
+100KH
+At every λ ≤ τH , the variational comparison gives posterior expected empirical residual against
+atom means less than a2 /50.
+We record the probabilities needed for the remaining argument uniformly in H. A sample of
+size n from n equal-probability atoms has at least n/3 singleton atoms except on probability e−c0 n ,
+by bounded differences and ES = n(1 − 1/n)n−1 ≥ n/e. Its weighted count statistic is at most
+four except on probability 2/n, by Lemma 9.1. Conditional on inputs with enough singletons,
+their noise-square sum is at least a2 n/6 except on probability e−c1 n . Thus every small-temperature
+posterior mean has empirical squared distance from g∗ at least a2 /20.
+25
+
+For the affine residual, the population augmented input Gram matrix has smallest eigenvalue
+at least 1/(128H) and dimension at most 5H. Bound all its empirical entries, all empirical targetfeature moments, and the empirical target second moment to within c∗ H −3 of their population
+values, where c∗ > 0 is a sufficiently small absolute constant depending only on r∗ . The matrix
+inverse perturbation identity and the formula for the least-squares Schur complement then give
+∥PS g∗ (S)∥22 /n ≥ r∗ /2.
+For completeness, if A is the population Gram matrix, λ0 = 1/(128H), and its dimension is q ≤ 5H,
+b
+an entry tolerance r∗ λ20 /(1000q) suffices. It gives ∥A−A∥
+≤ r∗ λ20 /1000, hence ∥Ab−1 −A−1 ∥ ≤ r∗ /500;
+the target moments have norm at most two, and their changes and the target-second-moment change
+leave the Schur complement within r∗ /2. Hoeffding and a union bound give failure probability at
+most
+C4 H 2 exp[−c2 n/H 6 ].
+The Gaussian noise-target alignment has variance at most a2 /n, so |∆S | ≤ r∗ τH /8 fails with
+probability at most 2 exp[−c′M n/H 6 ].
+The projected-sector argument now provides one common separator
+1
+(y − 2g∗ (S))T (f (S) − g∗ (S)) ≥ r∗ τH /8
+n
+for every temperature, width, scale, and allowed affine covariance. The Gaussian witness lemma
+bounds
+the squared population norm of this separator by seven, with additional failure at most
+√
+e− n . It survives arbitrary data-dependent mixing. Cauchy–Schwarz yields
+R(F ) − R(g∗ ) ≥
+
+2
+r∗2 τH
+= cH −6 .
+448
+
+The sum of all failure probabilities tends to zero as H → ∞, because n = 4 · 256H . Choosing H0
+large enough makes their sum at most 1/10. Increase the width constant C if necessary to cover all
+stated comparison conditions. This proves the theorem.
+For excess accuracy smaller than a fixed multiple of H −6 , these distributions defeat the allowed
+learners after 4 · 256H observations, despite a shallow width-one regression function and Gaussian
+noise of fixed variance. This is an exponential-in-learner-depth sample obstruction at inversepolynomial accuracy, with input dimension linear in depth and learner width at least exponential in
+depth. The theorem does not assert exponential sample requirements at one fixed positive accuracy
+or at fixed input dimension as depth grows. The separate fixed-law results above keep dimension
+fixed once depth is chosen and show slow rates along one infinite data stream.
+
+11
+
+Interpretation and scope
+
+Two different obstructions. The two-dimensional and fixed-dimensional constant-excess constructions concern teacher classes whose coefficients or widths grow with sample count. They show
+why an unrestricted width-only oracle comparison fails for this Gaussian family. The later rate
+construction has a fixed shallow teacher, fixed coefficients, and one fixed data law. It gives a
+vanishing but necessarily slow remainder along a subsequence.
+
+26
+
+Learner depth and target depth. The final teacher is tanh(x1 ) at every learner depth. Its
+exact depth-H realization on the support has width two and a coefficient bound below four. The
+slow-rate mechanism therefore does not require a deep or unstable true function. It comes from
+the noise-fitting possibilities of the unrestricted deep learner. A restriction on the learner’s prior
+support changes those possibilities and is outside these negative theorems.
+Prediction conventions. The constant-excess mixture theorem covers ordinary raw posterior
+means and clipping each such mean before mixing. The stronger fixed-law rate theorem, especially
+with broad affine output components and Gaussian labels, concerns ordinary raw means only. It
+does not silently identify these with means of clipped posterior draws or with a clipped mixture.
+Bayesian and asymptotic scope. The Gaussian-noise corollary is a correctly specified regression
+example: the true conditional mean is realizable on the data support and the likelihood family
+contains the true observation variance. The theorem ranges over every positive variance, including
+data-dependent mixtures. Its width range grows with the sample subsequence, so it does not
+contradict fixed-architecture large-sample asymptotics. It neither proves inconsistency nor rules out
+other priors, other likelihood constructions, or additional prior features that already represent the
+true nonlinear regression function.
+Verification. These are conventional mathematical proofs with independent AI-agent mathematical reviews. They have not been formalized in Lean. Numerical Fourier and fixed-point checks are
+supplementary sanity checks and are not proof assumptions. The sign-feature and Gaussian-recursion
+constructions extend methods from the companion manuscript Limits of temperature tuning for
+Gaussian Bayesian neural networks; all ingredients needed for the present claims are proved here.
+
+27
+
+

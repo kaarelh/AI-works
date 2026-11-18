@@ -1,0 +1,124 @@
+\section{Simultaneous comparison with unknown teacher classes}
+\label{ag-sec:population-oracle}
+For positive integers $m,b$, let $\mathcal G_{m,b}$ be the depth-$L$ networks of width at most $m$ and coefficient cap $b$ in the architecture above. They can be represented as a compact finite-dimensional parameter set by zero padding unused neurons and setting their outgoing weights to zero. This works even when $\phi(0)\ne0$. Their outputs are uniformly bounded, so population square loss is continuous on that set. A deterministic population minimizer $g_{m,b}$ exists. Write
+\[
+ R_{m,b}=\min_{g\in\mathcal G_{m,b}}R(g)\le1,
+\]
+since the zero readout gives the zero function.
+
+Use the definitions $E,T_g,P_g,D_g,\mathcal A_g$ from Section~\ref{ag-sec:general-lipschitz-raw} with $B=b$, and put $U_{m,b}=mbT_g^H$; for tanh use the sharper $U_{m,b}=mb$. Define
+\begin{align}
+ A_{m,b,n}&=1+2\mathcal A_g\left(\frac1{4n(U_{m,b}+1)}\right),\notag\\
+ \ell_{m,b}&=1+\log\frac{32(m+1)^2(b+1)^2}{\delta},\notag\\
+ \mathcal B_{m,b,n}&=(A_{m,b,n}+b_n+2B_H+1)\ell_{m,b}.
+ \label{ag-eq:comparison-cost}
+\end{align}
+These are fully specified width-independent comparison costs. They are used only in the bound, not in the likelihood calibration.
+
+\begin{lemma}[A comparison valid throughout the selected range]
+\label{ag-lem:teacher-comparison}
+For every sample, every $N\ge m$, every $0<\tau\le1$, and every $\lambda\ge1/n$,
+\begin{equation}
+ F_S(\lambda)\le\widehat R_S(g_{m,b})+\lambda A_{m,b,n}.
+ \label{ag-eq:teacher-comparison}
+\end{equation}
+\end{lemma}
+\begin{proof}
+Condition the prior on the uniform output neighborhood of radius
+$\varepsilon=1/[4n(U_{m,b}+1)]$ from Lemma~\ref{ag-lem:general-activation-cylinder}. Throughout this neighborhood,
+\[
+ \widehat R_S(z_w)\le\widehat R_S(g_{m,b})
+                      +2(U_{m,b}+1)\varepsilon+\varepsilon^2
+ \le\widehat R_S(g_{m,b})+1/n.
+\]
+The conditional prior has relative entropy at most $\omega\mathcal A_g(\varepsilon)$. Substituting it into \eqref{ag-eq:variational}, and using $1/n\le\lambda$, proves the claim. A uniform output tube is only a comparison construction; the actual posterior is unrestricted.
+\end{proof}
+
+\begin{theorem}[An adaptive oracle throughout $\gamma\ge1$]
+\label{ag-thm:main}
+Suppose \eqref{ag-eq:admissibility}, and select the likelihood by \eqref{ag-eq:root}. With probability at least $1-\delta$, simultaneously for every learner width $N$ and every $0<\tau\le1$, the actual finite posterior satisfies
+\begin{align}
+ \int R(z_w)d\Pi_{S,\lambda}(w)
+ \le\inf_{\substack{1\le m\le N\\b\in\N,\ b\ge1}}
+ \bigg\{R_{m,b}+C_{d,H,A}\big[&
+ \mathcal B_{m,b,n} R_{m,b}^{1-1/r}\theta_n^{1/p}
+ \notag\\[-2pt]
+ &+\mathcal B_{m,b,n}^r\theta_n^{1/\rho_d}\big]\bigg\}+n^{-3}.
+ \label{ag-eq:population-oracle}
+\end{align}
+The same inequality holds for the ordinary raw posterior mean. In particular it holds simultaneously for every canonical exponent $\gamma\ge1$, by $\tau^2=N^{1-\gamma}$.
+\end{theorem}
+\begin{proof}
+Use the statistical event of Lemma~\ref{ag-lem:common-statistical}. For each pair $(m,b)$, apply Bernstein's inequality to the fixed population minimizer $g_{m,b}$, with failure probability $\delta/[8(m+1)^2(b+1)^2]$. Its loss is at most $(U_{m,b}+1)^2$ and its variance at most $(U_{m,b}+1)^2R_{m,b}$. The sum of these failure probabilities is less than $\delta/2$. Thus on one event of probability at least $1-\delta$, all teacher concentrations and the common statistical inequality hold. No union over learner scales or over data-selected roots is required.
+
+Fix one cap pair and a learner with $N\ge m$, and abbreviate $R=R_{m,b}$, $u_g=\widehat R_S(g_{m,b})$, $A_g=A_{m,b,n}$, and $\mathcal B=\mathcal B_{m,b,n}$. The root equation and Lemma~\ref{ag-lem:teacher-comparison} imply
+\[
+ \lambda^p\le\theta_n[2u_g+(2A_g+b_n)\lambda]^q.
+\]
+Split according to which summand in the bracket is larger. Taking the $p$th root in the first case and cancelling $\lambda^q$ in the second gives
+\begin{equation}
+ \lambda\le C_{d,H,A}\left[
+ \theta_n^{1/p}u_g^{q/p}
+ +\theta_n^{1/\rho_d}(2A_g+b_n)^{q/\rho_d}\right].
+ \label{ag-eq:root-comparison}
+\end{equation}
+Combine this with \eqref{ag-eq:certificate} and the teacher free-energy bound. Since $r=p/\rho_d$ and $q=p-\rho_d$, writing
+\[
+ D=\mathcal B^r\theta_n^{1/\rho_d}
+\]
+yields the empirical oracle
+\begin{equation}
+ \int R(z_w)d\Pi\le u_g+C_{d,H,A}
+       [D^{1/r}u_g^{1-1/r}+D]+n^{-3}.
+ \label{ag-eq:empirical-oracle}
+\end{equation}
+
+The explicit teacher amplitudes obey
+$(U_{m,b}+1)^2\le C_{d,H,A}(1+E)^r$.
+For general activations, $T_g\le C_{d,H,A}mb$ and $E\ge m^2b^2$, giving this bound with $r=L$. For tanh, $U_{m,b}=mb$ and $r\ge2$ suffice. Since $\theta_n\le1$, $\rho_d\ge1$, $A_g\ge1+E$, and $\ell_{m,b}\ge1$, the quantity $D$ dominates
+$C^{-1}_{d,H,A}(U_{m,b}+1)^2\ell_{m,b}/n$.
+Bernstein therefore gives
+\begin{equation}
+ u_g\le R+C_{d,H,A}\sqrt{RD}+C_{d,H,A}D.
+ \label{ag-eq:teacher-risk-concentration}
+\end{equation}
+For $r\ge2$,
+\[
+ \sqrt{RD}\le R^{1-1/r}D^{1/r}+D,
+\]
+as follows by splitting into $R\ge D$ and $R<D$. Also \eqref{ag-eq:teacher-risk-concentration} implies $u_g\le C_{d,H,A}(R+D)$, hence
+\[
+ D^{1/r}u_g^{1-1/r}\le C_{d,H,A}
+                  [R^{1-1/r}D^{1/r}+D].
+\]
+Keep the leading $R$ in \eqref{ag-eq:teacher-risk-concentration} with coefficient one and apply these two inequalities to its remainder and to \eqref{ag-eq:empirical-oracle}. This proves \eqref{ag-eq:population-oracle} for the chosen pair. Every pair is valid on the same event, so take the stated infimum. Jensen proves the ordinary-mean claim.
+\end{proof}
+
+\begin{remark}[A definition at every sample count]
+If \eqref{ag-eq:admissibility} fails, select $\lambda=\omega R_0$ instead. Jensen gives $Z\ge e^{-1/2}$, so the posterior Gibbs risk is at most $e^{1/2}R_0$, deterministically. Failure of \eqref{ag-eq:admissibility} implies
+\[
+ \mathcal B_{m,b,n}^r\theta_n^{1/\rho_d}
+ \ge b_n^r\theta_n^{1/\rho_d}
+ >U_0^{-q/\rho_d}.
+\]
+Thus, after increasing only $C_{d,H,A}$, \eqref{ag-eq:population-oracle} also holds in this case. This supplies one specified learner for every $n\ge2$. For all sufficiently large $n$, it is the free-energy-calibrated learner of the main theorem.
+\end{remark}
+
+\begin{remark}[Ordinary internal biases]
+If $\phi$ is not identically zero, choose any fixed $a_0$ with $c=\phi(a_0)\ne0$. One constant neuron per layer can be kept at value $c$, using first bias $a_0$ and later self-edge $a_0/c$. An ordinary internal bias $b$ is then supplied by an edge $b/c$, and the same construction supplies a readout bias. Thus ordinary biased teachers compile at one extra neuron per layer and a coefficient factor depending only on the fixed activation. This changes comparison resources by fixed factors and requires learner width at least $m+1$. If $\phi$ is identically zero, the model as specified has only the zero output, so the theorem is trivial for its own comparison classes.
+\end{remark}
+
+\subsection{Sample exponents}
+At fixed $d,H,A,\delta$, the costs in \eqref{ag-eq:comparison-cost} obey $\mathcal B_{m,b,n}=\widetilde O(E)$, with logarithmic dependence on the displayed resources. Since $p=r(d+2)/2$, the remainder in \eqref{ag-eq:population-oracle} is
+\[
+ \widetilde O\left(E R^{1-1/r}n^{-2/[r(d+2)]}
+                       +E^r n^{-2/(d+2)}\right).
+\]
+For a requested excess $\varepsilon>0$, the sufficient sample form is
+\[
+ n=\widetilde O\left(
+ E^{r(d+2)/2}
+ \left[\frac{R^{(r-1)(d+2)/2}}{\varepsilon^{r(d+2)/2}}
+              +\frac1{\varepsilon^{(d+2)/2}}\right]\right).
+\]
+The coefficient on comparison risk remains one. If $f_0(x)=\E[Y\mid X=x]$ and $\nu=\E\operatorname{Var}(Y\mid X)$, then $R(g)=\nu+\|g-f_0\|_{L^2(P_X)}^2$. Subtracting $\nu$ turns the theorem into an approximation bound for the conditional mean; the penalty is evaluated at noise plus approximation error. The selected learner is told neither quantity.

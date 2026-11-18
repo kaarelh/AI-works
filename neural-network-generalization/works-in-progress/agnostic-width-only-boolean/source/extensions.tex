@@ -1,0 +1,86 @@
+\section{Two variants of the observation model and prior}
+\label{sec:boolean-variants}
+
+\subsection{A smooth final activation with the same polynomial}
+The hard saturation can be replaced by a final $\tanh$, provided the comparison class uses the same output convention. Write
+\[
+ \mathcal T_{C,h}=\{x\mapsto\tanh(g(x)):g\in\mathcal G_{C,h}\}.
+\]
+Keep the independent Gaussian weights in \eqref{eq:boolean-Gaussian-prior}, but use $\tanh(z_w)$ in both the likelihood and the ordinary posterior mean.
+
+\begin{corollary}[Smooth bounded outputs]
+\label{cor:boolean-tanh-output}
+Theorem~\ref{thm:boolean-width-oracle} remains valid with $\mathcal G_{C,h}$ replaced by $\mathcal T_{C,h}$ and with final $\tanh$ in the learner. The sample polynomial and constant-factor depth overhead are unchanged, up to logarithmic factors.
+\end{corollary}
+\begin{proof}
+For a raw comparison network $g$ and $0<\eta\le1$, put
+$B=\max\{1,\tfrac12\log(8/\eta)\}$. Then
+\[
+ \sup_t|\tanh(t)-\tanh(Bs(t/B))|\le\eta/4.
+\]
+Apply Theorem~\ref{thm:constant-depth-compiler} to $g/B$ with output tolerance $\eta/(4B)$, obtaining $q_0$. Set $q=Bq_0$. Its readout, and hence its path variation, is multiplied by $B$; its width and depth are unchanged. Since $\tanh$ is 1-Lipschitz,
+\[
+ \sup_x|\tanh(q(x))-\tanh(g(x))|\le\eta/2.
+\]
+Both the extra path factor $B$ and the precision cost $\log(B/\eta)$ are logarithmic in inverse accuracy.
+
+The statistical certificates transfer because $\tanh$ is odd, bounded by one, and 1-Lipschitz. Prior risk remains at most two; every approximation and Gaussian perturbation error can only decrease; clipping dictionary centers is replaced by applying $\tanh$ to them. The Gaussian entropy and weighted-tail bounds are unchanged. Finally, a strictly increasing scalar output map preserves the pseudodimension bound: inequalities $\tanh(z_w(x_i))>r_i$ become $z_w(x_i)>\operatorname{arctanh}(r_i)$ whenever $r_i\in(-1,1)$; thresholds outside that interval are constant. Thus the parameter certificate also applies. The original comparator in $\mathcal T_{C,h}$ is represented exactly in the small-width branch. The proof of Theorem~\ref{thm:boolean-width-oracle} now goes through with only extra logarithmic factors.
+\end{proof}
+
+This corollary concerns the risk of the best final-$\tanh$ comparison network. It does not replace that class by arbitrary raw readouts at the same width. The internal hidden activations remain ReLU.
+
+\subsection{A full-support prior with standard squared-loss accuracy powers}
+A different fixed-architecture prior gives better dependence on accuracy. This prior softly penalizes internal amplification; its coordinates are not independent. We state it explicitly to distinguish this conclusion from Theorem~\ref{thm:boolean-width-oracle}.
+
+Use the unit-ball feature $\xi=(1,x)/\sqrt D$, $D=d+1$, and put
+\[
+ G(W)=\prod_{\ell=2}^H\max\{1,\||W^\ell|\|_{\rm op}\},\qquad
+ u=\|W^1\|_F^2/N,\quad q=N\|v\|_2^2,
+ \qquad \omega=N(D+1)+(H-1)N^{\gamma+1}.
+\]
+Let $\pi^0$ have independent Gaussian coordinates with first-layer variance $N/\omega$, internal variance $N^{-\gamma}$, and readout variance $1/(\omega N)$. Define
+\begin{equation}
+ d\pi=Z_0^{-1}\exp\left[-\frac\omega2
+             \{(G-1)(u+q)+(G^2-1)\}\right]d\pi^0.
+ \label{eq:boolean-soft-prior}
+\end{equation}
+This density is positive at every finite parameter vector and is independent of the sample size and teacher. There is no prior over widths or depths. Retain final saturation in both likelihood and prediction, and select one positive likelihood variance by the same two-certificate rule, with the implicit certificate for \eqref{eq:boolean-soft-prior}.
+
+The path-variation oracle for this prior~\cite{softpath} supplies
+\begin{equation}
+ B_{\rm imp}\le R(s(g))+
+ \widetilde O\left((1+P)\sqrt{H R(s(g))/n}+(1+P)^2H/n\right)
+ \label{eq:boolean-soft-path-oracle}
+\end{equation}
+for every width-$m$ implementing network with path variation $P$, at every $N\ge m$. Its calibration is the unique positive root
+$\lambda^2=256a_n^2[2F_S(\lambda)+b_n\lambda]$, where
+$a_n^2=\widetilde O(H/n)$ and $b_n=O(\log n)$.
+Here is why the stated bounded-output version follows from the raw-output theorem. Conditional on the internal matrices, the endpoint coordinates remain centered Gaussian with variances divided by $G$. Thus $\omega G(u+q)$ has a chi-square law with normalized degrees of freedom at most one. The energy $G(u+q)$ controls path variation, whose energy-ball Rademacher complexity is $O(\sqrt H)$ times its radius divided by $\sqrt n$. Saturation is a contraction, leaves prior symmetry intact, and decreases every comparison perturbation error. Therefore the same weighted-objective, entropy, and Gaussian comparison proof yields \eqref{eq:boolean-soft-path-oracle}. No support restriction is introduced by this argument.
+
+\begin{corollary}[The soft-prior width-only oracle]
+\label{cor:boolean-soft-width}
+There is a numerical $b\ge2$ such that the assumptions on inputs, labels, teacher class, and depths in Theorem~\ref{thm:boolean-width-oracle}, with prior \eqref{eq:boolean-soft-prior}, imply the following bound. On one event of probability at least $1-\delta$, simultaneously for all $N\ge C+1$ and $\gamma\ge1$,
+\[
+ R(\widehat f_S)\le\inf_{g\in\mathcal G_{C,h}}R(g)+\varepsilon
+\]
+provided
+\begin{equation}
+ n\ge\widetilde O\left(
+ H^2(d+1)^{2b(h+1)+1}(C+1)^{2bh(h+1)}
+       \left[\frac{R_*}{\varepsilon^2}+\frac1\varepsilon\right]\right),
+ \qquad R_*=\inf_{g\in\mathcal G_{C,h}}R(g).
+ \label{eq:boolean-soft-samples}
+\end{equation}
+The prior and calibration do not use the teacher width, coefficients, or risk. The same assertion holds for final $\tanh$ and comparison class $\mathcal T_{C,h}$, up to extra logarithmic factors.
+\end{corollary}
+\begin{proof}
+Use the compiler with output tolerance $\varepsilon/64$ as in the main theorem. Its width and path variation are at most
+$B=[4(d+1)(C+1)^h+O(\log(1/\varepsilon))]^{b(h+1)}$.
+If $N$ accommodates its width, \eqref{eq:boolean-soft-path-oracle} suffices with sample budget
+$\widetilde O(HB^2[R_*\varepsilon^{-2}+\varepsilon^{-1}])$.
+If it does not, full support of \eqref{eq:boolean-soft-prior} gives the same positive-temperature parameter certificate, now applied to the original teacher. Its sufficient budget is
+$\widetilde O(H^2(dB+B^2)[R_*\varepsilon^{-2}+\varepsilon^{-1}])$.
+The displayed bound covers both branches after expanding $B$. The smooth-output compiler in Corollary~\ref{cor:boolean-tanh-output} adds only logarithms.
+\end{proof}
+
+The polynomial dependence on teacher width in these corollaries is conservative. Their sharper feature is that arbitrary coefficient magnitudes cost nothing, while positive-noise and zero-risk accuracy costs have the familiar $\varepsilon^{-2}$ and $\varepsilon^{-1}$ forms. The prior giving those powers is the explicitly reweighted Gaussian \eqref{eq:boolean-soft-prior}; the independent Gaussian theorem retains the different powers stated earlier.

@@ -1,0 +1,98 @@
+\section{Dimension dependence of the gradient certificate}
+\label{sec:dimension-sobolev}
+A spatial covering argument retains a dimension factor even when the
+comparison construction has dimension-independent action. We make that
+factor explicit.
+
+\begin{lemma}[A polynomial-dimensional Morrey constant]
+\label{lem:dimension-morrey}
+For $p\ge2d$, a continuously differentiable function on $[-1,1]^d$
+satisfies
+\[
+ |f(x)-f(y)|\le A d^2\|\nabla f\|_{L^p(\operatorname{Unif}[-1,1]^d)}
+                   \|x-y\|_2^{1/2},
+\]
+where $A$ is absolute. The same assertion holds for its continuous
+Sobolev representative.
+\end{lemma}
+\begin{proof}
+Extend $f$ by coordinatewise reflection, with period four. If
+$r=\|x-y\|_2\le2\sqrt d$, all balls used below lie in
+$[-1-4\sqrt d,1+4\sqrt d]^d$. That box contains at most
+$(A_0\sqrt d)^d$ reflected copies of the original cube. Its gradient
+$L^p$ norm is therefore at most $A_1d^{1/4}$ times the original
+normalized gradient norm, since $p\ge2d$.
+
+Write $v_d$ for the volume of the unit ball. Integrating the fundamental
+theorem of calculus along radial segments gives
+\[
+ |f(x)-\mathop{\rm avg}_{B(x,r)}f|
+ \le\frac1{dv_d}\int_{B(x,r)}
+              \frac{\|\nabla f(z)\|_2}{\|z-x\|_2^{d-1}}\,dz
+ \le2(dv_d)^{-1/p}r^{1-d/p}\|\nabla f\|_{L^p}.
+\]
+The second inequality follows by polar integration and
+$(p-1)/(p-d)\le2$. The averages over $B(x,r)$ and $B(y,r)$ differ
+by at most
+\[
+ r\mathop{\rm avg}_{B(0,r)}\int_0^1
+       \|\nabla f(x+z+t(y-x))\|_2\,dt\,dz
+ \le v_d^{-1/p}r^{1-d/p}\|\nabla f\|_{L^p}.
+\]
+Combining these three estimates, using
+$v_d^{-1/p}\le A_2d^{1/4}$ for $p\ge2d$, and weakening
+$r^{1-d/p}$ to $r^{1/2}$ on $r\le2\sqrt d$ gives the asserted
+conservative factor $Ad^2$. Smooth approximation proves the Sobolev
+version.
+\end{proof}
+
+\begin{proposition}[An explicit-dimensional evidence certificate]
+\label{prop:dimension-evidence}
+For the Gaussian tanh learner of this paper, fix
+$0<\lambda\le1$ and $0<\epsilon,\delta<1$. Put
+$K=A(1+\lambda^{-1}+\log(1/\epsilon))$ with a sufficiently large
+absolute $A$. One sample event of probability at least $1-\delta$
+gives, at every finite width and every variance prefactor,
+\[
+ \int R(z_w)\,d\Pi\le-\frac{2\lambda}{\omega}\log Z+\epsilon
+\]
+provided
+\begin{equation}
+ n\ge\left(\frac{A(d+H+K+1)}{\epsilon\delta}\right)^A
+  +\left(\frac{Ad(K+1)}\epsilon\right)^{Ad}
+        \exp(A d\sqrt{HK})\log(A/\delta).
+ \label{eq:dimension-evidence-budget}
+\end{equation}
+Increasing the absolute constants permits a fixed geometric grid of
+likelihood scales, with the usual summable confidence allocation.
+\end{proposition}
+\begin{proof}
+The Gaussian gradient-moment and readout bounds have absolute constants.
+Apply Lemma~\ref{lem:dimension-morrey} in the large-effective-width
+case $\omega\sqrt{K/H}\ge d$. Outside prior mass
+$2e^{-\omega K}$, the functions have amplitude $O(\sqrt{K+1})$
+and half-H\"older constant at most $Ad^2e^{A\sqrt{HK}}$.
+An input grid of Euclidean mesh
+$[b/(Ad^2e^{A\sqrt{HK}})]^2$ and output quantization at scale $b$
+give a fixed uniform cover with
+\[
+ \log|\mathcal D|\le
+       \left(\frac{Ad(K+1)}b\right)^{Ad}
+           e^{Ad\sqrt{HK}}\log[A(K+1)/b].
+\]
+Take $b=c\epsilon/(\sqrt{K+1}+1)$ and apply finite-class Hoeffding
+to squared losses. Its polynomial amplitude factor is absorbed into
+\eqref{eq:dimension-evidence-budget}.
+
+In the complementary case $N\le\omega<d\sqrt{H/K}$, there are only
+polynomially many possible widths. The total operator-energy cutoff
+$Q_{\rm op}\le A(H+K)$ has failure mass at most $e^{-\omega K}$,
+with absolute constants: the normalized first-layer chi-square
+exponent contains $(d+1)/d\le2$. Parameter counts, coordinate caps,
+and the logarithm of the parameter-to-output Lipschitz constant are
+polynomial in $d,H,K$. Fixed parameter dictionaries therefore require
+only the first term of \eqref{eq:dimension-evidence-budget}.
+The common raw-risk tail estimate uses $\E_\mu R^2\le24$ and
+$Z\ge e^{-\omega/\lambda}$, also dimension-free. It gives the
+certificate exactly as in Proposition~\ref{prop:sobolev-oracle}.
+\end{proof}

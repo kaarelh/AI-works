@@ -1,0 +1,202 @@
+\section{Extending the argument to every $\gamma\ge1$}
+\label{ag-sec:general-lipschitz-raw}
+
+Fix a scalar activation $\phi$ and a constant $A\geq1$ such that
+$\operatorname{Lip}(\phi)\leq A$ and $|\phi(0)|\leq A$.
+The activation need not be bounded, homogeneous, odd, or zero at the
+origin.  In particular the argument covers tanh, ReLU, GELU, sigmoid,
+and softplus, with their appropriate fixed Lipschitz constants.
+
+There are $H\geq1$ hidden layers of width $N$, a scalar linear readout,
+and a first-layer constant input.  Internal layers have no biases.
+Inputs belong to $[-1,1]^d$, labels to $[-1,1]$, and their joint IID
+law is arbitrary.  Write $\tau\in(0,1]$ for the actual Gaussian scale:
+first-layer, internal, and readout coordinate variances are
+$\tau^2/d$, $\tau^2/N$, and $\tau^2/N^2$.
+Put $\omega=N/\tau^2$.  The likelihood variance is $n\lambda/\omega$,
+so the actual posterior is
+\[
+ d\Pi=Z^{-1}\exp[-\omega\widehat R_S(z_w)/(2\lambda)]\,d\mu.
+\]
+This is the common prior and posterior in the notation $s=\tau^2/N=1/\omega$. Taking $\tau^2=N^{1-\gamma}$ gives every canonical prior exponent $\gamma\ge1$. The additional $\tau$ notation makes the width-uniform estimates explicit.
+
+\subsection{A teacher cylinder without bounded activations}
+
+Let $g$ be a width-$m$ teacher, with all coefficients at most $B\geq1$
+in absolute value.  Define the weighted Gaussian energy
+\[
+ Q_N(w)=\frac dN\|W^1\|_F^2+
+             \sum_{\ell=2}^H\|W^\ell\|_F^2+N\|v\|_2^2.
+\]
+The Gaussian density has exponent $-\omega Q_N(w)/2$.
+To represent the teacher at any $N\geq m$, partition each hidden
+layer into clone groups of sizes
+$k_j\in\{\lfloor N/m\rfloor,\lceil N/m\rceil\}$.
+Copy each teacher first-layer row to its group. For an internal
+teacher edge from neuron $i$ to neuron $j$, assign its weight divided
+by $k_i$ to every edge between the corresponding clone groups.
+Divide each teacher readout weight by its group size in the same way.
+The sums entering every clone equal the teacher sums, so this network
+computes exactly $g$, for any activation.
+
+The first-layer contribution is at most $d(d+1)B^2$.
+Since $k_j/k_i\leq2$, each internal-layer contribution is at most
+$2m^2B^2$. Since $N/k_i\leq2m$, the readout contribution is at most
+$2m^2B^2$. Thus the clone $w_*$ satisfies
+\[
+ Q_N(w_*)\leq E:=d(d+1)B^2+2Hm^2B^2.
+\]
+Every learner neuron belongs to a nonempty clone group, so this
+construction does not require $\phi(0)=0$.
+Define
+\begin{gather*}
+ b_0=2\sqrt{2[2\log9+\log(4(H+1))]},\qquad
+ T_g=A[3+2mB+B(d+1)+b_0],\\
+ P_g=1+(\sqrt2mB+1)A(d+1+H\sqrt m)T_g^{H-1}+T_g^H,\\
+ D_g=d+2+(H-1)m,\qquad
+ \eta_\rho=\min\{1/2,\rho/(2P_g)\},\qquad c_0=3/8,\\
+ \mathcal A_g(\rho)=E/2+D_g\log(1/(c_0\eta_\rho))+\log2.
+\end{gather*}
+Let $U\geq\|g\|_\infty$ be any specified output bound;
+one may always take $U=mBT_g^H$, and for tanh one may take $U=mB$.
+
+\begin{lemma}[A finite-width teacher neighborhood]
+\label{ag-lem:general-activation-cylinder}
+For every $N\geq m$, $0<\tau\leq1$, and $0<\rho\leq1$,
+\[
+ -\log\mu\{\|z_w-g\|_\infty<\rho\}
+ \leq\omega E/2+ND_g\log(1/(c_0\eta_\rho))+\log2
+ \leq\omega\mathcal A_g(\rho).
+\]
+\end{lemma}
+\begin{proof}
+Let $w_*$ be the balanced clone.  At each hidden layer let $P$ project
+onto the $m$-dimensional subspace of vectors constant on clone groups.
+In standardized independent Gaussian coordinates, require absolute
+value at most $\eta_\rho$ for all first-layer and readout coordinates,
+and for every internal row's projections onto an orthonormal basis of
+this group subspace.  There are $ND_g$ independent scalar constraints,
+whose joint probability is at least $(c_0\eta_\rho)^{ND_g}$.
+
+Conditioning on these intervals preserves independent centered
+unit-subgaussian coordinates in the corresponding orthonormal bases.
+Two sphere nets, each of size at most $9^N$, give for an internal
+standardized matrix $Z$
+\[
+ \Pr\{\|Z\|_{\rm op}>b_0\sqrt N\mid\text{cylinder}\}
+ \leq2\exp[(2\log9-b_0^2/8)N].
+\]
+A union bound over internal layers leaves a centrally symmetric event
+of probability at least one half the cylinder probability.
+
+Translate this event by $w_*$.  The internal perturbation has operator
+norm at most $b_0$, while its restriction to the teacher's group
+subspace has operator norm at most $\eta_\rho\sqrt m$.
+The clone internal operator norm is at most $\sqrt2mB$.
+Teacher hidden coordinates are at most $T_g^\ell$ at layer $\ell$,
+because $|\phi(s)|\leq A(1+|s|)$.
+For normalized hidden errors $e_\ell=\|h^\ell-h_*^\ell\|_2/\sqrt N$,
+Lipschitz propagation gives
+\[
+ e_1\leq A\eta_\rho(d+1),\qquad
+ e_\ell\leq A(\sqrt2mB+b_0)e_{\ell-1}
+                +A\eta_\rho\sqrt m\,T_g^{\ell-1}.
+\]
+Consequently
+$e_H\leq\eta_\rho A(d+1+H\sqrt m)T_g^{H-1}$.
+The clone readout has $\sqrt N\|v_*\|_2\leq\sqrt2mB$, and its
+perturbation has $\sqrt N\|v-v_*\|_2\leq\eta_\rho$.
+Thus the output error is at most
+$(\sqrt2mB+1)e_H+\eta_\rho T_g^H<\rho$.
+
+For a centered Gaussian measure and a centrally symmetric event,
+translation by a vector of squared standardized length $r$ decreases
+its probability by at most the factor $e^{-r/2}$; this follows by
+pairing opposite points and applying Jensen to the Gaussian density
+ratio.  Here $r\leq\omega E$.  This proves the first bound; $N\leq\omega$
+and $1\leq\omega$ prove the second.
+\end{proof}
+
+\subsection{Width-uniform prior moments and norm tails}
+
+Define
+\[
+ K(w)=\max\{128,\|W^1\|_F^2/N,
+          \|W^2\|_{\rm op}^2,\ldots,\|W^H\|_{\rm op}^2,
+          N\|v\|_2^2\}.
+\]
+Gaussian chi-square tails for the first layer and readout, and two
+sphere nets for internal layers, imply for $u\geq128$
+\begin{equation}
+ \mu\{K>u\}\leq(H+1)e^{-\omega u/16}.
+ \label{ag-eq:general-activation-norm-tail}
+\end{equation}
+For example the internal estimate is
+$2\exp[2N\log9-\omega u/8]\leq e^{-\omega u/16}$.
+The first-layer term in $K$ is $(\tau^2/(dN))\chi^2_{N(d+1)}$;
+the readout term is $(\tau^2/N)\chi^2_N$, so the same weaker bound
+applies to them.
+Tail integration yields
+\begin{equation}
+ \log\int e^{\omega K/32}d\mu\leq\omega B_H,
+ \qquad B_H=4+\log(H+2).
+ \label{ag-eq:general-activation-norm-mgf}
+\end{equation}
+
+There are also width-uniform raw-output moments.  Let
+$S_\ell=\|h^\ell(x)\|_2^2/N$, and use $S_0=\|\bar x\|_2^2/d\leq2$
+for the first conditional Gaussian field.  Conditional on previous
+layers, each new field has variance $\tau^2S_{\ell-1}$.
+The bounds $|\phi(s)|\leq A(1+|s|)$ and Gaussian second and fourth
+moments give
+\[
+ \mathbb E S_\ell\leq2(4A^2)^\ell,
+ \qquad \mathbb E S_\ell^2\leq4(32A^4)^\ell.
+\]
+For the second assertion, Jensen applied to the average of squared
+coordinates and $|\phi(s)|^4\leq8A^4(1+|s|^4)$ suffice; these bounds
+also apply to the first layer with the stated $S_0$.
+The centered Gaussian readout therefore implies, uniformly in $x$,
+\[
+ \mathbb E_\mu z_w(x)^2\leq 2(4A^2)^H/N,
+ \qquad \mathbb E_\mu z_w(x)^4\leq12(32A^4)^H/N^2.
+\]
+Put
+\[
+ R_0=1+2(4A^2)^H,\qquad V_0=8+96(32A^4)^H.
+\]
+Tonelli and Jensen give, for every sample and every data law under
+consideration,
+\begin{equation}
+ \int\widehat R_S(z_w)d\mu\leq R_0,\qquad
+ \int R(z_w)d\mu\leq R_0,\qquad
+ \int R(z_w)^2d\mu\leq V_0,
+ \qquad Z\geq e^{-\omega R_0/(2\lambda)}.
+ \label{ag-eq:general-activation-prior-moments}
+\end{equation}
+
+\subsection{A common function cover and raw statistical transfer}
+
+Write $L=H+1$.  On $K(w)\leq k$, Lipschitz propagation gives
+\[
+ \operatorname{Lip}(z_w)\leq A^H k^{L/2},\qquad
+ \|z_w\|_\infty\leq C_{d,H,A}k^{L/2}.
+\]
+For the amplitude bound, normalized hidden norms satisfy
+$a_\ell\leq A(1+\sqrt k\,a_{\ell-1})$ starting from
+$a_0\leq\sqrt{d+1}$, and the readout multiplies by at most $\sqrt k$.
+Thus this bound includes nonzero $\phi(0)$.
+An input grid of mesh proportional to $a/k^{L/2}$, followed by rounding
+values to multiples of $a$, provides a deterministic finite cover
+$\mathcal C_{k,a}$ in uniform norm, common to all widths and scales,
+with centers bounded by $C_{d,H,A}k^{L/2}+1$ and
+\begin{equation}
+ \log|\mathcal C_{k,a}|
+ \leq C_{d,H,A} k^{dL/2}a^{-d}
+                  \log\frac{C_{d,H,A}k}{a}
+ \qquad(k\geq128,\ 0<a<1).
+ \label{ag-eq:general-activation-cover}
+\end{equation}
+Nearest-grid-point functions are sufficient; the cover centers need
+not themselves be networks.
+

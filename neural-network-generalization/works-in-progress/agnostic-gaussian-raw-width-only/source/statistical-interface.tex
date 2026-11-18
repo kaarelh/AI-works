@@ -1,0 +1,98 @@
+\section{The finite Gaussian raw-output oracle used here}
+\label{sec:statistical-interface}
+We state the statistical input precisely, so the learning rule and the
+scope of the reduction do not depend on conventions from another paper.
+The theorem is proved in~\cite{gaussian}; its extension to unbounded
+labels is proved in~\cite{tails}. Neither result uses an architecture
+mixture or a support restriction.
+
+For $H\ge2$, put
+\[
+ v_H=\max\{4H,H^2+2H-2\},\qquad \rho_H=2H,\qquad r_H=v_H/\rho_H.
+\]
+Let $\omega=N/\nu$, and let
+$M_n=\max\{1,s_Y\sqrt{8\log(8n/\delta)}\}$, where
+$P(|Y|>t)\le2e^{-t^2/(2s_Y^2)}$.
+For the normalized observable $z_w/M_n$ and labels $Y_i/M_n$, define
+\[
+ F'_S(\lambda')=-\frac{2\lambda'}\omega
+ \log\int\exp\left[-\frac\omega{2\lambda'}
+       \widehat R_S(z_w/M_n,Y/M_n)\right]d\mu_{N,\nu}(w).
+\]
+Set
+\[
+ b_n=c_H\log(c_Hn/\delta),\qquad
+ \theta_n=\frac{c_H(d+1)^2
+       [\log(c_Hn(d+1)/\delta)]^{12H+30}}n.
+\]
+Here sufficiently large constants $c_H$ depend only on the fixed depth.
+If $\theta_n b_n^{v_H}5^{v_H-\rho_H}\le1$, choose the unique positive
+root
+\begin{equation}
+ (\lambda')^{v_H}=\theta_n
+       [2F'_S(\lambda')+b_n\lambda']^{v_H-\rho_H}.
+ \label{eq:calibration}
+\end{equation}
+Otherwise use the bounded-risk fallback $\lambda'=2\omega$.
+The actual raw likelihood parameter is $\lambda=M_n^2\lambda'$.
+Its observation variance is $n\lambda\nu/N$.
+All observed labels and all network outputs remain unchanged in that
+likelihood. Only its scalar variance is calibrated.
+
+\begin{lemma}[Imported raw Gaussian comparison theorem]
+\label{lem:gaussian-interface}
+Fix a tanh comparison network $q$ of depth $H$, width $m$, and
+coefficient cap $B\ge1$, with an input constant and no internal biases.
+For a sufficiently large $c_H$, set
+\[
+ A_n=c_H(d+m+1)^2(B+1)^2
+       \log^2\frac{c_Hn(d+m+1)(B+1)}\delta.
+\]
+Put $u_n=2s_Y(\delta/(8n))^2$ and
+\[
+ r_{q,n}=(\sqrt{R(q)}+u_n)^2,\qquad
+ e_n=c_H\left[A_nM_n^{2/r_H}r_{q,n}^{1-1/r_H}\theta_n^{1/v_H}
+       +A_n^{r_H}M_n^2\theta_n^{1/\rho_H}\right]+M_n^2n^{-3}.
+\]
+With probability at least $1-\delta$, simultaneously for every
+$N\ge m$ and every $0<\nu\le1$, the raw posterior under
+\eqref{eq:calibration} obeys
+\begin{equation}
+ \Pi_SR(z)\le R(q)+e_n+4u_n\sqrt{R(q)+e_n}+4u_n^2.
+ \label{eq:gaussian-interface}
+\end{equation}
+The ordinary raw posterior mean satisfies the
+same bound. The calibration does not know $q,m,B$ or its risk.
+\end{lemma}
+
+The displayed $A_n$ is a convenient upper bound for the sharper
+comparison action in~\cite{gaussian}. Its relevant consequence at
+fixed $d,H,s_Y,\delta$ is
+\begin{equation}
+ \Pi_SR(z)\le R(q)+
+ \widetilde O_H\left((mB)^2(R(q)+1)^{1-1/r_H}n^{-1/v_H}
+              +(mB)^{2r_H}n^{-1/\rho_H}
+\right)+o(1),
+ \label{eq:gaussian-interface-coarse}
+\end{equation}
+where harmless additive constants in $mB$ are understood.
+
+For clarity, the unbounded-label transfer does not change the prior.
+In the proof replace $Y$ by $Y_{M_n}=\clip_{[-M_n,M_n]}Y$; with
+probability at least $1-\delta/2$ every training label already equals
+this value. Normalize the observable and labels by $M_n$ and apply
+the bounded-label theorem. Dictionary amplitudes and approximation
+errors only decrease under this normalization, while all parameter
+energies and comparison entropies stay unchanged. The physical
+likelihood is exactly the one above. Finally
+\[
+ \|Y-Y_{M_n}\|_2\le
+ 2s_Ye^{-M_n^2/(4s_Y^2)}
+\]
+and Minkowski's inequality transfer posterior-averaged test risk back
+to the original labels. This proves the asserted powers and the
+negligible-tail statement. The exact transfer formula, if needed at
+small $n$, replaces $R(q)$ inside the remainder by
+$(\sqrt{R(q)}+u_n)^2$ and adds
+$4u_n\sqrt{R(q)+e_n}+4u_n^2$, where
+$u_n=2s_Y(\delta/(8n))^2$ and $e_n$ is the displayed remainder.

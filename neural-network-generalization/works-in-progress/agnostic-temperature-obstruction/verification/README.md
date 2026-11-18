@@ -1,13 +1,11 @@
 # Verification record
 
-The paper gives conventional proofs of the single-law temperature obstruction, its quantitative width threshold, and the posterior prediction consequences. These claims have undergone independent AI-agent mathematical review, not Lean formalization or external peer review.
+This paper has independent AI-agent mathematical reviews, source correspondence records, numerical sanity checks, and a clean PDF build. It has not been formalized in Lean.
 
-The [independent mathematical review](review.md) covers the final theorem statements and proofs. The canonical finite-prior theorem applies directly at every `σ²=N^(-γ)` with `γ≥1`, uniformly over all eligible widths and temperatures. Its shifted comparison Gaussian keeps the original covariance; a conditional scalar recursion controls its output error, and Gaussian operator moments give the posterior sensitivity bound. A simpler `γ≥2` proof has a smaller width threshold. The fixed-width corollary uses a width-2 teacher with growing coefficients. The self-contained memorizer-optimality appendix proves the first-layer-free capacity bound and both deterministic-label and random-singleton energy lower bounds.
+The mathematical checks cover the weighted sign-feature Gaussian construction; the Gaussian-readout sector and mixture separator; the Fourier convolution, constant-variance sphere embedding and finite quadrature; the fixed-dimensional teacher-growth obstruction; projected readout geometry with broad affine output priors; the fixed-teacher rate lower bound; nested rare-grid construction and weighted occupancy; the Gaussian-noise extension with bounded comparison targets and direct Gaussian witness concentration; the fixed-point width-two implementation of a shallow teacher; and the explicit finite-depth bound with energy O(H³), width exp(O(H)), and excess Ω(H⁻⁶) after exp(Ω(H)) observations.
 
-The proof includes the Boolean-cube memorizer construction, the bounded two-chain teacher, the common occupancy event, and the separate arguments for posterior averages and posterior means. The latter use residual or prediction-difference inequalities preserved under averaging; they do not average individual risk lower bounds.
+The proofs distinguish ordinary raw means, clipped raw means, and means of clipped draws. The fixed-law rate theorem with affine output components and Gaussian labels is a raw-mean theorem. The changing-law constant-excess results and the one-fixed-law slow-rate theorem also have separate quantifiers.
 
-The [two-chain check](check_two_chain.py) checks 84 numerical instances of the analytic teacher formulas. Its [recorded output](two-chain-check.json) is a sanity check and is not a proof assumption. Run it with Python 3.
+`check_fourier.py` and its recorded output verify numerical instances of the Fourier interpolation, mask, convolution identity, and nonzero affine residual. These checks are supplementary; no numerical result is used as a proof assumption.
 
-The PDF was built twice with pdfLaTeX. No unresolved references, LaTeX warnings, or overfull/underfull boxes remained. The first page was visually checked for title, abstract, author order, and the alphabetical-order footnote. [Build record](build-record.json).
-
-The localized-noise corollary keeps unit signal and noisy-label amplitudes while reducing their input probabilities. Its constants and simultaneous-parameter scope were independently checked; it does not assert a fixed excess as noise tends to zero.
+Run `../build.sh` from this directory, or `./build.sh` from the paper folder, to rebuild in an isolated temporary directory. The mathematical review and exact source hashes are recorded alongside this file.

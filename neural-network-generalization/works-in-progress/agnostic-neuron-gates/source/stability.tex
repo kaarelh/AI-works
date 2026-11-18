@@ -1,0 +1,69 @@
+\section{Uniform approximation without a robustness restriction}
+The comparison suppresses the total inactive gate mass. This gives a direct estimate for its contribution even when individual native hidden features are unbounded.
+
+\begin{lemma}[Uniform second moments and approximation]\label{lem:stability}
+For every fixed placement in the comparison construction,
+\[
+ \left(\E_{\rho_\epsilon}\sup_{x\in\mathcal X}
+       |z_w(x)-z_g(x)|^2\right)^{1/2}
+ \le\epsilon(H+2)D^{H+2}.
+\]
+The same statement holds for the mixture over placements.
+\end{lemma}
+\begin{proof}
+Let $R_\ell$ be the maximum, over all learner neurons at layer $\ell$, of the $L^2$ norm of its uniform absolute feature. Let $T_\ell$ be the largest uniform absolute teacher feature, and let $e_\ell$ be the maximum $L^2$ uniform discrepancy at selected neurons.
+
+Conditional on the placement, the gate vector $S^\ell$ is independent of the features $h^\ell$: those features use only gates from earlier layers. The incoming factors at the next layer are also independent of these gates and features. These facts continue to hold when the inactive gates have been jointly conditioned on their total mass.
+
+Write $r_j=\sup_x|h_j^\ell(x)|$. Weighted Cauchy--Schwarz and the inactive-mass bound give, for any next-layer row,
+\[
+ \sup_x\left|\sum_{j\ \mathrm{inactive}}S_j^\ell G_{ij}h_j^\ell(x)\right|^2
+ \le\epsilon\sum_{j\ \mathrm{inactive}}S_j^\ell G_{ij}^2r_j^2.
+\]
+Taking expectations and using independence bounds this by
+$\epsilon^2\mu^2R_\ell^2$. No factor of $N$ remains. The active part has $L^2$ norm at most
+$2m\max\{B+1,\mu\}R_\ell$, by Minkowski's inequality. Biases have $L^2$ norm at most $\max\{B+1,\mu\}$.
+
+The first layer has $R_1,T_1\le D^2$. At later layers, the preceding bounds yield
+\[
+ R_\ell\le b+A\left[
+ \max\{B+1,\mu\}+
+ \{2m\max\{B+1,\mu\}+\epsilon\mu\}R_{\ell-1}
+ \right].
+\]
+The deterministic teacher has the analogous, smaller bound. The constant in $D$ can therefore be chosen once, independently of depth, so that
+\[
+ R_\ell,T_\ell\le D^{\ell+1}.
+ \label{eq:feature-envelope}
+\]
+
+At the first layer, $e_1\le A(d+1)\epsilon$. At an active internal coefficient,
+\[
+ |S_jG_{ij}-a_{ij}|\le\epsilon(B+2),
+ \qquad |S_jG_{ij}|\le2(B+1).
+\]
+Subtract the teacher row, separate coefficient and feature errors, and include the inactive contribution and the bias perturbation. This gives
+\[
+ e_\ell\le A\left[
+ \epsilon+2m(B+1)e_{\ell-1}
+ +m\epsilon(B+2)T_{\ell-1}+\epsilon\mu R_{\ell-1}
+ \right].
+\]
+With the same sufficiently large constant in $D$, induction proves
+$e_\ell\le\epsilon(\ell+1)D^{\ell+1}$. The readout has the same estimate without the factor $A$, including its bias. It is bounded by
+$\epsilon(H+2)D^{H+2}$, as claimed. Every estimate holds separately for every placement, so averaging preserves it.
+\end{proof}
+
+\begin{lemma}[The comparison interface]\label{lem:comparison}
+For every $0<r\le1$, there is a sample-independent comparison law $\rho_r$ such that
+\[
+ \E_{\rho_r}\sup_{x\in\mathcal X}|f_w(x)-g(x)|^2\le r,
+ \qquad \KL(\rho_r\|\mu_N)\le K_0\log(K_1/r).
+\]
+This holds for every finite $N\ge m$, with the resources in~\eqref{eq:resources}.
+\end{lemma}
+\begin{proof}
+Take $\epsilon=\sqrt r/(4W)$. It is at most $1/4$. The Lipschitz property of $\psi$ and Lemma~\ref{lem:stability} prove the approximation bound. Lemma~\ref{lem:entropy} gives the entropy estimate after enlarging the constants in $K_0,K_1$. The construction depends on the comparator and the desired accuracy, but not on any observations.
+\end{proof}
+
+The uniform stability factor can grow exponentially with depth. Its logarithm enters the entropy, so this does not create exponential sample complexity. The argument requires no stability assumption on the teacher or on the support of the prior.

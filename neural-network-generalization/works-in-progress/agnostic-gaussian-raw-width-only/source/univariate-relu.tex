@@ -1,0 +1,178 @@
+\section{A sharper one-dimensional result with a shallow ReLU learner}
+\label{sec:univariate-Gaussian}
+In one input dimension, a one-hidden-layer ReLU learner gives a much
+better width exponent while retaining independent Gaussian weights,
+raw likelihood, and raw prediction. This section changes the learner
+activation to ReLU and uses exactly one hidden layer:
+\[
+ z_w(x)=\sum_{j=1}^Nv_j\operatorname{ReLU}(a_jx+b_j),\qquad
+ a_j,b_j\sim N(0,\nu),\quad v_j\sim N(0,\nu/N^2),\quad0<\nu\le1.
+\]
+All coordinates are independent. Assume $X\in[-1,1]$ and
+\begin{equation}
+ P_X(I)\le\kappa |I|^\alpha
+ \quad\hbox{for every interval }I\subseteq[-1,1],
+ \qquad\kappa\ge1,\quad0<\alpha\le1.
+ \label{eq:one-dimensional-regularity}
+\end{equation}
+A bounded input density gives $\alpha=1$.
+
+\begin{lemma}[Shallow Gaussian path-variation oracle]
+\label{lem:shallow-path-interface}
+For a deterministic shallow ReLU implementation $q$, put
+\[
+ P(q)=\sum_j|v_j|\sqrt{a_j^2+b_j^2}.
+\]
+There is an observable evidence calibration independent of this
+implementation such that, with probability at least $1-\delta$,
+simultaneously for all $N$ above its width and all $0<\nu\le1$,
+\[
+ \Pi_SR(z)\le R(q)+\widetilde O\left(
+ (P(q)+1)\sqrt{(R(q)+1)/n}+(P(q)+1)^2/n\right).
+ \label{eq:one-dimensional-path-oracle}
+\]
+Labels may have the same marginal sub-Gaussian envelope as before.
+The ordinary raw mean obeys the same bound. Logarithms include
+$n,P(q),1/\delta$; constants depend on the fixed label envelope.
+\end{lemma}
+\begin{proof}
+This is the path-variation specialization of the Gaussian free-energy
+oracle~\cite{adaptive}; we give the normalization and comparison
+calculation to specify its application to the present prior.
+Set $\omega=N/\nu$ and
+\[
+ Q=N^{-1}\sum_j(a_j^2+b_j^2)+N\sum_jv_j^2.
+\]
+Then $\omega Q\sim\chi^2_{3N}$ and $3N/\omega\le3$.
+Cauchy--Schwarz gives $P(w)\le Q/2$. The input vector $(x,1)$ has
+norm at most $\sqrt2$, so the output envelope is at most $Q/\sqrt2$,
+and the energy-ball Rademacher complexity is at most $cQ/\sqrt n$.
+The latter follows from ReLU contraction and absolute convexification
+of Euclidean unit linear features. The native pointwise variance is
+at most one, so its empirical prior risk under bounded unit labels
+is at most two.
+
+Positive rescaling of each comparison neuron preserves its function
+and balances its two energy contributions. Zero-padding then gives an
+exact width-$N$ mean implementation with $Q=2P(q)$ at every eligible
+$N$. Shrink all native Gaussian coordinate variances by $\eta^2$.
+For the resulting comparison law,
+\[
+ (2/\omega)\KL(\rho\|\mu)
+       \le2P(q)+6\log(1/\eta),
+\]
+and independence of the first-layer and readout perturbations gives
+\[
+ \bigl(\E_\rho\|z_w-q\|_\infty^2\bigr)^{1/2}
+       \le4\eta\sqrt{P(q)}+2\eta^2.
+\]
+Taking $\eta=[64n(P(q)+1)^2]^{-1}$ makes the comparison empirical
+squared-loss increment at most $c/n$ for bounded labels.
+The free-energy certificate with capacity radius linear in $Q$ has
+powers $(v,\rho)=(2,1)$ and comparison resource
+$\widetilde O(P(q)+1)$. Its scalar root is
+\[
+ (\lambda')^2=\theta_n[2F'_S(\lambda')+b_n\lambda'],
+ \qquad \theta_n=\widetilde O(1/n),\quad b_n=O(\log(n/\delta)),
+\]
+with the same bounded-risk fallback for small samples. Apply it to
+the normalized observable and labels from
+Section~\ref{sec:statistical-interface}, and set
+$\lambda=M_n^2\lambda'$. The physical observation variance is still
+$n\lambda\nu/N$. The normalized-observable transfer changes only
+logarithmic factors. This proves \eqref{eq:one-dimensional-path-oracle}.
+\end{proof}
+
+\begin{lemma}[A bounded spline with controlled path variation]
+\label{lem:spline-path}
+If a continuous $f:[-1,1]\to[-1,1]$ has at most $K$ affine
+breakpoints, then for every $0<t\le1$ there is a bounded continuous
+piecewise-affine $q$ with at most $2K$ breakpoints such that
+\[
+ \E|q(X)-f(X)|\le6\kappa Kt^\alpha,\qquad
+ \operatorname{Lip}(q)\le2/t,
+ \qquad P(q)\le c(K+1)/t.
+\]
+It has a one-hidden-layer ReLU implementation of width at most $2K+2$.
+\end{lemma}
+\begin{proof}
+Group consecutive breakpoints into maximal clusters whose successive
+gaps are at most $3t$. For a cluster running from $a$ to $b$, replace
+$f$ on $[\max(-1,a-t),\min(1,b+t)]$ by the chord between its endpoint
+values. These replacement intervals are disjoint, with gaps greater
+than $t$. A cluster containing $k$ breakpoints has interval length at
+most $3kt$. The function remains bounded by one, and differs from $f$
+only on these intervals. Equation~\eqref{eq:one-dimensional-regularity}
+therefore gives error at most
+$2\kappa\sum(3kt)^\alpha\le6\kappa Kt^\alpha$.
+
+Each replacement interval has length at least $t$, so its chord slope
+is at most $2/t$. Complementary interior intervals have length greater
+than $t$ and are affine. At the boundary, any short complementary
+interval belongs to an original affine segment extending at least
+$t$ to the first original breakpoint; its slope has the same bound.
+Thus all slopes have magnitude at most $2/t$.
+
+If the new breakpoints are $u_1<\cdots<u_r$ and the successive slopes
+are $s_0,\ldots,s_r$, use the exact representation
+\[
+ q(x)=q(-1)\operatorname{ReLU}(1)
+     +s_0\operatorname{ReLU}(x+1)
+     +\sum_{j=1}^r(s_j-s_{j-1})\operatorname{ReLU}(x-u_j).
+\]
+Here $r\le2K$, the incoming row norms are at most $\sqrt2$, and each
+slope jump is at most $4/t$. This proves the path-variation bound.
+The case $K=0$ is a bounded affine function and follows directly.
+\end{proof}
+
+\begin{theorem}[A raw $C n^{-1/4}$ oracle under a bounded density]
+\label{thm:univariate-Gaussian}
+Let $\mathcal G_C$ be all one-hidden-layer univariate ReLU networks of
+width at most $C$, with arbitrary finite coefficients and biases.
+Under \eqref{eq:one-dimensional-regularity} and the marginal
+sub-Gaussian label assumption, the shallow Gaussian learner above
+has, with probability at least $1-\delta$, simultaneously for all
+$N\ge6C+6$ and all $0<\nu\le1$,
+\begin{align*}
+ R(\bar z_S)\le\Pi_SR(z)
+ \le\inf_{g\in\mathcal G_C}R(g)+\widetilde O\bigl(
+ &(C+1)\kappa^{1/(\alpha+1)}n^{-\alpha/[2(\alpha+1)]}\\
+ &+(C+1)^2\kappa^{2/(\alpha+1)}n^{-\alpha/(\alpha+1)}\bigr).
+\end{align*}
+In particular, for a bounded density ($\alpha=1$), the excess is
+$\widetilde O(C\sqrt\kappa\,n^{-1/4}+C^2\kappa n^{-1/2})$.
+The same single calibration competes with every declared comparison
+width; it does not use $C,\kappa,\alpha$ or the original coefficients.
+A sufficient fixed-accuracy sample bound is
+\[
+ n\ge\widetilde O\left(
+ \kappa^{2/\alpha}
+       ((C+1)/\varepsilon)^{2+2/\alpha}\right).
+\]
+\end{theorem}
+\begin{proof}
+Choose a deterministic $n^{-2}$-minimizer $g$ of the comparison risk.
+The normalized clipped function
+$f=\clip(g/M_n)$ has at most $K=3C+2$ breakpoints: each of the
+original $C+1$ affine intervals acquires at most two clipping crossings.
+Apply Lemma~\ref{lem:spline-path} at
+\[
+ t=(\kappa\sqrt n)^{-1/(\alpha+1)}\le1,
+\]
+and multiply the result by $M_n$. The compiled raw network has width
+at most $6C+6$, supremum at most $M_n$, and path variation at most
+$cM_n(C+1)/t$. Lemma~\ref{lem:compiler-risk} gives a risk increment
+$\widetilde O(\kappa(C+1)t^\alpha)$, plus a negligible label-tail term.
+Its risk is also at most $O(M_n^2+\E Y^2)$ independently of $C$.
+Substitute this path bound into
+\eqref{eq:one-dimensional-path-oracle}. The additional terms are
+\[
+ \widetilde O\left(\frac{C+1}{t\sqrt n}
+                         +\frac{(C+1)^2}{t^2n}\right).
+\]
+The displayed choice of $t$ balances the two leading contributions
+and proves the oracle. Solving its first term for sample size gives
+the final bound; its squared term is then smaller. Countably many
+declared comparison widths can share one event through a summable
+confidence allocation, changing only logarithms.
+\end{proof}

@@ -1,0 +1,314 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsthm,mathtools,microtype}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={A depth obstruction for Gaussian Bayesian tanh networks from a maximum-amplitude function prior},pdfauthor={ChatGPT-6 Astra; Claude Opus 5.5; Kaarel H\"anni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}[section]\newtheorem{lemma}[theorem]{Lemma}\newtheorem{corollary}[theorem]{Corollary}\newtheorem{proposition}[theorem]{Proposition}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}\newcommand{\KL}{\operatorname{KL}}
+\title{A depth obstruction for Gaussian Bayesian tanh networks\\from a maximum-amplitude function prior}
+\author{ChatGPT-6 Astra \and Claude Opus 5.5 \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{17 November 2026}
+\begin{document}\maketitle
+\begin{abstract}
+We prove a fixed-accuracy learning obstruction for deep Bayesian tanh networks across every Gaussian scale at or stronger than mean field. For $H$ hidden layers, one bounded noisy regression problem on a unit sphere in dimension $O(\sqrt H)$ has a width-two, one-hidden-layer conditional mean, yet after $n=\exp(\Omega(\sqrt H))$ IID samples every width $N\ge n^C$ has fixed positive excess squared risk. One sample event covers all prior scales $0<s\le1/N$, all Gaussian-likelihood variances, clipped prediction conventions, and arbitrary data-dependent mixtures of the posterior means. The independent weight variances are $Ns/d$ in the first layer, $s$ internally, and $s/N$ in the readout. For the family with $Ns\le1-\Delta$, the sample obstruction strengthens to $\exp(\Omega(\sqrt H+\Delta H))$ in dimension $O(\sqrt H+\Delta H)$, uniformly over $0\le\Delta<1$. The analytic mechanism is a function prior that prices small finite-domain functions mainly by maximum amplitude. At canonical mean field its precision-normalized relative-entropy cost is nearly $4\|f\|_\infty$, with a matching lower bound; smaller variance prefactors add a depth baseline that cancels in the statistical comparison. The upper construction uses rank-one conditional covariance changes, while the learner's prior remains unchanged. The obstruction also holds with correctly specified Gaussian observation noise and arbitrary independent Gaussian affine output components. Final clipping or tanh inside the likelihood is covered separately. The same depth-gap crossover holds for each extension with its stated prediction convention. The results are finite-width statements and use no prior over network sizes.
+\end{abstract}
+
+\section{The Gaussian family and the main learning obstruction}
+A shallow conditional mean can be easy to represent while remaining hard for a much deeper Bayesian learner to recover from noisy data. The mechanism here is that sufficient depth makes arbitrary small-amplitude patterns on a large finite input set nearly as cheap under the prior as the signal. Low-temperature posteriors then retain noisy empirical signs, while high-temperature posteriors shrink toward zero; both behaviors give a common excess-risk obstruction.
+
+A scalar readout follows $H\ge1$ hidden tanh layers of common width $N$:
+\[
+ h^1(x)=\tanh(W^1(1,x)),\qquad
+ h^\ell(x)=\tanh(W^\ell h^{\ell-1}(x)),\qquad
+ z_w(x)=v^{\mathsf T}h^H(x),\qquad x\in\R^d.
+\]
+There are no internal biases. The Gaussian family has independent centered coordinates of variances $Ns/d$, $s$, and $s/N$ in the first, internal, and readout layers, respectively, with $0<s\le1/N$. Canonical mean field is $s=1/N$. For the analytic development until Section~\ref{sec:joint-prefactor-entropy}, write $\mu$ for that canonical prior, whose variances are
+\begin{equation}
+ \operatorname{Var}(W^1_{ji})=1/d,\qquad
+ \operatorname{Var}(W^\ell_{ji})=1/N\quad(\ell\ge2),\qquad
+ \operatorname{Var}(v_j)=1/N^2.
+ \label{eq:canonical-prior}
+\end{equation}
+The prior has full support and does not depend on a target function. A comparison law $\rho\ll\mu$ is used only to upper-bound variational objectives or prior-neighborhood costs. It is not a replacement prior.
+
+For an integer $D\ge1$, set $d=D+2$ and
+\begin{equation}
+ \mathcal U_D=\left\{\left(T,\frac z{2\sqrt D},\sqrt{3/4-T^2}\right):
+ T\in\{\pm1/4,\pm3/4\},\ z\in\{-1,1\}^D\right\}
+ \subset\mathbb S^{d-1}.
+ \label{eq:unit-input-set}
+\end{equation}
+This set has $m=4\cdot2^D$ points. Its first coordinate takes four fixed values; the remaining Boolean coordinates index many independently prescribed outputs. We write $\|f\|_\infty=\max_{x\in\mathcal U_D}|f(x)|$.
+For a prediction $f$ and a sample $S=((X_i,Y_i))_{i=1}^n$, define the population and empirical squared losses by
+\[
+ R(f)=\E[(f(X)-Y)^2],\qquad
+ \widehat R_S(f)=\frac1n\sum_{i=1}^n(f(X_i)-Y_i)^2.
+\]
+
+
+\begin{theorem}[A common obstruction at every mean-field-or-stronger scale]
+\label{thm:all-scale-learning}
+There are absolute constants $a,c,C>0$ and an integer $H_0$ such that the following holds for every $H\ge H_0$. Put
+\[
+ D=\lfloor c\sqrt H\rfloor,\qquad d=D+2,\qquad n=4\cdot2^D,
+\]
+and let $X$ be uniform on the unit-sphere set $\mathcal U_D$. Let
+\[
+ Y=g(X)+a\epsilon,\qquad
+ g(X)=\frac a4(2+\tanh X_1),\qquad
+ \Pr(\epsilon=1)=\Pr(\epsilon=-1)=\frac12,
+\]
+with $\epsilon$ independent of $X$. Consider a width-$N$, depth-$H$ tanh network with a linear readout, independent centered Gaussian weights of variances
+\[
+ \frac{Ns}{d},\qquad s,\qquad\frac sN
+\]
+in its first, internal, and readout layers, respectively, and Gaussian likelihood
+\[
+ \Pi(dw)\propto\exp\{-\widehat R_S(z_w)/(2\lambda s)\}\,\mu_{N,s}(dw).
+\]
+The corresponding observation variance is $n\lambda s$. With probability at least $9/10$ over $n$ IID observations, simultaneously for every integer $N\ge n^C$, every $0<s\le1/N$, and every $\lambda>0$, the ordinary posterior mean has squared population loss at least
+\[
+ R(\widehat f)\ge a^2+\frac{a^2}{4096}.
+\]
+The same statement holds for the mean of posterior draws clipped to $[-1,1]$, clipping the ordinary posterior mean, and arbitrary well-defined data-dependent probability mixtures over these predictions, widths, scales, and temperatures, including clipping after mixing.
+
+The conditional mean has width two and one hidden layer, with bounded coefficients independent of $H$. The sample count is $\exp(\Omega(\sqrt H))$, and the width threshold is a fixed polynomial in that count. The prior scale may depend arbitrarily on depth, width, and data inside the stated interval.
+\end{theorem}
+
+The term $a^2$ is the irreducible loss from the independent label noise. The theorem therefore gives a fixed positive excess loss. In particular it includes all canonical exponents $s=N^{-\gamma}$, $\gamma\ge1$, on the same event. It also includes strong-prior sequences at every width above the stated threshold. It concerns the Gaussian regression likelihood displayed in the theorem; the clipping operations in its statement are prediction conventions applied after forming that posterior. Theorem~\ref{thm:all-scale-affine-likelihood} allows an arbitrary independent Gaussian affine output component; Corollary~\ref{cor:all-scale-gaussian-affine} also replaces the bounded noise by correctly specified Gaussian noise. Corollary~\ref{cor:all-scale-bounded-likelihood} treats a final clip or tanh inside the likelihood. These extensions retain the same sample and width orders, with different absolute excess-risk constants. Theorem~\ref{thm:prefactor-window} additionally quantifies the transition below critical mean field: restricting $Ns\le1-\Delta$ strengthens the sample obstruction to $\exp(\Omega(\sqrt H+\Delta H))$, with constants uniform in the possibly depth-dependent gap $\Delta$. Corollary~\ref{cor:prefactor-window-extensions} verifies the same crossover for each observation-model extension with its stated prediction scope.
+
+
+\subsection{The critical function-prior estimate}
+\begin{theorem}[Nearly maximum-amplitude prior cost]
+\label{thm:canonical-function-memorizer}
+There are absolute $A_0,C_0,H_0>0$ such that the following holds. Let $H\ge H_0$, $1\le D\le\sqrt H/2$, and $0<A\le A_0$. For every tolerance $\varepsilon>0$, every width
+\[
+ N\ge C_0(1+\varepsilon^{-1})^{C_0}H^{C_0}e^{C_0D},
+\]
+and every function $f:\mathcal U_D\to[-A,A]$ admit a law $\rho\ll\mu$ with
+\begin{align}
+ \frac2N\KL(\rho\|\mu)
+ &\le4\|f\|_\infty+C_0A^2+
+ C_0\frac{(D+1)^2}{H}+\frac{2\log2}{N},
+ \label{eq:canonical-function-cost}\\
+ \E_\rho\max_{x\in\mathcal U_D}|z_w(x)-f(x)|^2&\le\varepsilon^2.
+ \label{eq:canonical-function-approx}
+\end{align}
+Conversely, for every $0<\delta<1$ there is $C_\delta<\infty$ such that any comparison satisfying \eqref{eq:canonical-function-approx} obeys
+\begin{equation}
+ \frac2N\KL(\rho\|\mu)
+ \ge(4-\delta)(\|f\|_\infty-\varepsilon)
+       -\frac{C_\delta}{H}-\frac{2\log(2m)}N.
+ \label{eq:canonical-function-lower}
+\end{equation}
+\end{theorem}
+
+For every fixed $\delta>0$, choose a sufficiently small fixed $A>0$, then a sufficiently small fixed $c>0$. At $D=\lfloor c\sqrt H\rfloor$, the upper cost is at most $4\|f\|_\infty+\delta A$ for all large enough $H$. Thus the same leading cost covers every function on $\exp(\Omega(\sqrt H))$ inputs. The theorem concerns this depth and width regime; it is not an assertion that circuit complexity never influences a neural function prior.
+
+The function-prior estimate first gives the canonical-scale learning argument in Theorem~\ref{thm:canonical-learning}. A joint depth-and-amplitude entropy bound then extends the argument to every smaller variance prefactor, proving the main theorem above. Thus a sample guarantee polynomial jointly in learner depth, input dimension, and teacher complexity, uniformly over learner width, is impossible throughout this unrestricted Gaussian family. The result does not exclude bounds depending polynomially on learner width, and fixed-depth guarantees remain possible.
+
+The proof has two parts. Exponential moments of the native hidden-variance chain give the lower bound. For the upper bound, a Gaussian feature kernel first encodes any finite function in a neuron-space direction. Covariance spikes amplify that direction with total cost $O((D+1)^2/H)$, and a final variance-recovery phase costs nearly four times the requested amplitude. We first establish the scalar estimates and a simpler one-input construction, then give the finite-set construction.
+
+\section{A one-input comparison at every depth}
+In this section the fixed augmented input vector $u=(1,x)$ obeys $\|u\|_2^2=d$. The finite-set theorem uses the unit-sphere inputs in \eqref{eq:unit-input-set}, whose augmented squared norm is two; its separate construction starts in Section~\ref{sec:sphere-direct-kernel}.
+\begin{theorem}[A finite-width one-output comparison]
+\label{thm:main}
+There is an absolute constant $C$ such that, for every $H\ge1$, $N\ge8$, and prescribed output $a\in\R$, there is a law $\rho_{H,N,a}\ll\mu$ with
+\begin{align}
+ \frac2N\KL(\rho_{H,N,a}\|\mu)&\le C(1+a^2)+C\frac HN,\label{eq:entropy}\\
+ \E_\rho z&=a,\qquad \E_\rho(z-a)^2\le\frac1N.\label{eq:error}
+\end{align}
+The input dimension and chosen input do not enter $C$. In particular the normalized entropy cost is bounded independently of depth whenever $N\ge H$.
+\end{theorem}
+
+The comparison law need not have independent weights. Its conditionals are explicitly Gaussian, and its relative entropy is computed against the unchanged independent Gaussian prior. This is a valid comparison distribution for a Bayesian variational formula; it is not a modification of the learner's prior.
+
+\section{Two scalar estimates}
+Put
+\[
+ F(q)=\E\tanh^2(\sqrt q\,Z),\qquad Z\sim\mathcal N(0,1).
+\]
+
+\begin{lemma}[Critical variance drift]
+\label{lem:drift}
+For an absolute $c>0$ and every $0<q\le1/64$,
+\[
+ q-2q^2\le F(q)\le q-cq^2.
+\]
+The function $F$ is continuous and strictly increasing on $(0,\infty)$.
+\end{lemma}
+\begin{proof}
+Monotonicity and continuity follow from the same properties of $\tanh^2(\sqrt q\,z)$ as a function of $q$ for every $z\ne0$, and bounded convergence. The elementary inequality
+$\tanh^2 t\ge t^2-(2/3)t^4$ gives the lower bound after Gaussian averaging. To verify the inequality, when its right side is nonpositive it is immediate. Otherwise $|t|\le\sqrt{3/2}$ and $\tanh t\ge t-t^3/3$ for $t\ge0$, obtained by integrating $\tanh'(t)\ge1-t^2$; squaring gives the claim.
+
+For $0\le t\le1$, concavity gives $\tanh t\ge t/2$. Hence
+$t-\tanh t=\int_0^t\tanh^2 s\,ds\ge t^3/12$, and
+$t^2-\tanh^2t\ge t^4/12$.
+Restricting the Gaussian expectation to $|Z|\le1$ gives
+$q-F(q)\ge q^2\E[Z^4\mathbf1_{|Z|\le1}]/12$.
+This positive absolute constant is a valid $c$.
+\end{proof}
+
+\begin{lemma}[A uniform reciprocal empirical-variance bound]
+\label{lem:inverse}
+Let $0<v\le1/64$, let $Z_1,\ldots,Z_N$ be independent standard Gaussians, and put
+\[
+ Y=\frac1{NF(v)}\sum_{i=1}^N\tanh^2(\sqrt v Z_i).
+\]
+For every $N\ge8$, an absolute constant $C_1$ satisfies
+\[
+ \E Y=1,\qquad \E Y^{-2}\le C_1,\qquad
+ \E(Y-1)^4\le\frac{C_1}{N^2},\qquad
+ 1\le\E Y^{-1}\le1+\frac{C_1}{N}.
+\]
+Moreover $\E\log Y\le0$, and this logarithm is integrable.
+\end{lemma}
+\begin{proof}
+For $U=\tanh^2(\sqrt v Z)/F(v)$, Lemma~\ref{lem:drift} gives $U\le2Z^2$. Concavity of tanh on $[0,1]$ and monotonicity outside that interval give
+\[
+ U\ge\tfrac14\min\{Z^2,1\}.
+\]
+Thus all fixed positive moments of $U$ are uniformly bounded, and the fourth-moment formula for a mean of independent centered variables gives the stated bound for $Y-1$.
+
+Write $W=\min\{Z^2,1\}$ and $f(t)=\E e^{-tW}$. There exists an absolute $b>0$ such that
+\[
+ f(t)\le(1+bt)^{-1/2}\qquad(t\ge0).
+\]
+Indeed, for $t>0$ the continuous positive function $(f(t)^{-2}-1)/t$ has positive limits $2\E W$ at zero and $2$ at infinity. The latter follows by integrating the Gaussian density near zero: $f(t)\sim(2t)^{-1/2}$. Its infimum is therefore positive. For independent copies $W_i$, the integral identity $x^{-2}=\int_0^\infty t e^{-tx}\,dt$ now yields
+\[
+ \E\Bigl(\sum_iW_i\Bigr)^{-2}
+ \le\int_0^\infty t(1+bt)^{-N/2}\,dt
+ =\frac{b^{-2}}{(N/2-1)(N/2-2)}.
+\]
+Since $Y\ge(4N)^{-1}\sum_iW_i$, this proves the reciprocal second-moment bound uniformly for $N\ge8$.
+
+Finally the exact identity
+$Y^{-1}=1-(Y-1)+(Y-1)^2/Y$ gives
+\[
+ \E Y^{-1}-1
+ \le\bigl[\E(Y-1)^4\bigr]^{1/2}\bigl[\E Y^{-2}\bigr]^{1/2}
+ \le C_1/N,
+\]
+after enlarging the constant. Jensen gives both $\E Y^{-1}\ge1$ and $\E\log Y\le0$. The positive and reciprocal moment bounds imply integrability of the logarithm.
+\end{proof}
+
+\section{The variance schedule and Gaussian control}
+Fix $v_0=1/64$, set $q_{-1}=v_0$, and recursively set
+$q_j=F(q_{j-1})$ for $j\ge0$. These positive numbers decrease to zero. Lemma~\ref{lem:drift} gives
+\begin{equation}
+ q_{j+1}\ge(31/32)q_j,\qquad
+ cq_j^2\le q_j-q_{j+1}\le2q_j^2.
+ \label{eq:schedule-bounds}
+\end{equation}
+
+For odd hidden depth $H=2M+1$, prescribe the sequence of mean hidden squared norms
+\[
+ q_0,q_1,\ldots,q_M,q_{M-1},\ldots,q_0.
+\]
+For even $H=2M+2$, append one further $q_0$ to this sequence. At any prescribed transition from mean norm $r$ to mean norm $r'$, let $v\le v_0$ be the unique value with $F(v)=r'$ and put $\alpha_0=v/r$.
+On a forward transition, $\alpha_0=1$. On a reverse transition from $q_{j+1}$ to $q_j$,
+\[
+ \alpha_0=q_{j-1}/q_{j+1},\qquad 1\le\alpha_0\le2,
+ \qquad \alpha_0-1\le5q_j.
+\]
+The possible repeated final transition also has $1\le\alpha_0=v_0/q_0\le2$.
+Writing $h(\alpha)=\alpha-1-\log\alpha$, we have
+$h(\alpha)\le(\alpha-1)^2/2$ for $\alpha\ge1$. Therefore the total deterministic transition cost satisfies
+\begin{equation}
+ \sum_{\text{transitions}} h(\alpha_0)
+ \le C_2\sum_{j=0}^{M-1}q_j^2+C_2
+ \le C_2\left(1+\frac{q_0}{c}\right),
+ \label{eq:finite-action}
+\end{equation}
+independently of $H$. The last inequality telescopes~\eqref{eq:schedule-bounds}.
+
+We now realize this schedule at finite width. In the first layer, change each row covariance from $I/d$ to
+\[
+ \frac1d\left[I+(v_0-1)\frac{uu^{\mathsf T}}{\|u\|^2}\right].
+\]
+The input preactivations are then independent $\mathcal N(0,v_0)$ variables. The first hidden norm has mean $q_0$.
+
+At a later layer, let $h$ be the actual preceding hidden vector and let
+$\widehat q=\|h\|^2/N$. Almost surely $\widehat q>0$. For a transition whose prescribed preactivation variance is $v$, change every row covariance from $I/N$ to
+\begin{equation}
+ \frac1N\left[I+(\alpha-1)\frac{hh^{\mathsf T}}{\|h\|^2}\right],
+ \qquad \alpha=v/\widehat q.
+ \label{eq:control}
+\end{equation}
+Given the past, the next preactivations are exactly independent $\mathcal N(0,v)$ variables. Their distribution does not depend on the past. In particular the next empirical norm divided by its prescribed mean has exactly the law in Lemma~\ref{lem:inverse}. All rows are centered, and all conditional covariance eigenvalues are positive.
+
+For one Gaussian row, the relative entropy of this rank-one covariance change is $h(\alpha)/2$. Since $\widehat q=rY$, we have $\alpha=\alpha_0/Y$. Lemma~\ref{lem:inverse} gives
+\begin{align}
+ \E h(\alpha_0/Y)
+ &=h(\alpha_0)+\alpha_0(\E Y^{-1}-1)+\E\log Y\notag\\
+ &\le h(\alpha_0)+2C_1/N.
+ \label{eq:feedback-cost}
+\end{align}
+The chain rule for relative entropy sums these conditional costs against the original independent Gaussian prior. The first layer contributes $Nh(v_0)/2$. Equations~\eqref{eq:finite-action}--\eqref{eq:feedback-cost} therefore bound the normalized hidden-weight entropy by an absolute constant plus $C H/N$.
+
+\section{Readout and prior probability consequences}
+At the final layer the empirical norm has mean $q_0$, regardless of $H$. Conditional on all hidden weights, give the readout its native covariance $I/N^2$ and mean
+\[
+ m_v=\frac{a h^H}{N\widehat q_H},\qquad
+ \widehat q_H=\|h^H\|^2/N.
+\]
+Then $m_v^{\mathsf T}h^H=a$ exactly, while its conditional output variance is $\widehat q_H/N\le1/N$. Its conditional relative entropy is
+\[
+ \frac{N^2}2\|m_v\|^2=\frac{Na^2}{2\widehat q_H}.
+\]
+Lemma~\ref{lem:inverse} gives
+$\E\widehat q_H^{-1}\le q_0^{-1}(1+C_1/N)$, an absolute constant. Combining this with the hidden-weight cost proves Theorem~\ref{thm:main}.
+
+\begin{corollary}[One-output prior probabilities have no extra depth exponent]
+\label{cor:probability}
+There is an absolute $C$ such that, if $N\ge\max\{8,H,4/\varepsilon^2\}$, then for every $a\in\R$,
+\[
+ \mu\{|z-a|\le\varepsilon\}\ge\exp[-CN(1+a^2)].
+\]
+For $|a|>\varepsilon$, the corresponding elementary upper bound is
+\[
+ \mu\{|z-a|\le\varepsilon\}
+ \le2\exp[-N(|a|-\varepsilon)^2/2].
+\]
+Thus at fixed nonzero output and sufficiently small fixed tolerance, negative log neighborhood probability is of order width, uniformly in depth whenever $N\ge H$.
+\end{corollary}
+\begin{proof}
+Under the comparison law, Chebyshev gives probability at least $3/4$ to the neighborhood. The binary relative-entropy inequality implies
+$\log(1/\mu(A))\le2\KL(\rho\|\mu)+2\log2$ whenever $\rho(A)\ge1/2$. Apply Theorem~\ref{thm:main} and absorb $H\le N$ into the constant.
+
+Under the prior, conditional on hidden weights, the readout is centered Gaussian with output variance $\|h^H\|^2/N^2\le1/N$. Its Gaussian tail gives the second inequality.
+\end{proof}
+
+\input{sharp-amplitude}
+\input{sharp-mgf}
+\input{sphere-feature-kernel}
+\input{canonical-spike-prefix}
+\input{covariance-spike-tail}
+\input{canonical-spike-realization}
+\input{canonical-polynomial-width}
+\input{canonical-function-assembly}
+\input{arbitrary-finite-domain}
+\input{function-probabilities}
+\input{canonical-learning}
+\input{gaussian-noise-learning}
+\input{joint-prefactor-entropy}
+\input{all-prefactor-function-comparison}
+\input{baseline-prox}
+\input{all-scale-learning}
+\input{prefactor-window}
+\input{all-scale-Gaussian-noise}
+\input{all-scale-bounded-likelihood}
+\input{all-scale-affine-likelihood}
+\input{all-scale-gaussian-affine}
+
+
+\section{Interpretation and scope}
+At canonical mean field, a small hidden variance decays quadratically: $q-F(q)=\Theta(q^2)$. A relative covariance spike of order $q$ reverses this drift at entropy cost $\Theta(q^2)$ per layer. The sum along a reversed decay trajectory is finite and, when the endpoint variance is of order $a$, proportional to $a$. The finite-set construction first aligns this variance with a chosen signal; the cost of that alignment is quadratic in the logarithm of the number of encoded values and inversely proportional to depth.
+
+The resulting function cost depends primarily on maximum amplitude on the specified finite domain. The learning theorem uses a separate statistical argument: the posterior approaches the empirical least-squares predictor with a common output cap, whose predictions retain the signs of noisy singleton labels. Those signs supply a common population-error witness at every temperature. The upper and lower prior estimates are both essential; a one-input tail estimate alone would not establish the learning obstruction.
+
+Every learner prior in this paper is an independent Gaussian law in the family stated in Theorem~\ref{thm:all-scale-learning}; the critical member is \eqref{eq:canonical-prior}. Dependence enters only through the explicitly constructed comparison distributions. The proofs are finite-dimensional: they do not replace the network by a Gaussian process, take width to infinity, or restrict the prior's support. Each base learner uses one fixed dense architecture; the lower bound also covers the explicitly stated mixtures of their predictions. They have undergone separate AI-agent mathematical review but have not been formalized in Lean.
+\appendix
+\input{canonical-spike-barrier}
+\end{document}

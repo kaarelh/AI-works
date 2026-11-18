@@ -1,0 +1,75 @@
+\section{The compiler pays only an additive cost for extra depth}
+\label{sec:stable-compiler-resources}
+The analog-to-digital input conversion is the only part of the comparator
+whose perturbations accumulate.  Its depth is logarithmic in precision.
+Once the features represent signed bits, each subsequent tanh gate
+restores its output margin.  Consequently adding learner layers need not
+multiply the entire comparison cost by learner depth.
+
+\begin{lemma}[Compiler comparison resource]\label{lem:stable-compiler-resource}
+Use one of the Boolean, density, or slab compilers at accuracy $\epsilon$,
+with compiled width $m$, grid exponent $J$ in the continuous cases, and
+$J=0$ in the Boolean case.  Write
+$t=\lceil\log_2(128/\epsilon)\rceil$.
+Suppose $M\ge1$ and the intended target is
+$M\operatorname{clip}(g/M,[-1,1])$.
+For every $N\ge m$ and every allowed learner depth $H$, there is a
+sample-independent comparison law $\rho$ with
+\[
+ \rho\{\sup_x|z_w(x)|\le6M\}=1,\qquad
+ \E_\rho\|z_w-M\operatorname{clip}(g/M,[-1,1])\|_{L^2(P_X)}^2
+                 \le cM^2\epsilon,
+\]
+and
+\begin{equation}\label{eq:stable-compiler-KL}
+ \operatorname{KL}(\rho\|\mu_{N,H})\le
+ c\left[(d+1)^2(J+2)^4+(d+1)(h+1)(m+1)^2
+                  +(H+1)(t+2)^2\right]\Lambda^2+cM^2,
+\end{equation}
+where one may take
+\[
+ \Lambda=c(1+\alpha^{-1})\left[J+
+ \log\frac{(H+2)(m+2)(d+2)(\kappa+2)(M+2)}{\epsilon}\right].
+\]
+For the Boolean and density cases take $\alpha=1$, and for the Boolean
+case also take $\kappa=1$.  The constants are numerical except for their
+dependence on the fixed scalar prior parameters.  There is no coefficient
+cap on the original ReLU network.
+\end{lemma}
+\begin{proof}
+On Boolean inputs insert one tanh layer of gain $O(\log(1/\delta))$
+which restores the input signs to error at most $\delta/4$.
+Its selected dense-block count is $O((d+1)^2)$.  On continuous inputs
+use the quantizer with bit tolerance at most one quarter of the desired
+digital tolerance.  Its prefix depth is $1+2J$, its width is at most
+$d(J+2)+1$, and its total selected coefficient/vertex/layer count is at
+most $c(d+1)^2(J+2)^3$.  Its coefficient logarithm is at most $c\Lambda$.
+
+Choose the digital tolerance smaller than
+$\min\{\epsilon,1/[100(m+1)]\}$, by a numerical factor where needed.
+The quantizer formulas, gate count and desired accuracy ensure that
+$\log(1/\delta)\le c\Lambda$.  In the density and slab cases its bad
+input set has probability $O(\epsilon)$.  The ideal bit computation
+approximates the clipped target in population squared error
+$O(\epsilon)$, by the compiler proofs.  The fixed-precision division
+step in the Boolean compiler leaves at most $2(t+1)$ final output bits.
+
+The actual majority circuit has depth at most $b(h+1)$ and width at most
+$m$.  All of its selected dense blocks, including zero coefficients,
+therefore contribute at most $c(d+1)(h+1)(m+1)^2$ positions.  Padding
+copies only the final $2(t+1)$ signed bits, so it contributes at most
+$c(H+1)(t+2)^2$ positions.  Any unused feature has intended outgoing
+coefficient zero, whose selected position is included in these counts.
+
+Apply Lemma~\ref{lem:raw-bit-comparison} and its range-$M$ extension.
+The prefix term is bounded by
+$c(d+1)^2(J+2)^3[(J+2)\Lambda+\Lambda]$.
+The digital term is its actual count times $c\Lambda$; the final
+readout contributes $cM^2$ and logarithms already covered by $\Lambda$.
+Their sum is bounded by \eqref{eq:stable-compiler-KL}.
+The good-input and bad-input error bounds from the restoring-bit lemma,
+combined with the compiler approximation and $|g_*|\le4$, give the stated
+population error.  Its final conditioning also gives the deterministic
+raw-support bound $6M$.  These are properties of a comparison law used
+in the proof, not restrictions on the Bayesian prior or posterior.
+\end{proof}

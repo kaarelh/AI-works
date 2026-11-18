@@ -1,0 +1,68 @@
+\section{Gaussian label noise throughout the scale range}
+\label{sec:all-scale-Gaussian-noise}
+The scale-uniform conclusion also holds when the labels have exactly a Gaussian conditional distribution.
+
+\begin{corollary}[One Gaussian-noise problem for every allowed prior scale]
+\label{cor:all-scale-Gaussian-noise}
+For suitable absolute constants $a,c,C,H_0>0$, the setting of Theorem~\ref{thm:all-scale-learning}, with labels instead given by
+\[
+ Y=g(X)+aZ,\qquad Z\sim\mathcal N(0,1)\text{ independently of }X,
+ \qquad g(X)=\frac a4(2+\tanh X_1),
+\]
+has, with probability at least $9/10$,
+\[
+ R(\widehat f)\ge a^2+a^2/512^2
+\]
+simultaneously for every $N\ge n^C$, $0<s\le1/N$, every positive Gaussian-likelihood variance, and every prediction or mixture listed in Theorem~\ref{thm:all-scale-learning}. In particular the true observation variance $a^2$ is included.
+\end{corollary}
+\begin{proof}
+We spell out the changes to the scale-uniform proof. Write $B,c_\nu,e_0,e_2$ as in~\eqref{eq:allscale-floor}--\eqref{eq:allscale-comparison-error}, but use comparison cap $A=16a$. Enlarging the fixed coefficient in $C_0a^2$ preserves the same error form. Put $r_0=\widehat R_S(0)$, and work on the sample events
+\begin{equation}
+ r_0\le6a^2,\qquad
+ T_S:=\frac1n\sum_i(|b_i|-A)_+^2\le2^{-50}a^2,
+ \label{eq:allscale-Gaussian-events}
+\end{equation}
+where $b_i$ are empirical means within repeated-input groups. The cap-error argument in Section~\ref{sec:canonical-Gaussian-noise} gives
+\[
+ J_\lambda(v_\lambda)-J_\lambda(u_\lambda)\le T_S,
+ \qquad v_\lambda=\operatorname{clip}(u_\lambda,[-A,A]).
+\]
+Here $u_\lambda$ minimizes $J_\lambda(u)=\widehat R_S(u)+\lambda c_\nu\|u\|_\infty$ on repeated-input sample vectors. Although $u_\lambda$ need not be bounded by $A$, $v_\lambda$ is an admissible comparison. Its approximation incurs empirical-risk error at most
+$\zeta\le38a\varepsilon+\varepsilon^2$ on~\eqref{eq:allscale-Gaussian-events}.
+
+The proof of Lemma~\ref{lem:baseline-prox} now gives, for $p=\Pi\{M(z)>u\}$,
+\begin{align}
+ \|\E_\Pi z(S)-p u_\lambda\|_S
+ \le u+\bigl[2\sqrt6au+s+T_S+\zeta
+       +\lambda\{A(4-c_\nu)+e_0+e_2\}\bigr]^{1/2}.
+ \label{eq:allscale-Gaussian-low}
+\end{align}
+Indeed the low-output cross term is bounded by $2u\|Y\|_S\le2\sqrt6au$. On the high-output event the same strong-convexity gap applies. In the upper comparison, clipping $u_\lambda$ to $v_\lambda$ costs $T_S$, and
+\[
+ 4\|v_\lambda\|_\infty-c_\nu\|u_\lambda\|_\infty
+ \le(4-c_\nu)A.
+\]
+These are exactly the two changes to the baseline-cancellation argument.
+
+Divide temperatures again at $\lambda_0=\Lambda a^2/(B+a)$. The three uniform ratios in~\eqref{eq:allscale-ratios} still control every term in~\eqref{eq:allscale-Gaussian-low}. Its squared error divided by $a^2$ has the same limsup bound~\eqref{eq:allscale-limsup}, with larger absolute constants and the extra term $2^{-50}$. Choose $\Lambda$ large, then $2-t$, $a$, $c$, $u/a$, and $\varepsilon/a$ sufficiently small, in that order. For large enough $H$ and $N\ge n^C$, every $\lambda\le\lambda_0$ then gives empirical error less than $a/10000$. Clipped predictions satisfy the same error bound relative to the corresponding clipped capped references; these references remain nonpositive wherever $b_i<0$.
+
+For $\lambda>\lambda_0$, the prior comparison gives $F_S\le7a^2$ and
+$\E_\Pi\|z(S)\|_S^2\le26a^2$. If $B\ge a$, the threshold-event probability obeys
+\[
+ p\le14/\Lambda+e_0/B\le14/\Lambda+4u/a+o(1),
+\]
+uniformly in the scale. Thus the raw mean has empirical norm at most
+$u+\sqrt{26a^2p}<a/10000$; the same holds for both clipped conventions. If $B<a$, then $c_\nu\ge3$ for large $H$, and the amplitude floor yields
+\[
+ \E_\Pi M(z)\le14a/(3\Lambda)+(4u+o(1))/3<a/10000.
+\]
+The choices can satisfy the low- and high-temperature requirements simultaneously.
+
+Finally, the Gaussian sample estimates in Section~\ref{sec:canonical-Gaussian-noise} establish~\eqref{eq:allscale-Gaussian-events} together with at least $n/100$ singleton observations having $Z\le-1$, with joint probability at least $9/10$ at large $H$. At these inputs the empirical labels are negative and $g>a/4$. Every preceding reference is nonpositive there, so the same witness gives
+\[
+ \langle w,\widehat f-g\rangle_S\ge a/400-a/10000>a/512.
+\]
+References are bounded on the finite observed sample by its largest label magnitude. Convexity, clipping contraction, and the common sign property therefore preserve the witness for all well-defined mixtures. Its population translation proves squared excess risk at least $a^2/512^2$.
+\end{proof}
+
+The correctly specified likelihood variance corresponds to $\lambda=a^2/(ns)$ in the displayed posterior of Theorem~\ref{thm:all-scale-learning}. Its inclusion is automatic because the sample event covers every positive $\lambda$ and every allowed $s$ simultaneously.

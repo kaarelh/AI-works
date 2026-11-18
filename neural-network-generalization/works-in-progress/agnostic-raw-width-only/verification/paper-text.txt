@@ -1,0 +1,1668 @@
+        Raw Bayesian neural-network regression competes with narrow
+                              approximations
+          ChatGPT-6 Astra                Claude Opus 5.5           Kaarel Hänni        Dmitry Vaintrob∗
+
+                                                    17 November 2026
+
+
+
+                                                        Abstract
+              Can Bayesian neural-network regression compete with the best approximation of width
+          polynomial in the sample size, when the comparison network may have arbitrarily large coef-
+          ficients? We give a positive result for one continuous full-support prior on a prescribed dense
+          tanh architecture. Hidden outgoing weights have continuous gamma multipliers and Student
+          factors; the Gaussian readout has a Dirichlet allocation of its variance. The likelihood uses raw
+          squared errors and prediction is the ordinary raw posterior mean after all observations. For
+          marginally
+          √            sub-Gaussian labels, a deterministic Gaussian observation variance proportional to
+             n gives a coefficient-one expected-risk oracle. At fixed input dimension and comparison depth
+          h, it competes with arbitrary-coefficient ReLU networks of width nu for some u > 0, with a
+          vanishing polynomial remainder, at every prescribed learner width N ≥ n. With only a finite
+          second label moment, a data-calibrated observation variance gives a slower vanishing oracle for a
+          growing width class. The input distribution may be arbitrary on the Boolean cube, or satisfy slab
+          anticoncentration on a continuous domain, including uniform spheres. A binary-input compiler
+          avoids a power-of-accuracy width cost; it uses logarithmic extra depth for continuous inputs.
+          Margin-restoring tanh gates make the comparison cost additive in extra learner depth. For noisy
+          realizable conditional means, a separate theorem keeps one fixed likelihood variance and gives
+          an almost 1/n rate at fixed teacher resources. For exactly Gaussian noise, a further theorem
+          uses its true variance without inflation, with a larger complexity polynomial. For marginally
+          sub-Gaussian labels with bounded conditional mean, a separate full-support readout with faster-
+          decreasing tails gives a nearly inverse-sample agnostic complexity penalty at observation variance
+          proportional to log2 n. Removing the conditional-mean bound adds an explicit n−1+o(1) term.
+          The learners use no output clipping, architecture mixture, or holdout selection.
+
+
+1        Approximation quality rather than exact realizability
+A complicated regression function can still admit a useful narrow-network approximation. A learning
+guarantee should then compare test risk with that approximation’s risk, rather than require the
+target itself to have small complexity. Width alone is a demanding measure: a narrow network may
+use arbitrarily large real coefficients, encode steep transitions, or have large raw outputs.
+    This paper proves such a comparison for one fixed family of Bayesian tanh networks. The prior
+is specified in Section 2. It is hierarchical in continuous weights and has full support on a prescribed
+dense architecture. It is not the independent Gaussian weight prior. The observation model is
+ordinary Gaussian regression with a specified sample-size-dependent variance. Both its likelihood
+and final posterior mean use unrestricted real outputs.
+    ∗
+        Authors are listed in alphabetical order.
+
+
+
+                                                           1
+    The main theorem bounds expected test risk by the best raw ReLU-network risk plus an
+estimation remainder, with coefficient exactly one on the comparison risk. At fixed input dimension
+and comparison depth, its resource is
+                                            e C 2bh + H ,
+                                                        
+                                           O
+where C is comparison width, h is comparison hidden depth, H is learner hidden depth, and b is
+a numerical constant from a Boolean arithmetic compiler. Its statistical penalty is this resource
+           √
+divided by n. For example, taking
+
+                              Cn = ⌊n1/(8bh) ⌋,         H ≤ n1/4 ,     N ≥n
+
+gives a remainder O(n e −1/4 ). Boolean inputs require only H ≥ O(h); continuous inputs require
+H ≥ c log n. The latter requirement is explicit and cannot be suppressed by calling learner depth
+fixed.
+     Under only a finite second label moment, Theorem 4.1 gives a slower vanishing comparison
+using a variance calibrated from the observed labels. Its output remains raw and its coefficient on
+comparison risk is still one.
+     There are three ingredients. A raw-posterior oracle charges a useful comparison neighborhood
+by its entropy relative to the weight prior. A coefficient-free Boolean compiler turns arbitrary
+real coefficients into finite digital computation. A tanh binary quantizer extends that compiler
+to continuous inputs, while restoring digital margins prevents padding to larger learner depth
+from repeatedly amplifying errors. Clipping occurs only in this proof’s comparison construction;
+sub-Gaussian label tails make that comparison step inexpensive. It never changes the observed
+labels or the actual learner.
+     The main statistical conclusion is in expectation over the training sample. It is not a claim of
+efficient posterior computation, a pointwise risk domination with no estimation term, or a guarantee
+at all widths as small as the uncompiled teacher. The explicit threshold is the compiled width, and
+N ≥ n is a simple sufficient choice in the growing-class corollary.
+
+Relation to earlier results. Dense Bayesian neural networks with heavy-tailed weights and
+deterministic architectures already have posterior-contraction guarantees for structured smoothness
+classes[8]. The present comparison target is different: arbitrary-coefficient finite-depth ReLU
+approximations, a coefficient-one agnostic risk inequality, every sufficiently large prescribed width,
+and an ordinary raw posterior mean. The prior and sample-size-dependent observation variance
+are part of the theorem; the result is not asserted for every reasonable prior. The underlying
+coefficient-reduction idea also has earlier precedents in neural complexity theory[6, 7]. We use a
+precise finite-input compiler[4] and standard threshold arithmetic [5], and prove the continuous
+quantization and Bayesian comparison consequences needed here.
+
+
+2    One dense prior and raw Gaussian regression
+Let X ∈ [−1, 1]d and let Y be real valued. The observations are iid, and R(f ) = E(f (X) − Y )2
+denotes squared test risk. Fix a hidden width N and hidden depth H before observing the sample.
+All hidden activations are tanh. Fix 0 < ϑ ≤ 1 and a centered Student law of more than two degrees
+of freedom. The first-layer weights and all hidden biases have this Student law. For 2 ≤ ℓ ≤ H, set
+                                                           
+                                    N
+                                          Sℓ−1,j Gℓ,ij hℓ−1
+                                    X
+            hℓi (x) = tanh bℓi +                       j (x) ,
+                                                                    Sℓ−1,j ∼ Gamma(ϑ/N, 1),
+                                    j=1
+
+
+                                                       2
+where the Gℓ,ij have the same Student law. All these latent variables are independent. At the
+readout take a separate symmetric Dirichlet vector and independent standard Gaussian factors:
+                                                                                  N q
+                                                                                  X
+                 P ∼ Dirichlet(ϑ/N, . . . , ϑ/N ),                zw (x) = G0 +             Pj Gj hH
+                                                                                                   j (x).      (1)
+                                                                                  j=1
+
+This is a continuous full-support prior on one dense architecture. Hidden outgoing weights share a
+continuous multiplier, and the readout shares a variance allocation; its weight coordinates are not
+independent. No network size is sampled. Its scalar distributions do not change with sample size.
+Their displayed fan-in dependence defines the prior family as N varies.
+   For a deterministic temperature Tn , the posterior and prediction are
+                              Pn
+                                     (zw (Xi )−Yi )2 /Tn
+                         e−
+                                                                                        Z
+                               i=1
+             ΠS (dw) =                                     µN,H (dw),      fbS (x) =         zw (x) ΠS (dw).   (2)
+                                       ZS
+The physical Gaussian observation variance is Tn /2. There is no output clipping, output saturation,
+label truncation, holdout selection, or averaging across sample sizes in this learner. The posterior
+mean is the ordinary mean after all n observations. Computing it efficiently is not part of the
+guarantee.
+   We state explicitly the raw-network oracle used below. It is proved in the companion paper
+on raw priors[3]; the following explanation also identifies its two quantitative inputs. Write Lq for
+the absolute sum of the comparator’s readout coefficients and bq for its output bias. For a tanh
+comparator q with the same depth H, width at most m ≤ N , and hidden coefficient cap B ≥ 1, set
+
+          Pm = (d + 1)(m + 1) + (H + 1)(m + 1)2 ,
+          Qm = Pm + (H + 1)(m + 1) + H + 1,
+     Kn (q) = Qm [(H + 2) log{c(d + m + 2)(B + 2)} + log{c(H + 2)(m + 1)(B + 2)(n + 1)}]
+                    + L2q + b2q + 1.                                                                           (3)
+
+The count includes every position in the selected dense blocks, including zero coefficients. It is not
+a count only of nonzero edges.
+Proposition 2.1 (Raw network comparison oracle, imported). Suppose E exp(Y 2 /KY2 ) ≤ 2 for a
+fixed finite KY . There are constants t0 , c > 0, depending only on the fixed prior laws and KY , such
+                                              √
+that the single deterministic choice Tn = t0 n gives
+
+                              ES R(fbS ) ≤ R(q) + cn−1/2 Kn (q) + c(n + 1)−2
+
+for every raw tanh comparator q and every N ≥ m. The constants are independent of learner depth,
+learner width, input dimension and comparator resources. No output bound on q is required.
+   Two facts explain the role of this prior. First, its rawpsupremum has a width- and depth-
+independent Gaussian tail. Indeed supx |zw (x)| ≤ |G0 | + j Pj |Gj |. If Sj ∼ Gamma(ϑ/N, 1) and
+                                                         P
+     P
+U = j Sj , then U is independent of Pj = Sj /U , and
+                                        Xq                   √ Xq
+                                               Sj |Gj | =     U  Pj |Gj |.
+                                         j                          j
+      p
+Each Sj Gj is a difference of two gamma variables. The absolute sum on√the left is dominated
+                                                                                  √
+by a gamma variable of fixed total shape; its pth norm is O(p), whereas ∥ U ∥p ≥ c p. Division
+                            √
+proves ∥ supx |zw (x)|∥p ≤ c p.
+
+                                                              3
+   Second, small comparator implementations have useful prior neighborhoods at every larger
+width. There is a comparison law ρr satisfying
+                                                                  c(m + 1)(B + 2)W
+        Eρr ∥zw − q∥2∞ ≤ r,        KL(ρr ∥µN,H ) ≤ cQm log                         + c(L2q + b2q ),
+                                                                          r
+where W = (H + 2)[c(d + m + 2)(B + 2)]H+2 . The comparison puts selected gates near nonzero values
+and suppresses the sum of the others. Its selected-gate entropy contains log N terms; averaging
+placements among the N neurons cancels those terms. Student coefficient neighborhoods cost
+logarithmically in B, while allocating readout variance in proportion to coefficient magnitudes costs
+O(L2q ). These are comparison measures, not changes to the learner or a prior over architectures.
+     The proof of Proposition 2.1 truncates the prior only for analysis, applies the all-data bounded-
+prediction exponential- weights oracle, and transfers back using the native Gaussian supremum
+                                                                      √
+tail. Balancing that tail against the posterior normalizer gives Tn ≍ n. The final posterior and its
+mean in (2) remain unrestricted. The companion gives the full latent-coordinate construction and
+tail-transfer proof.
+     We also use its supported-comparison form. There is an analytical cutoff Un = c0 n1/4 such that
+every sample-independent law ρ supported on {supx |zw (x)| ≤ Un } obeys
+                                                        Tn KL(ρ∥µN,H )
+                                   Z
+                    ES R(fbS ) ≤       R(zw ) ρ(dw) +                  + c(n + 1)−2 .                 (4)
+                                                            n+1
+This follows by using ρ directly in the proof-only bounded-prior oracle: conditioning the prior to
+contain its support can only decrease its KL cost. The raw-prior transfer is unchanged. This form
+permits a comparison accurate in population L2 , rather than uniformly on the whole input domain.
+No such cutoff is imposed on the actual posterior.
+
+
+3    Coefficient-free approximation oracles
+Let GC,h be the class of real-valued ReLU networks with hidden width at most C and hidden depth
+h, arbitrary finite real coefficients, and affine biases. There is no norm or robustness restriction on
+these comparison networks. Their output is raw and can be unbounded as their coefficients vary.
+Only the input domain is compact.
+    We first make the accuracy and architecture requirements explicit. For n ≥ 2 set
+                                            q
+                      Mn = max{1, KY            20 log(n + 2)},       ϵn = (n + 2)−8 .
+
+On Boolean inputs use
+
+       kB = 4(d + 1)(C + 1)h + ⌈log2 (32/ϵn )⌉ + 2,                   b
+                                                              mB = ⌈ckB ⌉,         HB = ⌈b(h + 1)⌉.
+
+For continuous inputs with density at most κ relative to uniform measure on the cube, put
+                                       &                             '
+                                       c max{1, κ}d(C + 1)h
+                              J = log2                      ,
+                                                ϵn
+                            kD = 4(dJ + 1)(C + 1)h + ⌈log2 (32/ϵn )⌉ + 2,
+                                   b
+                           mD = ⌈ckD ⌉,           HD = 2J + ⌈b(h + 1)⌉ + 3.
+
+For the slab condition (8), use instead
+                                                            l        n    √             om
+          F = (hC + ⌈8/ϵn ⌉ + 1)(C + 1)dh ,             JS = log2 max 8, 4 d(8κF/ϵn )1/α ,
+
+                                                        4
+and define kS , mS , HS by the density formulas with J replaced by JS . Here b, c are fixed numerical
+constants large enough for the compiler lemmas. Enlarging them is allowed once, before applying
+the theorem.
+
+Theorem 3.1 (Raw Bayesian regression against arbitrary coefficients). Assume E exp(Y 2 /KY2 ) ≤ 2.
+                                                    √
+Use the single prior (1), posterior (2), and Tn = t0 n from Proposition 2.1. The following statements
+hold for every architecture fixed before the data.
+
+   1. If X ∈ {−1, 1}d has any distribution, take m∗ = mB and H∗ = HB .
+
+   2. If X ∈ [−1, 1]d has density at most κ relative to the uniform probability measure, take m∗ = mD
+      and H∗ = HD .
+
+   3. If PX satisfies the slab condition (8), take m∗ = mS and H∗ = HS . This includes the sphere
+      laws in Corollary 7.2.
+
+For every N ≥ m∗ and H ≥ H∗ , and all n above a fixed threshold depending only on the label
+envelope and prior parameters,
+
+                             ES R(fbS ) ≤ inf R(g) + cBn n−1/2 + c(n + 1)−2 ,                      (5)
+                                           g∈GC,h
+
+where tn = ⌈log2 (128/ϵn )⌉ and
+               h                                                                        i
+         Bn = (d + 1)2 (J∗ + 2)4 + (d + 1)(h + 1)(m∗ + 1)2 + (H + 1)(tn + 2)2 Λ2n + Mn2 ,
+                                        (H + 2)(m∗ + 2)(d + 2)(κ + 2)(Mn + 2)
+                                                                                   
+                        −1
+         Λn = c(1 + α        ) J∗ + log                                       .
+                                                         ϵn
+Use J∗ = 0, α = 1, κ = 1 in the Boolean case; J∗ = J, α = 1 in the density case; and J∗ = JS with
+the stated slab constants in the third case. The constants depend on the fixed scalar prior laws and
+KY ; no coefficient of a comparison network enters the bound. The learner does not use C, h, κ,
+the comparison network, or these resource bounds to choose its temperature. The density and slab
+conditions are alternatives; the former gives a smaller sufficient depth for cube-supported laws.
+
+Proof. Fix a comparison network g. Pointwise projection onto [−Mn , Mn ] satisfies
+
+                                  (clipMn g − Y )2 ≤ (g − Y )2 + (|Y | − Mn )2+ .
+
+The label-tail assumption and the choice of Mn make the expectation of the last term at most
+c(n + 1)−4 . Apply the compiler to g/Mn , and Lemma 9.1 with raw target g, range Mn , and precision
+ϵn . It gives a sample-independent law ρ supported on raw outputs of supremum at most 6Mn , with
+
+                    Eρ ∥zw − clipMn g∥2L2 (PX ) ≤ cMn2 ϵn ,         KL(ρ∥µN,H ) ≤ cBn .
+
+The label-tail bound and Cauchy–Schwarz therefore give R(zw )ρ(dw) ≤ R(g) + c(n + 1)−2 . For
+                                                                   R
+
+all sufficiently large n, 6Mn lies inside the analytical cutoff c0 n1/4 of (4). That inequality proves
+(5) for the fixed g. Taking a deterministic sequence of population-risk near-minimizers proves the
+infimum statement. This last step is an infimum of numerical upper bounds; no data-dependent
+selection of a comparison network is required.
+
+
+
+
+                                                        5
+Corollary 3.2 (A growing-width comparison class). Fix d, h, KY and, in the continuous cases, the
+applicable regularity constants κ and α. Let
+                                                1
+                                          u=       ,          Cn = ⌊nu ⌋.
+                                               8bh
+For all sufficiently large n, every prescribed N ≥ n, and every prescribed learner depth in the ranges
+below, the same single posterior satisfies
+
+                                  ES R(fbS ) ≤      inf              e −1/4 ).
+                                                              R(g) + O(n                            (6)
+                                                 g∈GCn ,h
+
+
+On Boolean inputs the permitted range is b(h + 1) ≤ H ≤ n1/4 . Under either continuous assumption
+it is cd,h,κ,α log(n + 2) ≤ H ≤ n1/4 , with α = 1 for the density case. The tilde suppresses powers of
+logarithms; constants may depend on the fixed quantities above and the fixed prior laws. The prior
+                                                                                       √
+uses one prescribed dense architecture, the likelihood has deterministic variance t0 n/2, and the
+predictor is the raw posterior mean on all data.
+                                           e 1/8 ), so N ≥ n is sufficient. At fixed input dimension
+Proof. Both compiler widths satisfy m∗ = O(n
+                                       e              e 1/4 ). Division by √n gives the result. The
+and teacher depth the resource is Bn = O(m2∗ + H) = O(n
+lower bound on continuous learner depth is exactly the logarithmic input-quantization overhead.
+
+    The inequality compares the final raw Bayesian predictor with the best approximation in a
+growing width class. It does not assert that a learner can match that class with no estimation
+remainder, or that the learner width may be arbitrarily small. Here the explicit sufficient threshold
+is N ≥ m∗ , with the simpler N ≥ n in the corollary. The constants and powers are theoretical; no
+claim of practical sample counts is made.
+
+
+4    Only a finite second label moment is needed for a vanishing
+     oracle
+The qualitative comparison with a growing width class does not require a label-tail bound. The
+same prior also works under only EY 2 < ∞, with a slower rate and a variance calibrated from the
+observed labels. Neither the labels nor network outputs are clipped.
+Theorem 4.1 (A raw width oracle with finite-variance labels). Fix d, h and one of the input
+settings in Theorem 3.1, with its regularity constants fixed. Assume only EY 2 < ∞. Retain the
+same Student-hidden, normalized-Gaussian-readout prior. On each sample use
+                                                                n
+                                                                       !
+                                                   5/6       1X
+                                          TS = n          1+      Y2
+                                                             n i=1 i
+
+in the raw posterior (2). Put
+                                               Cn = ⌊n1/(24bh) ⌋.
+For all sufficiently large n, every prescribed N ≥ n, and every prescribed learner depth satisfying the
+previous lower threshold and H ≤ n1/36 ,
+                                 Z
+               ES R(fbS ) ≤ ES       R(zw ) ΠS (dw)
+                                                                             h           i
+                                               e (1 + EY 2 )n−1/12 + E Y 2 1
+                                                                       
+                         ≤     inf      R(g) + O                             {|Y |>n1/24 } .        (7)
+                             g∈GCn ,h
+
+
+
+                                                          6
+The lower learner-depth threshold is O(h) on Boolean inputs and cd,h,κ,α log(n + 2) in the continuous
+cases. The tilde hides powers of logarithms and constants depending on the fixed prior laws, input
+dimension, teacher depth and input regularity. The last term tends to zero for every fixed finite-
+variance label law. The variance rule uses no unknown label moment or teacher resource.
+
+Proof. The raw finite-variance sieve theorem for this prior[3] holds for every deterministic comparison
+law ρ of finite risk and KL:
+
+        ES ΠS R(zw ) ≤ ρR(zw ) + (1 + EY 2 )n−1/6 KL(ρ∥µN,H )
+                        + c(1 + EY 2 )(Dn + Dn2 + (n + 1)−2 ),       Dn = (d + H + 1)3 n−1/6 .
+
+For clarity, this interface comes from a deterministic finite dictionary covering all but exponentially
+small prior mass. The prior is centered, its pointwise variance is bounded, and its raw supremum
+has a Gaussian tail. The chosen TS gives a deterministic posterior-density ceiling exp(O(n1/6 )).
+Centering the loss as f 2 − 2f Y removes the Y 2 term; its dictionary symmetrization requires only
+EY 2 , not a fourth moment. The final variational inequality contributes exactly E(TS /n) KL =
+(1+EY 2 )n−1/6 KL. This is the arbitrary-comparison-law form of the imported theorem, so population
+approximation suffices.
+   Fix g ∈ GCn ,h and put M = n1/24 . Apply Lemma 9.1 to the raw target g, range M , and precision
+ϵ = (n + 2)−8 . Its compiled width is O(ne 1/24 ), hence at most N for all sufficiently large n. Its
+comparison entropy is
+                                           e 2bh + H + M 2 ) = O(n
+                             KL(ρ∥µN,H ) = O(C                 e 1/12 ).
+                                               n
+
+The law approximates clipM g in squared population norm to cM 2 ϵ. The pointwise projection
+inequality from the main proof and Cauchy–Schwarz give
+
+                         ρR(zw ) ≤ R(g) + E[Y 2 1{|Y |>M } ] + c(1 + EY 2 )n−2 .
+
+Since H ≤ n1/36 and d is fixed, Dn = O(n−1/12 ); its square is smaller. Substituting these estimates
+in the imported interface and taking population near-minimizers proves (7). Jensen gives the
+mean-prediction bound. Finally the tail expectation tends to zero by dominated convergence, using
+EY 2 < ∞.
+
+    The temperature in this section is data dependent, so it is a specified variance-calibrated Bayesian
+procedure rather than a fixed-variance Gaussian generative model. The prior and architecture remain
+fixed before the data, and a single posterior uses all observations. This should be distinguished
+                                   √
+both from the deterministic Tn ≍ n agnostic theorem and the fixed-temperature noisy-realizable
+theorem.
+
+
+5    A coefficient-free Boolean compiler
+Lemma 5.1. There is a numerical b ≥ 2 such that the following holds. Let g be any ReLU network
+of width C ≥ 1 and hidden depth h ≥ 1, with arbitrary finite real coefficients and affine biases. On
+{−1, 1}d , for every 0 < ϵ < 1 and every H ≥ b(h + 1) there is a tanh network q of hidden depth H,
+with a raw affine readout, satisfying
+
+                        sup |q(x) − clip(g(x), [−1, 1])| ≤ ϵ,    |q(x)| ≤ 1 + ϵ,
+                         x
+
+
+
+                                                    7
+and                                h                                       ib
+                           m, B ≤ 4(d + 1)(C + 1)h + ⌈log2 (32/ϵ)⌉ + 2 .
+The coefficient and width bounds do not grow with the additional learner depth H. On the entire
+input cube the same raw implementation satisfies |q| ≤ 4, because its signed-bit readout has coefficient
+sum below two and constant offset of magnitude below two.
+
+Proof. Use the coefficient-free unweighted-majority circuit compiler of [4]. Its precise input is an
+arbitrary-real ReLU network on d Boolean coordinates, of width C and depth h; it outputs a
+numerical-constant-depth-per-layer threshold circuit whose size is polynomial in 4(d + 1)(C + 1)h +
+log(1/ϵ), independently of all original coefficient magnitudes. The construction lifts input-to-node
+path products to independent coefficients, fixes the finite Boolean activation patterns, and uses
+integer linear programming bounds to replace the resulting affine forms. Constant-depth integer
+arithmetic then evaluates them. It does not assume that arbitrary deep real weights can be rounded
+within the original architecture. Its depth is O(h + 1), its size including wires is polynomial in the
+bracketed quantity, and a linear readout of its output bits, with absolute coefficient sum less than
+four, approximates the clipped target to ϵ/2. For a threshold gate with r inputs and threshold j,
+the signed-bit affine input is
+                                                r
+                                                X
+                                       ℓ(σ) =         σi − (2j − r − 1).
+                                                i=1
+
+It has margin at least one on exact signs. If the circuit size is S, choose δ = min{ϵ/16, 1/[8(S + 1)]}
+and k = log(2/δ). Replacing each gate by tanh(kℓ) preserves signed-bit error at most δ at every
+layer: incoming error changes ℓ by at most 1/8, and 2e−7k/4 ≤ δ. Copying signed bits with tanh(kσ)
+restores the same accuracy, so arbitrary further depth causes no accumulation.
+    Before the tanh replacement, round the final clipped rational value to t = ⌈log2 (128/ϵ)⌉ binary
+places. If its signed numerator is A and positive denominator is Q, compute ⌊2t min{|A|, Q}/Q⌋
+by the constant-depth threshold circuit for integer division [5], then mask its magnitude bits by
+the sign of A (zero has sign zero). This changes the value by at most 2−t and leaves only 2(t + 1)
+potentially nonzero readout bits. The input word lengths affect the circuit size, which is still
+polynomial in the displayed resource, but not this final number of bits. Enlarging b absorbs the
+additional constant-depth block. For arbitrary additional learner depth, copy only these final signed
+bits. Their readout variation plus bias remains less than four.
+    An exact constant c0 = tanh(1) can be carried by the weight 1/c0 ; alternatively the model’s affine
+biases supply offsets directly. Converting the Boolean readout to signed bits gives a nonconstant
+coefficient sum less than two, so its raw reconstruction error is at most 2δ. The triangle inequality
+proves the claimed raw output error before any clipping. The width is S + 1, gate coefficients are at
+most k, and bias/constant-wire coefficients at most (S + 1)k/c0 . Enlarging a numerical exponent b
+gives all bounds.
+
+
+6     Continuous inputs without a power-of-accuracy width cost
+A continuous input can first be converted to binary digits. Applying a Boolean-network compiler to
+those digits avoids a separate neuron for every small grid box. The price is logarithmic additional
+depth. This section concerns only a comparison network used in a proof; the Bayesian learner
+continues to use its raw output in both the likelihood and prediction.
+
+Lemma 6.1 (A tanh binary quantizer). Let Q = 2t , t ≥ 1, and 0 < ρ < 1/(4Q). Let 0 < δ ≤
+ρ/[106 Q(t + 1)]. There is a tanh network of width at most d(t + 2) + 1 and hidden depth 1 + 2t
+
+                                                        8
+which, for every y ∈ [0, 1]d satisfying
+
+                                   dist(yj , Q−1 Z) ≥ ρ   (1 ≤ j ≤ d),
+
+returns all dt signed binary digits of ⌊Qyj ⌋, each with error at most δ. Its coefficients have absolute
+value at most                              q
+                                      Cρ−1 Q(t + 1)/ρ log(4/δ).
+The output digits always lie in [−1, 1], including outside the displayed set. Arbitrary further layers
+can copy the digits while preserving their error, with coefficient cap C log(4/δ).
+Proof. It suffices to process one coordinate in parallel with the others. The exact binary algorithm
+starts at z0 = y and iterates
+
+                         bj = 1{zj ≥ 1/2},       zj+1 = 2zj − bj    (0 ≤ j < t).
+
+Every threshold encountered is a dyadic grid boundary. Therefore |zj − 1/2| ≥ ρ under the stated
+hypothesis. Choose
+                                        ρ               4
+                             τ2 = 6           ,    k = log(4/δ),
+                                  10 Q(t + 1)           ρ
+and initialize u0 = tanh(τ y). One physical layer computes
+                                                                              
+                            vj = tanh(uj ),     sj = tanh k(uj /τ − 1/2) ,
+
+and the next computes
+                                    uj+1 = tanh 2vj − τ2 (1 + sj ) .
+                                                                   
+
+At each of these layers every previously stored signed bit is replaced by tanh(ks); thus copies are
+restored rather than accumulated linearly. Constants can be supplied by affine biases. An exact
+constant wire of value tanh(1) is an alternative if the model omits intermediate biases.
+    Write ej = |uj /τ − zj |. As long as ej ≤ ρ/8, the decision input has margin at least 7ρ/8, so
+|sj − (2bj − 1)| ≤ δ. The elementary bound | tanh v − v| ≤ |v|3 /3 gives
+
+                              e0 ≤ τ 2 /3,     ej+1 ≤ 2ej + 100τ 2 + δ/2.
+
+Here |uj | ≤ 2τ and the next preactivation has magnitude at most 5τ , so the numerical constant
+100 is sufficient. Consequently ej ≤ 102Qτ 2 + Qδ/2 < ρ/8 for every j ≤ t; induction justifies the
+temporary hypothesis. A stored bit has magnitude at least 1 − δ ≥ 7/8, so its copy has error at
+most 2e−7k/4 ≤ δ. The displayed width, depth, and coefficient cap follow from these formulas. The
+same restoring copy proves the final claim.
+
+Lemma 6.2 (Quantized-input raw tanh compilation). There is a numerical exponent b ≥ 2 with
+the following property. Let g be an arbitrary-real-coefficient ReLU network of hidden width C ≥ 1
+and depth h ≥ 1. Suppose PX has density at most κ relative to the uniform probability measure on
+[−1, 1]d , and put κ̄ = max{1, κ}. For 0 < ϵ < 1/4, define
+                  &                  '
+                      cκ̄d(C + 1)h
+             J = log2              ,          K = 4(dJ + 1)(C + 1)h + ⌈log2 (32/ϵ)⌉ + 2.
+                            ϵ
+
+At every prescribed depth H ≥ 2J + b(h + 1) + 3, there is a tanh network q with raw affine readout
+(using the native output bias) such that
+
+                      E|q(X) − clip(g(X), [−1, 1])|2 ≤ cϵ,         sup      |q(x)| ≤ 4,
+                                                                x∈[−1,1]d
+
+
+                                                    9
+and
+                    m ≤ cK b ,
+                                                                                
+                                      log(B + 2) ≤ c J + log(dκ̄/ϵ) + log(K + 2) .
+The raw readout has absolute coefficient sum plus absolute bias at most four. These resource bounds
+are independent of additional learner depth. The constants do not depend on any coefficient of g.
+
+Proof. Write f = clip(g, [−1, 1]) and R = (C + 1)h . On every coordinate line, a depth-h, width-C
+ReLU network has at most R affine intervals. Clipping each affine interval is monotone, so the
+one-dimensional total variation of f on any segment is at most 2R.
+   Take Q = 2J and mesh ∆ = 4/Q. For a grid shift a ∈ [0, ∆)d , let
+
+                         y = (x − a + 21)/4,          xa = a − 21 + 4Q−1 ⌊Qy⌋.
+
+For J sufficiently large, y ∈ [0, 1]d whenever x ∈ [−1, 1]d . Averaging over a and using the coordinate
+translation bound for functions of bounded variation gives
+                                  Z
+                             Ea             |f (x) − f (xa )| 2−d dx ≤ cdR/Q.
+                                  [−1,1]d
+
+For completeness, replace the coordinates
+                                       R
+                                          one at a time. In one coordinate the randomized rounding
+displacement lies in [0, ∆]; Fubini and |u(t + s) − u(t)|dt ≤ |s| TV(u) bound its average contribution
+by 2R∆, times the volume of the other coordinates in the slightly enlarged cube. After the factor
+2−d , this volume contributes at most (1 + ∆)d ≤ e, because the numerical constant in J ensures
+Q ≥ 8d. Sum the d bounds. Multiplying by the density bound shows that some fixed shift a has
+
+                                  E|f (X) − f (Xa )| ≤ cκ̄dR/Q ≤ cϵ.
+
+The chosen shift is part of the proof’s comparison network, not an input to the learner.
+    Set ρ = ϵ/(cκ̄dQ), increasing the numerical constant c if necessary. The union of the original-
+coordinate strips for dist(yj , Q−1 Z) < ρ has probability at most cκ̄dQρ ≤ ϵ. On its complement
+use Lemma 6.1. The exact bits describe Xa as an affine function of dJ signed Boolean variables.
+Composing this affine decoding with the first layer of g gives a width-C, depth-h ReLU network on
+that Boolean cube. The coefficient-free majority-circuit compiler used in Lemma 5.1 has size S ≤ K b ,
+depth at most b(h + 1), and signed-bit readout variation plus offset below four. It approximates
+f (Xa ) to ϵ/4.
+    Choose the quantizer bit tolerance to be
+                                          ρ          1       ϵ
+                                                                         
+                             δ = min   6
+                                                ,          ,    .
+                                     10 Q(J + 1) 100(S + 1) 100
+
+The majority gates have integer margin at least one. Replacing each by tanh with gain log(4/δ)
+restores bit error at most δ, because its incoming perturbation is at most Sδ ≤ 1/100. The raw
+readout therefore adds at most 4δ error. Insert as many restoring signed-bit layers as necessary
+before the readout to attain the prescribed H. This does not increase the error or coefficient cap.
+    On the good quantizer set, |q − f (Xa )| ≤ ϵ/2. Everywhere, |q| ≤ 4, because the last hidden
+coordinates lie in [−1, 1] and the readout has variation plus offset below four. Thus its squared error
+against f is bounded by 25 on the bad set. On the good set use |f − f (Xa )|2 ≤ 2|f − f (Xa )| and
+the preceding translation estimate. This proves the claimed mean-square error. The quantizer and
+Boolean compiler widths are bounded by cK b . Their coefficient logarithms are O(J + log(dκ̄/ϵ) +
+log(K + 2)), directly from the quantizer formulas and the majority-gate gains. No inverse precision
+appears as a power in the width.
+
+                                                     10
+7     Digital compilation under slab anticoncentration
+The binary quantizer also works for singular input laws, including surface measure on a sphere. The
+approximation argument here uses output-level hyperplanes rather than translation of a density.
+   Assume X ∈ [−1, 1]d and, for fixed κ ≥ 1 and 0 < α ≤ 1,
+
+                      PX {|u · X − t| ≤ r} ≤ κrα         (∥u∥2 = 1, t ∈ R, r > 0).                    (8)
+
+No Lebesgue density is required.
+
+Lemma 7.1 (Slab-regular quantized-input compiler). Let g be a ReLU network of hidden width
+C ≥ 1, hidden depth h ≥ 1, arbitrary finite real coefficients, and affine biases. For 0 < ϵ < 1/4,
+define
+                   A = (C + 1)dh ,      L = ⌈8/ϵ⌉,       F = (hC + L + 1)A,
+                                                 √  8κF 1/α
+                                     &          (                       )'
+                                J = log2 max 8, 4 d                            ,
+                                                      ϵ
+and
+                             K = 4(dJ + 1)(C + 1)h + ⌈log2 (32/ϵ)⌉ + 2.
+For a numerical exponent b ≥ 2, and every prescribed hidden depth H ≥ 2J + b(h + 1) + 3, there is
+a tanh network q with raw affine readout satisfying
+
+                        E|q(X) − clip(g(X), [−1, 1])|2 ≤ 6ϵ,           sup |q| ≤ 4.
+                                                                     [−1,1]d
+
+Its readout coefficient absolute sum plus absolute bias is at most four. Its hidden width and coefficient
+cap satisfy
+                                                 c            κ(d + 1)
+                                                                                   
+                   m ≤ cK b ,      log(B + 2) ≤      J + log           + log(K + 2) ,
+                                                 α               ϵ
+with numerical c, b independent of the original coefficients and the additional learner depth. In
+particular,
+                             c                       κ(d + 1)(hC + 1)
+                                                                     
+                         J≤     dh log(C + 1) + log                     .
+                             α                                ϵ
+Thus inverse accuracy enters width and depth only logarithmically.
+
+Proof. The common refinement of all hidden activation regions has at most A full-dimensional
+polyhedral cells. Indeed, each layer cuts an existing cell by at most C affine hyperplanes, producing
+at most dj=0 Cj ≤ (C + 1)d subcells. The activation boundaries are contained in a union of at
+        P
+
+most hCA affine hyperplanes: include each nonconstant preactivation’s zero hyperplane on each
+preceding cell. Identically zero or nonzero constant expressions add no boundary. This is an upper
+bound on full hyperplanes, not merely on their restricted pieces. Boundary points are contained in
+the same union; degenerate identically zero gates do not create further boundaries.
+   On each final activation cell the raw output is affine. For every such affine formula ℓ, add its
+nonempty proper level hyperplanes
+
+                                 ℓ(x) = −1 + 2j/L,         j = 0, . . . , L.
+
+When ℓ is constant there is no level boundary to add. The total collection H has at most F
+hyperplanes. It depends on the teacher, but its cardinality bound is independent of all teacher
+coefficient magnitudes. On a connected set avoiding every plane of H, the activation formula stays
+
+                                                    11
+fixed and the clipped output varies by at most 2/L ≤ ϵ/4. If the raw output lies beyond the extreme
+levels, its clipped value is constant instead.
+    Put Q = 2J , y = (x + 21)/4, and
+
+                                       xQ = −21 + 4Q−1 ⌊Qy⌋.
+                                         √
+Here y ∈ [1/4, 3/4]d , and ∥x − xQ ∥2 ≤√4 d/Q. Whenever the rounding segment intersects a plane
+in H, the original point lies within 4 d/Q of that plane. The slab assumption and union bound
+therefore give an exceptional set of probability at most
+                                             √
+                                        κF (4 d/Q)α ≤ ϵ/8.
+
+Outside that set, writing f = clip(g, [−1, 1]), we have |f (X) − f (XQ )| ≤ ϵ/4. This argument uses
+one fixed unshifted grid and works for the singular laws allowed by (8).
+   For the binary quantizer choose
+                                                              1/α
+                                              1         ϵ
+                                                  
+                                           ρ=                        .
+                                              4       16κdQ
+
+Since α ≤ 1, this is smaller than 1/(4Q). In the range yj ∈ [1/4, 3/4], at most Q grid boundaries
+occur for each coordinate. Each original-coordinate bad strip has width condition |xj − t| < 4ρ.
+Consequently its union has probability at most
+
+                                            κdQ(4ρ)α = ϵ/16.
+
+No density bound is used for this second exceptional set either.
+   The exact quantizer bits describe XQ as an affine function of dJ signed Boolean variables.
+Compose that decoding with the first layer of g and apply the coefficient-free Boolean compiler from
+Lemma 5.1. It has size S ≤ K b , depth at most b(h + 1), and a signed-bit readout with variation
+plus offset below four, approximating f (XQ ) to ϵ/4. Use Lemma 6.1 at tolerance
+
+                                                 ρ          1       ϵ
+                                                                        
+                             δ = min                   ,          ,    .
+                                           106 Q(J + 1) 100(S + 1) 100
+
+Integer-margin majority gates replaced by tanh gates restore this accuracy at each layer. The raw
+readout adds at most 4δ, so |q − f (XQ )| ≤ ϵ/2 away from the quantizer strips. Additional hidden
+layers restore the signed bits before the final readout. They do not accumulate error or increase the
+coefficient cap.
+    Outside the two exceptional sets the total prediction error is at most 3ϵ/4, and hence its square
+is at most ϵ2 . Everywhere, |q − f | ≤ 5 because the readout variation and offset give |q| ≤ 4. The
+mean square error is thus at most
+
+                                       ϵ2 + 25(ϵ/8 + ϵ/16) ≤ 6ϵ.
+
+The quantizer and Boolean widths are bounded by cK b . Their logarithmic coefficient bound follows
+from
+                             log(1/ρ) = log 4 + α−1 log(16κdQ/ϵ)
+and the explicit quantizer gains and majority-gate biases. Finally, taking logarithms in the definition
+of F and J gives the stated upper bound on J. All constants are numerical.
+
+
+
+                                                      12
+Corollary 7.2 (Uniform cubes and spheres). The preceding compiler applies in both of the following
+cases. If PX has density√at most κ0 ≥ 1 relative to the uniform probability law on [−1, 1]d , one may
+take α = 1 and κ = κ0 d. If d ≥ 2 and PX has density at most κ0 relative to uniform surface
+probability on Sd−1 , one may take
+                                               (
+                                                (1/2, 4κ0 ),     d = 2,
+                                    (α, κ) =           √
+                                                (1, 4κ0 d),      d ≥ 3.
+
+In particular the sphere version has no ambient Lebesgue-density assumption. The regularity
+constants are fixed uniformly over the teacher and the requested accuracy.
+                                                                   √
+Proof. For the uniform cube, choose a coordinate with |uj | ≥ 1/ d and condition on all the others.
+√ uniform coordinate lies in an interval of length at most 2r/|uj |, giving slab probability at most
+Its
+  d r. A bounded density relative to this reference probability multiplies the bound by κ0 .
+    For the unit sphere, rotation invariance reduces the question to the first coordinate. When d ≥ 3,
+its density is
+                                                               Γ(d/2)          √
+                      cd (1 − t2 )(d−3)/2 1{|t|<1} , cd = √                 ≤ d.
+                                                            π Γ((d − 1)/2)
+                                                            √                                  √
+An interval of length 2r therefore has probability at most 2 d r. For d = 2 the density is 1/(π 1 − t2 )
+                                                                        √
+on (−1, 1); integrating over any interval of length 2r gives at most 4 r. Multiplication by κ0 and
+harmless enlargement give the displayed constants.
+
+
+8    Restoring bit circuits with a raw normalized readout
+This comparison refinement separates an analog prefix from later digital computation. It concerns
+the same gamma-gated Student hidden prior and normalized Gaussian readout. No additional
+restriction is imposed on the learner’s prior.
+    Fix an input law PX and a measurable good set A with PX (Ac ) ≤ ξ. A teacher prefix has depth
+J, width at most m, coefficient cap B0 , and resource Qpre in the neuron-gate comparison. On A,
+the final features used by the digital block approximate specified bits in {−1, 1} within δ/4. Other
+final prefix features may be retained but have zero intended outgoing coefficients in that block.
+After the prefix, let a layered signed-bit circuit use unweighted majority gates, including copying
+and negation. Before multiplying by a gain k, each gate has integer coefficients of magnitude at
+most one, a bias of magnitude at most m + 1, and signed preactivation margin at least one on its
+intended input bits. Let Qdig count all active dense coefficient positions, hidden vertices and layers
+after the prefix, including zero positions between selected neurons. The actual tanh implementation
+multiplies each gate’s coefficients and bias by
+                                                                    1
+                                k ≥ log(8/δ),         0<δ≤                .
+                                                                16(m + 1)
+
+Let the ideal bit readout have coefficients vj , bias b, and L = j |vj |, with L + |b| ≤ 4. Let g∗
+                                                                          P
+
+denote that ideal readout on A, extended arbitrarily with |g∗ | ≤ 4 outside it.
+
+Lemma 8.1 (A depth-stable raw bit comparison). For every prescribed finite width N ≥ m, there
+is a sample-independent comparison law ρ for the raw-output learner such that
+
+                      ρ{∥zw ∥∞ ≤ 6} = 1,           Eρ ∥zw − g∗ ∥2L2 (PX ) ≤ C(δ 2 + ξ),
+
+
+                                                     13
+and
+
+      KL(ρ∥µN ) ≤ CQpre [(J + 2) log{C(d + m + 2)(B0 + 2)} + log(1/δ)]
+                                              C(Qpre + Qdig + m + 2)(k + 1)
+                        + C(Qdig + m + 1) log                               + C(L2 + b2 ). (9)
+                                                            δ
+Constants depend on the fixed prior parameters but not on learner width, prefix depth, or digital
+depth. In particular the digital block pays its actual parameter count times logarithms, without a
+further factor of its depth.
+Proof. First construct a comparison before imposing three good events. Choose the usual disjoint
+per-vertex location groups at every layer. In the prefix use the standard gate comparison with scalar
+precision small enough that the maximum expected squared uniform error over all its final selected
+features is at most δ 2 /[104 (m + 1)]. Its depth-uniform stability bound shows that the logarithm of
+this precision is at most
+
+                     C(J + 2) log{C(d + m + 2)(B0 + 2)} + C log((m + 1)/δ).
+
+The first good event makes every such feature error at most δ/4. A union bound and Markov’s
+inequality give this event probability at least 0.99. On A the actual prefix output is then within
+δ/2 of its intended bits. Outgoing gates of the last prefix layer can be assigned at the next step,
+because they do not enter their own features.
+    At every digital layer put selected gates uniformly near one, condition the total inactive gate
+mass to be at most ϵ, and put selected edge/bias factors uniformly within ϵ of their intended gain-k
+values. All actual tanh features are bounded by one. The selected coefficient perturbation in one
+row is deterministically at most Cm(k + 1)ϵ. Its inactive background has expected uniform absolute
+value at most Cϵ, since the total inactive gate mass is at most ϵ and the native factor has a fixed
+first absolute moment. These bounds do not require the preceding features to be independent of
+one another.
+    Let Vdig be the number of digital gates and choose
+                                                     c
+                                    ϵ≤                            .
+                                         (Vdig + 1)(m + 1)(k + 1)
+The sum of the expected uniform absolute perturbations over every digital row is then at most
+k/1000. The second good event makes each such perturbation at most k/8; Markov’s inequality
+gives failure probability at most 0.01.
+     On the first two good events, the digital output error remains at most δ at every depth. Indeed,
+if incoming features are within δ of the intended bits, their contribution to the preactivation error is
+at most kmδ ≤ k/16. The ideal signed margin is at least k, and the new row perturbation is at
+most k/8. Thus the actual preactivation has the correct sign and magnitude at least 3k/4. Its tanh
+output differs from that sign by at most 2e−3k/2 ≤ δ. Induction proves the assertion, starting from
+the prefix error δ/2.
+     At the normalized Gaussian readout use the variation-adapted Dirichlet comparison: selected
+latent gate centers are
+                                        ωj = (|vj | + L/r)/(2L)
+when L > 0, where r is the number of selected output bits; use ωj = 1/r if L = 0. They sum to
+                                                                      √
+one and are at least 1/(2r). The selected Gaussian centers are vj / ωj . Their quadratic cost is at
+most 2L2 , and the bias adds Cb2 . Choose its scalar precision at most cδ/(m + 1). The selected
+effective coefficient errors then have total absolute size at most Cδ, while the inactive contribution
+
+                                                  14
+                                                                             p
+has expected uniform absolute size at most cδ by the bound inactive Pj ≤ Cϵ in the readout
+                                                                   P
+
+comparison. The third good event bounds that inactive absolute contribution by δ/100; choosing
+its precision constant small makes its failure probability at most 0.01.
+    The intersection E of the three good events has probability at least 0.97 under the comparison
+law. On E, the raw output is uniformly bounded by six, and on A its discrepancy from g∗ is at
+most Cδ. On Ac , both functions have absolute value at most six. This gives the stated integrated
+error after conditioning the comparison on E.
+    Before conditioning, every selected latent gate has the usual log N entropy cost. The disjoint
+location mixture cancels all these costs, including those for the final Dirichlet gates. The prefix pays
+the first term of (9). Digital factors, gates and biases pay CQdig log[C(Qpre + Qdig + m + 2)(k + 1)/δ];
+the selected final factors and gates pay at most the same logarithm times C(m + 1), plus C(L2 + b2 ).
+The selected marker intervals remain disjoint from inactive gates because the precisions are chosen
+smaller if necessary.
+    Finally conditioning a law ν on an event of probability at least 0.97 increases its KL against the
+native prior by at most a fixed factor plus a numerical constant. Explicitly the KL chain rule for
+(E, E c ) implies
+                            ν(E) KL(ν(· | E)∥µN ) ≤ KL(ν∥µN ) + h(ν(E)),
+where h is binary entropy. This proves (9). Conditioning occurs only in the comparison proof, not
+in the actual learner.
+
+Corollary 8.2 (A growing readout range). If the ideal bit readout instead has L + |b| ≤ 4M for a
+deterministic M ≥ 1, the same construction gives
+
+                   ρ{∥zw ∥∞ ≤ 6M } = 1,        Eρ ∥zw − g∗ ∥2L2 (PX ) ≤ CM 2 (δ 2 + ξ).
+
+In the resource (9), add log(M + 1) inside the logarithmic precision terms and retain the exact final
+cost C(L2 + b2 ) ≤ CM 2 .
+
+Proof. The digital and prefix comparison is unchanged. At the readout use precision cδ/[(m+1)(M +
+                              √
+1)], the selected centers vj / ωj for the enlarged coefficients, and the same constant-probability event
+bounding its inactive absolute contribution by δ/100. Selected coefficient errors have total absolute
+size Cδ, while the bit approximation contributes at most Lδ ≤ 4M δ. The selected absolute-sum
+norm plus bias is at most 4M + Cδ, and the inactive term is at most δ/100, giving the support bound
+after reducing the precision constant. The complement of the good input set contributes at most
+CM 2 ξ to integrated squared error. Only the precision logarithm and the Gaussian selected-center
+cost change.
+
+Interface to the raw-tail theorem. The raw-tail statistical proof only needs the comparison
+supported inside its auxiliary event En = {∥zw ∥∞ ≤ Mn } and a population-risk comparison. For all
+sufficiently large n, Mn ≥ 6, so the law above is already supported there. Moreover
+
+                    KL(ρ∥µN (· | En )) = KL(ρ∥µN ) + log µN (En ) ≤ KL(ρ∥µN ).
+                                                                                         √
+If δ ≤ n−2 and ξ ≤ n−4 , Cauchy–Schwarz and EY 2 < ∞ give Eρ R(zw ) ≤ R(g∗ ) + C(1 + EY 2 )n−2 .
+The remaining raw-tail comparison between the auxiliary and actual posterior is unchanged. Thus
+the resource above can replace the generic depth-amplified comparison resource in the raw oracle.
+For a quantizer prefix of logarithmic depth and logarithmic-bit output, extra bit-copying layers cost
+only their selected dense block count times logarithms, typically H polylog n.
+
+
+                                                  15
+    For a growing range M , the same interface applies once the auxiliary
+                                                                      √    raw-tail cutoff satisfies
+Mn ≥ 6M . Choosing δ ≤ n /M and ξ ≤ n /M√ gives an O((1 + EY )n−2 ) comparison-risk
+                             −3    2          −6   4                      2
+
+remainder, since |g∗ | ≤ 4M . In particular M = O( log n) only changes the compiler resources and
+statistical remainder by logarithmic factors. The population comparison itself only needs a finite
+second moment; the imported raw-tail oracle still requires its stated marginal sub-Gaussian label
+assumption.
+
+Corollary 8.3 (The power-readout family). Fix p > 1. Replace the final readout by G0 +
+P 1−1/p                                                                     −|G|p . The preced-
+  j Pj    Gj hH
+              j , with independent factor and bias density proportional to e
+ing comparison conclusions remain true, with constants depending on p, and the final magnitude
+cost becomes                              p      
+                                           X
+                                     Cp        |vj | + |b|p  ≤ Cp M p .
+                                             j
+
+All other resource terms change only by constants and logarithmic precision factors.
+
+Proof. Put α = 1 − 1/p. Use the same selected gate centers ωj , but the selected factor center is
+vj /ωjα . For L > 0, ωj ≥ |vj |/(2L), so
+
+                                X |vj |p                    X
+                                                 p−1
+                                       p−1 ≤ (2L)               |vj | = 2p−1 Lp .
+                                 j    ωj             j
+
+For L = 0 all selected centers are zero. The power-readout comparison conditions the inactive latent
+gate sum to be at most ϵ1/α and then bounds inactive Sjα ≤ Cϑ,p ϵ at constant additional entropy.
+                                                  P
+
+The identity        "                           #
+                       X
+                               α
+                                   X                          Γ(a + α)Γ(b0 )
+                  E           Sj          Sj = t = tα (N − r)                ≤ Cϑ,p tα
+                     inactive    inactive
+                                                              Γ(a)Γ(b0 + α)
+proves that assertion, with a = ϑ/N and b0 = (N − r)a; the empty inactive set is interpreted
+separately. The total gate sum remains close to one, so selected effective coefficient errors have total
+size at most Cp δ at precision cp δ/[(m + 1)(M + 1)]. Native factors have finite first moments, so the
+same inactive-output good event applies. All digital steps are unchanged. The designated-factor
+entropy is the displayed p-power cost plus logarithms, and the same constant-probability conditioning
+finishes the proof.
+
+
+9    The compiler pays only an additive cost for extra depth
+The analog-to-digital input conversion is the only part of the comparator whose perturbations
+accumulate. Its depth is logarithmic in precision. Once the features represent signed bits, each
+subsequent tanh gate restores its output margin. Consequently adding learner layers need not
+multiply the entire comparison cost by learner depth.
+
+Lemma 9.1 (Compiler comparison resource). Use one of the Boolean, density, or slab compilers at
+accuracy ϵ, with compiled width m, grid exponent J in the continuous cases, and J = 0 in the Boolean
+case. Write t = ⌈log2 (128/ϵ)⌉. Suppose M ≥ 1 and the intended target is M clip(g/M, [−1, 1]). For
+every N ≥ m and every allowed learner depth H, there is a sample-independent comparison law ρ
+with
+            ρ{sup |zw (x)| ≤ 6M } = 1,     Eρ ∥zw − M clip(g/M, [−1, 1])∥2L2 (PX ) ≤ cM 2 ϵ,
+               x
+
+
+
+                                                       16
+and
+                    h                                                                i
+  KL(ρ∥µN,H ) ≤ c (d + 1)2 (J + 2)4 + (d + 1)(h + 1)(m + 1)2 + (H + 1)(t + 2)2 Λ2 + cM 2 ,          (10)
+
+where one may take
+
+                                            (H + 2)(m + 2)(d + 2)(κ + 2)(M + 2)
+                                                                                   
+                 Λ = c(1 + α−1 ) J + log                                        .
+                                                             ϵ
+For the Boolean and density cases take α = 1, and for the Boolean case also take κ = 1. The
+constants are numerical except for their dependence on the fixed scalar prior parameters. There is
+no coefficient cap on the original ReLU network.
+
+Proof. On Boolean inputs insert one tanh layer of gain O(log(1/δ)) which restores the input signs
+to error at most δ/4. Its selected dense-block count is O((d + 1)2 ). On continuous inputs use the
+quantizer with bit tolerance at most one quarter of the desired digital tolerance. Its prefix depth is
+1 + 2J, its width is at most d(J + 2) + 1, and its total selected coefficient/vertex/layer count is at
+most c(d + 1)2 (J + 2)3 . Its coefficient logarithm is at most cΛ.
+     Choose the digital tolerance smaller than min{ϵ, 1/[100(m + 1)]}, by a numerical factor where
+needed. The quantizer formulas, gate count and desired accuracy ensure that log(1/δ) ≤ cΛ. In
+the density and slab cases its bad input set has probability O(ϵ). The ideal bit computation
+approximates the clipped target in population squared error O(ϵ), by the compiler proofs. The
+fixed-precision division step in the Boolean compiler leaves at most 2(t + 1) final output bits.
+     The actual majority circuit has depth at most b(h + 1) and width at most m. All of its selected
+dense blocks, including zero coefficients, therefore contribute at most c(d+1)(h+1)(m+1)2 positions.
+Padding copies only the final 2(t + 1) signed bits, so it contributes at most c(H + 1)(t + 2)2 positions.
+Any unused feature has intended outgoing coefficient zero, whose selected position is included in
+these counts.
+     Apply Lemma 8.1 and its range-M extension. The prefix term is bounded by c(d + 1)2 (J +
+   3
+2) [(J + 2)Λ + Λ]. The digital term is its actual count times cΛ; the final readout contributes cM 2
+and logarithms already covered by Λ. Their sum is bounded by (10). The good-input and bad-input
+error bounds from the restoring-bit lemma, combined with the compiler approximation and |g∗ | ≤ 4,
+give the stated population error. Its final conditioning also gives the deterministic raw-support
+bound 6M . These are properties of a comparison law used in the proof, not restrictions on the
+Bayesian prior or posterior.
+
+
+10     A fixed likelihood for noisy realizable targets
+When a narrow network represents the conditional mean exactly, the Gaussian observation variance
+can stay fixed. The posterior may still be misspecified: the true noise need only be conditionally
+sub-Gaussian, not Gaussian.
+                                                             2 2
+   Suppose Y = f0 (X) + ξ, E[ξ | X] = 0, and E[etξ | X] ≤ eσ t /2 . Assume |f0 | ≤ B0 almost surely
+and put B = max{1, B0 }, R0 = Eξ 2 . Retain the same continuous prior and raw posterior mean,
+but now use any one fixed temperature
+
+                                      T ≥ max{8σ 2 + 1, 49B 2 }.                                    (11)
+
+It does not depend on sample size, comparison width or depth.
+
+
+
+                                                   17
+Theorem 10.1 (Coefficient-free learning of the conditional mean). Assume one of the input
+conditions in Theorem 3.1. Suppose f0 agrees almost surely with a member of GC,h ; its implementing
+coefficients are unrestricted. Use the same compiled width and depth thresholds, and define Dn by
+the expression for cBn with Mn replaced by B, with its numerical constant sufficiently large. For
+every N ≥ m∗ and H ≥ H∗ , and all sufficiently large n,
+
+                                                     cDn [T + Dn + log(n + 2) + B 2 ]
+                         Z
+                    ES       R(zw ) ΠS (dw) ≤ R0 +                                    .
+                                                                   n
+The ordinary raw posterior mean has no larger risk. Moreover, for every 0 < δ < 1/2, with probability
+at least 1 − δ,
+                                           c[Dn + log(4/δ)]              n+2
+              Z                                                                            
+                  R(zw ) ΠS (dw) ≤ R0 +                     T + Dn + log     + B2 .
+                                                  n                       δ
+At fixed input dimension, teacher depth and regularity, the expected excess is
+                                                                         !
+                                       (C 2bh + H)2 + T (C 2bh + H)
+                                   O
+                                   e                                .
+                                                    n
+
+In particular the growing comparison width and learner-depth range of Corollary 3.2 give excess
+ e −1/2 ) for such realizable conditional means, at the single fixed variance T /2.
+O(n
+Proof. Use the globally bounded version f0 = clipB g of the regression function, where g ∈ GC,h
+represents it almost surely. This changes neither the data law nor any test risk. Lemma 9.1, at
+ϵn = (n + 2)−8 , gives a comparison law ρn with
+
+            KL(ρn ∥µN,H ) ≤ Dn ,         ρn {∥zw ∥∞ ≤ 6B} = 1,           Eρn ,X (zw − f0 )2 ≤ n−4
+
+for all sufficiently large n. Hence its pointwise mean squared discrepancy v(x) is at most 49B 2 ≤ T .
+    Here is the raw fixed-temperature argument, in the form needed for population rather than
+uniform approximation. Let A(f ) = EX (f − f0 )2 , cT = 1 − 2σ 2 /T ≥ 3/4, and define
+                                                                     2
+                                    DT (f ) = −T log EX e−cT (f −f0 ) /T .
+
+Conditional sub-Gaussianity, the entropy inequality and the Gibbs variational identity give
+
+                                        ES ΠS DT ≤ n−4 + T Dn /n.
+
+For the confidence statement the same argument gives ΠS DT ≤ cT [Dn + log(4/δ)]/n outside a set
+of probability O(δ). To verify the comparison concentration used here, 0 ≤ v ≤ 49B 2 and P v ≤ n−4
+imply Pn v ≤ 2n−4 + cB 2 log(1/δ)/n by Bernstein. The conditional noise term has variance proxy
+at most 4σ 2 Pn v/n and is therefore at most cn−4 + cT log(1/δ)/n with the same confidence order.
+    A second use of the comparison law bounds the expected posterior density relative to the prior
+by exp(Dn + c). Explicitly, divide the likelihood by that at f0 , lower-bound its normalizer by Jensen
+with ρn , and average the noise. For e = f − f0 and b(x) = Eρn (zw − f0 ), the exponent at one
+observation is bounded by
+
+                                 v − e2 2σ 2 (e − b)2   3v   e2   3v
+                                       +        2
+                                                      ≤    −    ≤    .
+                                   T          T         2T   2T   2T
+Because v ≤ T and P v ≤ n−4 , its input expectation is at most exp(cn−4 /T ). Thus every nonnegative
+network functional W obeys ES ΠS W ≤ eDn +c µN,H W .
+
+                                                     18
+   The native raw supremum has a Gaussian tail, so a cutoff with M 2 = c[Dn + log(n + 2) + B 2 ]
+makes the expected posterior contribution of (∥f ∥∞ + B)2 1{∥f ∥∞ >M } at most n−2 . For confidence
+1 − δ, replace log(n + 2) by log((n + 2)/δ) and apply Markov’s inequality to this tail term. On the
+remaining functions the secant bound for the exponential gives
+                                                               !
+                                                1   (M + B)2
+                                 A(f ) ≤          +                DT (f ).
+                                               cT      T
+
+Combining the last three bounds proves the displayed inequalities. The elementary entropy step
+and tail argument are also stated as the fixed-temperature population-comparison theorem in [3].
+Finally R(f ) = R0 + A(f ) and Jensen’s inequality transfer the result to the ordinary posterior mean.
+                      e 2bh + H) proves the last claims.
+Substitution of Dn = O(C
+
+
+11     Using the true Gaussian observation variance
+If the observation noise is exactly Gaussian with a known variance, even the variance inflation in
+(11) can be removed. This uses a finite-dictionary testing argument and has a larger complexity
+polynomial.
+
+Corollary 11.1 (Exactly matched Gaussian likelihood). Assume the input and realizable-conditional-
+mean conditions of Theorem 10.1, but now Y | X ∼ N (f0 (X), σ 2 ) for a fixed known σ > 0. Use the
+same prior and the ordinary raw posterior at temperature T = 2σ 2 , so its Gaussian observation
+variance is exactly σ 2 . Let K = max{Dn , 1 + B 2 } and define
+
+                                                                          n+2
+                                                                                        
+                                       2
+                 K = K + cσ (1 + 49B ) log(16/δ),           q = c K + log     +1 ,
+                                                                           δ
+                                        √                                        d+1
+                     en = min{n−2 , σ/(4 n)},            L = H + q + 1 + log         .
+                                                                                  en
+At every eligible compiled width and depth, with probability at least 1 − δ, the posterior-averaged raw
+risk and the risk of its ordinary mean are at most
+
+                              c(1 + q)                         n+2
+                                                                             
+                           2
+                          σ +          K + dHL2 + H 2 L3 + log     .                               (12)
+                                 n                              δ
+The constants depend on the fixed scalar prior laws and σ. An expected-risk bound is given by the
+same expression with δ = n−8 /16, plus c(1 + B 2 )n−3 .
+   In particular, at fixed d, h, B, σ and input regularity, put
+
+                            Cn = ⌊n1/(24bh) ⌋,      H ≤ n1/12 ,         N ≥ n,
+
+with the same lower learner-depth thresholds as before. The expected excess above σ 2 is O(ne −1/2 ).
+For every fixed confidence 0 < δ < 1/2 the same rate holds with probability 1 − δ; the displayed
+bound retains the dependence for varying confidence. The prior family and likelihood variance are
+fixed. The architecture may follow any prescribed schedule in these ranges; once it is prescribed, the
+prior has no additional sample-size dependence.
+
+Proof. The comparison law from Theorem 10.1 has entropy at most K, pointwise mean squared
+discrepancy at most 49B 2 , and population discrepancy at most n−4 . These are exactly the population-
+comparison hypotheses of the matched-Gaussian-likelihood theorem in [3]. The normalized readout
+
+                                                    19
+supplies a native Gaussian supremum tail, and the Student-hidden dictionary has logarithmic
+cardinality at most c(dHL2 + H 2 L3 ). The cited theorem combines a comparison lower bound on
+evidence, Gaussian likelihood-ratio tests on this finite dictionary, and the exact likelihood-ratio
+expectation identity to control the prior-sieve tail. It gives (12) for the actual untruncated posterior.
+Its expectation version uses conditional Gaussian-process regression at the readout to bound the
+failure-event raw risk, as stated there.
+    For the growing-class substitution, K = O(C   e 2bh + H) = O(n    e 1/12 ). At fixed confidence, or
+                                                       n
+at the displayed polynomially small confidence used for expectation, q, L = O(n         e 1/12 ). Thus
+         2  3
+(1 + q)H L = O(n e   1/2 ), and the other numerator terms are smaller. Division by n proves the rate.
+This is a noisy-realizable result for the regression function and an exactly matched Gaussian noise
+variance; it is not an agnostic fixed-variance oracle.
+
+
+12     Readout tails and prescribed approximation budgets
+The Gaussian readout is the primary model. Two variants explain which part of the statistical
+penalty is intrinsic to the proof and which part can be improved with additional information or a
+different prior.
+
+12.1    Power-law exponents in a light-tailed readout
+Fix p > 1. Replace the final Gaussian factors, including the output bias, by independent variables
+                                p                        1−1/p
+of density proportional to e−|u| , and replace Pj by Pj
+                                              p
+                                                               . The hidden Student/gamma layers
+are unchanged. The corresponding raw-tail and comparison lemmas in [3] give
+
+                                     ∥ sup |zw (x)|∥Lq (µ) ≤ cp q 1/p ,
+                                        x
+
+and the readout comparison cost becomes cp [( j |vj |)p + |b|p + 1]. The constants may depend on
+                                                   P
+
+the fixed p; no uniform limiting claim as p → ∞ is made. The restoring-bit comparison carries over
+with these same changes.
+    Set ap = p/(p + 2). With deterministic temperature Tn = tp n2/(p+2) , the main theorem becomes
+
+                                                  e (C 2bh + H)n−ap ,
+                                                                              
+                            ER(fbS ) ≤ inf R(g) + O
+                                        g∈GC,h
+
+at fixed input dimension, teacher depth, input regularity, and label envelope, with the same compiled-
+width and depth requirements. The additional factor Mnp is only logarithmic in n. The exact resource
+statement replaces Mn2 by Mnp in Bn and changes constants by factors depending on p.
+     For example, one may take
+
+                            Cn = ⌊nap /(4bh) ⌋,      H ≤ nap /2 ,         N ≥ n,
+
+with the previous lower depth thresholds. The remainder is then O(ne −ap /2 ). At p = 4, this permits
+Cn = n 1/(6bh)        1/3
+               , H ≤ n , and remainder O(n
+                                         e   −1/3 ). This is an explicit alternative readout prior, not
+a conclusion that changing the variance alone improves the Gaussian readout’s general agnostic rate.
+
+12.2    When the approximation and complexity budgets are known
+Suppose now Y = f0 (X) + ξ, where |f0 | ≤ B0 and the conditional noise is centered and σ 2 -sub-
+Gaussian. Write A(g) = E(g − f0 )2 and R0 = Eξ 2 , so R(g) = R0 + A(g). An optimistic raw-posterior
+
+
+                                                    20
+theorem in [3] uses prescribed upper bounds on comparison entropy and approximation error. For
+the normalized Gaussian readout its statistical form is
+                                                              s        
+                                         2    2                      A0 
+                                    e  K + Kσ + K
+                  ER(fbS ) ≤ R(g) + O                                     ,         A(g) ≤ A0 ,
+                                           n                         n
+                                                                       √
+with deterministic temperature of order K + log n + (B0 + U + 1)2 + nA0 + σ 2 , where U bounds
+the comparison output and K bounds its relative entropy. The approximation budget excludes
+the irreducible label-noise floor. The prescribed temperature is a different rule from the universal
+        √
+Tn = t0 n in the main theorem. No adaptation to unknown K or A0 is inferred from this statement.
+Applying this refinement to population-accurate digital comparisons requires its explicitly supported-
+comparison version; a uniform-approximation hypothesis cannot be replaced silently by a population
+one.
+
+
+13     A readout with bounded absolute-weight sum
+A readout restriction gives a faster fixed-likelihood alternative when the regression function is
+bounded. This is a different prior with bounded readout support, not an improvement of the
+unrestricted-support prior in the main theorem. It requires no final output activation.
+   Keep the gamma-gated Student hidden layers. At the readout use
+                                                                              N
+                                                                              X
+                  P ∼ Dirichlet(ϑ/N, . . . , ϑ/N ),         zw (x) = b +            Pj Uj hH
+                                                                                           j (x),
+                                                                              j=1
+
+where b, U1 , . . . , UN are independent uniform variables on [−1, 1], independent of P and the hidden
+layers. Thus the readout coefficients have absolute sum at most one, |b| ≤ 1, and |zw (x)| ≤ 2 on
+every input. The weights are dense almost surely, but their support is restricted. The raw affine
+output is used directly in the Gaussian likelihood and in its ordinary posterior mean.
+
+Proposition 13.1 (Fixed-likelihood expected oracle under a readout restriction). Assume Y =
+f0 (X) + ξ, with |f0 | ≤ 1 and centered conditional σ 2 -sub-Gaussian noise. Use any fixed temperature
+T ≥ 1024(1 + σ 2 ), with physical Gaussian likelihood variance T /2. Under any input setting of
+Theorem 3.1, for every eligible compiled width N ≥ m∗ and depth H ≥ H∗ ,
+                                                               (1)
+                                                           cT Bn
+                           ES R(fbS ) ≤ inf R(g) +               + c(n + 1)−2 ,
+                                         g∈GC,h             n+1
+        (1)
+where Bn is the resource in the main theorem with its proof range Mn replaced by one. In particular,
+at fixed d, h, input regularity and noise bound, the remainder is
+                                                                      !
+                                             (1 + σ 2 )(C 2bh + H)
+                                     O
+                                     e                             .
+                                                        n
+
+For Cn = ⌊n1/(4bh) ⌋, H ≤ n1/2 and every prescribed N ≥ n, the remainder is O(n     e −1/2 ). The
+previous lower depth thresholds still apply. The prior family and likelihood variance are fixed, and
+the returned predictor uses all observations. This is an expected-risk statement.
+
+
+
+
+                                                      21
+Proof. First modify only the compiler’s final encoding. A value a ∈ [−1, 1] can be rounded, with
+error at most 21−t , to
+                                     t
+                                           2−r sr − 2−t ,
+                                     X
+                                q=                             sr ∈ {−1, 1}.                        (13)
+                                     r=1
+
+Indeed encode k = min{2t − 1, ⌊2t−1 (a + 1)⌋} in t binary digits, and replace each binary digit by
+its signed version. The raw affine readout in (13) has absolute coefficient sum plus absolute bias
+exactly one. The same expression remains in [−1, 1] when all sr ∈ [−1, 1]. For a rational clipped
+compiler output a = A/Q, the required rounding is one constant-depth integer-division block. Thus
+the width, depth and precision bounds of the earlier compilers remain unchanged after increasing
+their numerical constants. Set t large enough that the additional error is at most the requested
+compiler accuracy.
+    Here is the readout comparison replacing the Gaussian-factor step in Lemma 8.1. Let vr = 2−r
+and L = r vr = 1 − 2−t . Choose selected latent-gate centers
+          P
+
+                                                                        wr ≥ 2−t /t,
+                                                      X
+                        wr = vr + (1 − L)/t,                wr = 1,
+                                                       r
+
+and uniform-factor centers ur = vr /wr . Then 0 ≤ ur ≤ 1 − 2−t /t. Put each selected gate within
+relative precision η of wr , its selected uniform factor within absolute precision η of ur , and the bias
+within η of −2−t . Take η smaller than the desired functional precision and than c2−t /t. Condition
+the total inactive latent-gate mass to be at most η, reducing it further if needed for marker separation.
+Its gamma small-ball cost is O(log(1/η) + t + log(t + 1)). The normalized selected coefficients then
+have total absolute error O(η), and the inactive contribution is deterministically O(η) because
+|Uj hH
+     j | ≤ 1.
+    Each selected latent gate costs log N + O(log(1/η)) + (ϑ/N ) log(1/wr ). Summing the last term
+costs at most c(t + log(t + 1)), since N ≥ t. The standard disjoint location mixture cancels the
+selected log N terms. The uniform-factor and bias intervals cost O((t + 1) log(1/η)). All these
+costs are polynomial in logarithmic precision, because log(1/η) = O(t + log(1/δ) + log(t + 1)). The
+hidden prefix and restoring digital comparison are unchanged. Consequently their comparison law
+                          (1)
+has entropy at most cBn and population squared discrepancy O((n + 2)−8 ) from clip[−1,1] g. It is
+automatically supported on raw outputs in [−2, 2].
+    Because |f0 | ≤ 1, projection onto [−1, 1] cannot increase E(g − f0 )2 , hence cannot increase
+squared test risk. The comparison error changes risk by O((n + 1)−2 ), using R(f ) − R(g) =
+E[(f − f0 )2 − (g − f0 )2 ] and the bounded comparison outputs. The all-data exponential-weights
+expected-risk theorem for predictions in [−2, 2], after rescaling its unit-range statement, gives
+                                            T KL(ρ∥µ)
+                       ES R(fbS ) ≤ ρR +                     when T ≥ 1024(1 + σ 2 ).
+                                              n+1
+This is the bounded-prediction theorem used in [3]; the bound on predictions here comes from
+the readout prior, not an output link. Substitute the comparison law and take population near-
+                     (1)   e 2bh + H) gives the stated rates and growing-class substitution.
+minimizers. Finally Bn = O(C
+
+
+14     Full-support readout tails and a nearly inverse-sample oracle
+The bounded readout in the preceding section can be replaced by a full-support law if its tails
+decrease sufficiently rapidly. This gives a faster agnostic theorem for another fixed continuous weight
+prior. Its likelihood variance grows as the square of a logarithm of sample size; the fixed-variance
+statement of the preceding section remains distinct.
+
+                                                      22
+    Keep the same hidden-layer prior and final Dirichlet vector P , but use
+                             N
+                             X                                      iid
+             zw (x) = U0 +         Pj Uj hH
+                                          j (x),       U0 , . . . , UN = arsinh(Z),   Z ∼ N (0, 1).         (14)
+                             j=1
+
+All factors are independent of the hidden layers and P . The density of Uj is
+
+                                     (2π)−1/2 cosh(u) exp[− sinh2 (u)/2],
+positive on all of R. Consequently the induced weight prior has full support on each prescribed
+dense architecture and the raw output is unbounded. The prior does not depend on sample count.
+Its exceptionally light readout tails are an additional modeling choice. The scalar factor is the
+established sinh-normal distribution with shape two, location zero and scale one, in the convention
+U = γ + σ arsinh(αZ/2) [1, 2]. Its use as a neural readout prior is separate from that distributional
+terminology.
+
+The exact scalar transform is not essential. The same arguments apply to any fixed symmetric
+full-support factor law with ∥U ∥q ≤ c log(q + 1) and a density r satisfying
+                                     inf      r(u) ≥ exp[−cecM ],         M ≥ 1.
+                                   |u|≤M +1
+
+The first condition controls the native raw-output tail through the Dirichlet convex combination; the
+second bounds the entropy of small intervals around the compiler’s readout coefficients. For example,
+U = arsinh(Z/2) has both properties, as does any fixed density proportional to exp[−a cosh(bu)]
+with a, b > 0. For the latter, the tail is bounded by c exp[−c′ ebt ] for large t, giving the logarithmic
+moment bound by integration; on [−M − 1, M + 1] its negative log density is at most cebM . An
+interval of radius ϵ therefore costs only O(log(1/ϵ) + ecM ) in entropy. The scaled sinh-normal
+example has the same estimates directly from its transformed Gaussian density. Both examples
+have smooth strongly log-concave scalar densities: the negative-log-density second derivatives are
+respectively 4 cosh(2u) − sech2 u ≥ 3 and ab2 cosh(bu) ≥ ab2 . These observations concern the scalar
+readout factors, not log-concavity of the entire hierarchical neural prior. The theorem below retains
+(14) as its primary concrete model.
+Theorem 14.1 (Coefficient-free raw oracle with logarithmic temperature). Use the prior (14), any
+input setting of Theorem 3.1, and one prescribed architecture with N ≥ m∗ and H ≥ H∗ . There is a
+deterministic temperature Tn ≍ log2 (n + 2) for which the ordinary raw posterior mean after all n
+observations has the following guarantees.
+   1. If |f0 | ≤ 1 and the centered noise Y − f0 (X) is conditionally σ 2 -sub-Gaussian, then
+                                                          c log2 (n + 2) (1)
+                         ES R(fbS ) ≤ inf R(g) +                        Bn + c(n + 1)−2 .                   (15)
+                                           g∈GC,h             n+1
+             (1)
+      Here Bn is the main theorem’s resource with proof range one. Constants in the temperature
+      and bound may depend on the noise bound and fixed scalar prior parameters. It suffices instead
+      to assume directly marginally sub-Gaussian labels and |f0 | ≤ 1.
+   2. More generally, suppose only E exp(Y 2 /KY2 ) ≤ 2. Put Mn = max{1, KY
+                                                                                          p
+                                                                                              20 log(n + 2)} and
+      t = ⌈log2 (128(n + 2)8 )⌉. Then, for all sufficiently large n,
+                                                 c log2 (n + 2) h (Mn )              i
+               ES R(fbS ) ≤ inf R(g) +                           Bn     + (t + 1)ecMn + c(n + 1)−2 .        (16)
+                             g∈GC,h                  n+1
+
+                                                        23
+     The superscript means that the proof range in the main resource is Mn . The constants and the
+     sufficiently-large-sample threshold may also depend on KY .
+
+In both parts GC,h consists of raw ReLU teachers with arbitrary finite real coefficients. The physical
+Gaussian likelihood variance is Tn /2. No actual output, label or prior is clipped. At fixed d, h and
+input regularity, part 1 has remainder O((C
+                                        e   2bh + H)/n). Part 2 has the same term and an explicitly
+
+additional n −1+o(1) term; that term is not asserted to be logarithmic. In either part, for
+
+                             Cn = ⌊n1/(4bh) ⌋,            H ≤ n1/2 ,         N ≥ n,
+                  e −1/2 ), with the previous lower depth thresholds. In particular continuous inputs
+the remainder is O(n
+still require H ≥ c log n. All conclusions are in expectation over training data.
+
+Proof. We first record precisely the statistical input. The logarithmic-native- moment raw oracle
+of [3] applies to a centered prior satisfying
+
+                               sup |zw (x)|            ≤ A log(q + 1),       q ≥ 1.
+                                x             Lq (µ)
+
+It chooses qn = c(n + 1), an analytical cutoff Ln = eA log(e + qn ), and Tn = 256L2n . For any
+deterministic comparison law supported on {supx |zw (x)| ≤ Ln } it gives
+
+                                                    Tn KL(ρ∥µ)
+                            ES R(fbS ) ≤ ρR +                  + c(n + 1)−2 .                      (17)
+                                                       n+1
+The actual predictor uses the original unbounded prior. The cutoff occurs solely in its proof: moment
+qn gives prior tail e−qn , which dominates the expected inverse-evidence factor exp(O(n/Tn )) under
+marginally sub-Gaussian labels. The bounded all-data expected-risk theorem then applies to the
+analytical conditioned prior, and the raw-posterior tail transfer gives (17).
+    For (14), ∥ arsinh Z∥q ≤ c log(q + 1) and, conditional on P , Minkowski’s inequality gives
+
+                                               X
+                                     |U0 | +        Pj |Uj |       ≤ 2∥U0 ∥q .
+                                                j              q
+
+Thus the native hypothesis is uniform in N, H, d; symmetry centers the prior at each input.
+     Use the unit-variation digital encoding (13), scaled by M ≥ 1. The preceding readout comparison
+still applies, with selected gate centers wr = 2−r + 2−t /t and factor centers ur = M 2−r /wr ∈ [0, M ].
+The output-bias center is −M 2−t . On an interval of radius η ≤ 1 around any such center, the
+negative logarithm of the asinh-Gaussian density is at most cecM . The t factor intervals and the
+bias therefore cost at most
+                                        c(t + 1){log(1/η) + ecM }.
+The selected latent gate intervals, disjoint placement averaging and hidden prefix/digital comparison
+are unchanged. Choose the total inactive latent gate mass at most η 2 . Its normalized mass is then
+O(η 2 ), and, conditional on all these gates,
+                                               X
+                                        E                Pj |Uj | ≤ cη 2 .
+                                            j inactive
+
+Conditioning this sum to be at most η has probability at least one half for sufficiently small η. Its
+entropy cost is bounded by a constant. If this final conditioning is applied to the whole comparison
+
+                                                         24
+law, its entropy is at most twice the previous entropy plus a numerical constant, and its mean
+squared approximation error increases by at most a factor two. This conditioning is also permutation
+invariant, so the placement-mixture cancellation is preserved.
+   Taking η smaller by a polynomial factor in M, t than the previous functional precision pro-
+duces a comparison supported on {supx |zw (x)| ≤ 3M }. Its population squared discrepancy from
+M clip(g/M, [−1, 1]) is at most cM 2 (n + 2)−8 , and its entropy is bounded by
+
+                                          cBn(M ) + c(t + 1)ecM .                                  (18)
+
+The extra logarithms of M, t are already covered by the main resource. At M = 1 the last term is
+              (1)
+absorbed in cBn .
+   For part 1 choose M = 1. Projection onto [−1, 1] cannot increase risk when |f0 | ≤ 1, and
+the squared comparison discrepancy changes risk by O(n−2 ). Conditional sub-Gaussian noise and
+bounded f0 imply the marginal sub-Gaussian premise of (17). For part 2 use the displayed Mn .
+Pointwise,
+                     (clip(g, [−Mn , Mn ]) − Y )2 ≤ (g − Y )2 + (|Y | − Mn )2+ .
+The label-tail term is O(n−2 ). For comparison teachers with risk at most EY 2 + 1 the population
+comparison error changes risk by O(n−2 ), by Cauchy–Schwarz; such near-minimizers suffice because
+the zero network is in the class. Also 3Mn ≤ Ln eventually. Substitute (18) into (17) and take
+population near-minimizers.
+                                          (M )    e 2bh + H) at fixed displayed parameters. The
+    Finally the compiler√ bounds imply Bn n = O(C
+extra factor ecM n =e O( log n)     o(1)
+                                is n , and is eventually smaller than n1/4 . The growing-class choice
+makes Cn2bh + H ≤ 2n1/2 and the compiled width smaller than n, proving the last assertion.
+
+
+15     Confidence bounds and an eventual noise-scale-free schedule
+The preceding exact-leading-one theorem is in expectation. A high-probability version controls
+posterior-averaged risk as well, at the cost of a slightly larger coefficient on approximation error.
+Only a marginal label-tail assumption is needed.
+Corollary 15.1 (A raw high-probability width oracle). Use the asinh-readout prior and assume
+   2  2
+EeY /KY ≤ 2. Fix q > 0. For all sufficiently large n, let n−q ≤ δ < 1/2 and n−1/2 ≤ η ≤ 1/2. Set
+                                  q
+                 B = max{1, KY        12 log((n + 2)/δ)},       t = ⌈log2 (128(n + 2)8 )⌉,
+
+and
+                                 Dn = Bn(B) + (t + 1)ecB + log(6/δ).
+       (B)
+Here Bn is the main compiler resource at proof range B. There is a deterministic temperature
+Tn ≍q,KY η −1 log2 (n + 2), independent of the comparison class, such that for each prescribed eligible
+architecture, with probability at least 1 − δ,
+
+                     R(fbS ) ≤ ΠS R(zw ) ≤ R0 + (1 + η) inf E(g(X) − f0 (X))2
+                                                            g∈GC,h
+
+                                                c log2 (n + 2)      c
+                                            +                  Dn + 2 ,                            (19)
+                                                      ηn           ηn
+where f0 (X) = E[Y | X] and R0 = E(Y − f0 (X))2 . Neither the conditional mean nor conditional
+noise variance is assumed bounded. The event is for each architecture prescribed before data; it is
+not asserted to hold simultaneously for all widths.
+
+                                                    25
+   At fixed d, h and input regularity, choosing
+
+                    ηn = n−1/4 ,       Cn = ⌊n1/(4bh) ⌋,       H ≤ n1/2 ,       N ≥n
+
+gives the coefficient-one comparison
+
+                           R(fbS ) ≤ ΠS R(zw ) ≤     inf             e −1/4 )
+                                                              R(g) + O(n
+                                                   g∈GCn ,h
+
+with probability at least 1 − δ. The previous lower depth thresholds remain, including H ≥ c log n on
+continuous domains. This last schedule uses physical Gaussian variance of order n1/4 log2 n, rather
+than the expected theorem’s log2 n.
+
+Proof. We use the marginal-label confidence theorem in [3]. For a centered prior with logarithmic
+native supremum moments, it sets an = log((n+2)/δ), qn = c(n+an ), Ln = eA log(e+qn )+6B+6 and
+Tn = cη −1 (L2n + B 2 ). On one event of probability at least 1 − δ, simultaneously for all comparison
+laws supported on raw outputs of magnitude at most Ln , it bounds actual posterior-averaged
+approximation error by
+                                            cTn
+                 (1 + η)ρEX (zw − f0 )2 +       {KL(ρ∥µ) + log(6/δ)} + c(n + 1)−2 .
+                                             n
+Its proof conditions on moderate labels only analytically, applies a bounded-prior relative-loss
+PAC–Bayes inequality, and transfers both the population risk and its irreducible-noise floor back
+to the original law. The original comparison risk appears in this interface, so no input-regularity
+assumption has to survive that auxiliary conditioning. A native-tail and inverse-evidence estimate
+removes the proof-only parameter restriction. The actual data and posterior stay unchanged.
+    Apply this interface with a fixed smaller multiple of the desired η. The comparison from (18)
+is supported on raw outputs at most 3B ≤ Ln , and its entropy is at most cDn . Projection of the
+teacher to [−B, B] adds O(n−2 ) to risk by the marginal tail bound. Young’s inequality converts its
+population squared error cB 2 (n + 2)−8 into a factor 1 + η/8 on the teacher approximation error
+and an additive O(η −1 n−2 ) term. Enlarging the fixed temperature constant makes the product
+of approximation coefficients at most 1 + η. Because δ ≥ n−q , both B 2 and an are O(log n) and
+L2n = O(log2 n). The confidence event is common to the comparison laws, so taking population
+near-minimizers gives (19) without a class-dependent algorithm.
+                                         e 1/2 ) + no(1) . The zero network shows that the infimum
+    For the growing-class choice, Dn = O(n
+approximation error is at most Ef0 (X)2 ≤ EY 2 , so the extra multiplicative term contributes only
+O(n−1/4 ). Substitution gives the last display.
+
+An eventual schedule requiring no known label scale. The expected theorem has a further
+asymptotic interpretation. Fix qn = c(n + 1), Ln = eA log(e + qn ) and Tn = 256L2n , with c
+chosen using only the native prior. For every fixed law having some finite marginal sub-Gaussian
+envelope, the conclusions of Theorem 14.1 then hold for all sufficiently large n. The onset and
+remainder constants may depend on that unknown envelope. Indeed Tn eventually dominates its
+exponential-square moment scale, qn dominates                                               2
+                                                 √ the inverse-evidence exponent O(nKY /Tn ), and
+Ln eventually contains the proof range O(KY log n). The label tails also become negligible. Thus
+the eventual growing-class oracle can use a single prior-only temperature schedule; the explicit
+finite-sample bounds earlier in the paper still allow their calibration constants to depend on a known
+label envelope.
+
+
+
+                                                   26
+16     An independent-coordinate raw comparison with a logarithmic
+       width cost
+A related guarantee preserves independence of all weight coordinates. Use tanh hidden activations.
+Every hidden coefficient of fan-in F has the time-1/F increment law of the symmetric process
+
+                                                     c du
+                                  νhid (du) =                  ,     p0 > 2.
+                                                |u|(1 + |u|)p0
+
+First-layer fan-in is d + 1, and later matrix fan-in is N . Native later biases use time one. The
+readout coordinates instead use
+
+                                    Vj = Γ(cout /N, 1) − Γ(cout /N, 1),
+
+with independent gamma variables, and the readout bias uses the same law with N replaced by one.
+All actual coordinates are independent. Both likelihood and prediction use the raw affine readout.
+In particular                                      X
+                            sup |zw (x)| ≤ |bw | +   |Vj | ≤st Γ(4cout , 1),
+                             x
+                                                       j
+
+so the native raw-tail exponent is one, independently of width and depth.
+    Use the analog-prefix/digital-block notation of Lemma 8.1, including its good input set, but
+count only nonzero teacher edges in Epre , Edig . Let Vpre , Vdig be the selected hidden-vertex counts,
+and let E1 count first-layer input coordinates. Bias positions are included in the corresponding
+resource counts Qpre and Qdig , which may conservatively be taken to be their full dense selected
+counts. The ideal bit readout has variation plus bias at most 4M , M ≥ 1.
+
+Lemma 16.1 (Fixed-position independent comparison). At every prescribed finite N ≥ m there is
+a sample-independent law ρ with
+
+                   ρ{∥zw ∥∞ ≤ 6M } = 1,            Eρ ∥zw − g∗ ∥2L2 (PX ) ≤ CM 2 (δ 2 + ξ).
+
+Its relative entropy is at most
+
+               CQpre [(J + 2) log{C(d + m + 2)(B0 + 2)} + log(1/δ)]
+                                           C(Qpre + Qdig + m + 2)(k + 1)(M + 1)
+                     + C(Qdig + m + 1) log
+                                                              δ
+                     + C(Epre + Edig + m + 1) log(N + 1) + CE1 log(d + 1) + CM.                   (20)
+
+Here Epre in the learner-width term may omit first-layer input edges. The bound shown uses fixed
+positions; no cancellation of vertex-location costs is claimed.
+
+Proof. Use fixed selected neuron positions for the teacher, which is possible whenever N ≥ m. For
+a hidden coordinate of fan-in F , the small-jump construction gives a centered background law
+supported on [−ϵ, ϵ] with
+
+                   E|W | ≤ Cϵ/F,         EW 2 ≤ Cϵ2 /F,            KL ≤ (C/F ) log(C/ϵ).
+
+A designated coordinate of value a has a law supported within Cϵ of a, with entropy at most
+
+                                      log F + C log{C(1 + |a|)/ϵ}.
+
+
+                                                       27
+One direct construction suppresses jumps larger than ϵ/C, conditions the remaining symmetric
+sum to have magnitude at most ϵ, and inserts one jump uniformly near a. For |a| = O(ϵ) use two
+separated signed intervals with probabilities chosen to give mean a. The symmetric small-jump
+law has the displayed first and second moments. The designated jump intensity on an interval of
+width proportional to ϵ is at least cϵ/[F (1 + |a| + ϵ)p0 +1 ], which gives the entropy bound. For a
+variance-gamma coordinate the same argument adds C|a| instead of the logarithmic magnitude cost.
+These are precisely the scalar comparison bounds of the mixed hidden/readout prior.
+    In each selected hidden row, put the designated law on its nonzero teacher coefficients and the
+background law elsewhere. The total background absolute magnitude has expectation at most Cϵ
+and second moment at most Cϵ2 . Since tanh features are bounded by one, these estimates hold for
+the uniform functional contribution of that background, regardless of the input law or of dependence
+between preceding features.
+    The prefix discrepancy therefore obeys the same uniform RMS recurrence as the ordinary
+fixed-depth comparison:
+                                eℓ ≤ Cm(B0 + 2)eℓ−1 + C(m + 1)ϵ.
+At first layer the error is at most C(d + 1)ϵ. Choose its precision so that, with probability at least
+0.99, all selected final prefix features differ from their teacher values by at most δ/4. The logarithm
+of the required inverse precision is bounded by the first bracket in (20), up to its already displayed
+logarithmic dimension factors.
+    For the digital block choose ϵ ≤ c/[(Vdig +1)(m+1)(k+1)]. The selected-coordinate perturbations
+and the expected uniform background magnitudes sum to at most k/1000 over all its rows. With
+probability at least 0.99, every row perturbation is at most k/8. Integer margin and tanh saturation
+then restore bit error at most δ at every depth, by exactly the margin induction in Lemma 8.1.
+    At the raw readout use the variance-gamma designated laws around its nonzero coefficients and
+bias, at precision cδ/[(m + 1)(M + 1)], and background laws on the remaining coordinates. The
+selected absolute coefficient sum plus bias is at most 4M + Cδ. The inactive absolute contribution
+is at most δ/100 on a further event of probability at least 0.99, by its first-moment bound. On the
+intersection the raw supremum is at most 6M , and the integrated squared discrepancy is at most
+CM 2 (δ 2 + ξ). Condition on this intersection. As before its constant probability changes entropy by
+at most a fixed factor and a numerical constant.
+    Every nonzero designated internal or readout edge pays at most log N , whereas a whole selected
+background row pays only C log(C/ϵ) after summing its N coordinate costs. The first-layer
+designated edges pay log(d + 1). Hidden coefficient magnitudes enter only logarithmically. The sum
+of all readout magnitude costs is at most CM . Adding these terms gives (20).
+
+    Under the raw-tail theorem’s marginal sub-Gaussian label assumption, the likelihood schedule
+has Tn ≍ n2/3 and the expected oracle remainder is O(n−1/3 ) times this comparison entropy, plus
+its approximation remainder. In particular the continuous quantizer and restoring-bit compiler,
+with only its output bits padded through extra layers, give
+                                                                  
+                                  e [C 2bh + H] log(N + 1) n−1/3
+                                  O
+
+at fixed input dimension, teacher depth and input regularity. Here b is the compiler’s fixed exponent,
+the learner width must exceed its explicit compiled width, and the continuous learner depth
+must exceed its logarithmic quantization threshold. The tilde hides powers of log n and fixed
+regularity constants. For polynomially bounded learner width the additional factor log(N + 1) is
+only logarithmic. This is an independent-coordinate result at one prescribed dense architecture;
+
+
+
+                                                  28
+unlike the neuron-gated result, its quantitative resource is not uniform over arbitrarily large learner
+widths.
+    For example, for any fixed q ≥ 1, every prescribed n ≤ N ≤ nq and
+
+                                   Cn = ⌊n1/(12bh) ⌋,     H ≤ n1/6 ,
+
+with the same lower depth requirements, give a coefficient-one expected-risk comparison with the best
+width-Cn raw ReLU teacher and remainder O(n  e −1/6 ). The first-layer and hidden-bias conventions
+above are part of the prior specification.
+
+A fixed likelihood for a realizable noisy target. Suppose instead that Y = f0 (X) + ζ, with
+conditionally sub-Gaussian noise of proxy σ 2 , and f0 is represented by the comparison class with
+|f0 | ≤ Bf on the input support. Put M = max(1, Bf ) and use a single fixed temperature
+
+                                      T ≥ max{8σ 2 + 1, 49M 2 }.
+
+Apply the compiler and this comparison at sufficient polynomially small precision so that EX Eρ (zw −
+f0 )2 ≤ n−4 . Its support bound gives Eρ (zw (x) − f0 (x))2 ≤ 49M 2 . The fixed-temperature population-
+comparison raw theorem therefore applies with native tail exponent one. If Kn denotes the right
+side of (20), increased to at least one, both the posterior-averaged risk and the raw posterior-mean
+risk satisfy
+                                      CKn {T + [Kn + log(n + 2) + 1 + Bf ]2 }
+                         ES R ≤ R0 +                                             .
+                                                            n
+Its high-probability version adds the corresponding confidence logarithms. At fixed noise and output
+bounds this is O(K    3
+                      n /n), with unchanged independent coordinates, unchanged labels, and fixed
+                  e
+Gaussian likelihood variance T /2. This is a realizable noisy-target conclusion, not a fixed-temperature
+sharp agnostic oracle.
+
+
+References
+ [1] James R. Rieck and Jerry R. Nedelman. A log-linear model for the Birnbaum–Saunders
+     distribution. Technometrics 33(1):51–60, 1991. https://doi.org/10.1080/00401706.1991.
+     10484769.
+
+ [2] Víctor Leiva, Filidor Vilca-Labra, and N. Balakrishnan. A skewed version of the non-central
+     sinh-normal distribution and its properties and application. Technical report, Universidade
+     Estadual de Campinas, 2007. Section 1 gives the sinh-normal parameterization. https://www.
+     ime.unicamp.br/sites/default/files/pesquisa/relatorios/rp-2007-14.pdf.
+
+ [3] ChatGPT-6 Astra, Claude Opus 5.5, Kaarel Hänni, and Dmitry Vaintrob. Raw-
+     output Bayesian learning with continuous shrinkage priors. Research manuscript,
+     November 2026. Normalized Gaussian readout, all-width comparison neighborhoods,
+     and raw posterior tail transfer. https://github.com/kaarelh/AI-works/tree/main/
+     neural-network-generalization/works-in-progress/agnostic-raw-priors.
+
+ [4] ChatGPT-6 Astra, Claude Opus 5.5, Kaarel Hänni, and Dmitry Vaintrob. A width-
+     only approximation guarantee for Bayesian neural networks on Boolean inputs. Research
+     manuscript, November 2026. The coefficient-free Boolean compiler and its constant-
+     depth threshold-arithmetic refinement. https://github.com/kaarelh/AI-works/tree/main/
+     neural-network-generalization/works-in-progress/agnostic-width-only-boolean.
+
+                                                  29
+[5] William Hesse, Eric Allender, and David A. Mix Barrington. Uniform constant-depth threshold
+    circuits for division and iterated multiplication. Journal of Computer and System Sciences
+    65(4):695–716, 2002.
+
+[6] Wolfgang Maass. Bounds for the computational power and learning complexity of analog neural
+    nets. SIAM Journal on Computing 26(3):708–732, 1997.
+
+[7] Gal Vardi and Ohad Shamir. Neural networks with small weights and depth-separation barriers.
+    Advances in Neural Information Processing Systems 33:19433–19442, 2020.
+
+[8] Ismaël Castillo and Paul Egels. Posterior and variational inference for deep neural networks
+    with heavy-tailed weights. Journal of Machine Learning Research 26(122):1–58, 2025. https:
+    //www.jmlr.org/papers/v26/24-0894.html.
+
+
+
+
+                                              30
+

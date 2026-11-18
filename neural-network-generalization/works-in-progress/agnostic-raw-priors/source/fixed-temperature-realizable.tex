@@ -1,0 +1,129 @@
+\section{Fixed-temperature raw learning of realizable noisy targets}
+\label{sec:fixed-temperature-realizable}
+The favorable raw-output rate for a realizable target does not require the likelihood variance to grow with sample size. This section keeps one fixed positive temperature. It uses the actual untruncated posterior and controls its posterior-averaged population risk, hence also the risk of its ordinary posterior mean.
+
+Retain the native tail assumption \eqref{eq:optimistic-native-tail} and the regression/noise model of Section~\ref{sec:optimistic-raw-temperature}. Write $R_0=\mathbb E\xi^2$. Fix any
+\[
+ T\ge8\sigma^2+1.
+\]
+For each $n\ge2$, suppose there is a deterministic comparison law $\rho_n$ such that
+\[
+ \KL(\rho_n\|\mu)\le K_n,\qquad K_n\ge1,
+ \qquad
+ \mathbb E_{\rho_n}\|f-f_0\|_\infty^2\le n^{-4}.
+\]
+The comparison law is used only in the proof; the prior, temperature, likelihood and prediction rule of the learner are unchanged.
+
+\begin{theorem}[A fixed-temperature realizable raw oracle]
+\label{thm:fixed-temperature-realizable}
+Put
+\[
+ J_n=K_n+\log(n+2)+1+(B_0+1)^{1/r}.
+\]
+There is a constant $C$, depending only on the native tail constants $A,r$, such that
+\begin{equation}
+ \mathbb E_S\int R(f)\,\Pi_{S,T}(df)
+ \le R_0+\frac{C K_n[T+J_n^{2r}]}n.
+ \label{eq:fixed-temperature-realizable-expectation}
+\end{equation}
+The same bound holds for $\mathbb E_SR(m_{S,T})$. Moreover, for every $0<\delta<1/2$, with probability at least $1-\delta$,
+\begin{equation}
+ \int R(f)\,\Pi_{S,T}(df)
+ \le R_0+\frac{C[K_n+\log(4/\delta)]}{n}
+       \left[T+\left(K_n+\log\frac{n+2}{\delta}
+                         +1+(B_0+1)^{1/r}\right)^{2r}\right].
+ \label{eq:fixed-temperature-realizable-probability}
+\end{equation}
+Again the ordinary raw posterior mean obeys the same inequality. No bounded output link is used in either the likelihood or prediction.
+\end{theorem}
+
+\begin{proof}
+Write $c=1-2\sigma^2/T\ge3/4$ and define the nonnegative generalized risk
+\[
+ D_T(f)=-T\log\mathbb E_X
+             \exp\{-c(f(X)-f_0(X))^2/T\}.
+\]
+It is finite whenever the raw function has finite supremum, and Jensen's inequality gives $D_T(f)\le c\mathcal A(f)$. Conditional sub-Gaussianity implies
+\[
+ \mathbb E_S\exp\left\{\frac nT
+       [D_T(f)-\widehat R_S(f)+\widehat R_S(f_0)]\right\}\le1.
+\]
+Let
+\[
+ \Xi_S=\log\int\exp\left\{\frac nT
+       [D_T(f)-\widehat R_S(f)+\widehat R_S(f_0)]\right\}\mu(df).
+\]
+Then $\mathbb E e^{\Xi_S}\le1$, so $\mathbb E\Xi_S\le0$, and
+$\Pr\{\Xi_S>\log(1/\delta')\}\le\delta'$. The entropy variational inequality, followed by the actual raw posterior's variational optimality, gives
+\begin{equation}
+ \int D_T(f)\,\Pi_{S,T}(df)
+ \le\rho_n[\widehat R_S(f)-\widehat R_S(f_0)]
+                          +\frac{T(K_n+\Xi_S)}n.
+ \label{eq:fixed-temperature-generalized-risk}
+\end{equation}
+The empirical risk of $f_0$ cancels from the optimization. This is a statement about the original posterior, not a posterior formed with clipped outputs or a restricted prior.
+
+Write $\eta=n^{-2}$. Taking expectations in
+\eqref{eq:fixed-temperature-generalized-risk} yields
+\begin{equation}
+ \mathbb E_S\int D_T(f)\,\Pi_{S,T}(df)
+                   \le\eta^2+TK_n/n.
+ \label{eq:fixed-temperature-expected-generalized-risk}
+\end{equation}
+All terms are integrable. For example, Lemma~\ref{lem:optimistic-posterior-density} applies with $a_{\rho_n}\le\eta^2$, and controls the expected posterior second supremum moment by a finite multiple of its native moment. This also justifies the expectation and entropy steps by truncation if desired.
+
+For the confidence version, put
+$v(x)=\mathbb E_{\rho_n}(f(x)-f_0(x))^2\le\eta^2$
+and $b(x)=\mathbb E_{\rho_n}(f(x)-f_0(x))$, so $b(x)^2\le\eta^2$. Conditional on the input sample, the centered noise term
+$-2n^{-1}\sum_i\xi_i b(X_i)$ is sub-Gaussian with variance proxy at most $4\sigma^2\eta^2/n$. Therefore, except with probability $\delta'$,
+\[
+ \rho_n[\widehat R_S(f)-\widehat R_S(f_0)]
+ \le\eta^2+2\sigma\eta\sqrt{2\log(1/\delta')/n}.
+\]
+Combining this with the event for $\Xi_S$, and using $T\ge1+8\sigma^2$, gives
+\begin{equation}
+ \int D_T(f)\,\Pi_{S,T}(df)
+       \le CT[K_n+\log(1/\delta')]/n
+ \label{eq:fixed-temperature-hp-generalized-risk}
+\end{equation}
+with failure probability at most $2\delta'$.
+
+It remains to recover raw squared risk from $D_T$. For a cutoff $M\ge B_0+1$, put $E_M=\{\|f\|_\infty\le M\}$. If $f\in E_M$, then $u=(f-f_0)^2\le L^2:=(M+B_0)^2$. The secant bound on $[0,L^2]$ gives
+\begin{align*}
+ \mathcal A(f)
+ &\le\frac{L^2}{1-e^{-cL^2/T}}
+           \left[1-\mathbb E_Xe^{-c(f-f_0)^2/T}\right]\\
+ &\le\frac{L^2}{T(1-e^{-cL^2/T})}\,D_T(f)
+ \le\left(\frac1c+\frac{L^2}T\right)D_T(f).
+\end{align*}
+The final inequality uses $1-e^{-u}\ge u/(1+u)$. The unbounded part satisfies
+\[
+ \mathcal A(f)\mathbf1_{E_M^c}
+       \le(\|f\|_\infty+B_0)^2\mathbf1_{E_M^c}.
+\]
+
+Apply Lemma~\ref{lem:optimistic-posterior-density} to this nonnegative tail functional. Since $\mathcal A_{\rho_n}\le\eta^2$, it gives
+\[
+ \mathbb E_S\Pi_{S,T}
+       [(\|f\|_\infty+B_0)^2\mathbf1_{E_M^c}]
+ \le e^{K_n+C}\int_{E_M^c}(\|f\|_\infty+B_0)^2\,\mu(df).
+\]
+Choose $M=Aq^r$, with $q=CJ_n$ for the expectation bound. Integrating the native tail and enlarging $C$ makes this last expression at most $n^{-2}$. Combining with
+\eqref{eq:fixed-temperature-expected-generalized-risk} proves
+\eqref{eq:fixed-temperature-realizable-expectation}.
+
+For confidence $1-\delta$, choose instead
+\[
+ q=C\left[K_n+\log\frac{n+2}{\delta}+1+(B_0+1)^{1/r}\right].
+\]
+The same expected tail bound is now at most $\delta n^{-2}/3$, so Markov's inequality bounds the posterior tail contribution by $n^{-2}$ except with probability $\delta/3$. Combine this with
+\eqref{eq:fixed-temperature-hp-generalized-risk} at $\delta'=\delta/3$. This proves \eqref{eq:fixed-temperature-realizable-probability}. Finally Jensen's inequality gives the posterior-mean statements, and adding $R_0$ converts approximation risk into population squared risk.
+\end{proof}
+
+\paragraph{Consequences for the continuous readout priors.}
+A normalized Gaussian readout has $r=1/2$. If the teacher comparison has $K_n=\widetilde O(\mathcal C)$, the expected excess risk is
+$\widetilde O((\mathcal C^2+T\mathcal C)/n)$ at one fixed likelihood variance. For the power-$p$ normalized readout, $r=1/p$, the corresponding term is
+$\widetilde O((\mathcal C^{1+2/p}+T\mathcal C)/n)$.
+An unnormalized Gamma/Gaussian readout has $r=3/2$, giving
+$\widetilde O((\mathcal C^4+T\mathcal C)/n)$.
+These are realizable noisy-target results. They do not assert a fixed-temperature sharp agnostic oracle against every approximately correct teacher.

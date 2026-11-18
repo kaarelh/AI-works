@@ -1,0 +1,57 @@
+\begin{lemma}[Selective perturbation of a sparse mean network]
+\label{lem:relu-profile-comparison}
+Let $N\sigma^2\le1$ and let a deterministic ReLU network $w_*$
+have, at layer $\ell$, at most $m_\ell\le N$ active coordinates.
+Assume its first-layer mean is supported on the active rows, each
+internal mean matrix is supported on active current rows and active
+preceding columns, and its readout is supported on the final active
+coordinates. Suppose every weighted layer energy is at most $e$.
+For $0<r\le1$, retain all prior Gaussian variances except those
+entering active hidden rows and all readout variances, whose standard
+deviations are multiplied by $r$. Center the resulting product Gaussian
+law $\nu_r$ at $w_*$. Then, with $L=H+1$,
+\begin{align*}
+ 2\sigma^2\operatorname{KL}(\nu_r\Vert\mu)
+ &\le Q_N(w_*)+2\left(d+2+\sum_{\ell=2}^Hm_\ell\right)\log(1/r),\\
+ \sup_{x\in[-1,1]^d}
+ \left(\mathbb E_{\nu_r}|z_w(x)-z_{w_*}(x)|^2\right)^{1/2}
+ &\le\sqrt2 Lr(e+1)^{H/2}.
+\end{align*}
+\end{lemma}
+\begin{proof}
+There are
+$k=m_1(d+1)+N\sum_{\ell=2}^Hm_\ell+N$ narrowed coordinates.
+The exact Gaussian entropy formula and $\sigma^2N\le1$ give
+\[
+ 2\sigma^2\operatorname{KL}(\nu_r\Vert\mu)
+ =Q_N(w_*)+\sigma^2k(r^2-1-2\log r)
+ \le Q_N(w_*)+2\left(d+2+\sum_{\ell=2}^Hm_\ell\right)\log(1/r).
+\]
+Fix an input and set $S_\ell=\|h^\ell\|_2^2/N$. The normalized
+first mean-layer squared norm is at most $2e$; its Gaussian noise
+contributes at most two to its expected squared norm. Centering of
+all Gaussian noise and $\relu(t)^2\le t^2$ imply
+$\mathbb E S_1\le2(e+1)$. Each later mean matrix has operator norm
+at most $\sqrt e$, and its conditional noise contributes at most
+$N\sigma^2S_{\ell-1}\le S_{\ell-1}$. Hence
+$\mathbb E S_\ell\le2(e+1)^\ell$.
+
+Let $P_\ell$ project onto that layer's active coordinates, and put
+$\Delta_\ell=(\mathbb E\|P_\ell h^\ell-h_*^\ell\|_2^2/N)^{1/2}$.
+The deterministic hidden state is supported on the active coordinates.
+Lipschitzness and conditional independence give
+\[
+ \Delta_1\le\sqrt2r,\qquad
+ \Delta_\ell\le\sqrt e\,\Delta_{\ell-1}
+       +r\sqrt{m_\ell\sigma^2}\sqrt{\mathbb E S_{\ell-1}}
+ \le\sqrt e\,\Delta_{\ell-1}
+       +\sqrt2r(e+1)^{(\ell-1)/2}.
+\]
+Thus $\Delta_\ell\le\sqrt2\ell r(e+1)^{(\ell-1)/2}$.
+The supported mean readout has $\sqrt N\|v_*\|_2\le\sqrt e$,
+while its independent perturbation contributes output variance
+$r^2\sigma^2S_H$. Consequently the total root mean square output
+error is at most
+$\sqrt e\,\Delta_H+r\sqrt{\sigma^2\mathbb E S_H}
+\le\sqrt2 Lr(e+1)^{H/2}$.
+\end{proof}

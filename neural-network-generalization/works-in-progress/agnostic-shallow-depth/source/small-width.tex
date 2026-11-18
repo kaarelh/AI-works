@@ -1,0 +1,63 @@
+\section{The smaller-width branch}
+\label{sec:small-width-shallow}
+The comparison constructions above require a polynomial width threshold. This does not leave smaller realizable widths untreated. A shallow tanh function has a same-width approximate implementation at arbitrary hidden depth, and ordinary finite-parameter covers suffice below the threshold.
+
+\begin{lemma}[A narrow relay implementation]
+\label{lem:relay}
+Let $g(x)=\sum_{j=1}^C c_j\tanh(a_j^\top\bar x)$ with all coefficients bounded by $B\ge1$, and write $A_0=CB$. For any $H\ge1$ and $0<r<1$, there is a width-$C$, depth-$H$ tanh network $g_H$ with
+\[
+ \sup_x|g_H(x)-g(x)|\le r.
+\]
+For $H=1$ take $g_H=g$. For $H\ge2$ it keeps the original first layer, uses a second-layer matrix $\eta I$, uses identity matrices in subsequent hidden layers, and has final readout $c_j/\eta$, where
+\[
+ \eta=\min\{1,\sqrt{3r/(A_0H)}\}.
+\]
+In particular its coefficients grow only polynomially in $C,B,H,r^{-1}$.
+\end{lemma}
+\begin{proof}
+The case $H=1$ is immediate. For $H\ge2$, every first-layer feature has magnitude at most one. After multiplying it by $\eta$, every subsequent relay state has magnitude at most $\eta$. The elementary inequality
+$|\tanh t-t|\le|t|^3/3$ bounds the accumulated relay error by $(H-1)\eta^3/3$. Dividing by $\eta$ in the readout and summing coefficient magnitudes gives error at most $A_0H\eta^2/3\le r$. If the minimum selects $\eta=1$, its defining inequality gives the same conclusion.
+\end{proof}
+
+\begin{lemma}[A comparison at every width]
+\label{lem:small-comparison}
+Fix input dimension, teacher coefficient cap, and an approximation accuracy. There is a polynomial $P$ in the teacher width and the inverses of the requested accuracies such that, for every $H\ge1$, every $N\ge C$, and every $0<\nu\le1$, a comparison law satisfies
+\[
+ \int\widehat R_S(z_w)d\rho\le\widehat R_S(g)+\epsilon/32,
+ \qquad \frac2\omega\KL(\rho\Vert\mu)\le P(C)H^3.
+ \label{eq:small-width-comparison}
+\]
+The first inequality holds for every deterministic sample on the sphere with labels in $[-1,1]$. Constants in $P$ may depend on the fixed coefficient bound, dimension, and accuracy, but not on depth, learner width, or variance prefactor.
+\end{lemma}
+\begin{proof}
+Use Lemma~\ref{lem:relay} with output accuracy $r$ inverse-polynomial in $1+CB$ and the requested inverse accuracy. At $H=1$, keep the exact teacher and set $\eta=1$ in the following bounds. Clone its $C$ neurons into $N$ nearly equal groups, dividing outgoing coefficients by source-group sizes. The weighted prior energy of this exact implementation is bounded by
+\[
+ E\le d(d+1)B^2+2(H-1)C+2C\sum_j(c_j/\eta)^2
+ \le P_1(C)H.
+\]
+The second-layer factor $\eta$ only reduces this bound. For $H\ge2$, all internal cloned mean operators have norm at most $\sqrt2$, and the normalized readout norm is at most $\sqrt{2C\sum_j(c_j/\eta)^2}$.
+
+In standard Gaussian coordinates, restrict every first-layer and readout coordinate, and each internal row's $C$ group-constant coordinates, to the interval $[-u,u]$. There are at most $N[d+2+(H-1)C]$ such independent coordinates. The event has probability at least $(3u/8)^{N[d+2+(H-1)C]}$. Conditional on these restrictions, the independent coordinates remain unit-subgaussian; orthogonal unrestricted coordinates remain standard Gaussian. A pair of sphere nets gives conditional probability at least $1/2$ for each internal standardized operator norm to be at most $8\sqrt N$. Independence across layers gives joint conditional probability at least $2^{-(H-1)}$.
+
+The resulting symmetric noise event, translated to the cloned mean, changes each raw output by at most $uP_2(C,H)10^H$, where $P_2$ is polynomial. This follows by the Lipschitz recurrence for normalized hidden errors and the final readout bound. Take $u$ sufficiently small to make this a fixed prescribed output accuracy; then
+$\log(1/u)\le O(H)+\log P_3(C,H)$.
+Translation of a symmetric Gaussian event costs at most the factor $e^{-\omega E/2}$, by Jensen applied to the remaining Gaussian density ratio. Hence the prior probability of the output neighborhood is at least $\exp[-\omega P(C)H^3/2]$, after enlarging a polynomial $P$ to absorb the logarithms and the fixed dimension.
+
+Condition the prior on this neighborhood. Its normalized entropy is at most $P(C)H^3$. On the sphere, $|g|\le CB$; inverse-polynomial relay and neighborhood accuracies therefore change squared loss by at most a prescribed fraction of $\epsilon$, independently of the sample. This proves \eqref{eq:small-width-comparison}.
+\end{proof}
+
+\begin{proposition}[A polynomial-width complement costs polynomially many samples]
+\label{prop:small-width-statistics}
+Suppose a separate comparison theorem applies above a width threshold $N_0(H,C)$. At every width $C\le N<N_0$, choose
+\[
+ \lambda_{\rm small}=\frac{c_\epsilon}{P(C)H^3}
+\]
+with $c_\epsilon$ sufficiently small. There is a common sample event on which these posteriors have risk at most the best shallow comparison risk plus $\epsilon$, using a number of samples polynomial in $H,C,N_0$ and $\log(1/\delta)$. Its constants may depend on the same fixed resources. The event is common to every $0<\nu\le1$.
+\end{proposition}
+\begin{proof}
+The variational identity and Lemma~\ref{lem:small-comparison} bound posterior empirical risk by the comparison empirical risk plus a prescribed fraction of $\epsilon$. A total Gaussian operator-energy cutoff
+$Q_{\rm op}\le C[H+\lambda_{\rm small}^{-1}+\log(1/\epsilon)]$
+has negligible posterior raw-risk complement: use its exponential moment, the evidence lower bound $e^{-\omega/\lambda}$, and the prior fourth-moment bound on risk. Bounded tanh features also give a raw amplitude bound polynomial in $C,H$ on this good set.
+
+At each $N<N_0$ there are $O(dN+HN^2)$ coordinates with polynomially bounded magnitudes in $N,C,H$. A telescoping estimate bounds the logarithm of a parameter-to-output Lipschitz constant by a polynomial in $H,\log(N+C+H+2)$. Finite parameter grids therefore have log cardinality polynomial in $H,C,N_0$ and the inverse approximation accuracy. Their raw square-loss envelope is polynomial in $C,H$. Finite-class Hoeffding, followed by the uniform output approximation and posterior tail integration, proves the claimed polynomial sample budget. Apply scalar concentration only to one population minimizer in the compact shallow comparison class. All dictionaries are independent of $\nu$.
+\end{proof}

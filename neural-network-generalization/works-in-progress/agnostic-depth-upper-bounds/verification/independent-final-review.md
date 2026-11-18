@@ -1,0 +1,5 @@
+# Independent mathematical review
+
+Reviewed the exact sources on 18 November 2026. This is a conventional mathematical audit, not Lean verification.
+
+The current five-source depth companion passes. Its leading raw-output theorem covers bounded centered activations, including tanh, at every Gaussian scale tau<=1 and every finite width above comparison width. The geometric clone proof, all-first-layer covariance suppression, correlated-clone error recurrence and fixed-cover small-width branch give exp(O(H)) sample cost at fixed dimension and comparison resources. The separate saturated-ReLU theorem includes its bounded final link in both likelihood and prediction and likewise covers every scale and width. The earlier noncentered-activation gamma>1 theorem and its growing-dimension extension retain their stronger explicit scope. The all-scale weaker bounds and depth-normalized corollary are correctly distinguished. Abstract, setup, theorem statements and the corrected posterior-average-risk wording agree with the proofs.

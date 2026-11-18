@@ -1,0 +1,86 @@
+\section{The same depth obstruction for ReLU}
+\label{sec:relu-depth-extension}
+The positive-label memorizer of Section~\ref{sec:relu-near-baseline} yields a ReLU version with a fixed width-two target. Shifting the hinge is useful: the unshifted function $\operatorname{ReLU}(T)$ is affine on this augmented four-point support, whereas the shifted hinge below has a nonzero residual from all affine input functions.
+
+\begin{theorem}[ReLU depth lower bound]
+\label{thm:relu-depth-lower}
+There is an absolute $\eta>0$ such that, for every $\kappa>0$, there are finite $C_\kappa,H_\kappa$ with the following property. For every integer $H\ge H_\kappa$, put
+\[
+ D=\lfloor\eta H\rfloor,\qquad d=D+2,\qquad n=4\cdot2^D,
+\]
+the uniform input law on $\mathcal X_D$ with
+\[
+ g(x)=\frac12+\frac14\operatorname{ReLU}(T-\tfrac12),\qquad
+ Y=g(X)+\epsilon/8,\quad \Pr(\epsilon=\pm1)=1/2,
+\]
+where the signs are independent of the inputs, has the following property. With probability at least $9/10$ over $n$ IID observations, simultaneously for every
+\[
+ N\ge e^{C_\kappa H},\qquad 0<s\le N^{-1-\kappa},\qquad \lambda>0,
+\]
+the ordinary raw posterior mean of the ReLU learner has risk at least
+$1/64+2^{-22}$. The same conclusion holds for clipping its mean, the mean of clipped draws, arbitrary data-dependent mixtures of these predictions, and clipping after mixing.
+
+If the learner is additionally given any independent centered Gaussian affine output component $b^\top(1,x)$ with finite positive semidefinite covariance, the conclusion remains valid for ordinary raw posterior means and arbitrary mixtures of them, with excess lower bound $2^{-40}$ in place of $2^{-22}$. This statement is simultaneous over all such affine covariances.
+
+The target has width two and coefficient bound one at every hidden depth, independently of $d$ and $H$.
+\end{theorem}
+\begin{proof}
+The target takes values $(1/2,1/2,1/2,9/16)$ on the ordered $T$ values. Thus all labels lie in $[3/8,11/16]$, and all empirical atom means are positive. Assign any value in $[0,1]$ at unobserved atoms. The ReLU near-baseline theorem supplies an exact memorizer with energy $K\le(1+\delta)H+c$ and an unchanged-covariance Gaussian comparison whose RMS error is arbitrarily small uniformly over the stated widths and scales. The resulting comparison loss is $r_0+\zeta$: within-atom residuals have zero sum, so their cross term vanishes.
+
+ReLU is zero-origin and one-Lipschitz, so the same operator-energy floor and entropy inequality apply. Its native prior output variance on this support is exactly $\frac2d s(Ns/2)^H\le s$, giving the same zero comparison. Choose the fixed norm threshold, entropy slack, memorizer energy slack and comparison error sufficiently small. For $0<\lambda\le16/H$ the objective correction is
+\[
+ s+\lambda s\mathcal B_a=O_a(s+Ns),
+\]
+which tends uniformly to zero at the stated widths. The segment lemma therefore puts each raw mean and each mean of clipped draws within any prescribed fixed tolerance of $\{pb:0\le p\le1\}$. For $\lambda\ge16/H$, the posterior operator-energy tail proof applies without change: it uses only the zero comparison, the Gaussian operator-norm moment and the zero-origin Lipschitz output-product bound. Bounded hidden coordinates are unnecessary. Since $Ns\to0$ uniformly, it makes all those mean conventions pointwise exponentially small in $H$. Clipping a mean preserves its distance from the segment.
+
+On the occupancy event, $\|g(S)\|_n^2\ge1/4$ and singleton noise gives
+$\|b-g(S)\|_n^2\ge1/192$. Also $D_S\le1$ and
+$|b-2g(S)|\le1$ pointwise. Conditional Hoeffding gives
+$|\langle b-g(S),g(S)\rangle_n|\le1/2048$
+except on an exponentially small failure event. Choose the segment tolerance at most $1/2048$. The common witness is then at least
+\[
+ 1/256-1/2048-1/2048\ge1/512.
+\]
+The population witness $h_S(x)=\sum_{i:X_i=x}(Y_i-2g(x))$ has squared norm at most four when $\sum_xk_x^2/n\le4$. Cauchy--Schwarz gives excess at least $2^{-20}$, leaving the stated slack. The same segment and witness survive mixtures and clipping after mixing.
+
+For the affine extension, let $\Phi$ have rows $(1,X_i)^\top$, let $\Sigma$ be the affine covariance and set
+\[
+ B=(I+\Phi\Sigma\Phi^\top/(n\lambda s))^{-1}.
+\]
+If $P$ projects orthogonally away from the full empirical affine span, then
+$0\prec B\preceq I$ and $PB=BP=P$. Gaussian integration gives neural marginal loss $\|B^{1/2}(y-z)\|_n^2$, and the total mean $f$ satisfies
+\[
+ f=(I-B)y+Bm_z,\qquad Pf=Pm_z.
+\]
+Within-atom residuals are affine-orthogonal. Apply the segment lemma in the $B$ inner product; its floor follows from $\|B^{1/2}z\|\le\|z\|$. Both prior comparisons and the native memorizer remain valid because $B\preceq I$. Thus
+$\|P m_z-pP b\|_n$ is arbitrarily small uniformly in $\Sigma$ at low temperatures. At high temperatures the operator-energy tail still gives pointwise smallness of the neural mean: its zero comparison is bounded by $\widehat R_B(0)+s\le1+s$. No bound on $\Sigma$ is used.
+
+The population affine residual of $g$ on the four $T$ values is
+\[
+ \frac1{320}(-1,3,-3,1),\qquad
+ \|g-\operatorname{proj}_{\rm affine}g\|_2^2=\frac1{20480}.
+\]
+Indeed the two even directions are spanned by $1$ and $\sqrt{3/4-T^2}$, and the only odd affine direction is $T$. The displayed residual is odd and orthogonal to $T$. Its corresponding affine fitted values are
+$(161,157,163,179)/320$, all below $3/4$.
+Use the whitened affine coordinates $(1,T,z,\sqrt{3/4-T^2})$ as in the tanh construction. They span all affine input functions, and their Gram matrix has a fixed positive lower eigenvalue. Bounded-entry concentration at precision $O((D+3)^{-2})$ therefore gives
+\[
+ \|Pg(S)\|_n^2>2^{-16}
+\]
+with failure probability tending to zero. Conditional on inputs, the affine projection of the independent sign noise has expected squared norm at most $(D+3)/(64n)$. Markov and the singleton event give $\|P(b-g)\|_n^2\ge1/384>2^{-16}$ with probability tending to one. Conditional Hoeffding makes the projected alignment at most $2^{-20}$ in absolute value. The projected witness has norm at most one.
+
+Make the projected segment tolerance at most $2^{-20}$.
+The common empirical separator is then at least $2^{-17}$.
+Let $\widehat\beta$ be the empirical affine coefficient fitting $y-2g(S)$.
+Its population fitted values are the negatives of the bounded affine values above. The same bounded Gram and noise-moment concentration gives
+$\sup_{x\in\mathcal X_D}|(1,x)^\top\widehat\beta|\le1$.
+For completeness, entry errors $O((D+3)^{-2})$ give coefficient error $O((D+3)^{-1})$; multiplying by the support norm $O(\sqrt{D+3})$ leaves a vanishing uniform error. The failure probability is at most a polynomial in $D$ times $e^{-cn/(D+3)^4}$.
+
+The population witness
+\[
+ h(x)=\sum_{i:X_i=x}\{Y_i-2g(x)-(1,x)^\top\widehat\beta\}
+\]
+pairs with every $f-g$ exactly as the empirical projected witness.
+Each summand has absolute value at most two; the count event therefore gives $\|h\|_2^2\le16$. The excess is at least $2^{-38}$, implying the stated $2^{-40}$. This witness is common to all temperatures, widths, scales and affine covariances, hence to their arbitrary mixtures. Clipping an affine prediction is not included in this projected argument.
+
+All event failures tend to zero because $n$ is exponential while the affine dimension is linear in $H$. Increase the depth threshold to make their sum at most $1/10$. Finally, the target is implemented by first-layer constant one and $\operatorname{ReLU}(T-1/2)$, followed by identity relays and readout $(1/2,1/4)$; all coefficients have magnitude at most one.
+\end{proof}

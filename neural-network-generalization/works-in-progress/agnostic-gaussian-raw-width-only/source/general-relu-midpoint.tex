@@ -1,0 +1,167 @@
+\section{Empirical midpoint comparison in every input dimension}
+Let $x\in[-1,1]^d$, $d\ge1$, $\bar x=(x,1)$, and
+\[
+ z_w(x)=\sum_{j=1}^N v_j(w_j\cdot\bar x)_+,
+ \qquad w_j\sim N(0,(\nu/d)I_{d+1}),\qquad
+ v_j\sim N(0,\nu/N^2),
+\]
+independently, where $0<\nu\le1$. Define
+\[
+ Q=\frac dN\sum_j\|w_j\|_2^2+N\sum_jv_j^2,
+ \qquad P=\sqrt d\sum_j|v_j|\|w_j\|_2\le Q/2,
+ \qquad\omega=N/\nu.
+\]
+The actual posterior is proportional to
+$\exp[-\omega\widehat R(z)/(2\lambda)]d\mu$.
+Thus its Gaussian observation variance is $n\lambda\nu/N$.
+Assume the observed labels are bounded by one.
+
+\begin{lemma}[Minimum-mass training-vector compression]
+For any finite sample of $n$ inputs and any two finite shallow ReLU
+functions $f,g$ of normalized path masses $P_f,P_g$, their midpoint
+training vector has an implementation using at most $n$ neurons,
+with path mass at most $(P_f+P_g)/2$. The choice is Borel in the
+original parameters and sample inputs.
+\end{lemma}
+\begin{proof}
+Use normalized features
+$\phi_\theta(x)=d^{-1/2}(\theta\cdot\bar x)_+$,
+$\theta\in\mathbb S^d$, with the readout coefficient signs absorbed
+into the signed features. Let $A$ contain all the signed training
+feature columns of $f$ and $g$. The linear program
+\[
+ \min\{\boldsymbol1^\top\alpha:A\alpha=(f(S)+g(S))/2,
+                                  \ \alpha\ge0\}
+\]
+is feasible with cost at most $(P_f+P_g)/2$ and has compact sublevel
+sets. A minimum-support optimum has independent supported columns:
+a dependence would permit motion until a coefficient vanished without
+increasing cost. It therefore uses at most $\operatorname{rank}A\le n$
+atoms. Enumerate independent column subsets, solve by their Gram
+inverses, retain the nonnegative feasible solutions, and choose the
+least cost with lexicographic tie-breaking. This is a Borel rule.
+\end{proof}
+
+\begin{lemma}[A dimension-explicit empirical midpoint inequality]
+\label{lem:general-shallow-midpoint}
+Let $n\ge2$, $N\ge n$, $n^{-2}\le\lambda\le1$.
+Fix any finite comparator $g$ with $P_g\le n^4$.
+Then the actual posterior satisfies
+\begin{align}
+ &\Pi_\lambda\widehat R(z)-\widehat R(g)
+ +\tfrac12\Pi_\lambda P_n(z-g)^2+\lambda\Pi_\lambda P\\
+ &\hspace{2cm}\le2\lambda P_g+
+ C\lambda\nu(d+2)\log((n+1)(d+1))+Cn^{-10}. \tag{GM1}
+\end{align}
+The comparator need not fit in width $N$: only its compressed midpoint
+training vector is used by the proof. The learner itself is unchanged.
+\end{lemma}
+\begin{proof}
+For each posterior function $f$, compress its midpoint training vector
+with $g$ as above and pad to width $N$. Balance a normalized signed
+atom of amplitude $c$ by
+\[
+ \bar w_j=\sqrt{N|c|/d}\,\theta_j,
+ \qquad \bar v_j=\operatorname{sign}(c)\sqrt{|c|/N}.
+\]
+The center has energy at most $P_f+P_g$ and agrees exactly with
+$(f+g)/2$ at all training inputs.
+
+Put a Gaussian law around this center with native covariance
+multiplied by $\epsilon^2$, where
+$\epsilon=((n+1)(d+1))^{-30}$, and mix these laws using the actual
+posterior distribution of $f$. Its KL is at most
+\[
+ \frac\omega2(\Pi P_f+P_g)+(d+2)N\log(1/\epsilon).
+\]
+This follows from the Gaussian relative-entropy formula and
+convexity of relative entropy under mixing. On the other hand,
+\[
+ \log\mathbb E_\mu e^{3\omega Q/8}=(d+2)N\log2,
+\]
+so the entropy inequality and $Q\ge2P$ give
+\[
+ \operatorname{KL}(\Pi\Vert\mu)
+ \ge\tfrac34\omega\Pi P-(d+2)N\log2.
+\]
+The difference between the mixture's KL and the actual posterior KL
+is therefore bounded by
+\[
+ -\tfrac14\omega\Pi P+\tfrac12\omega P_g
+       +C(d+2)N\log((n+1)(d+1)). \tag{GM2}
+\]
+
+The Gaussian perturbation of a balanced center of path mass $P_0$
+has uniform root-mean-square function error at most
+\[
+ C\epsilon\sqrt{\nu P_0}+C\epsilon^2\nu. \tag{GM3}
+\]
+For example, the incoming perturbation has directional standard
+deviation at most $\epsilon\sqrt{2\nu}$, and
+$\sum_j|\bar v_j|\le\sqrt{P_0}$. The independent readout perturbation
+has variance at most $C\epsilon^2\nu P_0/N$ when applied to the center
+features. The product term has variance at most
+$C\epsilon^4\nu^2/N$. These estimates use
+$\|\bar x\|_2^2/d\le2$ and are uniform in input dimension and width.
+
+We record a deterministic posterior moment bound to justify the
+uniform error estimate after mixing:
+\[
+ \Pi Q^2\le C\{(d+2)\nu+\lambda^{-1}\}^2. \tag{GM4}
+\]
+Indeed the native centered output has variance at most $\nu^2/N$,
+so Jensen gives $Z\ge e^{-\omega/\lambda}$.
+Also $\mathbb E_\mu e^{\omega Q/4}=2^{(d+2)N/2}$.
+Combining these bounds gives an exponential posterior tail for $Q$
+above $C((d+2)\nu+\lambda^{-1})$; integrating proves (GM4).
+Since $P\le Q/2$, $P_g\le n^4$, $\lambda\ge n^{-2}$ and
+$|g|\le\sqrt2 P_g$, (GM3) bounds the loss perturbation by
+$C\epsilon\Pi(P+P_g+1)^{3/2}+C\epsilon^2\Pi(P+P_g+1)$.
+By (GM4) this is at most $Cn^{-10}$. In particular no bounded-output
+restriction is imposed on the comparator.
+The exact squared-loss midpoint identity thus gives
+\[
+ \rho\widehat R\le\tfrac12\Pi\widehat R+\tfrac12\widehat R(g)
+                  -\tfrac14\Pi P_n(z-g)^2+Cn^{-10}.
+\]
+Finally, the actual posterior minimizes
+$\rho\widehat R+(2\lambda/\omega)\operatorname{KL}(\rho\Vert\mu)$.
+Use this comparison and (GM2), multiply by two, and use
+$N/\omega=\nu$. This is (GM1).
+\end{proof}
+
+\begin{corollary}[Only the observed label second moment is needed]
+\label{cor:general-midpoint-label-moment}
+In the preceding lemma replace the bounded-label assumption by
+$\widehat{Y^2}\le L$, where $L\ge1$. Then the same inequality holds
+with entropy remainder
+\[
+ C\lambda\nu(d+2)\log((n+1)(d+L+1))+Cn^{-10}. \tag{GM5}
+\]
+No labels are clipped in either the posterior or this comparison.
+The statement is deterministic for every sample satisfying the
+observed second-moment bound, so $L$ may also be a number computed
+from that sample.
+\end{corollary}
+\begin{proof}
+Use exactly the same midpoint centers and let
+$\epsilon=((n+1)(d+L+1))^{-30}$ in the proof-only comparison laws.
+The evidence bound becomes
+$Z\ge\exp[-\omega(L+1)/(2\lambda)]$.
+The same Gaussian energy moment therefore gives
+\[
+ \Pi Q^2\le C\{(d+2)\nu+(L+1)/\lambda\}^2.
+\]
+The midpoint identity is valid for arbitrary real labels. To bound
+the perturbation in empirical loss, apply Cauchy--Schwarz over the
+observations before posterior averaging. Its absolute value is at
+most
+\[
+ C\epsilon\Pi[(P+P_g+\sqrt L+1)\sqrt{P+P_g+1}]
+       +C\epsilon^2\Pi(P+P_g+1).
+\]
+The displayed energy moment, $P_g\le n^4$ and $\lambda\ge n^{-2}$
+make this at most $Cn^{-10}$. The KL calculations are unchanged
+except for the enlarged logarithm of the covariance precision.
+This proves (GM5).
+\end{proof}

@@ -1,0 +1,87 @@
+\section{Why the likelihood scale must depend on the prior}
+\label{sec:normalization}
+This appendix concerns bounded hidden activations, including tanh. It explains why the positive theorem uses a deliberately calibrated observation variance. The statements require no assumptions on the hidden-weight prior beyond independence from the centered Gaussian readout.
+
+Suppose the last hidden vector satisfies $|h_j(x)|\le1$ and the readout prior is
+$v\sim\mathcal N(0,(s_N/N)I_N)$, with $s_N\to0$. Conditional on hidden weights, the output at one input is a centered Gaussian of variance at most $s_N$.
+
+\begin{proposition}[Fixed observation variance cannot give an all-width oracle]
+\label{prop:fixed-variance-failure}
+Train on $n$ copies of an input $x_0$ with label one, using a Gaussian observation variance $V>0$. At every finite width, the ordinary posterior mean at $x_0$ lies in
+\[
+ \left[0,\frac{ns_N}{V+ns_N}\right].
+\]
+Its test loss on the same noiseless law is therefore at least
+\begin{equation}
+ \left(\frac{V}{V+ns_N}\right)^2.
+ \label{eq:variance-necessary}
+\end{equation}
+In particular, vanishing loss along such a sequence requires $V/(ns_N)\to0$. For the positive theorem's variance $V=n\lambda s_N$, this lower bound is $(\lambda/(1+\lambda))^2$.
+\end{proposition}
+\begin{proof}
+Conditional on hidden weights, put $q=(s_N/N)\|h(x_0)\|^2\le s_N$. Gaussian conjugacy gives conditional posterior output mean $nq/(V+nq)$. Integrating the posterior law of hidden weights preserves the stated interval.
+\end{proof}
+
+A width-one tanh teacher with coefficients at most two realizes the constant-one target at every depth: keep each hidden value at $1/2$ using first bias $\operatorname{arctanh}(1/2)$ and subsequent self-edge $\log3$, and use readout weight two. Thus \eqref{eq:variance-necessary} already concerns a uniformly simple teacher.
+
+The repeated-input example gives an exact bound, but the basic failure does not depend on a degenerate input law. On an arbitrary sample with $|Y_i|\le1$, conditional Gaussian readout regression has mean
+\[
+ k_x^{\mathsf T}(K+VI_n)^{-1}y,
+\]
+where $K$ is the prior output covariance matrix on training inputs and every component of $k_x$ has absolute value at most $s_N$. Its absolute value is at most $ns_N/V$, uniformly in $x$ and hidden weights. Therefore the raw posterior mean tends uniformly to zero whenever $V/(ns_N)\to\infty$. A constant-one target can consequently be used with any input distribution, including a nondegenerate continuous one. Taking a fractional power $0<\beta\le1$ of a fixed Gaussian likelihood replaces $V$ by $V/\beta$ and cannot remove this obstruction.
+
+\begin{proposition}[A fixed physical variance hyperprior]
+\label{prop:variance-hyperprior}
+Put any proper probability hyperprior $\pi(dV)$ on $(0,\infty)$, independent of learner width and weights, and use the fully normalized Gaussian likelihood. Fix $n\ge2$ repeated-input observations at $x_0$, with label mean $\bar y$ and positive residual sum of squares
+\[
+ A=\sum_i(y_i-\bar y)^2>0.
+\]
+Then the ordinary posterior output mean at $x_0$ tends to zero as $s_N\to0$, regardless of the hidden priors.
+\end{proposition}
+\begin{proof}
+After integrating the Gaussian readout conditional on hidden weights, the marginal likelihood is
+\[
+ L(q,V)=(2\pi)^{-n/2}V^{-(n-1)/2}(V+nq)^{-1/2}
+ \exp\left[-\frac A{2V}-\frac{n\bar y^2}{2(V+nq)}\right],
+ \qquad0\le q\le s_N.
+\]
+The corresponding conditional output mean is $m(q,V)=nq\bar y/(V+nq)$. For each fixed $V>0$, uniformly over $0\le q\le s_N$, one has $L(q,V)\to L(0,V)$ and $m(q,V)\to0$. Furthermore,
+\[
+ L(q,V)\le(2\pi)^{-n/2}V^{-n/2}e^{-A/(2V)},
+ \qquad |m(q,V)|\le|\bar y|.
+\]
+The likelihood upper bound is bounded on $(0,\infty)$ because $A>0$, hence integrable against every proper $\pi$. Dominated convergence, uniformly over the hidden-prior mixtures, gives a positive limiting denominator $\int L(0,V)\pi(dV)$ and a numerator tending to zero. Their ratio is the posterior mean.
+\end{proof}
+
+For the correctly specified regression law $X=x_0$, $Y=1+\varepsilon$, with $\varepsilon\sim\mathcal N(0,a^2)$ and $a>0$, the residual $A$ is positive almost surely for every fixed $n\ge2$. Proposition~\ref{prop:variance-hyperprior} gives test excess tending to one over the constant-one teacher, almost surely over that sample. This example allows unbounded Gaussian labels only in the present appendix. Bounded noise $\varepsilon=\pm a$ gives the same conclusion on the event that both signs occur, of probability $1-2^{1-n}$.
+
+\begin{proposition}[An unbounded hyperprior on normalized temperature]
+\label{prop:temperature-hyperprior}
+Instead give $\lambda$ any proper hyperprior $\pi_n$ on $(0,\infty)$ with unbounded support, independent of learner width, and set the physical observation variance to $n\lambda s_N$. The hyperprior may depend on sample count. Use the fully normalized Gaussian likelihood. For every fixed repeated-input sample as in Proposition~\ref{prop:variance-hyperprior}, the posterior temperature tends to infinity in probability, and the ordinary output mean tends to zero, as $s_N\to0$.
+\end{proposition}
+\begin{proof}
+Write $t=q/s_N\in[0,1]$ and $M_2=n^{-1}\sum_i y_i^2=A/n+\bar y^2$. Apart from the factor $(2\pi ns_N)^{-n/2}$, the integrated likelihood is
+\[
+ \mathcal L_{s_N}(t,\lambda)=\lambda^{-(n-1)/2}(\lambda+t)^{-1/2}
+ \exp\left[-\frac1{2s_N}\left(\frac A{n\lambda}+
+                                      \frac{\bar y^2}{\lambda+t}\right)\right].
+\]
+Fix $K>0$. When $s_N\le A/(n^2K)$, differentiation shows that
+$\lambda^{-n/2}e^{-A/(2ns_N\lambda)}$ is increasing on $(0,K]$. Hence, uniformly in $t$,
+\[
+ \sup_{\lambda\le K}\mathcal L_{s_N}(t,\lambda)
+ \le K^{-n/2}e^{-A/(2nKs_N)}.
+\]
+Choose $L>2nKM_2/A$. Unbounded support supplies a finite $U>L$ with $\pi_n([L,U])>0$. Throughout this interval,
+\[
+ \mathcal L_{s_N}(t,\lambda)
+ \ge U^{-(n-1)/2}(U+1)^{-1/2}e^{-M_2/(2Ls_N)}.
+\]
+The ratio bounds posterior probability $\Prob\{\lambda\le K\mid S\}$ by a finite constant times $e^{-A/(4nKs_N)}$. This tends to zero. Conditional readout mean has magnitude
+\[
+ |\bar y|\frac{t}{\lambda+t}\le\frac{|\bar y|}{1+\lambda}.
+\]
+First split its posterior expectation at $K$, then let $s_N\to0$ and $K\to\infty$. The mean converges to zero.
+\end{proof}
+
+These propositions concern ordinary variance or temperature hyperpriors with the stated width independence. They do not cover a width-dependent hyperprior, a temperature prior with a shrinking upper endpoint, or a prediction algorithm that weights candidate temperatures using a separate validation criterion. The free-energy calibration in the main theorem is different: it explicitly balances a statistical error certificate and selects one posterior. The distinction is necessary even for constant regression.

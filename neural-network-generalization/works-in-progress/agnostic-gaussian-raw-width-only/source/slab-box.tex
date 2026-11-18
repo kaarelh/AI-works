@@ -1,0 +1,93 @@
+\subsection{Slab regularity, including sphere inputs}
+Assume that for fixed $\kappa\ge1$ and $0<\alpha\le1$,
+\begin{equation}
+ P_X\{|u\cdot X-t|\le r\}\le\kappa r^\alpha
+ \quad(\|u\|_2=1,\ t\in\R,\ r>0).
+ \label{eq:slab}
+\end{equation}
+This does not require an ambient Lebesgue density.
+
+\begin{lemma}[A fixed-depth raw compiler under slab regularity]
+\label{lem:slab-box}
+For every width-$C$, hidden-depth-$h$ ReLU teacher with arbitrary finite
+coefficients, every $0<\zeta<1/4$, and every fixed learner depth $H\ge2$,
+there is a raw tanh network $q$ with an input constant and no internal
+biases such that
+\[
+ \E|q(X)-\clip(g(X))|\le c_d\zeta,
+ \qquad \sup_{[-1,1]^d}|q|\le2^d+1.
+\]
+Writing
+\[
+ R=\frac{\kappa(C+1)^{dh+1}}{\zeta^2},\qquad
+ a_{d,\alpha}=\max\{d/\alpha,\ 1/\alpha+1/\alpha^2\},
+\]
+its width and coefficient cap satisfy
+\[
+ m\le c_{d,h,\alpha}R^{d/\alpha},\qquad
+ B\le c_{d,h,\alpha}R^{a_{d,\alpha}}
+                    \log(c_{d,h,\alpha}R/\zeta).
+\]
+The constants do not depend on original teacher coefficients or on
+additional signed-bit padding layers.
+\end{lemma}
+\begin{proof}
+There are at most $A=(C+1)^{dh}$ full-dimensional affine activation
+cells: each layer cuts an existing cell by at most $C$ hyperplanes,
+creating at most $(C+1)^d$ subcells. Include all their activation
+boundary planes, at most $hCA$ of them. On each final cell the output
+is affine. Include also its proper level hyperplanes at levels
+$-1+2j/L$, $0\le j\le L$, where $L=\lceil8/\zeta\rceil$.
+Constant formulas contribute no level planes. The full collection has
+at most
+\[
+ F=(hC+L+1)A\le c_h(C+1)^{dh+1}/\zeta
+\]
+planes. Degenerate identically zero gates add no boundary.
+
+Choose an axis-aligned grid of mesh
+$\Delta=c_d(\zeta/(\kappa F))^{1/\alpha}$, with a sufficiently
+small fixed constant, and assign each box the value of $\clip(g)$ at
+its lower corner. Corners may lie slightly outside the input cube;
+the same affine-region count applies there. If the segment from $x$
+to its box corner meets one of the listed planes, then $x$ lies within
+$\sqrt d\Delta$ of that plane. By \eqref{eq:slab}, this exceptional
+set has probability at most $\kappa F(\sqrt d\Delta)^\alpha\le\zeta/8$.
+On its complement the clipped affine output stays within one interval
+between adjacent output levels, so its variation is at most
+$2/L\le\zeta/4$. Hence the boxwise-constant approximation has $L^1$
+error at most $c\zeta$.
+
+There are at most $M_0\le c_d\Delta^{-d}$ relevant boxes. Choose
+\[
+ w=\min\left\{\Delta/4,
+       (\zeta\Delta/(c_d\kappa))^{1/\alpha}\right\}.
+\]
+The union of strips of width $w$ around coordinate grid boundaries
+has probability at most $c_d\kappa\Delta^{-1}w^\alpha\le\zeta/16$.
+The soft tanh box indicators from the preceding proof apply without
+change. Their raw sum has global magnitude at most $2^d+1$;
+their first-layer coefficients are $O_d(1/w)$, and their remaining
+coefficients are bounded by
+$O_d(M_0+\log(M_0/\zeta))$. They approximate the boxwise constant
+function in $L^1$ to error $c_d\zeta$.
+
+Finally $\Delta^{-1}\le c_{d,h,\alpha}R^{1/\alpha}$ and
+\[
+ w^{-1}\le c_{d,h,\alpha}
+       \left[R^{1/\alpha}
+              +(\kappa/\zeta)^{1/\alpha}R^{1/\alpha^2}\right]
+ \le c_{d,h,\alpha}R^{1/\alpha+1/\alpha^2}.
+\]
+These inequalities give the displayed width and coefficient bounds.
+The signed copying gates preserve both the raw envelope and the
+accuracy at every larger prescribed depth.
+\end{proof}
+
+Uniform measure on the unit sphere in dimension $d\ge3$ satisfies
+\eqref{eq:slab} with $\alpha=1$ and $\kappa=4\sqrt d$. On the circle,
+$\alpha=1/2$ and $\kappa=4$ suffice. Indeed the first-coordinate density
+on the sphere is proportional to $(1-t^2)^{(d-3)/2}$; it is at most
+$\sqrt d$ for $d\ge3$, while the circle's endpoint singularity has
+integral $O(\sqrt r)$ over an interval of length $2r$. A bounded density
+relative to surface measure multiplies $\kappa$ by that density bound.

@@ -1,0 +1,161 @@
+\section{Selecting the likelihood from observed free energy}
+The calibration in this section does not use the teacher width, coefficient cap, or population noise level. It uses the observed sample and the fixed learner prior. Define the normalized negative log evidence
+\begin{equation}
+ F_S(\lambda)=-\frac{2\lambda}{\omega}\log\int
+       e^{-\omega\widehat R_S(z_w)/(2\lambda)}d\pi_{N,\gamma}(w).
+ \label{eq:freeenergy-definition}
+\end{equation}
+Its variational identity is
+\[
+ F_S(\lambda)=\inf_\rho\left\{\int\widehat R_S(z_w)d\rho+
+                    \frac{2\lambda}{\omega}\KL(\rho\|\pi_{N,\gamma})\right\},
+\]
+with equality at the posterior. In particular $0\le F_S(\lambda)\le M_0:=1+V^2$: the independent centered readout gives prior expected loss at most $1+V^2N/\omega\le M_0$ on every sample.
+
+For total failure probability $0<\delta<1$, define the following deterministic quantities, which do not depend on the teacher:
+\begin{align}
+ B_1&=2V^2+2, & K_n&=2\log2+4\log(7B_1n^4)+1,\notag\\
+ c_0&=\frac18+\frac{\log2}{4}, &
+ J_n&=\left\lceil\log_2(2M_0n+K_n+2)\right\rceil,\notag\\
+ t_n&=\max\left\{1,\log\frac{4(J_n+1)}\delta\right\},\notag\\
+ a_n&=\max\left\{\frac1{\sqrt n},\sqrt2C_*\left[
+       \frac{\sqrt2D_n\log^{3/2}(2n)}{\sqrt n}
+                   +(V+1)\sqrt{\frac{t_n}n}\right]\right\}.
+ \label{eq:adaptive-constants}
+\end{align}
+Put $\lambda_0=16a_n^2$ and select the smallest minimizer
+\begin{equation}
+ \widehat\lambda_S\in\arg\min_{\lambda\ge\lambda_0}
+   \left\{F_S(\lambda)(1+4a_n^2/\lambda)+c_0\lambda\right\}.
+ \label{eq:selected-lambda}
+\end{equation}
+The minimum exists. In fact it suffices to search the deterministic compact interval
+$[\lambda_0,\lambda_0+5M_0/(4c_0)]$.
+The Gaussian observation variance of the selected learner is
+$n\widehat\lambda_S/\omega$. This is one selected posterior, not a mixture of posteriors.
+
+\begin{lemma}[A common empirical-to-population event]
+\label{lem:statistical-event}
+With probability at least $1-\delta/2$, simultaneously for every width and every supported network with $q_N\le2M_0n+K_n+1$,
+\begin{equation}
+ R(z_w)-\widehat R_S(z_w)
+ \le a_n\sqrt{\widehat R_S(z_w)}\sqrt{1+q_N}
+                                  +a_n^2(1+q_N).
+ \label{eq:adaptive-stat-event}
+\end{equation}
+\end{lemma}
+\begin{proof}
+Apply~\eqref{eq:sst} to $\mathcal F_{2^j}$, $0\le j\le J_n$, with failure probability $\delta/[2(J_n+1)]$. Its loss is bounded by $(V+1)^2(1+2^j)$ and its capacity by $D_n\sqrt{(1+2^j)/n}$. Choose $j=0$ if $q_N\le1$ and the least dyadic cutoff otherwise. Then $1+2^j\le2(1+q_N)$. The definition of $a_n$, including its nonnegative square cross term and $C_*\ge1$, dominates both the linear and quadratic terms of~\eqref{eq:sst}. A finite union bound proves the assertion. These function classes include all widths and do not depend on $\gamma$ or $\lambda$.
+\end{proof}
+
+\begin{lemma}[Weighted tails of the empirical objective]
+\label{lem:objective-tail}
+For every sample and every $\lambda>0$, the posterior raw-risk integral on
+\[
+ \left\{\widehat R_S(z_w)+\lambda q_N>
+                    2F_S(\lambda)+\lambda K_n\right\}
+\]
+is at most $n^{-4}$.
+\end{lemma}
+\begin{proof}
+Write $J=\widehat R_S+\lambda q_N$. On $J>u$,
+\[
+ e^{-\omega\widehat R_S/(2\lambda)}
+ \le e^{-\omega u/(4\lambda)}e^{\omega q_N/4}.
+\]
+The likelihood normalizer is $e^{-\omega F_S/(2\lambda)}$. Under the prior, exponential tilting by $e^{\omega q_N/4}$ doubles the scale of the chi-square readout energy and contributes $2^{N/2}$. Its tilted mean is $2N/\omega\le2$, so
+\[
+ \int(1+q_N)\mathbf1_{\{J>u\}}d\Pi_\lambda
+ \le7\exp\left[\frac{\omega F_S}{2\lambda}
+                   -\frac{\omega u}{4\lambda}+\frac{N\log2}{2}\right].
+\]
+We used the larger constant seven for a convenient fixed bound. Raw loss is at most $B_1(1+q_N)$. At $u=2F_S+\lambda K_n$, use $N\le\omega$ and $\omega\ge1$ in the definition of $K_n$ to obtain the claimed $n^{-4}$ bound.
+\end{proof}
+
+\begin{theorem}[An observable certificate for raw posterior risk]
+\label{thm:certificate}
+On the event of Lemma~\ref{lem:statistical-event}, simultaneously for every $N$, every $\gamma\ge1$, and every $\lambda\ge16a_n^2$,
+\begin{equation}
+ \int R(z_w)d\Pi_\lambda\le
+ F_S(\lambda)(1+4a_n^2/\lambda)+c_0\lambda+n^{-4}.
+ \label{eq:certificate}
+\end{equation}
+The selection~\eqref{eq:selected-lambda} is measurable. Suppose a comparison yields
+$F_S(\lambda)\le u+\lambda T$ for all $\lambda\ge16a_n^2$, where $u,T\ge0$ are arbitrary. Then
+\begin{equation}
+ \int R(z_w)d\Pi_{\widehat\lambda_S}
+ \le u+4a_n\sqrt{(T+c_0)u}+20a_n^2(T+c_0)+n^{-4}.
+ \label{eq:empirical-oracle}
+\end{equation}
+The ordinary raw posterior mean obeys the same bounds.
+\end{theorem}
+\begin{proof}
+Outside the tail of Lemma~\ref{lem:objective-tail},
+$q_N\le2F_S/\lambda+K_n\le2M_0n+K_n$, because $\lambda\ge16a_n^2\ge1/n$. Thus the fixed statistical event applies. Put $U_0=\int\widehat R_Sd\Pi_\lambda$ and $T_0=1+\int q_Nd\Pi_\lambda$. Integrating~\eqref{eq:adaptive-stat-event} on this region and using Cauchy--Schwarz bounds the two error terms by
+\[
+ a_n\sqrt{U_0T_0}+a_n^2T_0
+ \le\lambda T_0/8+4a_n^2U_0/\lambda.
+\]
+Young's inequality pays the first term with $\lambda T_0/16+4a_n^2U_0/\lambda$, and $a_n^2T_0\le\lambda T_0/16$ pays the second.
+By Lemma~\ref{lem:entropy}, the energy contribution $\lambda\int q_N/8$ is at most one quarter of the relative-entropy penalty in $F_S$, plus $\lambda\log2/4$. Also $U_0\le F_S$. Adding the weighted raw-risk tail proves~\eqref{eq:certificate}.
+
+The certificate is continuous in positive $\lambda$, at least $c_0\lambda$, and at $\lambda_0$ at most $5M_0/4+c_0\lambda_0$. Therefore it attains its global minimum in the stated compact interval. Its smallest minimizer is measurable: the event that it lies at or below a fixed point is equality of the minimum over the interval ending there and the minimum over the full interval. Both minima are measurable as infima over countable dense sets. Continuity of the likelihood integral follows by bounded convergence.
+
+For any $\lambda\ge\lambda_0$, the comparison bounds the certificate by
+\[
+ u+(T+c_0)\lambda+4a_n^2u/\lambda+4a_n^2T.
+\]
+Use $\lambda=\max\{16a_n^2,2a_n\sqrt{u/(T+c_0)}\}$, with the square-root term zero when $u=0$. The inequalities
+$\lambda\le16a_n^2+2a_n\sqrt{u/(T+c_0)}$ and
+$4a_n^2u/\lambda\le2a_n\sqrt{(T+c_0)u}$ give~\eqref{eq:empirical-oracle}. The certificate's global minimum is no larger than this choice, regardless of whether the choice lies above the convenient compact search interval. Jensen gives the ordinary posterior mean.
+\end{proof}
+
+\begin{theorem}[Noise-adaptive population oracle]
+\label{thm:main}
+Fix any teacher $g$ with width at most $C$, coefficient cap $B\ge1$, and the appropriate support condition. Define $T_g$ by~\eqref{eq:T}. With probability at least $1-\delta$, simultaneously for every $N\ge C$ and every $\gamma\ge1$, the selected posterior satisfies
+\begin{align}
+ R\left(\int z_wd\Pi_{\widehat\lambda_S}\right)
+ \le\int R(z_w)d\Pi_{\widehat\lambda_S}
+ \le R(g)&+6a_n\sqrt{(T_g+c_0)R(g)}\notag\\
+ &+25a_n^2(T_g+c_0)+n^{-4}.
+ \label{eq:main-oracle}
+\end{align}
+The selection rule uses none of $C,B,R(g)$. In particular, it may be compared with a population-risk minimizer in any predetermined bounded-weight teacher class.
+\end{theorem}
+\begin{proof}
+The comparison measure gives $F_S(\lambda)\le u+\lambda T_g$ for every positive $\lambda$, where $u=\widehat R_S(g)+1/(2n)$. Bernstein's inequality for the fixed teacher gives, with failure probability at most $\delta/2$,
+\[
+ \widehat R_S(g)\le R(g)+(U+1)\sqrt{\frac{2R(g)\log(2/\delta)}n}
+                    +\frac{2(U+1)^2\log(2/\delta)}{3n}.
+\]
+We have $T_g\ge2C^2B^2\ge2$ and $(U+1)^2\le2V^2T_g$. Also $a_n^2\ge2(V+1)^2\log(2/\delta)/n$ and $a_n^2\ge1/n$. Consequently
+\[
+ u\le R(g)+2a_n\sqrt{T_gR(g)}+a_n^2T_g
+      =(\sqrt{R(g)}+a_n\sqrt{T_g})^2.
+\]
+Substitute this and its square root into~\eqref{eq:empirical-oracle}. Since $T_g\le T_g+c_0$, the two square-root terms have total coefficient at most six and the quadratic terms total at most twenty-five. Combining the teacher and capacity events gives the stated probability. Both events are common to every eligible width and exponent.
+\end{proof}
+
+\begin{corollary}[Width--depth sample polynomials]
+\label{cor:polynomials}
+At fixed input dimension, activation, and coefficient cap, let $R_*=\min_{g\in\mathcal G}R(g)$. In the bounded activation case, a sufficient sample count for oracle excess at most $\varepsilon\in(0,1)$ is
+\begin{equation}
+ n=\widetilde O\left(C^2\left\{\frac{R_*}{\varepsilon^2}+\frac1\varepsilon\right\}\right).
+ \label{eq:bounded-budget}
+\end{equation}
+Depth occurs only inside logarithms. In the general zero-origin case, at fixed first-layer gain cap $A$ as well, the sufficient bound is
+\begin{equation}
+ n=\widetilde O\left(C^2H\left\{\frac{R_*}{\varepsilon^2}+\frac1\varepsilon\right\}\right).
+ \label{eq:general-budget}
+\end{equation}
+The constants have no unreported exponential dependence on $H$ or $N$. If $R_*=0$, the dependence on accuracy is $1/\varepsilon$. The algorithm does not need to know whether this faster case applies.
+\end{corollary}
+\begin{proof}
+The geometric sum in the bounded-activation value of $D_n$ is zero when $c=0$ and at most $1/(1-\ell)$ otherwise. At a fixed activation, $a_n^2=\widetilde O((d+1)/n)$ with no polynomial depth factor. In the general case it is $\widetilde O(A^2(H+\log(2(d+1)))/n)$. Furthermore
+\[
+ T_g=E_H+O\left(\left(1+\frac{d+1}{H}\right)\log(n(U+1)(UH+V))\right).
+\]
+At the stated fixed parameters, $E_H=O(C^2)$ and $U=O(C)$. Substitute these bounds into~\eqref{eq:main-oracle}. The dependence on dimension, coefficient cap, gain cap, activation contraction, and confidence is explicit in~\eqref{eq:EH}, \eqref{eq:T}, and~\eqref{eq:adaptive-constants}; only logarithms are suppressed here.
+\end{proof}
+
+For example, at fixed $d,B$ the bounded activation case permits comparison widths $C_n=n^\alpha$, $\alpha<1/2$, alongside any prescribed polynomial depth $H_n=n^\beta$. In the general case at fixed $d,B,A$, a sufficient condition is $2\alpha+\beta<1$. Each sample size has a prescribed architecture depth; a single event simultaneously over all depths is not asserted.

@@ -1,0 +1,109 @@
+% Research module: finite-width realization of covariance-spike scalar schedules.
+\section{Finite-width realization and arbitrary finite functions}
+\label{sec:spike-realization}
+Throughout this section the prior is~\eqref{eq:canonical-prior}.
+
+Let $\mathcal X$ be a finite input set of size $m$, all with the same augmented squared norm. Suppose the native first hidden-feature kernel, as an operator for the uniform input law, has minimum eigenvalue at least $\Lambda>0$. Write
+\[
+ b_1=\E_\mu\tanh^2(W^1_i(1,x)),\qquad
+ \delta=\sqrt\Lambda/2.
+\]
+The value $b_1$ is independent of $x$. The unit-sphere sets $\mathcal U_D$ satisfy these assumptions with $m=4\cdot2^D$, $b_1=F(2/d)$, and $\Lambda=e^{-40(D+1)}$.
+
+\begin{lemma}[A unit direction realizing an arbitrary first-layer seed]
+\label{lem:unit-seed}
+Fix $\varepsilon>0$. At every sufficiently large $N$, an event $E$ under the unchanged first-layer prior has probability at least $1/2$, on which
+\[
+ \sup_{x\in\mathcal X}|\|h^1(x)\|^2/N-b_1|\le\varepsilon,
+\]
+and, for every function $u:\mathcal X\to[-1,1]$, there is a measurable unit vector $e_1\in\R^N$ with
+\[
+ e_1^{\mathsf T}h^1(x)/\sqrt N=\delta u(x)
+                     \quad(x\in\mathcal X).
+\]
+A sufficient width is
+\[
+ N\ge C(\Lambda^{-2}+\varepsilon^{-2})\log(8m)+2m.
+\]
+Conditioning the first layer on $E$ has normalized entropy cost at most $2\log2/N$.
+\end{lemma}
+\begin{proof}
+Let $H_1$ be the $m$ by $N$ first-feature matrix. Hoeffding and a union bound give a sample kernel
+$K_N=H_1H_1^{\mathsf T}/N$ whose uniform-measure integral operator is at least $\Lambda I/2$, and simultaneously give the displayed diagonal concentration, with joint probability at least $1/2$.
+For a prescribed $u$, the minimum-norm solution of
+$H_1e=\sqrt N\delta u$ has squared norm
+\[
+ \delta^2u^{\mathsf T}K_N^{-1}u
+ =\delta^2\langle u,(K_N/m)^{-1}u\rangle_{\mathrm{unif}}
+ \le\frac{2\delta^2}{\Lambda}\|u\|_{\mathrm{unif}}^2\le1/2.
+\]
+The equality uses the normalization of the integral operator. Since $N>m$, add a vector from the nullspace of $H_1$, orthogonal to the minimum-norm solution, to make the norm exactly one. A measurable choice follows by projecting the coordinate basis onto that nullspace and choosing the first nonzero projection, with deterministic tie breaking. Conditioning has entropy $\log(1/\Pr(E))\le\log2$.
+\end{proof}
+
+\begin{lemma}[An exact conditional Gaussian covariance construction]
+\label{lem:spike-finite-width}
+Fix a deterministic schedule $0\le\alpha_\ell\le1$ for $2\le\ell\le H$, a scalar readout factor $0\le B\le B_0$, and a seed function $u:\mathcal X\to[-1,1]$. Consider the scalar recursion at each input
+\[
+ q_1=b_1,\quad r_1=\delta u(x),\qquad
+ v_\ell=q_{\ell-1}+\alpha_\ell r_{\ell-1}^2,
+\]
+\[
+ q_\ell=F(v_\ell),\qquad
+ r_\ell=\sqrt{1+\alpha_\ell}\,r_{\ell-1}(1-q_\ell).
+\]
+For any fixed tolerance $\tau>0$, all sufficiently large widths admit a comparison law $\rho$ such that
+\begin{equation}
+ \frac2N\KL(\rho\|\mu)
+ \le\frac{2\log2}N+
+      \sum_{\ell=2}^H\{\alpha_\ell-\log(1+\alpha_\ell)\}+B^2,
+ \label{eq:spike-exact-entropy}
+\end{equation}
+and
+\[
+ \left(\E_\rho\max_{x\in\mathcal X}|z_w(x)-B r_H(x)|^2\right)^{1/2}\le\tau.
+\]
+When $\log m+\log(1/\Lambda)=O(H)$ and $B_0,\tau$ are fixed, a sufficient width is $N\ge e^{CH}$ for a constant depending only on those bounds and the constants in the preceding lemmas.
+\end{lemma}
+\begin{proof}
+Condition the native first layer on the event in Lemma~\ref{lem:unit-seed}, choosing its accuracy below. Construct its unit direction $e_1$ for $u$.
+At layer $\ell$, conditional on all preceding weights, draw its rows independently from the centered Gaussian law with covariance
+\[
+ \frac1N[I+\alpha_\ell e_{\ell-1}e_{\ell-1}^{\mathsf T}].
+\]
+Set
+\[
+ \xi_{\ell i}=\frac{\sqrt N}{\sqrt{1+\alpha_\ell}}
+                   (W^\ell e_{\ell-1})_i,
+ \qquad e_\ell=\xi_\ell/\|\xi_\ell\|.
+\]
+Conditionally the $\xi_{\ell i}$ are independent standard Gaussians. The normalization is well defined almost surely. Given a previous hidden vector, write its empirical variance and correlation as
+$\widehat q=\|h\|^2/N$, $\widehat r=e_{\ell-1}^{\mathsf T}h/\sqrt N$. Each new preactivation has the joint representation
+\[
+ \sqrt{1+\alpha_\ell}\,\widehat r\,\xi_i
+       +\sqrt{\widehat q-\widehat r^2}\,G_i,
+\]
+where $(\xi_i,G_i)$ are independent standard Gaussian pairs. Gaussian integration by parts gives its conditional output-square mean $F(\widehat q+\alpha_\ell\widehat r^2)$ and its $\xi_i$-weighted output mean
+\[
+ \sqrt{1+\alpha_\ell}\,\widehat r
+       \{1-F(\widehat q+\alpha_\ell\widehat r^2)\}.
+\]
+These are exactly the stated scalar update.
+
+At a fixed layer, conditional on the past, bounded-variable concentration for output squares, sub-Gaussian concentration for $\xi_i\tanh(\cdot)$, and chi-square concentration for $N^{-1}\sum_i\xi_i^2$ show that the empirical variance and correlation differ from these conditional update means by at most $C\varepsilon$, simultaneously at all $m$ inputs, with failure at most $Cm e^{-cN\varepsilon^2}$. The sub-Gaussian bound is uniform because $|\xi_i\tanh(\cdot)|\le|\xi_i|$; centering preserves an absolute sub-Gaussian parameter. The denominator $\|\xi\|/\sqrt N$ changes the correlation by at most another constant times $\varepsilon$ on the same event.
+
+The scalar map is uniformly Lipschitz on $0\le r^2\le q\le1$ and $0\le\alpha\le1$. Indeed $|F'|\le1$ by Gaussian differentiation and the bounded second derivative of $\tanh^2$, and the displayed formulas have uniformly bounded partial derivatives there. One may take an absolute Lipschitz constant ten. A union bound and induction consequently make the empirical state within $C10^H\varepsilon$ of the scalar state at every input, with failure at most $CHm e^{-cN\varepsilon^2}$.
+Choose $\varepsilon$ a fixed multiple of $\tau/[(1+B_0)10^H]$ and increase $N$ until this failure probability is at most $\tau^2/[8(1+B_0)^2]$.
+
+Finally, conditionally on the hidden weights, draw the readout with its native covariance $I/N^2$ and mean $B e_H/\sqrt N$. Its conditional output mean is $B\widehat r_H$, and its variance is at most $1/N$ at every input. A Gaussian union bound and integration give conditional expected maximum squared readout noise at most $C\log(2m)/N$. Both empirical and scalar correlations have absolute value at most one. The common bounded-error event and its complement therefore give the claimed expected maximum squared error, after a harmless tightening of $\varepsilon$ and increase of $N$.
+
+For entropy, each hidden row changes just one covariance eigenvalue from one to $1+\alpha_\ell$. Its relative entropy is
+$\tfrac12\{\alpha_\ell-\log(1+\alpha_\ell)\}$, and there are $N$ independent rows. The conditional readout mean shift has entropy $NB^2/2$. Chain-rule relative entropy adds these quantities and the initial conditioning cost. All directions are measurable functions of previously drawn parameters, so no extra entropy term is introduced by their use. This proves~\eqref{eq:spike-exact-entropy}.
+\end{proof}
+
+\begin{corollary}[A scalar endpoint suffices for every bounded finite function]
+\label{cor:spike-ivt}
+Fix a deterministic spike schedule and let $r_H(u)$ denote its final scalar correlation when $q_1=b_1$ and $r_1=\delta u$. Suppose $r_H(1)>0$. For every $f:\mathcal X\to[-a,a]$, set $B=a/r_H(1)$. Then there is a seed function $u:\mathcal X\to[-1,1]$ for which $B r_H(u(x))=f(x)$ exactly. Thus Lemma~\ref{lem:spike-finite-width} gives a function memorizer with the scalar endpoint's covariance cost and readout cost $a^2/r_H(1)^2$.
+\end{corollary}
+\begin{proof}
+The recursion is continuous in $u$, its variance is even in $u$, and its correlation is odd. Hence the continuous odd function $r_H(u)$ takes every value in $[-r_H(1),r_H(1)]$ by the intermediate value theorem. Choose one preimage at each of the finitely many input values. No monotonicity assertion is needed.
+\end{proof}

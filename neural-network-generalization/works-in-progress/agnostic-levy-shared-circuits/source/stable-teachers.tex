@@ -1,0 +1,52 @@
+\section{A sharper depth cost for stable teacher rows}
+\label{sec:stable-dag}
+The general uniform-error factor is exponential in depth, but it appears only inside a logarithm in the entropy bound. A natural teacher stability condition reduces even that factor to a polynomial. This condition restricts the comparator, not the support of the learner's prior.
+
+Assume that every hidden comparator row after the first obeys
+\[
+ A\sum_i|a_{ji}^\ell|\le1.
+\]
+Let the readout absolute row sum be at most $R\ge1$, and retain the first-layer coefficient and fan-in bounds $B,k$. For an unbounded activation, choose the fixed intensity $c$ in the L\'evy measure small enough that
+\[
+ AM_1\le1/2.
+\]
+This is a once-and-for-all choice of the scalar prior, independent of the architecture and data. If the activation is bounded, this small-intensity assumption is unnecessary.
+
+\begin{lemma}[Polynomial uniform approximation under row stability]
+\label{lem:stable-dag-error}
+Under these assumptions there is a polynomial $W_{\rm st}$ in $k,B,R,H$ such that, whenever
+$0<\epsilon\le[C(k+1)(H+1)]^{-1}$,
+\[
+ \E_{Q_\epsilon}\|z_w-z_g\|_\infty\le W_{\rm st}\epsilon,
+ \qquad
+ W_{\rm st}\le C(R+1)(k+1)(1+b+Ak(B+8))(H+1)^2.
+\]
+Constants may depend on the fixed activation and prior, but not on width or depth. Consequently the comparison entropy needed for expected uniform accuracy $t$ is at most
+\[
+ J\log N+E_1\log(d+1)
+   +C Q\log\frac{C(V+1)(k+1)(B+8)(R+1)(H+1)}t.
+\]
+\end{lemma}
+\begin{proof}
+First consider an unbounded activation with $\rho=AM_1\le1/2$. At selected rows, expected absolute designated weights sum to at most their teacher row sum plus $Ck\epsilon$. Thus the path recursions improve to
+\[
+ S_\ell\le b+(1+Ck\epsilon)S_{\ell-1}+C\epsilon P_{\ell-1},
+ \qquad P_\ell\le S_\ell+b+\rho P_{\ell-1}.
+\]
+The second inequality implies
+$P_\ell\le C[1+b+\max_{j\le\ell}S_j]$ by summing a geometric series, including the first-layer bound. Hence the running maximum of the selected path bounds grows by at most a factor $1+C(k+1)\epsilon$ per layer and an additive $C(1+b)$. The stated restriction on $\epsilon$ therefore gives
+\[
+ S_\ell+P_\ell
+ \le C(1+b+Ak(B+8))(\ell+1).
+\]
+The error recursion has propagation coefficient at most one:
+\[
+ e_\ell\le e_{\ell-1}
+             +C\epsilon[kS_{\ell-1}+P_{\ell-1}].
+\]
+Summing gives a quadratic depth bound. The readout multiplies this by at most $R$ and adds at most $C\epsilon[kS_H+P_H]$. This proves the displayed $W_{\rm st}$.
+
+If $|\phi|$ is bounded by a fixed constant, selected and native feature suprema are bounded deterministically. Use those bounds directly in the error recursion; the same displayed polynomial bound, with an adjusted constant, is valid without an intensity restriction.
+
+Choose $\epsilon$ to be the smaller of the permitted stability cutoff and $t/W_{\rm st}$. The logarithm of its inverse is bounded by a constant multiple of the logarithm displayed in the entropy conclusion. Apply Lemma~\ref{lem:dag-entropy}. No coordinate of the learner prior has been conditioned on a stability event.
+\end{proof}

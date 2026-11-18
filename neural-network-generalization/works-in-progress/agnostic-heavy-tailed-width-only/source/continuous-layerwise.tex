@@ -1,0 +1,71 @@
+\section{A continuous-domain oracle under slab regularity}
+\label{sec:continuous-layerwise}
+The same learner also has a coefficient-free guarantee on a continuous input domain. Here the approximation compiler has a polynomial precision cost, which is made small by the prior's heavy tails.
+
+Assume $X\in[-1,1]^d$ and, for known or unknown constants $\kappa\ge1$ and $0<\alpha_{\rm reg}\le1$,
+\begin{equation}
+ \Pr\{|u^\top X-t|\le s\}\le\kappa s^{\alpha_{\rm reg}}
+ \quad(\|u\|_2=1,\ t\in\mathbb R,\ s>0).
+ \label{eq:continuous-slab}
+\end{equation}
+Neither $\kappa$ nor $\alpha_{\rm reg}$ is needed by the likelihood-calibration rule. This condition holds for bounded-density cube laws, with $\alpha_{\rm reg}=1$ and a dimensional slab constant. It also holds for uniform measure on the unit sphere in dimension at least three, with $\alpha_{\rm reg}=1$; on the circle, exponent $1/2$ suffices.
+
+We use the following quantitative part of the polyhedral compiler in~\cite{regular}. For a width-$C$, hidden-depth-$h$ ReLU teacher $g$ with arbitrary coefficients, put
+\[
+ T=(Ch+1)(C+1)^{dh}.
+\]
+For every $0<\zeta\le1$, it produces a four-hidden-layer ReLU network $q_g$, with constant input and no internal biases, such that
+\begin{equation}
+ |q_g|\le1,\quad
+ \E|q_g(X)-s(g(X))|\le\zeta,\quad
+ m\le3T,\quad
+ B\le C_{d,\alpha_{\rm reg}}(\kappa T/\zeta)^{1/\alpha_{\rm reg}}.
+ \label{eq:continuous-slab-compiler}
+\end{equation}
+It pads exactly to any depth $H\ge4$. To see the coefficient bound explicitly, partition the teacher into at most $(C+1)^{dh}$ affine activation cells. Normalize their at most $Ch$ facet normals to unit norm. Replace each hard facet by a width-$\delta$ ReLU ramp, cap each cell's output slope at $1/\delta$, and mask the output by that cell's gate. Take $\delta=(c\zeta/(\kappa T))^{1/\alpha_{\rm reg}}$. The failure region lies in at most $T$ slabs of width $\delta$, and all remaining coefficients are $O_d(1/\delta)$ or $O(Ch)$, the latter also bounded by the displayed cap. The disjoint cell gates ensure the output is bounded. The cited compiler proves the full construction and its error estimate; no original coefficient magnitude appears.
+
+\begin{theorem}[All-width learning on a regular continuous domain]
+\label{thm:continuous-layerwise-width}
+Use the same layerwise heavy-tailed ReLU prior, conditional sub-Gaussian noise assumption, and two-score learner as in Section~\ref{sec:relu-width-only}. Let $H\ge\max\{h,4\}$, and fix any learner width $N\ge C+1$ before drawing data. Define
+\[
+ p=\frac a{2-a},\qquad b_H=H(a+2p),\qquad
+ k_H=\max\left\{H,\ H-1+2Hp+\frac{b_H}{\alpha_{\rm reg}}\right\}.
+\]
+With probability at least $1-\delta$,
+\begin{equation}
+ R(\widehat f_S)\le R_0+(1+\eta)
+      \inf_{g\in\mathcal G_{C,h}}\E(g(X)-f_0(X))^2+\varepsilon
+ \label{eq:continuous-layerwise-oracle}
+\end{equation}
+provided
+\begin{equation}
+ n\ge\widetilde O_{d,H,\boldsymbol\alpha,\alpha_{\rm reg}}\left(
+ \frac{(1+\sigma^2)\kappa^{b_H/\alpha_{\rm reg}}T^{k_H}}
+ {\eta^{p+1}\varepsilon^{p+1+b_H/\alpha_{\rm reg}}}
+ \right).
+ \label{eq:continuous-layerwise-samples}
+\end{equation}
+The original teacher coefficients are unrestricted, and the constants are independent of learner width. At fixed depth and slab exponent, the accuracy power approaches one as the fixed second-layer tail index $a$ approaches zero.
+\end{theorem}
+\begin{proof}
+Choose a deterministic near-minimizer and apply \eqref{eq:continuous-slab-compiler} at $\zeta=c\varepsilon$. Since the compiled output, clipped teacher and $f_0$ all lie in $[-1,1]$, their approximation risks differ by at most $4\zeta$. Thus $A(q_g)\le A(g)+c'\varepsilon$.
+
+At $N\ge m$, substitute $m\le3T$ and
+$B\le C_{d,\alpha_{\rm reg}}(\kappa T/\varepsilon)^{1/\alpha_{\rm reg}}$ into
+\eqref{eq:layerwise-compiled-resource}. Its power term is at most
+\[
+ C_d T^{H-1+2Hp}
+       (\kappa T/\varepsilon)^{b_H/\alpha_{\rm reg}},
+\]
+up to the allowed fixed-depth constants and logarithms; the remaining logarithmic-volume term is $\widetilde O_d(T^H)$. The resource is therefore bounded by
+$\widetilde O_d(\kappa^{b_H/\alpha_{\rm reg}}T^{k_H}
+\varepsilon^{-b_H/\alpha_{\rm reg}})$.
+The squared-error comparison oracle \eqref{eq:general-L2-score-oracle} gives exactly the sample budget in \eqref{eq:continuous-layerwise-samples}.
+
+At $C+1\le N<m$, the original teacher fits in the learner after adding a constant wire and padding depth. The parameter score needs at most
+$\widetilde O_{d,H}((1+\sigma^2)T^2/(\eta\varepsilon))$ samples.
+Since $H\ge4$, $k_H\ge H\ge2$, while $p+1>1$ and all displayed scale parameters are at least one, this is dominated by \eqref{eq:continuous-layerwise-samples}. The same observable score selection covers both branches. Allocate the compiler and near-minimizer errors within $\varepsilon$ and apply Jensen.
+\end{proof}
+
+For a desired fixed accuracy exponent $1+\rho$ with $\rho>0$, choose a sufficiently small positive $a$ that
+$p+H(a+2p)/\alpha_{\rm reg}<\rho$. The resulting prior is still proper and fixed before data. The constants may be large, so this statement is a qualitative nearly parametric rate rather than a practical finite-sample estimate. Unlike the Boolean compiler, whose coefficient cap depends only logarithmically on inverse accuracy, this continuous compiler pays an explicit precision power. Its exponent is visible in \eqref{eq:continuous-layerwise-samples}.

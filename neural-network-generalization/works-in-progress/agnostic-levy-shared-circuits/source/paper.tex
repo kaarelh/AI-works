@@ -1,0 +1,69 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsthm,mathtools,microtype}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={A circuit-size oracle for a dense Bayesian neural network},pdfauthor={ChatGPT-6 Astra; Claude Opus 5.5; Kaarel H\"anni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}[section]\newtheorem{lemma}[theorem]{Lemma}\newtheorem{corollary}[theorem]{Corollary}\newtheorem{proposition}[theorem]{Proposition}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}\newcommand{\KL}{\operatorname{KL}}\newcommand{\Pp}{\mathbb P}
+\title{A circuit-size oracle for a dense\\Bayesian neural network}
+\author{ChatGPT-6 Astra \and Claude Opus 5.5 \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{17 November 2026}
+\begin{document}\maketitle
+\begin{abstract}
+We give an approximation oracle for the ordinary posterior mean of one dense neural network, with a fixed Gaussian likelihood and independent continuous weight coordinates. The hidden activation may be any globally Lipschitz function, including ReLU, GELU, tanh and sigmoid. A bounded Lipschitz final output enters both likelihood and prediction. The data are IID, with a bounded conditional mean and centered conditional sub-Gaussian noise. Each fan-in-$F$ coordinate is a time-$1/F$ increment of a symmetric finite-variation L\'evy process. A comparator circuit with $V$ hidden vertices, $E$ internal/readout edges and $E_1$ used input coefficients has comparison entropy bounded by $(E-V)\log N+E_1\log(d+1)$ plus a term polynomial in circuit size and depth. The resulting expected test-risk bound has coefficient one on comparator risk and a nearly $1/n$ remainder. For dense width-$C$, depth-$H$ teachers this remainder has resource roughly $C^2H^2+C^2H\log N$, suppressing logarithms and input-dimension terms. A stability condition imposed only on the teacher improves the depth dependence to roughly $C^2H$. Digital ReLU, tanh and sigmoid implementations give a nearly linear size resource for arbitrary-depth bounded-fan-in Boolean circuits, and also bound total online sign-prediction mistakes. The learner prior has full support throughout. Formula implementations remove the learner-width term entirely. An explicit signed beta-prime density satisfies the same conclusions. There is no architecture mixture, and the posterior is formed from all observations.
+\end{abstract}
+
+\section{Model and main conclusion}\label{sec:model}
+An approximation oracle compares the test loss of a learner with that of a simpler predictor even when no simple predictor explains the data perfectly. Here the predictor class is represented inside a single, potentially much wider neural network. We use a continuous shrinkage prior whose rare coefficients of order one can express a small circuit, while its remaining coordinates can be suppressed at a logarithmic cost in approximation precision.
+
+The comparison distinguishes a shared circuit from a formula. A hidden computation used by several parents saves vertices in a circuit. Under the present prior, each such reuse incurs an uncancelled factor of learner width. Quantitatively, the coefficient of $\log N$ is exactly the number $E-V$ of internal/readout edges minus hidden vertices. Every hidden formula occurrence has exactly one outgoing edge, so this coefficient vanishes for formulas. For general circuits the logarithmic dependence on learner width is retained explicitly.
+
+Fix a globally $A$-Lipschitz activation $\phi:\R\to\R$, with $A\ge1$ and $b=|\phi(0)|$. For $x\in[-1,1]^d$, a width-$N$ network with $H$ hidden layers computes
+\[
+ h^1=\phi(W^1(1,x)),\qquad h^\ell=\phi(W^\ell h^{\ell-1}),
+ \qquad z_w=v^{\mathsf T}h^H,\qquad f_w=\psi(z_w),
+\]
+where $\psi:\R\to[-1,1]$ is a fixed $L_\psi$-Lipschitz function, $L_\psi\ge1$. Clipping to $[-1,1]$ and tanh are examples. There are no internal biases; a comparator may carry a constant wire if needed.
+
+Fix $c>0$ and $p>2$. Let $L_t$ be the absolutely convergent sum of Poisson jumps with symmetric intensity
+\[
+ t\,\mathfrak n(du),\qquad
+ \mathfrak n(du)=\frac{c\,du}{|u|(1+|u|)^p}.
+\]
+Independently give every fan-in-$F$ coordinate law $L_{1/F}$, with $F=d+1$ initially and $F=N$ thereafter, including the readout. Write $\mu_N$ for this product prior. Each coordinate is absolutely continuous with full support and no zero atom; the dense architecture is fixed. The Poisson description defines each scalar law and does not choose a network size.
+
+For IID data, write $f_0(x)=\E[Y\mid X=x]\in[-1,1]$ and assume $Y-f_0(X)$ is conditionally $\sigma^2$-sub-Gaussian. Let $R(f)=\E(f(X)-Y)^2$. With $T=256(1+\sigma^2)$, the learner is
+\[
+ d\Pi_{S_n}(w)=Z_{S_n}^{-1}
+    \exp\left[-\frac1T\sum_{i=1}^n(f_w(X_i)-Y_i)^2\right]d\mu_N(w),
+ \qquad \bar f_{S_n}=\int f_w\,d\Pi_{S_n}.
+\]
+Its Gaussian observation variance is $T/2$. All observations enter this posterior, and no temperature is selected from the data.
+
+For a comparator $g=\psi(z_g)$ of the same hidden depth and realizable width, Theorem~\ref{thm:dag-statistical} gives
+\[
+ \E_{S_n}R(\bar f_{S_n})\le R(g)
+   +\frac{C(1+\sigma^2)}{n+1}
+      \left[(E-V)\log N+E_1\log(d+1)
+              +\widetilde O((V+E+E_1+1)H)\right].
+\]
+The suppressed factors are logarithmic in coefficient bounds, fan-in, sample size and circuit size. If later teacher rows have absolute gain at most one, the extra factor $H$ inside the resource becomes logarithmic. This restriction is on the comparison implementation; no learner weights are excluded from the prior. The exact resources and their polynomial specializations appear in Section~\ref{sec:dag-oracle}. Section~\ref{sec:digital-circuits} obtains the stronger nearly linear gate-count bound for Boolean circuits by compiling them into error-restoring ReLU gates. This stability is automatic for that implementation; it does not assume that the learner satisfies a robustness condition.
+
+\input{scalar}
+\input{shared-dag}
+\input{stable-teachers}
+\input{all-data-expectation}
+\input{statistical-oracle}
+\input{posterior-confidence}
+\input{boolean-circuits}
+\input{saturating-boolean}
+\input{beta-prime}
+
+\section{Scope and verification}
+The conclusions are expected-risk bounds over IID training samples. They do not assert a sharp high-probability oracle or an efficient posterior-sampling algorithm. The bounded final link is part of the statistical model, not a post hoc clipping of the raw posterior mean. The scalar prior differs substantially from a Gaussian prior: its variance has inverse-fan-in scale, but rare coefficients of order one remain in wide sums.
+
+For formulas the result is independent of learner width. For shared circuits it is polynomial in circuit size and depth with an explicit logarithmic learner-width dependence. This distinction matters at extremely large widths and is not hidden in a constant. The minimum of the two resources is available to the same posterior.
+
+The proofs have undergone independent AI-agent mathematical review. They have not been formalized in Lean. Exact reviewed sources and build information are recorded with the manuscript.
+\end{document}

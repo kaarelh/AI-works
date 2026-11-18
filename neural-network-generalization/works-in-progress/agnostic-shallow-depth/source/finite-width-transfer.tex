@@ -1,0 +1,192 @@
+\section{Finite-width transfer of the Gaussian covariance construction}
+\label{sec:nongaussian-transfer}
+Write $\phi=\tanh$. All comparison directions below are determined by
+weights and auxiliary randomness, independently of the queried input.
+The first layer has the Gaussian comparison law of
+Lemma~\ref{lem:nongaussian-first-layer}; only the original prior is
+non-Gaussian.
+
+\begin{lemma}[Two-projection Lindeberg estimate]
+\label{lem:two-projection-lindeberg}
+Let $X=(X_1,\ldots,X_N)$ have independent coordinates of law $P$, let
+$e$ be a unit vector, and let $b\in\mathbb R^N$ satisfy
+$\|b\|_2\le1$ and $\|b\|_\infty\le N^{-1/2}$.
+Put $r=e\cdot b$, $q=\|b\|_2^2$, and, for $W\ge1$ and $0<\nu\le1$,
+\[
+ a=\sqrt\nu\,b+(\sqrt W-\sqrt\nu)r e,
+ \qquad \xi=e\cdot X,\qquad Z=a\cdot X.
+\]
+Let $(\xi_G,Z_G)$ be the centered Gaussian pair with the same
+covariance. If $\theta=\|e\|_\infty$, then
+\begin{align}
+ |\E\phi(Z)^2-\E\phi(Z_G)^2|
+ &\le C_P(1+W)^{3/2}(N^{-1/2}+\theta),\notag\\
+ |\E[\xi\phi(Z)]-\E[\xi_G\phi(Z_G)]|
+ &\le C_P(1+W)^{3/2}(N^{-1/2}+\theta).
+ \label{eq:two-projection-lindeberg}
+\end{align}
+The covariance identities are exact:
+\[
+ \E\xi^2=1,\qquad \E Z^2=\nu q+(W-\nu)r^2,\qquad
+ \E\xi Z=\sqrt W\,r.
+\]
+\end{lemma}
+\begin{proof}
+The covariance formulas use only centering and unit variance.
+Moreover $\|a\|_2\le\sqrt W$ and
+$\|a\|_\infty\le N^{-1/2}+\sqrt W\,\theta$.
+Replace coordinates of $X$ one at a time by standard Gaussians.
+The first two Taylor terms cancel because the first two moments
+match. For $\phi(a\cdot X)^2$, the third derivative in coordinate
+$j$ is bounded by $C|a_j|^3$. The total error is therefore at most
+$C_P\sum_j|a_j|^3$.
+
+For $(e\cdot X)\phi(a\cdot X)$, the third derivative is
+\[
+ (e\cdot X)a_j^3\phi'''(a\cdot X)
+       +3e_j a_j^2\phi''(a\cdot X).
+\]
+During one replacement, separate
+$e\cdot X=\xi_{-j}+e_jX_j$. The remaining mixed Gaussian/non-Gaussian
+coordinates have covariance identity, so $\E|\xi_{-j}|\le1$.
+Their independence from the replaced coordinate, and the fixed third
+and fourth moments of the scalar laws, bound the Taylor remainder by
+\[
+ C_P\bigl(|a_j|^3+|e_j||a_j|^3+|e_j|a_j^2\bigr).
+\]
+Summing, using $\|a\|_2\le\sqrt W$ and the displayed infinity-norm
+bound, proves \eqref{eq:two-projection-lindeberg}. The derivatives of
+$t\mapsto\tanh t$ through order three are globally bounded.
+\end{proof}
+
+\begin{lemma}[A delocalized finite layer follows the Gaussian state map]
+\label{lem:nongaussian-state-layer}
+Condition on a previous hidden vector $h(x)$ and a unit direction $e$,
+with $|h_i(x)|\le1$. Generate independent standardized rows
+$X_i\sim P^N$ and use physical rows
+\[
+ \sqrt{\nu/N}\,T_{\sqrt{W/\nu}}X_i.
+\]
+Set $\xi_i=e\cdot X_i$, $e'_i=\xi_i/(\sum_j\xi_j^2)^{1/2}$,
+$h'_i(x)=\phi(Z_i)$, and
+\[
+ q'=N^{-1}\sum_i h'_i(x)^2,\qquad
+ r'=N^{-1/2}\sum_i e'_i h'_i(x),\qquad
+ \sigma'=\sqrt{q'-(r')^2}.
+\]
+The zero denominator has probability zero. The associated Gaussian
+state map is
+\begin{align}
+ \mathcal T_W(r,\sigma)
+ &=\left(\E[\xi_GY],
+      \|Y-\xi_G\E[\xi_GY]\|_{L^2}\right),\notag\\
+ Y&=\phi(\sqrt W\,r\xi_G+\sqrt\nu\,\sigma\zeta_G),
+ \label{eq:nongaussian-gaussian-state}
+\end{align}
+where $r=e\cdot h(x)/\sqrt N$, $\sigma^2=N^{-1}\|h(x)\|^2-r^2$,
+and $\xi_G,\zeta_G$ are independent standard Gaussians.
+For $0<u\le1/4$, except with probability $C e^{-c_PNu^2}$,
+\begin{equation}
+ \|(r',\sigma')-\mathcal T_W(r,\sigma)\|_2
+ \le C_P\left[u+(1+W)^{3/2}
+                 (N^{-1/2}+\|e\|_\infty)\right]^{1/2}.
+ \label{eq:nongaussian-one-step-state}
+\end{equation}
+Also, with probability at least $1-\eta$,
+\begin{equation}
+ \|e'\|_\infty\le C_P\sqrt{\log(2N/\eta)/N},
+ \label{eq:nongaussian-delocalization}
+\end{equation}
+provided $N\ge C_P\log(2/\eta)$.
+\end{lemma}
+\begin{proof}
+Conditionally, the pairs $(\xi_i,Z_i)$ are IID. The variables
+$\phi(Z_i)^2$ are bounded, $\xi_i\phi(Z_i)$ have sub-Gaussian tails,
+and $\xi_i^2$ are subexponential with mean one. Standard scalar
+Chernoff bounds show that their three empirical means differ from
+expectation by at most $u$, with failure $C e^{-c_PNu^2}$.
+In particular the normalizing denominator squared, divided by $N$,
+lies in $[1-u,1+u]$.
+Lemma~\ref{lem:two-projection-lindeberg} then controls $q'$ and $r'$
+against the Gaussian moments with error
+$C_P[u+(1+W)^{3/2}(N^{-1/2}+\|e\|_\infty)]$.
+Both moment pairs are positive semidefinite and $|r'|,|r_G|\le1$.
+The inequality $|\sqrt a-\sqrt b|\le\sqrt{|a-b|}$ therefore gives
+\eqref{eq:nongaussian-one-step-state}.
+Finally each $\xi_i$ is $K$-sub-Gaussian. A union bound for their
+maximum, together with concentration of $N^{-1}\sum_i\xi_i^2$
+around one, proves \eqref{eq:nongaussian-delocalization}.
+\end{proof}
+
+\begin{lemma}[Global stability and polynomial finite width]
+\label{lem:nongaussian-global-transfer}
+The map $\mathcal T_W$ in
+\eqref{eq:nongaussian-gaussian-state} is globally $\sqrt W$-Lipschitz.
+Suppose $H\ge2$ and a Gaussian covariance construction uses controls
+$W_2,\ldots,W_H\ge1$ satisfying
+\begin{equation}
+ \max_\ell W_\ell\le e^{C_dD},\qquad
+ \prod_{\ell=2}^H\sqrt{W_\ell}\le C_d(H+1)e^{C_dD}.
+ \label{eq:control-product-bounds}
+\end{equation}
+Use the same controls with the rank-one transports above, starting
+from the Gaussian first-layer comparison and its bounded-density
+feature encoder. For every fixed accuracy $\varepsilon>0$ and
+readout gain $\mathcal B$, there are constants $A,a$ such that
+\begin{equation}
+ N\ge A(H+1)^a e^{aD}
+ \label{eq:nongaussian-polynomial-width}
+\end{equation}
+ensures the same bounded deterministic response is approximated in
+pointwise mean squared error at most $\varepsilon^2$, uniformly in
+the input and $0<\nu\le1$. Constants may depend on $P,d,\varepsilon$
+and $\mathcal B$, but not on $H,D,N,\nu$.
+\end{lemma}
+\begin{proof}
+The map from $Y\in L^2$ to
+$(\E\xi_GY,\|Y-\xi_G\E\xi_GY\|_2)$ is nonexpansive: orthogonal
+projection controls the first coordinate, and the reverse triangle
+inequality controls the residual norm. Since $\phi$ is
+$1$-Lipschitz and $\nu\le W$, this proves the global Lipschitz claim.
+
+For clarity, the first direction is formed from
+$a_i=\psi(W_i^1)/(\mathcal B L_H\sqrt N)$ and an independent uniform
+unit vector in $a^\perp$, where the scalar encoder is bounded by
+$Q$ and $L_H\ge4Q/\mathcal B$. Then $\|a\|\le1/4$ deterministically;
+completing to a unit vector preserves infinity norm
+$O(\sqrt{\log(N/\eta)/N})$ with failure at most $\eta$.
+The first-layer empirical $q,r$ moments have the same concentration
+as in the Gaussian construction. This is a comparison-law operation,
+not conditioning the original prior on a support event.
+
+Apply Lemma~\ref{lem:nongaussian-state-layer} at each layer, allocating
+failure probability $\eta/H$. Every new direction satisfies the
+same infinity-norm bound. Take
+$u=C_P\sqrt{\log(2H/\eta)/N}$.
+The one-step state error is at most
+\[
+ C_P(1+\max W_\ell)
+       [\log(2NH/\eta)/N]^{1/4}.
+\]
+Global Lipschitz propagation bounds the total error by this quantity
+times $H\prod\sqrt{W_\ell}$, plus the first-layer error with the
+same product. The polynomial bounds
+\eqref{eq:control-product-bounds} imply that
+\eqref{eq:nongaussian-polynomial-width}, with a sufficiently large
+fixed exponent, makes the final state error as small as required.
+The logarithm of $N$ is absorbed by increasing that exponent.
+This analysis is pointwise in the input, with constants uniform over
+all inputs; it therefore bounds the supremum of pointwise expected
+squared errors without taking an input-space union bound.
+
+The final readout mean is $\mathcal B e_H/\sqrt N$ and its native
+centered noise contributes at most $1/N$ to pointwise output MSE.
+Both the finite-width mean response and the limiting response have
+absolute value at most $\mathcal B$. Choose the total exceptional
+probability $\eta$ small relative to $\varepsilon^2/\mathcal B^2$,
+and then the on-event state error sufficiently small. This completes
+the MSE bound. Auxiliary directions and adaptive transports are
+measurable functions of previous weights and independent auxiliary
+randomness; entropy is bounded by the conditional chain rule and
+convexity under removal of the auxiliaries.
+\end{proof}

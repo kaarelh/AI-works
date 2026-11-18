@@ -1,0 +1,143 @@
+\section{Slow learning on one fixed data law}
+\label{sec:fixed-law-rate}
+The rate obstruction can be realized along a subsequence on a single fixed distribution. This removes the changing-law qualification from the slow-rate conclusion, while keeping a fixed width-one teacher, bounded independent noise, a fixed finite input dimension, and the optional broad Gaussian affine output component. The learner widths must still lie in the stated overparameterized range.
+
+\begin{lemma}[Weighted occupancy on an active finite support]
+\label{lem:weighted-occupancy}
+Let $A$ be a finite set of atoms of a probability law, with $|A|\le n$ and every atom probability $p_x\ge1/n$. For $n$ independent draws let $k_x$ be the counts and define
+\[
+ V_A=\frac1{n^2}\sum_{x\in A}\frac{k_x^2}{p_x}.
+\]
+Then $\E V_A\le2$, $\operatorname{Var}(V_A)\le8/n$, and
+$\Pp(V_A>4)\le2/n$.
+\end{lemma}
+\begin{proof}
+Write $m=|A|$ and $p_A=\Pp(X\in A)$. Decompose
+\[
+ V_A=\frac1{n^2}\sum_i\frac{\mathbf1_{X_i\in A}}{p_{X_i}}
+     +\frac2{n^2}\sum_{i<j}\frac{\mathbf1_{X_i=X_j\in A}}{p_{X_i}}
+     =:D_A+O_A.
+\]
+Its expectation is $m/n+(1-1/n)p_A\le2$. The diagonal part has variance at most
+$n^{-3}\sum_{x\in A}p_x^{-1}\le m/n^2\le1/n$.
+For an unordered collision kernel, the second moment is $m$ and the covariance of two kernels sharing one sample index is $p_A(1-p_A)\le1/4$; disjoint kernels are independent. Counting overlapping pairs gives
+\[
+ \operatorname{Var}(O_A)\le2m/n^2+1/n\le3/n.
+\]
+Thus $\operatorname{Var}(V_A)\le2\operatorname{Var}(D_A)+2\operatorname{Var}(O_A)\le8/n$. Chebyshev at a deviation of two proves the final claim.
+\end{proof}
+
+\begin{theorem}[One fixed problem forces depth-dependent slow rates]
+\label{thm:fixed-law-rate}
+Fix $H\ge3$, a fixed $D$ with $\rho_D<1/2$ as in Theorem~\ref{thm:simple-teacher-rate}, and a covariance cap $M$ for the optional affine output prior. There are one probability law $D_\infty$ on the unit sphere in $\R^{D+2}$, one fixed regression function
+\[
+ g_H(x)=\tanh^{\circ H}(x_1),
+\]
+and a deterministic increasing sequence $n_m\to\infty$ with the following property. Draw one infinite IID data stream from
+\[
+ X\sim D_\infty,\qquad Y=g_H(X)+\varepsilon/4,
+\]
+with independent fair signs $\varepsilon$. Almost surely, for every sufficiently large $m$, every well-defined probability mixture of ordinary raw posterior means trained on the first $n_m$ observations, over all allowed affine output priors and all
+\[
+ N\ge C n_m^{(1+2/D)(2-1/H)}\log n_m,
+ \quad 0<\sigma^2\le1/N,
+ \quad \lambda>0,
+\]
+satisfies
+\begin{equation}
+ R(F)-R(g_H)\ge c\,n_m^{-2\rho_D-\epsilon_m},
+ \qquad \epsilon_m=\frac{2(1-\rho_D)}{Dm^2}\longrightarrow0.
+ \label{eq:fixed-law-rate}
+\end{equation}
+The constants $c,C>0$ are fixed. The input covariance is nondegenerate, $R(g_H)=1/16$, and the teacher has width one and unit coefficients. Mixture weights and learner parameters may depend arbitrarily on the observed data.
+\end{theorem}
+\begin{proof}
+Use the four-point $T$ coordinate and the sphere embedding from Theorem~\ref{thm:simple-teacher-rate}. For even $J$, let $G(J)$ be its full $4J^D$-point input grid. If $J'$ is an odd integer multiple of $J$, the midpoint nuisance grid at resolution $J$ is contained in the one at resolution $J'$; the sphere embedding preserves these points exactly.
+
+Start with $J_0=4$ and $p_1=1/8$. Recursively choose $J_m$ to be an odd multiple of $J_{m-1}$, at least three times larger, and large enough that
+\[
+ J_m\ge p_m^{-m^2},\qquad J_m\ge e^{m^2}.
+\]
+Set $G_m=G(J_m)$, $B_m=G_m\setminus G_{m-1}$, and
+\[
+ n_m=\left\lceil |B_m|/p_m\right\rceil,
+ \qquad
+ p_{m+1}=\min\{p_m/4,n_m^{-4}\}.
+\]
+Assign total mass $p_m$ uniformly to $B_m$, for $m\ge1$, and assign the remaining mass $p_0=1-\sum_{m\ge1}p_m$ uniformly to $G_0$. Since $\sum_{m\ge1}p_m\le1/6$, we have $p_0\ge5/6$. This defines one fixed probability law on a countable subset of the sphere.
+
+Every block is the product of the same uniform four-point $T$ set and a sign-symmetric nuisance set. Hence $T$ is independent of the nuisance coordinates under this fixed law. The covariance and affine-projection arguments from Theorem~\ref{thm:simple-teacher-rate} apply: the base block supplies fixed positive nuisance-coordinate variances, the sphere coordinate has variance at least $1/64$, and the target's population residual from the affine span is the same number $r_H>0$ in \eqref{eq:fixed-affine-residual}.
+
+Write $M_m=|G_m|$. The resolution increase gives $|B_m|\ge(2/3)M_m$. The construction also gives
+\begin{equation}
+ p_m\ge n_m^{-1/(Dm^2)},\qquad
+ M_m\le\tfrac32n_mp_m\le n_m,
+ \label{eq:block-scales}
+\end{equation}
+and every active atom in $G_m$ has probability at least $p_m/|B_m|\ge1/n_m$. The last assertion follows because block atom probabilities decrease with $m$, including the base block. Moreover
+\[
+ \Pp(X\notin G_m)\le\frac43p_{m+1}\le2n_m^{-4}.
+\]
+Thus the first $n_m$ observations contain no future-block point except on probability at most $2n_m^{-3}$.
+
+At sample count $n=n_m$, the number $S_m$ of current-block atoms observed exactly once has expectation
+\[
+ \E S_m=n_mp_m(1-p_m/|B_m|)^{n_m-1}.
+\]
+For all sufficiently large $m$ this is at least $(7/20)n_mp_m$: the atom probability tends to zero and $(n_m-1)p_m/|B_m|<1$. Changing one observation changes $S_m$ by at most two. McDiarmid consequently gives
+\begin{equation}
+ S_m\ge n_mp_m/3
+ \label{eq:block-singletons}
+\end{equation}
+except on probability at most $\exp[-n_mp_m^2/7200]$.
+Lemma~\ref{lem:weighted-occupancy} gives, except on probability at most $2/n_m$,
+\begin{equation}
+ \frac1{n_m^2}\sum_{x\in G_m}\frac{k_x^2}{\Pp(X=x)}\le4.
+ \label{eq:block-witness-bound}
+\end{equation}
+
+On the event with no future-block observations, a Fourier comparison measure can fit all empirical atom means on $G_m$. Use the same rectangular Fourier expansion, now with $M_m$ grid points, and target output RMS tolerance
+\[
+ t_m=\frac{a\sqrt{p_m}}{1000},\qquad a=1/4.
+\]
+The native-covariance construction has a valid deterministic energy upper bound
+\begin{equation}
+ K_m\le C_{D,H,M} M_m^{\rho_D}
+ \label{eq:block-energy}
+\end{equation}
+for all sufficiently large $m$. We spell out why shrinking the tolerance does not change this energy exponent. From \eqref{eq:block-scales}, $p_m=M_m^{-o(1)}$, so $t_m^{-1}=M_m^{o(1)}$. The Fourier window can be chosen with $U=O_{D,H}(M_m^{1/D})$, including the logarithmic truncation margin. Its coefficient cap is $A=O(U\sqrt{M_m})$. The term $A^{2/H}$ therefore eventually dominates the tolerance term $768/t_m$ in $R^2$, and the first-layer and later-layer energy terms remain respectively $O(M_m^{2/D})$ and $O(M_m^{(1+2/D)/H})$. Shrinking the optional affine output covariance adds only $O(\log(1/t_m))$ to the normalized upper bound, which is absorbed by \eqref{eq:block-energy}.
+
+The width requirement gains a factor $t_m^{-2}=O(p_m^{-1})$, giving
+\[
+ N\ge C p_m^{-1}M_m^{\kappa_D}\log M_m,
+ \qquad \kappa_D=(1+2/D)(2-1/H)>1.
+\]
+By \eqref{eq:block-scales}, the sufficient bound in the theorem, $N\ge C'n_m^{\kappa_D}\log n_m$, dominates this requirement uniformly for large $m$.
+
+Take a deterministic upper bound in \eqref{eq:block-energy} as $K_m$ and split temperatures at
+\[
+ \tau_m=\frac{a^2p_m}{100K_m}.
+\]
+At $\lambda\le\tau_m$, the variational comparison bounds the posterior expected empirical residual against atom means by $4t_m^2+\lambda K_m<a^2p_m/50$. Using the current-block singletons in \eqref{eq:block-singletons}, the same reverse-triangle argument as before gives empirical error against $g_H$ at least $a^2p_m/10$ for every raw mean.
+
+At larger temperatures use the projected sector. The empirical affine residual is at least $r_H/2$ except on probability $Ce^{-cn_m}$. Also, with failure at most $2e^{-c_Hn_m\tau_m^2}$, the noise-target alignment obeys $|\Delta_S|\le r_H\tau_m/8$. Exactly as in Theorem~\ref{thm:simple-teacher-rate}, both temperature branches therefore have the common linear separator
+\[
+ \frac1{n_m}(y-2g_H(S))^{\mathsf T}(f(S)-g_H(S))\ge r_H\tau_m/8.
+\]
+For the low branch use $\tau_m=O(p_m/K_m)=o(p_m)$.
+
+Define the population witness at each atom by
+\[
+ h_m(x)=\frac1{n_m\Pp(X=x)}\sum_{i:X_i=x}(Y_i-2g_H(x)).
+\]
+It vanishes off $G_m$ when there are no future observations. Because $|Y_i-2g_H(X_i)|\le1$, \eqref{eq:block-witness-bound} gives $\|h_m\|_{L^2(D_\infty)}^2\le4$. The separator survives any mixture, hence every such mixture has excess at least $r_H^2\tau_m^2/256$.
+
+Finally, \eqref{eq:block-scales} and \eqref{eq:block-energy} imply
+\[
+ \tau_m\ge c n_m^{-\rho_D}p_m^{1-\rho_D}
+       \ge c n_m^{-\rho_D-(1-\rho_D)/(Dm^2)}.
+\]
+This proves \eqref{eq:fixed-law-rate} on the common events. Their failure probabilities are summable: $n_m\ge e^{Dm^2}$, $n_mp_m^2\ge n_m^{1-o(1)}$, and $n_m\tau_m^2\ge c n_m^{1-2\rho_D-o(1)}$ with $\rho_D<1/2$. The first Borel--Cantelli lemma therefore proves the almost-sure statement along one infinite IID stream.
+\end{proof}
+
+For any $\beta>2\rho_D$, this fixed problem excludes an eventual $O(n^{-\beta})$ excess bound along the specified overparameterized widths, even after arbitrary data-dependent temperature mixing. Since $D$ can be chosen once to make $2\rho_D$ arbitrarily close to $2/H$, the obstruction approaches that depth-dependent exponent while retaining a fixed finite dimension. The result is a slow-convergence theorem, not an inconsistency theorem: the lower bound still tends to zero. It also does not concern keeping one finite learner width fixed while sample count tends to infinity; its width range grows with the sample subsequence.

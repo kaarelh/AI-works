@@ -1,0 +1,130 @@
+\section{An independent-coordinate variance-gamma alternative}
+\label{sec:raw-variance-gamma}
+This model has independent weight coordinates throughout. Fix $c>0$ and let $L_t$ be the symmetric finite-variation L\'evy process with measure
+\[
+ \mathfrak n(du)=c e^{-|u|}\frac{du}{|u|}.
+\]
+Its increment has the explicit law
+\[
+ L_t\ \stackrel{\rm d}=\ A_t-B_t,\qquad
+ A_t,B_t\ \hbox{independent }\operatorname{Gamma}(ct,1).
+\]
+A first-layer coordinate, including its input bias, has law $L_{1/(d+1)}$. A later matrix or readout coordinate has law $L_{1/N}$. Biases at later hidden layers and at the readout, if included, have law $L_1$. All coordinates are independent. The network has tanh hidden activations and a raw linear readout:
+\[
+ h^1=\tanh(W^1(1,x)),\qquad
+ h^\ell=\tanh(b^\ell+W^\ell h^{\ell-1}),\qquad
+ z_w=b^{\rm out}+v^\top h^H.
+\]
+The likelihood and predictor use this raw output, without a final output link. Setting the later biases identically to zero gives the input-bias-only convention as a special case. The positive result below concerns the specified independent continuous coordinate law at one prescribed architecture, not a mixture of network sizes.
+
+\begin{lemma}[An exponential native supremum bound]
+\label{lem:VG-raw-moment}
+Uniformly in learner width, depth and input dimension,
+\[
+ \left\|\sup_x|z_w(x)|\right\|_{L^p(\mu_N)}
+ \le C_c p\qquad(p\ge1).
+\]
+More precisely, $\sup_x|z_w(x)|$ is stochastically dominated by
+$\operatorname{Gamma}(4c,1)$ when the readout bias is included, and by
+$\operatorname{Gamma}(2c,1)$ otherwise.
+\end{lemma}
+\begin{proof}
+Use the independent positive and negative gamma-jump representation of each readout coordinate. Since all hidden features are bounded by one,
+\[
+ \sup_x|z_w(x)|\le |b^{\rm out}|+\sum_j|v_j|.
+\]
+For each coordinate, its absolute value is bounded by the sum of its positive and negative gamma parts in that representation. Summing the $N$ readout coordinates gives a gamma variable of shape $2c$; the independent readout bias adds another shape $2c$. This proves the stochastic domination and the moment bound.
+\end{proof}
+
+\begin{lemma}[Variance-gamma scalar comparison]
+\label{lem:VG-scalar-comparison}
+For $0<\epsilon\le1/4$ and a coordinate with law $L_{1/F}$, the following comparison laws exist, with constants depending only on $c$.
+A background law is supported on $|W|\le\epsilon$, is centered, and satisfies
+\[
+ \E|W|\le C\epsilon/F,\quad
+ \E W^2\le C\epsilon^2/F,\quad
+ \KL\le C F^{-1}\log(C/\epsilon).
+\]
+For every $|a|\le B$, a designated law has
+\[
+ \E W=a,\quad |W|>\epsilon,\quad |W-a|\le C\epsilon,\quad
+ \KL\le\log F+C[B+1+\log(C/\epsilon)].
+\]
+The same statements apply to a later bias with $F=1$.
+\end{lemma}
+\begin{proof}
+Split the Poisson jumps at $\epsilon/K$, with a sufficiently large fixed $K$. Suppress all jumps above that threshold. Their intensity is at most
+$CF^{-1}\log(C/\epsilon)$. The remaining symmetric sum has first absolute jump moment at most $C\epsilon/(KF)$ and variance at most
+$C\epsilon^2/(K^2F)$. Condition its value to have magnitude at most $\epsilon/2$. Chebyshev's inequality makes this event have probability at least $1-1/(2F)$, after choosing $K$ large. Symmetry preserves its zero mean, and conditioning changes the displayed moments by at most a fixed factor. This gives the background law.
+
+For a designated coordinate, add one jump with a uniform value near $a$ when $|a|>4\epsilon$. For smaller $a$, use a mixture of uniform jumps on $[5\epsilon,7\epsilon]$ and $[-7\epsilon,-5\epsilon]$, with probabilities giving mean $a$. Add a centered independent small-jump sum supported within $\epsilon/2$, and suppress all other larger jumps. The uniform jump intervals have length comparable to $\epsilon$ and lie within distance $C\epsilon$ of $a$. Their density relative to the Poisson intensity $F^{-1}c e^{-|u|}/|u|$ has logarithm at most
+$\log F+C[B+1+\log(C/\epsilon)]$. The no-other-jump and small-sum conditions have the background costs already bounded. This is a relative-entropy calculation on the enlarged Poisson representation; mapping to the scalar weight can only decrease KL. The support, mean and deterministic discrepancy follow from the construction.
+\end{proof}
+
+For a width-$m$, depth-$H$ comparison network, let $S$ be the number of hidden occurrences in the formula obtained by unrolling its computation at the readout. A formula occurrence may include its own bias. Shared computations are duplicated for each use, so one always has $S\le\sum_{\ell=1}^H m^\ell$. The learner width is only required to satisfy $N\ge m$, not $N\ge S$.
+
+\begin{lemma}[All-width raw formula comparison]
+\label{lem:VG-raw-comparison}
+Let the raw comparator $g$ have coefficient cap $B\ge1$, maximum hidden width $m$, hidden depth $H$, and actual rooted formula size at most $S$. For every $0<r\le1$ and every finite $N\ge m$, there is a sample-independent law $\rho_r$ such that
+\[
+ \E_{\rho_r}\|z_w-g\|_\infty^2\le r,
+\]
+and
+\begin{equation}
+ \KL(\rho_r\|\mu_N)
+ \le C(d+1)(S+1)\left[
+ B+\log\frac{C(S+1)(d+1)(B+2)W}{r}\right],
+ \label{eq:VG-raw-comparison}
+\end{equation}
+where $W=C(d+1)(H+2)\{C(m+1)(B+2)\}^{H+2}$.
+There is no learner-width term. In particular, at fixed depth this is polynomial in teacher width and coefficient cap.
+\end{lemma}
+\begin{proof}
+First suppose $N\ge2(S+1)$. Embed each layer of the unrolled formula in disjoint groups of learner neurons, choosing one index uniformly per occurrence. On every selected row put the designated law on its formula edges and the background law on all other incoming coordinates. Put each selected bias near its target using the $F=1$ version. First-layer coordinates use their input fan-in $d+1$.
+
+Distinct placements have disjoint parameter supports: starting at the readout, every designated edge has magnitude greater than $\epsilon$, while every background edge entering that selected parent row has magnitude at most $\epsilon$. The fixed formula and the disjoint groups recover all selected locations. Each hidden occurrence has exactly one outgoing designated edge. The location entropy consequently cancels one $\log N$ designated-coordinate cost per occurrence, leaving at most
+\[
+ C(d+1)(S+1)\big[B+\log(C(S+1)(d+1)(B+2)/\epsilon)\big].
+\]
+Biases contribute no $\log N$, since their scalar fan-in parameter is $F=1$.
+
+For $m\le N<2(S+1)$, use the original shared implementation at fixed positions. Its used internal/readout edge count is at most $S$, since every such edge appears in its rooted expansion. Its hidden-vertex count is also at most $S$, and first-layer coefficient count at most $(d+1)S$. Every uncanceled $\log N$ is bounded by $\log(2(S+1))$. The same entropy bound follows.
+
+We record why the approximation is uniform in width and input. All tanh features are bounded by one. If $B_j$ are independent centered background weights entering a selected row, their absolute sum obeys
+\[
+ \E\left(\sum_j|B_j|\right)^2
+ =\sum_j\E B_j^2+\sum_{i\ne j}\E|B_i|\E|B_j|
+ \le C\epsilon^2.
+\]
+Thus its uniform contribution has $L^2$ norm at most $C\epsilon$. A background bias with $F=1$ has the same bound. First-layer coordinate discrepancies give error at most $C(d+1)\epsilon$. At later selected rows, Lipschitzness, the coefficient cap and the designated discrepancy bound give
+\[
+ e_\ell\le Cm(B+2)e_{\ell-1}+C(m+1)\epsilon.
+\]
+The raw readout has the same estimate without an activation. This proves uniform RMS error at most $W\epsilon$, with the stated depth-independent choice of constants. Take
+$\epsilon=\sqrt r/(4W)$, and absorb the resulting logarithms. Every estimate holds for each placement, hence also for the mixture.
+\end{proof}
+
+\paragraph{Interface to the raw-output oracle.}
+Lemma~\ref{lem:VG-raw-moment} is the native tail interface with exponent $r_{\rm tail}=1$. Lemma~\ref{lem:VG-raw-comparison} is the raw uniform comparison interface. They therefore instantiate the raw-tail transfer theorem with temperature of order $n^{2/3}$ and expected oracle remainder of order $n^{-1/3}$ times the displayed comparison entropy, whenever its comparator-output condition holds. The actual learner still uses the raw Gaussian likelihood and raw final posterior mean. This statistical corollary imports the raw-tail theorem; no bounded output link is inserted into the model.
+
+\begin{corollary}[Heavy-tailed hidden weights, light-tailed readout]
+\label{cor:VG-mixed-hidden}
+The same raw-tail interface and raw-output oracle hold if the hidden-layer coordinates instead use increments of the symmetric process
+\[
+ \mathfrak n_{\rm hid}(du)
+ =\frac{c_{\rm hid}}{|u|(1+|u|)^p}\,du,\qquad p>2,
+\]
+with the same fan-in times and fixed-time later biases, while the readout and its bias retain the variance-gamma law. The raw comparison entropy improves to
+\[
+ \KL(\rho_r\|\mu_N)
+ \le C(d+1)(S+1)
+       \log\frac{C(S+1)(d+1)(B+2)W}{r}
+       +C\left(\sum_j|v_j|+|b_g|\right).
+\]
+Only the final readout coefficients have a linear, rather than logarithmic, magnitude penalty. All actual coordinates remain independent.
+\end{corollary}
+\begin{proof}
+The hidden Lévy measure has the same logarithmic large-jump count near zero, the same $O(\epsilon/F)$ small-jump first moment and $O(\epsilon^2/F)$ variance. Its designated-jump density lower bound costs
+$\log F+C\log(C(B+2)/\epsilon)$ rather than a linear $B$ term. Thus the preceding proof is unchanged in every hidden row. The variance-gamma readout contributes
+$C\sum_j|v_j|+C|b_g|$, because only its actual root edges and bias pay the exponential-tail cost. The absolute readout-jump bound uses only $|h_j^H|\le1$, so its gamma domination is independent of the hidden coordinate distributions.
+\end{proof}

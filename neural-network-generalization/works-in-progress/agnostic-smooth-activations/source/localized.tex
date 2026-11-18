@@ -1,0 +1,201 @@
+\section{A localized oracle from Gaussian compression}
+\label{sec:localized-direct-oracle}
+This section is an abstract statistical consequence of the direct Gaussian
+compression lemma. It keeps the same fixed architecture and prior.
+Let $\omega\ge1$ be the precision, and let
+\[
+ d\Pi_{S,\lambda}=Z^{-1}e^{-\omega\widehat R_S(z)/(2\lambda)}d\mu,
+ \qquad F_S(\lambda)=-2\lambda\log Z/\omega.
+\]
+Inputs have any fixed probability law, and labels satisfy $|Y|\le1$.
+Suppose uniformly over all eligible widths and scales:
+\begin{enumerate}
+\item $\mathbb E_\mu\widehat R_S\le M$ for every sample, with a fixed
+constant $M\ge1$.
+\item For every $K\ge K_0$, $0<a\le1$, and probability measure $\xi$
+on inputs, a measurable set $G_\xi(K,a)$ has
+$\mu(G_\xi(K,a)^c)\le C e^{-c\omega K}$. Every member of this set has
+amplitude at most $C K^{b/2}$ and an $L^2(\xi)$ approximant, with error
+at most $a$, in a fixed finite dictionary $\mathcal D(K,a)$ independent
+of $\xi$, width, and scale. The dictionary has amplitude at most
+$C K^{b/2}$ and
+\[
+ \log|\mathcal D(K,a)|\le B K^p a^{-q}
+       \left[\log\frac{C K}{a}\right]^s.
+\]
+\item These good sets and approximants are measurable when
+$\xi=(D_X+\widehat D_{X,S})/2$. Constants may depend on the fixed depth
+and activation, while $B$ is polynomial in input dimension.
+\end{enumerate}
+Assume $q\ge0$ and enlarge $B$ so that $B\ge1$.
+Here $b>0$ is the amplitude exponent. Put $\rho=(q+2)/2$,
+$v=\max\{p+b,2\rho\}$, and $r=v/\rho\ge2$.
+For the general Lipschitz construction, $b=L$ and $p=Lq/2$, so
+$v=L\rho$. Bounded activations allow $b=1$.
+All assertions below permit a countable union of fixed teacher classes
+by summable confidence allocation.
+
+\subsection{One sample event for all calibrations}
+Set $U_0=2M+1$. There are constants $B_0,B_1,b_0,C_0$ determined only
+by the assumptions, such that, with
+\[
+ b_n=b_0+4\log(C_0 n^3),\qquad
+ \theta_n=\frac{C_0 B[\log(C_0 n/\delta)]^{s+4}}{n},
+\]
+the following learner is well defined. If
+$\theta_n b_n^v U_0^{v-\rho}\le1$, choose the positive solution of
+\begin{equation}
+ \lambda_S^v=\theta_n[2F_S(\lambda_S)+b_n\lambda_S]^{v-\rho}.
+ \label{eq:localized-evidence-root}
+\end{equation}
+Otherwise choose $\lambda_S=\omega M$.
+The root is unique and measurable because
+$\lambda^v/[2F_S(\lambda)+b_n\lambda]^{v-\rho}
+=\lambda^\rho/[2F_S(\lambda)/\lambda+b_n]^{v-\rho}$
+is continuous and strictly increasing from zero to infinity.
+Here $F_S\le M$ and $F_S(\lambda)/\lambda$ is nonincreasing.
+On the root branch, enlarging $C_0,b_0$ if necessary gives
+$1/n\le\lambda_S\le1/b_n$ and
+$u_S:=2F_S(\lambda_S)+b_n\lambda_S\le U_0$.
+
+For use in the proof, prebuild dyadic norm levels $K_j=K_0 2^j$
+through $C_0n$ and dyadic accuracies from $c_0/n$ through one.
+There is a single sample event of probability at least $1-\delta/2$
+with the following property. Whenever $\lambda\ge1/n$,
+$0<u\le U_0$, $\lambda K\le C_1u$, and $a$ lies within a factor two
+of $c_1\lambda K/\sqrt u$, each network good at $(K,a)$ with
+$\widehat R_S(z)\le u$ satisfies
+\begin{equation}
+ R(z)\le\widehat R_S(z)+\beta\lambda K
+ \label{eq:localized-level-deviation}
+\end{equation}
+provided
+\begin{equation}
+ n\ge C B[\log(Cn/\delta)]^{s+4}
+       u^\rho\lambda^{-2\rho}K^{p+b-2\rho}.
+ \label{eq:localized-level-budget}
+\end{equation}
+Here $\beta>0$ is a sufficiently small fixed constant, and $c_1$
+is chosen after $\beta,C_1,U_0$, so all required accuracies are at most
+one and at least $c_0/n$.
+
+Indeed, apply finite-class Bernstein to the squared losses of every
+fixed dictionary, allocating confidence over the finite level/accuracy
+list. A dictionary member has loss range $O(K^b)$ and variance at most
+that range times its population risk. Inverting Bernstein gives
+\[
+ R(f)\le\widehat R(f)+C\sqrt{\widehat R(f)K^b t/n}+C K^b t/n,
+ \quad t=\log|\mathcal D|+\log(1/\delta_{j,a}).
+\]
+The $L^2((D_X+\widehat D_X)/2)$ approximation controls both empirical
+and population root risks. At the selected accuracy the approximant
+has empirical risk $O(u)$, and transferring root risks costs
+$O(\sqrt u\,a+a^2)=O(c_1\lambda K)$.
+The leading Bernstein condition is exactly
+\eqref{eq:localized-level-budget}; its linear term is absorbed using
+$\lambda K\le C_1u$. Constants can be chosen to yield
+\eqref{eq:localized-level-deviation}.
+If $p+b\ge2\rho$, maximize the right side of
+\eqref{eq:localized-level-budget} at $K\le C_1u/\lambda$.
+If $p+b<2\rho$, maximize it at the fixed lower cutoff $K_0$.
+In both cases the resulting sufficient budget is
+$C B\log^{s+4}(Cn/\delta)u^{v-\rho}\lambda^{-v}$.
+Thus the evidence root enforces all required level budgets.
+
+\subsection{A sample-dependent complexity with uniform prior tails}
+Fix a sample on the preceding statistical event and its selected root
+$\lambda,u$. For every dyadic level $K_j$ whose value can enter
+$K_j\le u/(\beta\lambda)$, choose the prebuilt accuracy nearest below
+$c_1\lambda K_j/\sqrt u$. At larger levels set the accuracy to one.
+Use the good sets with $\xi_S=(D_X+\widehat D_X)/2$ and these accuracies.
+Define
+\[
+ Q_S(w)=\max\{K_0,\ 2\sup\{K_j:w\notin G_{\xi_S}(K_j,a_j)\}\},
+\]
+where the supremum of the empty set is zero. For each fixed sample the
+prior tail bound and a countable union give
+\[
+ \mu(Q_S>t)\le C'e^{-c'\omega t}\quad(t\ge2K_0).
+\]
+Only finitely many levels fail almost surely, so $Q_S$ is finite
+almost surely. If $Q_S=K_j$, then $w\in G_{\xi_S}(K_j,a_j)$.
+In particular $R(z_w)\le C(1+Q_S^b)$ almost surely.
+Choose $\beta$ small enough that tail integration gives, pointwise
+for every sample,
+\begin{equation}
+ \log\mathbb E_\mu e^{\beta\omega Q_S}\le\omega B_0,
+ \qquad
+ \mathbb E_\mu[R(z_w)e^{\beta\omega Q_S/4}]
+       \le C_0e^{\omega B_1}.
+ \label{eq:localized-complexity-mgf}
+\end{equation}
+The constants do not depend on the sample, selected root, width, or
+scale. Polynomial factors in $Q_S$ are absorbed by a smaller
+exponential rate, using $\omega\ge1$.
+Measurability follows from the measurable good-set tests and countable
+supremum. No data-dependent complexity is placed inside an
+unjustified empirical-process supremum; its prior inequalities are
+pointwise in the sample.
+
+Let $J=\widehat R_S+\beta\lambda Q_S$. On $J>u$,
+\[
+ e^{-\omega\widehat R_S/(2\lambda)}
+ \le e^{-\omega u/(4\lambda)}e^{\beta\omega Q_S/4}.
+\]
+After normalization and \eqref{eq:localized-complexity-mgf}, the
+posterior risk on this set is at most
+$C_0\exp[\omega F_S/(2\lambda)-\omega u/(4\lambda)+\omega B_1]$,
+which is at most $n^{-3}$ by the choice of $b_n$.
+On its complement, \eqref{eq:localized-level-deviation} applies at
+$K=Q_S$ and gives $R\le\widehat R_S+\beta\lambda Q_S$.
+Entropy duality in \eqref{eq:localized-complexity-mgf} gives
+\[
+ \beta\lambda\mathbb E_\Pi Q_S
+ \le(\lambda/\omega)\operatorname{KL}(\Pi\Vert\mu)+B_0\lambda.
+\]
+Integrate, extend the nonnegative right side to the entire posterior,
+and use the variational identity. This proves the observable certificate
+\begin{equation}
+ \int R(z_w)d\Pi_{S,\lambda_S}
+ \le F_S(\lambda_S)+B_0\lambda_S+n^{-3}.
+ \label{eq:localized-certificate}
+\end{equation}
+The same holds for the ordinary raw posterior mean by Jensen. On the
+fallback branch, Jensen gives $Z\ge e^{-1/2}$, so the deterministic
+certificate $e^{1/2}M$ is valid instead.
+
+\subsection{The resulting oracle powers}
+Suppose a fixed teacher $g$ has a deterministic comparison resource
+$A\ge1$ with
+$F_S(\lambda)\le\widehat R_S(g)+\lambda A$ for every sample and
+$\lambda\ge1/n$. Splitting the two terms in the root yields
+\[
+ \lambda_S\le C\left[
+ \theta_n^{1/v}\widehat R_S(g)^{1-\rho/v}
+ +\theta_n^{1/\rho}(2A+b_n)^{v/\rho-1}\right].
+\]
+Consequently, with $\bar A=A+b_n+B_0+1$, the empirical oracle is
+\[
+ \widehat R_S(g)+C\left[
+ \bar A\widehat R_S(g)^{1-\rho/v}\theta_n^{1/v}
+ +\bar A^{v/\rho}\theta_n^{1/\rho}\right]+n^{-3}.
+\]
+If $\|g\|_\infty^2\le C A^r$, Bernstein's scalar
+teacher concentration is absorbed by those same terms, after including
+confidence logarithms in $\bar A$. To check leading coefficient one,
+put $D=\bar A^r\theta_n^{1/\rho}$. Bernstein gives
+$\widehat R(g)-R(g)\le C\sqrt{R(g)D}+CD$, while
+$\sqrt{RD}\le R^{1-1/r}D^{1/r}+D$ for $r\ge2$.
+Also $\widehat R(g)\le2R(g)+CD$, which handles the sublinear power
+without multiplying the leading population-risk term. Thus
+\begin{equation}
+ R(\mathbb E_\Pi z)\le R(g)+C\left[
+ \bar A R(g)^{1-1/r}\theta_n^{1/v}
+ +\bar A^r\theta_n^{1/\rho}\right]+n^{-3}.
+ \label{eq:localized-population-oracle}
+\end{equation}
+The fallback is absorbed by the second remainder when its branch
+condition fails, after enlarging constants. This theorem is uniform in
+all eligible widths/scales; the comparison teacher's scalar
+concentration event is common to them.
+

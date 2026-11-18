@@ -1,0 +1,53 @@
+# Independent integrated mathematical review — 18 November 2026
+
+Reviewer: agnostic_proof_audit. Result: passes for the twelve active TeX sources identified in the adjacent manifest.
+
+The principal learner has Student hidden factors, Gamma source gates, normalized Dirichlet Gaussian readout, raw Gaussian likelihood and ordinary raw posterior mean. Architecture is prescribed before sampling. Its agnostic temperature is deterministic t0 sqrt(n), and its coefficient-one expected oracle compares against arbitrary-real-coefficient raw ReLU teachers. No output or label clipping is performed by the learner; clipping appears only in the comparison construction. The compiled-width requirement is explicit, with N>=n sufficient in the growing-class result. Continuous inputs require logarithmic additional learner depth; fixed learner depth is not silently asserted there.
+
+The binary quantizer, normalized-density BV estimate, and slab/hyperplane compiler match the independently reviewed sources. The Boolean compiler's final constant-depth integer-division block leaves only O(log(1/epsilon)) output bits. The bit-length of its internal rational arithmetic affects circuit size but not the final number of copied bits. Tanh integer-margin restoration validates approximate bits and arbitrary additional copying layers.
+
+The stable resource proof correctly counts variable-width selected dense blocks: O(d^2 J^3) prefix positions with depth-amplified logarithmic precision, O(h m^2) digital positions, and O(H t^2) final-bit padding positions. Selected zero coefficients are included. The resulting conservative bound is O([d^2 J^4+d h m^2+H t^2]Lambda^2+M^2). The supported comparison law has raw supremum at most 6M and population squared error O(M^2 epsilon), which is the correct interface to the imported raw-tail theorem. The main proof explicitly applies the compiler to g/M and the comparison lemma with raw target g and range M, avoiding double normalization.
+
+At M_n of order sqrt(log n) and epsilon_n=(n+2)^(-8), the marginal label-tail projection and comparison cross term are negligible. Thus C_n=n^(1/(8bh)), H<=n^(1/4), and N>=n yield the stated expected gap of order n^(-1/4) up to logarithms. All constants and fixed regularity assumptions are stated.
+
+The fixed-temperature realizable theorem also passes. Its supported comparison gives a_rho<=49B^2 and population mean <=n^-4. The generalized-risk PAC/Gibbs identity, expected posterior-density cancellation, and native Gaussian tail yield expected and high-probability POSTERIOR-AVERAGED raw risk at any fixed T>=max(8sigma^2+1,49B^2); the ordinary mean follows by Jensen. The squared-resource substitution and n^(-1/2) growing-class rate are correct. This is a noisy-realizable result, not an agnostic fixed-temperature claim.
+
+The power-p appendix retains explicit prior dependence on fixed p, readout penalty M^p, and exponent p/(p+2). The optimistic-budget subsection is limited to its imported uniform-comparison interface and does not silently claim an unsupported population transfer. The independent-coordinate appendix uses the separately reviewed mixed Levy/VG fixed-position construction and correctly pays E log(N+1). Its n<=N<=n^q, C_n=n^(1/(12bh)), H<=n^(1/6) substitution gives n^(-1/6), and its fixed-temperature realizable consequence uses native exponent r=1. No arbitrary-width-uniform quantitative claim is made for that independent-coordinate variant.
+
+The restoring-bits copy differs from its reviewed original only by renaming the gate concentration. The independent-coordinate copy adds only the checked explicit growing-class substitution. Wrapper, abstract, citations and prediction/probability/temperature scopes match these proofs.
+
+This is conventional mathematical review, not Lean verification or a claim of efficient posterior computation.
+
+The final finite-variance module passes independently. It invokes the arbitrary-comparison-law raw sieve theorem for the same Student-hidden normalized-Gaussian prior, with actual T_S=n^(5/6)(1+P_nY^2), centered-loss deviation D_n=(d+H+1)^3 n^(-1/6), and only E Y^2 finite. The proof range M=n^(1/24), compiler precision (n+2)^(-8), C_n=n^(1/(24bh)), and H<=n^(1/36) give KL of order n^(1/12) up to logs and D_n=O(n^(-1/12)) at fixed d. Projection contributes exactly one E[Y^2 1{|Y|>M}] term, and the comparison cross term is negligible by Cauchy using only the second label moment. Expected posterior-averaged risk and ordinary raw mean risk inherit coefficient one against the best raw ReLU class. The variance is explicitly data calibrated; neither labels nor outputs are clipped in the actual learner. The qualitative tail remainder vanishes by dominated convergence with no uniform finite-variance rate claimed.
+
+
+## Final exactly matched Gaussian-noise extension — 18 November 2026
+
+The exact thirteen-source integration passes. The new matched-variance.tex applies the independently reviewed matched-Gaussian likelihood theorem to the same supported population comparison law, with discrepancy envelope 49 B^2 and mean squared approximation error n^-4. Its enlarged evidence budget, confidence dependence, native Student-hidden dictionary entropy and expectation conversion match the source theorem. The learner uses the actual true Gaussian noise variance, raw outputs and the ordinary all-data posterior, with no tempering or clipping. This statement is restricted to Gaussian noisy realizability; it does not extend the agnostic fixed-variance claim.
+
+The growing-class substitution is correct: C_n=n^(1/(24bh)) and H<=n^(1/12) give K,q,L=Otilde(n^(1/12)); the dominant (1+q)H^2L^3/n is Otilde(n^-1/2). The compiled-width and lower-depth requirements remain explicit, including logarithmic depth on continuous domains. The expectation bound uses polynomially small confidence; arbitrary varying confidence is retained in the full displayed formula. The added abstract sentence accurately describes this narrower extension. All previously reviewed proof modules remain unchanged.
+
+
+## Final bounded-readout endpoint integration — 18 November 2026
+
+The fourteen-source integration passes. The added bounded-readout.tex matches the separately audited exact source. It is explicitly a different prior with readout absolute-weight sum at most one and bounded bias, hence raw function range [-2,2]; it does not silently restrict the primary unrestricted-support learner. The checked digital encoding and Dirichlet/uniform comparison law give the existing resource, and the fixed-temperature bounded-prior expected-risk theorem yields the stated nearly 1/n oracle. The growing-class substitution and all-data prediction scope are correct. The wrapper merely adds this optional input, and README labels the support restriction. The previously reviewed thirteen sources are unchanged except for the new input line in paper.tex.
+
+
+## Final full-support asinh readout integration — 18 November 2026
+
+The fifteen-source integration passes. The new asinh-width.tex is the separately audited coefficient-free compiler application of the native logarithmic-moment raw theorem. Its inactive-factor conditioning, supported population comparison, clipping-risk transfer and exp(C sqrt(log n)) readout cost are valid. The abstract and README correctly describe a different full-support very-light-tail readout, growing observation variance of order log^2 n, coefficient-one expected oracle, and the explicit n^(-1+o(1)) extra term under marginal sub-Gaussian labels. They do not call that extra term polylogarithmic or attribute the improved rate to the primary Gaussian readout. The compiled-width and continuous logarithmic-depth conditions remain explicit. All fourteen previous proof sources except the wrapper remain byte-identical.
+
+Final hypothesis precision: the asinh appendix explicitly allows marginally sub-Gaussian labels together with |f0|<=1 in its first part; conditional sub-Gaussian noise was only a sufficient way to obtain that marginal premise. The abstract now states this premise and separates the extra n^(-1+o(1)) cost when the bounded-mean assumption is removed. The proof already establishes this strengthening; exact wrapper and appendix hashes are refreshed.
+
+Layout-only follow-up: the asinh factor density is now displayed rather than inline to avoid an overfull line; its formula and mathematics are unchanged. The exact source hash is refreshed.
+
+
+## Final confidence and eventual-schedule appendix — 18 November 2026
+
+The sixteen-source integration passes. The new asinh-confidence.tex applies the independently reviewed marginal-label high-probability supported-comparison theorem. It preserves the original comparison risk and regularity assumptions despite proof-only conditioning on moderate labels. The fixed smaller eta, supported compiler range, entropy, projection tail and population comparison precision give the stated raw posterior-average and mean oracle. The restrictions delta>=n^-q and eta>=n^-1/2 keep all existing precision/logarithmic estimates valid. Its growing-class substitution gives an exact-leading-one bound with Otilde(n^-1/4) additive error by absorbing eta times the bounded infimum approximation error. This confidence learner uses temperature of order n^(1/4)log^2 n, distinct from the expected theorem.
+
+The eventual prior-only temperature remark is valid: at any fixed finite marginal sub-Gaussian envelope, T~log^2 n eventually dominates the noise moment scale, the native tail beats inverse evidence and the logarithmic analytical cutoff contains the sqrt(log n) proof range. The onset and constants remain law-dependent; no quantitative unknown-envelope finite-n guarantee is asserted. Wrapper/README statements preserve these distinctions. Earlier mathematical sources are unchanged.
+
+Follow-up: the scalar asinh-Gaussian law is identified as sinh-normal SHN(2,0,1) under an explicit transformation convention, with prior literature attribution. The density, law, theorem, and proof are unchanged. Exact hashes refreshed for this terminology/bibliography update.
+
+Scalar-family follow-up: the reusable sufficient conditions (symmetry, full support, logarithmic Lq moments, and an exp(−c exp(cM)) compact-interval density lower bound) support exactly the same tail and comparison steps. Both arsinh(Z/2) and normalized exp(−a cosh(bu)) densities satisfy them. Their negative-log-density second derivatives are respectively 4 cosh(2u)−sech²(u)≥3 and ab² cosh(bu)≥ab². The remark correctly limits strong log-concavity to scalar factors, not the hierarchical prior, and leaves the primary theorem/model unchanged.

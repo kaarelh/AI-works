@@ -1,0 +1,128 @@
+\section{A Gaussian gradient bound sensitive to comparison cost}
+\label{sec:sobolev-depth}
+A small relative-entropy comparison cost is useful only with a statistical bound that retains its depth dependence. We obtain such a bound from the input Jacobian. It uses moments of the actual input Jacobian, followed by a Sobolev embedding, rather than the product of full matrix operator norms.
+
+\begin{lemma}[Gaussian input-gradient moments]
+\label{lem:gaussian-gradient}
+For every globally one-Lipschitz hidden activation, every even integer $p\ge2$, and Lebesgue-almost every input $x$,
+\begin{equation}
+ \E_\mu\|\nabla z_w(x)\|_2^p
+ \le\left(\frac p\omega\right)^{p/2}
+                     \exp\left(\frac{Hp^2}{2\omega}\right).
+ \label{eq:gradient-moment}
+\end{equation}
+No condition on the activation's value at zero is needed.
+\end{lemma}
+\begin{proof}
+First take a continuously differentiable activation and write $J_l$ for the $N$-by-$d$ hidden Jacobian. Its diagonal activation derivative has operator norm at most one, so
+$\|J_1\|_F\le\|W^1_{\mathrm{input}}\|_F$ and
+$\|J_l\|_F\le\|W^lJ_{l-1}\|_F$.
+There is no independence assumption on the activation derivative.
+
+For deterministic $J$ and a standard $N$-by-$N$ Gaussian matrix $G$, convexity over the normalized eigenvalues of $J^\top J$ gives
+\[
+ \E\|GJ\|_F^p\le\E\chi_N^p\,\|J\|_F^p.
+\]
+Indeed the squared norm is a weighted sum of independent chi-square variables with $N$ degrees of freedom; Jensen bounds its $p/2$ moment by the rank-one case. For even $p$,
+$\E\chi_N^p=\prod_{j=0}^{p/2-1}(N+2j)\le(N+p)^{p/2}$.
+For $0<t\le1$ and $r\ge0$, elementary calculus gives
+$t(1+r)\le e^{tr}$.
+It follows that
+\[
+ \tau^p\E(\chi_N/\sqrt N)^p
+ \le[\tau^2(1+p/N)]^{p/2}
+ \le e^{p^2/(2\omega)}.
+\]
+Conditioning successively on preceding layers, and using the analogous $\chi_{Nd}$ first-layer estimate, yields
+$\E\|J_H\|_F^p\le N^{p/2}e^{Hp^2/(2\omega)}$.
+The independent readout satisfies
+\[
+ \E_v\|v^\top J_H\|_2^p
+ \le(\tau/N)^p\E|G_1|^p\,\|J_H\|_F^p
+ \le(\tau\sqrt p/N)^p\|J_H\|_F^p.
+\]
+Combining proves \eqref{eq:gradient-moment}. For a general Lipschitz activation, apply the argument to smooth Lipschitz mollifications. They converge uniformly; the corresponding networks converge uniformly on each compact input domain for each fixed parameter vector. Weak lower semicontinuity of the Sobolev seminorm and Fatou's lemma give the same integrated moment estimate, which is the form used below. Equivalently the weak chain rule gives the pointwise almost-everywhere statement.
+\end{proof}
+
+\begin{lemma}[A common H\"older class outside exponentially small prior mass]
+\label{lem:holder-prior}
+Assume the hidden activation has range in $[-1,1]$. Fix $K\ge1$. If
+$\omega\sqrt{K/H}\ge\max\{d,1\}$, then outside a prior set of mass at most $2e^{-\omega K}$,
+\[
+ \|z\|_\infty\le\sqrt{4K+2\log2},\qquad
+ |z(x)-z(y)|\le C_d e^{C\sqrt{HK}}\|x-y\|_2^{1/2}.
+\]
+The constants and function class are independent of $N$ and $\tau$.
+\end{lemma}
+\begin{proof}
+Use normalized Lebesgue measure on the cube and integrate \eqref{eq:gradient-moment}. Put $a=\omega\sqrt{K/H}$ and $p=2\lceil a\rceil$, so $p\ge2d$ and $p\le4a$. Markov's inequality gives
+\[
+ \Pr_\mu\left\{\|\nabla z\|_{L^p}>
+ \sqrt{p/\omega}\exp\left[\frac{Hp}{2\omega}
+                              +\frac{\omega K}{p}\right]\right\}
+ \le e^{-\omega K}.
+\]
+The displayed cutoff is at most $C e^{C\sqrt{HK}}$. Morrey's inequality on a cube has a dimension-only constant uniformly for $p\ge2d$. It gives H\"older exponent $1-d/p\ge1/2$; weakening to exponent $1/2$ changes only a dimension constant. The continuous Sobolev representative is the actual network function.
+
+For the amplitude, bounded hidden features give $\|z\|_\infty^2\le N\|v\|^2$. The exact Gaussian identity
+$\E e^{\omega N\|v\|^2/4}=2^{N/2}$ and $N\le\omega$ imply
+\[
+ \Pr_\mu\{N\|v\|^2>4K+2\log2\}\le e^{-\omega K}.
+\]
+Intersect the events.
+\end{proof}
+
+\begin{proposition}[Generalization from a small normalized comparison cost]
+\label{prop:sobolev-oracle}
+Fix $d$, $0<\epsilon,\delta<1$, a bounded one-Lipschitz hidden activation, and a likelihood scale $0<\lambda\le1$. Set
+$K=C[1+\lambda^{-1}+\log(1/\epsilon)]$ with a sufficiently large absolute $C$.
+There is a common sample event on which every finite $N$ and every $0<\tau\le1$ satisfy
+\begin{equation}
+ \int R(z_w)d\Pi\le
+ -\frac{2\lambda}{\omega}\log Z+\epsilon,
+ \label{eq:sobolev-certificate}
+\end{equation}
+provided
+\begin{equation}
+ n\ge \operatorname{poly}_d(H,K,\epsilon^{-1},\log(1/\delta))
+       +e^{C_d\sqrt{HK}}
+          \operatorname{poly}_d(K,\epsilon^{-1},\log(1/\delta)).
+ \label{eq:sobolev-budget}
+\end{equation}
+The polynomials have fixed degrees, independent of depth. The event has probability at least $1-\delta$.
+
+Consequently, for a comparison function with a fixed output envelope, a uniformly accurate comparison law with
+$2\KL(\nu\Vert\mu)/\omega\le A$ yields a leading-one oracle inequality at fixed accuracy with sample bound
+$\operatorname{poly}_d(H,A)+\exp(C_d\sqrt{H(A+1)})$, after choosing $\lambda$ of order $1/(A+1)$. Its constants may also depend on that fixed output envelope. This consequence applies only at widths where the stated comparison exists. Any separate width threshold and its complementary branch must also be included.
+\end{proposition}
+\begin{proof}
+For the large-effective-width case use Lemma~\ref{lem:holder-prior}. Its amplitude is $M=O(\sqrt{K+1})$. A spatial grid gives a uniform output cover at accuracy $b$ with
+\[
+ \log|\mathcal D|\le
+ \left(\frac{C_d e^{C\sqrt{HK}}}{b}\right)^{2d}
+                         \log(CM/b).
+\]
+Take $b=c\epsilon/(M+1)$. Finite-class Hoeffding for squared loss then gives the desired good-set loss deviation at the exponential term in \eqref{eq:sobolev-budget}.
+
+If $\omega\sqrt{K/H}<\max\{d,1\}$, then
+$N\le\omega<\max\{d,1\}\sqrt{H/K}$.
+There are only polynomially many possible widths. The Gaussian moment estimate \eqref{eq:relu-total-op-mgf} gives a total-operator-energy cutoff $Q_{\mathrm{op}}\le C(H+K)$ with prior failure at most $e^{-\omega K}$; also impose the same readout amplitude cutoff. The coordinate magnitudes are at most $\sqrt{CN(H+K)}$, the parameter count is $O(dN+HN^2)$, and the logarithm of a parameter-to-output Lipschitz constant is $O(H\log(N+H+K+2))$. Finite parameter grids for these widths therefore have logarithmic size polynomial in $H,d,K,\log(1/b)$. Clipping the dictionary outputs to $[-M,M]$ preserves approximation accuracy. This gives the polynomial term in \eqref{eq:sobolev-budget}.
+
+Both dictionaries are fixed independently of the sample, width, and scale. Their concentration event is common to every learner. At any fixed learner, the auxiliary prior-good set has complement at most $C e^{-\omega K}$. Since bounded hidden features imply $\E_\mu R(z)^2\le24$, and Jensen gives $Z\ge e^{-\omega/\lambda}$, Cauchy--Schwarz bounds the posterior raw-risk contribution of that complement by
+\[
+ \sqrt{24C}\exp[\omega/\lambda-\omega K/2]\le\epsilon/4
+\]
+with the stated choice of $K$ (enlarging the fixed constant if needed).
+Integrate the good-set deviation and add this tail. Finally
+$\int\widehat R\,d\Pi\le-2\lambda\log Z/\omega$ by the posterior variational identity. This proves \eqref{eq:sobolev-certificate}.
+
+For the oracle consequence, use a comparison law whose approximation makes its empirical loss at most that of the comparison function plus a prescribed fraction of the requested accuracy. The variational identity gives the certificate at most that empirical loss plus $\lambda A$. Choose $\lambda=c_\epsilon/(A+1)$, and apply scalar concentration to the fixed bounded comparison function. Then $K=O_\epsilon(A+1)$, giving the stated budget. The ordinary raw posterior mean obeys the same bound by Jensen.
+\end{proof}
+
+\begin{corollary}[Bounded observation of general Lipschitz hidden layers]
+\label{cor:sobolev-bounded-observation}
+Proposition~\ref{prop:sobolev-oracle} also holds for any fixed globally one-Lipschitz hidden activation, whether bounded or centered, if a one-Lipschitz map into $[-1,1]$ is applied to the final output in both the likelihood and prediction. The certificate and risks then refer to those bounded outputs. Constants may depend on the hidden activation's value at zero.
+\end{corollary}
+\begin{proof}
+The derivative moment in Lemma~\ref{lem:gaussian-gradient} does not require bounded hidden activations, and the final link cannot increase it. The output envelope is now one. For the small-effective-width branch, operator-energy coordinate caps still give parameter-to-output Lipschitz constants with logarithms polynomial in depth; the fixed activation offset adds only the corresponding constant to the layerwise growth estimate. The final link bounds every loss by four, so $Z\ge e^{-2\omega/\lambda}$ and a prior bad set of mass $Ce^{-\omega K}$ contributes at most $4C e^{2\omega/\lambda-\omega K}$ to posterior risk. Enlarge the fixed coefficient in $K$. All covering and variational arguments are unchanged.
+\end{proof}

@@ -25,6 +25,9 @@ def rebuild(paper):
         out = Path(temp)
         shutil.copytree(leaf / 'source', out / 'source')
         shutil.copyfile(leaf / 'build.sh', out / 'build.sh')
+        # Several package scripts write fresh build logs here. Recreate the
+        # directory without copying any prior review or build evidence.
+        (out / 'verification').mkdir()
         proc = subprocess.run(['bash', 'build.sh'], cwd=out, capture_output=True, text=True, errors='replace')
         result = {'paper': paper['slug'], 'build_passed': proc.returncode == 0}
         if proc.returncode:
@@ -33,7 +36,8 @@ def rebuild(paper):
         pdf_name = paper.get('pdf_file', 'paper.pdf')
         result['pdf_text_matches'] = text_of_pdf(leaf / pdf_name) == text_of_pdf(out / pdf_name)
         # Read final TeX logs, not captured first-pass console transcripts.
-        logs = [p for p in out.rglob('*.log') if not re.fullmatch(r'pass\d+\.log', p.name)]
+        logs = [p for p in out.rglob('*.log')
+                if not re.fullmatch(r'(?:pass|build)[-_]?\d+\.log', p.name)]
         log = '\n'.join(p.read_text(errors='replace') for p in logs)
         result['unresolved_references'] = bool(re.search(r'There were undefined references|Reference .* undefined|Citation .* undefined', log))
         result['latex_warnings'] = re.findall(r'^LaTeX Warning:.*', log, re.M)
@@ -75,6 +79,9 @@ def main():
             if not (leaf / rel).is_file():
                 failures.append(f'Missing file: {leaf / rel}')
     for readme in ROOT.rglob('*.md'):
+        # Downloaded Lean dependencies are not part of the published collection.
+        if '.lake' in readme.relative_to(ROOT).parts:
+            continue
         for link in markdown_links(readme.read_text()):
             parsed = urlsplit(link.strip('<>'))
             if parsed.scheme or not parsed.path:

@@ -1,0 +1,50 @@
+\section{A bounded auxiliary oracle under conditional sub-Gaussian noise}
+\label{sec:bounded-noise-oracle}
+The next lemma supplies the exact leading-one comparison used in the
+optimistic raw theorem. It concerns a proof-only bounded prior; the raw
+learner itself is not changed.
+
+\begin{lemma}[Conditional-noise leave-one-out bound]
+\label{lem:bounded-noise-oracle}
+Let a prior $\pi$ be supported on functions with values in $[-M,M]$.
+Suppose $Y=f_0(X)+\xi$, $|f_0|\le M$, and conditionally on $X$ the
+centered noise $\xi$ is $\sigma^2$-sub-Gaussian. At any fixed
+$T\ge256(M^2+\sigma^2)$, the ordinary all-data posterior mean satisfies
+\[
+ \E R(\bar f_{S_n})\le\rho R+\frac{T\KL(\rho\|\pi)}{n+1}
+\]
+for every deterministic comparison law $\rho\ll\pi$.
+\end{lemma}
+\begin{proof}
+Rescale by $M$; it suffices to prove the statement at $M=1$.
+For a fixed law $q$ on $U\in[-1,1]$, write its mean and variance as
+$\mu,v$, and let $p_y$ be its tilt by $e^{-(U-y)^2/T}$.
+The covariance identity used in the bounded finite-variance lemma gives
+\[
+ \E_{p_y}(U-y)^2\ge(\mu-y)^2+
+ \left[1-\frac{4(1+|y|)^2}{T}e^{4(1+|y|)/T}\right]v.
+\]
+If $Y=a+\xi$, $|a|\le1$, and $\xi$ is centered sub-Gaussian, then
+$\E e^{t|\xi|}\le2e^{\sigma^2t^2/2}$ and
+$\E\xi^4\le16\sigma^4$. Consequently Cauchy--Schwarz gives, at
+$T\ge256(1+\sigma^2)$,
+\begin{align*}
+ \E[(1+|Y|)^2e^{4(1+|Y|)/T}]
+ &\le e^{8/T}\left[16e^{8\sigma^2/T^2}
+             +8\sqrt2\,\sigma^2e^{16\sigma^2/T^2}\right]\\
+ &\le32(1+\sigma^2).
+\end{align*}
+The expected coefficient of $v$ is therefore nonnegative. Thus
+$\E_Y(\mu-Y)^2\le\E_Y\E_{p_Y}(U-Y)^2$.
+
+Introduce $n+1$ IID observations, using exactly the same prior and
+ temperature as for the $n$-sample learner. Conditional on the other
+$n$ observations and $X_i$, apply this inequality to the predictive law
+of the posterior omitting observation $i$. Its update by observation
+$i$ is the full $(n+1)$-sample posterior. Averaging over $i$ bounds the
+expected test risk of the ordinary $n$-sample mean by the expected
+training loss of that full posterior. Its Gibbs variational inequality
+bounds the latter by $\rho R+T\KL(\rho\|\pi)/(n+1)$.
+All integrals are finite because predictions are bounded and labels
+have finite second moment. Rescaling proves the stated lemma.
+\end{proof}

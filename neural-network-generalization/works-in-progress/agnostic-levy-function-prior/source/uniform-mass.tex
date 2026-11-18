@@ -1,0 +1,45 @@
+\section{A small formula gives a substantial function neighborhood}
+\label{sec:formula-uniform-mass}
+The fixed-embedding comparison laws are product laws. Only first moments are needed for an expected uniform approximation bound, even for unbounded Lipschitz activations.
+
+\begin{lemma}[Expected uniform comparison error]
+\label{lem:formula-uniform-error}
+Put $D=C(1+A+b)(m+1)(B+8)$ and $W=C(d+1)D^{H+1}$, with a sufficiently large constant depending only on the fixed L\'evy measure. At comparison precision $0<\epsilon\le1$,
+\[
+ \E_Q\sup_{x\in[-1,1]^d}|z_w(x)-g(x)|\le W\epsilon.
+\]
+The constants are independent of depth and learner width.
+\end{lemma}
+\begin{proof}
+Fix an embedding. Define $R_j^1=b+A\sum_{k=0}^d|W^1_{jk}|$ and $R_j^\ell=b+A\sum_k|W^\ell_{jk}|R_k^{\ell-1}$; these bound hidden magnitudes simultaneously on the cube. Let $S_\ell$ be the maximum expected path bound of a selected node and $P_\ell$ the average expected path bound in that layer. Native weights have expected absolute magnitude at most $M_1/F$, designated weights at most $B+8$, and background weights at most $C\epsilon/F$. Independence from preceding layers gives
+\begin{align*}
+ S_1+P_1&\le C(d+1)(1+A+b)(B+8),\\
+ S_\ell&\le b+Am(B+8)S_{\ell-1}+CA P_{\ell-1},\\
+ P_\ell&\le S_\ell+b+AM_1P_{\ell-1}.
+\end{align*}
+The last line separately bounds selected and native rows, using fractions at most one. A sufficiently large fixed coefficient in $D$ gives $S_\ell+P_\ell\le C(d+1)D^\ell$.
+
+Let $e_\ell$ be the maximum expected uniform error of a selected hidden node. The first layer obeys $e_1\le CA(d+1)\epsilon$. Expanding later preactivation differences into teacher coefficients times preceding errors, designated perturbations times new features, and background contributions gives
+\[
+ e_\ell\le AmB e_{\ell-1}+CA\epsilon[mS_{\ell-1}+P_{\ell-1}].
+\]
+Here $\E|W-a|\le C\epsilon$ on designated coordinates, and only independence between current weights and preceding layers is used. Taking $D$ to dominate twice the propagation coefficient gives $e_\ell\le C(d+1)D^\ell\epsilon$, with a depth-independent constant. The linear readout adds one factor $D$. This also handles shared-network small-width embeddings. Averaging over embeddings preserves the bound.
+\end{proof}
+
+\begin{theorem}[Formula complexity controls negative log prior mass]
+\label{thm:uniform-mass}
+For a layered formula $g$ with hidden depth $H$, at most $S$ hidden occurrences, maximum hidden-layer width $m$, and coefficients bounded by $B\ge1$, every finite $N\ge m$ and $0<\tau\le1$ satisfy
+\[
+ -\log\mu_N\{\|z_w-g\|_{\infty,[-1,1]^d}\le\tau\}
+ \le C(d+1)(S+1)\log\frac{C(S+1)(d+1)(B+8)W}{\tau},
+\]
+where $W=C(d+1)[C(1+A+b)(m+1)(B+8)]^{H+1}$.
+An arbitrary width-$m$, depth-$H$ network satisfies the same bound with $S=\sum_{\ell=1}^H m^\ell$, at every $N\ge m$.
+\end{theorem}
+\begin{proof}
+Take $\epsilon=\tau/(2W)$, increasing $W$ so this is at most one. Expected uniform approximation and Markov give comparison probability at least one half to the stated event $E$. Binary relative entropy gives
+\[
+ \KL(Q\|\mu_N)\ge Q(E)\log\frac1{\mu_N(E)}-\log2,
+\]
+so $-\log\mu_N(E)\le2\KL(Q\|\mu_N)+2\log2$. Apply Lemma~\ref{lem:entropy}, including its shared-network branch.
+\end{proof}

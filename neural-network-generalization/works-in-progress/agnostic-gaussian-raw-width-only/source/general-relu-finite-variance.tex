@@ -1,0 +1,179 @@
+\section{Unchanged labels with only a finite second moment}
+\label{sec:general-shallow-finitevariance}
+The sharp Gaussian shallow oracle also holds under the sole label
+assumption $\mathbb E Y^2<\infty$. This is a high-probability result,
+not an expectation bound. No labels or network outputs are clipped.
+
+\begin{lemma}[A square-integrable multiplier]
+Let $a(X,Y)$ be any fixed square-integrable measurable function.
+For the normalized ReLU atoms of the preceding section,
+\[
+ \mathbb E_S\left[
+ \sup_{u\in\mathcal H_d}
+ |(\mathbb P_n-\mathbb P)[a(X,Y)u(X)]|^2\right]
+ \le \frac{C\mathbb E a(X,Y)^2}{n}.                      \tag{GF1}
+\]
+\end{lemma}
+\begin{proof}
+An independent ghost sample and Jensen's inequality symmetrize
+the squared supremum, with a numerical factor, to
+\[
+ \mathbb E_{S,\epsilon}
+ \left[\sup_{u\in\mathcal H_d}
+       \left|n^{-1}\sum_i\epsilon_i a_i u(X_i)\right|^2\right].
+\]
+Conditional on the sample, the mean of this signed supremum is at
+most $C\sqrt{\sum_i a_i^2}/n$, by the weighted contraction argument
+above. Changing one Rademacher sign changes the supremum by at most
+$2\sqrt2|a_i|/n$. The bounded-differences variance inequality therefore
+bounds its conditional variance by $C\sum_i a_i^2/n^2$.
+Adding the squared conditional mean, then averaging, proves (GF1).
+Truncation of $a$ followed by the same $L^2$ estimate justifies every
+step for general square-integrable multipliers.
+\end{proof}
+
+\begin{theorem}[A finite-variance, teacher-independent likelihood schedule]
+\label{thm:general-shallow-finitevariance}
+Let inputs have any law on $[-1,1]^d$, and suppose
+$\mathbb E Y^2\le M_2<\infty$. Fix $0<\delta<1/2$ and set
+\begin{align*}
+ L&=\frac{8(M_2+1)}\delta,\\
+ b&=\frac{c_0\log^4(\mathrm e(n+1)(d+L+1)/\delta)}n,\\
+ \lambda&=c_1\{\sqrt{Lb}+(d+2)b\}.
+\end{align*}
+Assume $\lambda\le1$, with sufficiently large fixed numerical
+$c_0,c_1$. For any deterministic finite shallow ReLU comparison $g$,
+with probability at least $1-\delta$,
+\[
+ R(\bar z_\lambda)\le\Pi_\lambda R(z)
+ \le R(g)+C\lambda
+       [P_g+1+(d+2)\log((n+1)(d+L+1))].                 \tag{GF2}
+\]
+This event is common to every $N\ge n$ and $0<\nu\le1$.
+The prior is the original independent Gaussian prior; the likelihood
+uses the actual raw observations, and its physical variance is
+$n\lambda\nu/N$. The deterministic schedule depends on the declared
+second-moment bound and confidence, but not on the comparator.
+\end{theorem}
+\begin{proof}
+Markov's inequality gives $\mathbb P_nY^2\le L$ except with
+probability at most $\delta/8$. On this event the moment version
+(GM5) of the empirical midpoint inequality applies, and
+\[
+ Z\ge\exp[-\omega(L+1)/(2\lambda)],\qquad
+ \Pi Q^2\le C[(d+2)\nu+(L+1)/\lambda]^2.
+\]
+The proof of (GS4), with this evidence bound, gives
+\[
+ \Pi[(1+Q^2)\mathbf1_{Q>q_*}]\le n^{-40},\qquad
+ q_*=A\{d+2+(L+1)/\lambda\}.                           \tag{GF3}
+\]
+This is a deterministic assertion on the empirical-second-moment
+event, simultaneous in width and prior scale.
+
+First consider $R(g)\le R(0)+1\le M_2+1$ and
+$\lambda(P_g+1)\le cL$. Apply (GF1) to $a=g-Y$ and Markov's
+inequality. Except with probability $\delta/4$, its multiplier
+supremum is at most $C\sqrt{(M_2+1)/(n\delta)}\le C\sqrt{Lb}$.
+Intersect this with the square-norm event (GS3), with its confidence
+allocation reduced by a fixed factor. Expanding the loss difference
+gives, uniformly on $Q\le q_*$,
+\begin{align*}
+ R(z)-R(g)\le{}&\widehat R(z)-\widehat R(g)
+       +\tfrac14\mathbb P_n(z-g)^2\\
+       &+Cb(P+P_g+1)^2+C(P+P_g)\sqrt{Lb}.
+\end{align*}
+Now $bq_*\le c'\lambda$ follows from
+$\lambda\ge c_1\sqrt{Lb}$ and $\lambda\ge c_1(d+2)b$.
+Also $b(P_g+1)^2\le C\lambda(P_g+1)$ in the stated comparison
+range, since $\lambda^2\ge c_1^2Lb$.
+Enlarging $c_1$ consequently bounds the last line by
+$\lambda P/2+C\lambda(P_g+1)$.
+
+Integrate, apply (GM5), and use (GF3) for the discarded tail.
+The empirical comparator risk is at most $C(P_g+1)^2+2L$.
+Since $\lambda\le1$ forces $L,d\le Cn$ and the nontrivial branch
+forces $P_g\le Cn$, these tail corrections are negligible.
+This proves (GF2) in that branch.
+
+Apply the same argument to zero to get
+\[
+ \Pi R(z)\le R(0)+C\lambda
+              [1+(d+2)\log((n+1)(d+L+1))].
+\]
+If $R(g)>R(0)$ this already suffices. If
+$\lambda(P_g+1)>cL$, the excess resource term can dominate
+$R(0)\le M_2\le L$, after enlarging its numerical constant.
+Thus all comparisons are covered. Jensen proves the mean bound.
+\end{proof}
+
+\paragraph{No second-moment bound is needed asymptotically.}
+Fix input dimension and a confidence $0<\delta<1/2$. The one
+deterministic schedule
+\[
+ \lambda_n=\frac{\log^6(n+2)}{\sqrt n}
+                  +(d+2)\frac{\log^6(n+2)}n              \tag{GF4}
+\]
+eventually satisfies every lower bound in the proof for each fixed
+finite $M_2$. Its onset may depend on that unknown label law and on
+$\delta$; the quantitative finite-sample theorem above uses a
+declared moment bound. At fixed coefficient cap $B$ and dimension,
+the raw posterior at (GF4) therefore competes with width
+$C_n=\lfloor n^{1/4}\rfloor$ shallow ReLU comparisons with
+high-probability gap $\widetilde O(n^{-1/4})$, at every $N\ge n$
+and every mean-field-or-stronger scale. More generally any prescribed
+$C_nB_n^2=o(\sqrt n/\log^7 n)$ gives a vanishing bound. This is a
+bounded-coefficient comparison, not a coefficient-free theorem on
+arbitrary input laws.
+
+\paragraph{Fixed classes and optional simultaneous budgets.}
+For each declared finite coefficient/width class choose a
+deterministic population minimizer, which exists by continuity on
+its compact parameter set. This gives its oracle immediately.
+The fixed-class result is sufficient for the growing class in (GF4).
+One can also keep one event over polynomially many nontrivial budget
+classes: apply (GF1) only to the common multiplier $a=Y$, and handle
+each bounded $g$ multiplier separately by Bousquet's inequality.
+Since $\mathbb E g^2\le C(M_2+1)$ for the chosen near-minimizers,
+the resulting simultaneous multiplier coefficient is
+$C\{\sqrt{(M_2+1)b}+(P_g+1)b+\sqrt{(M_2+1)/(n\delta)}\}$.
+It obeys the same absorption inequalities. A polynomial finite union
+changes only the logarithms already included in $b$; larger budgets
+are again handled by zero. No union of Markov events over all classes
+is needed.
+
+\begin{corollary}[Universal risk consistency in probability]
+\label{cor:gaussian-universal-consistency}
+Fix the input dimension and any probability law on the input cube,
+and assume only $\mathbb E Y^2<\infty$. For any prescribed Gaussian scales $0<\nu_n\le1$ and finite widths
+$N_n\to\infty$, however slowly, the ordinary raw posterior mean is
+risk-consistent in probability under either of two choices: a shallow
+ReLU learner at the universal $\log^8$ schedule of
+Section~\ref{sec:all-width-relu}, or a bounded, nonconstant,
+nondecreasing Lipschitz activation at $\lambda_n=n^{-3/4}$.
+The posterior-average risk has both conclusions. Neither schedule
+needs the unknown label second moment.
+\end{corollary}
+\begin{proof}
+Finite shallow ridge networks with any of these continuous
+nonpolynomial activations are uniformly dense in continuous functions
+on the cube~\cite[Theorem~1]{leshno}. Continuous functions are dense in
+$L^2(P_X)$, and the regression function is square-integrable.
+Consequently, for every $\varepsilon>0$, there is a fixed finite
+comparison network $g$ with
+$R(g)\le R_*+\varepsilon$, where
+$R_*=\mathbb E\operatorname{Var}(Y\mid X)$.
+For this fixed $g$, the ReLU remainder in (GA3) at the universal
+schedule of Section~\ref{sec:all-width-relu} tends to zero;
+in the bounded-activation case $\mathcal A_n(g)=O(\log n)$ and (AW3)
+at $\lambda_n=n^{-3/4}$ also has a vanishing remainder. In both cases the
+width requirement is eventually met because the fixed comparison
+has finitely many neurons and $N_n\to\infty$.
+Both statements hold for every fixed confidence level and uniformly
+over the eligible prescribed widths and scales. Since test risk is
+at least $R_*$, first choose the approximation error small and then
+let the confidence failure probability tend to zero. This proves
+convergence in probability. It does not assert expected-risk
+consistency for arbitrary finite-variance labels. This is a standard
+approximation consequence of the quantitative oracles.
+\end{proof}

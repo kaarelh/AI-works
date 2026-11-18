@@ -1,0 +1,62 @@
+\section{Every realizable width: a high-probability selected-posterior oracle}
+\label{sec:all-width-results}
+The fixed-temperature expectation theorem requires enough learner width to hold the coefficient-bounded comparison implementation. The shallow Boolean result avoids this issue entirely. At general depth, a different guarantee covers every learner width above the original teacher width: train a small collection of posteriors at the same architecture, and use independent validation data to choose one likelihood variance. This is a different prediction rule from the fixed-temperature theorem, and its returned posterior uses only the training half of the observations.
+
+Here is the rule precisely. Split $n\ge4$ observations into $m=\lfloor n/2\rfloor$ training observations and $n-m$ validation observations. For $J=\lceil\log_2(128n)\rceil$, train posterior means at inverse temperatures $\beta_j=2^{-j}$, $0\le j\le J$, where the posterior density is proportional to $e^{-\beta_j m\widehat R_T}$ relative to the same $\pi_N$. Add one more posterior: writing
+\[
+ F_T(\beta)=-\frac1{\beta m}\log\int e^{-\beta m\widehat R_T(f_w)}d\pi_N(w),
+\]
+choose the first $\beta=2^\ell$, $\ell\ge0$, satisfying
+$F_T(\beta)\le\inf_w\widehat R_T(f_w)+1/m$.
+Full support and continuity ensure that this finite choice exists. Return the candidate posterior mean minimizing validation squared loss, with a fixed tie rule. This rule knows neither teacher width, teacher coefficients, approximation risk, nor noise scale. Its architecture and prior are fixed before observing the data.
+
+For a positive real $M$ define the parameter-complexity upper bound
+\[
+ \mathcal V_{H,d}(M)=c(d+1)(H+1)^2(M+1)^2
+       \log\{e(d+1)(H+1)(M+1)\}.
+\]
+The ReLU pseudodimension theorem~\cite{pdim} bounds the pseudodimension of every width-$N$ learner with $N<M$ by this quantity. Indeed it has $O((d+1)N+HN^2)$ parameters; clipping the last output changes the bound by at most a constant factor.
+
+\begin{theorem}[A coefficient-one oracle at every teacher-realizable width]
+\label{thm:all-width-holdout}
+Suppose the observations satisfy the conditional-mean and sub-Gaussian assumptions. Fix $H,N$ before data, use the prior \eqref{eq:fanin-prior}, and run the variance-selection rule above. Put $s_0=1+\sigma^2$ and
+$A_{C,h}=\inf_{g\in\mathcal G_{C,h}}R(g)-R_0$.
+For $C+1\le N$ define, in the Boolean case with $b(h+1)\le H$,
+\[
+ D_{C,h}=\frac{c s_0}{n}\left[
+ \mathcal B_{C,h,H,d}(n)
+ +\mathcal V_{H,d}(Q_n^b)\log(en)
+ +\log\frac{8(J+2)(C+1)^2(h+1)^2}{\delta}\right].
+\]
+In the slab-regular case with $h\le H$ and $H\ge4$, use instead
+\[
+ D_{C,h}=\frac{c s_0}{n}\left[
+ \mathcal C_{C,h,H,d,\kappa,\alpha}(n)
+ +\mathcal V_{H,d}(3T_C)\log(en)
+ +\log\frac{8(J+2)(C+1)^2(h+1)^2}{\delta}\right].
+\]
+On an event of probability at least $1-\delta$, simultaneously for all the stated teacher classes,
+\begin{equation}
+ R(\widehat f)\le R_0+
+ \inf_{C,h}\left\{A_{C,h}+c\sqrt{A_{C,h}D_{C,h}}+cD_{C,h}\right\}.
+ \label{eq:all-width-holdout-oracle}
+\end{equation}
+The output is the ordinary mean of one posterior trained on $\lfloor n/2\rfloor$ observations. The guarantee does not imply the same inequality after refitting that variance to all $n$ observations. Its remainder is independent of how large $N$ is.
+\end{theorem}
+\begin{proof}
+For each teacher class split the proof into two cases; the algorithm does not use this split. If $N$ is at least the compiled width, Lemma~\ref{lem:compiler-resources} provides a comparison to a deterministic compiled teacher with risk within $4/(n+1)^2$ of the original. The stable-padding comparison also implies the $L^2$ logarithmic-comparison interface in Section~\ref{sec:log-comparison-statistics}, since $|f_w-g|^2\le2|f_w-g|$ for bounded functions. Its resource at precision $1/n$ is bounded by $\mathcal B$ or $\mathcal C$.
+
+If $C+1\le N$ is smaller than the compiled width, the original teacher fits after adding one constant wire and identity-padding. Its coefficients need no bound. The pseudodimension of this particular learner is at most $\mathcal V$ evaluated at the compiled-width bound, so the finite-parameter candidate in Theorem~\ref{thm:log-comparison-holdout} gives the alternative resource. The displayed sum safely bounds both cases, without making an unjustified dominance claim.
+
+Use Corollary~\ref{cor:log-comparison-class-oracle} with proof-only weights
+$w_{C,h}=(C+1)^{-2}(h+1)^{-2}$, whose sum over positive integers is less than one. Its shared validation event and the common relative-noise baseline give \eqref{eq:all-width-holdout-oracle}. The approximation error $4/(n+1)^2$ and deterministic near-minimizer error are absorbed by $D_{C,h}$. No prior over classes is introduced.
+\end{proof}
+
+For Boolean inputs, the resource remains polynomial in $C,d$ at fixed $h$, and polynomial in the additional learner depth. For slab-regular inputs, a safe simplified bound is
+\[
+ D_{C,h}=\widetilde O_{d,\alpha}\!\left(
+ \frac{s_0(H+1)^2(T_C+1)^2}{n}\right),
+\]
+where the suppressed logarithms include $n,\kappa,H,T_C,1/\delta$. The extra square in $T_C$ covers the intermediate widths at which the original teacher fits but the coefficient-bounded compiler may not. The pure fixed-temperature expectation theorem at larger widths has only linear $T_C$ cost.
+
+The noise-sensitive form is relevant even when there is irreducible observation noise: the square-root term depends on approximation error $A_{C,h}$ above the regression noise floor, not on the total risk $R_0+A_{C,h}$. The fixed-temperature high-probability lemma in Section~\ref{sec:log-comparison-statistics} provides an all-data alternative with coefficient $1+\eta$ on approximation error whenever the logarithmic comparison itself fits. That result and the holdout result have different quantifiers from the sharp all-data expectation theorem.

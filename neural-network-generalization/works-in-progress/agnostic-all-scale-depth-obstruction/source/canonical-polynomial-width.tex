@@ -1,0 +1,96 @@
+% Research module: quantitative finite-width improvement for the canonical spike construction.
+\section{Polynomial width in the finite support size}
+\label{sec:canonical-polynomial-width}
+The exponential-in-depth width in Lemma~\ref{lem:spike-finite-width} is convenient but unnecessary for the schedules used here. Their small spikes allow a sharper stability estimate.
+
+\begin{theorem}[A quantitative width for the finite-function comparison]
+\label{thm:canonical-polynomial-width}
+In the finite-function comparison constructed from Lemma~\ref{lem:spike-prefix} and Lemma~\ref{lem:spike-reverse-tail}, let $1\le D\le\sqrt H$ and $m=4\cdot2^D$. There are absolute constants $C,c>0$, depending only on the fixed small amplitude cap and the constants in the construction, such that every prescribed root-mean-square supremum tolerance $0<\tau<1$ is achieved at every width
+\[
+ N\ge C\tau^{-C}H^C e^{CD}.
+\]
+The normalized entropy bound is unchanged. In particular the comparison width is polynomial in the support size, the depth, and the inverse accuracy.
+\end{theorem}
+\begin{proof}
+We first bound propagation of scalar errors uniformly over every prewarped seed $u\in[-1,1]$. Write
+\[
+ \mathcal T_\alpha(q,r)=
+ \bigl(F(q+\alpha r^2),\sqrt{1+\alpha}\,r[1-F(q+\alpha r^2)]\bigr).
+\]
+On a sufficiently small fixed variance interval, $0\le F'\le1$, and its Jacobian satisfies
+\begin{align*}
+ |\partial_q\mathcal T_\alpha^{(q)}|&\le1,
+ &|\partial_r\mathcal T_\alpha^{(q)}|&\le2\alpha\sqrt q,\\
+ |\partial_q\mathcal T_\alpha^{(r)}|&\le C\sqrt q,
+ &|\partial_r\mathcal T_\alpha^{(r)}|&\le1+C\alpha.
+\end{align*}
+The final estimate follows directly from
+$\partial_r\mathcal T_\alpha^{(r)}=\sqrt{1+\alpha}(1-F(v)-2\alpha r^2F'(v))$; for small $q$ this derivative is nonnegative and at most $\sqrt{1+\alpha}$. Enlarging the fixed constants accommodates a fixed larger initial variance interval.
+
+During the initial native burn, $\alpha=0$. The variance update is independent of $r$, while both diagonal derivatives are at most one in absolute value. Products of these triangular Jacobians have norm at most $C(1+H)$: the lower off-diagonal entry is a sum of at most $H$ bounded terms. Thus this stage amplifies errors by only a polynomial in $H$.
+
+For the constant-spike prefix put $a=K(D+1)/H$. Every seed, not just the endpoint seed, obeys $q\le C_1a$ after the burn. Indeed $r^2\le q$ and
+\[
+ q'\le F((1+a)q)\le (1+a)q-cq^2
+\]
+imply the same invariant upper bound used in Lemma~\ref{lem:spike-prefix}. Give state differences the weighted norm
+\[
+ \|(\Delta q,\Delta r)\|_a
+       =|\Delta q|/\sqrt a+|\Delta r|.
+\]
+The preceding Jacobian estimates show that every step has operator norm at most $1+Ca$ in this norm. Consequently the whole prefix amplifies errors by at most
+\[
+ e^{CaH}\le e^{C(D+1)}.
+\]
+Changing between this norm and the ordinary coordinate norm costs at most $C\sqrt H$.
+
+Now consider the padding and reverse-variance tail, whose schedule was chosen using the endpoint seed. Let $q_\ell^*$ denote its prescribed endpoint variance. The construction gives
+\[
+ q_\ell^*\ge ca,\qquad
+ 0\le\alpha_\ell\le Cq_\ell^*,
+\]
+and $q_\ell^*$ is constant during padding and nondecreasing during the reverse steps. At every other seed the variance satisfies
+\[
+ q_\ell(u)\le C_2 q_\ell^*.
+\]
+To verify this, the starting assertion follows from the prefix bounds. If $q\le C_2q_\ell^*$ then monotonicity and the quadratic upper drift give
+\[
+ F((1+\alpha_\ell)q)
+ \le q+C\alpha_\ell q-cq^2.
+\]
+For a sufficiently large fixed $C_2$, the map points inward at $q=C_2q_\ell^*$. Since $q_{\ell+1}^*\ge q_\ell^*$, this proves induction. Choose the fixed amplitude cap small enough that all these envelopes stay in the small-variance interval.
+Use the time-dependent norm
+\[
+ \|(\Delta q,\Delta r)\|_{q_\ell^*}
+       =|\Delta q|/\sqrt{q_\ell^*}+|\Delta r|.
+\]
+One step has norm at most $1+Cq_\ell^*$; increasing the denominator at the next step can only decrease the norm. Padding has at most $C/a$ steps, and hence $\sum_{\rm padding}q_\ell^*=O(1)$. For a reverse step,
+\[
+ c(q_\ell^*)^2\le q_{\ell+1}^*-q_\ell^*
+                         \le C(q_\ell^*)^2,
+\]
+so $\log(q_{\ell+1}^*/q_\ell^*)\ge cq_\ell^*$. Therefore
+\[
+ \sum_{\rm reverse}q_\ell^*\le C\log(1/a)\le C\log H.
+\]
+The tail's total amplification is at most a polynomial in $H$. This also covers the small-amplitude branch, which only pads at the endpoint variance and changes the readout.
+
+Combining the stages, every inserted state error is amplified by at most
+\[
+ L_{D,H}\le H^C e^{CD}.
+\]
+The same estimates hold in enlarged envelopes for empirical states. They therefore imply the corresponding perturbation estimate by a standard first-exit induction: choose the accumulated error less than a fixed multiple of $a$, enlarge $C_1,C_2$ by a factor of two, and observe that the derivative bounds hold throughout every segment between an exact and an empirical state. The admissible state region $\{(q,r):r^2\le q\}$ is convex, so such segments remain admissible.
+
+At each layer the conditional concentration estimate in Lemma~\ref{lem:spike-finite-width} gives coordinate error at most $C\epsilon$ simultaneously on all inputs, except with probability $Cm e^{-cN\epsilon^2}$. Choose
+\[
+ \epsilon=c\min\{a,\tau\}/(H L_{D,H}).
+\]
+The initial variance error can be required to obey the same bound, while its seed correlation is realized exactly. The initial Gram condition requires
+$N\ge C\Lambda^{-2}\log(8m)+2m$, with $\Lambda=e^{-40(D+1)}$; this is $H^C e^{CD}$ after enlarging constants. The initial diagonal accuracy and the conditional layer failure estimates are achieved with total failure probability at most $c\tau^2$ once
+\[
+ N\ge C\epsilon^{-2}\log(C Hm/\tau).
+\]
+Both requirements follow from the claimed $C\tau^{-C}H^Ce^{CD}$ bound. On the good event the final hidden prediction error is at most a fixed multiple of $\tau$. On its complement the bounded readout factor and bounded correlations give a constant error bound. The native Gaussian readout contributes expected squared maximum at most $C\log(2m)/N$. Tightening the constants proves the stated expected supremum estimate.
+
+Only the concentration widths have changed. The comparison law and its exact chain-rule entropy calculation are identical to Lemma~\ref{lem:spike-finite-width}, so the entropy bound is unchanged.
+\end{proof}

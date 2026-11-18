@@ -1,0 +1,68 @@
+\section{A limitation of one-direction covariance transport}
+\label{sec:spike-method-barrier}
+The square-root-depth scale in the covariance construction cannot be improved merely by optimizing its time-dependent spike factors. The obstacle is the entropy needed to amplify an exponentially small coherent seed.
+
+\begin{proposition}[A quadratic action cost for coherence amplification]
+\label{prop:coherence-action-barrier}
+Consider the scalar covariance-spike recursion with arbitrary positive factors $R_\ell^2$ and valid states $0<r_\ell^2\le q_\ell$. Put $\theta_\ell=r_\ell^2/q_\ell$ and let $L$ be the number of transitions. Then
+\[
+ \sum_{\ell=1}^L
+       \{R_\ell^2-1-\log R_\ell^2\}
+ \ge\frac1{2L}
+       \left(\log\frac{\theta_L}{\theta_0}\right)_+^2.
+\]
+In particular, raising coherence from $e^{-cD}$ to a fixed positive constant requires action $\Omega(D^2/L)$, for any deterministic time schedule. Allowing variance-reducing spikes $R_\ell<1$ does not evade the bound.
+\end{proposition}
+\begin{proof}
+Write $t=R^2$, $v=q+(t-1)r^2$. Gaussian Stein and Cauchy--Schwarz give $v\chi(v)^2\le F(v)$. Thus
+\[
+ \frac{\theta'}\theta
+ =\frac{t}{1+(t-1)\theta}\frac{v\chi(v)^2}{F(v)}
+ \le\begin{cases}t,&t\ge1,\\1,&0<t<1.\end{cases}
+\]
+Consequently $\log(\theta_L/\theta_0)\le\sum_\ell(\log R_\ell^2)_+$.
+For $u\ge0$, $e^u-1-u\ge u^2/2$. The action is therefore at least
+$\tfrac12\sum_\ell((\log R_\ell^2)_+)^2$, and Cauchy--Schwarz proves the claim.
+\end{proof}
+
+\begin{lemma}[Some finite labels have tiny correlation with every first feature]
+\label{lem:first-feature-discrepancy}
+For any $m$ points in $\R^d$ with $m\ge d+2$, there is a sign function $f$ on those points satisfying
+\[
+ \sup_{a\in\R^{d+1}}
+ \left|\frac1m\sum_x f(x)\tanh(a\cdot(1,x))\right|
+ \le C\sqrt{\frac{(d+1)\log(2m)}m}.
+\]
+The same $f$ has this bound simultaneously for every finite collection of first-layer rows, regardless of their norms or the number of neurons.
+\end{lemma}
+\begin{proof}
+The number of affine-halfspace sign patterns on the $m$ points is at most
+$2\sum_{j=0}^{d}\binom{m-1}{j}\le(2em)^{d+1}$. This follows by the usual hyperplane-arrangement induction, and remains an upper bound for nongeneric point configurations. Choose independent fair signs $f(x)$. Hoeffding and a union bound show that with positive probability their normalized correlation with every such pattern has magnitude at most the displayed bound, for a sufficiently large absolute $C$.
+Finally
+\[
+ \tanh t=\frac12\int_{\R}\operatorname{sign}(t-b)
+                         \operatorname{sech}^2b\,db
+\]
+expresses each tanh feature as an average of affine-halfspace sign features. This transfers the correlation bound to all tanh rows at once.
+\end{proof}
+
+\begin{corollary}[Worst-case seeds impose the same barrier]
+\label{cor:worst-seed-barrier}
+On the unit-sphere sets $\mathcal U_D$ with $m=4\cdot2^D$, there are sign labels for which the following holds. Suppose a one-direction covariance-transport construction starts with arbitrary first-layer tanh features whose empirical variance at each input is at least $c/(D+1)$, chooses any unit seed direction, and then uses the scalar spike recursion with a common schedule. If its final scalar output is $a f(x)$ at every input, where $a>0$ is fixed and the final readout factor is bounded by a fixed $B_0$, its covariance action over $H$ transitions is at least $c' D^2/H$ for all sufficiently large $D$.
+This conclusion permits arbitrary pointwise prewarping of seed magnitudes. It is a limitation of this transport construction, not a lower bound for every possible comparison measure or every Bayesian learner.
+\end{corollary}
+\begin{proof}
+Choose $f$ from Lemma~\ref{lem:first-feature-discrepancy}. If $h_i(x)$ are arbitrary first features and $e$ is any unit direction, the seed $r_1(x)=N^{-1/2}\sum_i e_i h_i(x)$ obeys
+\[
+ \left|\frac1m\sum_x f(x)r_1(x)\right|
+ \le\left\{\frac1N\sum_i
+       \left(\frac1m\sum_x f(x)h_i(x)\right)^2\right\}^{1/2}
+ \le C D/\sqrt m.
+\]
+Every scalar update multiplies $r$ by a positive number. After absorbing any common sign into the readout, the exact target therefore forces $r_1(x)$ to have sign $f(x)$. The left side is then the average of $|r_1(x)|$. At least one input has $|r_1(x)|\le CD/\sqrt m$, and hence initial coherence at most $C'D^3/m$ by the variance lower bound. At that same input the final correlation has magnitude at least $a/B_0$. Since the final variance is at most one, its final coherence is at least $a^2/B_0^2$. Proposition~\ref{prop:coherence-action-barrier} gives action at least
+\[
+ \frac1{2H}\left[\log\frac{c''m}{D^3}\right]^2
+ =\Omega(D^2/H).
+\]
+No assumption that seed magnitudes are constant was used.
+\end{proof}

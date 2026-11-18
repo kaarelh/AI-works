@@ -1,0 +1,111 @@
+\section{Canonical mean field with bounded centered activations}
+\label{sec:geometric-clones}
+For bounded activations satisfying $\phi(0)=0$, a different comparison network removes the strictly-above-mean-field assumption from the fixed-dimension exponential-depth theorem. Its active width grows geometrically through the hidden layers. This is a comparison distribution inside the same dense Gaussian prior; the learner's architecture and prior support remain unchanged.
+
+\begin{theorem}[All scales, raw outputs, bounded centered activation]
+\label{thm:geometric-depth}
+Fix $d,C,B,\epsilon,\delta$. Let $\phi:\mathbb R\to[-1,1]$ be one-Lipschitz with $\phi(0)=0$. There are constants $a,c>0$ and $0<\ell_+,\ell_-<1$, depending only on the fixed resources, such that for every $H\ge2$, the following calibration has the stated guarantee:
+\[
+ N_*(H)=\lceil e^{aH}\rceil,\qquad
+ \lambda_{H,N}=
+ \begin{cases}\ell_-/H^2,&N<N_*(H),\\
+ \ell_+/H,&N\ge N_*(H).
+ \end{cases}
+\]
+If $n\ge e^{cH}$, one sample event of probability at least $1-\delta$ satisfies \eqref{eq:main} simultaneously for every $N\ge C$ and every $0<\tau\le1$. The posterior uses the raw Gaussian likelihood \eqref{eq:posterior}; the conclusion bounds posterior-average risk and the risk of the ordinary raw posterior mean. In particular canonical mean field $\tau=1$, with internal variances $1/N$, is included.
+\end{theorem}
+
+This theorem covers tanh without a robustness restriction. The dependence on dimension and comparison resources is held fixed in the exponential-depth statement. The centering assumption is used to keep unused neurons close to zero; it is not needed for the earlier strictly-above-mean-field theorem.
+
+\subsection{Geometrically increasing clone groups}
+Write the width-$C$ comparison matrices and readout as $V^1,\ldots,V^H,b$, and put $A=CB$. Choose an integer
+$\alpha\ge2A^2+4$. A constant $0<p\le1/4$ will be fixed by the requested approximation accuracy, independently of $H,N,\tau$. Whenever
+\[
+ N\ge\frac{2C\alpha^{H-1}}p,
+\]
+define
+\[
+ k_1=\left\lfloor\frac{pN}{C\alpha^{H-1}}\right\rfloor,
+ \qquad k_l=k_1\alpha^{l-1},\qquad
+ m_l=Ck_l,\qquad p_l=m_l/N.
+\]
+Then $p/2\le p_H\le p$, $p_l=p_H\alpha^{l-H}$, and every layer has at most $N$ active neurons. Each comparison neuron has $k_l$ active clones in layer $l$. Give first-layer clones the comparison incoming row, connect every layer-$l$ active clone to every clone of its comparison parents with weights $V^l_{ij}/k_{l-1}$, and give each final clone readout coefficient $b_j/k_H$. All other mean weights are zero. The mean network computes the comparison function exactly: inactive mean neurons have output $\phi(0)=0$.
+
+Its Gaussian density energy obeys
+\begin{align}
+ E_{H,N}
+ &=\frac{dk_1}{N}\|V^1\|_F^2
+   +\sum_{l=2}^H\frac{k_l}{k_{l-1}}\|V^l\|_F^2
+   +\frac N{k_H}\|b\|^2\\
+ &\le d(d+1)B^2p_1+\alpha(H-1)C^2B^2
+                        +\frac{2C^2B^2}p.
+ \label{eq:geometric-mean-energy}
+\end{align}
+The geometric increase pays a constant energy per internal layer, rather than a factor growing with learner width.
+
+Let $\nu$ be a Gaussian law centered at this mean network. Multiply all first-layer prior variances by $p_1$, and leave every internal and readout variance unchanged. Exact Gaussian relative entropy gives
+\begin{equation}
+ \frac2\omega\KL(\nu\Vert\mu)
+ =E_{H,N}+\tau^2(d+1)(p_1-1-\log p_1)
+ \le E_{H,N}+(d+1)[\log(2/p)+(H-1)\log\alpha]
+ \le c_1H.
+ \label{eq:geometric-kl}
+\end{equation}
+Here and below constants may depend on $d,C,B,p$. The only variance suppression occurs in the first layer. Its logarithmic cost is proportional to depth.
+
+\subsection{The native Gaussian bulk remains small}
+Fix an input. Let $q_l=N^{-1}\E_\nu\|h^l\|^2$, and let $e_l$ be the largest expected squared error of an active clone relative to its comparison neuron's hidden value. The first layer satisfies
+\[
+ q_1\le p_1+2p_1=3p_1,\qquad e_1\le2p_1.
+\]
+The active contribution to $q_l$ is at most $p_l$, because the activation is bounded by one. Each inactive current row has zero mean. Conditional on the preceding layer its preactivation variance is $\tau^2\|h^{l-1}\|^2/N$. Since $|\phi(t)|\le|t|$, it follows that
+\[
+ q_l\le p_l+\tau^2q_{l-1}\le p_l+q_{l-1}\le3p_l.
+ \label{eq:geometric-q}
+\]
+The final inequality follows inductively from $p_l=\alpha p_{l-1}$ and $\alpha\ge2$.
+
+For an active row, the deterministic part of its preactivation error is a weighted sum of preceding clone errors whose absolute coefficient sum is at most $A$. Its $L^2(\nu)$ norm is therefore at most $A\sqrt{e_{l-1}}$. The current centered Gaussian row noise is independent of the preceding layer. Its cross term with that deterministic error has expectation zero and its expected variance is $\tau^2q_{l-1}$. Applying the activation's Lipschitz bound gives
+\[
+ e_l\le A^2e_{l-1}+\tau^2q_{l-1}
+     \le A^2e_{l-1}+3p_{l-1}\le2p_l.
+ \label{eq:geometric-e}
+\]
+No independence between clones is assumed. The last inequality uses the chosen $\alpha$.
+
+The deterministic readout coefficients have total absolute sum at most $A$, so its expected squared error is at most $A^2e_H$. The independent centered readout noise adds variance $\tau^2q_H/N$. Thus, uniformly over the input cube,
+\begin{equation}
+ \E_\nu|z_w(x)-g(x)|^2
+ \le A^2e_H+\tau^2q_H/N
+ \le(2A^2+3)p.
+ \label{eq:geometric-output-error}
+\end{equation}
+Choose $p$ sufficiently small that the square root of the last quantity is at most $\epsilon/[128(CB+1)]$. Since $|g|\le CB$ and labels are bounded by one, this makes the comparison's excess empirical loss at most $\epsilon/32$ for every sample. Combining \eqref{eq:geometric-kl} with the posterior variational identity and choosing $\ell_+$ sufficiently small yields
+\[
+ \int\widehat R_S(z_w)d\Pi\le\widehat R_S(g)+\epsilon/16
+\]
+at every width above the stated exponential threshold. Below it, the ordinary clone neighborhood of Lemma~\ref{lem:teacher} gives normalized entropy $O(H^2)$; choosing $\ell_-$ small yields the same conclusion with $\lambda=\ell_-/H^2$.
+
+\subsection{A common finite-cover argument for all widths and scales}
+Use the total operator energy
+\[
+ Q_{\mathrm{op}}=\|W^1\|_F^2/N+
+       \sum_{l=2}^H\|W^l\|_\op^2+N\|v\|^2.
+\]
+Its Gaussian moment estimate \eqref{eq:relu-total-op-mgf} depends only on the weight law and applies here. The deterministic evidence bound $Z\ge e^{-\omega/\lambda}$ and prior bound $\E_\mu R(z)^2\le24$ imply that the posterior raw-risk contribution outside
+\[
+ Q_{\mathrm{op}}\le T_0H\quad(N\ge N_*),\qquad
+ Q_{\mathrm{op}}\le T_0H^2\quad(N<N_*)
+\]
+is at most $\epsilon/64$ for sufficiently large fixed $T_0$. Indeed Cauchy--Schwarz bounds that contribution by
+\[
+ \sqrt{24}\exp[\omega/\lambda+C_0N(H+1)/2-c_0\omega Q_*/2],
+\]
+where $Q_*$ is the appropriate cutoff. Use $N\le\omega$ and the two specified likelihood scales.
+
+At large widths the raw output amplitude is at most $\sqrt{T_0H}$. AM--GM bounds its input Lipschitz constant by
+$(T_0H/(H+1))^{(H+1)/2}\le e^{c_2H}$. A spatial cover at fixed dimension has log cardinality $e^{O(H)}$. Its square-loss envelope is polynomial in $H$, so finite-class Hoeffding still costs only $e^{O(H)}$ samples.
+
+At smaller widths, $N<e^{aH}$ and the good-set raw amplitude is at most $\sqrt{T_0}H$. There are $e^{O(H)}$ parameters. Their coordinate magnitudes are at most $\sqrt{NT_0H^2}$, and a telescoping bound gives a parameter-to-output Lipschitz constant whose logarithm is $O(H^2)$. A union of finite parameter grids over these widths therefore has log cardinality $e^{O(H)}$. Its loss envelope is again polynomial in $H$. Both dictionaries are independent of $\tau$ and of the sample.
+
+Choose their uniform output accuracy small enough that loss perturbations on the stated amplitude intervals are at most $\epsilon/64$; accuracy $c_\epsilon/H$ suffices for both. This only adds logarithmic factors to the cover sizes. Finite-class concentration gives one event on which every good network has population loss at most its empirical loss plus $\epsilon/8$, for all widths and scales. Integrate, use the empirical objective bound and the raw-risk tail, and apply scalar concentration to a fixed population minimizer in the compact comparison class. Increasing $c$ absorbs all constants. This proves Theorem~\ref{thm:geometric-depth}, and Jensen gives its ordinary posterior-mean conclusion.

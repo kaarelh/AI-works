@@ -1,0 +1,232 @@
+\section{A nearly inverse-sample raw oracle with very light readout tails}
+\label{sec:asinh-readout}
+A further continuous readout law improves the statistical rate without
+bounding the learner's output. Keep the Student hidden factors, Gamma
+hidden-neuron gates, and tanh hidden activation of the principal model.
+Independently draw a final Dirichlet vector and readout factors
+\[
+ P\sim\operatorname{Dirichlet}(\kappa/N,\ldots,\kappa/N),\qquad
+ U_0,U_1,\ldots,U_N\stackrel{\rm iid}=\operatorname{arsinh}(Z),
+ \quad Z\sim N(0,1),
+\]
+and use the raw output
+\begin{equation}
+ z_w(x)=U_0+\sum_{j=1}^NP_jU_jh_j^H(x).
+ \label{eq:asinh-readout}
+\end{equation}
+The coefficient is $P_jU_j$, rather than $\sqrt{P_j}U_j$.
+The factor density is
+\[
+ r(u)=(2\pi)^{-1/2}\cosh(u)\exp[-\sinh^2(u)/2].
+\]
+It is positive on the entire real line. Thus the induced weight prior
+still has full support on the fixed finite dense architecture, and all
+outputs remain unbounded. The prior does not depend on sample count.
+Its readout tails are substantially lighter than Gaussian tails; this
+is a substantive modeling choice, not a consequence for an unchanged
+Gaussian readout.
+
+\paragraph{The scalar distribution.}
+This factor law is an instance of the established sinh-normal
+family~\cite{sinh-normal}: under the convention
+$Y=\ell+s\operatorname{arsinh}(\alpha Z/2)$, it has shape
+$\alpha=2$, location $\ell=0$, and scale $s=1$.
+The scalar family predates the present construction; the guarantees
+here concern its specified Dirichlet combination as a neural readout.
+
+\begin{lemma}[Logarithmic native supremum moments]
+\label{lem:asinh-native}
+There is a constant $A$ such that, uniformly in $H,d,N$,
+\[
+ \left\|\sup_x|z_w(x)|\right\|_{L^q(\mu_N)}
+       \le A\log(q+1),\qquad q\ge1.
+\]
+The prior is centered at every input.
+\end{lemma}
+\begin{proof}
+The bound $|\operatorname{arsinh}z|\le\log(1+2|z|)$ and
+$\log(1+t)\le\log(1+a)+t/a$ for $a>0$ give, at $a=\sqrt q$,
+$\|U_j\|_q\le C\log(q+1)$, since $\|Z\|_q\le C\sqrt q$.
+Conditional on $P$, Minkowski's inequality and $\sum_jP_j=1$ yield
+\[
+ \left\||U_0|+\sum_jP_j|U_j|\right\|_q
+       \le2\|U_0\|_q.
+\]
+The same bound holds after averaging $P$, and $|h_j^H|\le1$.
+Symmetry of the independent readout factors proves centering.
+\end{proof}
+
+\begin{lemma}[Comparison at bounded readout variation]
+\label{lem:asinh-comparison}
+Let a same-depth tanh comparator have width at most $m\le N$, hidden
+coefficient cap $B\ge1$, raw readout $b_g+\sum_{j=1}^kv_jh_{g,j}$,
+and
+\[
+ \sum_j|v_j|\le1,\qquad |b_g|\le1.
+\]
+For every $0<r\le1$, a deterministic comparison law $\rho_r$ has
+\[
+ \E_{\rho_r}\|z_w-g\|_\infty^2\le r,\qquad
+ \KL(\rho_r\|\mu_N)
+ \le C Q_g\log\frac{C(m+1)(B+2)W}{r},
+\]
+where $Q_g=P_g+V_g+H$, with $P_g$ the number of coefficient positions
+(including biases) in the selected full blocks and $V_g$ the number
+of hidden vertices, and
+$W=(H+2)\{C(d+m+2)(B+2)\}^{H+2}$.
+Constants depend only on the fixed hidden-factor law and gate
+concentration. They are independent of width, depth and dimension.
+The readout restriction is solely on the comparison implementation;
+it is not a support restriction on the learner.
+\end{lemma}
+\begin{proof}
+Use the hidden-layer comparison construction at scalar precision
+$\epsilon$. Write $L=\sum_j|v_j|$ and choose final selected latent
+Gamma gate centers
+\[
+ w_j=\frac{|v_j|+1/k}{L+1}.
+\]
+They sum to one, satisfy $w_j\ge1/(2k)$, and have
+$|v_j|/w_j\le L+1\le2$. Put each selected latent gate uniformly
+within relative error $\epsilon$ of $w_j$, and condition the sum of
+all inactive final Gamma gates to be at most $\epsilon^2$.
+This costs $k\log N+Ck\log(C/\epsilon)$ plus
+$C\log(C/\epsilon)$, before placement averaging. Take
+$\epsilon\le c/(m+1)$, so selected gates exceed $1/(4k)$ whereas
+all inactive gates are smaller. The same disjoint-group decoding and
+placement entropy cancellation apply as in the normalized Gaussian
+readout comparison, including the small-$N$ case.
+
+The total latent gate mass is $1+O(\epsilon)$, so selected normalized
+masses are $w_j(1+O(\epsilon))$ and inactive normalized mass is
+$O(\epsilon^2)$. Put each selected factor uniformly within
+$\epsilon$ of $v_j/w_j$ and the output bias within $\epsilon$ of
+$b_g$. The density $r$ is bounded below on $[-3,3]$, so these costs
+are only $C(k+1)\log(C/\epsilon)$.
+Every selected effective readout coefficient differs from $v_j$ by
+$C\epsilon(1+|v_j|)$.
+
+The inactive contribution has uniform $L^2$ norm at most
+$C\epsilon^2$: conditional on its gate masses, Minkowski gives
+$\|\sum_{j\,\mathrm{inactive}}P_j|U_j|\|_2
+\le\|U_1\|_2\sum_{j\,\mathrm{inactive}}P_j$.
+All hidden features are bounded by one and final gates are independent
+of their own features. The existing hidden comparison error and the
+selected coefficient errors therefore give raw uniform RMS error
+at most $CW\epsilon$. Choose
+$\epsilon=\sqrt r/[C(m+1)(B+2)W]$ and substitute in the entropy
+bound. No prior parameter depends on the comparator.
+\end{proof}
+
+\begin{theorem}[A raw logarithmic-temperature oracle]
+\label{thm:logmoment-raw-oracle}
+Suppose a centered prior on real functions satisfies
+$\|\sup_x|f(x)|\|_q\le A\log(q+1)$ for every $q\ge1$,
+and labels obey $\E\exp(Y^2/K_Y^2)\le2$.
+There are constants $c,C$, depending only on $A,K_Y$, such that
+one may choose
+\[
+ q_n=c(n+1),\qquad M_n=eA\log(e+q_n),\qquad
+ T_n=256M_n^2\asymp\log^2(n+2).
+\]
+For the actual raw Gaussian-likelihood posterior at this temperature,
+let $\bar f_{S_n}$ be its ordinary mean after all $n$ observations.
+If $\|g\|_\infty\le2$ and a deterministic law $\rho$ has
+\[
+ \E_\rho\|f-g\|_\infty^2\le(n+1)^{-4},\qquad
+ \KL(\rho\|\mu)\le K_n(g),
+\]
+then
+\begin{equation}
+ \E R(\bar f_{S_n})
+ \le R(g)+\frac{C\log^2(n+2)}{n+1}K_n(g)
+                        +\frac C{(n+1)^2}.
+ \label{eq:asinh-generic-oracle}
+\end{equation}
+The same conclusion with comparison risk $\rho R$ and entropy
+$\KL(\rho\|\mu)$ holds for any law fixed before observing the sample and supported on
+$\{\|f\|_\infty\le M_n\}$; no uniform target approximation is
+then required. Neither the actual prior nor its posterior mean is
+truncated.
+\end{theorem}
+\begin{proof}
+Increase $c$ so that $M_n\ge4$, $T_n\ge2K_Y^2$, and
+\[
+ q_n\ge8n(V+K_Y^2)/T_n+C\log(n+2)+C\log(1+M_n),
+ \qquad V=A^2\log^2 3,
+\]
+for all $n\ge1$. This is possible because $q_n$ is linear in $n$,
+whereas $n/T_n=O(n/\log^2(n+2))$, with constants improved by
+increasing $c$. Markov at moment $q_n$ bounds
+$\mu\{\|f\|_\infty>M_n\}\le e^{-q_n}$.
+
+Condition the prior on $E_n=\{\|f\|_\infty\le M_n\}$ only for
+the proof. The comparison has $\rho(E_n^c)\le
+4(n+1)^{-4}/M_n^2\le1/2$, so its conditioned entropy is at most
+$2K_n(g)$ and its risk is at most $R(g)+C(n+1)^{-2}$.
+The bounded finite-variance leave-one-out lemma gives auxiliary
+posterior-mean risk at most
+\[
+ R(g)+\frac{2T_nK_n(g)}{n+1}+C(n+1)^{-2}
+       +4\E[Y^2\mathbf1_{\{|Y|>M_n\}}].
+\]
+The label-tail term is $O((n+1)^{-2})$ after the same constant
+increase, since $M_n^2$ grows as $\log^2(n+2)$.
+
+For clarity, the transfer back to the actual raw posterior is uniform
+over the comparison. Centering gives its normalizer bound
+$Z_S\ge\exp[-(nV+\sum_iY_i^2)/T_n]$.
+If $m_S,m_{S,E}$ denote the actual and auxiliary means, then
+\[
+ \|m_S-m_{S,E}\|_\infty
+ \le C_A(1+M_n)
+ \exp\{(nV+\textstyle\sum_iY_i^2)/T_n-q_n/2\}=:D_S.
+\]
+This uses Cauchy--Schwarz and the fixed native second moment on
+$E_n^c$. The sub-Gaussian label hypothesis implies
+$\E e^{2\sum_iY_i^2/T_n}\le
+\exp(2nK_Y^2\log2/T_n)$.
+The choice of $q_n$ consequently gives
+$\E[2(M_n+\E|Y|)D_S+D_S^2]\le C(n+1)^{-2}$.
+The pointwise risk comparison
+$R(m_S)\le R(m_{S,E})+2(M_n+\E|Y|)D_S+D_S^2$
+finishes the proof.
+For a comparison already supported on $E_n$, its relative entropy
+against the conditioned prior is no larger than its original entropy;
+use it directly in the same auxiliary theorem and transfer.
+\end{proof}
+
+\begin{corollary}[Nearly inverse-sample neural approximation]
+\label{cor:asinh-neural}
+For the fixed full-support prior \eqref{eq:asinh-readout}, arbitrary
+IID inputs in $[-1,1]^d$, and marginal sub-Gaussian labels, use the
+single deterministic temperature from
+Theorem~\ref{thm:logmoment-raw-oracle}.
+At every prescribed finite learner width $N\ge m$, its ordinary raw
+posterior mean obeys
+\[
+ \E R(\bar z_{S_n})\le R(g)+
+       \frac{C\log^2(n+2)}{n+1}\mathcal K_n^{\rm light}(g)
+                     +\frac C{(n+1)^2},
+\]
+for every same-depth tanh comparator of width at most $m$, hidden
+coefficient cap $B$, and readout variation and bias at most one, where
+\begin{align*}
+ \mathcal K_n^{\rm light}(g)=C Q_g\big[&(H+2)
+          \log\{C(d+m+2)(B+2)\}\\
+       &+\log\{C(H+2)(m+1)(B+2)(n+1)\}\big].
+\end{align*}
+The constants are independent of $d,H,N,m,B$.
+This is a leading-coefficient-one expected-risk oracle with
+$\widetilde O(K/n)$ remainder; the learner imposes neither a bounded
+output link nor a hard readout constraint. The comparison restriction
+is substantive. Large unrestricted readout variation can have an
+exponential rather than polynomial cost under this very light-tailed
+factor law. The likelihood variance grows as $\log^2 n$; this result
+makes no fixed-temperature agnostic assertion.
+\end{corollary}
+\begin{proof}
+Lemma~\ref{lem:asinh-native} gives the native moment hypothesis,
+and Lemma~\ref{lem:asinh-comparison} at $r=(n+1)^{-4}$ gives the
+resource above. Since $|g|\le2$, the raw oracle applies directly.
+\end{proof}

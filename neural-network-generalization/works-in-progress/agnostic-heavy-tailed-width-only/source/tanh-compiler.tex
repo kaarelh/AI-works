@@ -1,0 +1,78 @@
+\section{Compiling Boolean-input ReLU teachers into tanh networks}
+\label{sec:tanh-compiler}
+We use the coefficient-free Boolean circuit compiler proved in~\cite{boolean}. Its exact imported assertion is the following. For a width-$C$, hidden-depth-$h$ ReLU network $g$ with arbitrary finite real coefficients and biases on $\{-1,1\}^d$, let
+\[
+ K=4(d+1)(C+1)^h,\qquad t=\lceil\log_2(32/\varepsilon)\rceil.
+\]
+There is a numerical $b$ and an unweighted-majority Boolean circuit of depth at most $b(h+1)$ and size, including wires, at most $(K+t+2)^b$. A linear readout of its Boolean output bits has absolute coefficient sum less than four, takes values in $[-1,1]$, and approximates $s(g)$ uniformly to error $\varepsilon/2$. Here $s$ clips to $[-1,1]$. The construction uses small integer representations of threshold functions on lifted Boolean path features and constant-depth integer arithmetic. It is existential and nonuniform; its resource bounds are independent of the original coefficient magnitudes.
+
+\begin{lemma}[A bounded-coefficient tanh implementation]
+\label{lem:tanh-Boolean-compiler}
+After increasing a numerical $b$, the same teacher has a tanh network $q$, with input $(1,x)$, no internal biases, and a linear readout, satisfying
+\[
+ \sup_{x\in\{-1,1\}^d}|s(q(x))-s(g(x))|\le\varepsilon,
+ \quad H_*\le b(h+1),\quad
+ m_*\le(K+t+2)^b,\quad
+ B_*\le(K+t+2)^b.
+\]
+Here $m_*$ is hidden width and $B_*$ bounds every coefficient. The construction extends to every hidden depth $H\ge H_*$ with the same bounds, after one fixed enlargement of $b$.
+\end{lemma}
+\begin{proof}
+Let $S$ bound the size and fan-in of the imported Boolean circuit. Use the sign encoding $\sigma=2b-1\in\{-1,1\}$. A gate with $r$ inputs and Boolean threshold $j$ has signed affine input
+\[
+ \ell(\sigma)=\sum_{i=1}^r\sigma_i-(2j-r-1).
+\]
+Its desired sign has margin at least one on exact input bits. AND, OR, and majority are such gates; NOT is negation of one sign.
+
+An exact constant wire is available: put $c=\tanh(1)$ in the first hidden layer using the constant input, and copy it by weight $1/c$ thereafter. Since $\tanh(c/c)=c$, its value remains exactly $c$ in the implementing network. Affine offsets are represented by weights from this wire, divided by $c$. In the first hidden layer, use the input constant directly instead.
+
+Choose
+\[
+ \delta=\min\{\varepsilon/16,\,1/[8(S+1)]\},\qquad
+ k=\log(2/\delta).
+\]
+Replace a threshold gate by $\tanh(k\ell)$, using the constant wire for its offset. If all incoming signed bits have error at most $\delta$, the affine input changes by at most $r\delta\le1/8$. Its sign is correct and its absolute value is at least $7/8$. Consequently the tanh output differs from the desired sign by at most $2e^{-7k/4}\le\delta$. Negation and copying use $-\tanh(k\sigma)$ and $\tanh(k\sigma)$, respectively, with the same bound. Induction therefore keeps the error at most $\delta$ at every circuit layer; errors do not add across depth. Insert copying gates to layer the circuit or pad to the prescribed larger hidden depth.
+
+A Boolean readout $\sum_j a_jb_j$ becomes
+$\tfrac12\sum_j a_j\sigma_j+\tfrac12\sum_j a_j$, using the exact constant wire. The nonconstant coefficient sum is less than two; the coefficient on the constant wire has magnitude less than $2/c$. Its output error is therefore at most $2\delta$. Final clipping cannot increase error. Combine this with the imported $\varepsilon/2$ approximation.
+
+Every threshold coefficient has magnitude at most $k$, and its offset coefficient at most $(S+1)k/c$. The width is at most $S+1$ and depth is the Boolean depth plus one if needed to initialize the constant wire. Since $k=O(\log S+\log(1/\varepsilon))$ and $S\le(K+t+2)^b$, all claimed bounds follow after increasing $b$. The same constant-wire and copying construction pads depth without changing width or the error tolerance.
+\end{proof}
+
+\section{A narrow tanh approximation with unrestricted coefficients}
+\label{sec:narrow-tanh-embedding}
+The preceding compiler bounds coefficients but may be much wider than the original teacher. For a second, finite-parameter certificate, we instead need a narrow approximation, with no coefficient bound.
+
+\begin{lemma}[A narrow approximate embedding of ReLU networks]
+\label{lem:narrow-tanh-embedding}
+Let $g$ be any width-$C$, hidden-depth-$h$ ReLU network with arbitrary finite coefficients and biases on $[-1,1]^d$. For every $\eta>0$ and every $H\ge2h$, there is a tanh network $q$ with hidden width at most $2C+1$, hidden depth $H$, input $(1,x)$, no internal biases, and a scalar linear readout, such that
+\[
+ \sup_{x\in[-1,1]^d}|q(x)-g(x)|\le\eta.
+\]
+Its coefficients are finite but are not bounded independently of the original teacher or $\eta$.
+\end{lemma}
+\begin{proof}
+We first approximate one scalar ReLU operation on an arbitrary fixed compact interval $[-R,R]$, with two tanh units in each of two layers. Write $\phi=\tanh$. The function
+\[
+ F_{a,k}(z)=z\phi'\big(a[\tanh(kz)-1]\big)
+          =z\operatorname{sech}^2\big(a[\tanh(kz)-1]\big)
+\]
+approximates $\operatorname{ReLU}(z)$ uniformly as follows. Fix a small $\delta>0$. On $|z|\le\delta$, the error is at most $\delta$, because $0\le\phi'\le1$. For $z\le-\delta$, the argument is at most $-a$, so $|F_{a,k}(z)|\le4Re^{-2a}$. Choose $a$ large enough to make this small. On $z\ge\delta$, $a[\tanh(kz)-1]$ converges uniformly to zero as $k\to\infty$, so $\phi'$ converges uniformly to one. Choosing $k$ sufficiently large makes the error small there as well.
+
+The first physical layer computes
+\[
+ u=\tanh(\tau z),\qquad v=\tanh(kz).
+\]
+Put $x=u/\tau$. As $\tau\downarrow0$, $x$ converges uniformly to $z$ on $[-R,R]$. The second layer computes the two features
+\[
+ h_\pm=\tanh\big(a(v-1)\pm s x\big).
+\]
+Their linear reconstruction $(h_+-h_-)/(2s)$ converges uniformly to
+$x\phi'(a(v-1))$ as $s\downarrow0$. This is the centered finite-difference formula for the first derivative, uniformly on the relevant compact rectangle. Since $|\phi'|\le1$, replacing $x$ by $z$ changes the limiting value by at most $|x-z|$. First choose $\delta,a,k$, then $\tau$, and finally $s$. The resulting two-layer block approximates ReLU to any desired error on the fixed interval, using only finite coefficients.
+
+Use this construction in parallel for the $C$ preactivations of each teacher layer. Both physical layers have at most $2C$ nonconstant neurons. Each virtual ReLU output is a linear combination of two second-layer features; fold those reconstructions into the next block's input weights. Every original coefficient is finite and intermediate ranges are compact. Induction and continuity therefore let the block errors be chosen small enough that final error is at most $\eta$. Fold the final teacher readout into the physical linear readout.
+
+Carry the exact constant $c=\tanh(1)$ from Lemma~\ref{lem:tanh-Boolean-compiler}. It implements original biases and the offset $-a$ in the derivative block, using one extra neuron per layer. This gives width at most $2C+1$ and depth $2h$.
+
+For larger prescribed depth, insert approximate identity layers: on a bounded intermediate vector, $\tanh(\tau z)/\tau\to z$ uniformly as $\tau\downarrow0$, and fold $1/\tau$ into the next matrix or readout. Keep the exact constant wire separately. There are finitely many inserted layers, so their errors can be made arbitrarily small without adding width. This proves the claim.
+\end{proof}

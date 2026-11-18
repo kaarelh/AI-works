@@ -1,0 +1,166 @@
+\section{Sharp exponential moments and a finite-set entropy floor}
+\label{sec:sharp-mgf}
+A heat-equation calculation sharpens the tail constant and gives an entropy inequality simultaneously on any finite set of inputs. This upper bound does not require the inputs to have equal norm.
+
+\begin{lemma}[A scalar heat supersolution]
+\label{lem:heat}
+For $3/2\le\theta<2$, there is an absolute $c_*>0$ such that, for every $0\le q\le1$,
+\begin{equation}
+ \log\E\exp\{\theta\tanh^2(\sqrt qZ)\}
+ \le\theta q-\theta\kappa_\theta q^2,
+ \qquad \kappa_\theta=(2-\theta)c_*e^{-2}.
+ \label{eq:heat-bound}
+\end{equation}
+The constant can be chosen so that $0<\kappa_\theta<1/2$.
+\end{lemma}
+\begin{proof}
+Put $f_\theta(x)=e^{\theta\tanh^2x}$ and $u=\tanh^2x$. Direct differentiation gives
+\[
+ \frac{f_\theta''(x)}{2f_\theta(x)}
+ =\theta\{1+(2\theta-4)u+(3-4\theta)u^2+2\theta u^3\}.
+\]
+The quadratic polynomial
+$A(u)=(2\theta-4)+(3-4\theta)u+2\theta u^2$ is convex on $[0,1]$. Its endpoint values are $-2(2-\theta)$ and $-1$. Since $\theta\ge3/2$,
+\[
+ A(u)\le-2(2-\theta),\qquad
+ f_\theta''/2\le\theta f_\theta[1-2(2-\theta)u].
+\]
+Let $M_\theta(q)=\E f_\theta(\sqrt qZ)$. The heat identity gives
+$M_\theta'(q)=\tfrac12\E f_\theta''(\sqrt qZ)$. All derivatives involved are bounded, so differentiation is justified. First $M_\theta'\le\theta M_\theta$ yields $M_\theta(q)\le e^{\theta q}$. Also $F(q)\ge c_*q$ on $[0,1]$, by the lower bound using $\min\{Z^2,1\}$ in Lemma~\ref{lem:inverse-large}. Since $f_\theta\ge1$,
+\[
+ \frac{d}{dq}\log M_\theta(q)
+ \le\theta-2\theta(2-\theta)\frac{F(q)}{M_\theta(q)}
+ \le\theta-2\theta(2-\theta)c_*e^{-2}q.
+\]
+Integrate from zero to $q$. Decreasing $c_*$ if necessary ensures the stated bound on $\kappa_\theta$.
+\end{proof}
+
+\begin{theorem}[Exponential moments at every depth]
+\label{thm:sharp-mgf}
+For the native variance chain and $3/2\le\theta<2$,
+\begin{equation}
+ \log\E_\mu e^{\theta Nq_H}
+ \le\frac{\theta N}{1+\kappa_\theta(H-1)}.
+ \label{eq:sharp-variance-mgf}
+\end{equation}
+For $0<t<2$, put
+\[
+ \theta_t=\max\{3/2,t^2/2\},\qquad
+ D_H(t)=\frac{t^2/2}{1+\kappa_{\theta_t}(H-1)}.
+\]
+Then for every input $x$,
+\begin{equation}
+ \log\E_\mu e^{tNz(x)}\le N D_H(t),\qquad
+ \log\E_\mu e^{-tNz(x)}\le N D_H(t).
+ \label{eq:sharp-output-mgf}
+\end{equation}
+For each fixed $t<2$, $D_H(t)=O_t(1/H)$.
+\end{theorem}
+\begin{proof}
+Lemma~\ref{lem:heat} and conditional row independence give
+\[
+ \E[e^{\theta Nq_{\ell+1}}\mid q_\ell=q]
+ \le e^{\theta Nq-\theta\kappa_\theta Nq^2}.
+\]
+The function
+\[
+ g(y)=y\exp[-\beta(\log y)^2],\qquad
+ \beta=\frac{\kappa_\theta}{\theta N},
+\]
+is concave for $1\le y\le e^{\theta N}$. Indeed its second derivative has the sign of
+$2\beta(\log y)^2-\log y-1$, which is negative because
+$2\beta\log y\le2\kappa_\theta<1$.
+Writing $M_\ell=\E e^{\theta Nq_\ell}$, Jensen therefore gives
+$M_{\ell+1}\le g(M_\ell)$. Thus
+\[
+ m_\ell:=\frac{\log M_\ell}{\theta N}
+ \quad\text{satisfies}\quad
+ m_{\ell+1}\le m_\ell-\kappa_\theta m_\ell^2,
+ \qquad m_1\le1.
+\]
+Taking reciprocals proves~\eqref{eq:sharp-variance-mgf}. Conditional on hidden weights, $z(x)$ is a centered Gaussian with variance $q_H(x)/N$, so its exponential moment equals the variance-chain moment with parameter $t^2/2$. If $t^2/2<3/2$, apply Jensen or H\"older to the larger parameter $\theta_t$. This proves~\eqref{eq:sharp-output-mgf}. The first hidden norm is always at most one, so the bound is uniform over inputs without an input-norm assumption.
+\end{proof}
+
+\begin{corollary}[A sharp finite-set entropy bound]
+\label{cor:sup-entropy}
+For a finite set $\mathcal A$ of $m\ge1$ inputs, let
+$\|z\|_{\infty,\mathcal A}=\max_{x\in\mathcal A}|z(x)|$. Every $\rho\ll\mu$ and $0<t<2$ satisfy
+\begin{equation}
+ \frac2N\KL(\rho\|\mu)
+ \ge2t\E_\rho\|z\|_{\infty,\mathcal A}
+       -2D_H(t)-\frac{2\log(2m)}N.
+ \label{eq:sup-entropy}
+\end{equation}
+The expectation may be interpreted by truncation. Thus, as depth and width grow with $\log m=o(N)$, the entropy penalty has coefficient arbitrarily close to four in front of the expected maximum output magnitude.
+\end{corollary}
+\begin{proof}
+The exponential of a maximum is at most the sum of exponentials. Using both signs in~\eqref{eq:sharp-output-mgf},
+\[
+ \E_\mu e^{tN\|z\|_{\infty,\mathcal A}}
+ \le2m e^{ND_H(t)}.
+\]
+The entropy variational inequality gives~\eqref{eq:sup-entropy}, first for truncations and then by monotone convergence.
+\end{proof}
+
+For a Gaussian-likelihood posterior with free energy
+$F_S=\E_\Pi\widehat R_S+(2\lambda/N)\KL(\Pi\|\mu)$,
+Corollary~\ref{cor:sup-entropy} gives the exact objective inequality
+\[
+ \E_\Pi[\widehat R_S+2t\lambda\|z\|_{\infty,S}]
+ \le F_S+2\lambda D_H(t)+\frac{2\lambda\log(2n)}N.
+\]
+This is an entropy lower bound. Turning it into a sample-complexity conclusion would also require a matching function comparison on the full input domain.
+
+\section{The leading constant in the one-output comparison}
+\label{sec:sharp-comparison}
+The partial variance recovery also gives the matching leading constant.
+
+\begin{theorem}[Asymptotically sharp amplitude cost]
+\label{thm:sharp-comparison}
+There are absolute constants $a_0,C>0$ such that for
+$0<|a|\le a_0$, $H\ge C/|a|$, and $N\ge8$, the comparison law can be chosen with
+\begin{equation}
+ \frac2N\KL(\rho\|\mu)
+ \le4|a|+Ca^2+CH/N,
+ \qquad \E_\rho z=a,\qquad
+ \E_\rho(z-a)^2\le\frac{|a|}{2N}.
+ \label{eq:sharp-comparison}
+\end{equation}
+Conversely, for every $\varepsilon>0$ there is $C_\varepsilon<\infty$ such that every law with $\E_\rho z=a$ satisfies
+\begin{equation}
+ \frac2N\KL(\rho\|\mu)
+ \ge(4-\varepsilon)|a|-C_\varepsilon/H-2\log2/N.
+ \label{eq:sharp-comparison-lower}
+\end{equation}
+\end{theorem}
+\begin{proof}
+Gaussian averaging of the Taylor expansion of $\tanh^2$ gives
+\[
+ F(q)=q-2q^2+O(q^3)\qquad(q\downarrow0),
+\]
+with an absolute uniform remainder on a small fixed interval. One elementary justification is
+$\tanh^2x=x^2-(2/3)x^4+O(x^6)$ globally, with a larger constant outside $[-1,1]$, followed by the Gaussian sixth moment.
+
+Use the native-first-layer schedule of Theorem~\ref{thm:small-amplitude}, now stopping the reverse trajectory at the first $q_m\le|a|/2$. Then
+\[
+ q_m=\frac{|a|}{2}(1+O(|a|)),\qquad q_m\le|a|/2.
+\]
+For a reverse transition indexed by $j$,
+\[
+ \alpha_j=\frac{q_{j-1}}{q_{j+1}}=1+4q_j+O(q_j^2),\qquad
+ h(\alpha_j)=8q_j^2+O(q_j^3)
+            =4(q_j-q_{j+1})+O(q_j^3).
+\]
+Since $\sum_{j\ge m}q_j^3\le Cq_m^2$, its total deterministic reverse cost is at most $4q_m+Cq_m^2$. A possible repeated endpoint costs $O(q_m^2)$. The feedback contribution remains $CH/N$.
+
+The readout costs
+\[
+ \frac{a^2}{q_m}(1+C/N)
+ \le2|a|+Ca^2+C|a|/N.
+\]
+Combining it with $4q_m\le2|a|$ proves the entropy upper bound, and the readout variance is $q_m/N\le|a|/(2N)$. The term $C|a|/N$ is absorbed into $CH/N$.
+
+For the lower bound apply~\eqref{eq:sup-entropy} to one input, choose $t<2$ with $2t\ge4-\varepsilon$, and use $\E|z|\ge|\E z|=|a|$. The bound $D_H(t)=O_t(1/H)$ proves~\eqref{eq:sharp-comparison-lower}.
+\end{proof}
+
+In particular, the leading precision-normalized entropy cost tends to $4|a|$ when $a\to0$, $H|a|\to\infty$, and $H/(N|a|)\to0$. The corresponding prior large-deviation exponent is $2N|a|$. Theorem~\ref{thm:laplace-tails} states a two-sided neighborhood version with absolute constants; the sharp moment and comparison estimates above give leading constants arbitrarily close to two after the neighborhood radius is made a sufficiently small fraction of $|a|$ and width is increased accordingly.

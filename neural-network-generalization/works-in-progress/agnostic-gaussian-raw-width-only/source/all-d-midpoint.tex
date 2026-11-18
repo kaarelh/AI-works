@@ -1,0 +1,406 @@
+\section{An arbitrary-input-law oracle for bounded monotone activations}
+\label{sec:all-d-product-midpoint}
+The random-subset midpoint construction also gives a simpler oracle in
+arbitrary input dimension. It uses the bounded ridge-feature class rather
+than a spatial smoothness assumption on the input distribution.
+
+Fix a bounded, nonconstant, nondecreasing, globally Lipschitz activation
+$\phi:\mathbb R\to\mathbb R$. Tanh, logistic sigmoid, and hardtanh are
+examples. Constants below may depend on its fixed supremum $K$ and
+Lipschitz constant. Let $X$ have any probability law on $[-1,1]^d$ and
+let $|Y|\le1$ and $d\ge1$. Put $D=d+1$ and $\widetilde x=(x,1)$.
+Let $a_0=d$ for the original first-layer convention; the alternative
+$a_0=d+1$ is also covered. The learner is
+\[
+ f_w(x)=N^{-1}\sum_{j=1}^N G_j\phi(\theta_j\cdot\widetilde x),
+ \qquad
+ \theta_j\sim N(0,\nu I_D/a_0),\quad G_j\sim N(0,\nu),
+ \quad0<\nu\le1,
+\]
+with all coordinates independent. Thus the actual readout coefficients
+$G_j/N$ have variance $\nu/N^2$. Define
+\[
+ Q_G=N^{-1}\sum_jG_j^2,\qquad \omega=N/\nu,\qquad
+ d\Pi_\lambda=Z_\lambda^{-1}
+ e^{-\omega\widehat R(f_w)/(2\lambda)}d\mu.
+\]
+Here $R(f)=\mathbb E(f(X)-Y)^2$ and
+$\widehat R(f)=n^{-1}\sum_i(f(X_i)-Y_i)^2$.
+The physical Gaussian observation variance is $n\lambda\nu/N$.
+Both the likelihood and the returned mean use the unrestricted raw output.
+
+Let a deterministic comparison network be
+\[
+ g(x)=\sum_{i=1}^C c_i\phi(\vartheta_i\cdot\widetilde x),
+ \qquad \|g\|_\infty\le1.
+\]
+The supremum is over the input cube. If $V=\sum_i|c_i|>0$, set
+$p_i=|c_i|/V$, omitting zero coefficients, and define
+\[
+ J_g=a_0\sum_i p_i\|\vartheta_i\|_2^2,
+ \qquad
+ A_n(g)=1+V^2+J_g+D\log(e n(V+1)).                       \tag{AD1}
+\]
+For $g=0$ use $V=J_g=0$. The term $J_g$ is measured in the actual
+fan-in-normalized incoming Gaussian energy. In particular, if every
+teacher coefficient has absolute value at most $B\ge1$, then
+\[
+ A_n(g)\le C_\phi\{1+C^2B^2+D^2B^2+D\log(e n(CB+1))\}. \tag{AD2}
+\]
+An incoming row-norm cap $B_{\rm in}$ instead gives
+$J_g\le a_0 B_{\rm in}^2$, independently of the teacher width.
+
+\begin{lemma}[Capacity of the bounded ridge hull]
+\label{lem:all-d-ridge-hull}
+Let $\mathcal F_q$ be the class of all finite sums
+$\sum_j v_j\phi(\theta_j\cdot\widetilde x)$ with
+$\sum_j|v_j|\le\sqrt q$. On every list of $n$ inputs,
+\[
+ \operatorname{Rad}_n(\mathcal F_q)
+ \le C_\phi\sqrt{Dq/n},\qquad
+ \sup_{f\in\mathcal F_q}\|f\|_\infty\le K\sqrt q.        \tag{AD3}
+\]
+Every learner output belongs to $\mathcal F_{Q_G}$, without any bound
+on incoming weights.
+\end{lemma}
+\begin{proof}
+For a monotone activation, each subgraph test
+$t<\phi(\theta\cdot\widetilde x)$ is a constant test or an affine
+halfspace test in $(x,\phi^{-1}(t))$, with a generalized inverse at
+flat portions. Strict or weak boundary choices give the same VC bound.
+The ridge class therefore has VC-subgraph dimension at most $D+1$.
+The standard VC-subgraph covering bound for a bounded real-valued class
+is $N(\epsilon K,\mathcal H,L^2(P_n))\le(A/\epsilon)^{cD}$,
+with universal $A,c$. Dudley's entropy integral gives worst-case
+empirical Rademacher complexity $C K\sqrt{D/n}$. Adding negatives
+only changes the constant. A signed convex hull does not increase
+Rademacher complexity beyond its radius, proving (AD3).
+Finally $N^{-1}\sum_j|G_j|\le\sqrt{Q_G}$.
+\end{proof}
+
+\begin{lemma}[A common relative-loss event]
+\label{lem:all-d-relative}
+Fix a deterministic $u$ with $\|u\|_\infty\le2$. There is a constant
+$C_\phi$ such that, for $n\ge2$, putting
+\[
+ b_n=\frac{C_\phi(D+1)\log^4(e n/\delta)}n,              \tag{AD4}
+\]
+with probability at least $1-\delta$, simultaneously for all
+$q\le n^{22}$ and $f\in\mathcal F_q$,
+\begin{align}
+ R(f)-R(u)\le{}&\widehat R(f)-\widehat R(u)
+ +\tfrac16\|f-u\|_n^2+c\lambda(q+1)+C_{\phi,c}b_n/\lambda,
+                                                                  \tag{AD5}
+\end{align}
+whenever $n^{-2}\le\lambda\le1$ and $\lambda\ge C_{\phi,c}b_n$.
+The positive constant $c$ may be chosen arbitrarily small by enlarging
+the constants in the likelihood floor and final remainder.
+\end{lemma}
+\begin{proof}
+Write $h=f-u$. Apply the standard smooth-loss Rademacher inequality
+for nonnegative squared loss (Srebro, Sridharan, and Tewari, 2010,
+Theorem~1~\cite{sst}) to the class
+$\mathcal F_q-u$, with response zero. Its Rademacher complexity is
+at most $C_\phi\sqrt{D(q+1)/n}$ and its squared envelope is at most
+$C_\phi(q+1)$. For any fixed small $\eta>0$, Young's inequality gives
+\[
+ (P_X-P_n)h^2\le\eta P_nh^2+C_{\phi,\eta}b_n(q+1).      \tag{AD6}
+\]
+Only this one-sided norm comparison is needed. The invoked smooth-loss
+bound is the usual inequality
+\begin{align*}
+ P h^2-P_nh^2\le{}&C\sqrt{P_nh^2}
+ \left[\log^{3/2}(2n)\operatorname{Rad}_n(\mathcal H)
+       +\sqrt{B\log(1/\zeta)/n}\right]\\
+ &+C\log^3(2n)\operatorname{Rad}_n(\mathcal H)^2
+ +CB\log(1/\zeta)/n.
+\end{align*}
+where $|h|^2\le B$. Its hypotheses are satisfied by the bounded class
+in (AD3).
+
+For the other term, the multiplier $u(X)-Y$ is bounded by three.
+Symmetrization, contraction, (AD3), and bounded-difference concentration
+give
+\[
+ |(P-P_n)((u-Y)h)|\le C_\phi\sqrt{b_n(q+1)}.             \tag{AD7}
+\]
+This argument does not require the multiplier to be independent of $X$:
+contraction is applied conditionally to the observed pairs $(X_i,Y_i)$.
+Apply both inequalities at dyadic radii through $2n^{22}$, including
+radius one, and allocate confidence equally to these $O(\log n)$
+events. This explains the safe logarithmic factor in (AD4), and gives
+one event for all intervening radii.
+
+Use the exact identity
+\[
+ R(f)-R(u)-\widehat R(f)+\widehat R(u)
+ =(P_X-P_n)h^2+2(P-P_n)((u-Y)h).
+\]
+Take $\eta=1/6$. The term $C b_nq$ is absorbed into a prescribed
+small multiple of $\lambda(q+1)$ when $\lambda\ge Cb_n$.
+Young's inequality bounds $C\sqrt{b_n(q+1)}$ by another such multiple
+plus $C b_n/\lambda$.
+\end{proof}
+
+\begin{lemma}[Variation-weighted comparison packs]
+\label{lem:all-d-comparison}
+There is a one-pack comparison law $q_g$ such that its mean function
+$g_\sigma$ is independent of $\nu$,
+\[
+ \|g_\sigma-g\|_\infty\le C_\phi n^{-20},\qquad
+ \mathbb E_{q_g}G^2\le V^2+1,
+ \qquad
+ \nu\operatorname{KL}(q_g\Vert\mu_0)\le C_\phi A_n(g).  \tag{AD8}
+\]
+Consequently, whenever $N\lambda\ge C_\phi$,
+\[
+ \Pi_\lambda[\widehat R(f)-\widehat R(g_\sigma)]
+ +\tfrac13\Pi_\lambda\|f-g_\sigma\|_n^2
+ +c_\phi\lambda\Pi_\lambda Q_G
+ \le C_\phi\lambda A_n(g).                             \tag{AD9}
+\]
+\end{lemma}
+\begin{proof}
+For $V>0$, choose index $i$ with probability $p_i$, then independently
+\[
+ \theta\sim N(\vartheta_i,\sigma^2I_D/a_0),\qquad
+ G\sim N(V\operatorname{sign}c_i,\nu),\qquad
+ \sigma=\frac{n^{-20}}{V+1}.
+\]
+Since $\|\widetilde x\|_2\le\sqrt D$, the incoming perturbation
+changes a ridge in mean by at most
+$\sqrt{D/a_0}\operatorname{Lip}(\phi)\sigma
+ \le\sqrt2\operatorname{Lip}(\phi)\sigma$.
+Thus the mean error is at most $C_\phi V\sigma$.
+The readout second moment is exactly $V^2+\nu$.
+Convexity and the Gaussian entropy formula give
+\[
+ \nu\operatorname{KL}(q_g\Vert\mu_0)
+ \le\tfrac12\{J_g+V^2+D\sigma^2-D\nu
+                     -D\nu\log(\sigma^2/\nu)\},
+\]
+which is bounded by $C_\phi A_n$ because $\nu\log\nu\le0$.
+For $g=0$ simply take the native centered pack law.
+
+Apply the random-subset replacement construction of
+Lemma~\ref{lem:tanh-subset-midpoint}: keeping a uniformly
+chosen $k=\lfloor N/2\rfloor$ posterior packs and replacing the others
+by independent $q_g$ draws contracts relative entropy by $p=k/N$.
+Its conditional variance is bounded by
+\[
+ K^2\left\{\frac{p(1-p)}{N-1}Q_G
+             +\frac{1-p}{N}\mathbb E_{q_g}G^2\right\}.
+\]
+Gibbs optimality, the squared-loss midpoint identity, and division by
+$1-p$ give
+\begin{align*}
+ &\Pi_\lambda[\widehat R(f)-\widehat R(g_\sigma)]
+ +p\Pi_\lambda\|f-g_\sigma\|_n^2
+ +\frac{2\lambda\nu}{N}\operatorname{KL}(\Pi_\lambda\Vert\mu)\\
+ &\hspace{8mm}\le2\lambda\nu\operatorname{KL}(q_g\Vert\mu_0)
+ +K^2\left\{\frac p{N-1}\Pi_\lambda Q_G
+                  +\frac{\mathbb E_{q_g}G^2}N\right\}.
+\end{align*}
+Use only the readout-block Gaussian moment:
+\[
+ \operatorname{KL}(\Pi_\lambda\Vert\mu)
+ \ge\frac\omega4\Pi_\lambda Q_G-\frac N2\log2.
+\]
+Absorb the $Q_G/N$ term using $N\lambda\ge C_\phi$, and use
+$(V^2+1)/N\le C_\phi\lambda A_n$. This proves (AD9).
+\end{proof}
+
+\begin{theorem}[A sharp arbitrary-input-law Gaussian oracle]
+\label{thm:all-d-sharp}
+For every fixed comparison network $g$ above, with probability at least
+$1-\delta$, simultaneously for all $0<\nu\le1$, all
+$n^{-2}\le\lambda\le1$ satisfying $\lambda\ge C_\phi b_n$, and all
+$N\lambda\ge C_\phi$,
+\[
+ R(\mathbb E_{\Pi_\lambda}f)\le\Pi_\lambda R(f)
+ \le R(g)+C_\phi\left\{\lambda A_n(g)+\frac{b_n}{\lambda}\right\}
+       +C_\phi n^{-10}.                                \tag{AD10}
+\]
+There is no density or anti-concentration condition on the input law.
+No output truncation, prior restriction, or architecture mixture is used.
+\end{theorem}
+\begin{proof}
+The prior empirical risk is at most $M=1+K^2$, since the readout is
+centered and $\mathbb E_\mu f(x)^2\le K^2\nu/N$.
+Thus Jensen gives $Z_\lambda\ge\exp[-\omega M/(2\lambda)]$.
+The law of $\omega Q_G$ is $\chi^2_N$, so above a fixed constant
+$\mu(Q_G>t)\le\exp(-c\omega t)$. Integrating the corresponding
+posterior bound shows that the omitted risk, empirical loss and
+quadratic-distance integrals on $Q_G>n^{22}$ are at most $C_\phi n^{-10}$,
+uniformly for $\lambda\ge n^{-2}$, $N\ge1$ and $0<\nu\le1$.
+For the finitely many smaller $n$, increase the deterministic lower
+sample-size threshold by an activation-dependent constant.
+All these quantities are bounded by $C_\phi(1+Q_G)$.
+
+Use (AD5) with $u=g_\sigma$ and a constant $c$ smaller than half
+$c_\phi$ in (AD9). Its norm is at most two for sufficiently large $n$.
+Integrate over the posterior, restore the negligible tail, and apply
+(AD9). The extra constant $c\lambda$ is absorbed by $C\lambda A_n$
+since $A_n\ge1$. The remaining distance and readout-energy terms are nonnegative
+and can be dropped. Finally $R(g_\sigma)\le R(g)+C_\phi n^{-20}$.
+Jensen proves the mean-risk statement. The sample event is fixed by
+$g_\sigma$ and the width/scale-independent ridge classes; $g_\sigma$
+does not depend on $\nu$, so the advertised simultaneity is valid.
+\end{proof}
+
+\begin{corollary}[An explicit polynomial]
+\label{cor:all-d-sharp-polynomial}
+In the nontrivial range $A_n(g)b_n\le c_\phi$, choose
+\[
+ \lambda=C_\phi\sqrt{b_n/A_n(g)},\qquad
+ N\ge C_\phi\sqrt{A_n(g)/b_n}.
+\]
+Then
+\[
+ R(\mathbb E_{\Pi_\lambda}f)\le\Pi_\lambda R(f)
+ \le R(g)+C_\phi\sqrt{A_n(g)b_n}+C_\phi n^{-10}.         \tag{AD11}
+\]
+The scale uses a declared deterministic upper bound for $A_n$, not the
+unknown risk or a prior over teacher sizes. At fixed $d,B$ this is
+$\widetilde O(C/\sqrt n)$ against width-$C$ teachers, and a sufficient
+sample size for excess $\varepsilon$ is
+\[
+ n\ge\widetilde O\left(
+ (d+1)[C^2B^2+(d+1)^2B^2]\varepsilon^{-2}\right).        \tag{AD12}
+\]
+For bounded readout variation and bounded incoming row norm, the resource
+in (AD1) is independent of the number of teacher neurons. The comparator is still required to have
+bounded raw output. The same risk bound holds against the infimum over
+a declared such class by selecting a deterministic population-risk
+near-minimizer; no common event over all data-selected comparisons is
+asserted. In the nontrivial range, every $N\ge C_\phi n$ satisfies the
+width requirement, after enlarging constants and logarithmic factors.
+\end{corollary}
+\begin{proof}
+Balance the two terms of (AD10). The nontrivial-range condition makes
+$\lambda\ge C_\phi b_n$, after the constants are chosen in order, and
+also $\lambda\le1$ when $b_n$ is sufficiently small. Equation (AD2)
+gives (AD12). Finally $A_nb_n\le c$ implies
+$\sqrt{A_n/b_n}\le C/b_n\le Cn$.
+\end{proof}
+
+\paragraph{An elementary bound without an output cap.}
+Theorem~\ref{thm:uncapped-all-d} below removes the output cap without
+worsening (AD11). The following simpler envelope-based argument gives
+a coarser statement for any finite comparison network.
+Let $F=\|g\|_\infty$, so $F\le K V$. In the nontrivial range, the same
+argument gives
+\[
+ R(\mathbb E_{\Pi_\lambda}f)\le\Pi_\lambda R(f)
+ \le R(g)+C_\phi\left\{\lambda A_n(g)
+             +(F+1)^2b_n/\lambda\right\}+C_\phi(F+1)n^{-10}.
+                                                               \tag{AD13}
+\]
+One may assume $F\le n^2$ to keep the same polynomial energy cutoff;
+the nontrivial optimized range below automatically has this property.
+Indeed the comparison mean is bounded by $F+1$. The squared-norm
+argument now has envelope $C_\phi(q+(F+1)^2)$, and its remainder is
+$C_\phi b_n(q+(F+1)^2)$. The bounded multiplier argument gives
+$C_\phi(F+1)\sqrt{b_n(q+(F+1)^2)}$. Young's inequality bounds these by
+a small multiple of $\lambda q$, plus
+$C_\phi\lambda(F+1)^2+C_\phi(F+1)^2b_n/\lambda$.
+Since $(F+1)^2\le C_\phi A_n$, the new constant penalty is absorbed
+in $C_\phi\lambda A_n$; the midpoint comparison is unchanged.
+The loss-smoothing error is $C_\phi(F+1)n^{-20}$ and the Gaussian
+tail remains negligible at the stated polynomial cutoff.
+
+Choosing $\lambda=C_\phi(F+1)\sqrt{b_n/A_n}$ gives excess
+$\widetilde O_\phi((F+1)\sqrt{(d+1)A_n/n})$, provided this is
+smaller than a sufficiently small fixed constant and
+$N\lambda\ge C_\phi$. With entrywise coefficient cap $B$ and fixed
+$d,B$, this is $\widetilde O(C^2/\sqrt n)$ without a comparison-output
+restriction. It is weaker than (AD11), whose bounded-output premise
+is what gives the better width polynomial.
+
+An explicit teacher readout bias can be included as one extra constant
+neuron: choose a fixed $t_0$ with $\phi(t_0)\ne0$, take incoming row
+$(0,\ldots,0,t_0)$, and coefficient $b_{\rm out}/\phi(t_0)$.
+It is counted in the variation and incoming-energy resources above.
+
+\paragraph{Marginally sub-Gaussian labels.}
+The bounded-label hypothesis can be replaced by the marginal condition
+$\mathbb E\exp(Y^2/K_Y^2)\le2$ for a fixed $K_Y<\infty$.
+This does not require a bounded conditional mean or a conditionally
+sub-Gaussian residual. Keep the bounded-output comparator of (AD1), and set
+\[
+ B_n=\max\{1,K_Y\sqrt{40\log(e n/\delta)}\},\qquad
+ b_n^{\rm sg}=C_\phi(B_n+1)^2(D+1)\log^4(e n/\delta)/n.
+\]
+Equations (AD10)--(AD11) hold with $b_n^{\rm sg}$ in place of $b_n$
+and an $O_{\phi,K_Y}(n^{-10})$ negligible term. The comparison pack and
+resource $A_n$ are unchanged. In particular the optimized excess is
+\[
+ \widetilde O_{\phi,K_Y}\bigl(\sqrt{(d+1)A_n/n}\bigr),               \tag{AD14}
+\]
+with the same condition $N\lambda\ge C_\phi$. As before, the scale must
+satisfy $n^{-2}\le\lambda\le1$ and
+$\lambda\ge C_\phi b_n^{\rm sg}$; the optimized statement concerns its
+nontrivial range. No observed label is modified in the actual algorithm.
+
+Here are the tail and risk details. In the proof alone define
+$Y^{B_n}=\operatorname{clip}(Y,-B_n,B_n)$. With probability at least
+$1-\delta/4$, every observed label equals its clipped value. The pairs
+$(X,Y^{B_n})$ retain exactly the original input law. Apply the preceding
+common statistical event to this clipped-label distribution. Its
+multiplier estimate gains a factor $B_n+1$, which changes $b_n$ to
+$b_n^{\rm sg}$. The midpoint identity and comparison-pack entropy do
+not require bounded labels. On the no-exceedance event the actual
+posterior, including its normalizer, is exactly the posterior appearing
+in that analysis, and its native empirical risk is at most $B_n^2+K^2$.
+The Gaussian readout-tail proof consequently gives
+\[
+ \Pi_\lambda Q_G\le C_\phi\{1+(B_n^2+1)/\lambda\}.
+\]
+The eligibility condition $b_n^{\rm sg}\lesssim1$ implies $B_n^2\lesssim n$;
+thus $Q_G>n^{22}$ still has negligible posterior integrals uniformly
+for $\lambda\ge n^{-2}$.
+
+Most importantly, only a relative-risk transfer is needed:
+\begin{align*}
+ &[R_Y(f)-R_Y(g)]-[R_{Y^{B_n}}(f)-R_{Y^{B_n}}(g)]\\
+ &\hspace{15mm}=-2\mathbb E[(Y-Y^{B_n})(f(X)-g(X))].
+\end{align*}
+The $Y^2$ terms cancel exactly. The marginal tail assumption gives
+$\mathbb E|Y-Y^{B_n}|\le C K_Y(e n/\delta)^{-20}$.
+Since $\|f\|_\infty\le K\sqrt{Q_G}$ and $\|g\|_\infty\le1$,
+posterior averaging and the displayed energy bound make the absolute
+transfer error $O_{\phi,K_Y}(n^{-10})$. A confidence allocation between
+this no-exceedance event and the clipped-label statistical event proves
+(AD14), with exact leading comparator coefficient one and a common
+event over the eligible widths and scales.
+
+\paragraph{A hardtanh learner competing with shallow ReLU teachers.}
+The hardtanh instance also gives an exact, same-depth comparison with
+coefficient-bounded ReLU teachers. Write
+\begin{gather*}
+ g(x)=b_{\rm out}+\sum_{i=1}^C c_i\operatorname{ReLU}(a_i\cdot x+b_i),\\
+ |b_{\rm out}|,|c_i|,|(a_i)_j|,|b_i|\le B,
+ \qquad B\ge1,\qquad M=(d+1)B.
+\end{gather*}
+On the input cube, $|a_i\cdot x+b_i|\le M$, and the exact identity
+\[
+ \operatorname{ReLU}(t)
+ =\frac M2\{\operatorname{hardtanh}(2t/M-1)+1\},\qquad |t|\le M,
+\]
+converts $g$ to a hardtanh teacher of width at most $C+1$.
+The extra neuron is the constant $\operatorname{hardtanh}(1)=1$.
+Its readout variation obeys
+\[
+ V'\le M\sum_i|c_i|+|b_{\rm out}|
+ \le(d+1)CB^2+B.
+\]
+Each transformed incoming row has Euclidean norm at most three,
+including the constant row, so $J'\le9a_0$.
+The comparison function itself is unchanged. Therefore (AD11) applies
+when $\|g\|_\infty\le1$, giving fixed-$d,B$ sample complexity
+$\widetilde O(C^2\varepsilon^{-2})$ under any input law; (AD13) gives
+the coarser no-output-cap statement. Marginally sub-Gaussian labels are
+covered by (AD14) when the comparison output is bounded.
+The actual learner here has hardtanh activation. This is not a claim
+that the raw ReLU learner has the bounded-ridge capacity bound (AD3).
+

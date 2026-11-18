@@ -1,0 +1,214 @@
+% Independent raw-output obstruction module, 18 November 2026.
+% Construction suggested by root; saturation estimate independently checked
+% by fresh_reader_approximation and robust_agnostic.
+\section{A raw posterior mean can fail under finite-variance Student weights}
+
+Fix $p>2$ and $T>0$. Let the three parameters $v,w,\gamma$ be
+independent with density
+\[
+ q_p(t)=c_p(1+t^2)^{-(p+1)/2},\qquad t\in\mathbb R,
+\]
+and consider the ordinary biased one-neuron network
+$f_{v,w,\gamma}(x)=v\tanh(wx+\gamma)$.
+Every coordinate has a finite second moment. The prior, architecture,
+and likelihood temperature are fixed independently of the sample size.
+For observations $S_n$, use the raw Gaussian likelihood and raw mean
+\[
+ dQ_{S_n}(\theta)=Z_{S_n}^{-1}
+  \exp\left\{-\frac1T\sum_{i=1}^n(f_\theta(X_i)-Y_i)^2\right\}
+  d\pi(\theta),\qquad
+ \bar f_{S_n}(x)=\int f_\theta(x)\,dQ_{S_n}(\theta).
+\]
+The physical observation variance is $T/2$. There is no clipping.
+
+\begin{theorem}[A distribution-uniform raw-mean obstruction]
+There are constants $c_*,q_*>0$, depending only on $p,T$, and
+distributions $P_n$ supported on $[-1,1]\times[-1,1]$, with noiseless
+labels, such that for every sufficiently large $n$,
+\[
+ P_n^{\otimes n}\{R_{P_n}(\bar f_{S_n})\ge c_*n^{1/3}\}\ge q_*.
+\]
+Yet the fixed width-one comparator $g\equiv0$ satisfies
+$R_{P_n}(g)\le n^{-1/3}$. In particular,
+$\mathbb E_{P_n^{\otimes n}}R_{P_n}(\bar f_{S_n})\ge q_*c_*n^{1/3}$.
+Thus this fixed prior and fixed likelihood do not admit any
+distribution-uniform vanishing oracle remainder against the zero
+network, either in expectation or at any fixed failure probability
+$\delta<q_*$.
+\end{theorem}
+
+\begin{proof}
+Write
+\[
+ b=n^{-1/6},\quad c=\frac1{100p(T+1)},\quad
+ R=e^{cn^{2/3}},\quad a=b/R.
+\]
+The distribution assigns probabilities $(1-1/n)/2,(1-1/n)/2,1/n$
+to the pairs $(a,b),(-a,-b),(1,0)$, respectively.
+Let $E_n$ be the event that the sample contains no input $1$ and that
+its counts $n_+,n_-$ at $a,-a$ both belong to $[n/3,2n/3]$.
+Its probability tends to $e^{-1}$, so is bounded below by a positive
+constant. All bounds below are uniform over samples in $E_n$.
+
+For such a sample define
+\[
+ u_+=v\tanh(\gamma+aw),\quad
+ u_-=v\tanh(\gamma-aw),\quad
+ L=\exp\{-[n_+(u_+-b)^2+n_-(u_-+b)^2]/T\}.
+\]
+The transformation $(v,w,\gamma)\mapsto(-v,-w,-\gamma)$ leaves
+the represented function unchanged and preserves the prior. We may
+therefore restrict all integrals to $v>0$ and multiply by two.
+Constants in the proof may depend on $p,T$ but never on $n$ or the
+balanced counts.
+
+Set
+\[
+ G=\{|u_+-b|\le b/2,\ |u_-+b|\le b/2\},\qquad
+ Z_*:=\frac{a^p b^{-p-1}}n=\frac{R^{-p}}{bn}.
+\]
+On $G^c$, the likelihood is at most
+\begin{equation}\label{eq:raw-student-bad-fit}
+ L\le \exp\{-nb^2/(12T)\}=\exp\{-n^{2/3}/(12T)\}.
+\end{equation}
+Since $pc=1/[100(T+1)]<1/(12T)$, this upper bound is
+$o(Z_*)$, and also $o(Z_*\log R)$.
+
+We first prove the evidence bound $Z_{S_n}\le C Z_*$.
+On $G$ necessarily $v\ge b/2$. For $b/2\le v\le3b$, set
+$h_+=\tanh(\gamma+aw)$ and $h_-=-\tanh(\gamma-aw)$.
+If the good-fit set of such $v$ is nonempty, then
+$h_+,h_-\ge1/6$, whence $w\ge t_0/a$ for
+$t_0=\operatorname{arctanh}(1/6)>0$.
+For every fixed such $(w,\gamma)$, the exponent as a function of $v$
+is a quadratic with coefficient
+\[
+ n_+h_+^2+n_-h_-^2\ge n/36.
+\]
+The density $q_p(v)$ is bounded, so integrating in $v$ first, even
+over the entire real line, gives at most $C/\sqrt n$.
+The Student tail bound then gives
+\begin{equation}\label{eq:raw-student-saturation}
+ \int_{G\cap\{b/2\le v\le3b\}}L\,d\pi
+ \le\frac C{\sqrt n}\int_{t_0/a}^\infty q_p(w)\,dw
+ \le \frac{C a^p}{\sqrt n}.
+\end{equation}
+The bias density integrates to one. This argument includes the
+near-saturation region without a singular change of variables.
+The ratio of the last bound to $Z_*$ is
+$b^{p+1}\sqrt n=n^{(2-p)/6}\le1$ for large $n$.
+
+For $v\ge3b$, use the exact coordinates $(u_+,u_-)$ instead of
+$(w,\gamma)$:
+\[
+ w=\frac{\operatorname{arctanh}(u_+/v)
+             -\operatorname{arctanh}(u_-/v)}{2a},\qquad
+ \gamma=\frac{\operatorname{arctanh}(u_+/v)
+             +\operatorname{arctanh}(u_-/v)}2.
+\]
+Their Jacobian is
+\begin{equation}\label{eq:raw-student-jacobian}
+ \left|\frac{\partial(w,\gamma)}{\partial(u_+,u_-)}\right|
+ =\frac1{2av^2[1-(u_+/v)^2][1-(u_-/v)^2]}.
+\end{equation}
+On $G$ we have $|u_\pm|/v\le1/2$ and
+$R/(2v)\le w\le2R/v$. Thus the Jacobian is at most $C/(av^2)$.
+The global bound $q_p(w)\le C|w|^{-p-1}$ and boundedness of
+$q_p(\gamma)$ imply
+\[
+ q_p(v)q_p(w)q_p(\gamma)
+ \left|\frac{\partial(w,\gamma)}{\partial(u_+,u_-)}\right|
+ \le C a^p b^{-p-1}q_p(v)v^{p-1}.
+\]
+The $v$ integral of $q_p(v)v^{p-1}$ over $(0,\infty)$ is finite.
+The likelihood integral over the $u$ rectangle is at most
+$\pi T/\sqrt{n_+n_-}\le C/n$.
+Together with \eqref{eq:raw-student-bad-fit} and
+\eqref{eq:raw-student-saturation}, this proves
+\begin{equation}\label{eq:raw-student-evidence}
+ Z_{S_n}\le C Z_*.
+\end{equation}
+
+We next lower-bound the numerator of the raw prediction at $x=1$.
+Let $t_n=1/(10\sqrt n)$ and restrict the transformed integral to
+\[
+ 1\le v\le R/100,\quad |u_+-b|\le t_n,\quad
+ |u_-+b|\le t_n.
+\]
+For large $n$ this region lies inside $G$; its likelihood is at least
+$e^{-1/(100T)}$. Here $R/(2v)\le w\le2R/v$, $|\gamma|\le1$,
+and hence $f(1)=v\tanh(w+\gamma)\ge c_1v$.
+The Student density lower bounds give
+\[
+ q_p(v)\ge c_2v^{-p-1},\quad
+ q_p(w)\ge c_2(R/v)^{-p-1},\quad q_p(\gamma)\ge c_2.
+\]
+The Jacobian in \eqref{eq:raw-student-jacobian} is at least
+$1/(2av^2)$. The prediction-weighted density is consequently at
+least $c_3 a^p b^{-p-1}/v$ throughout this region. Its $u$ area is
+$4t_n^2=1/(25n)$, and its $v$ integral contains
+$\int_1^{R/100}dv/v=\log(R/100)$. Its positive contribution to the
+numerator is therefore at least $c_4 Z_*\log R$.
+
+There is no negative contribution on $G$. Indeed, for $v>0$ the
+opposite signs of $u_+,u_-$ imply $w>0$ and $-aw<\gamma<aw$.
+Since $a<1$, it follows that $w+\gamma>w(1-a)>0$.
+On $G^c$, $|f(1)|\le|v|$ and
+\eqref{eq:raw-student-bad-fit} bounds the absolute contribution by
+$\mathbb E_\pi|v|e^{-n^{2/3}/(12T)}=o(Z_*\log R)$.
+After symmetry is restored, the full numerator is still at least
+$c_5Z_*\log R$. By \eqref{eq:raw-student-evidence},
+\[
+ \bar f_{S_n}(1)\ge c_6\log R=c_6c n^{2/3}
+ \qquad(S_n\in E_n).
+\]
+The rare input alone contributes at least $(c_6c)^2n^{1/3}$ to test risk.
+The zero comparator has risk $(1-1/n)b^2\le n^{-1/3}$, completing
+the proof. All posterior quantities exist: the likelihood is bounded
+by one, its normalizer is positive, and $|f(x)|\le|v|$ with
+$\mathbb E_\pi v^2<\infty$.
+\end{proof}
+
+\begin{corollary}[A cheap comparison law still does not give a raw oracle]
+Let $\rho_n=\pi(\cdot\mid |v|\le1/n)$. For every data distribution
+in the theorem,
+\[
+ \operatorname{KL}(\rho_n\|\pi)\le\log n+C_p,
+ \qquad
+ \int R_{P_n}(f)\,d\rho_n(f)
+       \le R_{P_n}(0)+n^{-2}.
+\]
+Consequently no fixed constant $A<\infty$ can make the naive raw-mean
+PAC--Bayesian bound
+\[
+ \mathbb E R_{P_n}(\bar f_{S_n})
+ \le\inf_{\rho\ll\pi}
+ \left\{\int R_{P_n}(f)\,d\rho(f)
+                 +\frac{AT}{n}\operatorname{KL}(\rho\|\pi)\right\}
+\]
+valid for all bounded data distributions and all $n$ for this prior
+and fixed temperature.
+\end{corollary}
+\begin{proof}
+The density $q_p$ is bounded below on $[-1,1]$, so
+$\pi(|v|\le1/n)\ge c_p'/n$, giving the entropy bound.
+Conditioning on this event preserves the symmetry and independence
+of the readout $v$. Thus $\int f(x)d\rho_n=0$ and
+$\int f(x)^2d\rho_n\le n^{-2}$ at every input.
+Expanding squared loss gives the risk bound. The displayed
+PAC--Bayesian right side would then tend to zero, whereas the main
+theorem makes its left side diverge. The comparison measure is
+deterministic and uses no training data.
+\end{proof}
+
+\paragraph{Scope.}
+The adverse distribution depends on $n$. This is a failure of a
+distribution-uniform oracle theorem, not a claim of inconsistency for
+one fixed distribution. The common inputs approach each other
+exponentially fast, so the construction imposes no fixed geometric
+regularity or uniform anti-concentration constant on the input law.
+The teacher is the same zero function for every $n$. The prior is
+dense, continuous, independent across all three coordinates, and
+unchanged with $n$; the likelihood is the ordinary all-data Gaussian
+likelihood with fixed variance. The lower bound is specifically for
+the raw posterior mean, rather than for posterior-averaged loss.

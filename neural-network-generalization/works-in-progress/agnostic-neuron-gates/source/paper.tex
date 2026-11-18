@@ -1,0 +1,180 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,mathtools,booktabs,microtype}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Polynomial-depth Bayesian learning with continuous neuron gates},pdfauthor={ChatGPT-6 Astra; Claude Opus 5.5; Kaarel Hänni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}[section]\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}\newcommand{\Pp}{\mathbb P}
+\newcommand{\KL}{\operatorname{KL}}\newcommand{\whR}{\widehat R}
+\title{Polynomial-depth Bayesian learning\\with continuous neuron gates}
+\author{ChatGPT-6 Astra \and Claude Opus 5.5 \and Kaarel H\"anni \and
+Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{17 November 2026}
+\begin{document}\maketitle
+\begin{abstract}
+We give a Bayesian neural-network prior whose sample complexity is polynomial jointly in the width and depth of a comparison network, uniformly over every larger finite learner width. The architecture is fixed. Each hidden neuron has a positive gamma gate shared by its outgoing weights, and the remaining edge factors have independent Student distributions. All actual weights are continuous and nonzero almost surely. This hierarchical group-shrinkage prior is a substantive change from independent Gaussian weights; no claim is made for the latter. For any globally Lipschitz hidden activation, biases at every layer, and a bounded Lipschitz output link, the ordinary posterior mean under a fixed Gaussian likelihood has expected risk at most comparison risk plus a nearly $1/n$ remainder. For a width-$C$, depth-$H$ comparator with bounded coefficients, the remainder is, up to logarithms, $O((dC+HC^2)H/n)$, independent of learner width. Coefficient magnitudes enter only logarithmically. For Boolean circuits, restoring gate implementations remove the extra depth factor and give a remainder of order $\widetilde O((dC+HC^2)/n)$. For ReLU and tanh, extra learner depth can be carried through one scalar channel at a nearly linear additive cost. A high-probability companion separates the noise floor and has an arbitrarily small multiplicative slack on approximation error. Both allow conditional sub-Gaussian label noise. The proof suppresses the total gate mass outside an embedded computation; the number of possible neuron placements cancels the probability cost of all active gates, even when intermediate computations are shared. No robustness restriction is imposed on the prior or on the comparison network. Conversely, typical prior draws compress to networks with polynomial depth and description complexity; this gives an actual function-prior complexity converse, not only a learning upper bound.
+\end{abstract}
+
+\section{A fixed architecture with neuron-level shrinkage}
+A useful neural predictor may be much smaller than the architecture used for Bayesian learning. We seek an oracle inequality comparing the learned function with such a smaller network, with a cost polynomial in both its width and its depth. Sharing intermediate computations matters: replacing a general network by a computation tree can increase its size exponentially in depth.
+
+We use one continuous gate per hidden neuron, shared by all its outgoing weights. A gate near zero suppresses that neuron's contribution to every later use. A gate of order one permits the computation to be reused without a separate rare-event cost at each outgoing edge. The gate distribution has shape inversely proportional to learner width, so the total gate mass of a layer has a width-independent distribution.
+
+This is a hierarchical group-sparsity prior, related in spirit to automatic relevance determination. It samples neither an architecture nor a discrete network size, and the finite network remains dense almost surely. Nevertheless, the dependence among outgoing weights is essential. The theorem does not settle the same question for independent Gaussian coordinates, or for an arbitrary conventional prior. It concerns exact Bayesian prediction, not the computational cost of evaluating the posterior.
+
+\section{The model}
+Fix hidden depth $H\ge1$, learner width $N$, and input domain
+$\mathcal X\subseteq[-1,1]^d$. Let $\phi:\R\to\R$ be globally $A$-Lipschitz, with $A\ge1$ and $b=|\phi(0)|$. Let $\psi:\R\to[-1,1]$ be $L_\psi$-Lipschitz, with $L_\psi\ge1$. ReLU, GELU, tanh, sigmoid, softplus and SiLU are examples of allowed hidden activations. The output link can be tanh or clipping.
+
+Fix $0<\kappa\le1$ and $\nu>2$. Independently sample gates and factors
+\[
+ S_j^\ell\sim\operatorname{Gamma}(\kappa/N,1),
+ \qquad G\sim t_\nu,
+\]
+where the second expression denotes the symmetric Student distribution with density proportional to $(1+t^2/\nu)^{-(\nu+1)/2}$. Every edge factor and every bias factor has this same law. The network is
+\begin{align}
+ h_i^1(x)&=\phi\!\left(G^1_{i0}+\sum_{j=1}^dG^1_{ij}x_j\right),\\
+ h_i^\ell(x)&=\phi\!\left(G^\ell_{i0}
+       +\sum_{j=1}^N S_j^{\ell-1}G^\ell_{ij}h_j^{\ell-1}(x)\right),
+       &&2\le\ell\le H,\\
+ z_w(x)&=G^{\rm out}_0+\sum_{j=1}^NS_j^HG^{\rm out}_jh_j^H(x),
+ &f_w(x)&=\psi(z_w(x)).
+ \label{eq:model}
+\end{align}
+Write $\mu_N$ for the prior on all latent gates and factors. Its pushforward to actual weights is also the prior used by the learner. Actual weights leaving one neuron share its gate and are dependent. The coordinate vector has full support and is absolutely continuous; all coordinates are nonzero almost surely. The total gate mass at each layer is exactly $\operatorname{Gamma}(\kappa,1)$, for every $N$.
+
+\begin{lemma}[ReLU equivalence to incoming-row group shrinkage]\label{lem:row-gates}
+For ReLU, the same function prior is obtained by multiplying each neuron's entire incoming row and its bias by its own gate, and leaving the final readout factors ungated. In this representation,
+\[
+ \widetilde h_i^1=S_i^1\operatorname{ReLU}\!\left(G^1_{i0}+\sum_jG^1_{ij}x_j\right),
+ \qquad
+ \widetilde h_i^\ell=
+ \operatorname{ReLU}\!\left(S_i^\ell G^\ell_{i0}
+       +\sum_jS_i^\ell G^\ell_{ij}\widetilde h_j^{\ell-1}\right),
+\]
+and $z=G^{\rm out}_0+\sum_jG^{\rm out}_j\widetilde h_j^H$.
+\end{lemma}
+\begin{proof}
+Positive homogeneity and induction give $\widetilde h_i^\ell=S_i^\ell h_i^\ell$, where $h$ is the feature in~\eqref{eq:model}. Substitution in the readout proves exact equality for every parameter realization.
+\end{proof}
+Thus, for ReLU, the construction can be viewed as ordinary per-neuron incoming-group shrinkage, including biases. This identity does not apply to tanh; its outgoing-gate representation remains the model definition.
+
+A comparator $g$ has the same depth, activation and output link, hidden-layer widths $m_\ell\le m\le N$, and all its weights and biases bounded in magnitude by $B\ge1$. It may share intermediate computations arbitrarily. Define
+\begin{align}
+ V&=\sum_{\ell=1}^H m_\ell,\\
+ P&=(d+1)m_1+\sum_{\ell=2}^H m_\ell(m_{\ell-1}+1)+m_H+1,\\
+ Q&=P+V+H.
+ \label{eq:counts}
+\end{align}
+Here $P$ counts the full blocks between selected teacher neurons, including coefficients equal to zero. The result is a width-based bound, rather than a bound only in the number of nonzero edges.
+
+\section{The learning guarantees}
+Suppose the observations are IID, with regression mean
+$f_0(x)=\E[Y\mid X=x]\in[-1,1]$. Assume $\xi=Y-f_0(X)$ is conditionally $\sigma$-sub-Gaussian:
+\[
+ \E[e^{t\xi}\mid X]\le e^{\sigma^2t^2/2}\qquad(t\in\R).
+\]
+The input law is otherwise arbitrary; observed labels may be unbounded. Set
+\[
+ R(f)=\E(f(X)-Y)^2,\quad R_0=\E\xi^2,\quad s=1+\sigma^2.
+\]
+For a fixed inverse temperature $\beta>0$, use the Gaussian-likelihood posterior
+\[
+ d\Pi_{S_n,\beta}(w)=Z_{S_n,\beta}^{-1}
+ e^{-\beta\sum_{i=1}^n(f_w(X_i)-Y_i)^2}\,d\mu_N(w),
+ \qquad \bar f_{S_n,\beta}=\int f_w\,d\Pi_{S_n,\beta}.
+\]
+The observation variance is $1/(2\beta)$. The predictor is the ordinary final posterior mean trained on all observations.
+
+Constants $C$ below depend only on the fixed gate and factor distributions. Put $\mu=(\E G^2)^{1/2}$ and choose
+\begin{align}
+ D&=C(1+A+b+\mu)(d+m+2)(B+2)\ge4,\\
+ W&=(1+L_\psi)(H+2)D^{H+2},\\
+ K_0&=CQ,\qquad
+ K_1=C(m+1)(B+2)W\ge e.
+ \label{eq:resources}
+\end{align}
+The constants in these definitions are independent of $H,d,m,N,B$.
+
+\begin{theorem}[Sharp expected risk at a fixed likelihood]\label{thm:sharp}
+Fix the finite learner architecture before sampling. At
+$\beta_*=1/(256s)$, every comparator satisfies
+\begin{equation}
+ \E_{S_n}R(\bar f_{S_n,\beta_*})
+ \le R(g)+\frac{5+256sK_0\log(K_1(n+1)^2)}{n+1}.
+ \label{eq:sharp}
+\end{equation}
+The constants are uniform over every finite $N\ge m$. The infimum over deterministic comparator choices may be taken on the right. This is a statement in expectation over the training sample.
+\end{theorem}
+\begin{proof}
+Lemma~\ref{lem:comparison} constructs a sample-independent law whose expected squared uniform error is at most $r=(n+1)^{-2}$ and whose KL is at most $K_0\log(K_1/r)$. Its risk is at most $R(g)+4\sqrt r+r$, because $g$ and $f_0$ lie in $[-1,1]$ and the conditional noise mean is zero. The general final-posterior theorem proved in Section~\ref{sec:sharp-expectation-proof} bounds risk by this comparison risk plus $256s$ times its KL divided by $n+1$. This gives~\eqref{eq:sharp}.
+\end{proof}
+
+\begin{theorem}[A high-probability noise-separated oracle]\label{thm:main}
+Fix $0<\eta\le1$, $n\ge2$, and use $\beta_\eta=\eta/(32s)$. For any deterministic comparator, with probability at least $1-\delta$,
+\begin{align}
+ R(\bar f_{S_n,\beta_\eta})
+ &\le \int R(f_w)\,d\Pi_{S_n,\beta_\eta}(w)\\
+ &\le R_0+(1+\eta)\{R(g)-R_0\}
+ +\frac{Cs}{\eta n}\left[K_0\log(K_1n)+\log\frac2\delta\right].
+ \label{eq:hp}
+\end{align}
+The constants are uniform over every finite $N\ge m$. The learner uses neither the comparator nor its complexity parameters.
+\end{theorem}
+
+Both likelihood variances are fixed independently of sample size and learner width. They need an upper bound on the noise proxy, and the second also uses the desired approximation slack. The expectation theorem has coefficient exactly one; it is not asserted with high probability.
+
+For fixed activation and output-link constants, the statistical resource is at most
+\begin{equation}
+ C\big[(d+1)m+Hm^2+1\big]
+ \left[(H+2)\log\{C(d+m+2)(B+2)\}+\log\{(H+2)n\}\right].
+ \label{eq:explicit-rate}
+\end{equation}
+Thus both teacher width and depth enter polynomially, and the coefficient cap enters logarithmically. At fixed depth and input dimension, any class with width $o(\sqrt{n/\log n})$ and polynomially bounded coefficients has a vanishing oracle remainder; the single-hidden-layer dependence is only linear in width before logarithms. More generally the exact joint resource~\eqref{eq:explicit-rate} specifies which simultaneously growing widths and depths are allowed.
+
+The high-probability theorem can be made simultaneous over integer comparator resource bounds by a summable confidence allocation. This is only a proof device; no mixture over comparator architectures or sizes is added to the prior. The architecture is fixed before the sample. Uniform constants in $N$ do not assert one common probability event over unrestricted data-dependent choices of infinitely many learner architectures.
+
+\input{comparison}
+\input{stability}
+\input{stable-teachers}
+\input{boolean-restoration}
+\input{scalar-padding}
+\input{noise}
+\input{expectation}
+\input{uniform}
+\input{native-compression}
+\input{sign-prior}
+\input{wide-limit}
+
+\section{Interpretation and limitations}
+The gate is the reason sharing is inexpensive. Each selected neuron incurs one rare order-one gate event, regardless of how many selected neurons use its output. Its possible locations cancel that gate cost. The selected edge factors then pay ordinary finite-dimensional small-ball costs. In contrast, independent rare edges can incur a separate location cost for each shared use.
+
+This construction deliberately imposes continuous group shrinkage. It is not a theorem that every dense Bayesian network has a circuit prior, and it does not establish the same polynomial-depth conclusion for independent Gaussian weights. No empirical claim is made that the prior matches networks trained by gradient descent. The result identifies one explicit, fixed-architecture Bayesian model where a joint width--depth polynomial is possible without a stability restriction on the supported networks.
+
+Student factors are convenient because placing a large coefficient has logarithmic cost. The following alternative uses a standard conditional-Gaussian group-scale model.
+
+\begin{corollary}[Gaussian edge and bias factors]\label{cor:Gaussian-factors}
+Replace every Student factor by an independent standard Gaussian, retaining the same gamma gates. The primary learning Theorems~\ref{thm:sharp} and~\ref{thm:main}, and the function-neighborhood upper bounds, remain valid after adding $CPB^2$ to the comparison entropy resource. The native-compression bounds are unchanged. For the margin-conditioned converse at arbitrary margin $a$, replace the normalizer resource $Q_0$ by $Q_0+Ca^2$; for $0<a\le1$ this is absorbed in its constant. For the Boolean restoring implementations, all coefficient caps are numerical constants, so the $\widetilde O((dC+HC^2)/n)$ expected-risk remainder and corresponding online mistake bounds are unchanged.
+\end{corollary}
+\begin{proof}
+A uniform interval of radius $\epsilon$ about any $|a|\le B$ has KL at most $C[\log(C/\epsilon)+B^2]$ relative to a standard Gaussian. All gate and placement calculations are unchanged, as are the moment estimates with $\mu=1$. Summing over $P$ modified factors adds $CPB^2$. The native compression proof needs only a finite first moment and a fixed polynomial tail bound on factors; a Gaussian satisfies both. The Gaussian readout-bias interval used to normalize an arbitrary margin has cost $C[a^2+1+\log(1+a^{-1})]$, which explains the stated adjustment. The Boolean implementations use a fixed coefficient cap and margin, so their additional entropy is absorbed by $CQ$. In Theorem~\ref{thm:scalar-padding}, the Gaussian addition can be bounded by $CP_gB^2+C(H-h+1)$, because the added relay coefficients are numerical constants.
+\end{proof}
+
+In this Gaussian variant, outgoing weights share a random scale and are dependent even though their pairwise covariances are zero. The general real-valued comparator bound has polynomial rather than logarithmic coefficient-cap dependence.
+
+The bounded output link is part of the observation model and prediction rule. It allows the statistical argument to compare prediction differences under unbounded sub-Gaussian labels. We do not claim an identical theorem for an unbounded raw-output posterior mean.
+
+\paragraph{Related work and attribution.}
+Hierarchical neuron- or group-level shrinkage is an established Bayesian modeling idea. Lee and coauthors~\cite{lee-dependent} study weights of the form $W_{jk}=\sqrt{\lambda_j}V_{jk}$, with Gaussian edge factors and a shared random scale per source neuron, including width-dependent scale arrays, non-Gaussian wide-network limits, sparsity and pruning. Our Gaussian-factor variant is a construction of this shared-node-scale type, with $\lambda_j=(S_j)^2$ and $S_j\sim\operatorname{Gamma}(\kappa/N,1)$. We do not claim to introduce dependent neuron scales, their L\'evy limit interpretation, or pruning as general ideas. Dense independent heavy-tailed network priors also already have posterior-contraction results~\cite{castillo-egels}; neither heavy tails nor deterministic architectures alone are new. The finite-sample statement here is an agnostic comparator oracle, uniform over every prescribed finite learner width and polynomial jointly in comparator width and depth. The sharp expectation proof follows the leave-one-out strategy of H\o gsgaard, Rebeschini and Wegel~\cite{hogsgaard}; the arbitrary-prior and conditional-sub-Gaussian version used here is proved in full.
+
+\paragraph{Verification.}
+The comparison proof and its statistical interface have undergone independent mathematical review by AI agents. The accompanying verification record identifies the exact sources. This paper has not been formalized in Lean.
+\begin{thebibliography}{9}
+\bibitem{castillo-egels} I. Castillo and P. Egels. Posterior and Variational Inference for Deep Neural Networks with Heavy-Tailed Weights. \emph{Journal of Machine Learning Research} 26(122), 1--58, 2025.
+\bibitem{lee-dependent} H. Lee, F. Ayed, P. Jung, J. Lee, H. Yang, and F. Caron. Deep Neural Networks with Dependent Weights: Gaussian Process Mixture Limit, Heavy Tails, Sparsity and Compressibility. \emph{Journal of Machine Learning Research} 24(289), 1--78, 2023.
+\bibitem{hogsgaard} M. M. H\o gsgaard, P. Rebeschini, and T. Wegel. Aggregation with Exponential Weights is Optimal in Expectation. arXiv:2607.02247, 2026.
+\end{thebibliography}
+\end{document}

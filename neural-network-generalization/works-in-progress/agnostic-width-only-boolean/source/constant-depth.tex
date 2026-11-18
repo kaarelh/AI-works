@@ -1,0 +1,59 @@
+\section{A constant-factor depth overhead using standard threshold arithmetic}
+\label{sec:constant-depth-compiler}
+The preceding compiler used elementary bounded-fan-in arithmetic. Standard constant-depth threshold arithmetic removes its logarithmic depth overhead. We state the imported complexity theorem precisely; all subsequent translations and resource estimates are explicit.
+
+\begin{theorem}[Constant-depth integer arithmetic~\cite{hab}]
+\label{thm:tc0-arithmetic-import}
+Iterated multiplication of polynomially many binary integers is computed by a family of constant-depth, polynomial-size Boolean circuits with unbounded-fan-in majority gates and Boolean gates. The depth and polynomial-size exponent are numerical constants, independent of the number and bit length of the integers. Uniform circuits exist; only the weaker nonuniform existence assertion is needed here.
+\end{theorem}
+
+Here the majority gates are unweighted. Circuit size may be measured including wires, since a polynomial number of gates with polynomial fan-in still has polynomially many wires. The cited theorem is the DLOGTIME-uniform $\mathrm{TC}^0$ result for division and iterated multiplication. We do not assume arbitrary-real-weight threshold gates as primitives.
+
+\begin{lemma}[The needed arithmetic has constant threshold depth]
+\label{lem:tc0-arithmetic}
+For $k$ Boolean inputs and $b$-bit signed integer coefficients, affine summation, comparison with a fixed integer, clipping to a fixed integer interval, and sign/magnitude extraction have unweighted-majority Boolean circuits of numerical constant depth and size at most $(k+b+2)^{a_1}$, for a numerical constant $a_1$.
+\end{lemma}
+\begin{proof}
+It suffices to derive iterated addition from Theorem~\ref{thm:tc0-arithmetic-import}. For nonnegative integers $A_1,\ldots,A_k<2^b$, put
+$r=b+\lceil\log_2(k+1)\rceil+1$ and form $1+A_i2^r$ by wiring their bits. The product satisfies
+\[
+ \prod_{i=1}^k(1+A_i2^r)
+ =1+\left(\sum_iA_i\right)2^r\pmod{2^{2r}}.
+\]
+Since $\sum_iA_i<2^r$, its binary representation is exactly the block of product bits at positions $r,\ldots,2r-1$. Iterated multiplication therefore gives iterated addition in constant threshold depth and polynomial size.
+
+A fixed coefficient times a Boolean bit is again just a wired copy of that bit in the coefficient's one positions. Signed addition uses a sufficient two's-complement word length and a fixed offset, then retains the appropriate low bits. Comparison of two binary words is a constant-depth Boolean formula: OR over possible first differing positions, requiring equality at every more significant position. Complementation, sign tests, multiplexing, and clipping use a fixed number of these addition and comparison operations. Taking absolute value uses complementation and adding one on the negative branch. These compose a numerical constant number of constant-depth circuits. Their input and output bit lengths are polynomial in $k+b$, proving the stated bounds.
+\end{proof}
+
+An unweighted threshold gate on $r$ Boolean inputs, with threshold $j$, is represented by two ReLU layers:
+\[
+ u=\operatorname{ReLU}\left(\sum_{i=1}^r b_i-j+1\right),\quad
+ v=\operatorname{ReLU}\left(\sum_{i=1}^r b_i-j\right),\qquad
+ \operatorname{ReLU}(u-v).
+\]
+The usual constant neuron supplies the offsets. Every row has absolute sum at most $2r+1$. Majority is the special case $j=\lceil r/2\rceil$; AND and OR are included. NOT uses one layer. Thus a constant-depth polynomial-size majority circuit becomes a constant-depth polynomial-width ReLU network with polynomially bounded coefficients and row sums. This uses the numerical gate threshold as an edge from the constant wire, not a parameter outside the network.
+
+\begin{theorem}[A compiler with only a constant-factor depth overhead]
+\label{thm:constant-depth-compiler}
+There is a numerical constant $b\ge2$ such that the approximation in Theorem~\ref{thm:boolean-compiler} can instead be achieved with
+\begin{align}
+ H_*&\le b(h+1),\label{eq:constant-depth-depth}\\
+ \operatorname{width}(q)&\le(K+t+2)^b,\label{eq:constant-depth-width}\\
+ P(q)&\le(K+t+2)^{b(h+1)}.\label{eq:constant-depth-path}
+\end{align}
+Here $K=4(d+1)(C+1)^h$ and $t=\lceil\log_2(16/\varepsilon)\rceil$. The output still belongs to $[-1,1]$ on Boolean inputs, and the approximation error is at most $\varepsilon$. The theorem is uniform over all original coefficient magnitudes.
+\end{theorem}
+\begin{proof}
+Use exactly the lifted Boolean path features and the two linear-programming lemmas from Section~\ref{sec:boolean-compiler}. Compute conjunctions of previously available activation bits by unbounded-fan-in AND gates. Replace each arithmetic block by Lemma~\ref{lem:tc0-arithmetic}. Every original hidden layer therefore costs only a numerical constant number of Boolean layers, and the final rational value computation costs one additional such block.
+
+All internal threshold encodings have $O(K\log(K+2))$ bits; the final rational encoding has $O(K\log(K+2)+t)$ bits. There are at most $K$ hidden activation decisions and polynomially many path-feature conjunctions. Consequently the overall circuit has depth $O(h+1)$ and size, including wires, polynomial in $K+t$. Layering adds only a polynomial factor, because $h\le K$.
+
+The majority-to-ReLU translation doubles depth at most. If its circuit size is $S\le(K+t+2)^{c}$, each internal row has absolute sum at most $2S+1$. The first row budgets are at most $\sqrt{d+1}$ and the readout coefficient sum is less than four, as before. At depth $O(h+1)$ this gives
+\[
+ P(q)\le4\sqrt{d+1}\,(2S+1)^{O(h+1)}
+       \le(K+t+2)^{b(h+1)}
+\]
+after enlarging one numerical $b$. The same enlargement gives the width and depth inequalities. No property of the original real coefficients enters these estimates.
+\end{proof}
+
+This compiler is existential and nonuniform. The linear programs may have exponentially many constraints, and no efficient procedure for extracting the implementation from an arbitrary real-weight teacher is claimed. That computational cost does not enter the size or bit length of the resulting circuit. The use of independent path coefficients is essential: they are not required to factor back into the original neural weights, so no semialgebraic parameter-precision claim is being made.

@@ -1,0 +1,124 @@
+\section{A dimension-uniform covariance schedule}
+\label{sec:dimension-uniform-echo}
+The reverse schedule need not be tied to the first-layer variance. Using one absolute reference chain removes dimension dependence from its action and nonlinear response constants.
+
+Let $F(q)=\E\tanh^2(\sqrt q Z)$ and define
+\[
+ q^{\rm ref}_{-1}=2,\qquad
+ q^{\rm ref}_j=F(q^{\rm ref}_{j-1})\quad(j\ge0).
+\]
+All constants in this section are absolute unless a dependence is displayed. The scalar drift and derivative-product estimates give
+\[
+ q^{\rm ref}_j\asymp(j+1)^{-1},\quad
+ \alpha_t:=\frac{q^{\rm ref}_{t-2}}{q^{\rm ref}_t}-1
+       \le\frac C{t+1},\quad
+ \sum_{t=1}^M\{\alpha_t-\log(1+\alpha_t)\}\le C,
+\]
+\[
+ \prod_{t=1}^M\sqrt{1+\alpha_t}
+ =\left(\frac{q^{\rm ref}_{-1}q^{\rm ref}_0}
+              {q^{\rm ref}_{M-1}q^{\rm ref}_M}\right)^{1/2}
+ \asymp M+1.
+\]
+The initialization at two covers every input dimension $d\ge1$.
+
+Fix $0<\nu\le1$, $\beta=1-\nu$, and first-layer comparison covariance $I/d$. Its zero-signal variance sequence is
+\[
+ b_1=F(2/d),\qquad b_{\ell+1}=F(\nu b_\ell).
+\]
+By monotonicity, $b_\ell\le q^{\rm ref}_{\ell-1}$ uniformly in $d,\nu$. Therefore
+\[
+ \prod_{\ell=2}^H(1-b_\ell)\ge cH^{-1/2}.
+ \label{eq:dimension-uniform-derivative-product}
+\]
+After a native burn of at least $H/8$ transitions, the product over any remaining block of at most $H$ such factors is bounded below by an absolute positive constant, because $b_\ell\le C/H$ there.
+
+\begin{lemma}[Uniform response and comparison action]
+\label{lem:dimension-uniform-schedule}
+Let $D\ge0$ and $H\ge C(D+1)$. Divide the $H-1$ hidden transitions into a native burn of length comparable to $H$, a middle block of length $M\asymp H$, and a reverse block of length $M_r\asymp H$. Use effective directional variances $W=1$ in the burn, $W=e^{2D/M}$ in the middle, and $W_t=1+\alpha_t$ for reverse indices $t=M_r,\ldots,1$.
+
+The linear correlation response $L_H$ obeys
+\[
+ ce^D\sqrt H\le L_H\le Ce^DH.
+\]
+If the exact scalar recursion starts at the admissible correlation $r_1=s/L_H$, its final response has the same sign as $s$, satisfies $|r_H|\le|s|$, and obeys
+\[
+ |r_H-s|\le C|s|^3.
+\]
+All constants are independent of $d,\nu,H,D$.
+
+Inflating the first-layer covariance from $\nu I/d$ to $I/d$, using these conditional covariance changes, and giving the readout mean $\mathcal B e_H/\sqrt N$ has normalized entropy at most
+\[
+ C\left[1+\mathcal B^2+\beta^2(H+d)+D^2/H\right].
+ \label{eq:dimension-uniform-action}
+\]
+\end{lemma}
+\begin{proof}
+The middle directional gain is exactly $e^D$, the reverse gain is comparable to $H$, and the native derivative product has the displayed absolute lower bound. This proves the bounds on $L_H$. If $t$ reverse transitions remain, the remaining directional gain is comparable to $t+1$ and the remaining derivative product is bounded below. Thus
+\[
+ L_\ell/L_H\le C/(t+1).
+\]
+If $j$ middle transitions remain, the analogous bound is
+$L_\ell/L_H\le C H^{-1}e^{-Dj/M}$. During the burn $L_\ell\le1$.
+
+Write $q_\ell=b_\ell+\Delta_\ell$. The exact recursion gives
+\[
+ 0\le\Delta_{\ell+1}\le\nu\Delta_\ell+(W_\ell-\nu)r_\ell^2,
+ \qquad |r_\ell|\le|s|L_\ell/L_H.
+\]
+A variance disturbance persists for total weight at most the smaller of its remaining number of steps and $1/\beta$, with the latter interpreted as infinity when $\beta=0$. The burn contribution to $\sum\Delta_\ell$ is at most
+$Cs^2H/L_H^2\le Cs^2$. For the middle block use
+$W-1\le CD/H$ and
+\[
+ \sum_{j=0}^{M-1}e^{-2Dj/M}\le C M/(1+D).
+\]
+The $\beta$ source contributes at most $Cs^2/H$, and the $W-1$ source at most $Cs^2/H$. The reverse contribution is bounded by
+\[
+ Cs^2\sum_{t\ge1}
+ \min\{t+1,\beta^{-1}\}
+ \left(\beta+\frac C{t+1}\right)\frac1{(t+1)^2}
+ \le Cs^2.
+\]
+Hence $\sum\Delta_\ell\le Cs^2$. The exact product ratio is
+\[
+ \frac{r_H}{s}=\prod_{\ell=2}^H
+      \left(1-\frac{\Delta_\ell}{1-b_\ell}\right)\in[0,1].
+\]
+Since $1-b_\ell\ge1-F(2)>0$, the elementary product inequality proves the cubic response, with an absolute constant.
+
+The first-layer entropy is $(d+1)\kappa(\nu)$, where
+$\kappa(\nu)=1-\nu+\nu\log\nu\le\beta^2$. An internal effective variance $W=1+\alpha$ costs
+\[
+ W-\nu-\nu\log(W/\nu)
+ \le\kappa(\nu)+\beta\alpha+\alpha^2/2.
+\]
+The middle block contributes at most $C(\beta D+D^2/H)$ beyond its baseline. The reverse block contributes at most $C(1+\beta\log(H+1))$. The readout costs $\mathcal B^2$. Finally
+$\beta D\le\beta^2H+D^2/(4H)$ and
+$\beta\log(H+1)\le\beta^2H+C$, proving \eqref{eq:dimension-uniform-action}.
+\end{proof}
+
+\paragraph{Encoding and finite width.}
+Suppose a bounded Gaussian-feature density $\psi$ gives
+\[
+ g_0(x)=\E[\psi(W)\tanh(W^{\mathsf T}(1,x))],
+ \qquad W\sim N(0,I/d),\qquad\|\psi\|_\infty\le Q.
+\]
+Take $D\ge C+\log(1+Q)$ and $\mathcal B\ge1$. Then
+$Q/(\mathcal B L_H)\le1/2$. The usual coefficients
+$a_i=\psi(W_i)/(\mathcal B L_H\sqrt N)$ and random orthogonal completion define an exact unit initial direction. Cauchy--Schwarz also gives
+$|g_0(x)|/(\mathcal B L_H)\le\sqrt{b_1}/2$, proving initial admissibility even when $b_1\asymp1/d$ is very small. This admissibility does not follow from $L_H\gtrsim\sqrt H$ alone.
+
+All finite-width constants can be dimension-independent. Normalize the state as $(r,\sigma)$ with $\sigma=\sqrt{q-r^2}$. At one transition the random feature is
+\[
+ Y=\tanh(\sqrt W\,r\xi+\sqrt\nu\,\sigma\zeta),
+\]
+with independent standard Gaussians. Orthogonal projection in $L^2$ maps $Y$ to
+$(\E\xi Y,\|Y-\xi\E\xi Y\|_2)$ nonexpansively. Thus the scalar state update has global Lipschitz constant at most $\sqrt W$. The product of these constants is at most $CHe^D$.
+
+The normalized first-feature summands are bounded independently of $Q,d$, and initial empirical second moments lie in $[0,1]$. Conditional one-step empirical correlations and second moments have absolute Gaussian concentration constants. Passing from second moments to $\sigma$ costs at worst a square root, so an $O(N^{-1/2})$ moment error gives an $O(N^{-1/4})$ state error. The empirical normalization of the directional Gaussian has the same dimension-free control. Union over $H$ transitions and multiply by the global gain bound. For any fixed readout factor $\mathcal B$ and accuracy $\varepsilon$, a sufficient width is
+\[
+ N\ge C_{\mathcal B,\varepsilon}H^C e^{CD},
+\]
+with absolute exponents and no hidden dependence on $d$. The readout mean is bounded by $\mathcal B$, and its conditional variance is at most $1/N$, so the bad-event contribution is controlled in mean square as well.
+
+For a bounded target envelope $|g_0|\le U$, one may choose $\mathcal B$ depending only on $U$ and accuracy, by the cubic response estimate. For the bounded-label risk comparison without an output cap on $g_0$, the same-sign attenuation property suffices: if $|Y|\le1$ and $|g_0|\ge2$, every value between zero and $g_0$ has loss at most the loss of $g_0$. On $|g_0|\le2$, a fixed $\mathcal B^2\ge C/\varepsilon$ bounds the cubic distortion by the desired tolerance. These readout choices do not depend on dimension.

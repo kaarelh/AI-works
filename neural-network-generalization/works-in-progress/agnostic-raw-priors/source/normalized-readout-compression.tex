@@ -1,0 +1,51 @@
+\section{Compression with a normalized Gaussian readout}
+\label{sec:normalized-readout-compression}
+Keep the Gaussian neuron-gated model of Section~\ref{sec:gaussian-ard-compression} in every hidden layer. Modify only its readout: if $S_j^H\sim\operatorname{Gamma}(\kappa/N,1)$ are the final independent gates, set
+\[
+ T=\sum_{j=1}^NS_j^H,\qquad P_j=S_j^H/T,\qquad
+ z(x)=G_0^{\rm out}+\sum_{j=1}^N\sqrt{P_j}\,G_j^{\rm out}h_j^H(x).
+\]
+Thus $P\sim\operatorname{Dirichlet}(\kappa/N,\ldots,\kappa/N)$ is independent of $T\sim\operatorname{Gamma}(\kappa,1)$ and of all Gaussian factors and hidden features. This is a single fixed-width prior with a continuous normalized readout gate; it does not select an architecture size.
+
+\begin{corollary}[The same dictionary budget]
+\label{cor:normalized-readout-compression}
+The approximation, width, coefficient-bit, and dictionary-cardinality conclusions of Theorem~\ref{thm:gaussian-ard-compression} hold for this normalized-readout model, with constants that may also depend on the fixed $\kappa$. Its deterministic dictionary envelope still obeys \eqref{eq:gaussian-ard-code-envelope}. If $|\phi|\le M_\phi$, the dictionary raw-output envelope can instead be bounded by $C(1+M_\phi)L^{3/2}$.
+\end{corollary}
+\begin{proof}
+For $0<r\le1/2$,
+\begin{equation}
+ \mathbb E\sum_{j=1}^N\sqrt{P_j}\,\mathbf1_{P_j\le r^2}\le Cr,
+ \qquad
+ \mathbb E\sum_{j=1}^N\sqrt{P_j}\le C.
+ \label{eq:normalized-readout-small-mass}
+\end{equation}
+For $N=1$ these statements are immediate. If $N\ge2$, one coordinate has beta density proportional to
+$p^{a-1}(1-p)^{\kappa-a-1}$, with $a=\kappa/N$ and $\kappa-a\ge\kappa/2$. Its normalizing constant is at most $Ca$. On $(0,r^2)$, the factor $(1-p)^{\kappa-a-1}$ is bounded by a constant depending only on $\kappa$. Integrating $p^{a-1/2}$ gives at most $Ca r$. Summing over $N$ coordinates gives the first bound. The second follows either by the beta integral or by the gamma ratio formula
+\[
+ \mathbb E\sum_j\sqrt{P_j}
+ =N\frac{\Gamma(\kappa)\Gamma(a+1/2)}
+             {\Gamma(\kappa+1/2)\Gamma(a)}\le C.
+\]
+
+Truncate internal outgoing gates at $S_j^\ell\le r$ for $\ell<H$, and truncate final readout coordinates at $P_j\le r^2$. Every gate or final normalized gate remains independent of its own incoming feature. The internal path-magnitude and difference recursions are unchanged. At the last step replace the expected outgoing absolute gain $\kappa\mathbb E|G|$ by the bounded gain $\mathbb E|G|\,\mathbb E\sum_j\sqrt{P_j}$, and use \eqref{eq:normalized-readout-small-mass} for its omitted contribution. Consequently
+\[
+ \mathbb E\|z-z^{(r)}\|_\infty
+ \le C(d+1)r(H+1)K^{H+1}.
+\]
+Choose $r$ as in the proof of Theorem~\ref{thm:gaussian-ard-compression}, with a larger fixed constant, so its expected truncation error is at most $\delta\epsilon/8$, where $\delta=e^{-q}$.
+
+The final retained count is not binomial in its normalized coordinates, but it has the required bound by the independent gamma representation. Since
+$\Pr(T<u)\le C u^\kappa$ for $0<u\le1$, choose a deterministic $u_0$ with
+\[
+ \Pr(T<u_0)\le\delta/8,\qquad
+ \log(1/u_0)\le C(q+1).
+\]
+On $T\ge u_0$, every retained final index has $S_j^H>r^2u_0$. The latter count is binomial with mean at most
+\[
+ C\log\frac C{r^2u_0}\le CL.
+\]
+Chernoff's inequality therefore bounds the final retained count by $CL$, outside another event of probability at most $\delta/8$. The earlier layers use the original independent-gate argument. Their retained counts and maximal gates can together be controlled with failure at most $\delta/4$. All retained index sets still depend only on gates, so the conditional Gaussian factor union bound is unchanged and uses failure at most $\delta/8$. The constants can be chosen so that the total failure, including truncation, is at most $\delta$.
+
+Every final readout coefficient has magnitude at most $B_G\le C\sqrt L$, because $\sqrt{P_j}\le1$. Every other retained coefficient has the original bound $CL^{3/2}$. The same dyadic quantization proof gives the coefficient-bit and cardinality bounds. For the bounded-activation envelope, enumerate the final readout coefficients only up to $C\sqrt L+1$ while using the larger cap in internal layers. Then the raw readout magnitude is at most
+$(C\sqrt L+1)(1+CLM_\phi)\le C(1+M_\phi)L^{3/2}$. The general Lipschitz envelope is unchanged.
+\end{proof}

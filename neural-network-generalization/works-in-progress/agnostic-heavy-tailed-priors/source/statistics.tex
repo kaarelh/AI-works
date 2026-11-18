@@ -1,0 +1,163 @@
+\section{An optimistic oracle for one final posterior}
+\label{sec:statistics}
+Throughout this section labels lie in $[-1,1]$. The argument uses only bounded loss and the comparison construction. For every fixed teacher $g\in\calG_{m,B}$ and every $0<r\le1$, Lemma~\ref{lem:comparison} supplies a comparison law with
+\begin{equation}
+ \E_\nu\whR_S(f_w)\le\whR_S(g)+r,
+ \qquad \KL(\nu\Vert\mu_N)\le K_{m,B}r^{-q},
+ \qquad q=\alpha/(2-\alpha).
+ \label{eq:stat-comparison}
+\end{equation}
+The law may depend on $g$ and $r$ but not on the observed labels. The argument below also allows sample-dependent comparison laws if these two inequalities hold; the PAC--Bayes event is simultaneous in all posterior laws.
+
+Write
+\[
+ F_S(\beta)=-\frac1{\beta n}\log Z_{S,\beta}.
+\]
+For $n\ge2$, put $J=\lceil\log_2(64n)\rceil$ and use the finite grid
+$\mathcal B_n=\{2^{-j}:3\le j\le J\}$. Let $M_n=|\mathcal B_n|$,
+$\ell_n=\log(2M_n/\delta)$, and define
+\begin{equation}
+ c_\beta=\frac{1-e^{-4\beta}}{4\beta},\qquad
+ \mathcal C_S(\beta)=
+ \frac{F_S(\beta)+\ell_n/(\beta n)}{c_\beta}.
+ \label{eq:multiplicative-certificate}
+\end{equation}
+Choose a grid value minimizing $\mathcal C_S$, breaking ties by the smaller index. This is a measurable, finite selection using only the data and the learner's partition function. It selects one likelihood and one posterior, without averaging predictions across temperatures.
+
+\begin{lemma}[A simultaneous bounded-loss certificate]
+\label{lem:multiplicative-PAC}
+For an architecture fixed before observing the data, with probability at least $1-\delta/2$, simultaneously for $\beta\in\mathcal B_n$,
+\[
+ R(\bar f_{S,\beta})\le\E_{\Pi_{S,\beta}}R(f_w)
+                   \le\mathcal C_S(\beta).
+\]
+\end{lemma}
+\begin{proof}
+For every $0\le l\le4$, convexity of $e^{-\beta l}$ gives
+\[
+ e^{-\beta l}\le1-\frac{1-e^{-4\beta}}4l.
+\]
+Thus, for each fixed $w$,
+$\E e^{-\beta(f_w(X)-Y)^2}\le e^{-\beta c_\beta R(f_w)}$.
+Independence implies
+\[
+ \E_S\exp\{\beta n[c_\beta R(f_w)-\whR_S(f_w)]\}\le1.
+\]
+Integrate over the prior, use Markov's inequality, and then use the relative-entropy variational inequality. With failure probability at most $e^{-\ell_n}$, simultaneously for every probability law $\rho$,
+\[
+ c_\beta\E_\rho R(f_w)\le\E_\rho\whR_S(f_w)
+       +\frac{\KL(\rho\Vert\mu_N)+\ell_n}{\beta n}.
+\]
+A union bound over the grid gives the declared event. At its Gibbs posterior the empirical loss and entropy terms sum exactly to $F_S(\beta)$. Jensen's inequality for squared loss proves the ordinary posterior-mean bound. All losses are bounded, so every integral used here is finite.
+\end{proof}
+
+\begin{theorem}[Risk-adaptive comparison bound]
+\label{thm:optimistic-statistics}
+Fix $g\in\calG_{m,B}$ and write $T=K_{m,B}+\ell_n$. With probability at least $1-\delta$, the selected posterior satisfies
+\begin{equation}
+ R(\bar f_{S,\widehat\beta})\le R(g)+C_q\left[
+       \left(\frac{T R(g)}n\right)^{1/(q+2)}
+       +\left(\frac Tn\right)^{1/(q+1)}\right].
+ \label{eq:optimistic-statistical-oracle}
+\end{equation}
+The same bound holds for its posterior-average risk. The constant is independent of learner width. Neither the temperature selection nor its certificate uses $g$, $m$, $B$, $K_{m,B}$, or $R(g)$.
+\end{theorem}
+\begin{proof}
+Put $R=R(g)$ and
+\[
+ u=\left(\frac{TR}n\right)^{1/(q+2)}
+       +\left(\frac Tn\right)^{1/(q+1)}.
+\]
+If $u>1$, the result follows from risk at most four after increasing the constant. Suppose $u\le1$. Define the analytical comparison temperature
+$\beta_*=u/[8(R+u)]$. Since $0\le R\le4$ and $T\ge1$,
+\[
+ \frac1{40n}\le\frac{u}{40}\le\beta_*\le\frac18.
+\]
+The first inequality uses $u\ge(T/n)^{1/(q+1)}\ge1/n$.
+The grid therefore contains a $\beta\in[\beta_*/2,\beta_*]$.
+For $\beta\le1/8$, Taylor's inequality gives
+$c_\beta\ge1-2\beta$, hence $c_\beta^{-1}\le1+3\beta$.
+
+Use \eqref{eq:stat-comparison} at precision $r=u$ in the free-energy variational formula. Since $u\le1$,
+\[
+ F_S(\beta)+\frac{\ell_n}{\beta n}
+ \le\whR_S(g)+u+\frac{T}{\beta n u^q}.
+\]
+The definition of $u$ gives
+$nu^{q+2}\ge TR$ and $nu^{q+1}\ge T$. Thus
+\[
+ \frac{T}{\beta n u^q}
+ \le\frac{16T(R+u)}{nu^{q+1}}\le32u,
+ \qquad \beta R\le u/8.
+\]
+On the certificate event, the selected certificate is no larger than this grid certificate. Consequently
+\[
+ \E_{\Pi_{S,\widehat\beta}}R(f_w)
+ \le (1+3\beta)\{\whR_S(g)+33u\}.
+\]
+For the single fixed teacher, bounded-loss Bernstein concentration gives, on a further event of probability at least $1-\delta/2$,
+\[
+ \whR_S(g)\le R+C\sqrt{R\ell_n/n}+C\ell_n/n.
+\]
+Both additional terms are $O(u)$. Indeed $u\le1$ implies $T/n\le1$; the power $1/(q+2)<1/2$ makes the first summand in $u$ dominate $\sqrt{RT/n}$, and the power $1/(q+1)<1$ makes the second dominate $T/n$. Substitute this inequality and use $\beta R\le u/8$. The leading population-risk term remains exactly $R$; all remaining contributions are $O_q(u)$. Jensen gives the mean-prediction claim.
+\end{proof}
+
+The bounded coefficient class is compact, and its bounded-output risk is continuous in the parameters. Therefore a deterministic population-risk minimizer exists and may be used in Theorem~\ref{thm:optimistic-statistics}. More generally a deterministic sequence approaching the infimum gives the same conclusion. Summable confidence allocation over integer teacher widths and integer coefficient caps yields a simultaneous structural oracle, with the additional logarithms absorbed in $T$. The PAC--Bayes certificate itself remains common to all those comparison classes.
+
+For the Student tail index,
+\[
+ \frac1{q+2}=\frac{2-\alpha}{4-\alpha},\qquad
+ \frac1{q+1}=\frac{2-\alpha}{2}.
+\]
+Thus a sufficient sample budget for excess at most $\varepsilon$ is
+\[
+ n\ge\widetilde O_{\alpha}\left(
+ K_{m,B}\{R_*\varepsilon^{-(q+2)}
+                       +\varepsilon^{-(q+1)}\}\right),
+ \qquad R_*=\inf_{g\in\calG_{m,B}}R(g).
+\]
+For Cauchy weights this gives the oracle remainder
+$\widetilde O((K_{m,B}R_*/n)^{1/3}+(K_{m,B}/n)^{1/2})$.
+For $\alpha=1/2$ the two powers are $3/7$ and $3/4$.
+The architecture is fixed before the observations. These statements have constants uniform in learner width, but do not assert one common PAC--Bayes event for data-dependent selection among infinitely many architectures.
+
+\subsection{A faster expected oracle for averaged prefix predictions}
+The ordinary final posterior above can be distinguished from a second, explicitly different predictor. Fix $\eta=1/8$, keep the same architecture and prior, and form the posterior after each prefix of the data with likelihood $\exp(-\eta\sum l_i)$. Let $p_i(x)$ be its ordinary mean after $i$ observations, including $p_0$ from the prior. Define
+\[
+ \widetilde f_n(x)=\frac1n\sum_{i=0}^{n-1}p_i(x).
+\]
+This averages prefix predictions. It is not the mean of the posterior after all $n$ observations, and it is not the temperature selection used earlier. The Gaussian observation variance is the constant $1/(2\eta)=4$, independent of sample size and learner width.
+
+\begin{corollary}[Expected oracle for progressive averaging]
+\label{cor:progressive-average}
+Under the same comparison bound, the averaged predictor satisfies
+\[
+ \E_S R(\widetilde f_n)
+ \le\inf_{g\in\calG_{m,B}}R(g)
+       +C_q\left(\frac{K_{m,B}}n\right)^{1/(q+1)}.
+\]
+For Cauchy weights the power is $1/2$; for $\alpha=1/2$ it is $3/4$. The expectation is over the IID training sample, and constants remain uniform over every architecture fixed in advance with $N\ge m$.
+\end{corollary}
+\begin{proof}
+For $|y|\le1$, the function $a\mapsto e^{-\eta(a-y)^2}$ is concave on $[-1,1]$ when $\eta\le1/8$. Jensen's inequality at step $i$ therefore gives
+\[
+ (p_{i-1}(X_i)-Y_i)^2\le
+ -\frac1\eta\log\E_{\Pi_{i-1}}e^{-\eta(f_w(X_i)-Y_i)^2}.
+\]
+The right sides telescope through the successive normalizers. The relative-entropy variational formula consequently yields the deterministic inequality
+\[
+ \sum_{i=1}^n(p_{i-1}(X_i)-Y_i)^2
+ \le\inf_\rho\left\{\E_\rho\sum_{i=1}^n(f_w(X_i)-Y_i)^2
+                          +\frac{\KL(\rho\Vert\mu_N)}\eta\right\}.
+\]
+Insert the comparison law at precision $r$ from \eqref{eq:stat-comparison}. The right side is at most
+$n\whR_S(g)+nr+K_{m,B}r^{-q}/\eta$.
+By independence of the next example from its preceding prefix,
+\[
+ \E_S\frac1n\sum_{i=1}^n(p_{i-1}(X_i)-Y_i)^2
+     =\E_S\frac1n\sum_{i=0}^{n-1}R(p_i).
+\]
+Convexity of squared risk bounds $R(\widetilde f_n)$ by the average on the right. Taking expectations and optimizing $0<r\le1$ gives the stated rate. If the optimizing scale exceeds one, bounded risk gives the same inequality after increasing $C_q$.
+\end{proof}
+
+A direct high-probability version follows by a bounded martingale concentration bound for the prefix losses and scalar concentration for the fixed comparator. It adds $O(\sqrt{\log(1/\delta)/n})$ to the displayed oracle. Thus the faster-than-$n^{-1/2}$ powers here are asserted for expected population risk, not for that elementary high-probability conversion.

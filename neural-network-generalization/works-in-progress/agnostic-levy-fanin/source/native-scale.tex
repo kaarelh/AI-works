@@ -1,0 +1,46 @@
+\section{Constant initialization variance does not imply a Gaussian limit}
+\label{sec:levy-native-scale}
+The scalar prior has a non-Gaussian wide-network limit even though its output variance stays of order one. Thus an order-one initialization standard deviation alone does not identify a kernel or Gaussian-process regime.
+
+\begin{proposition}[A non-Gaussian finite-variance limit]
+\label{prop:levy-native-limit}
+Choose the L\'evy density of Section~\ref{sec:levy-scalar} with $p>4$. Consider one hidden layer, a fixed input $x\in[-1,1]^d$, and a globally Lipschitz activation $\phi$ that is not identically zero. Let $Z_N$ be the raw prior output at that input. There is a nondegenerate symmetric infinitely divisible random variable $Z_\infty$ such that
+\[
+ Z_N\ \Longrightarrow\ Z_\infty.
+\]
+Every $Z_N$ has exactly the same positive finite variance. The limit is not Gaussian: it has a strictly positive fourth cumulant. If the final output is tanh or clipping to $[-1,1]$, its variance converges to a positive constant as well.
+\end{proposition}
+\begin{proof}
+Let $U$ be the first-layer preactivation at $x$, including the constant input coordinate, and put $h=\phi(U)$. The first-layer coordinate laws are fixed as $N$ varies. Their fourth moments are finite because $p>4$, so $\E h^4<\infty$. Full support of the bias law and continuity of the nonzero activation give $\E h^2>0$ and $\E h^4>0$.
+
+Write
+\[
+ \Psi(t)=\int(\cos(tx)-1)\,\mathfrak n(dx),
+ \qquad M_j=\int |x|^j\,\mathfrak n(dx),\quad j=2,4.
+\]
+The characteristic function of $L_s$ is $\exp\{s\Psi(t)\}$. Conditional on the IID hidden features $h_1,\ldots,h_N$, independence of the readout coordinates gives
+\[
+ \E[e^{itZ_N}\mid h_1,\ldots,h_N]
+   =\exp\left\{\frac1N\sum_{j=1}^N\Psi(th_j)\right\}.
+\]
+Since $|\Psi(th)|\le M_2t^2h^2/2$, the strong law and bounded convergence show that the unconditional characteristic functions tend to
+\[
+ \exp\{\E\Psi(th)\}.
+\]
+This limit is continuous at zero and is an infinitely divisible characteristic function; its L\'evy measure is the average of the pushforwards of $\mathfrak n$ under $x\mapsto hx$, omitting $h=0$. The same bound verifies the L\'evy integrability condition. L\'evy's continuity theorem proves weak convergence.
+
+Conditional centering and the scalar variance formula give, at every finite width,
+\[
+ \operatorname{Var}(Z_N)=M_2\E h^2>0.
+\]
+The finite fourth moments also justify expansion of the limiting log characteristic function at zero:
+\[
+ \E\Psi(th)
+   =-\frac{M_2\E h^2}{2}t^2
+     +\frac{M_4\E h^4}{24}t^4+o(t^4).
+\]
+For example, dominated convergence follows from the fourth-order remainder bound for cosine. The fourth cumulant $M_4\E h^4$ is strictly positive, so the limit cannot be Gaussian.
+
+For either stated final output link $\psi$, the random variable $\psi(Z_N)$ is symmetric, bounded, and centered. Weak convergence and bounded continuity give
+$\operatorname{Var}(\psi(Z_N))\to\E\psi(Z_\infty)^2>0$; nondegeneracy and the fact that either link vanishes only at zero justify strict positivity.
+\end{proof}

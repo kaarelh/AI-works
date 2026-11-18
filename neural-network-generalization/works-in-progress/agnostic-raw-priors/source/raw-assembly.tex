@@ -1,0 +1,125 @@
+\section{The resulting neural-network oracle bounds}
+\label{sec:raw-assembly}
+For the Gaussian neuron-gated model, define the comparison resource
+\begin{align}
+ \mathcal K_n(g)=C Q_g\big[&(H+2)\log\{C(d+m+2)(B+2)\}\notag\\
+ &+\log\{C(H+2)(m+1)(B+2)(n+1)\}\big]+CP_gB^2.
+ \label{eq:raw-comparison-resource}
+\end{align}
+It is polynomial jointly in dimension, comparison width, depth, and
+coefficient cap, up to the displayed logarithms. It contains no learner
+width. Constants depend only on the fixed activation and gate
+concentration.
+
+\begin{theorem}[Raw prediction with a bounded hidden activation]
+\label{thm:raw-bounded-activation}
+Fix a globally Lipschitz hidden activation with bounded range, and
+$0<\kappa\le1$. Use the Gaussian neuron-gated prior, an unrestricted
+linear readout, and squared loss on the raw output.
+
+\emph{Marginal sub-Gaussian labels.} If
+$\E e^{Y^2/K_Y^2}\le2$, there is a known constant $t_0$, depending
+only on the fixed activation, $\kappa$, and $K_Y$, such that the
+ordinary posterior mean at deterministic temperature
+$T_n=t_0n^{3/4}$ satisfies
+\begin{equation}
+ \E R(\bar z_{S_n})\le R(g)
+                  +C n^{-1/4}\mathcal K_n(g)+C(n+1)^{-2}
+ \label{eq:raw-bounded-subgaussian}
+\end{equation}
+for every $N\ge m$ and every comparator. The positive constant $C$ has
+the same fixed-resource dependence and are independent of $d,H,N,m,B$.
+
+\emph{Only a finite second label moment.} If $\E Y^2<\infty$, use
+instead the observable temperature
+\[
+ T_S=n^{6/7}\left(1+\frac1n\sum_iY_i^2\right).
+\]
+Put
+\[
+ A_n=(d+H+1)^2n^{-1/7}
+          \sqrt{\log\{C(d+H+1)(n+1)\}}.
+\]
+Then, for every raw comparator and every $N\ge m$,
+\begin{equation}
+ \E R(\bar z_S)\le R(g)+C(1+\E Y^2)
+       \{n^{-1/7}\mathcal K_n(g)+A_n+A_n^2+(n+1)^{-2}\}.
+ \label{eq:raw-bounded-finitevariance}
+\end{equation}
+This second statement also bounds the expected posterior-average risk.
+There is no extra output-envelope hypothesis on its comparators.
+\end{theorem}
+\begin{proof}
+For the first assertion, Lemma~\ref{lem:bounded-raw-moments} gives
+Theorem~\ref{thm:raw-tail-oracle} with $r=3/2$, with constants
+independent of depth and dimension. This yields $b=1/4$,
+$M_n=c n^{3/8}$, and $T_n=t_0n^{3/4}$.
+Apply Lemma~\ref{lem:raw-ard-comparison} with comparison squared
+accuracy $(n+1)^{-4}/(1+\|g\|_\infty^2)$.
+Bounded hidden features imply
+$\|g\|_\infty\le B(1+mM_\phi)$, so its logarithm is absorbed by
+\eqref{eq:raw-comparison-resource}. The raw-tail theorem proves
+\eqref{eq:raw-bounded-subgaussian} first for comparators below the analytical cutoff. Proposition~\ref{prop:raw-cutoff-removal} covers the remaining comparators.
+
+For the second assertion, put $a=1/7$ in
+Theorem~\ref{thm:raw-sieve-oracle}. The constants $V,W_4$ and the
+native cutoff coefficient are independent of $d,H$. Thus
+$q_n\le C n^{1/7}$ and $M(q_n)\le Cn^{3/14}$ for $n\ge2$.
+Choose dictionary accuracy $e=(n+1)^{-3}/(M(q_n)+1)$.
+The Gaussian compression theorem gives
+\[
+ L\le C[H+\log(d+1)+1]n^{1/7},
+\]
+and, conservatively,
+\[
+ J(q_n,e)\le C(d+H+1)^4 n^{2/7}
+                         \log\{C(d+H+1)(n+1)\}.
+\]
+The relative dictionary terms are therefore at most
+\begin{align*}
+ &C(1+\sqrt{\E Y^2})(d+H+1)^2n^{-1/7}\sqrt{\log\{C(d+H+1)(n+1)\}}\\
+ &\quad+C(d+H+1)^4n^{-2/7}\log\{C(d+H+1)(n+1)\}.
+\end{align*}
+These are precisely the terms $C(1+\E Y^2)(A_n+A_n^2)$ in the statement.
+The comparison law at the same accuracy as above has risk at most
+$R(g)+C(1+\sqrt{\E Y^2})(n+1)^{-2}$ and entropy at most
+$\mathcal K_n(g)$. Insert it in the raw-sieve theorem to finish.
+\end{proof}
+
+At fixed $d,H$, the finite-variance remainder is
+$\widetilde O((1+\E Y^2)n^{-1/7}[1+\mathcal K_n(g)])$.
+The explicit $A_n^2$ term keeps the bound valid even when dimension
+or depth grows too quickly for its statistical remainder to be small.
+
+\begin{corollary}[General Lipschitz activations at fixed depth]
+\label{cor:raw-general-lipschitz}
+For any fixed globally Lipschitz hidden activation, including ReLU and
+GELU, the same construction gives the following raw-output rates at
+fixed $d,H$. With marginal sub-Gaussian labels, temperature
+$T_n=t_0n^{1-1/(3H+2)}$ gives
+\[
+ \E R(\bar z)\le R(g)+C_{d,H}n^{-1/(3H+2)}\mathcal K_n(g)
+                                   +C_{d,H}(n+1)^{-2},
+\]
+without an additional comparator output cap.
+With only $\E Y^2<\infty$, the observable temperature
+\[
+ T_S=n^{1-1/(3H+5)}(1+\widehat{\E}Y^2)
+\]
+gives a remainder
+$\widetilde O_{d,H}((1+\E Y^2)n^{-1/(3H+5)}[1+\mathcal K_n(g)])$,
+without a comparator output cap. All conclusions hold at every
+$N\ge m$. Constants in this corollary may grow exponentially with
+learner depth.
+\end{corollary}
+\begin{proof}
+Lemma~\ref{lem:lipschitz-raw-moments} gives
+$r=(3H+1)/2$. The raw-tail theorem has exponent
+$1/(2r+1)=1/(3H+2)$. For the finite-variance theorem the dictionary
+still has $J=\widetilde O_{d,H}(q^2)$, while $M(q)=C_{d,H}q^r$.
+Its leading relative deviation is
+$\widetilde O_{d,H}(n^{a(r+1)-1/2})$. Balancing with $n^{-a}$ gives
+$a=1/[2(r+2)]=1/(3H+5)$; the quadratic relative term is smaller.
+Proposition~\ref{prop:raw-cutoff-removal} removes the auxiliary output cutoff. The raw comparison proof is unchanged. Its output-envelope logarithm
+is absorbed in the $H\log[(d+m)B]$ part of the resource.
+\end{proof}

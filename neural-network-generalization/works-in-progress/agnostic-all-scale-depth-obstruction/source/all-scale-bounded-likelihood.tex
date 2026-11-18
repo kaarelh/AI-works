@@ -1,0 +1,62 @@
+\section{Bounded outputs inside the likelihood at every scale}
+\label{sec:all-scale-bounded-likelihood}
+The common obstruction is not specific to an unbounded linear output in the observation model. Both final clipping and a final tanh preserve it.
+
+\begin{corollary}[Final clipping or tanh in the observation model]
+\label{cor:all-scale-bounded-likelihood}
+In Theorem~\ref{thm:all-scale-learning}, let $\psi$ be either clipping to $[-1,1]$ or tanh. Form the posterior using the actual output $\psi(z_w)$:
+\[
+ \Pi^\psi(dw)\propto
+       \exp\{-\widehat R_S(\psi(z_w))/(2\lambda s)\}\,\mu_{N,s}(dw),
+ \qquad \widehat f_\psi(x)=\E_{\Pi^\psi}\psi(z_w(x)).
+\]
+After adjusting the absolute constants $a,c,C,H_0$, the same input and label law as in that theorem has, with probability at least $9/10$, the simultaneous lower bound
+\[
+ R(\widehat f_\psi)\ge a^2+a^2/4096
+\]
+for all $N\ge n^C$, all $0<s\le1/N$, and all $\lambda>0$. The event can be chosen common to both bounded-output likelihoods and the original linear-output likelihood. It therefore also covers arbitrary data-dependent mixtures of these posterior predictions and the prediction conventions in Theorem~\ref{thm:all-scale-learning}, including clipping after mixing.
+
+The conditional mean remains $g(x)=a(2+\tanh X_1)/4$. With a final clipping output it has the same width-two shallow implementation. With a final tanh output it has a width-four implementation with a fixed coefficient bound on the support, at every hidden depth. Thus the bounded observation model still contains a fixed-complexity teacher realizing the true conditional mean.
+\end{corollary}
+\begin{proof}
+Both output maps are odd, vanish at zero, and are one-Lipschitz. Put
+\[
+ M_\psi(w)=\max_{x\in\mathcal U_D}|\psi(z_w(x))|.
+\]
+Then $M_\psi\le M$. Since the depth baseline $B$ and amplitude coefficient $c_\nu$ are nonnegative, the joint entropy floor implies
+\[
+ 2s\operatorname{KL}(\rho\|\mu)
+ \ge B\Pr_\rho(M_\psi>u)+c_\nu\E_\rho M_\psi-e_0.
+\]
+The prior prediction remains centered and has pointwise variance at most $s$, so the same zero comparison applies to its actual squared loss.
+
+For every comparison function $v:\mathcal U_D\to[-2a,2a]$, use raw target $v$ for clipping and raw target $\operatorname{arctanh}v$ for a final tanh. For sufficiently small fixed $a$,
+\[
+ \|\operatorname{arctanh}v\|_\infty
+       \le\|v\|_\infty+Ca^3\le3a.
+\]
+The uniform function comparison therefore has normalized entropy at most
+\[
+ B+4\|v\|_\infty+e_2',\qquad
+ e_2'\le\kappa(d+1)+C'a^2+
+ C'\left\{(1-\nu)(D+\log H)+\frac{(D+\log H)^2}{H}\right\}.
+\]
+Contraction by $\psi$ preserves its prescribed RMS supremum accuracy. In particular, its expected actual empirical loss is at most $\widehat R_S(v)+8a\varepsilon+\varepsilon^2$, exactly as in the linear-output proof.
+
+The baseline-plus-amplitude lemma applies to the actual function $\psi(z)$ with these comparisons and entropy floor. The single temperature cutoff and all uniform parameter estimates in the proof of Theorem~\ref{thm:all-scale-learning} are unchanged after increasing the fixed constants in $e_2$. The high-temperature branch uses only the zero comparison, the entropy floor, and a second-moment bound for the actual prediction, so it is valid here as well. Thus every stated prediction is close to zero or to a nonnegative multiple of a capped empirical-mean vector, with the same error tolerance. On every negative singleton observation those reference predictions are nonpositive, whereas $g>a/4$. The same common witness proves the claimed excess and all mixture assertions. Since the reference vectors lie in $[-2a,2a]$, clipping a mixture preserves their approximation.
+
+It remains to verify realizability for the final-tanh output while retaining the same conditional mean. Let $T_j$ run through $(-3/4,-1/4,1/4,3/4)$, and form the four-feature matrix whose $j$th column is
+\[
+ F_j=\bigl(\tanh1,\ \tanh(20(T_j+1/2)),\
+                 \tanh(20T_j),\ \tanh(20(T_j-1/2))\bigr)^{\mathsf T}.
+\]
+This matrix is invertible. Replacing the last three rows by their sign limits gives the usual constant-and-three-step basis on four ordered points, whose inverse has operator norm less than two. The actual matrix differs from it in Frobenius norm by less than $10^{-3}$ because each nonzero threshold distance is at least $1/4$ and $1-\tanh5<10^{-4}$. Hence invertibility follows from the Neumann criterion.
+
+Write $b_j=\operatorname{arctanh}(g(T_j))$ and choose $c^{\mathsf T}=b^{\mathsf T}F^{-1}$. The hidden features $F_j$ followed by readout $c$ and final tanh give $g(T_j)$ exactly. To preserve these features at arbitrary hidden depth, use the fixed matrix
+\[
+ W=\operatorname{arctanh}(F)\,F^{-1},
+\]
+where inverse tanh acts entrywise. Then $\tanh(WF)=F$. All first-layer parameters, entries of $W$, and readout coefficients are bounded by fixed constants independent of $H,D,N$; the readout coefficients are $O(a)$. No internal biases are needed for this relay. This proves the width-four teacher assertion.
+\end{proof}
+
+For the bounded likelihood, the prediction here is the mean of the bounded network output. A final tanh applied to the mean of the raw readout is a different convention and is not asserted by this corollary. The affine-output extension below concerns a raw Gaussian likelihood; it is not asserted for these bounded-output likelihoods.

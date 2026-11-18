@@ -1,0 +1,48 @@
+\section{An additive cost for additional learner depth}
+\label{sec:additive-depth}
+A shallow teacher's large coefficient precision need not be paid separately at every later layer. After its computation, the comparison network can reset the bounded scalar output into two channels. The native background contracts, so the precision needed in later layers relaxes as that background decays. The detailed construction is Theorem~\ref{thm:bounded-reset-padding}.
+
+\begin{theorem}[Quadratic teacher width plus linear learner depth]
+\label{thm:shallow-additive-depth}
+Use the fixed L\'evy prior, ReLU hidden activations, and final clipping in both the likelihood and prediction. Assume a conditional mean in $[-1,1]$ and conditionally sub-Gaussian noise with proxy $\sigma^2$, and put $s_0=1+\sigma^2$. Fix any learner depth $H\ge1$ and width $N\ge C+1$ before data. Use all observations and the fixed Gaussian variance $128s_0$.
+
+For Boolean inputs with arbitrary law, one has
+\begin{equation}
+ \E R(\bar f_{S_n})\le\inf_{g\in\mathcal G_{C,1}}R(g)
+ +\frac{c s_0(d+1)^2\{(C+1)^2+H\}}{n+1}
+       \log^2\{e(d+1)(C+1)(H+1)(n+1)\}.
+ \label{eq:Boolean-additive-depth}
+\end{equation}
+Under the slab condition \eqref{eq:slab-regularity}, a continuous-domain bound is
+\begin{equation}
+ \E R(\bar f_{S_n})\le\inf_{g\in\mathcal G_{C,1}}R(g)
+ +\frac{c s_0(d+1)^4\{(C+1)^2+H\}}{\alpha^2(n+1)}
+       \log^2\{e\kappa(d+1)(C+1)(H+1)(n+1)\}.
+ \label{eq:continuous-additive-depth}
+\end{equation}
+Thus, at fixed input dimension and regularity, the expected estimation cost is $\widetilde O(s_0(C^2+H)/n)$, at every learner width above the original teacher width plus its constant wire. There is no robustness restriction or architecture mixture.
+\end{theorem}
+\begin{proof}
+First suppose $C\ge2$. The exact Boolean compactification has width $m=C+1\ge3$, an existing constant-one feature, depth one, formula size at most $C+1$, and coefficient cap satisfying
+$\log(B+8)\le cP\log(2P)$, $P=C(d+1)+1$.
+The reset theorem's width condition is therefore $N\ge m$, not $m+1$. Its resource is bounded by
+\[
+ c\left[P^2\log^2(2P)
+       +(P+H)\log\{e(P+H+1)(H+1)(n+1)\}\right].
+\]
+This is bounded by the remainder in \eqref{eq:Boolean-additive-depth}. If $H$ is too small for the two-layer reset, the original comparison has only a bounded number of layers and obeys the same estimate.
+
+For continuous inputs use the same-width grid compactification at discrepancy probability $O(1/n)$. Its coefficient cap satisfies
+\[
+ \log(B+8)\le cP\left[\log(2P)+
+       \frac{\log(2\kappa(n+1))+d\log(C+1)}\alpha\right].
+\]
+Substitute this into the same reset resource. The bracket is at most
+$c(d+1)\alpha^{-1}\log\{e\kappa(d+1)(C+1)(n+1)\}$.
+The squared-log term in the reset resource and its teacher term are therefore bounded by the right side of \eqref{eq:continuous-additive-depth}; the compactification risk error is absorbed there as well.
+
+The remaining case is $C=1$ and $N=2$, where a three-channel intermediate reset may not fit. Use the original stable-padding estimates from the shallow Boolean or continuous theorem. Their resources are
+$O(HP^2\log(2P)+HP\log(eHn))$ and
+$O(HP^2L_n+HP\log(eHn))$, respectively, with $P=d+2$.
+Because $C=1$, these are bounded by the displayed additive formulas after enlarging the numerical constant. All larger widths use the reset proof. This handles every $N\ge C+1$ without an implicit minimum-width exception.
+\end{proof}

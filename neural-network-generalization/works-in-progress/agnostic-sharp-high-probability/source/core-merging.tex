@@ -1,0 +1,482 @@
+\section{The fixed prior and the main guarantee}
+\label{sec:sharp-model}
+Put $D=d+1$ and $\bar x=(1,x)$ for $x\in[-1,1]^d$. The learner has one
+prescribed hidden width $N$ and functions
+\[
+ f_{a,u}(x)=\sum_{i=1}^N a_i\phi(u_i\cdot\bar x),
+\]
+where $\phi$ is $1$-Lipschitz and $|\phi|\le1$. Tanh is the main example.
+There is no final output link. The prior is supported on $\|a\|_1\le1$,
+so every raw output belongs to $[-1,1]$.
+
+Fix $p>2$ and $0<c_0\le\min\{1,(p-1)/8\}$. For incoming feature
+coordinates, use the symmetric finite-variation L\'evy measure
+\[
+ \nu(dz)=\frac{c_0\,dz}{|z|(1+|z|)^p}.
+\]
+Let $\vartheta_F=\mathcal L(L_{1/F})$ be its zero-drift Poisson
+increment law. All incoming coordinates independently have law
+$\vartheta_D$. Before the readout norm conditioning, the readout
+coordinates independently have the signed beta-prime law $\lambda_N$:
+its sign is fair and its independent magnitude has density
+\[
+ q_a(t)=\frac{t^{a-1}(1+t)^{-a-p}}{\mathrm B(a,p)},\qquad
+ t>0,\qquad a=c_0/N.
+\]
+Write $\pi_N^0$ for this product parameter prior and define
+\[
+ A_N=\{\|a\|_1\le1\},\qquad p_N=\pi_N^0(A_N),\qquad
+ \pi_N=\pi_N^0(\cdot\mid A_N).
+\]
+Because $\mathbb E_{\lambda_N}|a_i|=c_0/[N(p-1)]$,
+$p_N\ge1-c_0/(p-1)\ge7/8$. Incoming features remain independent of the
+conditioning. The readout coordinates become dependent, but remain
+nonzero almost surely. Their unconditioned variance is
+$a(a+1)/[(p-1)(p-2)]$, of order $1/N$. These beta-prime readout laws
+are not asserted to be L\'evy increments. All scalar constants are
+fixed independently of sample size and architecture; only fan-in
+changes their prescribed coordinate laws.
+
+A teacher has the form
+\[
+ g(x)=\sum_{j=1}^C b_j\phi(v_j\cdot\bar x),\qquad
+ \sum_j|b_j|\le1,\quad \|v_j\|_\infty\le B,\quad B\ge1.
+\]
+The incoming cap is removed for tanh in
+Section~\ref{sec:l1-compactification}. The readout variation restriction
+remains part of both the learner and teacher models.
+
+Let $(X_i,Y_i)$ be IID, with $X_i\in[-1,1]^d$,
+$f_0(x)=\mathbb E[Y\mid X=x]\in[-1,1]$, and conditionally centered
+$\sigma^2$-sub-Gaussian noise. Put $s=1+\sigma^2$ and
+$R(f)=\mathbb E(f(X)-Y)^2$. Fix $T=2048s$ and use the ordinary posterior
+\[
+ dQ_S(w)=Z_S^{-1}\exp\left\{-\frac1T
+                  \sum_{i=1}^n(f_w(X_i)-Y_i)^2\right\}d\pi_N(w),
+ \qquad \bar f_S=\int f_w\,dQ_S(w).
+\]
+Every observation enters this likelihood, whose Gaussian variance is
+$T/2=1024s$. Architecture and prior are fixed before observing data.
+
+\begin{theorem}[Sharp high-probability all-data oracle]
+\label{thm:l1-main}
+For every deterministic teacher as above, $n\ge2$, $0<\delta<1$, and
+every prescribed finite $N\ge8C$, with probability at least $1-\delta$,
+\begin{align}
+ \int R(f_w)\,dQ_S(w)
+ &\le R(g)+K\frac C{N^2}\notag\\
+ &\quad+\frac{Ks}{n}\left[(1+CD)\log\{eD(B+8)(C+1)n\}+\log\frac4\delta\right].
+ \label{eq:sharp-main-bound}
+\end{align}
+Here $K$ depends only on $c_0,p$. The final posterior mean satisfies the
+same bound. If $N\ge\max\{8C,\sqrt n\}$, the $C/N^2$ term is absorbed
+into the statistical remainder.
+\end{theorem}
+
+The theorem makes no computational-efficiency claim. There is no
+selection over architectures, holdout, temperature selection, or
+averaging over sample sizes. Its comparison law and all precision
+choices below are proof devices, not changes to the learner.
+
+\section{Scalar laws and feature placement}
+The L\'evy measure has infinite total mass but finite first and second
+absolute moments. Its Poisson sum is absolutely convergent. Each
+$\vartheta_F$ is absolutely continuous: for every cutoff $r>0$, the
+large-jump sum has a density conditional on at least one jump, and the
+probability of no such jump tends to zero as $r\downarrow0$. Full support
+follows by prescribing one jump near any desired value and requiring
+the independent small-jump remainder to be small. Thus the incoming
+prior has full support and continuous coordinates.
+
+For $F\ge1$, $|b|\le B$, and $0<r\le1$, there is a law
+$q_{F,b,r}\ll\vartheta_F$ such that
+\begin{equation}
+ |W-b|\le12r,\qquad
+ \mathrm{KL}(q_{F,b,r}\|\vartheta_F)
+ \le\log F+C_0\log\frac{C_0(B+8)}r.
+ \label{eq:l1-scalar-placement}
+\end{equation}
+When $|b|>4r$, the stronger support bound $|W-b|\le r$ holds.
+For completeness, split the Poisson process at $r/\kappa$, with fixed
+large $\kappa$. Prescribe exactly one large jump, uniform on
+$[b-r/2,b+r/2]$ if $|b|>4r$. Otherwise use a mixture of uniforms on
+$[5r,7r]$ and $[-7r,-5r]$ with mean $b$. Retain the original small-jump
+process conditioned on its sum having magnitude at most $r/2$.
+Its failure probability is $O(1/F)$ by its variance, so this conditioning
+costs $O(1/F)$. The prescribed jump has density at most $1/r$, and the
+original Levy density on its support is at least a constant times
+$(B+8)^{-p-1}$. The entropy on Poisson space is
+\[
+ \int q(z)\log\frac{Fq(z)}{\nu(z)}\,dz
+ +\frac{\nu\{|z|>r/\kappa\}}F
+ -\log\Pr\{|S_{r/\kappa}|\le r/2\},
+\]
+which gives \eqref{eq:l1-scalar-placement}; summing the jumps decreases
+KL. The support bounds follow directly from the displayed jump intervals.
+The small-$b$ mixture can be chosen with mean $b$ because $|b|\le4r<6r$.
+
+In particular, every feature with $\|v\|_\infty\le B$ has a comparison
+law $\zeta_{v,\epsilon}$ relative to its native product incoming prior
+such that
+\begin{equation}
+ \sup_x|\phi(U\cdot\bar x)-\phi(v\cdot\bar x)|\le\epsilon,
+ \qquad
+ \mathrm{KL}(\zeta_{v,\epsilon}\|\vartheta_D^{\otimes D})
+ \le C_0D\log\frac{C_0D(B+8)}\epsilon.
+ \label{eq:l1-feature-placement}
+\end{equation}
+Apply \eqref{eq:l1-scalar-placement} independently with
+$r=\epsilon/(12D)$ and use Lipschitzness.
+
+\subsection{Scaling, placement, and merging of scalar coordinates}
+For $0<s<1$, direct density division gives
+\begin{equation}
+ \mathcal L(sW)\le s^{-a}\lambda_N,
+ \qquad W\sim\lambda_N.
+ \label{eq:merge-beta-scaling}
+\end{equation}
+Indeed the density ratio is
+$s^{-a}[(1+|w|)/(1+|w|/s)]^{a+p}\le s^{-a}$.
+For $0<a\le c_0\le1$, the quantity $a\mathrm B(a,p)$ is bounded above
+and below by fixed positive constants. Also
+\[
+ t^{a-1}(1+t)^{-a-p}
+ =(t/(1+t))^{a-1}(1+t)^{-p-1}\ge(1+t)^{-p-1}.
+\]
+Therefore a uniform distribution on $[b-r,b+r]$, with $|b|\le1$ and
+$0<r\le1$, has density relative to $\lambda_N$ at most $C_pN/r$.
+It has mean $b$ and lies within $r$ of its center. The incoming-feature
+placement law from \eqref{eq:l1-feature-placement} is unchanged.
+
+The positive density $q_a$ is decreasing because $a\le1$. Hence
+\begin{equation}
+ (q_a*q_a)(t)
+ \le2q_a(t/2)\int_0^{t/2}q_a(u)\,du
+ \le2^{p+2}q_a(t).
+ \label{eq:merge-beta-convolution}
+\end{equation}
+The last inequality uses
+$q_a(t/2)/q_a(t)\le2^{p+1}$. Thus the symmetric law whose magnitude is
+the sum of two independent native magnitudes has density at most
+$2^{p+2}$ times the native signed law.
+
+For any fixed parameter pair $(a_i,u_i),(a_j,u_j)$, put
+$L=|a_i|+|a_j|$. Choose feature $u_i$ with probability $|a_i|/L$ and
+feature $u_j$ otherwise. In the first slot place the chosen feature
+and coefficient $\operatorname{sign}(a_{\rm chosen})L$; erase the second
+slot. At $L=0$ use any choice and coefficient zero. This operation
+preserves the pair's $\ell^1$ norm pointwise and its function in conditional
+expectation. At every $x$ its conditional variance is
+\begin{equation}
+ |a_i a_j|\{\operatorname{sign}(a_i)\phi(u_i\cdot\bar x)
+       -\operatorname{sign}(a_j)\phi(u_j\cdot\bar x)\}^2
+ \le4|a_i a_j|.
+ \label{eq:merge-pair-variance}
+\end{equation}
+Under the unconditioned product reference, the copied feature retains
+its native law and is independent of the new coefficient: the choice
+depends only on readout magnitudes, the two features are iid, and the
+chosen sign is fair independently of those magnitudes. Thus a fixed
+pair merge has precisely the scalar domination
+\eqref{eq:merge-beta-convolution}; no orientation factor is required
+because the retained position is always the first slot.
+
+\section{A finite-width midpoint transfer}
+\begin{lemma}[Unbiased finite-width midpoint transfer]
+\label{lem:merge-transfer}
+Let $N\ge8C$, $0<\epsilon\le1$, and let $g$ obey the same teacher
+width, incoming coefficient and readout variation restrictions as stated above.
+For every finite-KL $Q\ll\pi_N$ there is a law
+$Q_g\ll\pi_N$ coupled with source and output functions $F,H$, such that
+\begin{align}
+ \mathrm{KL}(Q_g\|\pi_N)
+ &\le\mathrm{KL}(Q\|\pi_N)+J(C,B,\epsilon),
+ \label{eq:merge-KL}\\
+ \left|\mathbb E[H(x)-(F(x)+g(x))/2\mid F\text{ parameters}]\right|
+ &\le\epsilon,
+ \label{eq:merge-mean}\\
+ \mathbb E[|H(x)-(F(x)+g(x))/2|^2\mid F\text{ parameters}]
+ &\le C_p C/N^2+C_p\epsilon^2.
+ \label{eq:merge-second}
+\end{align}
+The last two inequalities hold uniformly in $x$, and one may take
+$J=C_p[1+CD\log\{eC_pD(B+8)(C+1)/\epsilon\}]$.
+The same conditional bounds hold after fixing the selected slot indices.
+\end{lemma}
+\begin{proof}
+Set $r=\epsilon/[64(C+1)]$, $\gamma=4Cr$, and retain teacher coefficients
+with magnitude greater than $16r$, leaving $k\le C$ terms. At every old
+readout vector of $\ell^1$ norm at most one there are at least $N/2$ slots
+with $|a_i|\le2/N$. Choose an ordered tuple of $2k$ distinct indices
+uniformly among such slots and group consecutive entries into $k$ pairs.
+Relative to a uniform tuple among all $(N)_{2k}$ possibilities, this
+conditional choice costs at most $2k\log4$ in KL: at each draw there
+are at least $N/2-2C\ge N/4$ permitted remaining indices.
+
+Independently merge each pair as above, always retaining its first
+position. The resulting function $F^{\rm m}$ has conditional mean $F$,
+and, because the merge choices are independent and each pair has
+$|a_i|,|a_j|\le2/N$,
+\[
+ \mathbb E[|F^{\rm m}(x)-F(x)|^2\mid W,I]\le16k/N^2.
+\]
+Its readout $\ell^1$ norm equals the old one. Halve all remaining readout
+coefficients and use the freed second position in pair $j$ for a feature
+from \eqref{eq:l1-feature-placement} and a uniform coefficient within
+$r$ of $(1-\gamma)b_j/2$. The new readout norm is at most
+$\frac12+\frac12(1-\gamma)+Cr\le1$, and every inserted
+magnitude exceeds $r$. Relative to $g/2$, discarded teacher terms
+cost at most $8Cr$, shrinkage costs at most $2Cr$, readout perturbations
+at most $Cr$, and feature perturbations at most $\epsilon/2$.
+Thus the inserted teacher function differs uniformly from $g/2$ by at
+most $11Cr+\epsilon/2\le\epsilon$. This insertion error is independent of
+the merge choices. Its conditional mean is bounded by $\epsilon$ and
+its second moment by $\epsilon^2$. Halving the merging error and using
+its zero conditional mean proves \eqref{eq:merge-mean} and
+\eqref{eq:merge-second}, with a numerical enlargement of $C_p$.
+
+Here is an explicit density proof of the KL bound. Augment the source
+law with the selected tuple. Relative to $\pi_N$ times a uniform
+tuple, its KL is at most $\mathrm{KL}(Q\|\pi_N)+2k\log4$.
+Apply the same randomized merging and insertion kernel to both laws;
+data processing bounds the output KL relative to the transformed
+reference by this number.
+
+For a fixed tuple, the unconditioned reference after merging has native
+independent features, native readout coordinates outside the retained
+positions, and $k$ merged readout laws dominated by $2^{p+2}\lambda_N$.
+The merged magnitude exactly preserves the old $\ell^1$ norm. Consequently
+conditioning the old prior on its norm can be bounded by the same
+unconditioned reference divided by its old normalizer. Halving all
+$N-k$ retained coefficients costs at most $2^{c_0}$ by
+\eqref{eq:merge-beta-scaling}. Inserting the $k$ teacher coefficients
+costs at most $(C_pN/r)^k$, while inserting their features costs at most
+\[
+ \exp\{C_p kD\log(C_pD(B+8)/\epsilon)\}.
+\]
+For this last density claim, the feature placement construction also
+has an L-infinity density bound of the displayed order: its prescribed
+one-jump Poisson density and its small-jump conditioning density are
+pointwise bounded by the same factors used in the entropy estimate.
+Taking a pushforward preserves an upper density bound.
+
+The output is supported on the same $\ell^1$ ball, so dividing by the target
+conditioned prior cancels the old conditioning normalizer exactly.
+At a realized output, at most $1/r$ slots have readout magnitude greater
+than $r$. Thus the $k$ inserted positions have at most $r^{-k}$ possible
+ordered choices. The $k$ retained first positions have at most $N^k$
+choices. Averaging over all $(N)_{2k}$ tuples bounds the transformed
+reference density relative to $\pi_N$ by
+\[
+ 2^{c_0}\,2^{(p+2)k}
+ \frac{N^{2k}}{(N)_{2k}}\,r^{-k}
+ \exp\{C_pkD\log(C_pD(B+8)(C+1)/\epsilon)\}.
+\]
+Since $N\ge8C\ge8k$, $N^{2k}/(N)_{2k}\le(4/3)^{2k}$.
+The logarithm of this density bound, plus the selection cost, is at
+most $J(C,B,\epsilon)$. Combining it with data processing proves
+\eqref{eq:merge-KL} without multiplying the source KL by a constant.
+The argument does not assume independence of the source posterior.
+\end{proof}
+
+% Uniform-width direct localization and the bounded-variation uniform bound.
+\section{Direct localization at every realizable width}
+\label{sec:direct-localization}
+We use the signed beta-prime readout prior and the same incoming
+feature laws and $\ell^1$ conditioning fixed in Section~\ref{sec:sharp-model}.
+
+\begin{lemma}[Small beta-prime backgrounds]
+\label{lem:beta-background}
+There are constants $r_0,K>0$ depending only on $c_0,p$ such that, for
+$a=c_0/N$ and $0<r\le r_0$, a native readout magnitude $V$ satisfies
+\[
+ -\log\Pr(V\le r)\le Ka\log(K/r),\qquad
+ \mathbb E[V\mid V\le r]\le2ar.
+\]
+\end{lemma}
+\begin{proof}
+Put $p_r=\Pr(V\le r)$. Since $(1+t)^{-a-p}\ge1-(a+p)t$,
+\[
+ p_r\ge\frac{r^a}{a\mathrm B(a,p)}
+       \left[1-\frac{(a+p)ar}{a+1}\right].
+\]
+Choose fixed $r_0$ so the bracket is at least $1/2$. The function
+$\log[a\mathrm B(a,p)]$ extends smoothly to $a=0$ with value zero;
+its derivative is bounded on $[0,c_0]$. Thus its absolute value is at
+most $Ka$, while the negative logarithm of the bracket is at most
+$Kar$. This proves the first bound. For the conditional mean, the
+numerator is at most $r^{a+1}/[(a+1)\mathrm B(a,p)]$. Divide by the
+preceding lower bound and use its bracket at least $1/2$.
+\end{proof}
+
+\begin{lemma}[Width-uniform sup-norm comparison]
+\label{lem:direct-comparison}
+For every $N\ge C$, $0<\epsilon\le1$, and every teacher $g$ of width
+$C$, incoming cap $B\ge1$, and readout variation at most one, there is
+a data-independent law $\rho_{g,\epsilon}\ll\pi_N$ such that
+\begin{align}
+ \rho_{g,\epsilon}\{\|f-g\|_\infty\le\epsilon\}&=1,\notag\\
+ \mathrm{KL}(\rho_{g,\epsilon}\|\pi_N)
+ &\le K(1+CD)\log\frac{eKD(B+8)(C+1)}\epsilon.
+ \label{eq:direct-comparison}
+\end{align}
+The constant is independent of $N$.
+\end{lemma}
+\begin{proof}
+Choose a sufficiently large fixed $K_0$ and set
+$r=\epsilon/[K_0(C+1)]\le r_0$. Discard teacher readout coefficients
+with magnitude at most $16r$, leaving $k\le C$ terms. Center the
+retained coefficient laws at $(1-\epsilon/2)b_j$, with uniform radius
+$r$. The centers have magnitude at least $8r$, so these inserted
+coefficients have magnitude greater than $r$. Approximate each retained
+feature uniformly to $\epsilon/8$ using the incoming placement law.
+
+For any fixed selection of $k$ distinct slots, condition every other
+native readout coordinate to have magnitude at most $r$, and then
+condition their total $\ell^1$ norm to be at most $\epsilon/8$. By
+Lemma~\ref{lem:beta-background}, their conditional expected total norm
+is at most $2c_0r$. For large enough $K_0$, the second conditioning
+therefore has probability at least $1/2$. The joint background law has
+density relative to its native product reference at most
+\[
+ 2p_r^{-(N-k)}\le\exp\{K\log(K/r)\},
+\]
+uniformly in $N$.
+
+Every resulting readout has norm at most
+$1-\epsilon/2+Cr+\epsilon/8\le1$. The uniform function error consists
+of at most $16Cr$ from discarded coefficients, $\epsilon/2$ from
+shrinkage, $Cr$ from coefficient perturbations, $\epsilon/8$ from
+feature approximation, and $\epsilon/8$ from the background. For
+$K_0\ge128$, their sum is at most $\epsilon$.
+
+It remains to cancel the cost of selecting the slots. When $k\ge1$,
+partition the $N$ slots into $k$ deterministic groups, each of size at
+least $\lfloor N/k\rfloor\ge N/(2k)$, and choose one slot uniformly
+from each group for its designated teacher term. For a fixed choice,
+the readout insertion densities cost at most $(KN/r)^k$, and the
+feature insertion densities cost at most
+$\exp\{KkD\log(KD(B+8)/\epsilon)\}$. All other readouts have magnitude
+at most $r$, whereas each inserted readout has magnitude greater than
+$r$. The realized weights therefore identify the chosen position in
+each group. In the mixture density, at most one placement contributes;
+its uniform mixing weight cancels $N^k$ up to $(2k)^k$.
+
+Combining these density bounds gives an upper density ratio of
+$\exp\{K(1+CD)\log(eKD(B+8)(C+1)/\epsilon)\}$ relative to the
+unconditioned product prior. The comparison is supported on the l1
+ball, so converting the denominator to the conditioned prior multiplies
+this ratio by $p_N\le1$. Its KL is bounded by the logarithm of the
+displayed ratio. For $k=0$, use only the background law; the same bounds
+hold without groups or insertion costs.
+\end{proof}
+
+
+\section{From midpoint transfer to a sharp population oracle}
+\label{sec:sharp-statistics}
+\begin{proof}[Proof of Theorem~\ref{thm:l1-main}]
+Write $\beta=1/T$ and $\Delta_f=(f-Y)^2-(g-Y)^2$. Use
+Lemma~\ref{lem:merge-transfer} with $\epsilon=n^{-2}$ and
+$J=J(C,B,n^{-2})$. Conditional on the source parameters, expand squared
+loss about the midpoint $M=(F+g)/2$. The conditional mean error and
+second-moment bounds in that lemma give
+\begin{align*}
+ \mathbb E_{Q_g}\widehat R(H)
+ &\le\tfrac12\mathbb E_Q\widehat R(F)+\tfrac12\widehat R(g)
+       -\tfrac14\mathbb E_QP_n(F-g)^2+\varepsilon_S,\\
+ \varepsilon_S&\le K C/N^2+K(1+P_n|Y|)n^{-2}.
+\end{align*}
+Gibbs variational optimality, together with the additive KL transfer,
+therefore implies
+\begin{equation}
+ \mathbb E_QP_n\Delta_F
+ \le-\tfrac12\mathbb E_QP_n(F-g)^2
+            +2\varepsilon_S+2TJ/n.
+ \label{eq:sharp-empirical-offset}
+\end{equation}
+
+We prove the needed relative-loss exponential inequality explicitly.
+For fixed bounded $f,g$, write $d_f=f-g$, $D_f=d_f^2$, and
+$B_f=d_f(f+g-2f_0)$. Then
+$\Delta_f=B_f-2\xi d_f$, $B_f^2\le16D_f$, and $0\le D_f\le4$.
+For $\kappa_*=1/8$ and $0<\lambda\le1/(1024s)$,
+\begin{equation}
+ \mathbb E\exp\{\lambda[P\Delta_f-\Delta_f-\kappa_*D_f]\}\le1.
+ \label{eq:sharp-relative-mgf}
+\end{equation}
+Indeed, conditional integration of the noise leaves
+$W=-B_f-\kappa_*D_f+2\lambda\sigma^2D_f$ inside $e^{\lambda W}$.
+At these constants, $|W|\le6|d_f|$ and $|\lambda W|\le1$.
+Since $e^z\le1+z+z^2$ for $|z|\le1$,
+\[
+ \mathbb E e^{\lambda W}
+ \le1-\lambda PB_f-\lambda\kappa_*PD_f
+       +\lambda^2(2\sigma^2+36)PD_f
+ \le e^{-\lambda PB_f}.
+\]
+This proves \eqref{eq:sharp-relative-mgf}. Take $\lambda=2\beta$,
+use independence, integrate over the prior, and apply Markov. With
+probability at least $1-\delta/2$,
+\begin{equation}
+ \int e^{2\beta n[P\Delta_f-P_n\Delta_f-\kappa_*P_nD_f]}
+                   d\pi_N(f)\le2/\delta.
+ \label{eq:sharp-mgf-event}
+\end{equation}
+
+Put $L=\log(2/\delta)$. The conditional sub-Gaussian inequality
+$\mathbb E e^{t|\xi|}\le2e^{\sigma^2t^2/2}$ and independence give, with
+probability at least $1-\delta/2$,
+\[
+ P_n|Y|\le1+\sigma\sqrt{2(\log2+L/n)}.
+\]
+If $L>n$, the theorem follows from $R(f)-R(g)\le4$ by enlarging $K$.
+Otherwise this event implies $1+P_n|Y|\le K\sqrt s$.
+
+Use the direct comparison law of Lemma~\ref{lem:direct-comparison}
+at accuracy $n^{-2}$. Its uniform approximation gives
+\[
+ \mathbb E_\rho P_n\Delta_f\le2(1+P_n|Y|)n^{-2}
+                         \le K\sqrt s/n^2.
+\]
+Its KL is at most
+$J_{\rm loc}=K(1+CD)\log\{eKD(B+8)(C+1)n\}$.
+For $Z_g=\int e^{-\beta nP_n\Delta_f}\,d\pi_N(f)$, the variational
+inequality therefore yields
+\begin{equation}
+ -\log Z_g\le J_{\rm loc}+K=:L_g.
+ \label{eq:sharp-partition}
+\end{equation}
+This comparison law does not depend on the observed sample.
+
+Rewrite \eqref{eq:sharp-mgf-event} using
+$dQ_S/d\pi_N=e^{-\beta nP_n\Delta_f}/Z_g$, and apply Jensen.
+Together with \eqref{eq:sharp-partition}, this gives
+\[
+ \mathbb E_QP\Delta_f
+ \le\tfrac12\mathbb E_QP_n\Delta_f+\kappa_*\mathbb E_QP_nD_f
+            +\frac T{2n}\{L_g+\log(2/\delta)\}.
+\]
+Insert \eqref{eq:sharp-empirical-offset}. The coefficient of the
+empirical distance is $-1/4+\kappa_*=-1/8$, so this term can be dropped.
+Consequently
+\[
+ \int R(f)\,dQ_S\le R(g)+\varepsilon_S
+        +\frac Tn\{J+L_g/2+\tfrac12\log(2/\delta)\}.
+\]
+Substitute the bounds on $\varepsilon_S,L_g$ and the displayed
+expression for $J(C,B,n^{-2})$. This is
+\eqref{eq:sharp-main-bound}. Jensen proves the posterior-mean claim.
+\end{proof}
+
+\paragraph{Simultaneous comparison classes.}
+For deterministic countably many teacher classes with uniform resources
+$(C_j,B_j)$ and $8C_j\le N$, choose weights $w_j>0$ summing to at most
+one. In each class choose a deterministic teacher within $1/n$ of its
+population-risk infimum, apply the theorem with confidence $\delta w_j$,
+and union bound. The same single posterior then obeys the infimum of
+\eqref{eq:sharp-main-bound} over those classes, with
+$\log(4/\delta)$ replaced by $\log(4/(\delta w_j))$ and an absorbed
+$1/n$ error. These confidence weights are proof devices and are not
+supplied to the learner. Dyadic incoming bounds compare arbitrary finite
+teacher coefficients with their corresponding resources.
+

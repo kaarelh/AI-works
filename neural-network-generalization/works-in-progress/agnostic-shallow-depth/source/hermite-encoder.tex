@@ -1,0 +1,92 @@
+\section{A polynomial-dimensional Gaussian feature encoder}
+\label{sec:dimension-encoder}
+The first-layer Gaussian variance decreases with dimension. Approximating a
+specified parameter vector by a small Euclidean ball therefore gives a poor
+bound on the feature-encoding norm. A finite Hermite expansion avoids that
+loss when the comparison rows have a fixed Euclidean norm.
+
+\begin{lemma}[Bounded feature density with polynomial dimension cost]
+\label{lem:hermite-encoder}
+Fix $C,B\ge1$ and $\eta>0$. There are constants $A,a$, depending only on
+these fixed quantities, such that for every $d\ge1$ and every
+\[
+ g(x)=\sum_{j=1}^C c_j\tanh(a_j^\top(1,x)),\qquad
+ |c_j|\le B,\quad\|a_j\|_2\le B,
+\]
+there is a bounded measurable $\psi$ with
+\[
+ W\sim N(0,I_{d+1}/d),\qquad
+ g_0(x)=\E\psi(W)\tanh(W^\top(1,x)),
+\]
+\[
+ \sup_{x\in\mathbb S^{d-1}}|g_0(x)-g(x)|\le\eta,
+ \qquad \|\psi\|_\infty\le A(d+1)^a.
+\]
+The constants are uniform over the displayed comparison class. The row
+norm bound, rather than a coordinatewise bound independent of dimension,
+is part of this lemma's hypothesis.
+\end{lemma}
+\begin{proof}
+Choose an odd polynomial
+\[P(t)=\sum_{k\le K,\ k\text{ odd}}p_kt^k\]
+that approximates $\tanh t$ on $[-\sqrt2B,\sqrt2B]$ within
+$\eta/(2CB)$. Such a polynomial follows, for example, by approximating
+on this compact interval and taking the odd part. Its degree and
+coefficients depend only on the fixed resources.
+
+Let $G\sim N(0,I_{d+1})$, $v=(1,x)/\sqrt2$, and let $H_k$ be the
+probabilists' Hermite polynomial. For any unit vector $u$, the Gaussian
+regression identity gives
+\begin{equation}
+ \E H_k(u^\top G)\tanh(\sqrt{2/d}\,v^\top G)
+  =b_k(d)(u^\top v)^k,
+ \quad b_k(d)=\E H_k(Z)\tanh(\sqrt{2/d}\,Z).
+ \label{eq:hermite-ridge-identity}
+\end{equation}
+This follows by conditioning on $v^\top G$, since
+$\E[H_k(u^\top G)\mid v^\top G]=
+ (u^\top v)^kH_k(v^\top G)$.
+For odd $k$, the coefficient never vanishes and
+\begin{equation}
+ |b_k(d)|\ge c_kd^{-k/2},\qquad d\ge1,
+ \label{eq:hermite-coefficient-lower}
+\end{equation}
+where $c_k>0$ depends only on $k$. Indeed the Fourier identity
+\[
+ \tanh t=\int_0^\infty\frac{\sin(ut)}{\sinh(\pi u/2)}\,du
+\]
+and $\E H_k(Z)e^{itZ}=(it)^ke^{-t^2/2}$ yield, with
+$a=\sqrt{2/d}$,
+\[
+ b_k(d)=(-1)^{(k-1)/2}
+       \int_0^\infty\frac{(au)^ke^{-a^2u^2/2}}
+                                {\sinh(\pi u/2)}\,du.
+\]
+Interchanging the integrals is justified by the linear bound for sine
+near zero and exponential decay of the denominator at infinity.
+Restricting the last positive integral to $1\le u\le2$ proves
+\eqref{eq:hermite-coefficient-lower}, since $a\le\sqrt2$.
+
+For $a_j\ne0$ put $u_j=a_j/\|a_j\|_2$. Equations
+\eqref{eq:hermite-ridge-identity}--\eqref{eq:hermite-coefficient-lower}
+show that the polynomial approximation to $g$ is represented exactly by
+\[
+ \Psi(G)=\sum_{j,k}c_jp_k
+       \frac{(\sqrt2\|a_j\|_2)^k}{b_k(d)}H_k(u_j^\top G).
+\]
+Terms with $a_j=0$ vanish. Each coefficient in this finite sum has
+absolute value at most $A_0(d+1)^{K/2}$.
+Replace each $H_k(u_j^\top G)$ by
+$H_k(u_j^\top G)\mathbf1_{\{|u_j^\top G|\le R\}}$.
+Since $\E H_k(Z)^2=k!$ and
+$\Pr(|Z|>R)\le2e^{-R^2/2}$, the uniform error in the represented
+function is at most $A_1(d+1)^{K/2}e^{-R^2/4}$.
+Take $R^2=A_2+A_3\log(d+1)$ with the fixed constants large enough
+that this is at most $\eta/2$. The resulting density is bounded by
+\[
+ A_4(d+1)^{K/2}(1+R)^K\le A(d+1)^a.
+\]
+Finally set $\psi(W)$ equal to this truncated density at $G=\sqrt dW$.
+Combining the truncation and polynomial approximation errors proves the
+claim.
+\end{proof}

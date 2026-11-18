@@ -1,0 +1,35 @@
+\section{Sub-Gaussian labels without changing the observation model}
+\label{sec:subgaussian-labels}
+The bounded-label assumption can be replaced by a fixed sub-Gaussian envelope. This includes a bounded regression function plus independent Gaussian noise. The training labels, likelihood, and prediction rule remain unchanged.
+
+\begin{corollary}[Sub-Gaussian-label oracle]
+\label{cor:subgaussian-labels}
+Replace $|Y|\le1$ in Theorem~\ref{thm:main-shallow} by
+\[
+ \E\exp(Y^2/S^2)\le2
+\]
+for a fixed $S>0$. All its conclusions and sample-complexity exponents remain valid, with constants and likelihood calibration also depending on $S$. No conditional assumption on the label distribution given the input is needed beyond this marginal envelope.
+\end{corollary}
+\begin{proof}
+On one sample event, $n^{-1}\sum_iY_i^2\le cS^2$ and therefore $n^{-1}\sum_i|Y_i|\le cS$, using subexponential Bernstein and a fixed confidence share. Its sample requirement is $O(\log(1/\delta))$ at fixed $S$.
+The evidence lower bound becomes
+\[
+ Z\ge\exp\left[-\frac{\omega}{2\lambda}
+                     \left(1+n^{-1}\sum_iY_i^2\right)\right].
+\]
+Conditioning on hidden features and using the centered Gaussian readout also gives
+\[
+ \E_\mu R(z)^2\le3+6\E Y^2+\E Y^4\le c(1+S^4).
+\]
+Thus the same posterior bad-set argument works with
+$K=c_S[1+\lambda^{-1}+\log(1/\epsilon)]$ on the common label-moment event.
+
+For a fixed dictionary function with $|f|\le M$, the squared loss $(f(X)-Y)^2$ is subexponential with norm at most $c(M+S)^2$. Finite-class Bernstein therefore replaces finite-class Hoeffding at the same logarithmic-cardinality cost and with the same powers of the output envelope. A uniform output approximation of size $b$ changes empirical or population loss by at most
+$2b[M+\E|Y|]+b^2$, with the empirical mean in the empirical version. The label-moment event controls both. Take $b$ of order $\epsilon/(M+S+1)$ in the dictionaries. These changes affect constants and logarithms, not the displayed depth or width exponents.
+
+The comparison laws give pointwise root-mean-square approximation error at most $r$. Their empirical loss exceeds the teacher's by at most
+\[
+ 2r\left(M+n^{-1}\sum_i|Y_i|\right)+r^2,
+\]
+where $M$ is the envelope of the approximated function. At depths $H\ge2$, the covariance comparison approximates a bounded response whose envelope is fixed independently of $C$. Lemma~\ref{lem:attenuation-loss}, together with one Bernstein event for the fixed label-tail variable $Y^2\mathbf1_{\{|Y|>T\}}$, compares that response to the original teacher. The Gaussian-feature approximation uses inverse-polynomial accuracy in $C$, as in Proposition~\ref{prop:uniform-risk-comparison}. At $H=1$ and in the smaller-width branch, take $M=O(CB)$ and inverse-polynomial $r$. The comparison costs and thresholds remain polynomial in $C$ with the same depth dependence. Finally the fixed teacher's squared loss is subexponential with scale polynomial in $CB+S$, so its scalar concentration event still costs only a polynomial in $C$. Intersect the events and repeat the variational assembly. No clipping of the actual observations or modification of their likelihood has occurred.
+\end{proof}

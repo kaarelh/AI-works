@@ -1,0 +1,60 @@
+\section{An exact Laplace representation of the Gaussian function prior}
+\label{sec:Gaussian-Laplace}
+The one-dimensional Gaussian model admits a simple exact
+reparametrization. This changes neither its prior on functions nor
+its likelihood or posterior.
+
+\begin{lemma}[Polar representation]
+\label{lem:Gaussian-Laplace}
+For independent coordinates
+\[
+ a_j,b_j\sim N(0,\nu),\qquad v_j\sim N(0,\nu/N^2),
+\]
+write $(a_j,b_j)=r_j(\cos\theta_j,\sin\theta_j)$ and $c_j=v_jr_j$.
+Then the pairs $(c_j,\theta_j)$ are independent across neurons,
+$\theta_j$ is uniform on $[0,2\pi)$, and $c_j$ is independent of
+$\theta_j$ with Laplace density
+\[
+ \frac{\omega}{2}e^{-\omega|c_j|},
+ \qquad \omega=N/\nu.
+\]
+Consequently the original Gaussian function prior is exactly
+\[
+ z(x)=\sum_{j=1}^N
+        c_j\operatorname{ReLU}(x\cos\theta_j+\sin\theta_j).
+\]
+Conditional on the directions, the actual posterior coefficient
+density is
+\[
+ \Pi(dc\mid\theta,S)\ \propto\
+ \exp\left[-\omega\left\{
+       \sum_{j=1}^N|c_j|+\frac{\widehat R_S(z)}{2\lambda}
+                         \right\}\right]\,dc.
+\]
+Thus the conditional coefficient posterior is a Bayesian lasso;
+the directions retain their full Bayesian posterior as well.
+\end{lemma}
+\begin{proof}
+Rotational symmetry gives independent uniform angle and
+$r_j^2$ exponential with mean $2\nu$. Conditioning on $r_j$,
+\[
+ \mathbb E e^{itc_j}
+ =\mathbb E\exp\left(-\frac{\nu t^2r_j^2}{2N^2}\right)
+ =\frac1{1+\nu^2t^2/N^2},
+\]
+the characteristic function of a centered Laplace variable with
+scale $\nu/N$. Independence of the angle is preserved by the
+product $v_jr_j$. Positive homogeneity gives the function identity.
+The likelihood is a function only of these transformed variables,
+so its posterior pushforward is exact; multiplying the product
+Laplace density by the original Gaussian likelihood gives the last
+display.
+\end{proof}
+
+The path variation of this representation is exactly
+$\sum_j|c_j|$, whose prior expectation is $\nu$, independently of
+width. Its second-derivative variation on $[-1,1]$ is at most that
+quantity. This identity explains why the localized analysis can
+use a variation budget. It does not assert that the full posterior
+is a fixed-feature lasso, since its directions are also inferred,
+and it is not an additional prior restriction.

@@ -1,0 +1,116 @@
+\section{One continuous infinitely divisible prior for every coordinate}
+\label{sec:levy-scalar}
+Fix constants $c>0$ and $p>2$, and define the symmetric L\'evy measure
+\[
+ \mathfrak n(dx)=\frac{c\,dx}{|x|(1+|x|)^p}
+ \qquad(x\ne0).
+\]
+Let $L_t$ be the sum of all points of a Poisson random measure on $\R\setminus\{0\}$ with intensity $t\mathfrak n$, with no Gaussian component or deterministic drift. This sum converges absolutely almost surely. A coordinate whose fan-in is $F\ge1$ has the law
+\begin{equation}
+ \vartheta_F=\mathcal L(L_{1/F}).
+ \label{eq:levy-coordinate-prior}
+\end{equation}
+All coordinates in the network are independent. Thus one fixed infinitely divisible family is used in every layer; fan-in changes its time parameter. The Poisson representation is a proof tool for this scalar law and does not introduce a prior over network architectures.
+
+\begin{lemma}[Regularity and moments of the scalar prior]
+\label{lem:levy-scalar-properties}
+For every $t>0$, the law of $L_t$ is symmetric, centered, absolutely continuous with respect to Lebesgue measure, and has full support on $\R$. It has finite first and second absolute moments. If
+\[
+ M_j=\int |x|^j\mathfrak n(dx),\qquad j=1,2,
+\]
+then
+\[
+ \E|L_t|\le tM_1,\qquad \operatorname{Var}(L_t)=tM_2.
+\]
+For $0<r\le1$, write $\Lambda(r)=\mathfrak n\{|x|>r\}$. Constants depending only on $c,p$ satisfy
+\begin{align*}
+ \Lambda(r)&\le C[1+\log(1/r)],\\
+ \int_{|x|\le r}|x|\mathfrak n(dx)&\le Cr,\\
+ \int_{|x|\le r}x^2\mathfrak n(dx)&\le Cr^2.
+\end{align*}
+The density need not be bounded near zero, especially at small time.
+\end{lemma}
+\begin{proof}
+Near zero the measure has density comparable to $1/|x|$, and at infinity it is comparable to $|x|^{-p-1}$. Hence $M_1,M_2$ are finite, and the three displayed estimates follow by direct integration. The expected total absolute jump size is $tM_1$, so the jump sum is absolutely convergent almost surely and its first moment has the stated bound. Symmetry and absolute integrability imply zero mean. For a finite jump cutoff the usual Poisson variance identity gives the second-moment formula; letting the cutoff decrease to zero in $L^2$ gives the formula for the full sum. Superposition of independent Poisson measures also proves infinite divisibility.
+
+For fixed $r>0$, the jumps with magnitude above $r$ form a finite Poisson process. Conditional on at least one such jump, their sum has a density: conditional on its positive count, every jump has the absolutely continuous law $\mathfrak n(dx)\mathbf1_{|x|>r}/\Lambda(r)$. Adding the independent small-jump sum preserves absolute continuity. Therefore, for every Lebesgue-null set $A$,
+\[
+ \Pr(L_t\in A)\le e^{-t\Lambda(r)}.
+\]
+Since $\Lambda(r)\to\infty$ as $r\downarrow0$, the right side tends to zero.
+
+To see full support, choose any nonzero $a$ in a prescribed open interval and a sufficiently small $\delta>0$ so that $[a-2\delta,a+2\delta]$ lies in the interval and excludes zero. Choose $r<\delta$ small enough that the expected absolute small-jump sum is less than $\delta/2$. Its magnitude is then at most $\delta$ with positive probability. Independently prescribe exactly one jump above $r$, lying in $(a-\delta,a+\delta)$, and no other jump above $r$. This has positive Poisson probability because the L\'evy density is positive away from zero. Their sum belongs to the prescribed interval with positive probability.
+\end{proof}
+
+\subsection{Suppressing a background coordinate}
+\begin{lemma}[A small centered background law]
+\label{lem:levy-background}
+There is a constant $C$ depending only on $c,p$ such that, for every $F\ge1$ and $0<\epsilon\le1$, a law $Q_{F,\epsilon}^{\rm bg}\ll\vartheta_F$ satisfies
+\begin{align*}
+ &\E W=0,\qquad |W|\le\epsilon,\\
+ &\E|W|\le C\epsilon/F,\qquad
+   \E W^2\le C\epsilon^2/F,\\
+ &\KL(Q_{F,\epsilon}^{\rm bg}\|\vartheta_F)
+       \le\frac C F\log(C/\epsilon).
+\end{align*}
+\end{lemma}
+\begin{proof}
+Choose a fixed sufficiently large $\kappa$ depending only on $c,p$, and put $r=\epsilon/\kappa$. Split the Poisson sum into independent parts $S_r+J_r$, containing jumps of magnitude at most $r$ and above $r$, respectively. Force the large-jump process to have no points, and condition the small-jump sum on $|S_r|\le\epsilon$. Its mean remains zero by symmetry. Chebyshev and Lemma~\ref{lem:levy-scalar-properties} give
+\[
+ \Pr(|S_r|>\epsilon)
+ \le\frac C{F\kappa^2}\le\frac1{4F}.
+\]
+The conditioning probability is at least $3/4$. The expected absolute small-jump sum is at most $Cr/F$, and its variance is at most $Cr^2/F$; division by the conditioning probability proves the first- and second-moment bounds.
+
+On the latent Poisson space, the relative entropy of this joint conditioning is exactly
+\[
+ \frac{\Lambda(r)}F-
+            \log\Pr(|S_r|\le\epsilon).
+\]
+The second term is at most $C/F$ because the failure probability is at most $1/(4F)$. The first term is at most $C\log(C/\epsilon)/F$. Mapping a Poisson realization to its summed weight cannot increase relative entropy, proving the stated scalar-law bound.
+\end{proof}
+
+\subsection{Placing a designated coefficient}
+\begin{lemma}[An unbiased designated-coordinate law]
+\label{lem:levy-designated}
+For every $F\ge1$, $B\ge1$, $|a|\le B$, and $0<\epsilon\le1$, there is a law $Q_{F,a,\epsilon}^{\rm act}\ll\vartheta_F$ with
+\begin{align*}
+ &\E W=a,\qquad \epsilon<|W|\le B+8,\\
+ &\E(W-a)^2\le C\epsilon^2,\\
+ &\KL(Q_{F,a,\epsilon}^{\rm act}\|\vartheta_F)
+       \le\log F+C\log\{C(B+8)/\epsilon\}.
+\end{align*}
+The construction includes $a=0$. In particular its support is disjoint from the background law's support.
+\end{lemma}
+\begin{proof}
+Choose a designated jump $J$ with density $q$ as follows. If $|a|>4\epsilon$, take it uniform on $[a-\epsilon/2,a+\epsilon/2]$. Otherwise take the mixture of the uniform laws on $[5\epsilon,7\epsilon]$ and $[-7\epsilon,-5\epsilon]$, with positive-interval probability
+\[
+ \frac12\left(1+\frac a{6\epsilon}\right).
+\]
+This probability belongs to $[1/6,5/6]$. Both constructions have
+\[
+ \E J=a,\qquad \|q\|_\infty\le1/\epsilon,
+ \qquad |J|>3\epsilon,\qquad |J|\le B+7,
+ \qquad \operatorname{Var}(J)\le C\epsilon^2.
+\]
+Independently retain the original small-jump process below $r=\epsilon/\kappa$, conditioned on its sum $R$ satisfying $|R|\le\epsilon/2$. Enlarge the fixed $\kappa$ so that this event has probability at least $1-1/(4F)$. Its mean is zero and its variance is at most $C\epsilon^2/F$. Set $W=J+R$. This gives the asserted mean and variance. In the first case $|J|>7\epsilon/2$, and in the second $|J|\ge5\epsilon$; subtracting $|R|\le\epsilon/2$ gives the strict support separation. The upper support bound is immediate.
+
+The entropy estimate is most transparent on the latent Poisson space. The original law gives an unordered configuration consisting of exactly one jump above $r$, at position $j$, the density
+\[
+ e^{-\Lambda(r)/F}\frac{\mathfrak n(dj)}F.
+\]
+The comparison instead prescribes that single jump with density $q(j)\,dj$, and independently conditions the original small-jump process as above. Its exact relative entropy is therefore
+\begin{equation}
+ \int q(j)\log\frac{Fq(j)}{\mathfrak n(j)}\,dj
+       +\frac{\Lambda(r)}F
+       -\log\Pr(|S_r|\le\epsilon/2),
+ \label{eq:levy-latent-active-entropy}
+\end{equation}
+where $\mathfrak n(j)$ denotes the L\'evy density. There is no additional factorial term because the prescribed large-jump count is one. On the support of $q$,
+\[
+ \mathfrak n(j)\ge\frac c{(B+8)(B+9)^p}.
+\]
+Together with $q\le1/\epsilon$, this bounds the integral by
+$\log F+\log(1/\epsilon)+C+C\log(B+8)$.
+The two remaining terms are bounded exactly as in the background proof. Finally apply data processing to the summed scalar weight. This proves the result without requiring any lower bound on the density of $L_{1/F}$ itself.
+\end{proof}

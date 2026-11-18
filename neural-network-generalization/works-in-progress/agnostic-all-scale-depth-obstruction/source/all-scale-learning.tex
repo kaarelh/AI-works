@@ -1,0 +1,111 @@
+\section{One regression problem for every mean-field-or-stronger scale}
+\label{sec:all-scale-learning}
+The baseline-plus-amplitude comparison removes the need to fix the mean-field variance prefactor. The following theorem uses one data distribution and one sample event for the entire scale interval.
+
+The main learning statement is Theorem~\ref{thm:all-scale-learning}, stated at the start of the paper. We now prove its uniformity over the entire scale interval.
+
+\begin{proof}[Proof of Theorem~\ref{thm:all-scale-learning}]
+Write
+\[
+ \nu=Ns\in(0,1],\quad b=1-\nu,\quad
+ \kappa=1-\nu+\nu\log\nu,\quad B=\kappa(H-1).
+\]
+The continuous value at $\nu=1$ is understood. The elementary inequality
+\begin{equation}
+ \kappa\ge b^2/2
+ \label{eq:kappa-quadratic}
+\end{equation}
+follows by differentiating in $b$: $\frac{d}{db}\{b+(1-b)\log(1-b)\}=-\log(1-b)\ge b$ and both sides vanish at zero.
+
+We use the joint entropy bound and uniform function comparison proved above. In a form sufficient here, for any fixed $t<2$ sufficiently close to two and any fixed threshold $u>0$, they give
+\begin{align}
+ 2s\operatorname{KL}(\rho\|\mu)
+ &\ge B\Pr_\rho(M(z)>u)+c_\nu\mathbb E_\rho M(z)-e_0,
+ &c_\nu&=2\nu t,\label{eq:allscale-floor}\\
+ e_0&\le C_t/H+C_t b(1+\log(1/u))
+                  +C_t\log(2n)/N+4u,\label{eq:allscale-floor-error}
+\end{align}
+where $M(z)=\max_{x\in\mathcal U_D}|z(x)|$. Every $v:\mathcal U_D\to[-2a,2a]$ has a comparison law with arbitrary fixed RMS tolerance $\varepsilon>0$ and
+\begin{align}
+ 2s\operatorname{KL}(\rho_v\|\mu)
+ &\le B+4\|v\|_\infty+e_2,\label{eq:allscale-comparison}\\
+ e_2&\le\kappa(d+1)+C_0a^2+
+ C_0\left\{b(D+\log H)+\frac{(D+\log H)^2}{H}\right\}.
+ \label{eq:allscale-comparison-error}
+\end{align}
+The constants are uniform over $0<\nu\le1$. A sufficient comparison width is $C_\varepsilon H^{C_\varepsilon}e^{C_\varepsilon D}$. All support-wide error bounds are simultaneous in the prescribed function. For the fixed choices below this threshold, and all additional polynomial width requirements, are absorbed by $N\ge n^C$ after increasing $C,H_0$.
+
+The prior itself is centered with output variance at most $s\le1/N$, so its variational comparison is $\widehat R(0)+s$. Also $|Y|<2a$, and a comparison of RMS error $\varepsilon$ has empirical-loss error
+\[
+ \zeta\le8a\varepsilon+\varepsilon^2.
+\]
+
+Choose a sufficiently large absolute $\Lambda$, and divide temperatures at
+\[
+ \lambda_0=\frac{\Lambda a^2}{B+a}.
+\]
+This is only a proof division; the learner is allowed every positive temperature.
+
+For $0<\lambda\le\lambda_0$, Lemma~\ref{lem:baseline-prox} puts each specified posterior prediction within
+\begin{equation}
+ u+\sqrt{4au+s+\zeta+
+       \lambda[2a(4-c_\nu)+e_0+e_2]}
+ \label{eq:allscale-low-error}
+\end{equation}
+of $p u_\lambda$ for some $p\in[0,1]$, where $u_\lambda$ is a capped empirical-mean vector. We show that the displayed distance can be made less than $a/1000$, uniformly in $\nu$.
+
+The required uniform estimates are
+\begin{equation}
+ \frac1{B+a}\le\frac1a,\qquad
+ \frac\kappa{B+a}\le\frac1{H-1},\qquad
+ \frac b{B+a}\le\frac1{\sqrt{2a(H-1)}}.
+ \label{eq:allscale-ratios}
+\end{equation}
+The last follows from~\eqref{eq:kappa-quadratic} by maximizing $x/[a+(H-1)x^2/2]$. Since
+$4-c_\nu=4b+2\nu(2-t)$, these estimates imply that the contribution to the square in~\eqref{eq:allscale-low-error}, divided by $a^2$, has limsup as $H\to\infty$ at most
+\begin{equation}
+ C\Lambda\left\{(2-t)+a+\frac c{\sqrt a}+\frac{c^2}{a}+\frac ua\right\}
+      +C\frac ua+C\frac\varepsilon a+C(\varepsilon/a)^2,
+ \label{eq:allscale-limsup}
+\end{equation}
+with a fixed absolute $C$ (depending only on the fixed analytic constants). For clarity, the individual terms are controlled as follows: the first-layer cost contributes at most $\Lambda a^2(d+1)/(H-1)=o(a^2)$; the term $bD$ contributes at most $C\Lambda a^{3/2}c$; $D^2/H$ contributes at most $C\Lambda a c^2$; the coefficient discrepancy $4b$ and the terms $b\log H$ contribute $o(a^2)$; $C_0a^2$ contributes $C\Lambda a^3$. The terms $C_t/H$, $\log n/N$, and $s$ also vanish uniformly. All appearances of $C_t$ multiply terms vanishing with $H$, once $t$ is fixed.
+
+First choose $\Lambda$ as large as needed for the high-temperature estimates below. Then choose $2-t>0$ small, $a>0$ small within the analytic amplitude range, $c>0$ sufficiently small compared with $\sqrt a/\Lambda$, and $u,\varepsilon>0$ sufficiently small compared with $a/\Lambda$. The right side of~\eqref{eq:allscale-limsup} can thereby be made less than any prescribed positive constant, in particular less than $10^{-8}$. Increase $H_0,C$ to make~\eqref{eq:allscale-low-error} less than $a/1000$ at every stated width.
+
+For $\lambda>\lambda_0$, the prior comparison gives
+\[
+ F_S\le\widehat R(0)+s\le5a^2,
+ \qquad \mathbb E_\Pi\widehat R(z)\le F_S,
+ \qquad \mathbb E_\Pi\|z(S)\|_S^2\le18a^2,
+\]
+after $1/N\le a^2$. If $B\ge a$, drop the nonnegative amplitude term in~\eqref{eq:allscale-floor}. With $p=\Pi(M(z)>u)$,
+\[
+ p\le\frac{5a^2}{\lambda B}+\frac{e_0}B
+       \le\frac{10}{\Lambda}+\frac{e_0}B.
+\]
+Uniformly in this range, $e_0/B\le4u/a+o(1)$: the $b$ term is bounded using $B\ge a$ and~\eqref{eq:kappa-quadratic}, giving $b/B\le C/\sqrt{aH}$, and the remaining terms are immediate. Therefore
+\[
+ \|\mathbb E_\Pi z(S)\|_S
+ \le u+\sqrt{18a^2p}<a/1000
+\]
+by the preceding choices of $\Lambda,u$ and sufficiently large $H_0$. The same inequality holds for both clipped prediction conventions.
+
+If instead $B<a$, then $b\le\sqrt{2a/(H-1)}$, so $c_\nu\ge3$ for large $H$. Dropping the baseline in~\eqref{eq:allscale-floor} yields
+\[
+ \mathbb E_\Pi M(z)
+ \le\frac{5a^2}{c_\nu\lambda}+\frac{e_0}{c_\nu}
+ \le\frac{10a}{3\Lambda}+\frac{4u+o(1)}3<a/1000.
+\]
+This also controls all stated prediction conventions. Thus every high-temperature prediction is close to the zero vector, which is a capped empirical-mean reference.
+
+On the sample event used in Theorem~\ref{thm:canonical-learning}, at least $n/10$ observations are singleton inputs with negative noise sign. This event has probability at least $9/10$ for all sufficiently large $H$. At each such input, the empirical mean is negative while $g(X)>a/4$. Every reference vector just obtained is nonpositive there. Its empirical error is at most $a/1000$, so the common witness $w_i=-1$ on these indices and zero elsewhere satisfies
+\[
+ \langle w,\widehat f-g\rangle_S
+ \ge a/40-a/1000>a/64.
+\]
+All reference vectors lie in $[-2a,2a]$ and have the same sign property. Their convex combinations retain these properties; averaging the error vectors cannot increase their norm, and clipping after averaging contracts distance to the bounded reference. The witness therefore applies to arbitrary well-defined mixtures over every allowed width, scale, and temperature.
+
+Because singleton atoms have population probability $1/n$, the corresponding population witness has squared norm at most one and the same pairing. Cauchy--Schwarz gives excess squared loss at least $a^2/4096$. The bounded-width teacher construction is the same as in Theorem~\ref{thm:canonical-learning}. This proves the theorem.
+\end{proof}
+
+The result is an obstruction to a sample bound polynomial jointly in input dimension, learner depth, and the complexity of an approximating teacher for this unrestricted Gaussian learner. It is consistent with the fixed-depth approximation theorems. The next theorem gives a uniform quantitative refinement below criticality, interpolating between $\exp(\Omega(\sqrt H))$ and $\exp(\Omega(H))$ as the variance gap grows.

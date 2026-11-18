@@ -1,0 +1,198 @@
+\section{Full-support readout tails and a nearly inverse-sample oracle}
+\label{sec:asinh-width}
+The bounded readout in the preceding section can be replaced by a
+full-support law if its tails decrease sufficiently rapidly.  This gives
+a faster agnostic theorem for another fixed continuous weight prior.
+Its likelihood variance grows as the square of a logarithm of sample size; the
+fixed-variance statement of the preceding section remains distinct.
+
+Keep the same hidden-layer prior and final Dirichlet vector $P$, but use
+\begin{equation}\label{eq:asinh-width-model}
+ z_w(x)=U_0+\sum_{j=1}^N P_jU_jh_j^H(x),\qquad
+ U_0,\ldots,U_N\stackrel{\rm iid}=\operatorname{arsinh}(Z),\quad
+ Z\sim N(0,1).
+\end{equation}
+All factors are independent of the hidden layers and $P$.
+The density of $U_j$ is
+\[
+ (2\pi)^{-1/2}\cosh(u)\exp[-\sinh^2(u)/2],
+\]
+positive on all of $\mathbb R$.  Consequently the induced weight prior has full support
+on each prescribed dense architecture and the raw output is unbounded.
+The prior does not depend on sample count.  Its exceptionally light
+readout tails are an additional modeling choice.  The scalar factor is
+the established \emph{sinh-normal} distribution with shape two, location
+zero and scale one, in the convention
+$U=\gamma+\sigma\operatorname{arsinh}(\alpha Z/2)$
+\cite{rieck-nedelman,leiva-sinh}.  Its use as a neural readout prior is
+separate from that distributional terminology.
+
+\paragraph{The exact scalar transform is not essential.}
+The same arguments apply to any fixed symmetric full-support factor law
+with $\|U\|_q\le c\log(q+1)$ and a density $r$ satisfying
+\[
+ \inf_{|u|\le M+1}r(u)\ge\exp[-c e^{cM}],\qquad M\ge1.
+\]
+The first condition controls the native raw-output tail through the
+Dirichlet convex combination; the second bounds the entropy of small
+intervals around the compiler's readout coefficients.  For example,
+$U=\operatorname{arsinh}(Z/2)$ has both properties, as does any fixed
+density proportional to $\exp[-a\cosh(bu)]$ with $a,b>0$.
+For the latter, the tail is bounded by
+$c\exp[-c' e^{b t}]$ for large $t$, giving the logarithmic moment bound
+by integration; on $[-M-1,M+1]$ its negative log density is at most
+$c e^{bM}$.  An interval of radius $\epsilon$ therefore costs only
+$O(\log(1/\epsilon)+e^{cM})$ in entropy.  The scaled sinh-normal example
+has the same estimates directly from its transformed Gaussian density.
+Both examples have smooth strongly log-concave scalar densities:
+the negative-log-density second derivatives are respectively
+$4\cosh(2u)-\operatorname{sech}^2u\ge3$ and
+$ab^2\cosh(bu)\ge ab^2$.
+These observations concern the scalar readout factors, not log-concavity
+of the entire hierarchical neural prior.  The theorem below retains
+\eqref{eq:asinh-width-model} as its primary concrete model.
+
+\begin{theorem}[Coefficient-free raw oracle with logarithmic temperature]
+\label{thm:asinh-width}
+Use the prior \eqref{eq:asinh-width-model}, any input setting of
+Theorem~\ref{thm:raw-width-oracle}, and one prescribed architecture with
+$N\ge m_*$ and $H\ge H_*$.  There is a deterministic temperature
+$T_n\asymp\log^2(n+2)$ for which the ordinary raw posterior mean after
+all $n$ observations has the following guarantees.
+\begin{enumerate}
+\item If $|f_0|\le1$ and the centered noise $Y-f_0(X)$ is conditionally
+$\sigma^2$-sub-Gaussian, then
+\begin{equation}\label{eq:asinh-bounded-mean-width}
+ \E_S R(\widehat f_S)
+ \le\inf_{g\in\mathcal G_{C,h}}R(g)
+       +\frac{c\log^2(n+2)}{n+1}\mathcal B_n^{(1)}
+       +c(n+1)^{-2}.
+\end{equation}
+Here $\mathcal B_n^{(1)}$ is the main theorem's resource with proof range
+one.  Constants in the temperature and bound may depend on the noise
+bound and fixed scalar prior parameters.  It suffices instead to assume
+directly marginally sub-Gaussian labels and $|f_0|\le1$.
+\item More generally, suppose only
+$\E\exp(Y^2/K_Y^2)\le2$.  Put
+$M_n=\max\{1,K_Y\sqrt{20\log(n+2)}\}$ and
+$t=\lceil\log_2(128(n+2)^8)\rceil$.
+Then, for all sufficiently large $n$,
+\begin{equation}\label{eq:asinh-marginal-width}
+ \E_S R(\widehat f_S)
+ \le\inf_{g\in\mathcal G_{C,h}}R(g)
+ +\frac{c\log^2(n+2)}{n+1}
+       \left[\mathcal B_n^{(M_n)}+(t+1)e^{cM_n}\right]
+ +c(n+1)^{-2}.
+\end{equation}
+The superscript means that the proof range in the main resource is
+$M_n$.  The constants and the sufficiently-large-sample threshold may
+also depend on $K_Y$.
+\end{enumerate}
+In both parts $\mathcal G_{C,h}$ consists of raw ReLU teachers with
+arbitrary finite real coefficients.  The physical Gaussian likelihood
+variance is $T_n/2$.  No actual output, label or prior is clipped.
+At fixed $d,h$ and input regularity, part~1 has remainder
+$\widetilde O((C^{2bh}+H)/n)$.  Part~2 has the same term and an explicitly
+additional $n^{-1+o(1)}$ term; that term is not asserted to be logarithmic.
+In either part, for
+\[
+ C_n=\lfloor n^{1/(4bh)}\rfloor,\qquad H\le n^{1/2},\qquad N\ge n,
+\]
+the remainder is $\widetilde O(n^{-1/2})$, with the previous lower depth
+thresholds.  In particular continuous inputs still require
+$H\ge c\log n$.  All conclusions are in expectation over training data.
+\end{theorem}
+\begin{proof}
+We first record precisely the statistical input.  The logarithmic-native-
+moment raw oracle of~\cite{rawprior} applies to a centered prior satisfying
+\[
+ \left\|\sup_x|z_w(x)|\right\|_{L^q(\mu)}\le A\log(q+1),\quad q\ge1.
+\]
+It chooses $q_n=c(n+1)$, an analytical cutoff
+$L_n=eA\log(e+q_n)$, and $T_n=256L_n^2$.
+For any deterministic comparison law supported on
+$\{\sup_x|z_w(x)|\le L_n\}$ it gives
+\begin{equation}\label{eq:asinh-supported-interface}
+ \E_S R(\widehat f_S)
+ \le \rho R+\frac{T_n\KL(\rho\|\mu)}{n+1}+c(n+1)^{-2}.
+\end{equation}
+The actual predictor uses the original unbounded prior.  The cutoff
+occurs solely in its proof: moment $q_n$ gives prior tail $e^{-q_n}$,
+which dominates the expected inverse-evidence factor
+$\exp(O(n/T_n))$ under marginally sub-Gaussian labels.  The bounded
+all-data expected-risk theorem then applies to the analytical
+conditioned prior, and the raw-posterior tail transfer gives
+\eqref{eq:asinh-supported-interface}.
+
+For \eqref{eq:asinh-width-model},
+$\|\operatorname{arsinh}Z\|_q\le c\log(q+1)$ and, conditional on $P$,
+Minkowski's inequality gives
+\[
+ \left\||U_0|+\sum_jP_j|U_j|\right\|_q
+       \le2\|U_0\|_q.
+\]
+Thus the native hypothesis is uniform in $N,H,d$; symmetry centers the
+prior at each input.
+
+Use the unit-variation digital encoding
+\eqref{eq:unit-variation-digital-readout}, scaled by $M\ge1$.
+The preceding readout comparison still applies, with selected gate
+centers $w_r=2^{-r}+2^{-t}/t$ and factor centers
+$u_r=M2^{-r}/w_r\in[0,M]$.  The output-bias center is $-M2^{-t}$.
+On an interval of radius $\eta\le1$ around any such center, the negative
+logarithm of the asinh-Gaussian density is at most $ce^{cM}$.
+The $t$ factor intervals and the bias therefore cost at most
+\[
+ c(t+1)\{\log(1/\eta)+e^{cM}\}.
+\]
+The selected latent gate intervals, disjoint placement averaging and
+hidden prefix/digital comparison are unchanged.  Choose the total
+inactive latent gate mass at most $\eta^2$.  Its normalized mass is
+then $O(\eta^2)$, and, conditional on all these gates,
+\[
+ \E\sum_{j\,\mathrm{inactive}}P_j|U_j|\le c\eta^2.
+\]
+Conditioning this sum to be at most $\eta$ has probability at least
+one half for sufficiently small $\eta$.  Its entropy cost is bounded
+by a constant.  If this final conditioning is applied to the whole
+comparison law, its entropy is at most twice the previous entropy plus
+a numerical constant, and its mean squared approximation error
+increases by at most a factor two.  This conditioning is also
+permutation invariant, so the placement-mixture cancellation is
+preserved.
+
+Taking $\eta$ smaller by a polynomial factor in $M,t$ than the previous
+functional precision produces a comparison supported on
+$\{\sup_x|z_w(x)|\le3M\}$.  Its population squared discrepancy from
+$M\operatorname{clip}(g/M,[-1,1])$ is at most
+$cM^2(n+2)^{-8}$, and its entropy is bounded by
+\begin{equation}\label{eq:asinh-digital-comparison}
+ c\mathcal B_n^{(M)}+c(t+1)e^{cM}.
+\end{equation}
+The extra logarithms of $M,t$ are already covered by the main resource.
+At $M=1$ the last term is absorbed in $c\mathcal B_n^{(1)}$.
+
+For part~1 choose $M=1$.  Projection onto $[-1,1]$ cannot increase
+risk when $|f_0|\le1$, and the squared comparison discrepancy changes
+risk by $O(n^{-2})$.  Conditional sub-Gaussian noise and bounded $f_0$
+imply the marginal sub-Gaussian premise of
+\eqref{eq:asinh-supported-interface}.  For part~2 use the displayed
+$M_n$.  Pointwise,
+\[
+ (\operatorname{clip}(g,[-M_n,M_n])-Y)^2
+       \le(g-Y)^2+(|Y|-M_n)_+^2.
+\]
+The label-tail term is $O(n^{-2})$.  For comparison teachers with risk
+at most $\E Y^2+1$ the population comparison error changes risk by
+$O(n^{-2})$, by Cauchy--Schwarz; such near-minimizers suffice because
+the zero network is in the class.  Also $3M_n\le L_n$ eventually.
+Substitute \eqref{eq:asinh-digital-comparison} into
+\eqref{eq:asinh-supported-interface} and take population near-minimizers.
+
+Finally the compiler bounds imply
+$\mathcal B_n^{(M_n)}=\widetilde O(C^{2bh}+H)$ at fixed displayed
+parameters.  The extra factor $e^{cM_n}=e^{O(\sqrt{\log n})}$ is
+$n^{o(1)}$, and is eventually smaller than $n^{1/4}$.
+The growing-class choice makes $C_n^{2bh}+H\le2n^{1/2}$ and the
+compiled width smaller than $n$, proving the last assertion.
+\end{proof}

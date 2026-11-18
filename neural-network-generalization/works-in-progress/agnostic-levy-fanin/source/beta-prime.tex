@@ -1,0 +1,84 @@
+\section{An explicit-density alternative: signed beta-prime weights}
+\label{sec:beta-prime}
+The learning proof uses only the scalar moment and comparison-law estimates, not infinite divisibility itself. A simple explicit density satisfies the same estimates.
+
+Fix $p>2$ and $0<c_0\le1$. For fan-in $F$, put $a_F=c_0/F$ and give each coordinate the independent symmetric density
+\begin{equation}
+ \varrho_F(w)=
+ \frac{|w|^{a_F-1}(1+|w|)^{-a_F-p}}
+      {2\,\mathrm B(a_F,p)},\qquad w\ne0,
+ \label{eq:beta-prime-prior}
+\end{equation}
+where $\mathrm B$ is Euler's beta function. Equivalently, $|W|$ has the beta-prime law with shape parameters $(a_F,p)$ and its sign is an independent fair coin. This is an absolutely continuous full-support distribution with no zero atom. Its density is sharply concentrated near zero and has a fixed polynomial tail. Fan-in changes its first shape parameter, not the architecture.
+
+\begin{proposition}[The same learning guarantees for an explicit density]
+\label{prop:beta-prime}
+All the learning and uniform-neighborhood conclusions of this paper remain valid, with modified fixed constants, if every L\'evy increment coordinate is replaced by~\eqref{eq:beta-prime-prior}. In particular, this includes the sharp expected-risk oracle, the high-probability companion, and the raw-likelihood alternative. The stable-padding theorem holds if $c_0/(p-1)\le1/4$.
+\end{proposition}
+\begin{proof}
+We verify the scalar interface. Write $a=a_F\in(0,1]$ and
+$\mathcal B=\mathrm B(a,p)$. The beta integral gives
+\[
+ \E|W|=\frac{a}{p-1},\qquad
+ \E W^2=\frac{a(a+1)}{(p-1)(p-2)}.
+\]
+Thus the native first absolute and second moments are at most $C/F$.
+Also $c_p/a\le\mathcal B\le1/a$, with fixed $c_p>0$. For the lower bound integrate the beta-prime density kernel on $(0,1)$; for the upper bound use the beta integral on $(0,1)$ with factor $(1-u)^{p-1}\le1$.
+
+For $0<\epsilon\le1$, let $P_\epsilon=\Pr(|W|\le\epsilon)$.
+The integral above $\epsilon$ gives
+\[
+ 1-P_\epsilon\le Ca\{1+\log(1/\epsilon)\}.
+\]
+Indeed the integral on $(\epsilon,1)$ is at most
+$\log(1/\epsilon)$, the integral on $(1,\infty)$ is at most $1/p$,
+and $\mathcal B^{-1}\le Ca$.
+A second bound, obtained by integrating below $\epsilon$, is
+\[
+ P_\epsilon\ge
+ \frac{2^{-p-1}\epsilon^a}{a\mathcal B}
+ \ge2^{-p-1}\epsilon^a.
+\]
+When $Ca\{1+\log(1/\epsilon)\}\le1/2$, the first bound and
+$-\log(1-u)\le2u$ give the desired logarithmic conditioning cost.
+Otherwise the second bound gives
+$-\log P_\epsilon\le a\log(1/\epsilon)+(p+1)\log2$;
+the fixed additive constant is absorbed by
+$a\{1+\log(1/\epsilon)\}$ in this case. Therefore
+\begin{equation}
+ -\log P_\epsilon\le\frac C F\log(C/\epsilon).
+ \label{eq:beta-prime-small-ball}
+\end{equation}
+
+Condition the coordinate directly on $|W|\le\epsilon$.
+Symmetry preserves mean zero. For $r=1,2$, the ratio of its truncated moment integral to the lower bound on $P_\epsilon$ gives
+\[
+ \E[|W|^r\mid |W|\le\epsilon]
+ \le 2^{p+1}\frac{a}{a+r}\epsilon^r
+ \le C\epsilon^r/F.
+\]
+Together with~\eqref{eq:beta-prime-small-ball}, these are exactly the background support, entropy and moment estimates used in the network proof.
+
+For a designated coefficient $u$, $|u|\le B$, use the unbiased separated interval law from Lemma~\ref{lem:levy-designated}, without adding a small-jump remainder. Its support lies in
+$\{\epsilon<|w|\le B+8\}$, its density is at most $1/\epsilon$,
+and its variance around $u$ is at most $C\epsilon^2$.
+On this support,
+\[
+ \varrho_F(w)\ge
+ \frac{a}{2(B+8)(B+9)^{p+1}}.
+\]
+Hence its relative entropy to $\varrho_F$ is at most
+$\log F+C\log(C(B+8)/\epsilon)$.
+All designated-support and unbiasedness properties are unchanged.
+
+The remaining embedding, moment and statistical proofs use only these scalar estimates. They therefore apply verbatim. For stable relays the native row's first absolute moment constant is $c_0/(p-1)$, giving the displayed intensity condition. No Poisson representation is needed for this alternative.
+\end{proof}
+
+The density behaves near zero like $|w|^{-1+c_0/F}$, with integrable central concentration and no exact sparsity atoms. It can be viewed as continuous shrinkage whose strength is tied to fan-in. This is a mathematical prior construction, not an empirical claim about trained-network weights.
+
+Its wide-row limit has the same L\'evy mechanism. For fixed $w\ne0$,
+\[
+ F\varrho_F(w)\longrightarrow
+ \frac{c_0}{2|w|(1+|w|)^p}.
+\]
+Dominated convergence against $\cos(tw)-1$, using the quadratic bound near zero and the integrable tail bound, shows that a sum of $F$ such independent coordinates converges to the non-Gaussian infinitely divisible law with this L\'evy measure. Its variance remains of order one. The exact finite-width constant-variance identity in Section~\ref{sec:levy-native-scale} is special to increment laws; it is not needed for any learning conclusion.

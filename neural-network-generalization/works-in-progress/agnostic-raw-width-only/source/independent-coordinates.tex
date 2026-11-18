@@ -1,0 +1,197 @@
+\section{An independent-coordinate raw comparison with a logarithmic width cost}
+\label{sec:independent-raw-bits}
+A related guarantee preserves independence of all weight coordinates.
+Use tanh hidden activations. Every hidden coefficient of fan-in $F$
+has the time-$1/F$ increment law of the symmetric process
+\[
+ \nu_{\rm hid}(du)=
+ \frac{c\,du}{|u|(1+|u|)^{p_0}},\qquad p_0>2.
+\]
+First-layer fan-in is $d+1$, and later matrix fan-in is $N$.
+Native later biases use time one. The readout coordinates instead use
+\[
+ V_j=\Gamma(c_{\rm out}/N,1)-\Gamma(c_{\rm out}/N,1),
+\]
+with independent gamma variables, and the readout bias uses the
+same law with $N$ replaced by one. All actual coordinates are
+independent. Both likelihood and prediction use the raw affine
+readout. In particular
+\[
+ \sup_x|z_w(x)|\le |b_w|+\sum_j|V_j|
+ \ \le_{\rm st}\ \Gamma(4c_{\rm out},1),
+\]
+so the native raw-tail exponent is one, independently of width
+and depth.
+
+Use the analog-prefix/digital-block notation of
+Lemma~\ref{lem:raw-bit-comparison}, including its good input set,
+but count only nonzero teacher edges in $E_{\rm pre},E_{\rm dig}$.
+Let $V_{\rm pre},V_{\rm dig}$ be the selected hidden-vertex counts,
+and let $E_1$ count first-layer input coordinates. Bias positions
+are included in the corresponding resource counts $Q_{\rm pre}$ and
+$Q_{\rm dig}$, which may conservatively be taken to be their full
+dense selected counts. The ideal bit readout has variation plus
+bias at most $4M$, $M\ge1$.
+
+\begin{lemma}[Fixed-position independent comparison]
+\label{lem:independent-raw-bit-comparison}
+At every prescribed finite $N\ge m$ there is a sample-independent
+law $\rho$ with
+\[
+ \rho\{\|z_w\|_\infty\le6M\}=1,\qquad
+ \E_\rho\|z_w-g_*\|_{L^2(P_X)}^2\le CM^2(\delta^2+\xi).
+\]
+Its relative entropy is at most
+\begin{align}
+ C Q_{\rm pre}
+ &\left[(J+2)\log\{C(d+m+2)(B_0+2)\}
+                      +\log(1/\delta)\right]\notag\\
+ &+C(Q_{\rm dig}+m+1)
+      \log\frac{C(Q_{\rm pre}+Q_{\rm dig}+m+2)(k+1)(M+1)}{\delta}
+ \notag\\
+ &+C(E_{\rm pre}+E_{\rm dig}+m+1)\log(N+1)
+       +C E_1\log(d+1)+CM.
+ \label{eq:independent-raw-bit-KL}
+\end{align}
+Here $E_{\rm pre}$ in the learner-width term may omit first-layer
+input edges. The bound shown uses fixed positions; no cancellation
+of vertex-location costs is claimed.
+\end{lemma}
+\begin{proof}
+Use fixed selected neuron positions for the teacher, which is
+possible whenever $N\ge m$. For a hidden coordinate of fan-in $F$,
+the small-jump construction gives a centered background law
+supported on $[-\epsilon,\epsilon]$ with
+\[
+ \E|W|\le C\epsilon/F,\qquad
+ \E W^2\le C\epsilon^2/F,\qquad
+ \KL\le (C/F)\log(C/\epsilon).
+\]
+A designated coordinate of value $a$ has a law supported within
+$C\epsilon$ of $a$, with entropy at most
+\[
+ \log F+C\log\{C(1+|a|)/\epsilon\}.
+\]
+One direct construction suppresses jumps larger than
+$\epsilon/C$, conditions the remaining symmetric sum to have
+magnitude at most $\epsilon$, and inserts one jump uniformly near
+$a$. For $|a|=O(\epsilon)$ use two separated signed intervals with
+probabilities chosen to give mean $a$. The symmetric small-jump
+law has the displayed first and second moments. The designated
+jump intensity on an interval of width proportional to $\epsilon$
+is at least $c\epsilon/[F(1+|a|+\epsilon)^{p_0+1}]$, which gives
+the entropy bound. For a variance-gamma coordinate the same
+argument adds $C|a|$ instead of the logarithmic magnitude cost.
+These are precisely the scalar comparison bounds of the mixed
+hidden/readout prior.
+
+In each selected hidden row, put the designated law on its
+nonzero teacher coefficients and the background law elsewhere.
+The total background absolute magnitude has expectation at most
+$C\epsilon$ and second moment at most $C\epsilon^2$.
+Since tanh features are bounded by one, these estimates hold for
+the uniform functional contribution of that background, regardless
+of the input law or of dependence between preceding features.
+
+The prefix discrepancy therefore obeys the same uniform RMS
+recurrence as the ordinary fixed-depth comparison:
+\[
+ e_\ell\le C m(B_0+2)e_{\ell-1}+C(m+1)\epsilon.
+\]
+At first layer the error is at most $C(d+1)\epsilon$.
+Choose its precision so that, with probability at least $0.99$,
+all selected final prefix features differ from their teacher
+values by at most $\delta/4$.
+The logarithm of the required inverse precision is bounded by
+the first bracket in \eqref{eq:independent-raw-bit-KL},
+up to its already displayed logarithmic dimension factors.
+
+For the digital block choose
+$\epsilon\le c/[(V_{\rm dig}+1)(m+1)(k+1)]$.
+The selected-coordinate perturbations and the expected uniform
+background magnitudes sum to at most $k/1000$ over all its rows.
+With probability at least $0.99$, every row perturbation is at
+most $k/8$. Integer margin and tanh saturation then restore
+bit error at most $\delta$ at every depth, by exactly the
+margin induction in Lemma~\ref{lem:raw-bit-comparison}.
+
+At the raw readout use the variance-gamma designated laws around
+its nonzero coefficients and bias, at precision
+$c\delta/[(m+1)(M+1)]$, and background laws on the remaining
+coordinates. The selected absolute coefficient sum plus bias
+is at most $4M+C\delta$. The inactive absolute contribution is
+at most $\delta/100$ on a further event of probability at least
+$0.99$, by its first-moment bound. On the intersection the raw
+supremum is at most $6M$, and the integrated squared discrepancy
+is at most $CM^2(\delta^2+\xi)$.
+Condition on this intersection. As before its constant probability
+changes entropy by at most a fixed factor and a numerical constant.
+
+Every nonzero designated internal or readout edge pays at most
+$\log N$, whereas a whole selected background row pays only
+$C\log(C/\epsilon)$ after summing its $N$ coordinate costs.
+The first-layer designated edges pay $\log(d+1)$.
+Hidden coefficient magnitudes enter only logarithmically.
+The sum of all readout magnitude costs is at most $CM$.
+Adding these terms gives \eqref{eq:independent-raw-bit-KL}.
+\end{proof}
+
+Under the raw-tail theorem's marginal sub-Gaussian label assumption,
+the likelihood schedule has $T_n\asymp n^{2/3}$ and the expected
+oracle remainder is $O(n^{-1/3})$ times this comparison entropy,
+plus its approximation remainder. In particular the continuous
+quantizer and restoring-bit compiler, with only its output bits
+padded through extra layers, give
+\[
+ \widetilde O\!\left(
+    [C^{2bh}+H]\log(N+1)\,n^{-1/3}\right)
+\]
+at fixed input dimension, teacher depth and input regularity.
+Here $b$ is the compiler's fixed exponent, the learner width must
+exceed its explicit compiled width, and the continuous learner depth
+must exceed its logarithmic quantization threshold.
+The tilde hides powers of $\log n$ and fixed regularity constants.
+For polynomially bounded learner width the additional factor
+$\log(N+1)$ is only logarithmic. This is an independent-coordinate
+result at one prescribed dense architecture; unlike the
+neuron-gated result, its quantitative resource is not uniform
+over arbitrarily large learner widths.
+
+For example, for any fixed $q\ge1$, every prescribed $n\le N\le n^q$
+and
+\[
+ C_n=\lfloor n^{1/(12bh)}\rfloor,\qquad H\le n^{1/6},
+\]
+with the same lower depth requirements, give a coefficient-one
+expected-risk comparison with the best width-$C_n$ raw ReLU teacher and
+remainder $\widetilde O(n^{-1/6})$.  The first-layer and hidden-bias
+conventions above are part of the prior specification.
+
+\paragraph{A fixed likelihood for a realizable noisy target.}
+Suppose instead that $Y=f_0(X)+\zeta$, with conditionally sub-Gaussian
+noise of proxy $\sigma^2$, and $f_0$ is represented by the comparison
+class with $|f_0|\le B_f$ on the input support.
+Put $M=\max(1,B_f)$ and use a single fixed temperature
+\[
+ T\ge\max\{8\sigma^2+1,49M^2\}.
+\]
+Apply the compiler and this comparison at sufficient polynomially
+small precision so that
+$\E_X\E_\rho(z_w-f_0)^2\le n^{-4}$.
+Its support bound gives
+$\E_\rho(z_w(x)-f_0(x))^2\le49M^2$.
+The fixed-temperature population-comparison raw theorem therefore
+applies with native tail exponent one. If $K_n$ denotes the right
+side of \eqref{eq:independent-raw-bit-KL}, increased to at least one,
+both the posterior-averaged risk and the raw posterior-mean risk
+satisfy
+\[
+ \E_S R\le R_0+
+ \frac{C K_n\{T+[K_n+\log(n+2)+1+B_f]^2\}}n.
+\]
+Its high-probability version adds the corresponding confidence
+logarithms. At fixed noise and output bounds this is
+$\widetilde O(K_n^3/n)$, with unchanged independent coordinates,
+unchanged labels, and fixed Gaussian likelihood variance $T/2$.
+This is a realizable noisy-target conclusion, not a fixed-temperature
+sharp agnostic oracle.

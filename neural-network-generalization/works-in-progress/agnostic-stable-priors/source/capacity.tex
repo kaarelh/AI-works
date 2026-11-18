@@ -1,0 +1,75 @@
+\section{Capacity controlled by the readout}
+Write $q_N=N\|v\|_2^2$, and let $\mathcal F_t$ be the union over all widths of admissible networks with $q_N\le t$, at the fixed depth and support condition. In both cases,
+\begin{equation}
+ |z_w(x)|\le V\sqrt{q_N(w)}.
+ \label{eq:envelope}
+\end{equation}
+For $n\ge2$, define
+\begin{equation}
+ D_n=\begin{cases}
+ \ell^{H-1}\sqrt{2(d+1)\log(n+1)}+|c|\sum_{j=0}^{H-2}\ell^j,&\text{bounded activation case},\\
+ A\sqrt{2\{H\log2+\log(2(d+1))\}},&\text{general zero-origin case}.
+ \end{cases}
+ \label{eq:D}
+\end{equation}
+
+\begin{lemma}[A common capacity bound at every width]
+\label{lem:capacity}
+On every input sample in the cube,
+\[
+ \widehat\Rad_n(\mathcal F_t)\le D_n\sqrt{t/n}.
+\]
+Consequently the same bound holds for worst-case sample Rademacher complexity. The constants have no unreported dependence on depth or width.
+\end{lemma}
+\begin{proof}
+In the bounded activation case, let $\mathcal A_1$ be the closed absolute convex hull of all vectors $(\phi(a\cdot\bar X_i))_{i=1}^n$. It is symmetric, contains zero, and lies in $[-1,1]^n$. Recursively let
+\[
+ \mathcal A_\ell=\overline{\operatorname{aconv}}\{(\phi(f_i))_{i=1}^n:f\in\mathcal A_{\ell-1}\}.
+\]
+The absolute row-sum condition puts every hidden neuron's sample vector in the corresponding class. To avoid confusion between layer index and activation Lipschitz constant, write $r_j=\Rad(\mathcal A_j)$. Since $\psi$ is odd, its image of a symmetric class is symmetric. Consequently, for each sign sample,
+\[
+ \sup_{f\in\mathcal A_{j-1}}\left|\sum_i\epsilon_i\phi(f_i)\right|
+ =\left|c\sum_i\epsilon_i\right|+
+   \sup_{f\in\mathcal A_{j-1}}\left|\sum_i\epsilon_i\psi(f_i)\right|.
+\]
+Scalar contraction therefore gives $r_j\le |c|/\sqrt n+\ell r_{j-1}$.
+
+For the first layer, any continuous monotone function with range in $[-1,1]$ can be written as a constant plus a scaled average of threshold signs, with the absolute constant plus the scale at most one. Thus $\mathcal A_1$ lies in the absolute convex hull of affine-halfspace sign vectors and zero. Constants are themselves affine-halfspace vectors. There are at most $(n+1)^{d+1}$ such dichotomies, giving $r_1\le\sqrt{2(d+1)\log(n+1)/n}$. Iterating the recursion gives the bounded-activation value of $D_n$. Finally $\|v\|_1\le\sqrt{q_N}$, and symmetry gives the output bound. The geometric sum is empty at $H=1$. It vanishes when $c=0$, and is bounded by $1/(1-\ell)$ otherwise.
+
+For the general zero-origin case, put $\psi(u)=\phi(u/K_\phi)$. This map is $1$-Lipschitz and vanishes at zero. Let $\mathcal A_0$ be $A$ times the closed absolute convex hull of the $d+1$ coordinate sample vectors, including the constant coordinate. Recursively put
+\[
+ \mathcal A_\ell=\overline{\operatorname{aconv}}\{(\psi(f_i))_{i=1}^n:f\in\mathcal A_{\ell-1}\}.
+\]
+Each admissible layer-$\ell$ feature lies in $\mathcal A_\ell$. For independent Rademacher signs $\epsilon_i$, define
+$M_\ell=\sup_{f\in\mathcal A_\ell}\sum_i\epsilon_i f_i$.
+For every $s>0$,
+\begin{equation}
+ \E e^{sM_\ell}\le2\E e^{sM_{\ell-1}}.
+ \label{eq:mgf-contraction}
+\end{equation}
+Indeed, absolute convexification takes the maximum of the positive and negative suprema. The exponential of that maximum is at most the sum of their exponentials, whose expectations are equal by sign symmetry. Scalar exponential contraction then bounds either one by $\E e^{sM_{\ell-1}}$.
+
+For completeness, the contraction step follows coordinate by coordinate. Conditional on the other signs, write $a_t$ for their contribution and consider the two suprema of $a_t\pm\psi(t)$. Their sum is at most the sum of the suprema of $a_t\pm t$, by $|\psi(t)-\psi(u)|\le|t-u|$; their maximum is at most the latter pair's maximum, by $|\psi(t)|\le|t|$. These two inequalities imply the corresponding inequality for the sum of exponentials. Iterating over signs proves the stated contraction. Finite classes suffice initially; monotone limits give the bounded separable classes used here.
+
+Since each coordinate sample vector has squared Euclidean norm at most $n$,
+\[
+ \E e^{sM_0}\le2(d+1)e^{s^2A^2n/2}.
+\]
+Iterating~\eqref{eq:mgf-contraction}, taking logarithms, and optimizing $s$ gives
+\[
+ \E M_H\le A\sqrt{2n\{H\log2+\log(2(d+1))\}}.
+\]
+Multiplying by $\sqrt t/n$ proves the result. Notice that the factor $2^H$ occurs before taking a logarithm; it contributes linearly to the squared capacity bound, not exponentially to sample complexity.
+\end{proof}
+
+The classes are separable: at each width, interior admissible parameter vectors admit countable dense approximations, and boundary points are limits of interior points. Taking the union over integer widths preserves measurability. The proof also shows that an odd activation in the second case removes $H\log2$ from~\eqref{eq:D}; then the image of every symmetric class is already symmetric, so no factor two is needed.
+
+\section{A uniform smooth-loss inequality}
+We use the following form of the smooth-loss theorem of Srebro, Sridharan, and Tewari~\cite[Theorem~1]{sst}. There is a universal $C_*\ge1$ such that, for a nonnegative scalar loss with smoothness $s$ and upper bound $b_0$ on a function class $\mathcal F$, with probability at least $1-\eta$, simultaneously for all $f\in\mathcal F$,
+\begin{align}
+ R(f)-\widehat R_S(f)\le C_*\bigg[&\sqrt{\widehat R_S(f)}
+ \left(\sqrt{s}\log^{3/2}(2n)\Rad_n(\mathcal F)+\sqrt{\frac{b_0\log(1/\eta)}n}\right)\notag\\
+ &+s\log^3(2n)\Rad_n(\mathcal F)^2+\frac{b_0\log(1/\eta)}n\bigg].
+ \label{eq:sst}
+\end{align}
+Here $\Rad_n$ is worst-case sample Rademacher complexity. Squared loss is $2$-smooth. On $\mathcal F_t$, its upper bound is $(V\sqrt t+1)^2$ by~\eqref{eq:envelope}. The class need not be convex and the labels need not be realizable. We leave $C_*$ as the universal constant in this imported theorem rather than assign it an untracked numerical value.

@@ -1,0 +1,157 @@
+\section{Sharper tanh guarantees above mean-field scaling}
+\label{sec:above-one}
+The all-scale theorem also covers mean field. For tanh, stronger scalings permit an additional localization of a spectral-truncation argument. This section improves the risk dependence of the known finite-width spectral/small-width comparison; it does not claim that a rate denominator linear in depth for fixed $\gamma>1$ is new.
+
+Fix $\phi=\tanh$, $H\ge2$, and $\gamma>1$, with $\tau^2=N^{1-\gamma}$. Put
+\begin{equation}
+ h=\max\{H,3\},\qquad
+ v_\gamma=3+\frac{\gamma(h-1)}{\gamma-1},\qquad
+ \rho_\gamma=1+\frac\gamma{\gamma-1},\qquad r_\gamma=v_\gamma/\rho_\gamma.
+ \label{eq:gamma-powers}
+\end{equation}
+Here $r_\gamma\ge2$. Use the evidence-root rule \eqref{eq:main-calibration} with $(v_H,\rho_H)$ replaced by $(v_\gamma,\rho_\gamma)$ and sufficiently large constants depending on $H,\gamma$. The prior is unchanged.
+
+\begin{theorem}[Optimistic spectral comparison]
+\label{thm:above-one}
+For every fixed teacher $g$, with probability at least $1-\delta$, simultaneously for every $N\ge m$, the raw posterior risk and the raw posterior mean risk are at most
+\begin{equation}
+ R(g)+C_{H,\gamma}\left[
+ \overline A_{g,n}R(g)^{1-\rho_\gamma/v_\gamma}
+           \theta_n^{1/v_\gamma}
+ +\overline A_{g,n}^{v_\gamma/\rho_\gamma}
+           \theta_n^{1/\rho_\gamma}\right]+n^{-3},
+ \label{eq:above-one-oracle}
+\end{equation}
+where $\overline A_{g,n}=C_{H,\gamma}+2A_g(1/n)+\log(C_{H,\gamma}n/\delta)$ and $\theta_n$ is $n^{-1}$ times the polynomial dimension and logarithmic factors from the main theorem, with enlarged constants. For $\gamma\ge2$ the same statement holds with $(v,\rho)=(H,1)$.
+\end{theorem}
+
+For example, at $\gamma=3/2$ and $H\ge3$, $(v_\gamma,\rho_\gamma)=(3H,4)$. At fixed resources the zero-risk rate is then $n^{-1/4}$ up to logarithms, independently of depth. Its comparison-resource exponent is $3H/4$, and the constants still depend on depth. Thus this does not yield a polynomial bound jointly in comparison width and depth.
+
+\subsection{A localized finite-width PAC--Bayes certificate}
+Write $F=F_S(\lambda)$ and $u=2F+b_n\lambda$, where
+$b_n=C_{H,\gamma}\log(C_{H,\gamma}n/\delta)$, and work on the ordinary root branch $1/n\le\lambda\le1/b_n$, $u\le5$.
+For each integer width, prebuild inverse-temperature values $\beta_j=(\omega/2)2^j$ through $\omega n$ and squared clipping radii $M_k^2=2^k$ through $C_H n$. Allocate confidence proportional to $\delta/N^2$ and uniformly over these $O(\log^2 n)$ grid pairs.
+
+For the selected $\lambda$, choose $\beta_*\in[\omega/(2\lambda),\omega/\lambda]$ and a grid radius with $C_Hu/\lambda\le M^2\le2C_Hu/\lambda$. These choices are within the grids since $u\ge b_n\lambda$. The proof-clipped squared loss has range $b=(M+1)^2\le C_Hu/\lambda$.
+
+For any bounded loss $\ell\in[0,b]$ and $s=\beta_*b/n$, convexity gives
+\[
+ \E e^{-s\ell/b}\le\exp[-(1-e^{-s})\E\ell/b].
+\]
+Independence, integration over the fixed Gaussian prior, Markov's inequality, and entropy duality give, on the grid event, every law $Q$ the bound
+\[
+ \int R(z^{[M]})dQ\le\frac{s}{1-e^{-s}}
+ \left[\int\widehat R(z^{[M]})dQ+
+             \frac{\KL(Q\Vert\mu)+t}{\beta_*}\right],
+\]
+where $t\le C_H\log(C_HnN/\delta)$. For the actual posterior, the clipped empirical objective in brackets without $t$ is at most its raw free energy $F$: clipping does not increase square loss and $\beta_*$ is at least its actual inverse temperature. If $s\le1$, then $s/(1-e^{-s})\le1+s$, so
+\begin{equation}
+ \int R(z^{[M]})d\Pi\le F+
+       \frac{C_H\omega u^2}{n\lambda^2}
+       +C_H\lambda\log(C_Hn/\delta).
+ \label{eq:localized-finite-width}
+\end{equation}
+Here $\log N/\omega\le1$ because $\omega=N^\gamma\ge N$.
+
+For raw tails put $r=N\|v\|^2$. The Gaussian readout gives
+$\mu(r>M^2)\le e^{-\omega M^2/8}$ and $\E_\mu R^2\le24$. Exact evidence, rather than a constant comparison risk, gives
+\[
+ \int R(z)\mathbf1_{r>M^2}d\Pi
+ \le\sqrt{24}\exp[\omega F/(2\lambda)-\omega M^2/16]
+ \le n^{-3}
+\]
+after choosing the radius constant sufficiently large. Thus whenever
+\begin{equation}
+ n\ge C_H\omega u^2\lambda^{-3}\log(C_Hn/\delta),
+ \label{eq:small-localized-budget}
+\end{equation}
+the raw risk is at most $F+C_H\lambda\log(C_Hn/\delta)+n^{-3}$. The condition also ensures $s\le1$. The same event handles every eligible data-dependent calibration and every width.
+
+\subsection{The spectral certificate at larger widths}
+Retain from each internal matrix only singular values greater than $8\tau$, obtaining $T^\ell$, and leave the first layer and readout unchanged. Let $\widetilde z$ be the resulting network and set
+\[
+ q=K_0+\sum_{\ell=2}^H\|T^\ell\|_F^2+N\|v\|^2.
+\]
+For each internal Gaussian matrix, the operator-norm ball of radius $4\tau$ has probability at least one half. Its squared Frobenius distance is $\sum_j(s_j-4\tau)_+^2$, and the retained energy is at most four times this quantity. Gaussian isoperimetry and integration therefore give
+\[
+ \E\exp(\omega\|T^\ell\|_F^2/16)\le3/2.
+\]
+The readout chi-square moment gives
+$\log\E e^{\omega q/16}\le C_H\omega$.
+The same estimate at a smaller exponent controls raw-risk-weighted moments, because $R(z)\le2q+2$.
+
+Normalized hidden-state perturbations and the Lipschitz property of tanh give
+\begin{equation}
+ \|z-\widetilde z\|_\infty\le C_H\tau q^{(H-1)/2},
+ \qquad |z|,|\widetilde z|\le\sqrt q.
+ \label{eq:localized-spectral-error}
+\end{equation}
+The union over all widths of tanh networks with internal-plus-readout energy at most $K$ and unrestricted first-layer weights has Rademacher complexity
+\begin{equation}
+ \mathfrak r_n\le C_HK^{H/2}\sqrt{(d+1)\log(n+1)/n}.
+ \label{eq:localized-spectral-rad}
+\end{equation}
+For clarity, this bound uses more than bounded smoothness. First-layer tanh features lie in the convex hull of affine-halfspace signs. Their Rademacher complexity is at most $\sqrt{2(d+1)\log(n+1)/n}$. If a symmetric convex class lies in $[-1,1]$, adjoining all variable clips $\clip_{[-t,t]}$, $0\le t\le1$, increases its complexity by at most $1/(2\sqrt n)$, by contraction and the identity $\clip_{[-t,t]}u=(|u+t|-|u-t|)/2$. The identity
+\[
+ \frac{\tanh(su)}s=
+ \int_0^1\clip_{[-t,t]}(u)\,2s\tanh(st)\operatorname{sech}^2(st)dt
+ +\operatorname{sech}^2(s)\clip_{[-1,1]}(u)
+\]
+for $|u|\le1$ has nonnegative coefficients of total mass one. It propagates the convex-hull estimate through successive layers. The final path-weight sum is at most
+$\sqrt N\|v\|\prod_{\ell=2}^H\|T^\ell\|_F\le(K/H)^{H/2}$.
+This proves \eqref{eq:localized-spectral-rad}. We do not apply this unrestricted first-layer argument to nonmonotone activations.
+
+On $J=\widehat R(z)+\beta_0\lambda q\le u$, the energy is at most $C_Hu/\lambda$. A sufficient condition for \eqref{eq:localized-spectral-error} to be at most $c_H\lambda q/\sqrt u$ throughout this region is
+\begin{equation}
+ \tau^2\le c_H\lambda^{h-1}u^{2-h},\qquad h=\max\{H,3\}.
+ \label{eq:localized-spectral-scale}
+\end{equation}
+For $H\ge3$, maximize $q^{(H-3)/2}$ at the upper energy endpoint; for $H=2$, its maximum is at the constant lower cutoff. Apply the smooth-square-loss inequality \eqref{eq:smooth-loss} to fixed energy classes at dyadic levels. At risk at most $C_Hu$, its deviation is at most $\beta_0\lambda K$ if
+\[
+ n\ge C_H(d+1)\log^c(C_Hn/\delta)\,
+                  u\lambda^{-2}K^{H-2}.
+\]
+Maximizing over $K\le C_Hu/\lambda$ gives the sufficient budget
+\begin{equation}
+ n\ge C_H(d+1)\log^c(C_Hn/\delta)\,
+                    u^{H-1}\lambda^{-H}.
+ \label{eq:localized-spectral-budget}
+\end{equation}
+The linear and confidence terms are absorbed using $\lambda K\le C_Hu$. Equation~\eqref{eq:localized-spectral-scale} transfers empirical and population root risks with cost at most $c_H\lambda K$.
+
+The localized tail and entropy argument of Section~\ref{sec:localized-direct-oracle} now applies with complexity $q$. On $J>u$ its raw-risk contribution is at most $n^{-3}$; on $J\le u$ integrate the level deviation. It follows that the raw risk is at most $F+C_H\lambda+n^{-3}$. All statistical classes are independent of width and scale. A grid of risk and calibration values supplies one event for all choices made from the sample.
+
+\subsection{Combining the two certificates}
+Condition \eqref{eq:localized-spectral-scale} holds once
+\[
+ N\ge C_H[u^{h-2}\lambda^{-(h-1)}]^{1/(\gamma-1)}.
+\]
+Below this cutoff, $\omega=N^\gamma$ is at most the $\gamma$th power of its right side, so \eqref{eq:small-localized-budget} follows from
+\[
+ n\ge C_{H,\gamma}(d+1)\log^c(C_{H,\gamma}n/\delta)\,
+                   u^{v_\gamma-\rho_\gamma}\lambda^{-v_\gamma}.
+\]
+This also dominates \eqref{eq:localized-spectral-budget}: their ratio is
+$u^{\rho_\gamma-1}(\lambda/u)^{v_\gamma-H}$, which is bounded since $u\le5$, $\lambda/u\le1/b_n$, and $v_\gamma\ge H$.
+The evidence root enforces this budget. Apply the teacher comparison and the same coefficient-one Bernstein conversion as in Section~\ref{sec:localized-direct-oracle}, absorbing the logarithmic certificate coefficient into $\overline A_{g,n}$. This proves \eqref{eq:above-one-oracle}.
+
+When $\gamma\ge2$, use the full internal Frobenius energy in $q$ instead. Its Gaussian exponential moment costs $O_H(N^2)$ in the logarithm; divided by $\omega=N^\gamma$, this is bounded uniformly. No spectral approximation is needed. The only sample condition is \eqref{eq:localized-spectral-budget}, giving $(v,\rho)=(H,1)$. The same teacher comparison completes the proof.
+
+\subsection{Selecting a calibration while keeping one prior}
+All branches give observable certificates of the form $F_S(\lambda)+B_n\lambda+n^{-3}$, with one sufficiently large common $B_n$, on a joint event obtained by a finite confidence split. Their fallback branches instead give their stated constant-risk certificate. Compute the applicable calibrations and select the one with smallest certificate. This still uses one architecture and its original Gaussian prior; only its likelihood variance is calibrated. On ordinary branches the certificate is nondecreasing in $\lambda$, since $F_S(\lambda)$ is nondecreasing. Thus selecting the smallest ordinary-root $\lambda$ gives the best of those certificates. Including fallback branches requires comparing their actual constant certificates as well.
+
+The available exponent pairs for tanh, each yielding the oracle form
+$A R(g)^{1-\rho/v}n^{-1/v}+A^{v/\rho}n^{-1/\rho}$ up to logarithms, are:
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Regime & $v$ & $\rho$\\
+\midrule
+$H=1$, every $\gamma\ge1$ & $2$ & $1$\\
+$H\ge2$, every $\gamma\ge1$ & $\max\{4H,H^2+2H-2\}$ & $2H$\\
+$H\ge2$, fixed $\gamma>1$ & $3+\gamma(\max\{H,3\}-1)/(\gamma-1)$ & $1+\gamma/(\gamma-1)$\\
+$H\ge2$, $\gamma\ge2$ & $H$ & $1$\\
+\bottomrule
+\end{tabular}
+\end{center}
+The second row covers the full bounded smooth activation class, as does the first. The sharper last two rows here use tanh. Depending on comparison risk and resources, different pairs can be preferable; selecting a valid certificate gives the corresponding best risk bound without changing the prior.

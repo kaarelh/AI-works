@@ -1,0 +1,192 @@
+\section{A data-dependent likelihood with a raw-risk certificate}
+Let $R(f)=\E(f(X)-Y)^2$ and $\widehat R_S(f)=n^{-1}\sum_i(f(X_i)-Y_i)^2$. With Gaussian observation variance $n\lambda/\omega$, define
+\[
+ \Pi_{\lambda,S}(dw)=Z^{-1}e^{-\omega\widehat R_S(z_w)/(2\lambda)}\pi_{N,\gamma}(dw),\qquad
+ F_S(\lambda)=-\frac{2\lambda}{\omega}\log Z.
+\]
+The variational identity is $F_S(\lambda)=\inf_\rho\{\int\widehat R_Sd\rho+2\lambda\KL(\rho\|\pi)/\omega\}$. The centered independent readout cancels cross terms and
+\[
+ \E_\pi z_w(x)^2\le\frac{\E\|W^1x\|_2^2}{\omega N}
+                 \le\frac N{\omega^2}\le1.
+\]
+Therefore $0\le F_S(\lambda)\le2$ for every sample and every $\lambda>0$.
+We state all constants used in the selection rule. Let $C_*\ge1$ be a universal constant for the smooth-loss theorem of Srebro, Sridharan, and Tewari~\cite[Theorem~1]{sst}. In the form used here, for a nonnegative $s_0$-smooth loss bounded by $b$ on $\mathcal F$, with probability at least $1-\eta$, simultaneously for $f\in\mathcal F$,
+\begin{align}
+ R(f)-\widehat R_S(f)\le C_*\bigg[&\sqrt{\widehat R_S(f)}
+ \left(\sqrt{s_0}\log^{3/2}(2n)\Rad_n(\mathcal F)+\sqrt{\frac{b\log(1/\eta)}n}\right)\notag\\
+ &+s_0\log^3(2n)\Rad_n(\mathcal F)^2+\frac{b\log(1/\eta)}n\bigg].
+ \label{eq:sst}
+\end{align}
+The Rademacher complexity here is worst-case empirical complexity. Squared loss is $2$-smooth.
+
+For $0<\delta<1$, put
+\begin{align}
+ M_2&=1+(2D_0+8)^2, & K_n&=2D_0\log2+4\log(6M_2n^4)+1,\notag\\
+ c_0&=\frac18+\frac{D_0\log2}{4}, &
+ J_n&=\left\lceil\log_2(4n+K_n+2)\right\rceil,\notag\\
+ t_n&=\max\left\{1,\log\frac{4(J_n+1)}\delta\right\},\notag\\
+ a_n&=\max\left\{\frac1{\sqrt n},\ 2C_*\left[
+       \frac{\sqrt2K_H\log^{3/2}(2n)}{\sqrt n}+2\sqrt{\frac{t_n}n}\right]\right\}.
+ \label{eq:stat-constants}
+\end{align}
+Set $D_0=1$ and recall $K_H$ from~Lemma~\ref{lem:capacity}. Select the unique positive solution of
+\begin{equation}
+ \widehat\lambda_S^2
+   =256a_n^2\{2F_S(\widehat\lambda_S)+\widehat\lambda_S(K_n+1)\}.
+ \label{eq:calibration}
+\end{equation}
+This one-dimensional rule uses the observed free energy, not teacher resources or the population risk. The learner predicts with the posterior at this single selected value.
+
+\begin{lemma}[Existence, uniqueness, and measurability]
+\label{lem:root}
+The root in~\eqref{eq:calibration} exists, is unique, and is a measurable function of the sample. It satisfies
+$\widehat\lambda_S\ge256a_n^2(K_n+1)\ge1/n$.
+No upper bound on $\widehat\lambda_S$ is required.
+\end{lemma}
+\begin{proof}
+The likelihood integral makes $F_S$ continuous, and $F_S(\lambda)/\lambda$ is decreasing. The map
+\[
+ \Psi_S(\lambda)=\frac{\lambda^2}{2F_S(\lambda)+\lambda(K_n+1)}
+ =\frac{\lambda}{2F_S(\lambda)/\lambda+K_n+1}
+\]
+is therefore continuous and strictly increasing. It tends to zero at zero because it is at most $\lambda/(K_n+1)$, and tends to infinity because $F_S\le2$. It crosses $256a_n^2$ exactly once. The lower bound follows directly from the root equation. For each $t>0$, the event $\{\widehat\lambda_S<t\}$ equals $\{\Psi_S(t)>256a_n^2\}$, proving measurability.
+\end{proof}
+
+\begin{lemma}[One statistical event for all widths and scales]
+\label{lem:stat-event}
+With probability at least $1-\delta/2$, simultaneously for every supported network with $Q_N\le4n+K_n+1$,
+\begin{equation}
+ R(z_w)-\widehat R_S(z_w)
+ \le a_n\sqrt{\widehat R_S(z_w)}(1+Q_N)+a_n^2(1+Q_N)^2.
+ \label{eq:stat-event}
+\end{equation}
+\end{lemma}
+\begin{proof}
+Apply~\eqref{eq:sst} to $\mathcal F_{2^j}$, $0\le j\le J_n$, with failure probability $\delta/[2(J_n+1)]$. By~\eqref{eq:energy-lower}, its loss is bounded by $4(1+2^j)^2$, and by Lemma~\ref{lem:capacity}, its Rademacher complexity is at most $K_H(1+2^j)/\sqrt n$. Use the unit cutoff for $Q_N\le1$ and the least containing dyadic cutoff otherwise; then $1+2^j\le2(1+Q_N)$. The definition of $a_n$ and a union bound prove the claim. The energy-ball classes already include every width, so the event does not depend on $N$, $\gamma$, or $\lambda$.
+\end{proof}
+
+\begin{lemma}[Weighted empirical-objective tails]
+\label{lem:tail}
+For every sample and $\lambda>0$, the posterior raw-risk integral on
+\[
+ \{\widehat R_S+\lambda Q_N>2F_S(\lambda)+\lambda K_n\}
+\]
+is at most $n^{-4}$. Also, for every finite-entropy law $\rho$ relative to the prior,
+\begin{equation}
+ \int Q_Nd\rho\le\frac4\omega\KL(\rho\|\pi)+2D_0\log2.
+ \label{eq:entropy}
+\end{equation}
+\end{lemma}
+\begin{proof}
+On $J:=\widehat R_S+\lambda Q_N>u$,
+\[
+ e^{-\omega\widehat R_S/(2\lambda)}
+ \le e^{-\omega u/(4\lambda)}e^{\omega Q_N/4}.
+\]
+By~\eqref{eq:chi-square}, exponential tilting by $e^{\omega Q_N/4}$ doubles the chi-square scale and contributes the factor $2^{N(d+1)/2}$. Under that tilted law,
+\[
+ \E Q_N^2=\frac4{\omega^2}N(d+1)\{N(d+1)+2\}\le(2D_0+8)^2.
+\]
+After dividing by the posterior normalizer,
+\[
+ \int(1+Q_N^2)\mathbf1_{\{J>u\}}d\Pi_\lambda
+ \le M_2\exp\left[\frac{\omega F_S}{2\lambda}-\frac{\omega u}{4\lambda}
+                       +\frac{N(d+1)\log2}{2}\right].
+\]
+Raw risk is at most $2Q_N^2+2\le6(1+Q_N^2)$. Use $u=2F_S+\lambda K_n$, $N(d+1)\le\omega D_0$, and $\omega\ge1$ to obtain the claimed tail bound.
+
+Finally $\log\int e^{\omega Q_N/4}d\pi=N(d+1)\log2/2\le\omega D_0\log2/2$. The entropy variational inequality gives~\eqref{eq:entropy}.
+\end{proof}
+
+\begin{theorem}[An observable certificate and an empirical oracle]
+\label{thm:certificate}
+On the event of Lemma~\ref{lem:stat-event}, simultaneously for every $N\ge1$ and $\gamma\ge1$,
+\begin{equation}
+ \int R(z_w)d\Pi_{\widehat\lambda_S}
+ \le F_S(\widehat\lambda_S)+c_0\widehat\lambda_S+n^{-4}.
+ \label{eq:certificate}
+\end{equation}
+If $F_S(\lambda)\le u+\lambda T$ for every positive $\lambda$, put
+$\mathcal B=2T+K_n+1+c_0$. Then
+\begin{equation}
+ \int R(z_w)d\Pi_{\widehat\lambda_S}
+ \le u+16\sqrt2\mathcal B a_n\sqrt u+256\mathcal B^2a_n^2+n^{-4}.
+ \label{eq:empirical-oracle}
+\end{equation}
+Both bounds also hold for the ordinary raw posterior mean.
+\end{theorem}
+\begin{proof}
+Write $\lambda=\widehat\lambda_S$ and $G=2F_S(\lambda)+\lambda(K_n+1)$. Off the tail in Lemma~\ref{lem:tail},
+\[
+ \widehat R_S\le G,\qquad1+Q_N\le G/\lambda,\qquad Q_N\le4n+K_n.
+\]
+The last inequality uses $F_S\le2$ and Lemma~\ref{lem:root}. The two terms of~\eqref{eq:stat-event} are bounded, respectively, by
+\[
+ a_n\sqrt G(1+Q_N)=\frac\lambda{16}(1+Q_N),
+ \qquad
+ a_n^2\frac G\lambda(1+Q_N)=\frac\lambda{256}(1+Q_N).
+\]
+Their sum is at most $\lambda(1+Q_N)/8$. Integrate and use~\eqref{eq:entropy}. The energy term costs at most one quarter of the relative-entropy penalty retained in $F_S$, plus $\lambda D_0\log2/4$. Adding $\lambda/8$ and the weighted tail gives~\eqref{eq:certificate}.
+
+For the comparison, the root implies
+\[
+ \lambda^2\le512a_n^2u+256a_n^2(2T+K_n+1)\lambda.
+\]
+The elementary implication $x^2\le bx+c\Rightarrow x\le b+\sqrt c$ gives
+$\lambda\le256a_n^2\mathcal B+16\sqrt2a_n\sqrt u$.
+Substitute into~\eqref{eq:certificate} and use $T+c_0\le\mathcal B$ to obtain~\eqref{eq:empirical-oracle}. All raw moments exist by~\eqref{eq:energy-lower} and the Gaussian endpoint tails. Jensen gives the mean-prediction claim.
+\end{proof}
+
+\begin{theorem}[A dimension-free path-variation oracle]
+\label{thm:main}
+Fix any ReLU teacher $g$ with hidden depth $H$, width $C$, and mixed path variation $P$. Define $T_g$ by~\eqref{eq:teacher-budget}, and put $\mathcal B_g=2T_g+K_n+1+c_0$. With probability at least $1-\delta$, simultaneously for every $N\ge C$ and every $\gamma\ge1$,
+\begin{align}
+ R\left(\int z_wd\Pi_{\widehat\lambda_S}\right)
+ \le\int R(z_w)d\Pi_{\widehat\lambda_S}
+ \le R(g)&+25a_n\mathcal B_g\sqrt{R(g)}\notag\\
+ &+280a_n^2\mathcal B_g^2+n^{-4}.
+ \label{eq:population-oracle}
+\end{align}
+The calibration uses none of $C,P,R(g)$ and no coefficient bound is required. The data may have any IID law on $\mathcal X\times[-1,1]$.
+\end{theorem}
+\begin{proof}
+The comparison~\eqref{eq:free-energy-comparison} supplies $u=\widehat R_S(g)+1/(2n)$. Put $E=4+2P$. Then $|g|\le P\le E$ and $T_g\ge E\ge4$. Bernstein gives
+\[
+ \widehat R_S(g)\le R(g)+(E+1)\sqrt{\frac{2R(g)\log(2/\delta)}n}
+                  +\frac{2(E+1)^2\log(2/\delta)}{3n}
+\]
+except on an event of probability at most $\delta/2$. The inequalities $(E+1)^2\le2E^2$, $a_n^2\ge16\log(2/\delta)/n$, and $a_n^2\ge1/n$ imply
+$u\le(\sqrt{R(g)}+a_nE)^2$.
+Substitute this and its square root into~\eqref{eq:empirical-oracle}, using $E\le T_g\le\mathcal B_g$. The square-root coefficient is at most $2+16\sqrt2<25$, and the quadratic coefficient at most $257+16\sqrt2<280$. Combining the two sample events proves the result. Both are common to every eligible learner width and exponent.
+\end{proof}
+
+\begin{corollary}[Sample complexity in path variation]
+\label{cor:polynomial}
+For a comparison network with path variation $P$ and risk $R_*$, a sufficient sample count for oracle excess at most $\varepsilon\in(0,1)$ is
+\begin{equation}
+ n=\widetilde O\left(H(1+P)^2\left\{\frac{R_*}{\varepsilon^2}+\frac1\varepsilon\right\}\right).
+ \label{eq:sample-budget}
+\end{equation}
+Only logarithms in $n,H,P,1/\varepsilon,1/\delta$ are suppressed. There is no input-dimension factor once $N\ge C$. The teacher resources and risk are used to state the guarantee, not to choose the posterior.
+\end{corollary}
+\begin{proof}
+Here $a_n^2=\widetilde O(H/n)$ and $\mathcal B_g=\widetilde O(1+P)$. Substitute in~\eqref{eq:population-oracle}. These estimates follow directly from the displayed constants with $D_0=1$ and $K_H=1+\sqrt{2H\log2}$.
+\end{proof}
+
+\begin{corollary}[Quadratic width and linear depth under controlled gain]
+\label{cor:width-depth}
+Suppose a width-$C$ teacher has first-row Euclidean norms at most $B_1$, readout coefficients at most $B_2$, and
+\[
+ G=\prod_{\ell=2}^H\bigl\||W^\ell|\bigr\|_{\op}.
+\]
+Then $P\le GCB_1B_2$. In particular, at fixed $B_1,B_2$ and $G\le1$, the sufficient sample count is
+\[
+ \widetilde O\left(C^2H\left\{\frac{R_*}{\varepsilon^2}+\frac1\varepsilon\right\}\right).
+\]
+Only the product of gains is needed for this conclusion; the teacher need not have every gain at most one.
+\end{corollary}
+\begin{proof}
+Apply Cauchy--Schwarz to~\eqref{eq:pathnorm}: $P\le\|v\|_2G\|a^1\|_2\le(\sqrt C B_2)G(\sqrt C B_1)$. Then use Corollary~\ref{cor:polynomial}.
+\end{proof}
+
+For arbitrary coefficient-bounded teachers, this estimate still gives a fixed-depth polynomial: if every internal coefficient and readout coefficient is at most $B$ in absolute value and first-row norms are at most $B_1$, then $P\le C^HB^HB_1$. Under a coordinatewise first-layer cap $B$ as well, $B_1\le\sqrt d B$, giving $P\le\sqrt d C^HB^{H+1}$. Its possible exponential dependence on depth is not removed by neuron rescaling.

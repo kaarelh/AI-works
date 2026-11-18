@@ -1,0 +1,102 @@
+\section{A function prior and total online mistakes on finite domains}
+\label{sec:uniform-online}
+The same independent-coordinate prior gives a stronger kind of guarantee on a finite input domain: a margin-implementable Boolean function receives substantial prior probability, uniformly over learner width. Bayesian sign conditioning then makes only polynomially many mistakes on every input sequence. For this section, the hidden activation need only be bounded by one and $A$-Lipschitz; the second-derivative assumption is unnecessary. Prediction uses the sign of the raw readout.
+
+Let $\mathcal X\subset[-1,1]^d$ be nonempty and finite. Fix a width-$m$, depth-$H$ teacher with coefficients bounded by $B\ge1$, and an accuracy $0<t\le1$. Define
+\begin{align}
+ M&=(m+1)^H,&G&=1+AmB,& U&=G^H/t,\\
+ \Lambda&=\log(4M|\mathcal X|),&
+ D_0&=d+1+\Lambda+\sqrt{m\Lambda},\\
+ \epsilon&=\min\left\{\frac1{C_\alpha D_0U},
+              \left(\frac1{C_\alpha\Lambda U^2}\right)^{1/(2-\alpha)}\right\}.
+ \label{eq:uniform-epsilon}
+\end{align}
+The constant $C_\alpha$ is sufficiently large. Put
+\begin{equation}
+ Q=C_\alpha M\left[\epsilon^{-\alpha}+(d+1)
+ \log\frac{C_\alpha M(d+1)(B+6)^{1+\alpha}}\epsilon\right]+2\log2.
+ \label{eq:uniform-resource}
+\end{equation}
+At fixed depth and tail index, $Q$ is polynomial in $d,m,B,1/t$ and $\log|\mathcal X|$, up to logarithms, and contains no learner-width factor.
+
+\begin{theorem}[Uniform finite-domain prior mass]\label{thm:uniform-mass}
+For every finite learner width $N\ge m$,
+\begin{equation}
+ \mu_N\left\{\max_{x\in\mathcal X}|z_w(x)-z_g(x)|\le t\right\}
+ \ge e^{-Q}.
+ \label{eq:uniform-mass}
+\end{equation}
+\end{theorem}
+\begin{proof}
+Use the comparison measure from Section~\ref{sec:comparison} at precision~\eqref{eq:uniform-epsilon}, and condition first on a fixed index assignment. At a selected row beyond the first, the centered perturbation noise at input $x$ is
+\[
+ Z(x)=\sum_{\mathrm{designated}}(W_j-a_j)h_j(x)
+        +\sum_{\mathrm{background}}W_jh_j(x).
+\]
+Conditional on the preceding layers, these summands are independent and centered. They have absolute value at most $9\epsilon$: for a small designated coefficient, $|a_j|\le4\epsilon$ and $|W_j|\le5\epsilon$; the other cases are smaller. Their total variance is at most
+\[
+ V=17m\epsilon^2+C_\alpha\epsilon^{2-\alpha}.
+\]
+Conditional Bernstein therefore gives, with $u=1/U$,
+\[
+ \Pp\{|Z(x)|>u\mid\text{preceding layers}\}
+ \le2\exp\left\{-\frac{u^2}{2(V+3\epsilon u)}\right\}.
+\]
+The cutoff~\eqref{eq:uniform-epsilon} ensures $V\le u^2/(4\Lambda)$, $3\epsilon u\le u^2/(4\Lambda)$, and $(d+1)\epsilon\le u$. There are at most $M$ selected later rows. A union bound over them and all input points bounds the probability of any failure by $2M|\mathcal X|e^{-\Lambda}=1/2$. Conditional bounds suffice here; different input evaluations need not be independent.
+
+On the common success event, first-layer preactivation errors are deterministically at most $(d+1)\epsilon\le u$. Let $e_\ell$ be the largest selected hidden-coordinate error over $\mathcal X$. With $a=AmB$,
+\[
+ e_1\le Au,\qquad e_\ell\le ae_{\ell-1}+Au,\qquad
+ \max_{\mathcal X}|z_w-z_g|\le mB e_H+u
+ \le u\sum_{j=0}^H a^j\le u(1+a)^H=t.
+\]
+The success probability is at least $1/2$ for every embedding, hence also for the comparison mixture. Its KL bound~\eqref{eq:embedding-kl} and binary relative entropy give~\eqref{eq:uniform-mass}, exactly as in Corollary~\ref{cor:mass}.
+\end{proof}
+
+For Cauchy weights and $\mathcal X=\{\pm1\}^d$, one can simplify~\eqref{eq:uniform-resource} to
+\begin{equation}
+ Q=\widetilde O_H\left(
+ \frac{(d+1)(m+1)^H(1+AmB)^{2H}}{t^2}\right).
+ \label{eq:boolean-cauchy-resource}
+\end{equation}
+Indeed $\Lambda=O(d+H\log(m+1))$ and $U\ge m^H\ge\sqrt m$, so the terms $D_0U$ are absorbed by a constant times $(d+H\log(m+1))U^2$. No exponential in input dimension is suppressed in~\eqref{eq:boolean-cauchy-resource}.
+
+\begin{corollary}[Prior mass of a Boolean function]\label{cor:sign-prior}
+Suppose $f:\mathcal X\to\{\pm1\}$ has a teacher satisfying
+$f(x)z_g(x)\ge2\kappa$ at every input, where $\kappa>0$.
+Use $t=\min\{1,\kappa/2\}$ in~\eqref{eq:uniform-resource}. Then
+\[
+ \mu_N\{\operatorname{sign}z_w=f,\ \min_{\mathcal X}|z_w|>\kappa\}
+ \ge e^{-Q}.
+\]
+The same lower bound holds for the induced sign-function prior if the weight prior is initially conditioned on $\min_{\mathcal X}|z_w|>\kappa$.
+\end{corollary}
+\begin{proof}
+On the uniform-approximation event, $f(x)z_w(x)\ge2\kappa-t>\kappa$. The conditioning event has positive prior mass, and dividing by its probability can only increase the lower bound.
+\end{proof}
+
+\begin{corollary}[Every-sequence online guarantees]\label{cor:online-mistakes}
+Use either sign-function prior from Corollary~\ref{cor:sign-prior}, and condition exactly on each revealed label $f(X_t)$. Inputs may be chosen adaptively from previous observations and predictions; in the randomized-prediction case, the next input is chosen before drawing the next prediction's fresh randomness. Let $p_t$ be the posterior probability of the correct sign before its reveal. On every realized input sequence,
+\begin{equation}
+ \sum_{t\ge1}-\log p_t\le Q.
+ \label{eq:online-logloss}
+\end{equation}
+Consequently:
+\begin{itemize}
+\item Fresh posterior-sampled predictions have expected total mistake count at most $Q$.
+\item Posterior majority prediction makes at most $Q/\log2$ mistakes, allowing ties to count as mistakes.
+\item For every $a\in(0,1)$, there are at most $Q/(-\log a)$ steps at which $p_t\le a$. In particular, failure of strict $>2/3$ correct-label confidence occurs at most $Q/\log(3/2)$ times.
+\end{itemize}
+These statements require neither IID inputs nor a stationary train--test distribution.
+\end{corollary}
+\begin{proof}
+Let $\pi$ be the induced function prior. For every finite realized sequence, the posterior normalizers telescope:
+\[
+ \prod_{t=1}^T p_t
+ =\pi\{h:h(X_t)=f(X_t)\text{ for every }t\le T\}
+ \ge\pi(f)\ge e^{-Q}.
+\]
+Taking logarithms and then increasing $T$ proves~\eqref{eq:online-logloss}. This is a pathwise identity even when the chosen inputs depend on previous predictions. Since $1-p\le-\log p$, the sum of conditional sampled-prediction error probabilities is at most $Q$; the tower property and monotone convergence give the expected total count. Each majority mistake has $p_t\le1/2$, and each confidence failure has $p_t\le a$, proving the other assertions.
+\end{proof}
+
+This online result uses noiseless sign observations. It is separate from the Gaussian-likelihood agnostic theorem: the prior is the same, but the observation model and prediction criterion differ. It supplies a literal function-prior lower bound and the corresponding finite total mistake guarantee, rather than only an IID sample-complexity conclusion.

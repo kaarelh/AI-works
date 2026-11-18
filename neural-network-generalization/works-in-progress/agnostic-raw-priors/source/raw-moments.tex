@@ -1,0 +1,70 @@
+\section{Width-independent raw moments}
+\label{sec:raw-moments}
+For a gamma-gated layer, write $S=\sum_{j=1}^NS_j$. Then
+$S\sim\operatorname{Gamma}(\kappa,1)$, independently of the preceding
+features. Let $R_j$ be their uniform absolute magnitudes. Weighted
+Jensen and independence give, for every $p\ge1$,
+\begin{align}
+ \E\left(\sum_{j=1}^NS_j|G_j|R_j\right)^p
+ &\le\E\left[S^{p-1}\sum_jS_j|G_j|^pR_j^p\right]\notag\\
+ &\le\E S^p\,\E|G|^p\,\max_j\E R_j^p.
+ \label{eq:gamma-weighted-jensen}
+\end{align}
+Symmetry of the gates gives
+$\E[S^{p-1}S_j]=\E S^p/N$. The features need not be independent
+of one another. Standard scalar moment bounds yield
+\[
+ \|S\|_p\le C_\kappa p,\qquad\|G\|_p\le C\sqrt p.
+\]
+
+\begin{lemma}[Bounded hidden activations]
+\label{lem:bounded-raw-moments}
+If $|\phi|\le M_\phi$, then, uniformly in input dimension, hidden
+depth, and learner width,
+\[
+ \|\sup_x|z_w(x)|\|_{L^p(\mu_N)}
+       \le C_\kappa(1+M_\phi)p^{3/2}\qquad(p\ge1).
+\]
+Moreover the native output is centered and
+\[
+ \sup_x\E_{\mu_N}z_w(x)^2
+ \le1+M_\phi^2(\kappa+\kappa^2).
+\]
+\end{lemma}
+\begin{proof}
+Apply \eqref{eq:gamma-weighted-jensen} only at the readout, where
+$R_j\le M_\phi$, and add the independent Gaussian readout bias.
+For the second moment, the distinct centered Gaussian readout factors
+have zero cross terms. Thus it is at most
+$1+M_\phi^2\sum_j\E(S_j^H)^2$, and the sum equals
+$\kappa+\kappa^2/N$. Centering follows from the same independent
+Gaussian factors and bias.
+\end{proof}
+
+\begin{lemma}[General Lipschitz hidden activations]
+\label{lem:lipschitz-raw-moments}
+For any fixed globally Lipschitz activation, there is $D\ge1$ depending
+only on its Lipschitz constant, its value at zero, and $\kappa$, such that
+\[
+ \|\sup_x|z_w(x)|\|_{L^p(\mu_N)}
+ \le D^{H+1}(d+1)p^{(3H+1)/2}\qquad(p\ge1).
+\]
+The centering conclusion still holds. In particular the second and
+fourth raw moments are finite and bounded independently of $N$.
+\end{lemma}
+\begin{proof}
+The first affine Gaussian layer costs at most
+$C(d+1)\sqrt p$ in uniform $L^p$ norm. Each subsequent layer uses
+\eqref{eq:gamma-weighted-jensen}, followed by the activation's linear
+growth bound, and multiplies the preceding bound by at most $Dp^{3/2}$.
+The readout has the same multiplication and no activation. There are
+$H$ such multiplications after the first affine layer, giving the
+claimed exponent. Increasing $D$ absorbs all fixed offsets and biases.
+\end{proof}
+
+Taking the moment of order $p=q$ in Markov's inequality shows that the
+raw uniform envelope is at most $Cq^{3/2}$, outside mass $e^{-q}$,
+for bounded hidden activations. For a general Lipschitz activation the
+corresponding envelope is
+$eD^{H+1}(d+1)q^{(3H+1)/2}$. These are properties of the actual prior;
+no network is discarded from the learner.

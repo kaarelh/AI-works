@@ -1,0 +1,110 @@
+\section{A width-only oracle for one heavy-tailed ReLU architecture}
+\label{sec:relu-width-only}
+Fix input dimension $d$, hidden depth $H$, and one learner width $N$ before observing data. The learner has ReLU hidden layers, constant input coordinate $\bar x=(1,x)$, no internal biases, a scalar linear readout $z_w$, and output
+$f_w=s(z_w)$, where $s$ clips to $[-1,1]$. The same bounded output enters both its Gaussian likelihood and posterior prediction.
+
+Choose tail indices, also before observing data, with
+\[
+ 0<\alpha_{H+1}<\cdots<\alpha_2<\min\{1,\alpha_1\},
+ \qquad \alpha_1<2,
+ \qquad a=\alpha_2,\qquad p=\frac a{2-a}.
+\]
+Every coordinate in layer $\ell$ is independent with law $F^{-1/\alpha_\ell}T_\ell$, where
+\[
+ T_\ell\text{ has density }c_{\alpha_\ell}
+       (1+t^2)^{-(1+\alpha_\ell)/2},
+\]
+and the fan-in is $F=d+1$ in the first layer and $F=N$ thereafter. The prior is a continuous full-support product measure on this one architecture. Later layers have heavier tails. There is no prior over network sizes.
+
+Observations are IID, with arbitrary $X\in\{-1,1\}^d$, conditional mean $f_0(x)\in[-1,1]$, and centered conditional noise $\xi=Y-f_0(X)$ satisfying
+$\E[e^{t\xi}\mid X]\le e^{\sigma^2t^2/2}$ for a known upper proxy $\sigma^2$. Thus the theorem includes bounded labels and Gaussian label noise. Write
+\[
+ R_0=\E\xi^2,\qquad R(f)=\E(f(X)-Y)^2,
+ \qquad A(f)=R(f)-R_0.
+\]
+
+For a width-$m$, depth-$H$ ReLU comparison implementation with coefficients bounded by $B\ge1$, the native heavy-tail comparison theorem~\cite{layerwise} gives, at every $N\ge m$ and every $0<r\le1$, a data-independent law $\nu$ such that
+\begin{equation}
+ \E_\nu|f_w(x)-g(x)|^2\le r\quad(x\in[-1,1]^d),
+ \qquad \operatorname{KL}(\nu\|\pi_N)\le K_{m,B}r^{-p}.
+ \label{eq:layerwise-L2-comparison}
+\end{equation}
+Here $g$ includes its final clipping. One may use
+\begin{align}
+ D&=1+m(B+6),\quad M=(m+1)^H,\notag\\
+ U&=C(d+1)(m+1)^{H-1}(B+6)^{aH},
+ \quad V=C(d+1)^2D^{2H},\notag\\
+ K_{m,B}&=C\left[UV^p+(d+1)M
+       \log\big(CM(d+1)(B+6)V\big)\right].
+ \label{eq:layerwise-compiled-resource}
+\end{align}
+The constants depend on the fixed depth and tail indices, but not on $d,m,B,N$. This is a comparison statement for the unchanged independent-coordinate prior; its proof's conditional truncations are not imposed on the learner.
+
+Fix an approximation slack $0<\eta\le1$. Use the two scores of Section~\ref{sec:noisy-certificate-selection}, with
+$\beta_0=\eta/[32(1+\sigma^2)]$. For the finite-parameter score, use the explicit ReLU pseudodimension upper bound
+\[
+ V_N=C_1(W_N+1)(H+1)\log(2(W_N+1)(H+1)),
+ \quad W_N=N(d+2)+(H-1)N^2,
+\]
+where $C_1$ is one fixed sufficiently large numerical constant from the standard piecewise-linear-network bound~\cite{relu-vc}. In the score take
+$t_n=C_0[V_N\log(en)+\log(32/\delta)]/n$, with the fixed sufficiently large constant $C_0$ in Lemma~\ref{lem:subgaussian-VC-excess}. Thus the learner is fully specified up to fixed universal constants. It uses none of the comparison width, coefficients, error, or accuracy target.
+
+\begin{theorem}[Coefficient-free Boolean-input approximation]
+\label{thm:layerwise-Boolean-width}
+There is a numerical $b\ge2$ with the following property. Let $d,C,h\ge1$, let $H\ge b(h+1)$, and fix any learner width $N\ge C+1$ before drawing data. Let $\mathcal G_{C,h}$ be all width-$C$, hidden-depth-$h$ ReLU networks with arbitrary finite real coefficients, biases and affine readout. Put
+\[
+ A_* =\inf_{g\in\mathcal G_{C,h}}\E(g(X)-f_0(X))^2,
+ \qquad
+ Q_\varepsilon=4(d+1)(C+1)^h+
+                 \lceil\log_2(1024/\varepsilon)\rceil+2,
+\]
+and define the explicit coefficient-free resource
+\[
+ \mathcal J_\varepsilon
+ =(d+1)^{2p+3}
+   Q_\varepsilon^{b[H(1+a+4p)+4]}.
+\]
+For $0<\varepsilon,\eta\le1$, the selected ordinary posterior mean satisfies
+\begin{equation}
+ R(\widehat f_S)\le R_0+(1+\eta)A_*+\varepsilon
+ \label{eq:layerwise-Boolean-conclusion}
+\end{equation}
+with probability at least $1-\delta$ whenever
+\begin{equation}
+ n\ge\widetilde O_{H,\boldsymbol\alpha}\left(
+ \frac{(1+\sigma^2)\mathcal J_\varepsilon}
+      {(\eta\varepsilon)^{p+1}}\right),
+ \qquad p+1=\frac2{2-a}.
+ \label{eq:layerwise-Boolean-samples}
+\end{equation}
+Only logarithms in $d,C,1/\varepsilon,1/\eta,1/\delta$ and sample size are suppressed. Constants are independent of learner width and of all original teacher coefficient magnitudes. In particular, the accuracy exponent can be made arbitrarily close to one by choosing a fixed positive $a$ sufficiently small.
+\end{theorem}
+\begin{proof}
+We use the coefficient-free Boolean compiler of~\cite{boolean}. Its precise required assertion is: for every original teacher $g$ and tolerance $\zeta$, there is a ReLU network $q_g$, with constant input and no internal biases, whose output approximates $s(g)$ uniformly on the Boolean cube to error $\zeta$, with
+\[
+ H_*\le b(h+1),\qquad
+ m,B\le\left[4(d+1)(C+1)^h+
+                  \lceil\log_2(16/\zeta)\rceil+2\right]^b.
+\]
+The coefficient bound follows directly from its unweighted-majority-gate implementation: a threshold gate with at most $S$ inputs uses coefficients bounded by $2S+1$, and the circuit size $S$ is polynomial in the displayed bracket. ReLU identity padding reaches the specified depth $H$ without increasing width or coefficient cap. The compiler is existential and nonuniform; no efficient extraction procedure is assumed.
+
+Choose a deterministic teacher near the approximation-risk infimum and take $\zeta$ a sufficiently small numerical multiple of $\varepsilon$. Clipping decreases squared distance to $f_0\in[-1,1]$. Both clipped functions are bounded, so their approximation risks differ by at most $4\zeta$. The compiled network therefore has $A(q_g)\le A_*+c\varepsilon$, and its width and coefficient cap are at most $Q_\varepsilon^b$ after increasing the numerical $b$ once.
+
+If $N\ge m$, apply \eqref{eq:layerwise-L2-comparison} and the squared-error score oracle \eqref{eq:general-L2-score-oracle}. Substitution into \eqref{eq:layerwise-compiled-resource} gives
+\[
+ K_{m,B}\le\widetilde O_{H,\boldsymbol\alpha}
+   ((d+1)^{2p+1}Q_\varepsilon^{b[H-1+aH+4Hp]}
+      +(d+1)Q_\varepsilon^{bH}),
+\]
+which is dominated by $\mathcal J_\varepsilon$.
+
+If $C+1\le N<m$, the original biased ReLU teacher fits exactly in the learner architecture: one extra constant neuron implements its biases, and identity padding reaches depth $H$. The parameter-score oracle \eqref{eq:general-parameter-oracle} therefore applies directly to $s(g)$. Its pseudodimension is bounded by a polynomial of degree two in $m$, up to the displayed depth and input-dimension factors, and is also dominated by $\mathcal J_\varepsilon$. Its sample requirement is proportional to $(1+\sigma^2)\mathcal J_\varepsilon/(\eta\varepsilon)$, which is no larger than \eqref{eq:layerwise-Boolean-samples}.
+
+Both cases use the same two observable scores, whose unknown offset is common. Selecting the smaller score inherits the applicable comparison bound. The fixed near-minimizer and compiler errors are absorbed by choosing their allocated fractions of $\varepsilon$ small enough. Jensen bounds the risk of the ordinary posterior mean by the posterior average, proving the result.
+\end{proof}
+
+The exponent $2/(2-a)$ equals $4/3$ when $a=1/2$, and tends to one as $a$ tends to zero. This concerns the approximation-error oracle with slack $1+\eta$; it is not a coefficient-one fast total-risk claim. The constants can deteriorate as tail indices become small or approach one another. At learner widths large enough to contain the compiler at the requested accuracy, the parameter score can be omitted, leaving the single fixed Gaussian observation variance $16(1+\sigma^2)/\eta$. At all remaining widths the rule selects one positive variance from the data.
+
+At fixed $d,h,H$ and tail indices, write
+$k=b h[H(1+a+4p)+4]$. For any fixed $\eta>0$ and positive $u,v$ with
+$uk+(p+1)v<1$, the same rule competes with every width-$\lfloor n^u\rfloor$ ReLU approximation at error $O(n^{-v})$, with factor $1+\eta$ on approximation error and coefficient one on the noise floor. It holds at every prescribed $N\ge\lfloor n^u\rfloor+1$. The constants are conservative; this establishes a positive polynomial-width regime, not a practical network-size estimate.

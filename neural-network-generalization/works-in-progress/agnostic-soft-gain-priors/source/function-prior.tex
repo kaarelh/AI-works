@@ -1,0 +1,48 @@
+\section{The induced prior on function neighborhoods}
+For a bounded function $f$ on $\mathcal X$ and $0<\delta<1$, write
+\[
+ B_\delta(f)=\{w:\|z_w-f\|_{\infty,\mathcal X}\le\delta\}.
+\]
+These events are measurable because the network map is continuous in parameters in the uniform norm on the compact input domain.
+
+\begin{theorem}[Two-sided finite function-prior bounds]
+\label{thm:prior}
+For every $N\ge1$ and $\gamma\ge1$,
+\begin{equation}
+ -\frac1\omega\log\pi_{N,\gamma}(B_\delta(f))
+ \ge\frac12\VarPath_{H,N,\delta}(f)-\frac{\log2}{2}.
+ \label{eq:prior-lower}
+\end{equation}
+If $p=\VarPath_{H,N,\delta/2}(f)<\infty$, then
+\begin{equation}
+ -\frac1\omega\log\pi_{N,\gamma}(B_\delta(f))
+ \le3p+1+2\log\frac{24(H+1)(p+1)}\delta+2\log2.
+ \label{eq:prior-upper}
+\end{equation}
+In particular the precision-normalized negative log prior is controlled by minimal approximate path variation, with only the displayed logarithmic accuracy and depth terms. No learner-width or input-dimension factor is suppressed.
+\end{theorem}
+\begin{proof}
+Conditional on the internal matrices, the scaled endpoint coordinates are independent standard Gaussians. Their squared sum is $\omega Q_N$, so unconditionally
+\begin{equation}
+ \omega Q_N\sim\chi^2_{N(d+1)},\qquad
+ \frac{N(d+1)}\omega\le1.
+ \label{eq:chi-square}
+\end{equation}
+Any network in $B_\delta(f)$ has $P(w)\ge\VarPath_{H,N,\delta}(f)$ and $Q_N\ge2P(w)$ by~\eqref{eq:energy-lower}. Markov's inequality with
+$\E e^{\omega Q_N/4}=2^{N(d+1)/2}$ yields
+\[
+ \pi(B_\delta(f))\le
+ \exp\left[-\frac\omega2\VarPath_{H,N,\delta}(f)
+                      +\frac{N(d+1)\log2}{2}\right],
+\]
+which proves~\eqref{eq:prior-lower}. An infinite infimum means the event is empty.
+
+For the upper bound, choose any width-at-most-$N$ network $g$ within $\delta/2$ of $f$, with path variation $P$. Apply Lemma~\ref{lem:comparison} at
+$\eta=\delta/[24(H+1)(P+1)]$. Its uniform-error $L^2$ norm is at most $\delta/4$, so its comparison law gives probability at least $3/4$ to $B_{\delta/2}(g)\subset B_\delta(f)$. The binary relative-entropy inequality implies, for any event $A$ with $\rho(A)\ge1/2$,
+\[
+ \log\frac1{\pi(A)}\le2\KL(\rho\|\pi)+2\log2.
+\]
+Use~\eqref{eq:comparison-entropy}, divide by $\omega\ge1$, and let $P$ decrease to the infimum $p$. This proves~\eqref{eq:prior-upper}.
+\end{proof}
+
+The different radii in the two bounds are intentional: approximation at half the requested accuracy leaves room for an open neighborhood of the comparison implementation. The theorem is about function neighborhoods, not positive mass on one exact continuous-domain function. It gives bounds on prior preference; it does not assert an exact monotone ordering between every pair of functions.

@@ -1,0 +1,111 @@
+\section{A fixed likelihood for noisy realizable targets}
+\label{sec:compiler-fixed-temperature}
+When a narrow network represents the conditional mean exactly, the
+Gaussian observation variance can stay fixed.  The posterior may still
+be misspecified: the true noise need only be conditionally sub-Gaussian,
+not Gaussian.
+
+Suppose $Y=f_0(X)+\xi$, $\E[\xi\mid X]=0$, and
+$\E[e^{t\xi}\mid X]\le e^{\sigma^2t^2/2}$.  Assume $|f_0|\le B_0$
+almost surely and put $B=\max\{1,B_0\}$, $R_0=\E\xi^2$.
+Retain the same continuous prior and raw posterior mean, but now use any
+one fixed temperature
+\begin{equation}\label{eq:compiler-fixed-T}
+ T\ge\max\{8\sigma^2+1,49B^2\}.
+\end{equation}
+It does not depend on sample size, comparison width or depth.
+
+\begin{theorem}[Coefficient-free learning of the conditional mean]
+\label{thm:raw-realizable-compiler}
+Assume one of the input conditions in Theorem~\ref{thm:raw-width-oracle}.
+Suppose $f_0$ agrees almost surely with a member of
+$\mathcal G_{C,h}$; its implementing coefficients are unrestricted.
+Use the same compiled width and depth thresholds, and define $\mathcal D_n$
+by the expression for $c\mathcal B_n$ with $M_n$ replaced by $B$, with
+its numerical constant sufficiently large.  For every $N\ge m_*$ and
+$H\ge H_*$, and all sufficiently large $n$,
+\[
+ \E_S\int R(z_w)\,\Pi_S(dw)
+ \le R_0+\frac{c\mathcal D_n[T+\mathcal D_n+\log(n+2)+B^2]}n.
+\]
+The ordinary raw posterior mean has no larger risk.  Moreover, for every
+$0<\delta<1/2$, with probability at least $1-\delta$,
+\[
+ \int R(z_w)\,\Pi_S(dw)
+ \le R_0+\frac{c[\mathcal D_n+\log(4/\delta)]}{n}
+       \left[T+\mathcal D_n+\log\frac{n+2}{\delta}+B^2\right].
+\]
+At fixed input dimension, teacher depth and regularity, the expected
+excess is
+\[
+ \widetilde O\left(\frac{(C^{2bh}+H)^2+T(C^{2bh}+H)}n\right).
+\]
+In particular the growing comparison width and learner-depth range of
+Corollary~\ref{cor:raw-growing-width} give excess
+$\widetilde O(n^{-1/2})$ for such realizable conditional means, at the
+single fixed variance $T/2$.
+\end{theorem}
+\begin{proof}
+Use the globally bounded version $f_0=\operatorname{clip}_B g$ of the
+regression function, where $g\in\mathcal G_{C,h}$ represents it almost
+surely.  This changes neither the data law nor any test risk.
+Lemma~\ref{lem:stable-compiler-resource}, at $\epsilon_n=(n+2)^{-8}$,
+gives a comparison law $\rho_n$ with
+\[
+ \KL(\rho_n\|\mu_{N,H})\le\mathcal D_n,\qquad
+ \rho_n\{\|z_w\|_\infty\le6B\}=1,\qquad
+ \E_{\rho_n,X}(z_w-f_0)^2\le n^{-4}
+\]
+for all sufficiently large $n$.  Hence its pointwise mean squared
+discrepancy $v(x)$ is at most $49B^2\le T$.
+
+Here is the raw fixed-temperature argument, in the form needed for
+population rather than uniform approximation.  Let
+$\mathcal A(f)=\E_X(f-f_0)^2$, $c_T=1-2\sigma^2/T\ge3/4$, and define
+\[
+ D_T(f)=-T\log\E_X e^{-c_T(f-f_0)^2/T}.
+\]
+Conditional sub-Gaussianity, the entropy inequality and the Gibbs
+variational identity give
+\[
+ \E_S\Pi_S D_T\le n^{-4}+T\mathcal D_n/n.
+\]
+For the confidence statement the same argument gives
+$\Pi_SD_T\le cT[\mathcal D_n+\log(4/\delta)]/n$ outside a set of
+probability $O(\delta)$.  To verify the comparison concentration used
+here, $0\le v\le49B^2$ and $Pv\le n^{-4}$ imply
+$P_nv\le2n^{-4}+cB^2\log(1/\delta)/n$ by Bernstein.  The conditional
+noise term has variance proxy at most $4\sigma^2P_nv/n$ and is therefore
+at most $cn^{-4}+cT\log(1/\delta)/n$ with the same confidence order.
+
+A second use of the comparison law bounds the expected posterior
+density relative to the prior by $\exp(\mathcal D_n+c)$.  Explicitly,
+divide the likelihood by that at $f_0$, lower-bound its normalizer by
+Jensen with $\rho_n$, and average the noise.  For $e=f-f_0$ and
+$b(x)=\E_{\rho_n}(z_w-f_0)$, the exponent at one observation is bounded by
+\[
+ \frac{v-e^2}{T}+\frac{2\sigma^2(e-b)^2}{T^2}
+                    \le\frac{3v}{2T}-\frac{e^2}{2T}
+                    \le\frac{3v}{2T}.
+\]
+Because $v\le T$ and $Pv\le n^{-4}$, its input expectation is at most
+$\exp(cn^{-4}/T)$.  Thus every nonnegative network functional $W$ obeys
+$\E_S\Pi_SW\le e^{\mathcal D_n+c}\mu_{N,H}W$.
+
+The native raw supremum has a Gaussian tail, so a cutoff with
+$M^2=c[\mathcal D_n+\log(n+2)+B^2]$ makes the expected posterior
+contribution of $(\|f\|_\infty+B)^2\mathbf1_{\{\|f\|_\infty>M\}}$
+at most $n^{-2}$.  For confidence $1-\delta$, replace $\log(n+2)$ by
+$\log((n+2)/\delta)$ and apply Markov's inequality to this tail term.
+On the remaining functions the secant bound for the exponential gives
+\[
+ \mathcal A(f)\le
+ \left(\frac1{c_T}+\frac{(M+B)^2}{T}\right)D_T(f).
+\]
+Combining the last three bounds proves the displayed inequalities.
+The elementary entropy step and tail argument are also stated as the
+fixed-temperature population-comparison theorem in~\cite{rawprior}.
+Finally $R(f)=R_0+\mathcal A(f)$ and Jensen's inequality transfer the
+result to the ordinary posterior mean.  Substitution of
+$\mathcal D_n=\widetilde O(C^{2bh}+H)$ proves the last claims.
+\end{proof}

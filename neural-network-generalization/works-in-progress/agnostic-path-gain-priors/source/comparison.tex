@@ -1,0 +1,72 @@
+\section{An exact conditional-Gaussian comparison}
+The set $\{W:\||W|\|_{\op}\le1\}$ is convex, centrally symmetric, and has positive Gaussian measure. Convexity follows from entrywise absolute-value convexity and monotonicity of the operator norm on nonnegative matrices.
+
+We will use the following identity. If $X$ has density proportional to $\mathbf1_K(x)e^{-\alpha\|x\|^2/2}$ on a convex centrally symmetric set $K\subset\R^p$, $a\in K$, and $Y=(1-\eta)a+\eta X$ with $0<\eta<1$, then
+\begin{align}
+ \KL(\mathcal L(Y)\|\mathcal L(X))
+ &=p\log(1/\eta)+\frac\alpha2\left[(1-\eta)^2\|a\|^2-(1-\eta^2)\E\|X\|^2\right]\notag\\
+ &\le p\log(1/\eta)+\frac\alpha2\|a\|^2.
+ \label{eq:transport}
+\end{align}
+Indeed, $Y\in K$, the affine Jacobian is $\eta^p$, and symmetry gives $\E X=0$. The conditional-Gaussian normalizer cancels exactly in the density ratio. For an unrestricted Gaussian, $Y=a+\eta X$ obeys the same upper bound.
+
+\begin{lemma}[Uniform approximation with controlled relative entropy]
+\label{lem:comparison}
+Let $g$ have width $C$, depth $H$, and mixed path variation $P$. At every $N\ge C$, every $\gamma\ge1$, and every $0<\eta<1$, there is a law $\rho_{g,\eta}$ relative to $\pi_{N,\gamma}$ such that
+\begin{equation}
+ \frac2\omega\KL(\rho_{g,\eta}\|\pi_{N,\gamma})
+ \le2P+1+2\log(1/\eta),
+ \label{eq:comparison-entropy}
+\end{equation}
+and
+\begin{equation}
+ \left(\int\|z_w-g\|_{\infty,\mathcal X}^2d\rho_{g,\eta}\right)^{1/2}
+ \le2(H+1)(P+1)\eta.
+ \label{eq:comparison-uniform}
+\end{equation}
+\end{lemma}
+\begin{proof}
+Take the exact implementation from Lemma~\ref{lem:clone}, with endpoint energies $u_N=q_N=P$. Independently for every internal layer, draw $X$ from its actual conditioned Gaussian prior and set $W^\ell=(1-\eta)W^{\ell,*}+\eta X$. For the first layer and readout use Gaussians with the cloned means and $\eta^2$ times their original covariances.
+
+The dimension cost in~\eqref{eq:transport}, normalized by $2/\omega$, is at most $2\log(1/\eta)$ because
+\[
+ \frac{Nd+(H-1)N^2+N}{N(d+1)+(H-1)N^{\gamma+1}}\le1.
+\]
+The endpoint mean cost is exactly $2P$. The internal mean cost is at most $N^\gamma(H-1)C/\omega\le C/N\le1$. This proves~\eqref{eq:comparison-entropy}.
+
+Let $e_\ell$ be the $L^2(\rho)$ norm of the maximum over $x\in\mathcal X$ of $\|h^\ell(x)-h^{\ell,*}(x)\|_2/\sqrt N$. The first Gaussian perturbation has
+\[
+ \frac1N\E\|W^1-W^{1,*}\|_F^2
+ =\eta^2\frac{Nd}{\omega}\le\eta^2,
+\]
+so $e_1\le\eta$. Every internal random matrix has operator norm at most one and differs from its teacher matrix by operator norm at most $2\eta$. Teacher hidden states satisfy $\sup_x\|h^{\ell,*}(x)\|_2/\sqrt N\le\sqrt P$. Consequently
+\[
+ e_H\le\eta+2(H-1)\eta\sqrt P.
+\]
+The cloned readout contributes at most $\sqrt P\,e_H$ to the output error.
+
+The readout noise is independent of the hidden layers and has expected squared Euclidean norm $\eta^2/\omega$. Since all internal layers are Euclidean nonexpansive,
+\begin{align*}
+ \E\sup_x| (v-v^*)^{\mathsf T}h^H(x)|^2
+ &\le\frac{\eta^2}{\omega}\E\|W^1\|_F^2\\
+ &=\eta^2\frac N\omega\left(P+\eta^2\frac{Nd}\omega\right)
+ \le\eta^2(P+1).
+\end{align*}
+Minkowski gives total error at most
+$\eta\{\sqrt P+2(H-1)P+\sqrt{P+1}\}\le2(H+1)(P+1)\eta$.
+This is a uniform-function estimate, not merely a pointwise-in-input estimate.
+\end{proof}
+
+For learning, put
+\begin{equation}
+ \eta_n=\frac1{16n(H+1)(P+1)^2},\qquad
+ T_g=4+2P+2\log(1/\eta_n).
+ \label{eq:teacher-budget}
+\end{equation}
+Then $|g|\le P$, and~\eqref{eq:comparison-uniform} makes the expected squared-loss increase at every observation at most $1/(2n)$. Thus the Gibbs free energy for observation variance $n\lambda/\omega$ satisfies
+\begin{equation}
+ F_S(\lambda)\le\widehat R_S(g)+\frac1{2n}+\lambda T_g
+ \qquad(\lambda>0).
+ \label{eq:free-energy-comparison}
+\end{equation}
+The slack from $2P+1$ to $4+2P$ is convenient for the population-risk constants below.

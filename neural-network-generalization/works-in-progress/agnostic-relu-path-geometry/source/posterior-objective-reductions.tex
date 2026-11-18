@@ -1,0 +1,139 @@
+\section{Two posterior-specific reductions}
+We first quantify how the posterior relates to convex path-norm
+regression on the observed sample.
+Let
+\[
+ z(x)=\sum_{j=1}^N v_j(a_jx+b_j)_+,
+ \quad (a_j,b_j)\sim N(0,\nu I_2),\quad
+ v_j\sim N(0,\nu/N^2),\quad \omega=N/\nu,
+\]
+where all coordinates are independent and $0<\nu\le1$.
+The actual posterior has density proportional to
+$\exp[-\omega\widehat R(z)/(2\lambda)]$ relative to this prior.
+Throughout this section $|X_i|,|Y_i|\le1$.
+
+Write $(a_j,b_j)=r_j\theta_j$ with $\theta_j$ uniform on the unit
+circle, and put $c_j=v_jr_j$. The exact pushforward prior has independent
+uniform directions and independent Laplace amplitudes
+$c_j\sim\operatorname{Laplace}(0,\omega^{-1})$.
+Indeed $r_j^2$ is exponential of mean $2\nu$, and
+\[
+ \mathbb E e^{itc_j}
+ =\mathbb E\exp[-\nu t^2r_j^2/(2N^2)]
+ =(1+\nu^2t^2/N^2)^{-1}.
+\]
+Put $P(c)=\sum_j|c_j|$ and
+$A_\theta c=(\sum_jc_j(\theta_{j,1}X_i+\theta_{j,2})_+)_{i=1}^n$.
+All statements below are about this exact pushforward posterior;
+no replacement prior or estimator is introduced.
+
+\begin{proposition}[Expected excess mass on a training-prediction fiber]
+Fix the directions and a feasible training vector $b$.
+Let $d_\theta=N-\operatorname{rank}(A_\theta)$ and
+\[
+ P_{\min}(b,\theta)=\min\{\|c\|_1:A_\theta c=b\}.
+\]
+For almost every fiber under the regular conditional posterior,
+\[
+ \mathbb E[P(c)-P_{\min}(b,\theta)\mid\theta,A_\theta c=b]
+ \le d_\theta/\omega\le\nu. \tag{PR1}
+\]
+\end{proposition}
+\begin{proof}
+Conditional on the fiber, the likelihood is constant. The posterior
+density with respect to its affine Hausdorff measure is proportional
+to $e^{-\omega\|c\|_1}$; the coarea normalization is constant there.
+Choose a minimizer $c_*$. In orthonormal nullspace coordinates $u$,
+let $V(u)=\|c_*+Bu\|_1$, where $B$ is an isometry from
+$\mathbb R^{d_\theta}$ onto $\ker A_\theta$.
+The density is coercive and has exponential tails. Integration of
+$\operatorname{div}(u e^{-\omega V(u)})$ gives
+\[
+ d_\theta=\omega\mathbb E[u\cdot\nabla V(u)].
+\]
+The piecewise-linear convex potential is differentiable almost
+everywhere; the identity also follows by smooth approximation.
+Convexity gives $u\cdot\nabla V(u)\ge V(u)-V(0)$.
+The zero-dimensional case is immediate. This proves (PR1).
+\end{proof}
+
+\begin{proposition}[Approximate minimization of the full empirical path objective]
+Suppose $N\ge n$ and $0<\lambda\le1/2$. Let $J_*$ be the minimum,
+over all finite shallow ReLU implementations, of
+\[
+ J(c,\theta)=\widehat R(z_{c,\theta})+2\lambda\sum_j|c_j|.
+\]
+Equivalently, one may first minimize the amplitude mass among
+implementations of each training vector, then minimize over those vectors. Then the actual posterior satisfies
+\[
+ 0\le\mathbb E_\Pi[\widehat R(z)+2\lambda P(c)]-J_*
+ \le C\lambda\nu\log\frac{e}{\lambda\nu}. \tag{PR2}
+\]
+Here $C$ is universal. The mass in the posterior expectation is that
+of its actual amplitude representation, not a separately minimized
+version.
+\end{proposition}
+\begin{proof}
+The signed unit-ridge training vectors form a compact subset of
+$\mathbb R^n$. The minimum-mass representation of any feasible
+training vector therefore exists, and a linear-dependence reduction
+uses at most $n$ atoms. Minimizing the coercive objective over the
+resulting compact sublevel sets gives a minimizer $f_*$ with at most
+$n$ atoms. Since zero is feasible,
+\[
+ J_*\le1,\qquad \widehat R(f_*)\le1,\qquad P_*\le(2\lambda)^{-1}.
+\]
+Thus $f_*$ fits into the prescribed width $N$.
+
+Let $F=-(2\lambda/\omega)\log Z$ be the actual free energy.
+Represent $f_*$ by the balanced Gaussian center
+$\bar r_j=\sqrt{N|c_j|}\theta_j$,
+$\bar v_j=\operatorname{sign}(c_j)\sqrt{|c_j|/N}$.
+Its weighted Gaussian energy is $2P_*$.
+Around this center use native covariance multiplied by
+$\epsilon^2$, with $\epsilon=(\lambda\nu)^2$.
+The comparison law has
+\[
+ \operatorname{KL}(\rho\Vert\mu)
+ \le\omega P_*+3N\log(1/\epsilon).
+\]
+Its uniform root-mean-square function perturbation is bounded by
+$C\epsilon\sqrt{\nu P_*}+C\epsilon^2\nu$.
+Using $\widehat R(f_*)\le1$ gives
+$\rho\widehat R\le\widehat R(f_*)+C\lambda\nu$.
+The Gibbs variational inequality therefore yields
+\[
+ F\le J_*+C\lambda\nu\log\frac e{\lambda\nu}. \tag{PR3}
+\]
+
+For the pushforward prior,
+$\mathbb E e^{t\omega P}=(1-t)^{-N}$ for $0<t<1$.
+The entropy inequality and the Gibbs identity imply
+\[
+ F\ge\mathbb E_\Pi\widehat R+2\lambda t\mathbb E_\Pi P
+       +2\lambda\nu\log(1-t).
+\]
+Radial integration by parts in the Laplace amplitudes gives
+\[
+ \mathbb E_\Pi P
+ =\nu-\lambda^{-1}\mathbb E_\Pi P_n[z(z-Y)]
+ \le\nu+\widehat{Y^2}/(4\lambda)
+ \le\nu+(4\lambda)^{-1}.
+\]
+Use $1-t=\lambda\nu$. The lost coercivity term
+$2\lambda(1-t)\mathbb E_\Pi P$ is at most $C\lambda\nu$.
+Combining this with (PR3) proves the upper bound in (PR2).
+Its lower bound follows from the definition of $J_*$.
+\end{proof}
+
+Neither statement alone controls population predictions in an empty
+sample interval. In (PR1), a small mass excess need not imply small
+function distance to a minimum-mass representative: nearby ridge
+directions can make the relevant stability constant arbitrarily bad.
+In (PR2), near-minimal objective value is not a uniform output-range
+bound. The four-point example later in this paper proves that
+full Gaussian path-norm interpolants themselves can have arbitrarily
+large excursions between bounded training labels. A statistical
+improvement must use the local sample spacings and the cost of fitting
+nearby conflicting labels, rather than invoking deterministic range
+preservation.

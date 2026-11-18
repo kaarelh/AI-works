@@ -1,0 +1,165 @@
+\section{Gaussian features and nearly minimal-energy interpolation}
+\label{sec:gaussian-feature-memorizer}
+We first construct a quantitative feature representation on a finite subset of a unit sphere. All norm bounds below use the original Gaussian weighted energy.
+
+Put $d=D+2$ and
+\[
+ \mathcal X_D=\left\{\left(T,\frac z{2\sqrt D},\sqrt{3/4-T^2}\right):
+ T\in\{\pm1/4,\pm3/4\},\ z\in\{-1,1\}^D\right\}\subset\mathbb S^{d-1}.
+\]
+Let $A$ have independent $N(0,1/d)$ coordinates in $\R^{d+1}$. For $0\le\nu\le1$, define
+\[
+ \phi_A(x)=\E_G\tanh\left(A\cdot(1,x)+\sqrt{2\nu/d}\,G\right),
+ \qquad K_\nu(x,x')=\E_A\phi_A(x)\phi_A(x').
+\]
+All finite-set inner products use the uniform probability law on $\mathcal X_D$.
+
+\begin{lemma}[A small-variance Gaussian feature kernel]
+\label{lem:gaussian-feature-kernel}
+The kernel operator $K_\nu$ has smallest eigenvalue at least
+\[
+ \Lambda_D=e^{-40(D+1)}
+\]
+for every $D\ge1$ and every $0\le\nu\le1$.
+\end{lemma}
+\begin{proof}
+Write $\alpha=\sqrt{2/d}$. The Gaussian mean preactivation has variance $\alpha^2$ at every input. Expand
+\[
+ t\longmapsto\E_G\tanh(\alpha t+\alpha\sqrt\nu G)
+\]
+in orthonormal Hermite polynomials for a standard Gaussian variable. Even coefficients vanish. For odd $j\ge1$, the Fourier identity $\tanh t=\int_0^\infty\sin(\omega t)/\sinh(\pi\omega/2)\,d\omega$ and the Gaussian Hermite identity $\mathbb E[\operatorname{He}_j(G)e^{iuG}]=(iu)^j e^{-u^2/2}$ give the exact absolute coefficient
+\[
+ |b_j|=\frac1{\alpha\sqrt{j!}}\int_0^\infty
+ \frac{\omega^j e^{-(1+\nu)\omega^2/2}}
+      {\sinh(\pi\omega/(2\alpha))}\,d\omega.
+\]
+For $j\le D+4=d+2$, restrict to $\omega\in[\sqrt j/2,\sqrt j]$. Since $\nu\le1$, $\sqrt{j!}\le j^{j/2}$, and $1/\sinh u\ge2e^{-u}$,
+\[
+ |b_j|\ge\frac{\sqrt j}{\alpha}
+       \exp\{-j\log2-j-(\pi/2)\sqrt{jd/2}\}\ge e^{-5d}.
+\]
+For the final inequality use $\sqrt j/\alpha\ge1$, $j\le d+2$, $\sqrt{jd/2}\le d$ for $d\ge2$, and
+$(1+\log2)(d+2)+(\pi/2)d\le5d$ for $d\ge3$.
+
+The correlation of two normalized first preactivations is
+\[
+ c(x,x')=\frac{1+TT'}2+\frac{z\cdot z'}{8D}
+            +\frac{\sqrt{3/4-T^2}\sqrt{3/4-(T')^2}}2.
+\]
+The Fourier identity follows by expanding $1/\sinh(\pi\omega/2)$ into decaying exponentials and using the partial-fraction expansion of tanh. The Gaussian factor justifies the displayed Hermite integration. Thus $K_\nu=\sum_{j\ \mathrm{odd}}b_j^2c^j$, with every multinomial term a positive semidefinite rank-one kernel. For a nuisance subset $S$ of size $s$ and $a\in\{0,1,2,3\}$, choose $b\in\{0,1\}$ so that $j=s+a+b$ is odd. Retaining the term $T^a\chi_S(z)\otimes T^a\chi_S(z)$ gives coefficient
+\[
+ b_j^2\frac{j!}{a!b!}\,2^{-(a+b)}(8D)^{-s}
+ \ge \frac1{96}e^{-10d}\frac{s!}{(8D)^s}
+ \ge\frac1{96}e^{-10d-8D}.
+\]
+The last inequality follows because $(8D)^s/s!$ is one term of the series for $e^{8D}$. All selected terms are distinct. The four-point Gram matrix of $1,T,T^2,T^3$ has determinant $9/65536$ and trace less than two, so its minimum eigenvalue is greater than $9/524288>2^{-16}$, while nuisance Walsh characters are orthonormal. Consequently
+\[
+ \lambda_{\min}(K_\nu)
+ \ge\frac{2^{-16}}{96}e^{-18D-20}\ge e^{-40(D+1)}.
+\]
+This proves the claim.
+\end{proof}
+
+\begin{lemma}[Finite features with controlled row norm]
+\label{lem:finite-gaussian-features}
+For any $0\le\nu\le1$, every sufficiently large integer $N$ admits vectors $a_1,\ldots,a_N\in\R^{d+1}$ such that
+\[
+ \frac1N\sum_i\|a_i\|^2\le2,
+ \qquad
+ K_{\nu,N}:=\frac1N\sum_i\phi_{a_i}\otimes\phi_{a_i}
+                   \succeq\tfrac12\Lambda_D I.
+\]
+A sufficient threshold is $N\ge C\Lambda_D^{-2}\log(8m)$ for an absolute constant $C$. Simultaneously, for any requested $\eta>0$, the rows may be chosen so that
+\[
+ \sup_{x\in\mathcal X_D}\left|
+ \frac1N\sum_i\E_G\tanh^2(a_i\cdot(1,x)+\sqrt{2\nu/d}G)-b_1\right|\le\eta,
+\]
+where $b_1=\E\tanh^2(\sqrt{2(1+\nu)/d}G)$ is independent of $x$, provided additionally $N\ge C\eta^{-2}\log(8m)$.
+For any function $r$ on $\mathcal X_D$, coefficients $c_i$ can then be chosen with
+\[
+ r=\frac1N\sum_i c_i\phi_{a_i},\qquad
+ \frac1N\sum_i c_i^2\le2\Lambda_D^{-1}\|r\|_2^2,
+ \qquad |c_i|\le2\Lambda_D^{-1}\|r\|_2.
+\]
+\end{lemma}
+\begin{proof}
+Sample the rows independently as in Lemma~\ref{lem:gaussian-feature-kernel}. Hoeffding and a union bound over $m^2$ matrix entries give
+$\max_{x,x'}|K_{\nu,N}(x,x')-K_\nu(x,x')|\le\Lambda_D/2$ with probability at least $7/8$ at the stated width. Because the integral operator uses uniform probability normalization, its operator norm is bounded by the maximum absolute kernel entry; hence this event implies the operator lower bound. The squared-feature condition follows from another Hoeffding union bound, with failure at most $1/8$, since its expectation is the displayed constant $b_1$. Finally $\E\|A\|^2=(d+1)/d\le4/3$, and a chi-square tail shows that the row-norm average is at most two with failure at most $1/8$ once $N$ exceeds an absolute constant. All three events consequently have positive joint probability. Enlarging $C$ covers that threshold.
+
+For such rows set $u=K_{\nu,N}^{-1}r$ and $c_i=\langle u,\phi_{a_i}\rangle$. Then the representation is exact,
+\[
+ \frac1N\sum_i c_i^2=\langle r,K_{\nu,N}^{-1}r\rangle
+ \le2\Lambda_D^{-1}\|r\|_2^2,
+\]
+and $|c_i|\le\|u\|_2\|\phi_{a_i}\|_2\le2\Lambda_D^{-1}\|r\|_2$.
+\end{proof}
+
+\begin{theorem}[Exact interpolation at nearly one energy unit per layer]
+\label{thm:near-baseline-memorizer}
+For every $\delta>0$ and finite output bound $A_0>0$ there are constants $\eta,c,C>0$ and $H_0$ such that, whenever $H\ge H_0$, $1\le D\le\eta H$, and $N\ge e^{CH}$, every function $r:\mathcal X_D\to[-A_0,A_0]$ is exactly represented by a width-$N$, $H$-hidden-layer tanh network with
+\[
+ Q_N(w)\le(1+\delta)H+c.
+\]
+The constants may depend on $\delta,A_0$, but not on $D,H,N,r$. Taking $D=\lfloor\eta H\rfloor$ gives $4\cdot2^D=\exp(\Omega_\delta(H))$ freely prescribed values. There are no internal biases, and the energy is the same weighted Gaussian energy used throughout the paper.
+\end{theorem}
+\begin{proof}
+Choose $R>1$ with $R^2\le1+\delta/4$. Choose $\alpha\in(0,1)$ so small that
+\[
+ a_\alpha:=\operatorname{arctanh}(\alpha)/\alpha<R,
+ \qquad q:=a_\alpha/R<1,
+\]
+and put $B=\max\{1,A_0/\alpha\}$. For each desired output $r(x)$, set $u_H(x)=r(x)/B$ and recursively define
+\[
+ u_{\ell-1}(x)=\operatorname{arctanh}(u_\ell(x))/R
+       \quad(3\le\ell\le H),\qquad
+ r_0(x)=\operatorname{arctanh}(u_2(x)).
+\]
+The inverse recursion stays in $[-\alpha,\alpha]$ and contracts in absolute value by at most $q$ at each step. Therefore
+\[
+ \|r_0\|_\infty\le a_\alpha q^{H-2}A_0/B.
+\]
+Apply Lemma~\ref{lem:finite-gaussian-features} with $\nu=0$ to represent $r_0$ exactly. Use its $a_i$ as the first-layer rows, its weights $c_i/N$ as every row of the second-layer matrix, the constant matrix with all entries $R/N$ in each later hidden layer, and the readout with all entries $B/N$.
+The second-layer output is exactly $u_2$, repeated across its neurons. Induction gives $u_\ell$ at each later layer and final output $B u_H=r$.
+
+The weighted energy is at most
+\begin{align*}
+ Q_N(w)&\le2d+2\Lambda_D^{-1}\|r_0\|_2^2
+                  +(H-2)R^2+B^2\\
+ &\le2(D+2)+2\Lambda_D^{-1}
+       (a_\alpha A_0/B)^2 q^{2H-4}+(H-2)R^2+B^2.
+\end{align*}
+Choose $\eta>0$ so small that $2\eta\le\delta/4$ and
+$40\eta+2\log q<0$. Since $\Lambda_D^{-1}$ is an absolute constant times $e^{40(D+1)}$, the second term is uniformly bounded for $D\le\eta H$. The first and later-layer terms total at most $(1+\delta/2)H+O(1)$, and all remaining constants are fixed. Enlarging $c$ gives the displayed claim. The finite-feature width bound is at most $e^{CH}$ for a suitable $C$, because $D\le\eta H$ and $\Lambda_D^{-2}=e^{O(D)}$.
+\end{proof}
+
+\begin{corollary}[Near-baseline comparison with small native Gaussian noise]
+\label{cor:near-baseline-native-small-noise}
+Fix $\delta,A_0,t>0$ and $\gamma>1$. With the constants and supports of Theorem~\ref{thm:near-baseline-memorizer}, there is $C_\gamma<\infty$ such that, for every sufficiently large $H$, every $D\le\eta H$, every $N\ge e^{C_\gamma H}$, every $0<\sigma^2\le N^{-\gamma}$, and every $r:\mathcal X_D\to[-A_0,A_0]$, a Gaussian mean shift retaining exactly the original prior covariance has
+\[
+ Q_N(w_0)\le(1+\delta)H+c,\qquad
+ \sup_{x\in\mathcal X_D}
+ \left(\E|z_{w_0+\xi}(x)-r(x)|^2\right)^{1/2}\le t.
+\]
+Its relative entropy is exactly $Q_N(w_0)/(2\sigma^2)$.
+\end{corollary}
+\begin{proof}
+Use the deterministic exact interpolator from Theorem~\ref{thm:near-baseline-memorizer}. Write $s=\sigma^2$, and compare its hidden outputs $h_\ell^0$ with those $h_\ell$ after independent native Gaussian perturbations. At a fixed input let
+\[
+ e_\ell=\left(\E\|h_\ell-h_\ell^0\|_2^2/N\right)^{1/2}.
+\]
+The first-layer row noise has preactivation variance $2Ns/d\le Ns$ because $\|(1,x)\|^2=2$. The one-Lipschitz property of $\tanh$ gives $e_1\le\sqrt{Ns}$. For each subsequent hidden layer, its weight noise is independent of earlier hidden outputs and
+\[
+ \E\|\Xi_\ell h_{\ell-1}\|^2/N
+       =s\E\|h_{\ell-1}\|^2\le Ns.
+\]
+Minkowski and the deterministic operator norm therefore imply
+\[
+ e_\ell\le\|W_\ell^0\|_{\rm op}e_{\ell-1}+\sqrt{Ns}.
+\]
+The second deterministic matrix has uniformly bounded squared Frobenius norm by the bounded second term of the memorizer's energy estimate. Its operator norm is consequently bounded by a constant independent of $H,D,N,r$. Every later hidden matrix has operator norm exactly $R$. It follows that $e_H\le C R^H\sqrt{Ns}$, with a fixed constant $C$ depending on the construction. The deterministic readout has norm $B/\sqrt N$, while its independent native Gaussian noise contributes output variance at most $s$. Hence
+\[
+ \left(\E|z_{w_0+\xi}(x)-r(x)|^2\right)^{1/2}
+ \le CB R^H\sqrt{Ns}+\sqrt s.
+\]
+This is at most $t$ uniformly for $N\ge e^{C_\gamma H}$ after increasing $C_\gamma$ and the fixed depth threshold, because $Ns\le N^{1-\gamma}$. The bound is independent of the chosen input, and the covariance-preserving shift has the stated exact entropy.
+\end{proof}

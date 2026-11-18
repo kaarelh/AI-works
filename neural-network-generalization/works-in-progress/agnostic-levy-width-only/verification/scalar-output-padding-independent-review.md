@@ -1,0 +1,6 @@
+# Independent scalar-output padding review
+The exact module passes. ReLU positive/negative output channels duplicate the teacher formula once and add two occurrences per extra layer, preserving width max(m,2) and the original coefficient cap. The stable first-moment relay argument then gives the stated actual-formula resource rather than multiplying every extra layer by the original hidden width. Its univariate specialization has additive C+H dependence.
+
+For tanh, the weak scalar signal has error at most q delta^2 M^3/3 after q applications, and the stated delta guarantees the requested tolerance. The reciprocal readout has only polynomial coefficient growth. The first added row has total intended absolute gain at most one, and later relays have gain one. The local precision stated in the source absorbs teacher error, native background, accumulated relay noise and reciprocal readout amplification; its logarithm has the claimed resource order. Formula count is S+q with no duplication. The same-width condition N>=m is maintained. The final bounded Lipschitz link and the expected-risk transfer are used consistently.
+
+This is an independent mathematical source review, not a Lean verification.

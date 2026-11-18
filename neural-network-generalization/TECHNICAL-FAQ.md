@@ -20,7 +20,7 @@ This FAQ explains what the current results say, which assumptions matter, where 
 - **Other weight priors and activations:** [28. Non-Gaussian weight priors](#28-do-independent-non-gaussian-weight-priors-give-the-same-results) · [29. Other activations](#29-what-about-relu-sigmoid-gelu-or-other-activations)
 - **Online learning and distribution shift:** [30. Total mistakes](#30-can-we-bound-the-total-number-of-mistakes-during-online-learning) · [31. Mistakes and circuit size](#31-does-making-few-mistakes-imply-that-the-target-has-a-small-circuit) · [32. Out-of-distribution learning](#32-why-expect-occam-learning-to-transfer-out-of-distribution)
 - **Label noise, likelihoods, and singular learning theory:** [33. Label noise](#33-do-the-good-generalization-results-survive-a-small-amount-of-label-noise) · [34. SLT likelihoods](#34-do-the-polynomial-bounds-survive-the-likelihood-based-setup-used-in-singular-learning-theory) · [35. Comparison with SLT bounds](#35-does-singular-learning-theory-already-give-comparable-generalization-bounds) · [36. A finite-sample variational bound](#36-what-does-a-finite-sample-variational-bound-give-for-the-standard-fan-in-gaussian-prior) · [37. Prior scaling and prior-mass bounds](#37-can-prior-scaling-force-direct-prior-mass-bounds-to-depend-on-width-or-target-complexity)
-- **Approximation and arbitrary bounded noise:** [41. Competing with the best small network](#41-can-nnbayes-compete-with-the-best-small-network-without-a-realizable-target)
+- **Approximation and noisy labels:** [41. Competing with the best small network](#41-can-nnbayes-compete-with-the-best-small-network-without-a-realizable-target)
 - **Status and outlook:** [38. Resolved and open problems](#38-which-original-open-problems-have-been-resolved-and-which-remain) · [39. Before explaining practical deep learning](#39-what-other-questions-matter-before-interpreting-this-as-an-explanation-of-practical-deep-learning) · [40. Formal verification](#40-how-much-of-this-is-formally-verified)
 
 ## 1. What is the basic model, and what does “a circuit prior” mean here?
@@ -91,6 +91,8 @@ $$
 
 The [critical-depth paper](works-in-progress/critical-depth/paper.pdf) on $\gamma=1$ ([Question 21](#21-without-a-robustness-restriction-what-depth-dependence-does-the-critical-gamma1-prior-have)) gives a variational characterization and depth bounds for the corresponding rate. These partly answer the slides' open problem of lower-bounding the log prior mass of a target ([Question 38](#38-which-original-open-problems-have-been-resolved-and-which-remain)). Absolute negative log probabilities can still grow with width or prior strength, consistently with the normalized rate comparison above; [Question 37](#37-can-prior-scaling-force-direct-prior-mass-bounds-to-depend-on-width-or-target-complexity) shows that, for some prior scalings, direct bounds based on the raw prior probability of reproducing a prescribed real-valued function must pay such costs in width or in target complexity.
 
+**Different sparse priors give absolute, rather than only normalized, complexity comparisons.** The [independent Lévy function-prior paper](works-in-progress/agnostic-levy-function-prior/paper.pdf) gives both directions at fixed depth: small formulas have substantial prior neighborhoods, and substantial mass near a function forces a small finite-precision formula approximation. Its bounds are independent of learner width. A [shared-circuit construction](works-in-progress/agnostic-levy-shared-circuits/paper.pdf) instead keeps polynomial depth dependence while paying an explicit sharing term proportional to `log N`. These two constructions use the sparse Lévy prior, which differs from the original Gaussian prior; neither takes a strong-prior limit. They do not change the Gaussian statements above.
+
 **Growing absolute costs do not contradict width-independent learning.** The generalization argument controls competitors relative to the target, or compresses a posterior with controlled relative entropy. It need not pay the full raw $`-\log\mu(U_f)`$ as a sample bound. The globally conditioned function prior also includes a normalization denominator that must be retained for absolute probabilities and comparisons across different priors; it cancels when comparing two functions under the same prior, as above.
 
 **A tiny target probability alone is not a sample lower bound.** A prior may assign the target tiny mass and put almost all remaining mass on one competitor that a single informative example eliminates. A lower bound must also control competing functions and the posterior after observations. The [appendix audit](side-results/strong-prior-appendix-audit/paper.pdf) explains this distinction and the need to retain the global-conditioning denominator when computing absolute prior probabilities.
@@ -103,11 +105,13 @@ The [critical-depth paper](works-in-progress/critical-depth/paper.pdf) on $\gamm
 
 **The positive learning results extend to continuous inputs for real-valued regression.** The [continuous-domain paper](side-results/continuous-domains/paper.pdf) treats arbitrary input distributions on a compact subset of the unit ball, including the full sphere. The target is the real-valued output of a teacher network with depth $L$, width $C$, and weights bounded by $B$. At each fixed depth, the sample bound is polynomial in $d,C,B$ and accuracy parameters, independently of **every learner width $`N\ge C`$**. This holds in the strong-prior limit (width fixed, prior variance tending to zero) and for each finite scaling exponent $\gamma\ge1$, including mean field ($\gamma=1$), with Gaussian weights or the non-Gaussian family in [Question 28](#28-do-independent-non-gaussian-weight-priors-give-the-same-results). The proof uses an input net; the learner and data remain continuous.
 
-The finite-scale regression theorem observes clean real-valued labels, accepts training error below a positive tolerance $\rho$, and requires test error at most a larger tolerance $\tau>\rho$. It controls the actual posterior's probability of meeting that test tolerance. A separate exact-interpolation result covers minimum-energy interpolants and Gaussian posteriors with the **strong-prior limit taken before the zero-tolerance limit**. Neither result assumes a teacher margin or a gap in the input distribution's support. Teacher weight magnitude is counted; a pure-width bound for arbitrarily large weights is not proved.
+The finite-scale regression theorem observes clean real-valued labels, accepts training error below a positive tolerance $\rho$, and requires test error at most a larger tolerance $\tau>\rho$. It controls the actual posterior's probability of meeting that test tolerance. A separate exact-interpolation result covers minimum-energy interpolants and Gaussian posteriors with the **strong-prior limit taken before the zero-tolerance limit**. Neither result assumes a teacher margin or a gap in the input distribution's support. That clean-label interpolation theorem counts teacher weight magnitude; it does not prove a pure-width bound for arbitrarily large weights.
 
 Depth is substantive in this extension: [Question 19](#19-is-exponential-depth-dependence-necessary-without-any-robustness-restriction) describes an exponential-depth regression lower bound at constant teacher width and bounded weights. An unconditional exponential-depth lower bound for the original Boolean-cube learner remains open. A separate result conditionally rules out a universal joint-polynomial bound; see [Question 22](#22-can-the-exponential-dependence-on-the-teachers-depth-be-removed-without-a-robustness-restriction).
 
-**Binary classification needs a distinction.** A continuous network with a nonzero absolute margin everywhere on a connected sphere has a constant sign. The original globally margin-conditioned learner therefore cannot simply be transplanted there. Training-only margin conditioning does give a learning theorem when the data support stays a positive teacher margin away from its decision boundary ([Question 5](#5-can-we-drop-the-global-margin-condition-imposed-on-every-input-before-training)). The corresponding unrestricted binary-label theorem on the full sphere remains open. The two main positive-tolerance regression theorems have [Lean proofs](lean/review/BatchTwo-coverage.md). The iterated exact-interpolation posterior limit and ancillary classification statements have conventional proofs outside that certification.
+**Binary classification needs a distinction.** A continuous network with a nonzero absolute margin everywhere on a connected sphere has a constant sign. The original globally margin-conditioned learner therefore cannot simply be transplanted there. Training-only margin conditioning does give a learning theorem when the data support stays a positive teacher margin away from its decision boundary ([Question 5](#5-can-we-drop-the-global-margin-condition-imposed-on-every-input-before-training)). For that training-margin posterior, the corresponding unrestricted binary-label theorem on the full sphere remains open. The main regression theorems, actual iterated posterior limits, and the listed binary-margin and spherical classification consequences have Lean proofs in the [completed coverage record](lean/review/coverage-completion-2026-11-15.txt). The unrestricted binary-label problem described here is a different claim.
+
+**Approximation with noisy real-valued labels has separate guarantees.** [Question 41](#41-can-nnbayes-compete-with-the-best-small-network-without-a-realizable-target) treats a small network as an approximation rather than an exact data generator. A calibrated raw Gaussian likelihood gives coefficient-free width comparisons under quantitative continuous-input regularity, including appropriate sphere laws, while retaining the original Gaussian weight priors. Different continuous sparsity priors give stronger rates and depth dependence. A weaker universal-consistency consequence needs only a compact input domain and finite label variance, with no anti-concentration assumption. These likelihood-based results are distinct from the clean-label interpolation theorem above.
 
 **Finite precision versus a change of prior.** An 8-bit pixel can be expressed exactly as a linear combination of eight Boolean bits. Composing that fixed decoder with a network preserves its computations and its internal-noise stability (the robustness condition of [Question 15](#15-what-robustness-condition-gives-polynomial-depth-dependence)) on the corresponding images. It does **not** identify the resulting tied first-layer weights with independent Gaussian weights on the bits, and checking real images does not check all bit strings.
 
@@ -121,7 +125,7 @@ Depth is substantive in this extension: [Question 19](#19-is-exponential-depth-d
 
 For a finite input cube and nonzero clean outputs, sufficiently large readout amplification can eventually enforce the robustness condition of [Question 15](#15-what-robustness-condition-gives-polynomial-depth-dependence), which requires clipped outputs to survive small internal disturbances. This does not show that the **raw trained network** satisfies the condition, or that the required amplification has polynomial cost. The robust Boolean-circuit construction behind that question's theorem instead supplies a controlled implementation and a controlled neighborhood of prior mass around it.
 
-**Noisy real-valued regression has agnostic guarantees under suitable likelihoods.** [Question 41](#41-can-nnbayes-compete-with-the-best-small-network-without-a-realizable-target) gives squared-loss comparisons with the best bounded-weight teacher for arbitrary bounded-label distributions, including noise. This uses calibrated Gaussian likelihoods within specified dense architectures; it is a different statement from the continuous-domain theorem's clean-label interpolation guarantee. Multiclass outputs remain less developed. Binary label noise with exact interpolation is discussed in [Question 33](#33-do-the-good-generalization-results-survive-a-small-amount-of-label-noise).
+**Noisy real-valued regression has agnostic guarantees under suitable likelihoods.** [Question 41](#41-can-nnbayes-compete-with-the-best-small-network-without-a-realizable-target) gives squared-loss comparisons with small networks, including coefficient-free versions under the stated input assumptions and separate results with only finite label variance. This uses calibrated Gaussian likelihoods within specified dense architectures; it is a different statement from the continuous-domain theorem's clean-label interpolation guarantee. Multiclass outputs remain less developed. Binary label noise with exact interpolation is discussed in [Question 33](#33-do-the-good-generalization-results-survive-a-small-amount-of-label-noise).
 
 <a id="4-can-we-drop-the-requirement-of-a-margin-on-every-input-before-training"></a>
 
@@ -614,7 +618,7 @@ at every input and every disturbance in that ball. The theorem imposes no global
 
 **The guarantee.** For the tanh learner and a layered Boolean target circuit of width $C$, counting constant wires and any compilation overhead, this gives sample complexity polynomial jointly in $d,L,C,c+c^{-1},\varepsilon^{-1},\log(1/\delta)$, simultaneously for every $N\ge C$ and every $\gamma\ge1$. Training requires signed output above $1/2$. With training probability at least $1-\delta$, the posterior-average probability of signed test output at most $1/4$ is at most $\varepsilon$. The test mass where the correct sign has posterior probability at most $2/3$ is then at most $3\varepsilon$; use $\varepsilon/3$ in the sample bound for confidence-error tolerance $\varepsilon$. The proof builds a robust implementation with enough Gaussian prior mass and compresses posterior draws through small internal disturbances.
 
-**Width convention in the Lean theorem.** The formal circuit reserves a constant $+1$ wire at every stage, including the final stage, and counts it in $C$. A literal that the paper calls a width-one circuit therefore has formal width two; the verified guarantee for that example starts at learner width two. This qualification also applies to the improved original-support bound in [Question 23](#23-what-are-the-explicit-sample-complexity-polynomials-and-are-practical-sample-bounds-close). It leaves the polynomial dependence unchanged, but matters when interpreting “every width above circuit width” literally.
+**Width convention in the Lean theorem.** The circuit model counts the wires actually used by the implementation, including a constant wire when a gate needs one. Padding does not force an additional constant output. The current proof therefore covers the paper's width-one literal, copy and negation cases as well. The [current coverage inventory](lean/review/coverage-extension-2026-10-30.txt) records the repaired convention; the earlier dated statement audit describes the former mismatch. The ReLU/GELU merging theorem has its own explicitly counted constant-wire convention.
 
 **Interpretation.** The condition says that the prediction score must survive a small amount of simultaneous internal numerical error. Clipping avoids treating a change from output $10$ to output $1$ as a prediction failure. The root-mean-square (RMS) normalization, dividing each hidden-layer term by $N$, makes perturbations comparable across widths. The radius compensates for accumulating layer disturbances and readout amplification.
 
@@ -693,7 +697,9 @@ The internal-noise robustness restriction of [Question 15](#15-what-robustness-c
 
 These thresholds are far above teacher width, so the result refutes guarantees asserted at every width $N\ge C$, not behavior near the teacher width. Training and test tolerances are fixed constants, and the failure concerns the actual posterior-confidence criterion, including mixtures.
 
-The main lower bounds in all three regimes are Lean verified in the [second batch](lean/review/BatchTwo-coverage.md). The exact-interpolation, iterated-limit and varying smooth-density extensions mentioned below have conventional proofs and are outside that certification.
+The main lower bounds and their listed exact-interpolation, iterated-limit and varying smooth-density extensions are Lean verified; the [completed coverage record](lean/review/coverage-completion-2026-11-15.txt) gives the current scope.
+
+**Noisy squared-loss regression has a separate obstruction even for a shallow target.** With the original Gaussian prior, a raw Gaussian likelihood, and the raw posterior mean, a small shallow regression function can require $\exp(\Omega(\sqrt H))$ examples at every mean-field-or-stronger scale and every likelihood temperature. When the hidden variance prefactor stays below its critical value, the lower bound becomes exponential in learner depth $H$. These constructions increase input dimension with depth and use very large finite widths. They are distinct from the noiseless, margin-conditioned statements above. [Question 41](#41-can-nnbayes-compete-with-the-best-small-network-without-a-realizable-target) gives the matching scale expression in the available upper bounds and the dimensional distinction.
 
 **The mechanism.** The teacher separates outputs at exponentially close input pairs. For the strong-prior and above-mean-field ($\gamma>1$) cases, a small random sample can instead be fit exactly by a network whose energy permits only a polynomial-in-sample-size Lipschitz constant, independently of depth. The posterior favors those fits, which must fail on at least one member of every close pair. This also gives a lower bound for minimum-energy exact interpolation and the specified strong-prior-then-zero-tolerance posterior limit. The mean-field proof uses a separate entropy-rate comparison and the same paired inputs. The fixed input distribution is supported on a Cantor subset of the circle; smooth densities depending on depth are also covered. Uniform spherical inputs remain open.
 
@@ -959,7 +965,7 @@ $$
 n\ge A\left[2+d+L+C+c+c^{-1}+\varepsilon^{-1}+\log(1/\delta)\right]^{46}.
 $$
 
-This degree-46 bound is still deliberately loose; the conventional $\widetilde O(C^4L^9)$ bound in the [entropy-metric paper](works-in-progress/entropy-metric-compression/paper.pdf) is more informative about joint width and depth. Its intermediate- and stronger-scale refinements are listed in [Question 23](#23-what-are-the-explicit-sample-complexity-polynomials-and-are-practical-sample-bounds-close). The earlier all-scales paper separately states the fixed-depth $C^6\log^{13}(2+C)$ rate. The degree-46 envelope and that fixed-depth rate are Lean verified, as are the three explicit shallow budgets and the ReLU/GELU merging bounds; the shallow paper's $\widetilde O$ summary in terms of $\kappa_C$ is not separately formalized. The improved original-support paper's separate numerical $16/\varepsilon$ allocation is **not** certified: the formal proof uses larger internal constants while preserving these exponents. Its circuit width uses the reserved-constant-wire convention in [Question 15](#15-what-robustness-condition-gives-polynomial-depth-dependence). These are upper bounds from particular proof constructions, not necessary exponents. The newer entropy-metric, multilevel, quartic stronger-scale, and tanh neuron-averaging arguments retain conventional-proof status. The earlier [bounded-density and factor-coding improvement](works-in-progress/sequential-robust-quantization/) gives the valid conventional envelope $n=O(S^{32}\log S)$, hence $O(S^{33})$, with $S=2+d+L+C+c+c^{-1}+\varepsilon^{-1}+\log(1/\delta)$. The degree-45 sequential-quantization envelope also remains a valid intermediate bound. None of these refinements enlarges the existing degree-46 Lean certification. The [new mathematical review](verification/weighted-depth-2026-10-29.md), [verification record](lean/VERIFICATION.md), and [coverage table](lean/review/BatchTwo-coverage.md) distinguish all these claims.
+This degree-46 bound is still deliberately loose; the conventional $\widetilde O(C^4L^9)$ bound in the [entropy-metric paper](works-in-progress/entropy-metric-compression/paper.pdf) is more informative about joint width and depth. Its intermediate- and stronger-scale refinements are listed in [Question 23](#23-what-are-the-explicit-sample-complexity-polynomials-and-are-practical-sample-bounds-close). The all-scales paper's degree-46 envelope, fixed-depth $C^6\log^{13}(2+C)$ rate, and **literal numerical sample allocation**, including the leading $16/\varepsilon$, now have Lean proofs. The [literal-budget correspondence](lean/review/manuscript-literal-target-correspondence-2026-11-15.txt) identifies the exact formulas and endpoints. The three explicit shallow budgets and their recorded resource consequences, and the ReLU/GELU merging bounds, are also covered. These are sufficient bounds from particular proof constructions, not necessary exponents. Later entropy-metric, multilevel, quartic and tanh neuron-averaging improvements retain conventional-proof status. In particular, the [bounded-density and factor-coding improvement](works-in-progress/sequential-robust-quantization/) gives the conventional envelope $n=O(S^{32}\log S)$, hence $O(S^{33})$, with $S=2+d+L+C+c+c^{-1}+\varepsilon^{-1}+\log(1/\delta)$. These later results do not inherit the earlier paper's formalization.
 
 **The unrestricted deep bounds retain poor depth dependence.** For comparison, consider the prior without a robustness restriction. In the strong-prior limit, the prior variance tends to zero at fixed width ([Question 8](#8-what-is-known-for-the-one-parameter-family-of-prior-scalings)), and the teacher width is the bounded-weight complexity $`C=C_L(f)`$ of [Question 1](#1-what-is-the-basic-model-and-what-does-a-circuit-prior-mean-here). The original [strong-prior proof](main-results/strong-prior-generalization/paper.pdf), outlined in [Question 2](#2-can-we-bound-the-prior-probability-of-a-function), bounds target energy by
 
@@ -1122,7 +1128,7 @@ The proof replaces Gaussian target-mass calculations with translation and concen
 
 **The strong-prior result permits more general laws.** Two-sided quadratic density envelopes suffice, without symmetry or log-concavity. If the negative log density is asymptotic to a common quadratic coefficient times $u^2$, the original weighted-energy ordering of function probabilities ([Question 2](#2-can-we-bound-the-prior-probability-of-a-function)) holds exactly at exponential-rate level. Curvature bounds alone give the learning guarantee and polynomial comparisons, but need not give a limiting exact rate.
 
-**Scope and status.** The two main learning statements have Lean proofs in the [second batch](lean/review/BatchTwo-coverage.md), alongside [independent AI-agent mathematical reviews](side-results/non-gaussian-priors/verification/README.md). The broader strong-prior tail-class extension and ancillary prior-ordering claims are outside that certification. The sample polynomials may depend on the coordinate law and depth. The theorem does not cover Laplace, uniform, Student, or pure quartic-exponential coordinates at the original scales. For a compactly supported law, taking the scale to zero at fixed width can even make the global-margin conditioning event empty. Broader families, alternative width normalizations, and non-Gaussian subcritical ($\gamma<1$) learning remain open.
+**Scope and status.** The [completed second-batch coverage](lean/review/coverage-completion-2026-11-15.txt) includes all three original non-Gaussian learning endpoints, the stated two-sided density-envelope laws, and the listed quadratic-tail limits and rates. The sample polynomials may depend on the coordinate law and depth. This theorem does not cover Laplace, uniform, Student, or pure quartic-exponential coordinates at the original scales. For a compactly supported law, taking the scale to zero at fixed width can even make the global-margin event empty. The [Student/Cauchy](works-in-progress/agnostic-heavy-tailed-priors/paper.pdf) and [Lévy/beta-prime](works-in-progress/agnostic-levy-fanin/paper.pdf) approximation results use different coordinate families and width normalizations. They cover noisy real-valued regression and give width-independent bounds under their stated likelihoods. The Lévy family has finite variance but a strong continuous sparsity bias and a non-Gaussian wide limit. These are not extensions at the unchanged original scales; see [Question 41](#41-can-nnbayes-compete-with-the-best-small-network-without-a-realizable-target).
 
 <a id="21-what-about-relu-sigmoid-gelu-or-other-activations"></a>
 <a id="37-what-about-relu-sigmoid-gelu-or-other-activations"></a>
@@ -1173,6 +1179,8 @@ This is a **structural restriction** on the prior. It uses the balanced-populati
 
 **Depth remains activation-sensitive.** For ordinary tanh, the [conditional impossibility theorem](works-in-progress/conditional-nonpolynomial-learning/) rules out a blanket teacher-polynomial, all-width guarantee under the circuit-complexity conjecture stated in [Question 19](#19-is-exponential-depth-dependence-necessary-without-any-robustness-restriction). It does not automatically extend to ReLU, GELU, sigmoid, or softplus. Their unrestricted arbitrary-teacher polynomial-depth questions remain open here. The tanh $\gamma<1$ lower bounds ([Question 8](#8-what-is-known-for-the-one-parameter-family-of-prior-scalings)) and its unrestricted-depth constructions ([Questions 20](#20-without-a-robustness-restriction-which-targets-have-polynomial-learner-depth-bounds-above-mean-field) and [21](#21-without-a-robustness-restriction-what-depth-dependence-does-the-critical-gamma1-prior-have)) also require separate analysis for other activations. Hard thresholds fail the Lipschitz assumption.
 
+**Approximate real-valued targets and noisy labels admit a common activation argument too.** The [Gaussian approximation theorem](works-in-progress/agnostic-common-activations/paper.pdf) covers every globally Lipschitz activation with the raw Gaussian likelihood and raw posterior mean, at every finite mean-field-or-stronger scale. Its rates depend on depth and count teacher coefficients as well as width. With a different, independent sparse prior, the [Lévy theorem](works-in-progress/agnostic-levy-fanin/paper.pdf) gives a nearly $K/n$ expected-risk remainder for every such activation, using a bounded output link in the likelihood. Here $K$ is polynomial jointly in formula size and depth; sharing a computation can increase its formula size. These are squared-loss results with separate conventions, detailed in [Question 41](#41-can-nnbayes-compete-with-the-best-small-network-without-a-realizable-target).
+
 The main zero-at-zero learning statements, GELU compiler, and separate ReLU/GELU population-merging theorem have [Lean proofs with specified scope](lean/review/BatchTwo-coverage.md). The offset appendix, general-activation polynomial-depth theorem, shallow logistic/softplus results, and engineered-activation lower bound have conventional proofs. Their review status does not extend the formal certification.
 
 <a id="can-we-bound-the-total-number-of-mistakes-during-learning"></a>
@@ -1212,7 +1220,9 @@ The neuron-merging restrictions on the prior ([Questions 25](#25-what-does-the-n
 
 **The input-order assumption is substantive.** For a nonuniform iid distribution on a finite support, an expected bound depends on $`\log(1/p_{\min})`$, where $`p_{\min}`$ is the smallest positive input probability. It stays polynomial when that logarithm does. A finite family with sufficiently unequal prior weights can nevertheless make many mistakes in an adverse order, or under a sufficiently nonuniform distribution. These abstract examples refute an arbitrary-order inference from class cardinality alone. The ordinary [ReLU](works-in-progress/online-mistakes/isotropic-relu-allwidth/paper.pdf) and [tanh](works-in-progress/online-mistakes/isotropic-tanh-allwidth/paper.pdf) strong-prior learners also have explicit counterexamples at every sufficiently large fixed width. Their mistake counts are respectively `exp(Ω(√C))` and `exp(Ω(√C/log C))` in a displayed bounded-weight shallow teacher width. Both use a fixed nonrepeating order with a large calibration history. [Question 32](#32-why-expect-occam-learning-to-transfer-out-of-distribution) gives the conventions, formalization status, and positive results for structured orders.
 
-The core cumulative theorem and its three original neural applications have [Lean proofs](lean/review/BatchTwo-coverage.md). That certification does not include the optional activation, merging, and nonuniform-input extensions; the coverage record distinguishes their partial formal results. For the converse question, whether few mistakes imply that the target has a small circuit, see [Question 31](#31-does-making-few-mistakes-imply-that-the-target-has-a-small-circuit).
+**A different sparse prior permits arbitrary input order.** For the [independent Lévy weight prior](works-in-progress/agnostic-levy-fanin/paper.pdf), a margin-separated target formula has actual prior mass at least $e^{-K}$, with $K$ polynomial in its formula resources and independent of learner width. If training conditions on each revealed sign, the cumulative log loss is at most $K$ on every input sequence, including adaptive sequences. Majority prediction therefore makes at most $K/\log2$ mistakes; the corresponding confidence and posterior-sampling bounds follow as well. A [neuron-gated prior](works-in-progress/agnostic-neuron-gates/paper.pdf) extends the joint-polynomial depth cost to shared circuits. These are substantive changes to the prior, not consequences for the original Gaussian learners. Their sign-conditioning online rule is also different from the Gaussian-likelihood regression rule used elsewhere in the same papers.
+
+The core cumulative theorem, its original neural applications, and the listed nonuniform-input and activation/support extensions have [Lean proofs in the completed coverage record](lean/review/coverage-completion-2026-11-15.txt). The later adaptive-source and function-prior results have their own, separate verification status. For the converse question, whether few mistakes imply that the target has a small circuit, see [Question 31](#31-does-making-few-mistakes-imply-that-the-target-has-a-small-circuit).
 
 <a id="does-making-few-mistakes-imply-that-the-target-has-a-small-circuit"></a>
 <a id="39-does-making-few-mistakes-imply-that-the-target-has-a-small-circuit"></a>
@@ -1452,6 +1462,8 @@ There is a precise limitation to improving this particular counting argument. Ou
 
 **Possible improvements.** One promising next step is to make the correction cheaper by allowing it to change some unseen labels. Approximate-membership constructions used in circuit learning trade a controlled amount of off-sample error for a shorter description. Obtaining a corresponding sharp neural-energy bound could help; alternatively, a more selective counting argument might avoid paying for all those almost-correct functions. Neither improvement has yet been proved for this posterior.
 
+**Allowing a noisy likelihood changes the answer.** The [approximation results](#41-can-nnbayes-compete-with-the-best-small-network-without-a-realizable-target) learn a small regression function despite nonzero noise. For independent label flips at rate $\eta<1/2$, the regression function is $(1-2\eta)f(x)$. Learning it to squared error $\varepsilon$ gives clean sign error at most $\varepsilon/(1-2\eta)^2$. Thus the likelihood-based theorems give polynomial clean-learning guarantees for the small implementations they cover. The raw hierarchical-prior theorem also controls posterior-average squared error, which yields posterior-sign confidence guarantees. These learners accept training residuals; they do not resolve the requirement to fit every flipped label exactly.
+
 **Scope.** These conclusions are specific to the stated sampling and interpolation conventions. Repeated inputs with contradictory labels would make exact conditioning impossible. If we instead allow training errors, ordinary finite-class noisy-error minimization has standard clean-learning guarantees, but that is a different learner. Replacing exact fit by a positive noisy likelihood also needs care in the **strong-prior-first limit**: its likelihood ratios are at most $((1-\eta)/\eta)^n$, whereas a fixed gap $\Delta\kappa$ between the prior energies of two functions contributes $\exp[-\Delta\kappa/(2\sigma^2)]$. At fixed $n$, the prior gap wins as $\sigma\to0$. The noisy-interpolation theorem uses the exact-fit likelihood throughout. [Question 34](#34-do-the-polynomial-bounds-survive-the-likelihood-based-setup-used-in-singular-learning-theory) discusses smooth likelihoods.
 
 <a id="do-the-polynomial-bounds-survive-the-likelihood-based-setup-used-in-singular-learning-theory"></a>
@@ -1499,7 +1511,11 @@ Both versions observe clean labels from the teacher. They do not assert the same
 
 A Boolean sign teacher gives positive variants of both Gaussian results after adding one tanh layer to approximate its labels; a logistic analogue works when its inverse temperature grows together with prior strength. These are explicit changes of scale, not a claim about the unchanged fixed-likelihood model.
 
-**What about the usual fixed-likelihood setup?** At fixed architecture and fixed prior, standard prior-mass arguments do give sample upper bounds. They pay for the negative log prior mass of a small neighborhood of the teacher. Our available neighborhood estimate grows like $N^\gamma$ in the finite-exponent models with fixed $\gamma\ge1$. This yields polynomial bounds when learner width is itself polynomially bounded by teacher resources, but not the arbitrary-width guarantee of the main papers. A different prior with a sufficiently strong, quantitative circuit-description mass bound could give better results. Calling a model “SLT” alone supplies neither that prior-mass bound nor an all-width learning theorem. [Question 37](#37-can-prior-scaling-force-direct-prior-mass-bounds-to-depend-on-width-or-target-complexity) discusses when such direct prior-mass costs must grow with width.
+**A fixed Gaussian likelihood can give an all-width theorem under a different weight prior.** The [independent Lévy prior](works-in-progress/agnostic-levy-fanin/paper.pdf) places enough absolute mass near small formula implementations for a fixed observation variance to suffice. With a bounded network output inside the likelihood, its ordinary final posterior mean has a coefficient-one expected-risk oracle with a nearly `K/n` remainder, including conditionally sub-Gaussian noise. This is an explicit positive example of the likelihood-based setup; it does not transfer that conclusion to shrinking Gaussian priors. [Question 41](#41-can-nnbayes-compete-with-the-best-small-network-without-a-realizable-target) separates the models and prediction conventions.
+
+The [raw shrinkage-prior theorem](works-in-progress/agnostic-raw-priors/paper.pdf) also gives a correctly specified example: with a small bounded regression function and Gaussian observation noise, the actual likelihood can use the true noise variance. Posterior-average squared error then converges at a polynomial teacher-resource rate, uniformly over larger finite learner widths. Neither outputs nor predictions are clipped. This uses a continuous hierarchical prior with a normalized Gaussian readout, not the original shrinking Gaussian weight prior.
+
+**What about the usual fixed-likelihood setup?** At fixed architecture and fixed prior, standard prior-mass arguments do give sample upper bounds. They pay for the negative log prior mass of a small neighborhood of the teacher. Our available neighborhood estimate grows like $N^\gamma$ in the finite-exponent models with fixed $\gamma\ge1$. This yields polynomial bounds when learner width is itself polynomially bounded by teacher resources, but not the arbitrary-width guarantee of the main papers. The preceding sparse-prior theorem is an example in which better absolute mass estimates do give an all-width result. Calling a model “SLT” alone supplies neither that prior-mass bound nor an all-width learning theorem. [Question 37](#37-can-prior-scaling-force-direct-prior-mass-bounds-to-depend-on-width-or-target-complexity) discusses when such direct prior-mass costs must grow with width.
 
 **Still open here:** a smooth-likelihood theorem with joint polynomial dependence on depth under the robustness restriction of [Question 15](#15-what-robustness-condition-gives-polynomial-depth-dependence). The required prior mass and cover estimates within that support remain to be checked. Without robustness, the hard-conditioning results of [Question 19](#19-is-exponential-depth-dependence-necessary-without-any-robustness-restriction) do not automatically settle this different likelihood. Without rescaling the likelihood, the counterexamples above already prevent a blanket transfer of the main guarantees.
 
@@ -1616,7 +1632,9 @@ $$
 
 where $L^2$ uses the uniform input distribution. The proof is a Fourier variance budget: the total variance of all parity coefficients is at most $V$, and the $\binom dk$ coefficients of a given degree have equal variance. Approximating a parity requires its coefficient to be close to one. When $V$ is bounded or grows at most polynomially in $d$, taking $k$ near $d/2$ gives an exponential log-prior cost, although parity has a small circuit and can be approximated by a shallow tanh teacher with polynomially bounded resources. Without permutation symmetry, a related argument still finds at least one hard parity. These are bounds on raw good-function mass, not posterior sample-complexity lower bounds.
 
-Output variance of order one **does not by itself imply a GP**. The Gaussian limit needs a separate argument about the architecture and coordinate laws. A structured mixture that first chooses a small circuit can have order-one output variance and a circuit prior. The supporting analysis proves a restricted classification for one hidden tanh layer with independent Gaussian weights and power-law variance scalings. For that family, direct raw-prior certificates incur either a width cost or a nonpolynomial teacher-complexity cost. It does not classify every deep architecture or scaling tuple.
+Output variance of order one **does not by itself imply a GP**. There is a concrete independent-coordinate counterexample: the [Lévy fan-in prior](works-in-progress/agnostic-levy-fanin/paper.pdf) has finite variance of order `1/F` per coordinate at fan-in `F`, an order-one initialization output scale, and width-independent prior mass near small formulas. Its wide limit is non-Gaussian. Rare order-one weights persist as fan-in grows, so the usual Gaussian central-limit argument does not apply. The distributional shape changes with fan-in; this is not merely a different scaling of one fixed standardized law.
+
+The supporting Gaussian analysis proves a restricted classification for one hidden tanh layer with independent Gaussian weights and power-law variance scalings. For that family, direct raw-prior certificates incur either a width cost or a nonpolynomial teacher-complexity cost. It does not classify every deep architecture, coordinate family, or scaling tuple.
 
 **The distinction from the main learning theorems is essential.** Sign-only predictions are unchanged by positive output rescaling, and conditioning the prior on global margins changes the probabilities being compared. A common amplitude penalty can cancel between numerator and denominator. Our positive results use additional structure, including relative prior costs, posterior concentration, and compression ([Question 2](#2-can-we-bound-the-prior-probability-of-a-function)). A diverging raw log-prior penalty therefore does not contradict those theorems or prove that the actual learner needs more samples. For the Gaussian families covered by these obstructions, a successful width-independent, teacher-polynomial proof must use information beyond a direct raw-mass certificate.
 
@@ -1660,80 +1678,269 @@ The [appendix audit](side-results/strong-prior-appendix-audit/paper.pdf) checks 
 
 ## 40. How much of this is formally verified?
 
-**Lean proofs cover the original five main learning results, ten additional papers, and the conditional obstruction to polynomial circuit learning, with the conventions and exclusions below.** A separate [statement audit](lean/review/statement-audit-2026-10-23/README.md) compares the paper statements with the actual Lean definitions: network and teacher classes, prior measures, conditioning, prediction rules, quantifier order, and limits. A successful Lean build alone does not check this correspondence.
+**Lean proofs cover the main statements and the important listed extensions of the original five papers, the ten papers in the second batch, and the conditional obstruction to polynomial circuit learning.** The [16-paper completion record](lean/review/coverage-completion-2026-11-15.txt) gives the current scope. The ordinary ReLU/softplus and tanh adversarial online lower bounds have separate completed formalizations, linked in the [collection's Lean overview](README.md#lean-verification).
 
-The second batch includes the unified activation theorem; polynomial-depth ReLU/GELU learning under population merging; the improved original-support and shallow bounds; online mistake bounds; circuit and gain-restricted neural converses; non-Gaussian priors; continuous regression; and its exponential-depth lower bound. [Exact theorem names and coverage](lean/review/BatchTwo-coverage.md) are listed separately from the [original five results](README.md#main-results).
+Formalization has two parts: Lean checks the proofs, and a statement audit compares the formal definitions with the paper's hypotheses, model and quantifiers. The [October statement audit](lean/review/statement-audit-2026-10-23/README.md) records the original comparison and identified gaps; the [current inventory](lean/review/coverage-extension-2026-10-30.txt) and November completion record record their resolution. Earlier dated exclusions should not be treated as the present coverage statement.
 
-The [conditional impossibility theorem](works-in-progress/conditional-nonpolynomial-learning/lean/ClosedConditionalImpossibility.lean) has a separate closed proof for the actual Gaussian tanh posterior, including the finite-width posterior ceiling at exceptional mass $1/6$ needed by the reduction and the explicit threshold-circuit compiler. Its only conjectural hypothesis is nonuniform $\mathsf{P}/\mathrm{poly}\ne\mathsf{TC}^1$; the posterior ceiling is proved, not an additional premise. Independent audits compared the paper with the concrete formal definitions, and the complete dependency chain was rebuilt from source. Its [verification record](works-in-progress/conditional-nonpolynomial-learning/verification/) distinguishes the central theorem from the stronger fixed-hard-family and every-probability-level auxiliary statements. It concerns prescribed positive prior scales, not a separately defined exact zero-temperature limit.
+The completed work includes the original robust theorem's counted-width convention and small-width cases; the improved original-support paper's literal target-mass and sample-budget formulas, including its leading $16/\varepsilon$ factor, $C^6\log^{13}(2+C)$ rate and degree-46 envelope; actual continuous-regression posterior limits and listed classification consequences; the online theorem's recorded extensions; and the circuit converse's executable prefix coding. The [literal-budget record](lean/review/manuscript-literal-target-correspondence-2026-11-15.txt) documents the numerical correspondence.
 
-The main qualifications are:
+The [conditional impossibility theorem](works-in-progress/conditional-nonpolynomial-learning/lean/ClosedConditionalImpossibility.lean) uses nonuniform $\mathsf{P}/\mathrm{poly}\ne\mathsf{TC}^1$ as its sole conjectural premise. Its actual Gaussian posterior ceiling and the required circuit constructions are proved. The current coverage includes the fixed-hard-family and arbitrary-confidence extensions. Its positive-scale learner is distinct from a separately defined zero-temperature limit.
 
-- **Circuit-width convention:** the original robust theorem and its improved original-support version use formal circuits with a reserved constant wire at every stage. A width-one target other than constant $+1$ in the papers needs formal width two; those papers' learner-width-one cases are not certified. See [Question 15](#15-what-robustness-condition-gives-polynomial-depth-dependence).
-- **ReLU/GELU circuit compilation:** its theorem requires a reserved constant-one wire at every stage, counted in teacher width. The manuscript now spells out this condition, which the Lean definition already imposed; omitting it would give a false width-one ReLU claim. See [Question 25](#25-what-does-the-neuron-merging-restriction-assume-and-what-bounds-does-it-give).
-- **Numerical constants:** the improved original-support paper's sixth-power width rate and degree-46 envelope are verified; its separate printed $16/\varepsilon$ allocation is not. The original robust proof retains its looser degree-10974 budget. See [Question 24](#24-what-do-the-shallow-lean-checked-and-unrestricted-deep-bounds-look-like).
-- **Continuous regression and exact interpolation:** both main positive-training-tolerance regression endpoints are Lean proved, as are the three main depth-lower-bound regimes. There is also a [Lean theorem for low-energy interpolants and their probability mixtures](lean/NeuralGeneralization/BatchTwoContinuousExactInterpolants.lean). Identifying strong-prior-then-zero-tolerance posterior weak limits with such interpolants remains a conventional result. The depth lower bound's ancillary exact-interpolation and iterated-limit extensions also remain outside the certification.
-- **Other ancillary claims:** a verified main theorem does not certify every appendix or extension. Examples outside coverage include continuous-domain classification corollaries and some optional activation extensions of the online theorem. The prefix-circuit converse uses abstract program syntax with proved code lengths and Kraft counting; it does not include a bitstring encoder and parser.
+**Coverage is attached to particular statements, not to every later result with a similar name.** Subsequent population, sequential-quantization and entropy-metric improvements—including the newer literal $C^2L$ and sharper joint depth polynomials—retain their stated conventional-proof status. The newer agnostic approximation papers in [Question 41](#41-can-nnbayes-compete-with-the-best-small-network-without-a-realizable-target), including the Lévy-prior and Gaussian depth results, have independent AI-agent mathematical reviews and reproducible PDF builds, but are **not Lean verified**. The same distinction applies to later research notes, heuristic assessments and experiments.
 
-The [general-activation polynomial-depth theorem and fixed-depth offset extension](works-in-progress/unified-activation-polynomial-depth/) are later conventional results with independent AI-agent reviews. Neither is included in the 15-paper Lean certification. The [Boolean depth-barrier paper](works-in-progress/boolean-depth-barriers/) has its own analytic-component formalizations; the separate conditional-impossibility package now supplies the complete circuit compiler and posterior ceiling needed for its main negative theorem. This does not certify every stronger statement in the broader depth-barrier paper. The [supercritical-prefactor depth lower bound](works-in-progress/supercritical-depth-lower/) retains a conventional proof rather than full Lean verification.
-
-The [linear-depth population results](works-in-progress/linear-depth-populations/), [sequential-quantization depth improvements](works-in-progress/sequential-robust-quantization/), and new [entropy-metric and multilevel bounds](works-in-progress/entropy-metric-compression/paper.pdf) are also conventional, not Lean formalized. In particular, the literal $C^2L$ bound and the unchanged-support $C^4L^9$, $C^4L^8$, $C^4L^7$, and $C^{9/2}L^6$ rates do not inherit the earlier formal coverage. The [new mathematical verification record](verification/weighted-depth-2026-10-29.md) records their separate scope.
-
-The [verification record](lean/VERIFICATION.md) gives the theorem-type gates, independent source rebuild, and axiom checks. The later statement audit also reran the type and axiom checks against unchanged, hash-matched sources. Other supporting depth manuscripts, the noisy-interpolation note, smooth-likelihood notes, and alternative robustness conditions retain their stated conventional-proof status. Numerical certificates, heuristics, and open-problem assessments are separate from the Lean proofs.
-
-The [29 October standalone-writing review](verification/standalone-writing-2026-10-29.md) and [remaining-paper review](verification/remaining-papers-2026-10-29.md) improved explanations and corrected specified informal conventions without changing Lean sources or extending formal coverage. Older dated audits describe their own snapshots; each package's current verification overview gives its present status.
-
-Readers should start with the main theorem and conventions in the relevant paper, then use this FAQ to identify the limitations and possible extensions. The [collection index](README.md) distinguishes main results, side results, and work in progress.
+The [verification guide](lean/VERIFICATION.md) identifies the theorem gates, source-build records and transitive axiom checks. Numerical interval certificates are not Lean proofs. Nor does a completed formalization constitute external peer review or verify every informal calculation in a manuscript.
 
 
 ## 41. Can NNBayes compete with the best small network without a realizable target?
 
-**Yes, when the comparison controls teacher weights as well as width and allows an additive estimation error.** The data may have any IID distribution with bounded inputs and labels, including noise and model misspecification. A small network need only approximate the data well. The learner uses one specified dense Gaussian architecture and a Gaussian observation likelihood; there is no prior over network sizes.
+**Yes, with an additive estimation error. There are results for the original Gaussian priors, and stronger rates for priors that favor continuous sparsity.** The true regression function need not be a small network; a small network need only approximate it well. Every learner below has one prescribed dense architecture. None places a prior over network sizes.
 
-The guarantee has the form
+Write
 
 $$
-R(\widehat f_S)\leq\inf_{g\in\mathcal G_n}R(g)+\epsilon_n,
-\qquad \epsilon_n\longrightarrow0,
+R(f)=\mathbb E(f(X)-Y)^2,\qquad
+f_0(x)=\mathbb E[Y\mid X=x],\qquad
+R_0=\mathbb E(Y-f_0(X))^2.
 $$
 
-where $R$ is population squared loss and $\mathcal G_n$ is a class of small, bounded-weight comparison networks. The coefficient on the comparison loss is one. The main positive results below cover the **ordinary posterior mean of raw outputs**, and also the stronger posterior-average risk. They do not require clipping the learner's predictions.
+Then $R(g)=R_0+A(g)$, where $A(g)=\mathbb E(g-f_0)^2$ is approximation error. Below, $C,h$ denote comparison width and hidden depth, and $N,H$ denote learner width and hidden depth. Probability and expectation statements concern IID training samples from the test distribution.
 
-Write $C$ for teacher width, $B$ for its coefficient bound, and $H$ for the number of hidden layers; total depth is $L=H+1$. The learner width $N$ can be arbitrarily larger than $C$. Its base prior scale is $\sigma^2=N^{-\gamma}$, giving variances $N\sigma^2/d$, $\sigma^2$, and $\sigma^2/N$ in the first layer, internal layers, and readout. The likelihood variance is $n\lambda_n\sigma^2$, with the stated calibration of $\lambda_n$. These regression learners have no global sign-margin conditioning.
+**The original Gaussian priors already give a qualified version of the conjecture.** The [Gaussian raw width-only theorem](works-in-progress/agnostic-gaussian-raw-width-only/paper.pdf) retains the independent Gaussian weights at every mean-field-or-stronger scale. At fixed teacher depth and a suitable fixed learner depth, there are explicit positive exponents $u,v$ such that, with high probability,
 
-**Unrestricted tanh networks: finite-prior bounds throughout $\gamma\ge1$.** The [finite-posterior paper](works-in-progress/agnostic-finite-posteriors/paper.pdf) proves an oracle inequality on one sample event for every learner width and every $\gamma\ge1$. No prior-strength or width limit is needed. The exponents are conservative, especially near mean-field scaling. Sharper separate bounds are:
+$$
+R(\widehat f_S)\le
+\inf_{\substack{g\text{ is a ReLU network of depth }h\\
+\operatorname{width}(g)\le n^u}} R(g)
++\widetilde O(n^{-v}).
+$$
 
-| Setting | Remainder at fixed teacher resources, up to logarithms | Permitted teacher width $C=n^a$ at a fixed weight cap |
+This holds simultaneously at every $N\ge n$ and every finite $\gamma\ge1$, including mean field. Teacher coefficients are unrestricted. The learner has tanh hidden activations, uses all observations, and keeps its raw output in both the likelihood and posterior mean. Its likelihood variance is selected by an explicit evidence criterion and scales with the weight prior; it is not a claim for a fixed observation variance. Labels may be marginally sub-Gaussian. Inputs may have any law on the Boolean cube, or satisfy the continuous density/slab conditions, including sphere inputs. Learner depth remains fixed as $n$ grows; the polynomial is poor, especially on continuous domains. The Boolean finite-sample bound is polynomial jointly in $d$ and $C$ at fixed depths.
+
+The likelihood scaling matters even for very simple targets. For the tanh model without a separate output bias, take one input point with label one. Conditional on the hidden weights, the prior output variance is at most $\nu/N$. At a fixed Gaussian observation variance $\sigma^2$, the posterior mean after $n$ examples is therefore at most $n\nu/(\sigma^2N+n\nu)$. It tends to zero when $N/n$ grows, although a width-one network represents the constant target. Width-uniform learning cannot simply retain a fixed observation variance under this prior scaling.
+
+For the shallow Gaussian results below, $\lambda$ is defined by the posterior density proportional to $\exp[-N\widehat R/(2\nu\lambda)]$ times the prior. Here $\widehat R$ is mean training squared loss and $0<\nu\le1$ is the Gaussian scale prefactor. The physical observation variance is $n\lambda\nu/N$.
+
+**For shallow tanh networks, a simpler polynomial works under any input law.** Let the comparison class contain all width-$C$ networks with coefficients bounded by $B$, with no output cap. Assume only $\mathbb E Y^2\le M_2<\infty$. With probability at least $1-\delta$, the original Gaussian raw learner has risk at most the best comparison risk plus
+
+$$
+\widetilde O\!\left(
+\sqrt{\frac{(M_2+1)(d+1)\,[C^2B^2+(d+1)^2B^2]}{n\delta}}
+\right).
+$$
+
+The input law can be arbitrary on the cube. This covers tanh, sigmoid, and hardtanh at every mean-field-or-stronger scale, **at every learner width $N\ge C$**. At fixed $d,B,M_2,\delta$, the sample count is $\widetilde O(C^2\varepsilon^{-2})$. The exact resource uses the average squared incoming-row norm and $C\sum_i c_i^2$, where $c_i$ are the teacher's readout coefficients. It can be smaller than the displayed coefficient-cap bound. The theorem controls posterior-average risk and hence ordinary posterior-mean risk. This finite-variance theorem is a confidence guarantee, not a claim about expected risk over training samples. A separate sub-Gaussian-label theorem gives logarithmic confidence dependence and expected-risk bounds at its stated larger-width threshold.
+
+For a concrete growing-class version, fix $d,B$, take any $N\ge\lfloor n^{1/4}\rfloor$ and the likelihood schedule $\lambda=n^{-3/4}$, and compare with all coefficient-capped teachers of width at most $n^{1/4}$. Then
+
+$$
+R(\widehat f_S)\le\inf_g R(g)+\widetilde O(n^{-1/4})
+$$
+
+at any fixed confidence, assuming only a finite second label moment. The schedule uses sample size without knowing that moment or the teacher. These results retain coefficient control; they do not replace the coefficient-free theorem above. Any constant neuron used for an output bias is counted in the teacher width.
+
+**A ReLU learner also has an arbitrary-input-law guarantee.** Define the scaled path variation of a shallow comparison network by
+
+$$
+P_g=\sqrt d\sum_j |v_j|\sqrt{\|a_j\|_2^2+b_j^2}.
+$$
+
+The original Gaussian ReLU learner, at every mean-field-or-stronger scale and **every width that can contain the comparison**, has a leading-coefficient-one confidence oracle with remainder
+
+$$
+\widetilde O_{M_2,\delta}\!\left[
+(n^{-1/2}+d/n)(P_g+d)\right].
+$$
+
+Only $\mathbb E Y^2\le M_2<\infty$ is required, and the input law can be arbitrary on the cube. The subscript indicates dependence on the label moment and confidence; those are held fixed in this display. For width $C$ and entrywise coefficient cap $B$, one has $P_g\le2d(C+1)B^2$. Every $N\ge C+1$ works, or $N\ge C$ when the teacher has no output bias. Thus the fixed-$d,B,M_2,\delta$ sample count is again $\widetilde O(C^2\varepsilon^{-2})$. A deterministic likelihood schedule depends on the declared moment and confidence, but not on the teacher's width, coefficients, or risk. Another schedule, using only $n,d$, eventually works for every fixed finite-variance label law: it competes with width-$n^{1/4}$, coefficient-capped teachers at gap $\widetilde O(n^{-1/4})$, already for every $N\ge\lfloor n^{1/4}\rfloor+1$. Its onset may depend on the unknown label law. The actual observations, likelihood outputs, and returned predictions are all untruncated.
+
+The proof places a Gaussian comparison distribution around an energy-balanced implementation of the teacher. Gaussian relative entropy controls posterior energy, while a joint bound on empirical loss and energy controls the raw squared-loss process. This works without an input-density assumption or a minimum width proportional to sample size. Under marginally sub-Gaussian labels, a separate calibration gives logarithmic confidence dependence and an **expected-risk** oracle with the same polynomial rates, also at every eligible width. Under only a finite second moment, the claim remains a confidence guarantee. The [geometry companion](works-in-progress/agnostic-relu-path-geometry/paper.pdf) explains the relation to convex path-penalized regression and why bounded training labels alone do not ensure bounded posterior predictions on unseen inputs.
+
+The calibrated shallow Gaussian learners are also universally risk-consistent **in probability** on a compact cube: for every fixed input law and label distribution with a finite second moment, their risk approaches the Bayes risk along any prescribed width sequence $N_n\to\infty$, however slowly. Use the tanh schedule above or the paper's eventual ReLU schedule. This follows by comparing with successively accurate finite neural approximations. It supplies no uniform rate for arbitrary regression functions, and it does not turn the finite-variance confidence theorem into an expected-risk theorem.
+
+**A better rate is available in one input dimension.** Suppose the input density on an interval is bounded above and away from zero. For a declared comparison-width budget $1\le C\le n$, a shallow ReLU learner with the original independent Gaussian prior satisfies, at every $N\ge n$,
+
+$$
+R(\widehat f_S)\le
+\inf_{g\in\mathcal G_{C,1}}R(g)
++\widetilde O\!\left(
+(C+1)^{4/7}n^{-4/7}+(C+1)^{4/5}n^{-3/5}\right).
+$$
+
+The guarantee holds with high probability, simultaneously over eligible widths and mean-field-or-stronger scales. Comparison coefficients are unrestricted, and labels may be marginally sub-Gaussian. A sufficient sample count for additive error $\varepsilon$ is
+
+$$
+\widetilde O\!\left(
+C\varepsilon^{-7/4}+C^{4/3}\varepsilon^{-5/3}\right).
+$$
+
+This likelihood schedule uses a declared comparison-width budget. A schedule independent of $C$ gives $\widetilde O(Cn^{-4/7})$; other prescribed schedules give a vanishing power-rate gap for any fixed comparison-width exponent below $3/4$. The proof compresses a midpoint's predictions on the training sample into at most $n$ neurons and uses that construction in the Gaussian variational comparison. The learner itself remains the full Bayesian posterior.
+
+At smaller widths, the same paper retains an oracle with remainder $\widetilde O(C^{2/5}n^{-3/10})$ for every $N\ge6C+6$. Triangular-wave targets show sharpness of the width exponents for the paper's named universal likelihood schedules; they do not rule out better schedules. With only an upper density bound, a weaker $C n^{-1/4}$ estimate remains available.
+
+**Shallow tanh networks also have a sharp oracle, with different comparison assumptions.** On the same one-dimensional input distributions, let the teacher have width $C$, coefficients bounded by $B$, and output bounded by one. For fixed $B$, the original Gaussian raw learner has high-probability excess over the teacher's risk at most
+
+$$
+\widetilde O\!\left(C^{4/5}n^{-4/5}+C^{4/3}/n\right).
+$$
+
+The learner must satisfy the explicit threshold $N\lambda\ge c$; the schedule is chosen from the teacher-resource bound. A sufficient sample count is $\widetilde O(C\varepsilon^{-5/4}+C^{4/3}\varepsilon^{-1})$. The theorem covers every mean-field-or-stronger scale; unlike the ReLU comparison above, it retains the teacher's coefficient and output bounds. Its proof replaces a random subset of posterior neurons by independent comparison neurons. Product-prior entropy and the squared-loss midpoint identity preserve a positive penalty on disagreement. A marginally sub-Gaussian label extension uses a rescaled version of the width threshold. Related bounded activations, including sigmoid and hardtanh, are also covered.
+
+The following different priors give substantially better rates and depth dependence.
+
+**Can a fully raw learner attain a nearly $1/n$ oracle remainder?** Yes, with a different, very light-tailed readout prior. Give each hidden neuron a gamma gate shared by its outgoing weights, with independent Student factors, and take
+
+$$
+v_j=P_j\operatorname{arsinh}(G_j),\qquad
+G_j\sim N(0,1),\qquad
+P\sim\operatorname{Dirichlet}(\kappa/N,\ldots,\kappa/N),
+$$
+
+and use an independent $\operatorname{arsinh}(G_0)$ output bias. This prior still has full support on the dense network's weights. It is fixed independently of sample size; the likelihood uses the unbounded raw output, and prediction is the ordinary raw posterior mean. The scalar law $\operatorname{arsinh}(G)$ is a standard sinh-normal distribution; using its unusually light tails as a neural-network readout prior is a substantive modeling choice. The argument also works for a class of two-sided doubly exponential tails, rather than depending on this one transformation.
+
+With $T_n\asymp\log^2 n$, a comparison implementation with bounded readout variation has expected remainder $\widetilde O(K/n)$. The digital compiler gives coefficient-free comparisons with arbitrary real-weight ReLU networks. For a numerical compiler exponent $b$, at fixed $d,h$, on the same Boolean and regular continuous domains,
+
+$$
+\mathbb E_S R(\widehat f_S)
+\le \inf_{g\in\mathcal G_{C,h}}R(g)
++\widetilde O\!\left(\frac{C^{2bh}+H}{n}\right)
++\frac{\exp(O(\sqrt{\log n}))}{n}.
+$$
+
+Here $\mathcal G_{C,h}$ is the raw ReLU class with width at most $C$ and hidden depth $h$, and labels need only a marginal sub-Gaussian envelope. The final term is $n^{-1+o(1)}$, not a logarithmic factor; it can be omitted when the conditional mean is bounded by one. In particular, $C_n=n^{1/(4bh)}$, $H\le\sqrt n$ and every prescribed $N\ge n$ give an expected gap $\widetilde O(n^{-1/2})$. Boolean inputs permit fixed learner depth; the continuous compiler still needs $H\ge c\log n$. A separate deterministic choice $T_n\asymp n^{1/4}\log^2 n$ gives a high-probability version at the same growing comparison width and learner-depth range: raw posterior-average risk, and hence raw posterior-mean risk, is at most the best comparison risk plus $\widetilde O(n^{-1/4})$. The confidence can be polynomially high in $n$. Its event is for each prescribed architecture, with constants independent of learner width. The expectation result and confidence result use different likelihood schedules.
+
+**A bounded final hidden layer gives a simpler joint polynomial.** There is also an architecture variant that avoids the coefficient-free compiler. Let a depth-$h$, width-$C$ comparison network have coefficient cap $B$ and any fixed globally Lipschitz hidden activation, including ReLU, GELU or tanh. Add one final hidden layer using hardtanh or ReLU6 before the unbounded raw readout. A comparison implementation can then compute a clipped version of the teacher using one active neuron in that layer. The actual dense learner still has unrestricted weights and an unbounded output.
+
+With the continuous neuron-gate prior and sinh-normal readout, the expected estimation remainder is nearly
+
+$$
+\frac{[(d+1)C+hC^2]\,[h\log((d+C+2)(B+2))+\log n]}{n},
+$$
+
+plus the same $n^{-1+o(1)}$ term for general marginally sub-Gaussian labels. The latter term is unnecessary for a bounded conditional mean. This holds for **any input law on the cube**, every $N\ge C$, and learner depth $h+1$. It is polynomial jointly in teacher width and depth, with logarithmic coefficient dependence. The extra bounded hidden layer and changed weight prior are part of the theorem; it is neither a pure-ReLU architecture result nor a coefficient-free bound over arbitrary input laws. The same architecture with a normalized Gaussian readout gives a slower nearly $K/\sqrt n$ oracle.
+
+**A normalized Gaussian readout gives another raw-output theorem.** The [same paper](works-in-progress/agnostic-raw-width-only/paper.pdf) also studies Gaussian readout factors, which have heavier tails and a different statistical rate. At fixed input dimension and teacher depth $h$, there is a numerical exponent $b$ such that, with
+
+$$
+C_n=\left\lfloor n^{1/(8bh)}\right\rfloor,
+\qquad H\le n^{1/4},\qquad N\ge n,
+$$
+
+the learner satisfies
+
+$$
+\mathbb E_S R(\widehat f_S)
+\le\inf_{\substack{g\text{ is a ReLU network}\\
+\operatorname{width}(g)\le C_n,\ \operatorname{depth}(g)=h}}R(g)
++\widetilde O(n^{-1/4}).
+$$
+
+Teacher coefficients and raw output magnitudes are unrestricted. Labels have a known marginal sub-Gaussian envelope. Inputs may be Boolean, or satisfy quantitative slab anticoncentration on a compact domain; this includes uniform sphere inputs and bounded densities relative to sphere surface measure. On Boolean inputs, learner depth can be fixed at a sufficiently large multiple of $h$. The continuous-input construction requires $H\ge c\log n$, with the stated fixed-resource dependence of $c$. The polynomial degrees are conservative.
+
+This learner has tanh hidden activations, a raw affine readout, a Gaussian likelihood with denominator $T_n=t_0\sqrt n$ in $\exp(-\sum_i(z_w(X_i)-Y_i)^2/T_n)$, and prediction equal to the **ordinary raw posterior mean trained on all observations**. Thus the observation variance is $T_n/2$. No output clipping, holdout, or selected checkpoint is part of this learner.
+
+**What changes in this prior?** Keep the same hidden gamma gates and Student factors, and use the readout
+
+$$
+(P_1,\ldots,P_N)\sim\operatorname{Dirichlet}(\kappa/N,\ldots,\kappa/N),
+\qquad v_j=\sqrt{P_j}\,G_j,
+$$
+
+with independent Gaussian $G_j$ and a Gaussian output bias. This allocates a fixed conditional variance budget among readout coordinates. Weights and outputs still have unbounded support. The prior is fixed once the architecture is prescribed, independently of sample size. It is a hierarchical shrinkage prior: outgoing weights are dependent, and it is a substantive change from independent Gaussian coordinates.
+
+The [underlying theorem](works-in-progress/agnostic-raw-priors/paper.pdf) compares directly with a same-depth tanh teacher at every $N\ge C$. Its expected remainder is $\widetilde O(K(g)/\sqrt n)$, where, writing $B$ for a teacher coefficient cap and $V$ for its readout absolute-weight sum including the bias, one may take a resource of the form
+
+$$
+K(g)\lesssim [(d+1)C+HC^2]
+ [H\log((d+C+2)(B+2))+\log(Hn+2)]+V^2.
+$$
+
+There is no exponential depth factor. The coefficient-free theorem compiles arbitrary ReLU comparisons into bounded raw tanh computations. On continuous inputs it first converts coordinates into binary digits, which costs logarithmic depth and avoids putting a separate neuron in every small grid box. Restoring digital gates make extra learner depth cost nearly linearly.
+
+**Can the likelihood variance be fixed?** Yes in the noisy-realizable case. If a bounded regression function is represented by a small comparison network and the noise is conditionally sub-Gaussian, the same raw learner at a sufficiently large **fixed** Gaussian likelihood variance has nearly $K^2/n$ excess risk. Both expectation and high-probability bounds are proved, including a bound on posterior-average risk and hence on the raw posterior mean. The coefficient-free companion extends this to bounded regression functions represented by arbitrary-coefficient ReLU networks on the stated input domains.
+
+If the noise is exactly Gaussian with known variance, a further theorem uses **that exact observation variance**, rather than an inflated one. It gives high-probability and expected raw posterior-average risk bounds that are polynomial jointly in teacher resources and depth and independent of learner width. The conservative fixed-depth resource powers are $K^4/n$ for Student hidden factors and $K^3/n$ for Gaussian hidden factors, up to logarithms. The proof combines prior mass near the teacher, a finite approximation dictionary for typical prior draws, and Gaussian tests. It is a realizable result, not a fixed-variance agnostic oracle.
+
+With a bounded conditional mean and conditionally sub-Gaussian noise, a separate calibrated theorem for genuinely approximate comparisons gives
+
+$$
+\mathbb E_S R(\widehat f_S)
+\le R(g)+\widetilde O\!\left(
+\frac{K^2}{n}+K\sqrt{\frac{A_0}{n}}\right),
+$$
+
+when $A(g)\le A_0$ and the learner is supplied with declared complexity and approximation-error budgets. The irreducible noise floor is excluded from $A_0$. The corresponding temperature is of order $K+\sqrt{nA_0}$, with noise and logarithmic terms. This is not a claim that the fixed-variance learner automatically adapts to an unknown approximation error. The general all-data theorem above uses the predetermined $\sqrt n$ schedule.
+
+**Other raw-output priors.** A factor density proportional to $\exp(-|G|^p)$ and weights $P_j^{1-1/p}G_j$ give rate $n^{-p/(p+2)}$ for each fixed $p>1$, with a comparison penalty containing the $p$th power of readout variation. At the other endpoint, a hard readout-variation cap gives a nearly $K/n$ raw oracle at fixed likelihood variance, but restricts prior support. These are separate alternatives to the full-support inverse-hyperbolic-sine readout.
+
+Independent variance-gamma weight coordinates give a raw $n^{-1/3}$ theorem with formula-based comparison complexity. A mixed independent prior—heavy-tailed hidden coordinates and a variance-gamma readout—can preserve shared computations instead, paying a $\log N$ factor. Its digital compiler gives a raw width-only oracle at polynomial learner widths, and a fixed-variance noisy-realizable bound of nearly $K^3/n$. That estimate is not uniform over arbitrarily large learner widths.
+
+**What if labels only have a finite second moment?** The normalized-Gaussian-readout prior still admits a slower raw-output oracle. The [raw width-only companion](works-in-progress/agnostic-raw-width-only/paper.pdf) uses $T_S=n^{5/6}(1+n^{-1}\sum_iY_i^2)$ and compares against arbitrary-coefficient ReLU width $n^{1/(24bh)}$ with remainder $\widetilde O((1+\mathbb E Y^2)n^{-1/12})$ plus $\mathbb E[Y^2\mathbf1_{\lbrace |Y|>n^{1/24}\rbrace}]$. Here $N\ge n$, $H\le n^{1/36}$, and the continuous case still requires logarithmic depth. Both terms tend to zero whenever $\mathbb E Y^2<\infty$. Only the proof truncates comparison outputs; observations and actual predictions remain unmodified. The likelihood calibration uses the empirical label second moment.
+
+**A faster bounded-output alternative with independent coordinates.** The [Lévy width-only paper](works-in-progress/agnostic-levy-width-only/paper.pdf) uses a bounded output inside the Gaussian likelihood. With a bounded conditional mean and conditionally sub-Gaussian noise, its all-data final posterior mean obeys, on Boolean inputs,
+
+$$
+\mathbb E_S R(\widehat f_S)
+\le\inf_{\operatorname{width}(g)\le C}R(g)
++\widetilde O\!\left(
+\frac{(1+\sigma^2)[C^2(d+1)^2+H]}{n}\right),
+\qquad N\ge C+1,
+$$
+
+for shallow ReLU comparison functions with bounded final output and arbitrary real coefficients. There is a continuous-input version with explicit slab-regularity parameters. In one input dimension, and for an unknown single-index spline $g(x)=q(u\cdot x)$, the width factor improves to linear in $C$, with a constant-factor width allowance. Extra learner depth has an additive, nearly linear cost.
+
+For each fan-in $F$, a weight is an independent time-$1/F$ increment of a symmetric Lévy process. One example has jump intensity proportional to $du/[|u|(1+|u|)^p]$, $p>2$. Every coordinate is atomless, has full support and finite variance; most weights are tiny, with rare larger weights. The law changes shape with fan-in, rather than rescaling one fixed standardized variable. The network is dense almost surely. Poisson jumps describe scalar coordinate distributions, not a random choice of architecture.
+
+**Only a finite second label moment is also enough.** Put $C_n=M_n= n^{1/8}$, rounding width down. With every prescribed $N\ge C_n+1$ and $1\le H\le n^{1/4}$, use likelihood mean $M_n\operatorname{clip}_{[-1,1]}(z_w(x))$ and observation variance $128n^{1/4}$. This external output factor is part of the learner. On Boolean or slab-regular continuous inputs,
+
+$$
+\mathbb E_S R(\widehat f_S)
+\le\inf_{\substack{g\text{ has one ReLU hidden layer}\\
+\operatorname{width}(g)\le C_n}}R(g)
++O(n^{-1/2}\log^2 n)
++5\mathbb E[Y^2\mathbf1_{\{|Y|>n^{1/8}\}}].
+$$
+
+Here the teachers have raw outputs and arbitrary coefficients, and observed labels are unchanged. The tail term tends to zero under only $\mathbb E Y^2<\infty$, without a conditional noise model. The same prior also gives universal squared-risk consistency on any compact input law at every prescribed width sequence tending to infinity, under the stated depth and output-range schedules. That consistency result does not give a uniform width-only rate on arbitrary input distributions.
+
+**How do deeper comparisons and shared computations enter?** The [independent-coordinate theorem](works-in-progress/agnostic-levy-fanin/paper.pdf) works for every globally Lipschitz activation, including nonzero values at zero. Its complexity is polynomial jointly in formula size, depth and input dimension, and logarithmic in coefficient magnitude. A formula counts each use of an intermediate computation separately. Unrolling a dense width-$C$, depth-$h$ network can cost $\sum_{j=1}^hC^j$, so this is polynomial in width at fixed depth, not jointly polynomial in arbitrary shared circuit size and depth.
+
+The [shared-circuit companion](works-in-progress/agnostic-levy-shared-circuits/paper.pdf) avoids unrolling by paying an additional $(E-V)\log N$ for a graph with $V$ hidden vertices and $E$ internal/readout edges. It gives joint-polynomial circuit/depth guarantees at polynomial learner widths. The [neuron-gated prior](works-in-progress/agnostic-neuron-gates/paper.pdf) instead removes that learner-width cost, by sharing a continuous gate across all outgoing edges of a neuron. With a bounded output likelihood it gives a nearly $K/n$ remainder, with $K$ polynomial jointly in shared circuit size and depth. Both papers also give actual function-prior statements, beyond learning upper bounds.
+
+For arbitrary-coefficient, fixed-depth ReLU teachers, the independent Lévy paper gives a fixed-likelihood width-$\operatorname{poly}(n)$ oracle at every $N\ge n$. A separate deterministic all-data schedule covers intermediate polynomial widths; its existence construction may use an extremely small, nonexplicit likelihood variance. Formula-shaped ReLU teachers with biases only in the first layer admit a stronger same-width, joint-polynomial width/depth comparison. These qualifications matter when comparing results.
+
+**Expectation and high probability are different.** The unrestricted bounded-output priors give coefficient exactly one on comparison risk in expectation. Their high-probability bounds have the form
+
+$$
+R(\widehat f_S)\le R_0+(1+\eta)A(g)
++\widetilde O\left(
+\frac{(1+\sigma^2)[K(g)+\log(1/\delta)]}{\eta n}\right).
+$$
+
+The factor $1+\eta$ applies only to approximation error. A [different, readout-restricted prior](works-in-progress/agnostic-sharp-high-probability/paper.pdf) gives a coefficient-one high-probability oracle for shallow tanh teachers with readout absolute-weight sum at most one. Its remainder is nearly $C(d+1)\log(B+2)/n$ when $N\ge\max(8C,\sqrt n)$; a slower guarantee holds at every $N\ge C$. Incoming coefficient caps can be removed under the stated input regularity. A [deep row-restricted extension](works-in-progress/agnostic-deep-sharp-high-probability/paper.pdf) retains finite-width midpoint and sharing costs. Neither is a sharp high-probability theorem for the unrestricted priors.
+
+**What survives for the original Gaussian priors?** Raw-output oracle bounds hold at every finite mean-field-or-stronger scale, every width above comparison width, and every fixed globally Lipschitz activation. The likelihood variance is calibrated with the weight prior; the weight prior itself is unchanged. Comparison resources generally include both width and a coefficient cap. Suppressing logarithms and fixing the remaining resources gives:
+
+| Setting | Positive comparison risk | Zero comparison risk |
 |---|---|---|
-| One hidden layer, every $\gamma\ge1$ | $n^{-1/2}$ | $a<1/2$ |
-| $H\ge2$, every $\gamma\ge2$ | $n^{-1/H}$ | $a<1/(2H)$ |
-| $H\ge2$, mean field $\gamma=1$ | $n^{-1/(2^{H+1}+3)}$ | $a<1/2^{H+2}$ |
+| Shallow tanh or ReLU, every $\gamma\ge1$ | $n^{-1/2}$ | $n^{-1}$ |
+| Tanh, $H\ge2$, every $\gamma\ge2$ | $n^{-1/H}$ | $n^{-1}$ |
+| Bounded smooth activations, every $\gamma\ge1$ | $n^{-1/v_H}$ | $n^{-1/(2H)}$ |
+| General Lipschitz activations, every $\gamma\ge1$ | $n^{-1/[2H(H+1)]}$ | $n^{-1/(2H)}$ |
 
-These width ranges use calibrations for the specified comparison class. If both width and weight cap grow as $n^a$, halve the displayed ranges. The paper gives intermediate-exponent rates and a common all-exponent calibration; with two hidden layers, the latter permits $a<1/18$ at fixed weight cap, or $a<1/36$ when both resources grow. Ordinary internally biased tanh teachers are included by adding one constant neuron per layer and doubling the coefficient cap. An additional sample-dependent prior prefactor gives the faster $n^{-1/H}$ rate at all $\gamma\ge1$, but changes the prior as sample count grows.
+Here $v_H=\max(4H,H^2+2H-2)$ in the smooth row, and the last two rows assume $H\ge2$. Thus the smooth mean-field exponents are $1/8,1/13,1/22$ at hidden depths two, three and four. Input dimension enters polynomially in these two rows. See [adaptive calibration](works-in-progress/agnostic-adaptive-calibration/paper.pdf), [smooth activations](works-in-progress/agnostic-smooth-activations/paper.pdf), and [the common Lipschitz argument](works-in-progress/agnostic-common-activations/paper.pdf). A shallow ReLU refinement counts path variation $P$ and gives sufficient samples $\widetilde O((P^2+d)(R(g)/\varepsilon^2+1/\varepsilon))$.
 
-**One argument for tanh, ReLU, GELU, sigmoid, and softplus.** The [Lipschitz-activation paper](works-in-progress/agnostic-lipschitz-oracles/paper.pdf) covers every fixed globally Lipschitz activation, without requiring $\phi(0)=0$, at every finite $\gamma\ge1$ and every eligible learner width. For fixed input dimension $d$ and depth $L$, the ordinary raw posterior mean has fixed-teacher excess
+The [raw Gaussian width-only theorem](works-in-progress/agnostic-gaussian-raw-width-only/paper.pdf) removes coefficient caps by compiling comparisons into bounded **raw** tanh functions and then applying this raw-posterior analysis. The earlier [Boolean](works-in-progress/agnostic-width-only-boolean/paper.pdf) and [regular-domain](works-in-progress/agnostic-width-only-regular/paper.pdf) treatments use their own bounded-output conventions. An unrestricted width-only theorem on every possible input law does not follow: arbitrarily close inputs and huge coefficients can defeat it. The [temperature-obstruction paper](works-in-progress/agnostic-temperature-obstruction/paper.pdf) gives noisy laws on which every Gaussian likelihood temperature fails.
 
-$$\widetilde O\bigl(n^{-2/[L(d+2)]}\bigr).$$
+**How much does Gaussian learner depth cost?** For a shallow tanh teacher of width $C$ and fixed coefficient cap, the [depth upper bound](works-in-progress/agnostic-shallow-depth/paper.pdf) gives, at fixed input dimension, accuracy and confidence,
 
-Both teacher width and coefficient cap can grow as $n^a$ for $a<1/[2L(d+2)]$; a fixed coefficient cap doubles the width range. For tanh, bounded activations improve the rate to $n^{-1/\max(d+2,\,1+dL/2)}$, up to logarithms. This can be much better at low dimension: with $d=1$ and two hidden layers it gives $n^{-1/3}$ throughout $\gamma\ge1$. The proof covers functions on an input grid, so it pays a curse of dimension. It complements the preceding tanh result's polynomial dimension dependence. A separate faster bound averages individually clipped outputs; that is a different prediction convention from the ordinary posterior mean.
+$$
+\operatorname{poly}(C)\exp\!\left(O(\sqrt H+(1-Ns)H)\right)
+$$
 
-The same raw-output theorem allows labels with a known marginal sub-Gaussian tail, including Gaussian noise around a bounded regression function. The prior and observed training labels remain unchanged; a truncation used only in the proof adds logarithmic calibration factors and an explicit population-tail remainder. Both the generic and sharper tanh sample exponents, including their growing comparison-class ranges, survive. This extension concerns ordinary raw prediction, not the separate convention clipping predictions to `[-1,1]`.
+samples at every $H\ge1$, $N\ge C$, and $0<s\le1/N$. It uses raw outputs throughout and allows sub-Gaussian observations. Extensions cover fixed smooth strongly log-concave coordinate laws and finite Gaussian mixtures with common positive component variance. At canonical mean field, $Ns=1$, the depth factor is subexponential; a fixed gap below one makes it exponential.
 
-**ReLU: matching width-growth exponents.** The [ReLU oracle paper](works-in-progress/agnostic-relu-sharp/paper.pdf) identifies a strict threshold. For teacher width $n^a$ and coefficient cap $n^b$, a vanishing oracle excess holds when
+The [lower bound](works-in-progress/agnostic-all-scale-depth-obstruction/paper.pdf) gives one noisy law requiring $\exp(\Omega(\sqrt H+\Delta H))$ samples uniformly over $0<Ns\le1-\Delta$ and every likelihood temperature, at sufficiently large finite widths polynomial in the sample count. Constants are uniform in $0\le\Delta<1$. This identifies a crossover at $\Delta\asymp H^{-1/2}$. The target is shallow and small, but the lower construction increases input dimension with depth. It is not a matching fixed-dimension lower bound and is separate from the noiseless Boolean-depth question.
 
-$$Ha+(H+1)b<1/2.$$
+**What are the main limits?** Changing the prior or prediction rule can matter decisively. An [explicit Student-prior tanh example](works-in-progress/agnostic-raw-heavy-tail-obstruction/paper.pdf) has raw posterior-mean risk at least a constant times $n^{1/3}$ with constant probability and in expectation, while the zero comparator's risk is at most $n^{-1/3}$. This uses sample-size-dependent input laws with a fixed prior and likelihood variance. Even a comparison law with KL $O(\log n)$ is insufficient there. Thus bounded-output proofs cannot simply be relabeled as raw-prediction theorems. For the original Gaussian priors, a [soft internal-gain penalty](works-in-progress/agnostic-soft-gain-priors/paper.pdf) improves joint width–depth rates, but reweights the prior and counts stable implementation resources; it is not an unconditional bound for arbitrary small circuits.
 
-When the inequality is reversed, with $a>0$, a counterexample defeats **every likelihood temperature**, including a temperature selected from the data. Both directions hold for actual finite priors with $\gamma\ge2$, and for every $\gamma\ge1$ with one hidden layer. The negative direction extends to every $\gamma\ge1$ at all hidden depths, with a larger polynomial threshold on learner width. They also have strong-prior versions. The equality case remains open. The upper bound has polynomial dimension dependence; the counterexample uses dimension $\Theta(\log n)$. Thus the matching threshold concerns guarantees uniform over laws and dimensions, rather than a lower bound at one fixed dimension.
-
-In the regimes where both directions apply, the critical width exponent at fixed $B$ is $1/(2H)$: the sufficient sample polynomial has degree $2H$ in $C$, and no smaller degree works uniformly for this learner family. Consequently there is no universal sample polynomial jointly in teacher width, depth, and dimension for this unrestricted agnostic ReLU learner. This is a noisy real-valued regression result; it does not settle the Boolean-classification depth question.
-
-**A restriction with much better joint width–depth dependence.** If each internal matrix has absolute row sums at most one, it is nonexpansive in the maximum-coordinate norm. The [nonexpansive-prior paper](works-in-progress/agnostic-nonexpansive/paper.pdf) conditions the dense Gaussian prior on that restriction and compares with teachers satisfying it too. At fixed dimension and coefficient cap, its sufficient sample count is
-
-$$n=\widetilde O\bigl((C^2+HC)/\varepsilon^2\bigr).$$
-
-This holds in the strong-prior limit and for actual finite priors at every $\gamma\ge2$. The activations include tanh and hardtanh. The condition excludes internal amplification and does not cover arbitrary small networks. For tanh, unit row sums also attenuate activations as depth increases; hardtanh can carry features through identity layers without attenuation. We have not shown that this restriction is typical of trained networks. The corresponding all-width finite-prior claim is false for this *conditioned* prior at $1\le\gamma<2$ under the same width-independent likelihood calibration, even for a width-one constant teacher.
-
-**Why weight bounds and likelihood calibration matter.** Width alone is insufficient even in one input dimension with noiseless labels and well-conditioned inputs. For any prescribed finite Gaussian prior and positive observation variance, two sufficiently close oppositely labeled inputs cannot receive predictions close to their opposite labels, although a width-two tanh teacher with large weights fits them and two distant anchors exactly. The [finite-posterior paper's appendix](works-in-progress/agnostic-finite-posteriors/paper.pdf) proves this, and gives a unit-circle version. Here the law is chosen after the temperature; this elementary argument does not defeat an arbitrary temperature chosen from the observed spacing.
-
-The [tanh temperature-obstruction paper](works-in-progress/agnostic-temperature-obstruction/paper.pdf) gives the stronger kind of counterexample: one noisy law on which every temperature fails, at every finite $\gamma\ge1$ and every sufficiently large learner width. Weak regularization memorizes noise; strong regularization misses a steep signal. Its dimension grows logarithmically with sample count. A width-two teacher with sufficiently large coefficients already suffices. ReLU has the analogous width-four obstruction. The noisy input region can have any fixed small positive probability, while signal and noisy labels retain unit amplitude; this is localized regression noise, not independent Boolean label flips. These results explain why “choose some temperature” does not by itself recover the unrestricted width-only conjecture.
-
-**What remains open?** Among bounds with polynomial input-dimension dependence, the finite mean-field tanh rates are much weaker than the stronger-prior rates. For deep ReLU, positive finite-prior bounds hold throughout $\gamma\ge1$, but the matching dimension-uniform threshold has not been established throughout $1\le\gamma<2$. The gap between tanh's positive and negative comparator-growth exponents also remains. More permissive, natural prior restrictions with good joint width–depth bounds would be valuable. The papers linked here have conventional proofs and independent AI-agent mathematical reviews; they are **not Lean verified**.
+All approximation papers in this answer have conventional proofs and independent AI-agent mathematical reviews. These new results are **not Lean verified**. They concern exact Bayesian inference, not its computational efficiency or gradient descent.

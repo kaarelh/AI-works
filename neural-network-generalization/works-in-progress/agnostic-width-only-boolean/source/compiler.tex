@@ -1,0 +1,134 @@
+\section{A bounded-path compiler on Boolean inputs}
+\label{sec:boolean-compiler}
+The input distribution in this section is arbitrary on $\{-1,1\}^d$. The original comparison network may have arbitrary finite real coefficients and biases. The construction uses the discreteness of the input set; it does not apply unchanged to arbitrary real inputs.
+
+Write $s(t)=\max\{-1,\min\{1,t\}\}$. A ReLU network's mixed path variation, evaluated on the unit-ball feature vector $\xi(x)=(1,x)/\sqrt{d+1}$, is
+\[
+ P(w)=|v|^{\mathsf T}|W^H|\cdots|W^2|a^1,
+ \qquad a^1_j=\|W^1_{j,:}\|_2.
+\]
+A positive identity layer does not change this quantity.
+
+\begin{theorem}[Arbitrary coefficients can be compiled away]
+\label{thm:boolean-compiler}
+There is a numerical constant $a\ge2$ with the following property. Let $d,C,h\ge1$, and let $g$ be a width-$C$, hidden-depth-$h$ ReLU network on $\{-1,1\}^d$, with arbitrary real coefficients and biases and a scalar affine readout. Put
+\[
+ K=4(d+1)(C+1)^h,\qquad
+ t=\left\lceil\log_2(16/\varepsilon)\right\rceil,
+ \qquad 0<\varepsilon\le1.
+\]
+There is a ReLU network $q$ with no internal biases, input $\xi$, and a linear readout, such that
+\begin{align}
+ \sup_{x\in\{-1,1\}^d}|q(x)-s(g(x))|&\le\varepsilon,
+ \qquad |q(x)|\le1\quad(x\in\{-1,1\}^d),\label{eq:boolean-approximation}\\
+ H_*&\le a\left[(h+1)\left\lceil\log_2(K+2)\right\rceil
+                   +\left\lceil\log_2(t+2)\right\rceil+1\right],\label{eq:boolean-depth}\\
+ \operatorname{width}(q)&\le(K+t+2)^a,\label{eq:boolean-width}\\
+ P(q)&\le\sqrt{d+1}\,(K+2)^{a(h+1)}(t+2)^a.
+ \label{eq:boolean-path}
+\end{align}
+All internal coefficients can be taken in $\{-1,0,1\}$. The first-layer coefficient magnitudes are at most $\sqrt{d+1}$, each internal row has absolute sum at most three, and the absolute sum of readout coefficients is less than four. The bound does not depend on the original coefficient magnitudes. Identity layers extend the construction to any hidden depth at least $H_*$.
+\end{theorem}
+
+\subsection{Small encodings of threshold and clipped affine maps}
+\begin{lemma}[Integer threshold weights]
+\label{lem:boolean-integer-threshold}
+Every linear threshold function on $\{0,1\}^k$ has an integer affine representation with all coefficients of magnitude at most
+$(k+1)^{(k+1)/2}$. In particular it has coefficient encodings of $O(k\log(k+2))$ bits. The convention that equality has output zero is allowed.
+\end{lemma}
+\begin{proof}
+Constant functions are immediate. For a nonconstant real threshold, the finitely many strictly positive values have a positive minimum. Shift the intercept by less than that minimum to make the two classes strictly separated, then scale so that the signed affine value is at least one on every Boolean input.
+
+Let $A$ have rows $y_x(1,x)$, where $y_x\in\{-1,1\}$ is the desired sign. The polyhedron $Au\ge\mathbf1$ is nonempty, and its row span is $\mathbb R^{k+1}$ because the vectors $(1,x)$ span that space. It has a point at which $k+1$ linearly independent constraints are tight. To see this directly, start at any feasible point. If the active rows do not span, move in a direction orthogonal to them, choosing its sign so some inactive constraint decreases. Stop at the first new tight constraint. Its row increases the active rank, since it is not orthogonal to the movement direction. Repeat at most $k+1$ times.
+
+At the resulting point, an invertible integer matrix $A_0$ with entries in $\{-1,0,1\}$ satisfies $A_0u=\mathbf1$. Cramer's rule, followed by multiplication by $|\det A_0|$, gives integer coefficients with the same strict signs. Hadamard's determinant inequality bounds every numerator by $(k+1)^{(k+1)/2}$. This proves the claim. This is the standard integer-weight argument for threshold functions~\cite{muroga}.
+\end{proof}
+
+The next version preserves approximate values, not only signs.
+\begin{lemma}[A rational approximation of a clipped affine map]
+\label{lem:boolean-rational-values}
+Let $\ell$ be any real affine form on $\{0,1\}^k$ and let $\eta=2^{-t}$, $t\ge1$. There are integers $a_0,\ldots,a_k$ and $Q\ge1$ such that
+\[
+ \sup_{z\in\{0,1\}^k}
+ \left|s\left(\frac{a_0+\sum_ja_jz_j}{Q}\right)-s(\ell(z))\right|
+ \le2\eta.
+\]
+All the integers have bit length $O(k\log(k+2)+t)$, independent of the coefficients of $\ell$.
+\end{lemma}
+\begin{proof}
+For each Boolean $z$ with $\ell(z)\ge1$, impose the constraint $u\cdot(1,z)\ge1$. For $\ell(z)\le-1$, impose $u\cdot(1,z)\le-1$. Otherwise choose a nearest multiple $r_z$ of $\eta$ to $\ell(z)$ and impose
+\[
+ r_z-\eta\le u\cdot(1,z)\le r_z+\eta.
+\]
+The original coefficients are feasible. The constraint matrix has entries in $\{-1,0,1\}$, and every right-hand side is an integer multiple of $2^{-t}$ with magnitude at most two. Its rows span $\mathbb R^{k+1}$, so the same rank-increasing argument supplies a feasible point determined by $k+1$ independent tight constraints.
+
+Let $A_0$ be their integer matrix and let their right side be $r/2^t$. Cramer's rule gives a common denominator
+\[
+ Q=2^t|\det A_0|\le2^t(k+1)^{(k+1)/2}
+\]
+and integer numerators of magnitude at most
+$2^{t+1}(k+1)^{(k+1)/2}$. This is the asserted bit bound. On unsaturated inputs the affine value differs from the original by at most $3\eta/2$, and clipping cannot increase the difference. On saturated inputs the constraints give exactly the desired clipped value. The weaker bound $2\eta$ follows.
+\end{proof}
+
+\subsection{Boolean arithmetic without large neural coefficients}
+\begin{lemma}[Parallel arithmetic circuits]
+\label{lem:boolean-arithmetic}
+There is a numerical $a_0$ such that an affine form in $k$ Boolean inputs, with signed integer coefficients and a positive denominator encoded in at most $b$ bits, has the following Boolean circuits over two-input AND, OR, and NOT gates:
+\begin{enumerate}
+\item its sign is computed with depth at most $a_0\log_2(k+b+2)$ and size at most $(k+b+2)^{a_0}$;
+\item the positive and negative binary digits of its integer numerator clipped to $[-Q,Q]$ are computed with the same depth and size bounds.
+\end{enumerate}
+Reading those digits with coefficients $\pm2^j/Q$ computes the clipped rational value exactly, and the absolute sum of those readout coefficients is less than four.
+\end{lemma}
+\begin{proof}
+The contribution of a fixed unsigned weight times an input bit is obtained by copying that bit to positions where the weight has a one. Negative weights can be handled by signed binary addition, or by complementing the corresponding input bit and adjusting the constant offset. Use $O(b+\log(k+2))$ bits throughout, sufficient for the entire sum without overflow.
+
+Carry-save addition reduces three input words to two in constant Boolean depth: at each bit, compute the parity bit and the majority carry bit, placing the latter one position higher. Repeating in parallel reduces $k$ words to two in $O(\log(k+2))$ stages. The word lengths increase by at most one per stage. The remaining two-word addition is computed with a balanced carry-prefix circuit. The carry relation on an interval is $c_{\rm out}=G\lor(P\land c_{\rm in})$, and composing two such pairs uses only a constant number of Boolean gates. A balanced tree therefore gives logarithmic depth in the word length; all needed prefixes can be computed in parallel with polynomially many gates. This is the standard carry-lookahead construction~\cite{brentkung}.
+
+Comparisons with $Q$ and $-Q$, multiplexing the appropriate clipped value, and conversion to sign and magnitude use the same addition, comparison, and Boolean-selection operations. Their total depth is $O(\log(k+b+2))$ and their total size is polynomial in $k+b$. All coefficients are encoded as fixed Boolean constants; they are not neural edge weights.
+
+If $m=\lfloor\log_2 Q\rfloor$, the clipped magnitude uses only bits $0,\ldots,m$. Gate each magnitude bit by the positive or negative sign indicator. The linear readout has absolute coefficient sum
+\[
+ 2\sum_{j=0}^{m}\frac{2^j}{Q}
+ =\frac{2(2^{m+1}-1)}Q<4.
+\]
+Its value is exactly the signed clipped numerator divided by $Q$. No Boolean division circuit is required.
+\end{proof}
+
+For completeness, a layered Boolean circuit has a direct ReLU implementation with no internal biases once a constant neuron is carried through its layers. AND is $\operatorname{ReLU}(a+b-1)$ and NOT is $\operatorname{ReLU}(1-a)$. OR is implemented in two layers by
+\[
+ u=\operatorname{ReLU}(a+b),\quad v=\operatorname{ReLU}(a+b-1),
+ \qquad\operatorname{ReLU}(u-v).
+\]
+Replace every Boolean layer by two ReLU layers, using identity neurons where necessary. All internal coefficients are in $\{-1,0,1\}$ and each row has absolute sum at most three. Long Boolean wires are padded by identity gates; this increases size by at most the circuit depth and does not increase its depth. The first ReLU layer produces $(1+x_j)/2$ and the constant one from the normalized feature $\xi$; its largest incoming row norm is at most $\sqrt{d+1}$.
+
+\subsection{Compiling the original network's activation decisions}
+Compile the original teacher's biases into one constant neuron per hidden layer, giving width $M=C+1$. Let
+\[
+ a_j^\ell(x)=\mathbf1\{z_j^\ell(x)>0\}
+\]
+be its activation indicator. Then $h_j^\ell=a_j^\ell z_j^\ell$, including the zero case. Expanding a preactivation through earlier layers expresses it as a real linear combination of at most
+\[
+ (d+1)M^{\ell-1}
+\]
+path features of the form
+\[
+ \bar x_k\prod_{r<\ell}a_{i_r}^r(x).
+\]
+For a nonconstant input coordinate, write $x_k=2b_k-1$ with $b_k\in\{0,1\}$. Each path feature is then a linear combination of at most two Boolean conjunctions. The same expansion for the scalar output has at most $2(d+1)M^h$ Boolean conjunction features. All counts are bounded by $K=4(d+1)M^h$.
+
+Proceed in the original layer order. Once the earlier activation indicators have been computed, their conjunction features can be computed by balanced AND trees of depth $O(\log(h+2))$. Apply Lemma~\ref{lem:boolean-integer-threshold} to the real affine form on these Boolean features, considered on their entire Boolean cube. Lemma~\ref{lem:boolean-arithmetic} computes the resulting threshold exactly with depth $O(\log(K+2))$ and polynomial size. It therefore computes the original activation decision on every actual input. Induction makes every hidden decision exact, without approximating the original real activations themselves.
+
+After the final hidden layer, the real scalar output is an affine form in at most $K$ of the now available Boolean path features. Apply Lemma~\ref{lem:boolean-rational-values} with $\eta=2^{-t}$ and evaluate its clipped rational form by Lemma~\ref{lem:boolean-arithmetic}. The final approximation error is at most $2^{1-t}\le\varepsilon$, and its output belongs to $[-1,1]$ on every Boolean input.
+
+There are at most $hM\le K$ hidden activation decisions. Their arithmetic coefficient lengths are $O(K\log(K+2))$ and are independent of $t$. The final value computation has coefficient lengths $O(K\log(K+2)+t)$. Consequently the whole Boolean circuit has depth
+\[
+ O\bigl((h+1)\log(K+2)+\log(t+2)\bigr)
+\]
+and size polynomial in $K+t$. Layering and the ReLU conversion preserve these bounds up to universal constants.
+
+Finally propagate absolute path budgets through this ReLU implementation. The first budget at every neuron is at most $\sqrt{d+1}$. Each later layer multiplies the largest budget by at most three. The final readout has absolute coefficient sum less than four. Thus
+\[
+ P(q)\le4\sqrt{d+1}\,3^{H_*-1}.
+\]
+Enlarging one universal constant $a$ absorbs this estimate and the circuit size/depth bounds into \eqref{eq:boolean-depth}--\eqref{eq:boolean-path}. This proves Theorem~\ref{thm:boolean-compiler}.

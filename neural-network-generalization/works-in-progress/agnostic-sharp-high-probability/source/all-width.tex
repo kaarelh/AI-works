@@ -1,0 +1,121 @@
+\section{One posterior at every width above the teacher width}
+\label{sec:l1-all-width}
+For this section take $\phi=\tanh$. Let $\mathcal H$ be the class of
+single tanh features on the cube and let $\mathcal F$ be their absolute
+convex hull: all finite sums $\sum_j a_jh_j$ with $\sum_j|a_j|\le1$.
+Every learner width and every teacher under consideration lies in
+$\mathcal F$. Monotonicity of tanh turns each subgraph test into a
+linear threshold test after applying inverse tanh; hence the
+pseudodimension of $\mathcal H$ is at most $D$. The same argument
+also works for hardtanh.
+
+\begin{lemma}[Uniform relative losses over the variation class]
+\label{lem:variation-uniform}
+Under the conditional sub-Gaussian assumptions, with probability at
+least $1-\delta$,
+\[
+ \sup_{f\in\mathcal F}|\widehat A_S(f)-A(f)|
+ \le K\sqrt{\frac{s[D\log(en)+\log(4/\delta)]}{n}},
+\]
+where $A(f)=R(f)-R(f_0)$ and
+$\widehat A_S(f)=P_n[(f-Y)^2-(f_0-Y)^2]$.
+The bound is independent of the number of terms in $f$.
+\end{lemma}
+\begin{proof}
+On any fixed input sample, quantizing the evaluation vectors of
+$\mathcal H$ in maximum norm at mesh $n^{-2}$ gives a net with log
+cardinality at most $KD\log(en)$. Indeed there are $O(n^3)$ input and
+threshold pairs, and the subgraph growth bound controls their label
+patterns. Use actual function representatives from a countable
+pointwise-dense subclass, choosing the first one in each nonempty
+quantization cell; the net is measurable and depends only on inputs.
+
+The empirical Rademacher complexity of an absolute convex hull equals
+that of its signed generating class. The finite-net bound for bounded
+vectors therefore gives, uniformly over the observed inputs,
+\[
+ \mathbb E_\varepsilon\sup_{f\in\mathcal F}
+       \left|n^{-1}\sum_i\varepsilon_i f(X_i)\right|
+       \le K\sqrt{D\log(en)/n}.
+\]
+Symmetrization and the contraction inequality for
+$t\mapsto(t-f_0(X_i))^2$ on $[-1,1]$, whose Lipschitz constant is four,
+bound the expected supremum of
+$|(P_n-P)(f-f_0)^2|$ by the same order. The harmless fixed-function
+offset contributes at most $K/\sqrt n$. Since these squared
+discrepancies lie in $[0,4]$, bounded differences adds
+$K\sqrt{\log(4/\delta)/n}$ with the required confidence.
+
+For the noise term, condition on the inputs and apply sub-Gaussian
+concentration to the preceding finite net. It gives
+\[
+ \sup_{h\in\mathcal H}|P_n\xi h|
+       \le K\sigma\sqrt{[D\log(en)+\log(4/\delta)]/n}
+\]
+after increasing constants and extending from the net. The extension
+error is at most $n^{-2}P_n|\xi|$; the inequality
+$\mathbb E e^{t|\xi|}\le2e^{\sigma^2t^2/2}$ controls it by the same
+displayed order. A separate conditional sub-Gaussian bound controls
+$|P_n\xi f_0|$. By $\ell^1$ duality,
+$\sup_{f\in\mathcal F}|P_n\xi f|=\sup_{h\in\mathcal H}|P_n\xi h|$.
+Combine these bounds with
+\[
+ \widehat A_S(f)=P_n(f-f_0)^2-2P_n\xi(f-f_0)
+\]
+and allocate the failure probabilities to sum to $\delta$.
+Continuity in the ridge parameters, rational coefficients, and bounded
+pointwise approximation justify all suprema through a countable
+separable subclass; no measurable-selection assumption on the unknown
+conditional mean is needed.
+\end{proof}
+
+\begin{theorem}[A width-uniform slow oracle for the same fixed posterior]
+\label{thm:all-width-variation}
+Use exactly the tanh learner, conditioned prior, and fixed-temperature
+all-data posterior of Theorem~\ref{thm:l1-main}, with $n\ge2$ and
+$0<\delta<1$. On one event of
+probability at least $1-\delta$, simultaneously for every teacher width
+$C\le N$, incoming cap $B\ge1$, and teacher $g$ with these resources,
+\begin{align}
+ \int R(f)\,dQ_S(f)
+ &\le R(g)+K\sqrt{\frac{s[D\log(en)+\log(4/\delta)]}{n}}\notag\\
+ &\quad+\frac{Ks(1+CD)}n\log\{eD(B+8)(C+1)n\}.
+ \label{eq:all-width-variation}
+\end{align}
+The same conclusion holds for the posterior mean. The architecture is
+fixed before observing its data; neither the posterior nor its
+temperature depends on the teacher's resources.
+\end{theorem}
+\begin{proof}
+Work on the common event of Lemma~\ref{lem:variation-uniform}, with
+right-hand side $U_n$. For any comparator law $\rho$, Gibbs variational
+optimality and the nonnegative posterior KL imply
+\[
+ \mathbb E_Q A(f)\le\mathbb E_Q\widehat A_S(f)+U_n
+ \le\mathbb E_\rho\widehat A_S(f)+T\mathrm{KL}(\rho\|\pi_N)/n+U_n
+ \le\mathbb E_\rho A(f)+T\mathrm{KL}(\rho\|\pi_N)/n+2U_n.
+\]
+For each teacher choose the direct comparison law at accuracy $n^{-2}$.
+Its population risk is at most $R(g)+4/n^2$, and its KL is bounded by
+\eqref{eq:direct-comparison}. Substitute these bounds. The uniform
+event and the pathwise variational inequality work for all such
+teachers and laws simultaneously; no confidence allocation is required.
+\end{proof}
+
+For tanh teachers with unrestricted incoming coefficients, compactify
+each feature at tolerance $1/n$ using the Boolean or slab-regular
+lemma. In \eqref{eq:all-width-variation}, replace the logarithmic
+resource by
+\[
+ CD\{D\log(2D)+\log(e(C+1)n)\}
+\]
+on Boolean inputs, or by
+\[
+ CD\{\log(eD(C+1)n)+\alpha^{-1}\log(e\kappa n)\}
+\]
+under slab regularity, and absorb the $4/n$ approximation error.
+This gives a vanishing coefficient-one approximation oracle at every
+prescribed $N\ge C$ whenever the displayed statistical resources
+vanish. At larger widths the merged theorem supplies the faster
+near-$1/n$ remainder. Both statements concern the same all-data
+posterior, with the same fixed likelihood variance.

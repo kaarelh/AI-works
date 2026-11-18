@@ -1,0 +1,44 @@
+\section{Uniform function mass and online sign prediction}
+The comparison law also yields a lower bound on the prior probability of a uniform function neighborhood.
+
+\begin{theorem}[Uniform function-neighborhood mass]\label{thm:uniform-mass}
+For every comparator and every $0<t\le1$,
+\[
+ -\log\mu_N\left\{\sup_{x\in\mathcal X}|f_w(x)-g(x)|\le t\right\}
+ \le C Q\log\frac{C(m+1)(B+2)W}{t}.
+\]
+The same statement holds for raw outputs, using
+$W_{\rm raw}=(H+2)D^{H+2}$ in place of $W$.
+\end{theorem}
+\begin{proof}
+Use the comparison with $\epsilon=t/(2W)$. Its expected squared uniform error is at most $t^2/4$, so the neighborhood event has comparison probability at least $3/4$. For any event $E$,
+\[
+ \KL(\rho\|\mu_N)\ge\rho(E)\log\frac1{\mu_N(E)}-\log2.
+\]
+Apply this inequality and Lemma~\ref{lem:entropy}. The raw-output argument omits the output-link factor.
+\end{proof}
+
+Let a raw teacher have a global sign margin on a prescribed compact input set:
+\[
+ y(x)z_g(x)\ge2a\quad(x\in\mathcal X),
+ \qquad y:\mathcal X\to\{-1,+1\},\quad a>0.
+\]
+The raw neighborhood with radius $t=\min\{1,a/2\}$ is contained in the set $E_y$ of networks with $y(x)z_w(x)\ge a$ everywhere. Thus $\mu_N(E_y)\ge e^{-J}$, where
+\[
+ J=CQ\left[(H+2)\log\{C(d+m+2)(B+2)\}
+           +\log\{(H+2)(1+1/a)\}\right].
+\]
+Initially conditioning the prior on the all-input absolute-margin event can only increase this lower bound.
+
+\begin{corollary}[Total online mistakes]\label{cor:online}
+Use the preceding prior, optionally conditioned on its all-input margin event, and update by exact agreement with each revealed sign. If $p_t$ is the posterior probability of the correct label before round $t$, then every input sequence satisfies
+\[
+ \sum_t-\log p_t\le J,\qquad \sum_t(1-p_t)\le J.
+\]
+Majority prediction therefore makes at most $J/\log2$ mistakes. For any $0<c<1$, at most $J/(-\log c)$ rounds have correct-label probability at most $c$. Fresh posterior-sampled predictions make at most $J$ mistakes in expectation, provided each input is selected before that round's fresh prediction randomness.
+\end{corollary}
+\begin{proof}
+At each finite horizon, the product of successive correct-label probabilities is the prior probability of agreeing with all labels revealed along that sequence. The event $E_y$ is contained in this agreement event, so the product is at least $e^{-J}$. Take logarithms and then increase the horizon. The remaining assertions follow from $1-p\le-\log p$ and the indicated thresholds. The sampling assertion uses conditional expectation under the stated nonanticipation rule.
+\end{proof}
+
+The input order can be adaptive and need not be IID. This is a separate exact-sign learner, rather than the noisy Gaussian-likelihood learner of the regression theorems. A continuous function taking both signs cannot have a positive sign margin on the whole connected cube; the sign result instead applies to prescribed sets such as the Boolean cube. The regression neighborhood theorem itself is uniform on the entire cube.

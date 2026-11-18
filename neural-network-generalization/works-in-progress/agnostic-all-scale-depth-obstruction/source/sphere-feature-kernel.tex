@@ -1,0 +1,61 @@
+\section{A quantitative feature kernel on the unit sphere}
+\label{sec:sphere-direct-kernel}
+Use the input set $\mathcal U_D$ from~\eqref{eq:unit-input-set}.
+Let $A$ have independent $N(0,1/d)$ coordinates in $\R^{d+1}$. For $0\le\nu\le1$, define
+\[
+ \phi_A(x)=\E_G\tanh\left(A\cdot(1,x)+\sqrt{2\nu/d}\,G\right),
+ \qquad K_\nu(x,x')=\E_A\phi_A(x)\phi_A(x').
+\]
+All finite-set inner products use the uniform probability law on $\mathcal U_D$.
+
+\begin{lemma}[A small-variance Gaussian feature kernel]
+\label{lem:sphere-direct-kernel}
+The kernel operator $K_\nu$ has smallest eigenvalue at least
+\[
+ \widetilde\Lambda_D=e^{-40(D+1)}
+\]
+for every $D\ge1$ and every $0\le\nu\le1$.
+\end{lemma}
+\begin{proof}
+Write $\alpha=\sqrt{2/d}$. The first Gaussian mean preactivation has variance $\alpha^2$ at every input. Expand
+\[
+ t\longmapsto\E_G\tanh(\alpha t+\alpha\sqrt\nu G)
+\]
+in orthonormal Hermite polynomials for a standard Gaussian variable. Even coefficients vanish. For odd $j\ge1$, the identities
+\[
+ \tanh t=\int_0^\infty\frac{\sin(\omega t)}{\sinh(\pi\omega/2)}\,d\omega,
+ \qquad \E[\operatorname{He}_j(Z)e^{i\omega Z}]=(i\omega)^j e^{-\omega^2/2}
+\]
+give the exact absolute coefficient below. The Fourier identity follows by expanding $1/\sinh(\pi\omega/2)=2\sum_{k\ge0}e^{-(k+1/2)\pi\omega}$, integrating each sine term, and using the partial-fraction expansion of tanh. Gaussian decay justifies the Hermite calculation, and the integrands are integrable at zero. The coefficient is
+\[
+ |b_j|=\frac1{\alpha\sqrt{j!}}\int_0^\infty
+ \frac{\omega^j e^{-(1+\nu)\omega^2/2}}
+      {\sinh(\pi\omega/(2\alpha))}\,d\omega.
+\]
+For $j\le D+4=d+2$, restrict to $\omega\in[\sqrt j/2,\sqrt j]$. Since $\nu\le1$, $\sqrt{j!}\le j^{j/2}$, and $1/\sinh u\ge2e^{-u}$,
+\[
+ |b_j|\ge\frac{\sqrt j}{\alpha}
+       \exp\{-j\log2-j-(\pi/2)\sqrt{jd/2}\}\ge e^{-5d}.
+\]
+For the final inequality use $\sqrt j/\alpha\ge1$, $j\le d+2$, $\sqrt{jd/2}\le d$ for $d\ge2$, and
+$(1+\log2)(d+2)+(\pi/2)d\le5d$ for $d\ge3$.
+
+The correlation of two normalized first preactivations is
+\[
+ c(x,x')=\frac{1+TT'}2+\frac{z\cdot z'}{8D}
+            +\frac{\sqrt{3/4-T^2}\sqrt{3/4-(T')^2}}2.
+\]
+Thus $K_\nu=\sum_{j\ \mathrm{odd}}b_j^2c^j$, with every multinomial term a positive semidefinite rank-one kernel. For a nuisance subset $S$ of size $s$ and $a\in\{0,1,2,3\}$, choose $b\in\{0,1\}$ so that $j=s+a+b$ is odd. Retaining the term $T^a\chi_S(z)\otimes T^a\chi_S(z)$ gives coefficient
+\[
+ b_j^2\frac{j!}{a!b!}\,2^{-(a+b)}(8D)^{-s}
+ \ge \frac1{96}e^{-10d}\frac{s!}{(8D)^s}
+ \ge\frac1{96}e^{-10d-8D}.
+\]
+The last inequality follows because $(8D)^s/s!$ is one term of the series for $e^{8D}$. All selected terms are distinct. The four-point Gram matrix of $1,T,T^2,T^3$ has determinant $9/65536$ and trace less than two: the unnormalized Vandermonde determinant is $3/16$. Its minimum eigenvalue is therefore at least $9/524288>2^{-16}$. The nuisance Walsh characters are orthonormal. Consequently
+\[
+ \lambda_{\min}(K_\nu)
+ \ge\frac{2^{-16}}{96}e^{-18D-20}\ge e^{-40(D+1)}.
+\]
+This proves the claim.
+\end{proof}
+
