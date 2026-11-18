@@ -1716,6 +1716,8 @@ $$\widetilde O\bigl(n^{-2/[L(d+2)]}\bigr).$$
 
 Both teacher width and coefficient cap can grow as $n^a$ for $a<1/[2L(d+2)]$; a fixed coefficient cap doubles the width range. For tanh, bounded activations improve the rate to $n^{-1/\max(d+2,\,1+dL/2)}$, up to logarithms. This can be much better at low dimension: with $d=1$ and two hidden layers it gives $n^{-1/3}$ throughout $\gamma\ge1$. The proof covers functions on an input grid, so it pays a curse of dimension. It complements the preceding tanh result's polynomial dimension dependence. A separate faster bound averages individually clipped outputs; that is a different prediction convention from the ordinary posterior mean.
 
+The same raw-output theorem allows labels with a known marginal sub-Gaussian tail, including Gaussian noise around a bounded regression function. The prior and observed training labels remain unchanged; a truncation used only in the proof adds logarithmic calibration factors and an explicit population-tail remainder. Both the generic and sharper tanh sample exponents, including their growing comparison-class ranges, survive. This extension concerns ordinary raw prediction, not the separate convention clipping predictions to `[-1,1]`.
+
 **ReLU: matching width-growth exponents.** The [ReLU oracle paper](works-in-progress/agnostic-relu-sharp/paper.pdf) identifies a strict threshold. For teacher width $n^a$ and coefficient cap $n^b$, a vanishing oracle excess holds when
 
 $$Ha+(H+1)b<1/2.$$

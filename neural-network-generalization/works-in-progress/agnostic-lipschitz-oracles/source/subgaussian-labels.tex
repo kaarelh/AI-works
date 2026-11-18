@@ -1,0 +1,140 @@
+\section{Sub-Gaussian labels with the same learner prior}
+\label{sec:subgaussian-labels}
+
+The raw-output oracle inequalities also allow unbounded labels with a
+sub-Gaussian tail. The Gaussian parameter prior remains exactly the
+same. Only the likelihood calibration acquires logarithmic factors.
+The extension here concerns raw outputs and their ordinary posterior
+mean, not the earlier convention clipping predictions to $[-1,1]$.
+
+First suppose $|Y|\leq T$ for a known $T\geq1$. In the proof only,
+normalize the prediction observable and label by $T$: use $z_w/T$
+and $Y/T$, with $\lambda'=\lambda/T^2$. Write
+$S/T=((X_i,Y_i/T))_{i=1}^n$; the inputs are not rescaled.
+The likelihood identity is
+\[
+ \exp\left[-\frac{\omega\widehat R_S(z_w)}{2\lambda}\right]
+ =\exp\left[-\frac{\omega\widehat R_{S/T}(z_w/T)}{2\lambda'}\right].
+\]
+This identity does not rescale any Gaussian weight or change the
+learner's raw prediction. The prior moments, amplitudes, and Lipschitz
+cover bounds for $z_w/T$ are no larger than those for $z_w$.
+A teacher observable $g/T$ is represented by the same original teacher
+parameters in this normalized observation map, so its energy cost
+remains $E$. A raw-output tube of radius
+\[
+ \rho=\frac\lambda{4(U+T)}
+\]
+has normalized radius
+$\rho/T=\lambda'/[4(U/T+1)]$.
+Thus repeating the proof, rather than changing the model's prior,
+and then multiplying the risk inequality by $T^2$, gives
+\begin{align}
+ \int R(z_w)d\Pi
+ \leq\;&R(g)+2\lambda\mathcal A_g(\rho)+C_{d,H,A}\lambda\notag\\
+ &+(U+T)\sqrt{\frac{2R(g)\log(2/\delta)}n}
+       +\frac{2(U+T)^2\log(2/\delta)}{3n},
+ \label{eq:bounded-large-label-oracle}
+\end{align}
+under the sufficient condition
+\begin{equation}
+ n\geq C_{d,H,A}T^{2p}\lambda^{-p}
+           \log^6\!\frac{2nT^2}{\lambda\delta},
+ \qquad p=\frac{(H+1)(d+2)}2,
+ \quad 0<\lambda\leq1.
+ \label{eq:bounded-large-label-budget}
+\end{equation}
+The stated range of $\lambda$ ensures $\rho\leq1$, as required by
+the teacher-cylinder lemma. As before, the sample event is common to
+all learner widths above the teacher width and all $0<\tau\leq1$.
+
+\begin{corollary}[A raw oracle with sub-Gaussian labels]
+\label{cor:subgaussian-labels}
+Replace the bounded-label assumption by the marginal tail condition
+\begin{equation}
+ \Pr\{|Y|>t\}\leq2e^{-t^2/(2s^2)}\qquad(t\geq0)
+ \label{eq:subgaussian-label-tail}
+\end{equation}
+for a known $s>0$. Let $n\geq2$, $0<\delta<1$, and put
+\[
+ T=\max\left\{1,s\sqrt{8\log(8n/\delta)}\right\},
+ \qquad u=2s\left(\frac\delta{8n}\right)^2.
+\]
+Fix a bounded-weight teacher $g$, with $|g|\leq U$, and let
+$\rho=\lambda/[4(U+T)]$, where $0<\lambda\leq1$.
+Suppose \eqref{eq:bounded-large-label-budget} holds with confidence
+parameter $\delta/2$. Define
+\begin{align*}
+ e={}&2\lambda\mathcal A_g(\rho)+C_{d,H,A}\lambda\\
+ &+(U+T)(\sqrt{R(g)}+u)\sqrt{\frac{2\log(4/\delta)}n}
+          +\frac{2(U+T)^2\log(4/\delta)}{3n}.
+\end{align*}
+With probability at least $1-\delta$, simultaneously for all $N\geq m$
+and all $0<\tau\leq1$, the posterior trained on the original,
+unbounded labels satisfies
+\begin{equation}
+ \int R(z_w)d\Pi
+ \leq R(g)+e+4u\sqrt{R(g)+e}+4u^2.
+ \label{eq:subgaussian-label-oracle}
+\end{equation}
+The ordinary raw posterior mean obeys the same bound.
+The Gaussian prior and likelihood form are unchanged.
+At fixed teacher resources and fixed $s,d,H,A,\delta$, the sufficient
+excess rate remains $\widetilde O(n^{-1/p})$.
+\end{corollary}
+\begin{proof}
+Write $Y_T=\operatorname{clip}_{[-T,T]}Y$, and let $R_T$ denote
+population square loss for $(X,Y_T)$. Tail integration gives
+\begin{align*}
+ \|Y-Y_T\|_2^2
+ &=\int_0^\infty2r\Pr\{|Y|>T+r\}\,dr\\
+ &\leq4e^{-T^2/(2s^2)}
+       \int_0^\infty r e^{-r^2/(2s^2)}\,dr
+ =4s^2e^{-T^2/(2s^2)}\leq u^2.
+\end{align*}
+A union bound gives
+\[
+ \Pr\{\text{some training label differs from its clipping}\}
+ \leq2n e^{-T^2/(2s^2)}
+ \leq2n(\delta/(8n))^4<\delta/2.
+\]
+On the complementary event, training on the original and clipped
+samples gives exactly the same posterior for every width and scale.
+Apply \eqref{eq:bounded-large-label-oracle} to the IID clipped sample
+with failure probability $\delta/2$. Minkowski gives
+$\sqrt{R_T(g)}\leq\sqrt{R(g)}+u$, so the resulting posterior bound is
+$\int R_T(z_w)d\Pi\leq R_T(g)+e$.
+
+For each fixed observed sample, Minkowski on the product of the
+posterior law and the fresh-test distribution gives
+\[
+ \sqrt{\int R(z_w)d\Pi}
+ \leq\sqrt{\int R_T(z_w)d\Pi}+u
+ \leq\sqrt{R(g)+e}+2u.
+\]
+The last inequality also uses
+$\sqrt{R_T(g)+e}\leq\sqrt{R(g)+e}+u$.
+Squaring proves \eqref{eq:subgaussian-label-oracle}, and Jensen gives
+the ordinary-mean statement. The two exceptional events have total
+probability at most $\delta$ and are common to all asserted learners.
+Since $T$ grows only as a square root of a logarithm, its polynomial
+factor in the sample condition changes logarithms but not the power
+of $n$. The bound $u=O(n^{-2})$ makes the population clipping error
+smaller still.
+\end{proof}
+
+The same normalization extends the sharper tanh theorem. Its sample
+condition is multiplied by $T^{2s_{d,H}}$, with $\lambda$ and
+$\epsilon$ inside the logarithm replaced by $\lambda/T^2$ and
+$\epsilon/T^2$. Its raw additive term remains $C_{d,H}\epsilon$ after
+multiplication by $T^2$. The same clipping and population-risk argument
+therefore preserves its fixed-teacher rate and its growing-class
+exponents, up to logarithms. The generic raw growing-class bounds
+are preserved for the same reason.
+
+Condition~\eqref{eq:subgaussian-label-tail} includes Gaussian noise
+around an arbitrary uniformly bounded regression function, with a
+sufficiently large $s$. If the noise has conditional mean zero, its
+irreducible variance cancels when comparing two population squared
+risks; no correct Gaussian likelihood model is needed for the oracle
+argument.

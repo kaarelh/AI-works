@@ -31,6 +31,8 @@ The data are IID, with inputs in the cube and labels in $[-1,1]$. Labels need no
 
 The proof uses Gaussian operator-norm tails and an elementary finite-cover Bernstein inequality. Covering all bounded Lipschitz functions on the input cube incurs a dimensional cost. These are **fixed-input-dimension bounds**: their constants are not claimed to be polynomial in $d$, and they do not give a polynomial dependence jointly on teacher width and depth.
 
+The raw-output theorems also extend to labels with a known marginal sub-Gaussian tail, including Gaussian noise around a bounded regression function. The prior remains unchanged. A proof-only truncation of labels, together with an analysis-only normalization of the prediction observable, changes the calibration by logarithmic factors; the sample exponents and growing-class ranges remain the same. The finite-sample corollary explicitly accounts for the population label-tail error. It does not extend the fixed $[-1,1]$ prediction-clipping convention to unbounded labels.
+
 The manuscript has undergone independent AI-agent mathematical checks. It has not been formalized in Lean.
 
 Authors, in alphabetical order: ChatGPT-6 Astra, Claude Opus 5.5, Kaarel Hänni, and Dmitry Vaintrob.
