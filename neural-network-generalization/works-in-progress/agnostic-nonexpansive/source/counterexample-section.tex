@@ -1,0 +1,107 @@
+\section{Why the finite-scale threshold cannot be lowered}
+\label{sec:counterexample}
+
+For the particular prior restriction used here, extending the deep finite-scale theorem to $1\leq\gamma<2$ is impossible with a likelihood calibration independent of learner width. Even a constant target gives a counterexample. This statement concerns the Gaussian prior \emph{conditioned on nonexpansive internal rows}; it is not a negative theorem for the unrestricted Gaussian prior.
+
+\begin{theorem}[Failure below $\gamma=2$ for the conditioned prior]
+\label{thm:finite-failure}
+Take two hidden tanh layers, input dimension one, and the data law concentrated on $(X,Y)=(0,1)$. Use the internal absolute-row-sum restriction, $\sigma^2=N^{-\gamma}$, and likelihood variance $n\lambda\sigma^2$. Fix any $1\leq\gamma<2$, any sample size $n\geq1$, and any $\lambda>0$ independent of $N$. Then, as $N\to\infty$,
+\[
+ \int z_w(0)^2\,\Pi_{\sigma,N,S}(dw)\longrightarrow0,
+ \qquad
+ R(\bar z_{\sigma,N,S})\longrightarrow1,
+ \qquad
+ \int R(z_w)\,\Pi_{\sigma,N,S}(dw)\longrightarrow1.
+\]
+The target has an exact admissible width-one teacher with weights bounded by two. Thus no width-uniform oracle remainder tending to zero can hold in this regime, even for this fixed comparator class and deterministic noiseless data. The conclusion permits any prescribed $\lambda_n>0$ depending on sample size, but not an additional dependence on learner width.
+\end{theorem}
+
+We give an elementary concentration argument for the row prior.
+
+\begin{lemma}[Uniform absolute-row-sum ball]
+\label{lem:l1-row}
+Let $V$ be uniform on the unit $\ell^1$ ball in $\R^N$. For $h\in[-1,1]^N$, let $A=\phi(V\cdot h)$, where $\phi$ is odd and $1$-Lipschitz with $\phi(0)=0$. If $|\phi|\leq1$, then, with the universal constant $C=300$,
+\[
+ \E e^{tA}\leq e^{Ct^2/N}\quad(t\in\R),
+ \qquad
+ \E e^{uA^2}\leq(1-4Cu/N)^{-1/2}\quad(0\leq u<N/(4C)).
+\]
+\end{lemma}
+\begin{proof}
+The uniform-ball representation is
+\[
+ V_i=\varepsilon_i E_i/S,\qquad S=E_0+E_1+\cdots+E_N,
+\]
+where the $E_i$ are independent unit exponential variables and the $\varepsilon_i$ are independent fair signs. Indeed, the normalized exponentials are uniform on the simplex, and independent signs fill its $2^N$ orthants.
+
+For $L=\sum_i\varepsilon_iE_i h_i$ and $|s|\leq1/2$,
+\[
+ \log\E e^{sL}=-\sum_i\log(1-s^2h_i^2)\leq2Ns^2.
+\]
+For $0<t\leq1$, Chernoff's bound at $s=t/8$ gives
+$\Prob(|L|>Nt/2)\leq2e^{-Nt^2/32}$. Also
+$\Prob(S<N/2)\leq e^{N/2}2^{-(N+1)}\leq e^{-N/8}$.
+Therefore
+\[
+ \Prob(|V\cdot h|>t)\leq3e^{-Nt^2/32}.
+\]
+For $t>1$ the probability is zero. Since $A$ is symmetric and $|A|\leq|V\cdot h|$, integration of the tail gives
+$\E A^{2p}\leq3(32/N)^p p!$ for every integer $p\geq1$.
+Expanding the hyperbolic cosine and using $(2p)!\geq(p!)^2$,
+\[
+ \E e^{sA}
+ \leq1+3\{e^{32s^2/N}-1\}\leq e^{96s^2/N}\leq e^{Cs^2/N}.
+\]
+For an independent standard Gaussian $G$, write
+$e^{uA^2}=\E_G e^{\sqrt{2u}GA}$ and use the first bound. The Gaussian integral gives the second.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:finite-failure}]
+At $(X,Y)=(0,1)$ all samples are deterministic. Write $Z=z_w(0)$ under the prior. Condition first on the preceding hidden vector $h\in[-1,1]^N$.
+
+An internal row has density proportional to
+$\exp[-N^\gamma\|w\|_2^2/2]$ on the unit $\ell^1$ ball. For a uniform ball vector,
+\[
+ \E\|V\|_2^2=\frac{2N}{(N+1)(N+2)}\leq2/N.
+\]
+Jensen's inequality shows that the density of the restricted Gaussian row relative to uniform is at most $\exp(N^{\gamma-1})$. For the $N$ independent last-layer rows, the joint density ratio is therefore at most $\exp(N^\gamma)$.
+
+Temporarily replace those rows by independent uniform ball vectors, keeping the Gaussian readout and $h$ fixed. Let $A_j$ be the resulting hidden activations. Conditional on them, $Z$ is a centered Gaussian with variance $N^{-\gamma-1}\sum_jA_j^2$. Lemma~\ref{lem:l1-row} and independence give
+\[
+ \E e^{tZ}
+ \leq\left(1-\frac{2Ct^2}{N^{\gamma+2}}\right)^{-N/2}
+ \quad\text{when }2Ct^2<N^{\gamma+2}.
+\]
+Taking $t=N^{1+\gamma/2}/(2\sqrt C)$ and applying Chernoff to both signs, then returning to the actual row law, proves
+\begin{equation}
+ \Prob_{\pi}(|Z|>\varepsilon)
+ \leq2\exp\left[-\frac{\varepsilon N^{1+\gamma/2}}{2\sqrt C}
+                     +N^\gamma+\frac N2\log2\right].
+ \label{eq:negative-prior-tail}
+\end{equation}
+This bound is uniform in $h$, so it remains valid after averaging over the first layer.
+
+We also need a lower bound for the likelihood normalizer. Under a uniform ball vector, tilting by $e^{-a\|w\|_2^2}$ can only decrease the mean of $\|w\|_2^2$: the derivative of this tilted mean in $a$ is minus its variance. Thus the actual row law has $\E\|w\|_2^2\leq2/N$. Coordinate-sign symmetry cancels mixed second moments. For every $h\in[-1,1]^N$, $1$-Lipschitzness and $\phi(0)=0$ give
+\[
+ \E\phi(w\cdot h)^2\leq\E(w\cdot h)^2\leq2/N.
+\]
+Consequently $\E_\pi Z=0$ and $\E_\pi Z^2\leq2N^{-\gamma-1}$.
+Since the empirical loss is $(Z-1)^2$, Jensen's inequality gives
+\begin{equation}
+ Z_{\rm like}:=\E_\pi e^{-N^\gamma(Z-1)^2/(2\lambda)}
+ \geq\exp[-N^\gamma/(2\lambda)-1/(\lambda N)].
+ \label{eq:negative-normalizer}
+\end{equation}
+The likelihood is at most one. Divide~\eqref{eq:negative-prior-tail} by~\eqref{eq:negative-normalizer}. Because $1+\gamma/2>\gamma\geq1$, the result tends to zero for every fixed $\varepsilon>0$ and $\lambda>0$. Hence $Z\to0$ in posterior probability.
+
+For raw second moments, condition on the hidden activations under the prior. The Gaussian readout gives conditional output variance at most $N^{-\gamma}$. Therefore
+\[
+ \E_\pi[Z^2\mathbf1_{\{|Z|>R\}}]
+ \leq2(R^2+2N^{-\gamma})e^{-R^2N^\gamma/2}.
+\]
+Divide again by~\eqref{eq:negative-normalizer}. For any fixed $R$ with $R^2>1/\lambda$, the posterior tail second moment tends to zero. On $|Z|\leq R$, convergence in probability and boundedness give convergence of the second moment to zero. Thus $\E_\Pi Z^2\to0$. Cauchy--Schwarz gives $\E_\Pi Z\to0$, proving both risk limits.
+
+Finally, a width-one teacher uses first-layer constant preactivation one, internal weight one, and readout $1/\tanh(\tanh1)<2$. It produces the constant output one and satisfies the internal restriction. This proves the oracle obstruction.
+\end{proof}
+
+The positive finite-scale theorem and this counterexample locate a threshold at $\gamma=2$ for the stated likelihood family and prior restriction. Strong-prior learning at each fixed width remains covered by Theorem~\ref{thm:oracle}. The negative theorem does not exclude other likelihood calibrations with additional width dependence, nor does it apply to a different robustness restriction.

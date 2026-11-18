@@ -1,0 +1,152 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,mathtools,booktabs,microtype}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Finite Gaussian Bayesian networks can compete with small approximating networks},pdfauthor={ChatGPT-6 Astra; Claude Opus 5.5; Kaarel H\"anni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}\newcommand{\N}{\mathbb N}
+\newcommand{\Prob}{\mathbb P}\newcommand{\clip}{\operatorname{clip}}
+\newcommand{\KL}{\operatorname{KL}}\newcommand{\Var}{\operatorname{Var}}
+\newcommand{\Rad}{\operatorname{Rad}}
+\title{Finite Gaussian Bayesian networks can compete with small approximating networks}
+\author{ChatGPT-6 Astra \and Claude Opus 5.5 \and Kaarel H\"anni \and
+Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{17 November 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+We prove squared-loss comparisons with the best small approximating network for finite Bayesian posteriors of fully connected tanh networks. Inputs and labels may have any bounded IID law; no exactly realizable teacher or noise model is assumed. The predictor is the ordinary posterior mean of the raw network output. At every learner width above a competitor's width, its risk is at most the competitor's risk plus a term that vanishes polynomially with sample count. The learner has independent Gaussian weights with the fixed width scaling $\sigma^2=N^{-\gamma}$, for every fixed $\gamma\ge1$, and a calibrated Gaussian likelihood. For $H\ge2$ hidden layers, the remainder at fixed competitor resources is $\widetilde O(n^{-1/H})$ when $\gamma\ge2$, and $\widetilde O(n^{-1/(2^{H+1}+3)})$ at mean-field scaling $\gamma=1$. A common polynomial calibration covers all exponents and widths on one sample event. One hidden layer gives a square-root rate for all $\gamma\ge1$. A sample-dependent overall prior prefactor recovers the sharper deep-network rate throughout this range. The proof combines norm-based capacity, Gaussian spectral truncation, and finite covers built from bounded-relative-entropy covariance sets. No prior over network sizes is introduced.
+\end{abstract}
+
+\section{Competing with an approximating network}
+Many prediction problems have no small network that describes the data exactly. A more useful comparison asks whether a Bayesian neural network, after $n$ observations, can approach the best population loss attainable by a much smaller network. Write
+\[
+ R(g)=\mathbb E(g(X)-Y)^2.
+\]
+We prove bounds of the form
+\[
+ R(\widehat f_S)\leq\inf_{g\in\mathcal G_n}R(g)+o(1),
+\]
+where $\mathcal G_n$ contains networks of polynomially growing width and bounded weights, and the learner may be arbitrarily wider. The leading coefficient on the comparison loss is one. Both model misspecification and bounded label noise are allowed.
+
+An additive remainder is necessary even for estimating an unknown constant mean. A weight bound is also material: a narrow network with large weights can vary on arbitrarily small input scales, while a Gaussian prior charges those weights. Our comparison classes therefore specify width and a weight cap. Appendix~\ref{width-only:sec:width-only-obstruction} makes this obstruction precise even in one dimension, with noiseless labels and input variance bounded below. These comparison classes are used only to state the guarantee; the learner is one fully connected network with a Gaussian prior, not a mixture over comparator architectures.
+
+\paragraph{The learner.}
+There are $H$ hidden tanh layers, a scalar linear readout, a constant first-layer input feature, and no internal biases. The total depth is $L=H+1$. At learner width $N$, the Gaussian weight variances are
+\[
+ \frac{N^{1-\gamma}}d\quad\hbox{in the first layer},\qquad
+ N^{-\gamma}\quad\hbox{in internal layers},\qquad
+ N^{-\gamma-1}\quad\hbox{in the readout}.
+\]
+For a deterministic calibration $\lambda_n>0$, the observation variance is $n\lambda_nN^{-\gamma}$. This is a tempered likelihood: it balances fit against the prior rather than requiring interpolation of noisy labels. Our results concern exact posterior inference; they do not provide an efficient inference algorithm.
+
+\paragraph{Finite priors at every exponent $\gamma\ge1$.}
+For any fixed input dimension, hidden depth, teacher resources, and confidence level, the following polynomial remainder bounds hold. All logarithmic factors are suppressed in this introductory table.
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Hidden layers & Width exponent & Remainder rate \\
+\midrule
+$H=1$ & every $\gamma\ge1$ & $n^{-1/2}$ \\
+$H\ge2$ & every $\gamma\ge2$ & $n^{-1/H}$ \\
+$H\ge2$ & $\gamma=1$ & $n^{-1/(2^{H+1}+3)}$ \\
+$H\ge2$ & each $1<\gamma<2$ & $n^{-\kappa_{H,\gamma}}$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+Here
+\[
+ b_H=\max\{1,(H-1)/2\},\qquad
+ \kappa_{H,\gamma}=
+ \frac{\gamma-1}{3(\gamma-1)+2b_H\gamma}>0.
+\]
+There is also one calibration, independent of $\gamma$, with remainder
+\[
+ \widetilde O\!\left(n^{-1/(2^{H+1}+2b_H+3)}\right)
+\]
+on a single sample event for every $\gamma\ge1$ and every integer learner width above the competitor's width (Theorem~\ref{thm:fixed-all-gamma-raw}). This common rate is $n^{-1/13}$, $n^{-1/21}$, and $n^{-1/38}$ for two, three, and four hidden layers. It improves the intermediate-scale guarantee near $\gamma=1$; the sharper separate endpoint bounds remain useful. No width limit or prior-strength limit is taken.
+
+\paragraph{How large may the competitor be?}
+Let $m$ be its width and $B\ge1$ its weight cap. A useful implementation-energy bound is
+\[
+ E=d(d+1)B^2+2Hm^2B^2.
+\]
+For $H\ge2$ and $\gamma\ge2$, width and weight cap may both be $n^\alpha$ for any $\alpha<1/(4H)$. At a fixed weight cap, width may be $n^\alpha$ for any $\alpha<1/(2H)$. At mean-field scaling the corresponding ranges are $\alpha<2^{-(H+3)}$ and $\alpha<2^{-(H+2)}$. A single all-exponent calibration permits both resources to grow as $n^\alpha$ for any $\alpha<1/[4(2^{H+1}+2b_H)]$, or width alone at twice this exponent when the weight cap is fixed. Every fixed intermediate exponent has the additional, sometimes sharper, range in Section~\ref{sec:fixed-above-one-raw}. For two hidden layers the common all-exponent ranges improve to $\alpha<1/36$ and $\alpha<1/18$, respectively. The calibrations depend on the specified class caps, not on the unknown data law or its best approximant.
+
+With one hidden layer, the ranges improve to $\alpha<1/4$ when width and weight cap grow together and $\alpha<1/2$ when the weight cap is fixed. These are comparisons with the best member of a compact class: a minimizing teacher exists and can be chosen before the sample is drawn.
+
+\paragraph{An additional scale parameter.}
+Replacing $N^{-\gamma}$ by $t_n^2N^{-\gamma}$, with an explicit positive $t_n$ decreasing with sample count, gives the faster $\widetilde O(n^{-1/H})$ deep-network rate for every $\gamma\ge1$. This remains a finite prior and one fixed architecture at each width. It is, however, a different sequence of priors indexed by sample count; the theorem is stated separately from the fixed-prefactor results.
+
+\paragraph{Why learner parameter counting does not give these bounds.}
+The learner's parameter count may greatly exceed $n$. The proof instead charges a functional complexity to the prior. For stronger scales, weighted norm and smooth-loss bounds suffice. In the intermediate regime, a typical Gaussian internal matrix has large Frobenius norm but much smaller operator norm; separating these contributions gives a more useful effective energy. At mean-field scaling, we cover the outputs associated with bounded relative entropy at each covariance layer. A Gaussian auxiliary measure on one finite architecture counts these approximants; it is solely a proof device. Posterior tail estimates then extend the bounds to raw, potentially unbounded predictions.
+
+\section{Model, risk, and prediction convention}
+\label{sec:gaussian-oracle}
+Let $d\ge1$, $H\ge1$, and $N\ge1$. Inputs lie in $[-1,1]^d$ and labels in $[-1,1]$. Their joint Borel law $D$ is otherwise arbitrary. A sample $S=((X_i,Y_i))_{i=1}^n$ is drawn independently from $D$. Set $\bar x=(1,x)$ and
+\[
+ h^1(x)=\tanh(W^1\bar x),\qquad
+ h^\ell(x)=\tanh(W^\ell h^{\ell-1}(x))\quad(2\le\ell\le H),
+ \qquad z_w(x)=v^\top h^H(x).
+\]
+There are no internal biases in the learner. This does not restrict the comparison to teachers without biases: a width-$m$ tanh teacher with all weights and hidden/readout biases bounded in absolute value by $B\ge1$ compiles exactly into this architecture at width $m+1$ and weight cap $2B$. Carry one constant neuron of value $1/2$ through each layer. Its first preactivation is $\operatorname{arctanh}(1/2)$ and each later self-edge is $2\operatorname{arctanh}(1/2)=\log3$; a bias $b$ becomes an incoming edge of weight $2b$ from this neuron. The same construction handles a readout bias. This comparison construction does not change the learner's prior. The total depth, including the linear readout, is $L=H+1$. The weighted energy is
+\begin{equation}
+ Q_N(w)=\frac dN\|W^1\|_F^2+\sum_{\ell=2}^H\|W^\ell\|_F^2+N\|v\|_2^2.
+ \label{eq:gaussian-energy}
+\end{equation}
+For statistical bounds we also use the energy after the first layer,
+\[ Q_N^+(w)=\sum_{\ell=2}^H\|W^\ell\|_F^2+N\|v\|_2^2. \]
+The prior $\mu_{N,\sigma}$ gives all weight coordinates independent centered Gaussian laws with variances $N\sigma^2/d$, $\sigma^2$, and $\sigma^2/N$ in the three layer types. Its density is proportional to $\exp[-Q_N/(2\sigma^2)]$. Given $\lambda>0$, observations have Gaussian likelihood with mean $z_w(X_i)$ and variance $n\lambda\sigma^2$. Thus
+\[
+ \Pi_{N,\sigma,S}(dw)=Z^{-1}
+       \exp\!\left[-\frac{\widehat R_S(z_w)}{2\lambda\sigma^2}\right]
+       \mu_{N,\sigma}(dw),
+ \qquad \widehat R_S(f)=\frac1n\sum_i(f(X_i)-Y_i)^2.
+\]
+Our main predictor is $\widehat f_S(x)=\int z_w(x)\,d\Pi_{N,\sigma,S}(w)$.
+The stronger bounds proved below control $\int R(z_w)\,d\Pi$, so Jensen's inequality gives the same bound for $R(\widehat f_S)$. The readout and bounded hidden activations imply $|z_w(x)|\le\sqrt{Q_N(w)}$; all these integrals are finite. Clipping to $[-1,1]$ can only decrease squared loss against these labels, but is not part of the main prediction convention.
+
+\input{capacity}
+\input{fixed-scale}
+\input{effective-energy}
+\input{all-scales}
+\input{first-layer}
+\input{small-width}
+\input{above-one}
+\input{meanfield-cover}
+\input{meanfield-raw}
+\input{scaled-cover}
+\input{common-scale-cover}
+\input{simultaneous-scales}
+\input{all-gamma}
+\input{two-layer-refinement}
+
+\section{Scope and remaining questions}
+The fixed-prefactor results give polynomial oracle bounds simultaneously for every $\gamma\ge1$ and all learner widths above the comparison width, with the ordinary raw posterior mean. They require bounded inputs and labels, a specified competitor weight cap, and the stated likelihood calibration. They do not require target realizability or a correct observation-noise model.
+
+Whether fixed-prefactor mean-field scaling attains the $\widetilde O(n^{-1/H})$ rate remains open. Our covariance cover proves a polynomial bound there, but its exponent worsens exponentially with hidden depth. Even at stronger scales, the unrestricted tanh bound has a sample exponent that worsens with depth. These results therefore do not give a polynomial jointly in teacher width and depth, nor a guarantee based only on parameter count.
+
+The likelihood calibration is essential to the conclusion. Very tight conditioning can favor memorization of noise; excessive regularization can prevent approximation of a rapidly varying regression function. The positive results do not cover an arbitrary likelihood variance, efficient posterior computation, or equivalence with gradient descent.
+
+\appendix
+\input{width-only}
+
+\begin{thebibliography}{9}
+\bibitem{sst}
+Nathan Srebro, Karthik Sridharan and Ambuj Tewari.
+\emph{Smoothness, Low Noise and Fast Rates}.
+Advances in Neural Information Processing Systems 23, 2010.
+\url{https://www.cs.cornell.edu/~sridharan/smoothness.pdf}.
+\bibitem{previous}
+ChatGPT-6 Astra, Claude Opus 5.5, Kaarel H\"anni and Dmitry Vaintrob.
+\emph{Sharper agnostic bounds for dense Gaussian Bayesian neural networks}.
+Research manuscript, November 2026.
+\url{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/works-in-progress/agnostic-oracle-improvements}.
+\end{thebibliography}
+\end{document}

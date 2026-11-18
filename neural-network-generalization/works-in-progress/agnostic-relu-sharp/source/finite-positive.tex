@@ -1,0 +1,118 @@
+\section{The same upper threshold at finite Gaussian prior scales}
+\label{sec:finite-positive}
+
+The positive theorem also holds for the actual posterior at canonical Gaussian scales, without taking a strong-prior limit. Put $\sigma^2=N^{-\gamma}$ and assume either $\gamma\geq2$, or $H=1$ and $\gamma\geq1$. Let
+\[
+ P_N=N(d+2)+(H-1)N^2,\qquad D_0=d+H+1.
+\]
+In these regimes $P_N\sigma^2\leq D_0$ and $N\sigma^2\leq1$.
+
+\begin{lemma}[A Gaussian perturbation of a balanced ReLU network]
+\label{lem:finite-perturbation}
+Suppose a deterministic network has each weighted layer energy at most $e$, and let $E=Le$. Add independent Gaussian noise with covariance $r^2$ times the original prior covariance, where $0<r\leq1$. If $N\sigma^2\leq1$, then at every input in $[-1,1]^d$ the output satisfies
+\[
+ \left(\E|z_{w+\xi}(x)-z_w(x)|^2\right)^{1/2}
+ \leq rK_E,\qquad K_E=\sqrt2 L(\sqrt e+1)^H.
+\]
+\end{lemma}
+\begin{proof}
+Use hidden-state Euclidean norms divided by $\sqrt N$, and let $b_\ell$ be the $L^2$ norm of the perturbed layer-$\ell$ state in that normalization. The first deterministic layer has normalized output norm at most $\sqrt{2e}$; its Gaussian perturbation has normalized $L^2$ norm at most $\sqrt2r$, because $N\sigma^2\leq1$. Every later deterministic hidden matrix has operator norm at most $\sqrt e$. Independence of the current Gaussian matrix from the preceding layers gives normalized $L^2$ noise contribution at most $r b_{\ell-1}$. ReLU is $1$-Lipschitz and vanishes at zero. Thus
+\[
+ b_1\leq\sqrt2(\sqrt e+r),\qquad
+ b_\ell\leq(\sqrt e+r)b_{\ell-1},\qquad
+ b_\ell\leq\sqrt2(\sqrt e+r)^\ell.
+\]
+Let $\Delta_\ell$ be the normalized $L^2$ difference from the deterministic state. Then
+\[
+ \Delta_1\leq\sqrt2r,\qquad
+ \Delta_\ell\leq\sqrt e\,\Delta_{\ell-1}+r b_{\ell-1}
+ \leq\sqrt2\ell r(\sqrt e+r)^{\ell-1}.
+\]
+The deterministic readout has $\sqrt N\|v\|_2\leq\sqrt e$, while its independent Gaussian noise contributes output $L^2$ norm at most $r b_H$, since $\sigma^2\leq1$. The total error is at most
+$\sqrt e\,\Delta_H+r b_H\leq\sqrt2 Lr(\sqrt e+r)^H$, proving the bound.
+\end{proof}
+
+Let $g$ be the teacher from Lemma~\ref{lem:teacher}, use its exact balanced clone, and define
+\begin{equation}
+ K_g=\sqrt2 L(\sqrt{E/L}+1)^H,\qquad
+ G_g(\lambda)=E+1+D_0\log2+
+       2D_0\log\frac{4K_g(U+1)}\lambda.
+ \label{eq:finite-G}
+\end{equation}
+
+\begin{lemma}[Finite-posterior comparison]
+\label{lem:finite-comparison-relu}
+For $0<\lambda\leq1$, the actual posterior satisfies, on every sample,
+\begin{equation}
+ \int[\empRisk_S(z_w)+(\lambda/2)Q_N(w)]d\Pi
+       \leq\empRisk_S(g)+\lambda G_g(\lambda).
+ \label{eq:finite-comparison-relu}
+\end{equation}
+\end{lemma}
+\begin{proof}
+For any law $\rho$ relative to the Gaussian prior $\mu$, its quadratic-energy exponential moment gives
+\[
+ \int Q_Nd\rho\leq4\sigma^2\KL(\rho\|\mu)+2D_0\log2.
+\]
+Take as comparison measure the Gaussian perturbation in Lemma~\ref{lem:finite-perturbation} with $r=\lambda/[4K_g(U+1)]$. Its expected empirical loss is at most $\empRisk_S(g)+\lambda$, since the pointwise output root mean square error is at most $\lambda/[4(U+1)]$. Its relative entropy obeys
+\[
+ 2\lambda\sigma^2\KL(\rho\|\mu)
+ \leq\lambda E+2\lambda D_0\log(1/r).
+\]
+Apply the Gibbs variational principle to compare the posterior's penalized empirical loss with this measure. The preceding energy inequality turns the posterior's relative-entropy penalty into $(\lambda/2)\int Q_Nd\Pi$, at the extra cost $\lambda D_0\log2$. This is exactly~\eqref{eq:finite-comparison-relu}.
+\end{proof}
+
+We next give the weighted tail bound needed for raw risk. Put
+\[
+ T_0=8+2D_0\log2,\qquad M_L=1+(2D_0+4L)^L,
+ \qquad F(w)=\empRisk_S(z_w)+\lambda Q_N(w).
+\]
+For every sample and $0<\lambda\leq1$,
+\begin{equation}
+ \int(1+Q_N^L)\Ind_{\{F>T_0\}}d\Pi\leq M_Le^{-1/\lambda}.
+ \label{eq:finite-objective-tail}
+\end{equation}
+Indeed, Gaussian symmetry at each ReLU layer gives prior output second moment at most $\sigma^2$. The first-layer normalized second moment is at most $N\sigma^2$, each internal layer multiplies it by $N\sigma^2/2$, and the readout multiplies it by $\sigma^2$. Hence the likelihood normalizer is at least $\exp[-(1+\sigma^2)/(2\lambda\sigma^2)]$ by Jensen. On $F>T_0$, split its exponent into the constant $T_0/2$ and $\lambda Q_N/2$. The resulting Gaussian integral changes covariance from $\sigma^2$ to $2\sigma^2$, introducing $2^{P_N/2}$. Under that Gaussian,
+\[
+ \E Q_N^L=(2\sigma^2)^L\prod_{j=0}^{L-1}(P_N+2j)
+              \leq(2D_0+4L)^L.
+\]
+The remaining exponential factor is at most $e^{-1/(\lambda\sigma^2)}\leq e^{-1/\lambda}$ by the choice of $T_0$, proving~\eqref{eq:finite-objective-tail}. The raw-risk contribution of this tail is at most $2M_Le^{-1/\lambda}$, since $v\leq1$ in the amplitude bound of Lemma~\ref{lem:capacity}.
+
+For the finite-scale statistical constants, retain $p,v,\kappa,V$ from~\eqref{eq:calibration}, but set
+\begin{align}
+ J_f&=\lceil\log_2(T_0n)\rceil,&
+ u_f&=\frac1n\log\frac{2(J_f+1)}\delta,\notag\\
+ A_f&=C_0\left[\frac{\sqrt2\kappa\log^{3/2}(2n)}{\sqrt n}
+                      +V\sqrt{u_f}\right],&
+ a_f&=2^pA_f,\notag\\
+ r_f&=\sqrt{T_0}A_f+A_f^2,&
+ \lambda_f&=\max\{1/n,[4a_fT_0^{p-1/2}]^{1/p}\}.
+ \label{eq:finite-positive-calibration}
+\end{align}
+
+\begin{theorem}[Actual finite-scale raw oracle inequality]
+\label{thm:finite-upper-relu}
+Suppose $\lambda_f\leq1$. With probability at least $1-\delta$, simultaneously at every learner width $N\geq m$ and every allowed exponent $\gamma$, the actual posterior with $\lambda=\lambda_f$ satisfies
+\begin{align}
+ \int\Risk(z_w)d\Pi\leq\Risk(g)+\lambda_fG_g(\lambda_f)+r_f
+ &+(U+1)\sqrt{\frac{2\Risk(g)\log(2/\delta)}n}\notag\\
+ &+\frac{2(U+1)^2\log(2/\delta)}{3n}
+              +2M_Le^{-1/\lambda_f}.
+ \label{eq:finite-upper-relu}
+\end{align}
+The ordinary raw posterior mean and the clipped conventions satisfy the same bound.
+\end{theorem}
+\begin{proof}
+Apply the smooth-loss inequality to energy radii $2^j$, $0\leq j\leq J_f$, with total failure probability $\delta/2$. On $F\leq T_0$, the empirical loss is at most $T_0$ and $Q_N\leq T_0/\lambda_f\leq T_0n$. For an energy shell of radius $K$, the deviation is at most
+$\sqrt{T_0}A_fK^p+A_f^2K^{2p}$.
+The unit shell is covered by $r_f$. For energy $q>1$, use $K\leq2q$ and $q\leq T_0/\lambda_f$. Since
+$\lambda_f^p\geq4a_fT_0^{p-1/2}$, the two terms are at most $\lambda_fq/4$ and $\lambda_fq/16$, respectively. Therefore
+\[
+ \Risk(z_w)\leq\empRisk_S(z_w)+(\lambda_f/2)Q_N(w)+r_f
+ \quad\text{on }F\leq T_0.
+\]
+Integrate this inequality, use~\eqref{eq:finite-objective-tail} for the raw-risk tail, and apply Lemma~\ref{lem:finite-comparison-relu}. Bernstein's inequality for the fixed teacher, with the remaining failure probability $\delta/2$, completes the bound. All sample classes are unions over widths and do not involve $\gamma$, so the event is common to the asserted parameters. Jensen and clipping give the other predictions.
+\end{proof}
+
+For fixed depth and input dimension, $\lambda_f=\widetilde O(n^{-1/L})$. The additional terms in $G_g$ are logarithmic in teacher resources. Thus Corollary~\ref{cor:growing} holds with the same strict exponent condition $Ha+Lb<1/2$ and the same rate $\widetilde O(n^{-(1-2Ha-2Lb)/L})$ for these actual finite posteriors, simultaneously over all eligible widths and allowed $\gamma$.

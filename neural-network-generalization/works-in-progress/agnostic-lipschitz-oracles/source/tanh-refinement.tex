@@ -1,0 +1,134 @@
+\section{A sharper bound for tanh}
+\label{sec:lipschitz-tanh-raw}
+
+Tanh has an additional useful property: its last hidden layer is bounded
+coordinatewise by one. On the same Gaussian norm event, the output has
+amplitude $\sqrt K$, even though its Lipschitz constant can be as large
+as $K^{(H+1)/2}$. The smaller loss range improves the statistical bound.
+
+Use the preceding architecture with $\phi=\tanh$, and put
+\[
+ a_{d,H}=1+\frac{d(H+1)}2,\qquad b_d=d+2,
+ \qquad s_{d,H}=\max\{a_{d,H},b_d\}.
+\]
+In the teacher-cylinder definitions take $A=1$ and $U=mB$.
+In particular $\rho=\lambda/[4(U+1)]$ and
+$\mathcal A_g(\rho)$ is the cost in
+Lemma~\ref{lem:general-activation-cylinder}.
+
+\begin{theorem}[A sharper raw oracle bound for tanh]
+\label{thm:lipschitz-tanh-raw}
+There is a finite computable constant $C_{d,H}$ such that the following
+holds. Suppose $n\geq2$, $0<\lambda\leq\epsilon\leq1$,
+$0<\delta<1$, and
+\begin{equation}
+ n\geq C_{d,H}
+   \log^6\!\frac{2n}{\lambda\epsilon\delta}\,
+   \lambda^{-a_{d,H}}\epsilon^{-(b_d-a_{d,H})_+}.
+ \label{eq:lipschitz-tanh-budget}
+\end{equation}
+For every fixed width-$m$, weight-$B$ teacher $g$ with $B\geq1$,
+with probability at least $1-\delta$, simultaneously for all learner
+widths $N\geq m$ and all Gaussian scales $0<\tau\leq1$,
+\begin{align}
+ \int R(z_w)\,\Pi_{N,\tau,S}(dw)
+ \leq\;&R(g)+2\lambda\mathcal A_g(\rho)+C_{d,H}\epsilon
+ \notag\\
+ &+(U+1)\sqrt{\frac{2R(g)\log(2/\delta)}n}
+       +\frac{2(U+1)^2\log(2/\delta)}{3n}.
+ \label{eq:lipschitz-tanh-oracle}
+\end{align}
+The ordinary raw-output posterior mean and the clipped prediction
+conventions obey the same bound. In particular, one event covers every
+original prior exponent $\gamma\geq1$ and every eligible width.
+
+For fixed teacher resources, input dimension, depth, and confidence,
+setting $\epsilon=\lambda$ gives excess
+\begin{equation}
+ \widetilde O\!\left(n^{-1/s_{d,H}}\right).
+ \label{eq:lipschitz-tanh-rate}
+\end{equation}
+At $d=1$, the exponents for two, three, and four hidden layers are
+$1/3$, $1/3$, and $2/7$. Joint width and weight caps
+$m,B\leq n^\alpha$ are allowed with vanishing oracle excess whenever
+\begin{equation}
+ \alpha<\frac1{4a_{d,H}}=\frac1{4+2d(H+1)}.
+ \label{eq:lipschitz-tanh-growing}
+\end{equation}
+At a fixed weight cap, the sufficient width exponent is twice as large.
+\end{theorem}
+
+\begin{proof}
+Use the same continuous norm quantity $K(w)$ and its exponential moment
+\eqref{eq:general-activation-norm-mgf}. For tanh, the prior empirical
+risk has expectation at most two, and
+$\int R(z_w)^2d\mu\leq24$: the last-layer bound gives
+$|z_w|^2\leq N\|v\|^2$, whose first and second prior moments are at
+most one and three. Thus $Z\geq e^{-\omega/\lambda}$.
+
+Take $k_j=128\cdot2^j$ up to the least $J$ with $k_J\geq160/\lambda$,
+and cover tolerances $a_j=c_*(\epsilon+\lambda k_j)$ for a sufficiently
+small fixed $c_*>0$. Lemma~\ref{lem:lipschitz-output-cover} supplies
+covers of amplitude at most $\sqrt{k_j}$ and logarithmic cardinality
+\[
+ C_{d,H}k_j^{d(H+1)/2}a_j^{-d}
+                 \log(C_{d,H}k_j/a_j).
+\]
+Apply Lemma~\ref{lem:finite-cover-bernstein} with total failure
+probability $\delta/2$. On empirical risk at most ten, the same
+square-root-risk transfer as in the preceding proof gives
+\[
+ R(z_w)\leq\widehat R_S(z_w)+\lambda K(w)/16+C_{d,H}\epsilon
+ \quad\text{if } K(w)\leq k_J,
+\]
+provided the sample count dominates, up to the displayed logarithms,
+\begin{equation}
+ \max_{128\leq k\leq320/\lambda}
+       \frac{k^{a_{d,H}}}{(\epsilon+\lambda k)^{b_d}}.
+ \label{eq:lipschitz-tanh-maximization}
+\end{equation}
+The confidence contribution alone is at most a constant times
+$1/(\lambda\epsilon)$ and is also absorbed by
+\eqref{eq:lipschitz-tanh-budget}. The proof uses finite covers common
+to all widths and scales.
+
+If $a_{d,H}<b_d$, substitute $u=\lambda k/\epsilon$ to bound
+\eqref{eq:lipschitz-tanh-maximization} by
+\[
+ \lambda^{-a_{d,H}}\epsilon^{a_{d,H}-b_d}
+      \sup_{u>0}\frac{u^{a_{d,H}}}{(1+u)^{b_d}}
+ \leq C_{d,H}\lambda^{-a_{d,H}}
+                         \epsilon^{-(b_d-a_{d,H})}.
+\]
+If $a_{d,H}\geq b_d$, use $\epsilon+\lambda k\geq\lambda k$ and
+$k\leq320/\lambda$ to obtain the bound
+$C_{d,H}\lambda^{-a_{d,H}}$.
+These are the powers in \eqref{eq:lipschitz-tanh-budget}.
+There is no minimum-width threshold.
+
+The omitted empirical-risk and norm regions have weighted posterior
+risks at most $2e^{-4\omega/\lambda}$ and
+$\sqrt{24(H+1)}e^{-4\omega/\lambda}$, respectively, by the same
+calculation as in the preceding proof. Integrate the raw deviation,
+apply the posterior entropy comparison, and condition the prior on
+the teacher cylinder. The tails and the resulting $O_H(\lambda)$
+terms are absorbed by $C_{d,H}\epsilon$ because $\lambda\leq\epsilon$.
+One fixed-teacher Bernstein event, with failure at most $\delta/2$,
+gives the displayed population-risk terms. Jensen proves the statement
+for the ordinary posterior mean.
+
+Setting $\epsilon=\lambda$ gives sample power
+$a_{d,H}+(b_d-a_{d,H})_+=s_{d,H}$.
+For growing teacher caps, choose
+$\lambda=n^{-\theta}$ and $\epsilon=n^{-\eta}$ with
+\[
+ 4\alpha<\theta<1/a_{d,H},\qquad
+ 0<\eta\leq\theta,\qquad
+ a_{d,H}\theta+(b_d-a_{d,H})_+\eta<1.
+\]
+Such choices exist under \eqref{eq:lipschitz-tanh-growing}.
+The compact capped class has a population-risk minimizer of risk at
+most one, since zero is available. Its energy penalty, logarithmic
+cylinder cost, and Bernstein terms all vanish under this calibration.
+At a fixed weight cap replace $4\alpha$ by $2\alpha$.
+\end{proof}

@@ -1,0 +1,215 @@
+\section{Finite prior scales with the same polynomial rate}
+\label{sec:finite}
+
+The strong-prior limit can be avoided in a range of Gaussian scalings. In this section all internal gain bounds equal one, and inputs lie in $[-1,1]^d$. We set $\sigma^2=N^{-\gamma}$ and use the actual posterior~\eqref{eq:posterior}. The allowed regimes are
+\begin{equation}
+ \gamma\geq2\text{ at every depth},
+ \qquad\text{or}\qquad H=1\text{ and }\gamma\geq1.
+ \label{eq:finite-regimes}
+\end{equation}
+The activation class and the raw prediction conventions are unchanged. We compare with the population minimizer in $\mathcal G_{m,B,H}(\boldsymbol1)$. Put
+\[
+ E=d(d+1)B^2+2(H-1)m+2m^2B^2,\qquad U=mB.
+\]
+
+\subsection{Readout energy and a comparison distribution}
+
+\begin{lemma}[Entropy controls readout energy]
+\label{lem:finite-entropy}
+Let $\pi$ be the Gaussian prior conditioned on the internal row-sum restriction, and let $q_N=N\|v\|_2^2$. If $\gamma\geq1$, then for every probability measure $\rho$ with finite relative entropy,
+\begin{equation}
+ \int q_N\,d\rho\leq4\sigma^2\operatorname{KL}(\rho\|\pi)+M,
+ \qquad M=2\log2.
+ \label{eq:finite-entropy}
+\end{equation}
+Also $\pi(q_N>u)\leq\exp[-(u-M)/(4\sigma^2)]$.
+\end{lemma}
+\begin{proof}
+Conditioning internal matrices leaves the independent readout Gaussian unchanged. Thus $q_N/\sigma^2$ has the chi-square distribution with $N$ degrees of freedom and
+\[
+ \log\int e^{q_N/(4\sigma^2)}d\pi
+   =\frac N2\log2\leq\frac M{4\sigma^2},
+\]
+since $N\sigma^2\leq1$. The entropy variational inequality gives~\eqref{eq:finite-entropy}; the tail follows by Markov's inequality.
+\end{proof}
+
+For the comparison construction, define
+\begin{equation}
+ \eta=\frac1{8n(U+1)(2UH+1)},\qquad \tau=\eta/4,
+ \qquad
+ T=E+2(d+H+1)\log(1/\tau)+2(H-1)\log(4/3).
+ \label{eq:finite-T}
+\end{equation}
+
+\begin{lemma}[An admissible finite-scale teacher neighborhood]
+\label{lem:finite-comparison}
+For every teacher $g\in\mathcal G_{m,B,H}(\boldsymbol1)$, every $N\geq m$, and every regime in~\eqref{eq:finite-regimes}, there is a probability measure $\rho$ supported on the prior restriction such that, on every sample from the bounded input domain,
+\begin{equation}
+ \int\widehat R_S(z_w)d\rho\leq\widehat R_S(g)+\frac1{2n},
+ \qquad
+ 2\lambda\sigma^2\operatorname{KL}(\rho\|\pi)\leq\lambda T.
+ \label{eq:finite-comparison}
+\end{equation}
+\end{lemma}
+\begin{proof}
+Start with the exact balanced clone of $g$. Multiply its internal matrices by $1-\eta$, leaving the first layer and readout unchanged. Around this mean add Gaussian noise with covariance $\tau^2$ times the original prior covariance. Condition each internal noise row, separately, to have absolute row sum at most $\eta$.
+
+In the deep regime $N\sigma\leq1$, so the unconditioned expected absolute sum of such a row is at most $\tau$. Each row event has probability at least $3/4$ by Markov's inequality. The perturbed internal mean has row sum at most $1-\eta$, so the resulting measure $\rho$ is supported on the required restriction. All noises remain centered, by the coordinate-sign symmetries of their conditioning events.
+
+Let $P=N(d+2)+(H-1)N^2$ be the number of coordinates. In both regimes, $\sigma^2P\leq d+H+1$. The log density ratio of the unconditioned Gaussian perturbation to the original Gaussian is
+\[
+ P\log(1/\tau)+\frac{Q_N(w_0)}{2\sigma^2}
+ +\text{a mean--noise cross term}
+ +(1-\tau^{-2})\frac{Q_N(w-w_0)}{2\sigma^2},
+\]
+where $w_0$ is the shrunken mean. The cross term averages to zero under $\rho$; the last term is nonpositive. Conditioning the noise rows adds at most $N(H-1)\log(4/3)$ to relative entropy. Conditioning the reference prior adds $\log\mu_\sigma(\mathcal S_N)\leq0$, which may be dropped. Since $Q_N(w_0)\leq E$, this proves the entropy part of~\eqref{eq:finite-comparison}.
+
+For the risk estimate, first suppose $H\geq2$ and $\gamma\geq2$. Let $e_\ell$ be the maximum absolute hidden-activation difference from the exact teacher clone at a fixed input. First-layer noise preactivations have Gaussian variance at most $2\tau^2N\sigma^2$. A Gaussian union tail gives
+\[
+ \E e_1^2\leq4\tau^2N\sigma^2\{\log(2N)+1\}\leq8\tau^2.
+\]
+For an internal noise row and a vector $h\in[-1,1]^N$, the unconditioned noise inner product is Gaussian with variance at most $\tau^2N\sigma^2$. Conditioning the row event changes its tail by a factor at most $4/3$. A union bound over rows and integration of the Gaussian tail show that the maximum $Z_\ell$ of these row-noise inner products satisfies
+\[
+ \E Z_\ell^2
+ \leq2\tau^2N\sigma^2\{\log(8N/3)+1\}\leq6\tau^2.
+\]
+The same calculation is valid conditionally on the previous layers, which are independent of this layer's noise rows. Internal nonexpansiveness gives the pointwise recursion
+$e_\ell\leq e_{\ell-1}+\eta+Z_\ell$. Minkowski's inequality therefore yields
+\[
+ (\E e_H^2)^{1/2}\leq3H\tau+(H-1)\eta\leq2H\eta.
+\]
+The exact cloned readout has absolute coefficient sum at most $U$. Its independent Gaussian perturbation contributes output variance at most $\tau^2\sigma^2\leq\tau^2$. Consequently
+\begin{equation}
+ \left(\int|z_w(x)-g(x)|^2d\rho\right)^{1/2}
+ \leq(2UH+1)\eta=\frac1{8n(U+1)}.
+ \label{eq:finite-output-perturbation}
+\end{equation}
+
+If $H=1$ and $\gamma\geq1$, no internal conditioning is present. Every first-layer activation perturbation has $L^2$ norm at most $\sqrt2\tau$, because $N\sigma^2\leq1$. Apply Minkowski directly with the cloned readout's absolute coefficient sum at most $U$, and add its noise contribution. This gives~\eqref{eq:finite-output-perturbation} in this case as well, without taking a maximum over the first-layer neurons.
+
+Since $|g(x)-y|\leq U+1$, Cauchy--Schwarz and~\eqref{eq:finite-output-perturbation} bound the expected loss increase by
+$1/(4n)+1/(64n^2(U+1)^2)\leq1/(2n)$ at each observation. This proves the risk part.
+\end{proof}
+
+\subsection{The finite-posterior oracle inequality}
+
+The following constants depend on the teacher-class resources, the sample size, and the confidence level, but not on $N$ or $\gamma$:
+\begin{align}
+ h_n&=(U+1)\sqrt{\frac{2\log(2/\delta)}n}
+             +\frac{2(U+1)^2\log(2/\delta)}{3n},\notag\\
+ B_n^0&=M+2n(1+h_n)+2T+6,
+ & K_n&=B_n^0+16\log(4nB_n^0),\notag\\
+ J_n^f&=\lceil\log_2K_n\rceil,
+ &q_n^f&=\frac{\log(2(J_n^f+1)/\delta)}n.\notag
+\end{align}
+In the definitions of $D_n,A_n,a_n$ in~\eqref{eq:constants}, set $G=1$. Define
+\begin{equation}
+ b_n^f=a_n+2\sqrt{2q_n^f},\qquad
+ c_n^f=a_n^2+8q_n^f,\qquad
+ D_\lambda=1+h_n+\lambda T+\frac1{2n}.
+ \label{eq:finite-statistical-constants}
+\end{equation}
+The superscript $f$ merely distinguishes these finite-scale constants from the earlier strong-prior ones.
+
+\begin{theorem}[Actual finite posterior, raw predictions]
+\label{thm:finite-oracle}
+Suppose $n\geq2$, $0<\delta<1$, and
+\begin{equation}
+ 1/n\leq\lambda\leq1,\qquad \lambda\geq8C_*c_n^f.
+ \label{eq:finite-calibration-condition}
+\end{equation}
+With sample probability at least $1-\delta$, simultaneously for every $N\geq m$ and every $\gamma$ in~\eqref{eq:finite-regimes},
+\begin{align}
+ R(\bar z_{\sigma,N,S})
+ \leq\int R(z_w)\,\Pi_{\sigma,N,S}(dw)
+ \leq\min_{g\in\mathcal G_{m,B,H}(\boldsymbol1)}R(g)
+ &+h_n+\lambda T+\frac{C_*^2(b_n^f)^2D_\lambda}{\lambda}\notag\\
+ &+C_*b_n^f\sqrt{D_\lambda(M+1)}
+    +C_*c_n^f(M+1)+\frac5{2n}.
+ \label{eq:finite-oracle}
+\end{align}
+Here $\sigma^2=N^{-\gamma}$, with no limiting operation. The clipped prediction variants are covered too.
+\end{theorem}
+\begin{proof}
+Choose a deterministic population-risk minimizer $g$ in the teacher class. As before $R(g)\leq1$, and with probability at least $1-\delta/2$, Bernstein's inequality gives $\widehat R_S(g)\leq R(g)+h_n$. Work first on this event.
+
+Write $\Pi=\Pi_{\sigma,N,S}$ and
+\[
+ I=2\lambda\sigma^2\operatorname{KL}(\Pi\|\pi),\qquad
+ F=\int\widehat R_S(z_w)d\Pi+I.
+\]
+The Gibbs variational principle and Lemma~\ref{lem:finite-comparison} imply
+\begin{equation}
+ F\leq R(g)+h_n+\lambda T+1/(2n)\leq D_\lambda.
+ \label{eq:finite-free-energy}
+\end{equation}
+All these entropies and expectations are finite by Gaussian tails and the positive comparison density.
+
+Let $Z=\int\exp[-\widehat R_S/(2\lambda\sigma^2)]d\pi$ be the likelihood normalizer. The same variational identity says $-2\lambda\sigma^2\log Z=F$. Dropping the likelihood in the numerator and using Lemma~\ref{lem:finite-entropy},
+\[
+ \Pi(q_N>u)
+ \leq\exp\left[-\frac{u-M-2D_\lambda/\lambda}{4\sigma^2}\right].
+\]
+Because $\lambda\geq1/n$,
+$D_\lambda/\lambda\leq n(1+h_n)+T+1/2$. The cutoff $K_n$ was chosen so that integration of this tail gives
+\begin{equation}
+ \int(1+q_N)\mathbf1_{\{q_N>K_n\}}d\Pi\leq1/n.
+ \label{eq:finite-readout-tail}
+\end{equation}
+For an explicit check, let $a=M+2D_\lambda/\lambda\leq B_n^0-5$. Since $\sigma^2\leq1$, the left side is at most
+$(K_n+5)e^{-(K_n-a)/4}$.
+The inequality $\log(4nB_n^0)\leq4nB_n^0$ gives
+$K_n+5\leq70nB_n^0$, and hence this expression is less than $1/n$.
+
+Apply Lemma~\ref{lem:sst} to the readout-energy classes $\mathcal F_{2^j}$, $0\leq j\leq J_n^f$, with failure probability $\delta/[2(J_n^f+1)]$. On the resulting common-width event, for every network with $k=q_N\leq K_n$,
+\begin{equation}
+ R(z_w)-\widehat R_S(z_w)
+ \leq C_*b_n^f\sqrt{(1+k)\widehat R_S(z_w)}
+                       +C_*c_n^f(1+k).
+ \label{eq:finite-global-deviation}
+\end{equation}
+For $k>1$, use the least dyadic radius containing $k$, which is at most $2k$. For $k\leq1$, use the unit-radius bound. Unlike the minimizer argument, this estimate does not assume $\widehat R_S(z_w)\leq1$.
+
+By Lemma~\ref{lem:finite-entropy} and~\eqref{eq:finite-free-energy},
+\[
+ \int(1+q_N)d\Pi\leq M+1+2I/\lambda,
+ \qquad \int\widehat R_S(z_w)d\Pi\leq D_\lambda.
+\]
+Integrating~\eqref{eq:finite-global-deviation}, using Cauchy--Schwarz and~\eqref{eq:finite-readout-tail}, yields
+\begin{align*}
+ \int R(z_w)d\Pi
+ \leq \int\widehat R_S(z_w)d\Pi
+ &+C_*b_n^f\sqrt{D_\lambda(M+1+2I/\lambda)}\\
+ &+C_*c_n^f(M+1+2I/\lambda)+2/n.
+\end{align*}
+Here the omitted tail risk is at most $2/n$ because $R(z_w)\leq2(1+q_N)$. The calibration absorbs the term $2C_*c_n^fI/\lambda$ into $I/4$. Split the square root and use
+\[
+ C_*b_n^f\sqrt{2D_\lambda I/\lambda}
+ \leq I/2+C_*^2(b_n^f)^2D_\lambda/\lambda.
+\]
+The terms involving $I$ total at most $3I/4$, so they are paid by the retained relative-entropy penalty in $F$. Using~\eqref{eq:finite-free-energy} now proves~\eqref{eq:finite-oracle}. Jensen and clipping give the other predictions. All events were independent of $N$ and $\gamma$, proving the claimed simultaneity.
+\end{proof}
+
+A useful calibration is
+\begin{equation}
+ \lambda=\max\left\{
+ \frac{\sqrt2C_*b_n^f}{\sqrt{T+1}},\ 8C_*c_n^f,\ 1/n\right\}.
+ \label{eq:finite-optimized-calibration}
+\end{equation}
+When $\lambda\leq1$ and $D_\lambda\leq2$, the two main terms satisfy
+\[
+ \lambda T+\frac{C_*^2(b_n^f)^2D_\lambda}{\lambda}
+ \leq2\sqrt2C_*b_n^f\sqrt{T+1}+8C_*c_n^fT+T/n.
+\]
+Both conditions hold eventually in the growing-class regimes below. Since
+$T=E+O((d+H)\log(n(U+1)(UH+1)))$, the finite theorem gives
+\begin{equation}
+ \widetilde O\left(
+   \frac{\sqrt{(d+1)(E+d+H)}+U+1}{\sqrt n}
+   +\frac{(d+1)(E+d+H)+(U+1)^2}{n}\right)
+ \label{eq:finite-rate}
+\end{equation}
+as its oracle excess. The suppressed factors are logarithms in the displayed resources, $n$, and $1/\delta$, never a learner-width factor.
+
+At fixed $d,B\geq1$, the sufficient sample dependence is again
+$\widetilde O((m^2+Hm)/\varepsilon^2)$. Thus both the growing-width exponents in Corollary~\ref{cor:growing} and the strict power conditions $m_n=n^\alpha$, $H_n=n^\beta$, $2\alpha<1$, $\alpha+\beta<1$ hold for the finite posterior in~\eqref{eq:finite-regimes}, now on the bounded input domain. This does not establish the same deep-network result for $1\leq\gamma<2$.

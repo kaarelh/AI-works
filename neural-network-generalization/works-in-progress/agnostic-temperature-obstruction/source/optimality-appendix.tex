@@ -1,0 +1,119 @@
+\appendix
+\section{The tanh memorizer's energy exponent is optimal}
+\label{app:memorizer-optimality}
+The exponent $n^{1/H}$ in Lemma~\ref{lem:memorizer} cannot be replaced by $n^{1/(H+1)}$ times logarithmic factors for arbitrary-label tanh memorization. We prove this even when first-layer weights are unrestricted and only the remaining energy is charged. The argument also applies to the random noisy singleton labels in the counterexample. It rules out one possible way of closing the gap in the comparator-width exponents; it does not prove that the present negative boundary is optimal.
+
+Write
+\[
+ Q_N^+(w)=\sum_{\ell=2}^H\|W^\ell\|_F^2+N\|v\|_2^2,
+ \qquad D_s=\sqrt{2(d+1)\log(s+1)}+\frac{H-1}{2}.
+\]
+For fixed inputs $x_1,\ldots,x_s$, let $\mathcal Z_K$ be the set of their output vectors from every width and every tanh network with $Q_N^+\le K$. No bound is placed on first-layer weights. For a set $A\subset\mathbb R^s$, put
+\[
+ \operatorname{Rad}(A)=\frac1s\E_\epsilon\sup_{a\in A}
+                       \sum_{i=1}^s\epsilon_i a_i,
+\]
+where the $\epsilon_i$ are independent fair signs.
+
+\begin{lemma}[First-layer-free capacity bound]
+\label{lem:appendix-capacity}
+For every $K>0$ and every fixed input set,
+\[
+ \operatorname{Rad}(\mathcal Z_K)
+       \le (K/H)^{H/2}D_s/\sqrt s.
+\]
+\end{lemma}
+\begin{proof}
+We include the argument to make the appendix self-contained; it is also the capacity argument underlying the positive oracle bounds in~\cite{sharper}. Rademacher complexity is unchanged by closed convex hull and scales linearly under positive multiplication.
+
+For $0\le t\le1$, let $\clip_t(u)=\max(-t,\min(t,u))$. For $A\subset[-1,1]^s$, let $\operatorname{Clip}(A)$ contain its coordinatewise clipped vectors, with one common clipping level $t$. The identity $\clip_t(u)=(|u+t|-|u-t|)/2$, the Rademacher contraction inequality, and symmetry of the signs give
+\[
+ \operatorname{Rad}(\operatorname{Clip}(A))
+       \le\operatorname{Rad}(A)+\frac1{2\sqrt s}.
+\]
+Indeed, split the supremum between the two absolute-value expressions and contract each. The two added scalar-shift contributions sum to
+$\E|\sum_i\epsilon_i|/(2s)\le1/(2\sqrt s)$.
+
+For every $a>0$ and $|u|\le1$,
+\begin{equation}
+ \frac{\tanh(au)}a=
+ \int_0^1\clip_t(u)\,2a\tanh(at)\operatorname{sech}^2(at)\,dt
+       +\operatorname{sech}^2(a)\clip_1(u).
+ \label{eq:appendix-mixture}
+\end{equation}
+The weights are nonnegative and sum to one. For $u\ge0$, integration by parts gives $u-\int_0^u\tanh^2(at)\,dt=\tanh(au)/a$; oddness proves the other half.
+
+Let $\mathcal F_1$ be the closed convex hull of first-layer tanh vectors on the fixed inputs, and recursively set
+$\mathcal F_\ell=\overline{\operatorname{conv}}\operatorname{Clip}(\mathcal F_{\ell-1})$.
+These sets are symmetric, convex, and contained in $[-1,1]^s$. Define
+$\rho^1=\boldsymbol1_N$ and
+$\rho^\ell=|W^\ell|\rho^{\ell-1}$, using entrywise absolute values.
+Induction with~\eqref{eq:appendix-mixture} shows that hidden neuron $j$ in layer $\ell$ has output vector in $\rho^\ell_j\mathcal F_\ell$: divide its preactivation by $\rho^\ell_j$ to get a convex signed combination of the previous normalized neurons, then use the mixture formula. A zero denominator forces the neuron to vanish.
+
+The output vector therefore belongs to $P(w)\mathcal F_H$, where
+\[
+ P(w)=|v|^\top|W^H|\cdots|W^2|\boldsymbol1_N
+ \le\sqrt N\|v\|_2\prod_{\ell=2}^H\|W^\ell\|_F
+ \le(Q_N^+/H)^{H/2}.
+\]
+The last step uses AM--GM over the $H$ charged layer energies. Meanwhile
+$\operatorname{Rad}(\mathcal F_H)\le\operatorname{Rad}(\mathcal F_1)+(H-1)/(2\sqrt s)$.
+If $T$ has distribution function $(1+\tanh t)/2$, then
+$\tanh u=\E\operatorname{sign}(u-T)$. Thus $\mathcal F_1$ lies in the convex hull of affine-halfspace dichotomies. Sauer--Shelah bounds their number on $s$ inputs by $(s+1)^{d+1}$, and Massart's finite-class bound gives
+$\operatorname{Rad}(\mathcal F_1)\le\sqrt{2(d+1)\log(s+1)/s}$.
+Combining these inequalities proves the lemma, uniformly over widths.
+\end{proof}
+
+\begin{theorem}[Necessary energy for arbitrary and random labels]
+\label{thm:memorizer-optimality}
+Fix $s$ inputs and $0\le t<1$. If every labeling in $\{-1,1\}^s$ has a tanh implementation with $Q_N^+\le K$ and maximum approximation error at most $t$, then
+\[
+ K\ge H\left(\frac{(1-t)\sqrt s}{D_s}\right)^{2/H}.
+\]
+Moreover, for independent fair labels $\epsilon_i$ and any fixed $0\le\rho<1$, with probability at least $1-\exp[-(1-\rho)^2s/128]$, every network of every width satisfying
+\[
+ \sum_{i=1}^s(z_w(x_i)-\epsilon_i)^2\le\rho s
+\]
+has
+\begin{equation}
+ Q_N^+(w)>H\left(\frac{(1-\rho)\sqrt s}{8D_s}\right)^{2/H}.
+ \label{eq:random-memorizer-energy}
+\end{equation}
+\end{theorem}
+\begin{proof}
+In the first assertion each labeling has normalized correlation at least $1-t$ with an allowed network. Take the supremum, average over labels, and apply Lemma~\ref{lem:appendix-capacity}.
+
+For the random assertion, fix $K$ and let
+\[
+ Z(\epsilon)=\sup_{Q_N^+\le K,\,N\ge1}
+       \frac1s\sum_i\epsilon_i\clip(z_w(x_i)).
+\]
+Contraction gives $\E Z\le2(K/H)^{H/2}D_s/\sqrt s$; the factor two is a conservative contraction constant. Changing one label changes $Z$ by at most $2/s$. McDiarmid therefore gives, with probability at least $1-\delta$,
+\[
+ Z\le2(K/H)^{H/2}D_s/\sqrt s+
+                      \sqrt{2\log(1/\delta)/s}.
+\]
+Clipping decreases the squared residual against sign labels. Expanding that residual and dropping the nonnegative squared-prediction term shows that residual at most $\rho s$ requires clipped normalized correlation at least $(1-\rho)/2$.
+
+Choose $K$ equal to the right side of~\eqref{eq:random-memorizer-energy} and $\delta=\exp[-(1-\rho)^2s/128]$. The displayed upper bound for $Z$ is $3(1-\rho)/8$, strictly less than the required correlation. Hence no network of energy at most $K$ can achieve the residual on this event. The class is a union over widths and all parameters, so the conclusion already covers networks selected after seeing the labels.
+\end{proof}
+
+\begin{corollary}[The noisy singleton obstruction]
+\label{cor:singleton-energy}
+For the data law in Theorem~\ref{thm:main}, for sufficiently large $n$, with probability at least
+\[
+ 1-2e^{-n^{1/3}/2}-e^{-n/2400},
+\]
+every network of every width whose noisy count-weighted residual is at most $n/5$ satisfies
+\begin{equation}
+ Q_N^+(w)>H\left(\frac{n}{1200D_n^2}\right)^{1/H}.
+ \label{eq:singleton-energy}
+\end{equation}
+Here the residual is $\sum_j k_j(z_w(0,+1,z_j)-r_j)^2$ in the notation of the main proof.
+\end{corollary}
+\begin{proof}
+On the common occupancy event, the singleton count $s=S_1$ is at least $n/3$ for sufficiently large $n$. Conditional on all inputs, these singleton labels are independent fair signs. A total noisy residual at most $n/5$ implies singleton residual at most $n/5\le3s/5$. Apply Theorem~\ref{thm:memorizer-optimality} with $\rho=3/5$. Its conditional failure probability is at most $e^{-s/800}\le e^{-n/2400}$. Since $s\ge n/3$ and $D_s\le D_n$, its energy lower bound implies~\eqref{eq:singleton-energy}. Finally add the occupancy-event failure probability. Conditioning on other labels does not affect the argument, since the uniform function-class event covers every data-selected network.
+\end{proof}
+
+At fixed depth and dimension $d=\Theta(\log n)$, the lower bound is
+$\Omega_H(n^{1/H}/(\log n)^{2/H})$. The memorizer in this paper has energy $O_H(n^{1/H}\operatorname{polylog}n)$, so its sample-size exponent is optimal for this role. Closing the remaining tanh comparator-width gap would require a stronger signal obstruction or a better general positive representation theorem, rather than a universal memorizer with the ReLU energy exponent.

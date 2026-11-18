@@ -1,0 +1,159 @@
+\section{Gaussian norm events and finite function covers}
+\label{sec:lipschitz-output-cover}
+
+The first step is a norm event whose probability bound holds at every
+learner width. Quantizing a bounded Lipschitz function on a fixed spatial
+net then gives a cover independent of that width.
+
+Let $H\geq1$ be the number of hidden layers.  The inputs are
+$\bar x=(1,x)$ with $x\in[-1,1]^d$, $d\geq1$, and the readout is
+linear.  For $0<\tau\leq1$, the independent centered Gaussian
+variances are $\tau^2/d$ in the first layer, $\tau^2/N$ in internal
+layers, and $\tau^2/N^2$ in the readout.  Put $\omega=N/\tau^2$.
+The canonical exponent $\gamma\geq1$ corresponds to
+$\tau^2=N^{1-\gamma}$ and $\omega=N^\gamma$.
+
+\begin{lemma}[An all-width operator-norm event and output cover]
+\label{lem:lipschitz-output-cover}
+For $K\geq128$, define
+\begin{equation}
+ G_K=\left\{\|W^1\|_F^2\leq NK,\quad
+       \|W^\ell\|_{\rm op}^2\leq K\ (2\leq\ell\leq H),\quad
+       N\|v\|_2^2\leq K\right\}.
+ \label{eq:lipschitz-norm-event}
+\end{equation}
+For every $N\geq1$ and every $\tau\in(0,1]$,
+\begin{equation}
+ \mu_{N,\tau}(G_K^c)\leq(H+1)e^{-\omega K/16}.
+ \label{eq:lipschitz-prior-tail}
+\end{equation}
+If every hidden activation is one-Lipschitz, all outputs on $G_K$
+have Lipschitz constant at most
+\[
+ L_K=K^{(H+1)/2}.
+\]
+For tanh, the absolute output is at most $A_K=\sqrt K$.
+For any one-Lipschitz activation satisfying $\phi(0)=0$, it is at
+most $A_K=\sqrt{d+1}\,K^{(H+1)/2}$.
+
+In either case, for every $0<a<1$ there is a deterministic finite
+family $\mathcal L_{K,a}$, common to every learner width and every
+$\tau\in(0,1]$, with centers bounded by $A_K$, such that all good
+outputs are within $a$ in uniform norm of this family and
+\begin{align}
+ \log|\mathcal L_{K,a}|
+ &\leq\left(1+\frac{8\sqrt d\,L_K}{a}\right)^d
+                    \log\left(3+\frac{8A_K}{a}\right)\notag\\
+ &\leq C_{d,H}K^{d(H+1)/2}a^{-d}
+                     \log\frac{C_{d,H}K}{a}.
+ \label{eq:lipschitz-output-cover}
+\end{align}
+The constant $C_{d,H}$ is finite and computable, but is not claimed
+to be polynomial in dimension.
+\end{lemma}
+\begin{proof}
+The readout normalization satisfies
+$N\|v\|_2^2=(\tau^2/N)\chi_N^2$.
+The first-layer normalization satisfies
+$\|W^1\|_F^2=(\tau^2/d)\chi_{N(d+1)}^2$.
+The Gaussian chi-square exponential moment at parameter $1/4$ gives
+\[
+ \Pr\{N\|v\|_2^2>K\}
+       \leq2^{N/2}e^{-NK/(4\tau^2)}
+       \leq e^{-NK/(16\tau^2)},
+\]
+and
+\[
+ \Pr\{\|W^1\|_F^2>NK\}
+       \leq2^{N(d+1)/2}e^{-dNK/(4\tau^2)}
+       \leq e^{-NK/(16\tau^2)}.
+\]
+The final inequalities use $d\geq1$, $\tau\leq1$, and $K\geq128$.
+The standard two-sided sphere-net estimate for each internal matrix is
+\[
+ \Pr\{\|W^\ell\|_{\rm op}>\sqrt K\}
+ \leq2\exp[2N\log9-NK/(8\tau^2)]
+ \leq e^{-NK/(16\tau^2)}.
+\]
+A union bound proves~\eqref{eq:lipschitz-prior-tail}.
+
+Composing Lipschitz maps gives
+\[
+ \operatorname{Lip}(z_w)
+ \leq\|v\|_2\|W^1\|_F
+                      \prod_{\ell=2}^H\|W^\ell\|_{\rm op}
+ \leq K^{(H+1)/2}.
+\]
+The last hidden layer has coordinates of magnitude at most one for
+tanh, giving $|z_w|\leq\sqrt N\|v\|_2\leq\sqrt K$.
+If $\phi(0)=0$, its one-Lipschitz property instead gives
+\[
+ |z_w(x)|\leq\|v\|_2\|W^1\|_F
+           \prod_{\ell=2}^H\|W^\ell\|_{\rm op}\,\|\bar x\|_2
+ \leq\sqrt{d+1}\,K^{(H+1)/2}.
+\]
+
+Choose a fixed Euclidean net of the cube with radius $a/(4L_K)$,
+having at most $(1+8\sqrt d L_K/a)^d$ points.  At each net point
+quantize an output value to mesh $a/4$ in $[-A_K,A_K]$, using clipped
+endpoints if necessary.  There are at most $3+8A_K/a$ choices at
+each point.  Extend every such assignment by the fixed Borel
+nearest-net-point map.  The input-net error is at most $a/4$ and the
+quantization error at most $a/4$, so the total is strictly less than
+$a$.  This proves the first cardinality bound.  Substituting $L_K$
+and the relevant $A_K$ gives the second, because $K\geq128$ and
+$a<1$.  The construction uses only $d,H,K,a$ and the displayed norm
+bounds, so the family is common to all widths and Gaussian scales.
+\end{proof}
+
+\begin{lemma}[Uniform prior moments for Lipschitz activations]
+\label{lem:lipschitz-prior-moments}
+Suppose every hidden activation is one-Lipschitz and vanishes at zero.
+Uniformly in $N\geq1$, $0<\tau\leq1$, and $x\in[-1,1]^d$,
+\begin{equation}
+ \mathbb E z_w(x)=0,\qquad
+ \mathbb E z_w(x)^2\leq2\tau^{2(H+1)}/N\leq2,
+ \qquad
+ \mathbb E z_w(x)^4\leq12\cdot3^H\tau^{4(H+1)}/N^2.
+ \label{eq:lipschitz-prior-moments}
+\end{equation}
+For ReLU, the second-moment bound improves to
+$2^{1-H}\tau^{2(H+1)}/N\leq1$.
+Consequently, for arbitrary bounded-label IID data and its population
+square loss $R$, there is a finite constant $C_H$ such that
+\[
+ \mathbb E_\mu\widehat R_S(z_w)\leq3,
+ \qquad \mathbb E_\mu R(z_w)^2\leq C_H,
+\]
+uniformly over every sample, every width, and every scale.
+The first bound is at most two for ReLU or tanh.
+\end{lemma}
+\begin{proof}
+Put $S_\ell=\|h^\ell(x)\|_2^2/N$ and
+$S_0=\|\bar x\|_2^2/d\leq2$.
+Conditionally on layer $\ell-1$, each preactivation in layer $\ell$
+is an independent centered Gaussian of variance
+$\tau^2S_{\ell-1}$.  Since $|\phi(t)|\leq|t|$,
+\[
+ \mathbb E[S_\ell\mid h^{\ell-1}]\leq\tau^2S_{\ell-1},\qquad
+ \mathbb E[S_\ell^2\mid h^{\ell-1}]
+       \leq(1+2/N)\tau^4S_{\ell-1}^2
+       \leq3\tau^4S_{\ell-1}^2.
+\]
+The same formula applies at the first layer with the deterministic
+quantity $S_0$.  Thus
+$\mathbb E S_H\leq2\tau^{2H}$ and
+$\mathbb E S_H^2\leq4\cdot3^H\tau^{4H}$.
+Conditionally on the final hidden layer, the independent centered
+Gaussian readout has variance $\tau^2S_H/N$.  Its exact Gaussian
+second and fourth moments prove~\eqref{eq:lipschitz-prior-moments}.
+For ReLU, the conditional second-moment recurrence contains the
+additional factor $1/2$ at each hidden layer.
+
+The output has prior mean zero, hence its expected empirical square
+loss is at most its second moment plus one.  For the second moment
+of population risk, Jensen and
+$(a-b)^4\leq8(a^4+b^4)$ give the uniform bound
+$C_H=8(12\cdot3^H+1)$.  Tanh uses its bounded last-layer activations
+to obtain $\mathbb E z_w(x)^2\leq\tau^2/N\leq1$.
+\end{proof}

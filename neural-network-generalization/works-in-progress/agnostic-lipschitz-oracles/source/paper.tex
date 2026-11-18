@@ -1,0 +1,163 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,mathtools,booktabs,microtype}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Bayesian neural networks compete with small networks in fixed input dimension},pdfauthor={ChatGPT-6 Astra; Claude Opus 5.5; Kaarel Hänni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}\newcommand{\N}{\mathbb N}
+\newcommand{\Prob}{\mathbb P}\newcommand{\clip}{\operatorname{clip}}
+\newcommand{\KL}{\operatorname{KL}}\newcommand{\Var}{\operatorname{Var}}
+\newcommand{\Rad}{\operatorname{Rad}}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\title{Bayesian neural networks compete with small networks\\in fixed input dimension}
+\author{ChatGPT-6 Astra \and Claude Opus 5.5 \and Kaarel H\"anni \and Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{17 November 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+We prove agnostic oracle inequalities for finite Bayesian neural networks
+with independent Gaussian weight priors. The data may follow any IID
+distribution on a bounded continuous input domain with bounded labels;
+no network is assumed to generate the labels. A single probability event
+covers every learner width above the comparison network's width and
+every Gaussian scaling exponent at or above mean field. The learner
+uses its ordinary raw-output posterior mean and a calibrated Gaussian
+likelihood. Its risk is bounded by the comparison network's risk with
+coefficient one, plus a complexity penalty and a vanishing remainder.
+The activation class includes ReLU, GELU, tanh, sigmoid, and softplus,
+without requiring $\phi(0)=0$. At fixed input dimension $d$ and depth
+$L$, globally Lipschitz activations give fixed-teacher excess
+$\widetilde O(n^{-2/[L(d+2)]})$; the sharper bounded-output estimate
+for tanh gives
+$\widetilde O(n^{-1/\max\{d+2,\,1+dL/2\}})$.
+The proof covers functions by their Lipschitz constants, pays Gaussian
+norm excursions through a posterior entropy inequality, and controls
+raw-output tails. The prior has one fixed dense architecture at each
+width, with no mixture over network sizes and no robustness restriction.
+The spatial cover incurs a dimensional cost: these bounds complement,
+rather than replace, bounds with polynomial dependence on input dimension.
+\end{abstract}
+
+\section{Introduction}
+A useful approximation guarantee would let a large Bayesian neural
+network compete with the best smaller network, even when every small
+network has nonzero test error. We establish such a guarantee for dense
+Gaussian priors on fully connected networks. The leading coefficient of
+the comparison risk is one, so the theorem applies to the population-risk
+minimizer of a specified bounded-weight comparison class.
+
+The likelihood must be calibrated. For a learner of hidden width $N$
+and prior exponent $\gamma\geq1$, we use Gaussian observation variance
+$n\lambda N^{-\gamma}$, where $n$ is the sample count and $\lambda$
+is chosen without knowledge of the data distribution. The independent
+weight variances are $N^{1-\gamma}/d$ in the first layer,
+$N^{-\gamma}$ in subsequent hidden layers, and $N^{-\gamma-1}$ in
+the linear readout. These are actual finite-parameter posteriors;
+neither width nor prior strength is taken to a limit.
+
+The main argument has three parts. Gaussian matrix tails imply that
+large operator norms are exponentially unlikely at the prior's natural
+speed. On the complementary event, network outputs have controlled
+Lipschitz constants and can be covered by quantizing values on a spatial
+grid. An entropy inequality transfers this prior control to the
+posterior, while its variational identity compares it with a neighborhood
+of any specified teacher. A separate weighted-tail estimate retains the
+ordinary, unbounded real output throughout prediction.
+
+Write $H$ for hidden depth and $L=H+1$ for the number of affine maps,
+including the readout. At fixed $d$ and $L$, the resulting sample
+exponents grow only linearly with depth. This is a statement about the
+exponent in a fixed-dimension bound, not a polynomial dependence jointly
+on width and depth. The spatial grid introduces an exponential dependence
+on input dimension, and constants may also grow rapidly with depth.
+No claim is made about efficient posterior computation or gradient descent.
+
+\section{Model and loss}
+
+For input $x\in[-1,1]^d$, put $\bar x=(1,x)$. A width-$N$ network
+with $H\geq1$ hidden layers and coordinatewise activation $\phi$ is
+\[
+ h^1(x)=\phi(W^1\bar x),\qquad
+ h^\ell(x)=\phi(W^\ell h^{\ell-1}(x))\ (2\leq\ell\leq H),
+ \qquad z_w(x)=v^{\mathsf T}h^H(x).
+\]
+Here $W^1$ is $N$ by $d+1$, each internal matrix is $N$ by $N$,
+and $v\in\mathbb R^N$. Internal layers have no biases. A teacher
+uses the same depth and activation, with hidden width $m$ in place
+of $N$. Unless stated otherwise its coefficients have absolute value
+at most $B\geq1$.
+
+\begin{remark}[Comparison with networks having internal biases]
+\label{rem:biased-teacher-compilation}
+Suppose $\phi$ is not identically zero. Choose a fixed $a_0$ with
+$c=\phi(a_0)\ne0$, and put
+\[
+ K_\phi=\max\{1,|a_0|,|a_0/c|,1/|c|\}.
+\]
+Any width-$m$ teacher with a bias at each hidden neuron and at the
+readout, with all coefficients and biases bounded by $B\geq1$, can
+be represented in the architecture above at width $m+1$, the same
+depth, and weight bound $K_\phi B$.
+
+To see this, add one constant neuron at each hidden layer. The first
+has preactivation $a_0$ using the constant input; each later one
+receives only the previous constant neuron, with weight $a_0/c$.
+Every constant neuron therefore outputs $c$. Replace each internal
+or readout bias $b$ by an edge of weight $b/c$ from the preceding
+constant neuron. All original first-layer biases are already allowed
+by the constant input. This preserves every teacher output and gives
+the stated coefficient bound. For ReLU take $a_0=c=1$, giving
+$K_\phi=1$. For tanh take $a_0=\operatorname{arctanh}(1/2)$ and
+$c=1/2$, giving $K_\phi=2$.
+
+This construction concerns only the comparison network. The learner's
+Gaussian prior is unchanged, and the resulting bounds apply whenever
+$N\geq m+1$. The main theorems themselves do not exclude the zero
+activation; only this compilation remark requires a nonzero one.
+\end{remark}
+
+The observations $S=((X_i,Y_i))_{i=1}^n$ are IID, with
+$X_i\in[-1,1]^d$ and $|Y_i|\leq1$. For any measurable real prediction
+function $h$, define
+\[
+ R(h)=\mathbb E(h(X)-Y)^2,\qquad
+ \widehat R_S(h)=\frac1n\sum_{i=1}^n(h(X_i)-Y_i)^2.
+\]
+The population distribution is otherwise arbitrary. In particular,
+no realizability or observation-noise model is imposed on it.
+
+\input{norm-cover}
+\input{finite-cover-statistics}
+\input{activation-oracle}
+\input{tanh-refinement}
+
+\section{Scope of the approximation guarantee}
+The risk comparison is agnostic: labels need not equal a teacher output,
+and their conditional distribution need not match the Gaussian likelihood.
+The probability statements require the same distribution for training and
+testing. A bounded-weight population-risk minimizer is chosen before the
+sample; compactness supplies such a minimizer, and the zero-readout network
+shows that its risk is at most one.
+
+The actual prior remains independent Gaussian over all weights of one
+dense width-$N$ architecture. Norm events and finite function covers are
+proof devices. The posterior is not restricted to those events, and no
+prior over architectures is introduced. The main guarantee uses the ordinary raw posterior mean. A separate
+corollary gives a faster bound when clipping each network output before
+averaging.
+
+The likelihood calibration and comparison weight cap are substantive
+assumptions. The theorem does not give the exact finite-sample inequality
+with no additive remainder, an unrestricted comparison over arbitrarily
+large weights, or a computational procedure for obtaining the posterior.
+It also does not eliminate the dimensional cost of approximating general
+functions on a continuous domain.
+
+\end{document}

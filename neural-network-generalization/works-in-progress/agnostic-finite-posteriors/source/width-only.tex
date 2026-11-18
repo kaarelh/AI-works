@@ -1,0 +1,138 @@
+\section{Why width alone is insufficient}\label{width-only:sec:width-only-obstruction}\subsection{A finite-temperature obstruction}
+Let $\pi$ be a prior on real-valued functions $z_w:[-1,1]\to\R$. For a sample $S=((x_i,y_i))_{i=1}^n$ with $|y_i|\le1$, write
+\[
+ \widehat R_S(z_w)=\frac1n\sum_{i=1}^n(z_w(x_i)-y_i)^2,
+ \qquad
+ \Pi_S(dw)=Z_S^{-1}e^{-\beta\widehat R_S(z_w)}\pi(dw),
+ \quad 0<\beta<\infty.
+\]
+A Gaussian observation likelihood of variance $v>0$ has $\beta=n/(2v)$. The prior, its architecture, and $\beta$ are fixed before the data law below is chosen. They may depend on sample size.
+
+Assume that each $z_w$ has a Lipschitz constant $\mathcal L(w)$ on $[-1,1]$ and that
+\begin{equation}
+ M=\sup_{|x|\le1}\E_\pi z_w(x)^2<\infty,
+ \qquad A=\E_\pi\mathcal L(w)^2<\infty.
+ \label{width-only:eq:moments}
+\end{equation}
+These conditions hold for every fixed finite feedforward tanh or ReLU architecture with Gaussian weights. No prior over network sizes is involved. Set
+\[
+ B_0=2(M+1),\qquad C=e^{\beta B_0/2}\sqrt A.
+\]
+For a prior whose output has mean zero, including an independent centered Gaussian readout, one may improve $B_0$ to $M+1$.
+
+\begin{theorem}[A close-pair obstruction with fixed input covariance]
+\label{width-only:thm:general}
+For $0<\eta<1/2$, let $D_\eta$ put probability $1/4$ on each of
+\[
+ (\eta,1),\quad(-\eta,-1),\quad(1,0),\quad(-1,0).
+\]
+This law is noiseless and has input mean zero and variance $(1+\eta^2)/2\ge1/2$. For every sample $S$ of size $n$ from its support, the ordinary posterior mean $\bar z_S=\int z_w\,d\Pi_S$ satisfies
+\begin{equation}
+ R_{D_\eta}(\bar z_S)
+ \ge\frac12(1-C\eta)_+^2.
+ \label{width-only:eq:risk-lower}
+\end{equation}
+The same lower bound holds for the mean of clipped outputs, the clipped ordinary mean, and raw or clipped posterior-average risk. In particular, choosing $C\eta\le1/2$ gives a lower bound of $1/8$, uniformly over every possible sample.
+\end{theorem}
+\begin{proof}
+For any bounded-label sample, Jensen and $(a-b)^2\le2a^2+2b^2$ give
+\[
+ Z_S\ge e^{-\beta\E_\pi\widehat R_S}\ge e^{-\beta B_0}.
+\]
+The likelihood is at most one. Thus, uniformly over all such samples,
+\[
+ \E_{\Pi_S}\mathcal L^2\le e^{\beta B_0}A=C^2.
+\]
+It follows from Cauchy--Schwarz that
+\[
+ |\bar z_S(\eta)-\bar z_S(-\eta)|
+ \le2\eta\E_{\Pi_S}\mathcal L\le2C\eta.
+\]
+Write $u=\bar z_S(\eta)$ and $v=\bar z_S(-\eta)$. The two inner points alone contribute
+\[
+ \frac{(u-1)^2+(v+1)^2}{4}
+ \ge\frac12\left(1-\frac{u-v}{2}\right)^2
+ \ge\frac12(1-C\eta)_+^2
+\]
+to the risk. This proves~\eqref{width-only:eq:risk-lower}. Clipping is $1$-Lipschitz, so both clipped-mean conventions have the same pair-difference bound. Jensen then proves the posterior-average risk assertions. The moment assumptions and the evidence bound also ensure that the ordinary means and risks used here are finite.
+\end{proof}
+
+The bound tends to $1/2$ as $\eta\downarrow0$, although it is enough below to retain the fixed constant $1/8$. The argument does not depend on the sample containing an inner point: it is uniform over all samples, including those containing both oppositely labeled inner points many times.
+
+\subsection{Exact small teachers}
+The teacher class contains ordinary fully connected networks with zero values permitted for unused weights. Let $H\ge1$ be the number of hidden layers, followed by a linear readout. Only the first layer needs biases; internal biases may be fixed to zero.
+
+\begin{lemma}[Two tanh chains]
+\label{width-only:lem:tanh}
+For every fixed $H\ge1$ and all sufficiently small $\eta>0$, a tanh network of hidden width two and depth $H+1$ fits $D_\eta$ exactly.
+\end{lemma}
+\begin{proof}
+Let $F_H$ denote the $H$-fold composition of tanh and set
+\[
+ c_\eta=\frac{F_H(2/\eta)}{F_H(1/\eta)},\qquad
+ a_\eta=F_H(2)-c_\eta F_H(1).
+\]
+The function $F_H$ is odd and strictly increasing. Moreover,
+$F_H(t)\to F_{H-1}(1)>0$ as $t\to\infty$, with the convention $F_0(1)=1$. Consequently $c_\eta\to1$ and
+$a_\eta\to F_H(2)-F_H(1)>0$. In particular $a_\eta>0$ for sufficiently small $\eta$.
+
+Use two disjoint chains with first-layer weights $2/\eta$ and $1/\eta$, respectively, and internal weights one. The linear readout realizes
+\[
+ g_\eta(x)=\frac{F_H(2x/\eta)-c_\eta F_H(x/\eta)}{a_\eta}.
+\]
+By construction $g_\eta(\eta)=1$ and $g_\eta(1)=0$; oddness supplies the two negative inputs. Its readout coefficients remain bounded as $\eta\downarrow0$ at each fixed depth. Its first-layer weights diverge as $1/\eta$.
+\end{proof}
+
+\begin{lemma}[A ReLU tent]
+\label{width-only:lem:relu}
+For every $H\ge1$ and $0<\eta<1/2$, a ReLU network of hidden width four and depth $H+1$ fits $D_\eta$ exactly, with output magnitude at most one on the whole real line.
+\end{lemma}
+\begin{proof}
+Write $r(t)=\max(t,0)$. The function
+\[
+ g_\eta(x)=\frac{-r(x+2\eta)+2r(x+\eta)-2r(x-\eta)+r(x-2\eta)}{\eta}
+\]
+is an odd piecewise-linear tent, equal to $\pm1$ at $\pm\eta$, zero outside $[-2\eta,2\eta]$, and bounded by one. Its four first-layer features are nonnegative and pass unchanged through identity internal matrices. The displayed coefficients give the readout. First-layer weights are one, bias magnitudes are at most $2\eta$, internal weights are zero or one, and readout magnitudes are at most $2/\eta$.
+\end{proof}
+
+\subsection{Gaussian priors and a width-only oracle}
+\begin{lemma}[Finite Gaussian priors satisfy the required moments]
+Every fixed finite fully connected tanh or ReLU network with Gaussian weights, a linear readout, and biases confined to the first layer satisfies~\eqref{width-only:eq:moments}. The conclusion allows any fixed positive Gaussian coordinate variances.
+\end{lemma}
+\begin{proof}
+Both activations are $1$-Lipschitz and vanish at zero. If $W^1$ includes the bias column, then on $[-1,1]$ the augmented input has Euclidean norm at most $\sqrt2$. Put
+\[
+ T(w)=\|v\|_2\prod_{\ell=1}^H\|W^\ell\|_F.
+\]
+The output is at most $\sqrt2 T(w)$ in magnitude, and its input Lipschitz constant is at most $T(w)$. In a fixed finite architecture, $T(w)^2$ is bounded by a polynomial in the absolute values of finitely many Gaussian coordinates, so its expectation is finite. Independence is not needed for this integrability statement.
+\end{proof}
+
+\begin{corollary}[No width-only, distribution-uniform vanishing excess]
+\label{width-only:cor:oracle}
+Fix a hidden depth $H\ge1$. For each sample size $n$, choose any finite learner width $N_n$, a Gaussian weight prior with positive coordinate variances, and any finite positive inverse temperature $\beta_n$. Suppose $N_n\ge2$ for tanh, or $N_n\ge4$ for ReLU. There exist noiseless laws $D_n$ on $[-1,1]\times[-1,1]$, each with input variance at least $1/2$, and teachers of the corresponding fixed width such that
+\[
+ \inf_{g\text{ in the fixed-width teacher class}}R_{D_n}(g)=0,
+ \qquad
+ R_{D_n}(\bar z_{S,n})\ge\frac18
+\]
+for every sample $S$ of size $n$ from $D_n$. The other prediction conventions of Theorem~\ref{width-only:thm:general} satisfy the same lower bound.
+\end{corollary}
+\begin{proof}
+For each prescribed learner and temperature, apply Theorem~\ref{width-only:thm:general} with $\eta_n>0$ small enough that $C_n\eta_n\le1/2$ and the corresponding exact-teacher lemma applies. The teacher may be zero-padded to any larger width. Both activations vanish at zero, so padding preserves its function.
+\end{proof}
+
+Thus no guarantee with a remainder tending to zero uniformly over input laws can depend only on teacher width when coefficient size is unrestricted. The counterexample already has fixed input dimension, bounded inputs and labels, no label noise, and input variance bounded away from zero. A coefficient, sensitivity, or approximation-scale restriction is needed for such a uniform statement. The result does not exclude an oracle inequality with a penalty depending on those additional resources.
+
+\paragraph{Order of quantifiers.}
+The prior and temperature are prescribed before selecting $\eta_n$. The result permits arbitrary deterministic schedules in sample size and learner width, including canonical Gaussian scaling regimes, provided every architecture and temperature is finite at each $n$. It does not exhibit one law on which every temperature fails. An adaptive rule may respond to the observed input separation by making the likelihood arbitrarily sharp; the proof does not bound such a rule. Nor does the theorem concern exact conditioning or a zero-temperature/strong-prior limit taken after fixing the data law.
+
+\paragraph{Distribution-uniform versus pointwise learning.}
+The laws $D_n$ and their exact teachers may vary with $n$. The statement refutes a uniform vanishing remainder over unrestricted-coefficient teachers; it does not refute consistency on one fixed law or one fixed teacher. The small separation supplies an unbounded sensitivity resource that is invisible to width and covariance alone.
+
+
+\paragraph{Inputs on a unit sphere.}
+The same obstruction holds with all inputs on the unit circle in $\mathbb R^2$. Replace the near inputs by $(\pm\eta,\sqrt{1-\eta^2})$ and the anchors by $(\pm1,0)$, retaining their labels and masses. The close-pair distance is still $2\eta$, the teachers use only the first coordinate, and the centered covariance is
+\[
+ \operatorname{diag}\bigl((1+\eta^2)/2,(1-\eta^2)/4\bigr).
+\]
+Its eigenvalues are at least $3/16$ when $\eta\le1/2$. The Gaussian moment and evidence proof applies on the bounded two-dimensional input set. Thus a unit-norm input assumption also does not replace control of teacher coefficients or sensitivity.

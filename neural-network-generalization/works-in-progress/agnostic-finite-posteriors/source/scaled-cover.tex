@@ -1,0 +1,258 @@
+\section{An output cover uniform over stronger Gaussian scalings}
+\label{sec:scaled-entropy-cover}
+
+The entropy construction also applies when every Gaussian standard
+deviation is multiplied by $\tau\in(0,1]$.  The first-layer, internal,
+and readout variances are then respectively
+$\tau^2/d$, $\tau^2/N$, and $\tau^2/N^2$.
+For the scaling exponent $\gamma\geq1$, take
+$\tau^2=N^{1-\gamma}$; its natural concentration speed is
+$N/\tau^2=N^\gamma$.  We obtain a finite output cover common to all
+$\tau$, although its cardinality is larger than the sharper
+mean-field cover of Lemma~\ref{lem:mf-entropy-cover}.
+
+\subsection{Normalized entropy and a uniform covariance bound}
+
+For $0<\tau\leq1$, define
+\[
+ \mathcal M_\tau(Q,K)=
+ \left\{\int hh^{\mathsf T}d\nu:
+       \tau^2\operatorname{KL}(\nu\Vert P_{\tau^2Q})\leq K\right\}.
+\]
+The Hausdorff covariance estimate remains
+\begin{equation}
+ d_{\rm H,max}\bigl(\mathcal M_\tau(Q,K),
+                   \mathcal M_\tau(Q',K)\bigr)
+ \leq2\sqrt{2K\Delta}+3\Delta\leq6\sqrt{K\Delta},
+ \qquad \Delta=\|Q-Q'\|_{\max}\leq K.
+ \label{eq:scaled-entropy-stability}
+\end{equation}
+Indeed the support function in direction $A$, $\|A\|_1\leq1$, is
+\[
+ \inf_{u>0}\frac{K+\Psi_{\tau,Q}(u)}u,
+ \qquad
+ \Psi_{\tau,Q}(u)=\tau^2\log
+   \mathbb E_{P_{\tau^2Q}}
+            e^{(u/\tau^2)h^{\mathsf T}Ah}.
+\]
+The proof of~\eqref{eq:mf-entropy-support} applies after rescaling
+the entropy constraint.  The covariance differentiation calculation
+now gives
+\[
+ |\Psi_{\tau,Q}(u)-\Psi_{\tau,Q'}(u)|
+       \leq\Delta(3u\tau^2+2u^2).
+\]
+Restricting $u$ to $(0,T]$ costs at most $K/T$, while division by $u$
+bounds the covariance error by $(3+2T)\Delta$.  Optimizing $T$ proves
+\eqref{eq:scaled-entropy-stability} exactly as before.  All assertions
+include singular covariance matrices.
+
+The continuous tilt-selection lemma has the same normalized version.
+If a witness has normalized entropy at most $K$ and moment error at
+most $\alpha$, maximize
+\begin{equation}
+ \langle\Gamma,A\rangle
+ -\tau^2\log\mathbb E_{P_{\tau^2Q}}
+                  e^{h^{\mathsf T}\Gamma h/\tau^2}
+ -\frac{\alpha^2}{4K}\|\Gamma\|_F^2,
+ \qquad \|\Gamma\|_1\leq K/\alpha.
+ \label{eq:scaled-regularized-dual}
+\end{equation}
+Its unique maximizing tilt has normalized entropy at most $2K$ and
+moment error at most $3\alpha$.  The proof of
+Lemma~\ref{lem:mf-regularized-tilt} is unchanged, since the gradient
+of the scaled log partition function is still the second moment.
+The maximizing parameter is continuous in $(Q,A,\tau)$ for
+$\tau>0$, giving the Borel kernels needed below.
+
+\subsection{A common finite grid}
+
+\begin{lemma}[Uniformly scaled Gaussian output cover]
+\label{lem:scaled-mf-cover}
+Fix $H\geq2$ and write
+\[
+ v_H=2^{H+1},\qquad D_H'=\tfrac32v_H-4,
+ \qquad A_H'=\tfrac32v_H.
+\]
+There are computable constants $C_H\geq1$ such that for $K\geq128$
+and $0<a<1$ a finite deterministic family $\mathcal D_{K,a}$,
+independent of $\tau\in(0,1]$ and of learner width, satisfies
+\begin{gather}
+ T_H'(d,K,1/a)\leq
+ C_H(d+1)K^{v_H-2}a^{-v_H}
+                    \log\frac{C_H(d+1)K}{a},\notag\\
+ \log|\mathcal D_{K,a}|\leq
+ C_H(d+1)^2K^{D_H'}a^{-A_H'}
+                    \log^3\frac{C_H(d+1)K}{a}.
+ \label{eq:scaled-mf-cover-bounds}
+\end{gather}
+For every $N\geq T_H'(d,K,1/a)$ and every $\tau\in(0,1]$, there is
+a Borel event $G_{N,\tau,K,a}$ such that
+\begin{gather*}
+ \mu_{N,\tau}(G_{N,\tau,K,a}^c)
+       \leq2(H+1)\exp[-NK/(16\tau^2)],\qquad
+ N\|v\|_2^2\leq K\quad\hbox{on }G_{N,\tau,K,a},\\
+ \inf_{h\in\mathcal D_{K,a}}\sup_{x\in[-1,1]^d}|z_w(x)-h(x)|<a
+       \quad(w\in G_{N,\tau,K,a}).
+\end{gather*}
+Every center may be chosen bounded by $\sqrt K$ in absolute value.
+\end{lemma}
+\begin{proof}
+Set $\zeta=a/4$, and use the same input net and backward tolerances
+as in~\eqref{eq:mf-entropy-budgets}:
+\[
+ s\leq\left(1+\frac{8\sqrt d\,K^{(H+1)/2}}\zeta\right)^d,
+ \qquad \delta_H=\frac{\zeta^2}{8K},\quad
+ \delta_{\ell-1}=\frac{\delta_\ell^2}{2304K},\quad
+ G_\ell^{\rm orig}=8K/\delta_\ell.
+\]
+The norm event
+\[
+ \|W^1\|_F^2\leq NK,\qquad
+ \|W^\ell\|_{\rm op}\leq\sqrt K\ (2\leq\ell\leq H),\qquad
+ N\|v\|_2^2\leq K
+\]
+now fails with probability at most
+$(H+1)\exp[-NK/(16\tau^2)]$.
+For example the internal sphere-net estimate is
+$2\exp[2N\log9-NK/(8\tau^2)]
+ \leq\exp[-NK/(16\tau^2)]$.
+The chi-square estimates for the first layer and readout have at least
+the same strength.  On the norm event the output Lipschitz constant
+is at most $K^{(H+1)/2}$, so the same net works for every $\tau$.
+
+For an empirical activation covariance $A$ and a reference law $P$,
+define the normalized dual certificate
+\[
+ \mathcal J_{G,\tau}(A;P)=
+ \max_{\|\Gamma\|_1\leq G}
+ \left[\langle\Gamma,A\rangle-
+       \tau^2\log\mathbb E_P e^{h^{\mathsf T}\Gamma h/\tau^2}\right].
+\]
+For $N$ independent rows from $P$, the atomic sparsification argument
+used in~\eqref{eq:mf-slack-certificate} gives
+\begin{equation}
+ \Pr\{\mathcal J_{G,\tau}>K\}
+ \leq\exp\{q\log(2s^2+1)-NK/(2\tau^2)\},
+ \qquad q=\lceil G^2/(K\tau^2)\rceil.
+ \label{eq:scaled-certificate}
+\end{equation}
+Specifically, the expected scaled log-partition error in averaging
+$q$ atoms is at most $G^2/(2q\tau^2)\leq K/2$.
+For each fixed average its empirical dual, multiplied by
+$N/\tau^2$, has exponential moment one.  These two facts prove
+\eqref{eq:scaled-certificate} by the same finite union bound.
+Since $G\geq K$ here, $\tau^2q\leq G^2/K+\tau^2\leq2G^2/K$.
+Consequently the width requirement
+\[
+ N\geq8(G_1^{\rm orig})^2K^{-2}\log(2s^2+1)
+\]
+ensures failure at most $\exp[-NK/(4\tau^2)]$ at each layer,
+uniformly in $\tau$.  Conditional row fields are exactly Gaussian
+with covariance $\tau^2Q_{\ell-1}$, including the fixed first-layer
+input field.  Intersect all the certificates and the norm event to
+define $G_{N,\tau,K,a}$; the required probability bound follows.
+The event is Borel because each certificate maximizes a continuous
+function over a compact parameter set.
+
+Fix a draw in this event.  Each normalized certificate at most $K$
+supplies a law of normalized entropy at most $K$ whose moment is
+within $\delta_\ell/8$ of the actual covariance $Q_\ell$.
+The lift is the first-order identity
+\[
+ \mathcal J_{G,\tau}
+ =\tau^2\operatorname{KL}(P_*\Vert P)
+       +G\|A-\mathbb E_{P_*}hh^{\mathsf T}\|_{\max}.
+\]
+Use the deterministic unequal layer widths
+\[
+ J_\ell=\left\lceil32\delta_\ell^{-2}\log(8Hs^2)\right\rceil.
+\]
+Conditionally on previous sampled layers, take independent Gaussian
+incoming rows of variance $\tau^2/d$ at the first layer and
+$\tau^2/J_{\ell-1}$ thereafter, with the tilt selected by
+\eqref{eq:scaled-regularized-dual} and $\alpha=\delta_\ell/4$.
+Use the unmodified Gaussian rows after the first failure of a
+covariance condition.  Just as in the proof of
+Lemma~\ref{lem:mf-entropy-cover}, the normalized entropy stability
+bound supplies a witness within $\delta_\ell/4$, the selected mean
+is within $3\delta_\ell/4$, and Hoeffding contributes at most
+$\delta_\ell/4$.  All sampled covariances are therefore within
+$\delta_\ell$ of the actual ones with probability at least $3/4$.
+
+The approximate-readout argument from that proof gives
+$\|\beta\|_1\leq K/\zeta$ and
+$\|Q_H\beta-z_w|_{\rm net}\|_\infty\leq\zeta/4$.
+Set the sampled network's readout coefficient to
+$v_i^*=(\beta\cdot h_i)/J_H$.  On successful covariance sampling,
+its output on the net is within
+$\zeta/4+(K/\zeta)\delta_H=3\zeta/8$ of the actual output.
+Each readout coefficient has absolute value at most $K/(\zeta J_H)$.
+
+We bound every incoming coefficient in one such realization,
+uniformly in $\tau$.  There are at most
+\[
+ P_0=(d+1)J_1+\sum_{\ell=2}^H J_\ell J_{\ell-1}+J_H
+\]
+active coefficients, including the readout.  Every selected tilt
+has parameter norm at most $4K/\delta_\ell\leq G_1^{\rm orig}$.
+Its density relative to its incoming Gaussian row is therefore at
+most $\exp(2G_1^{\rm orig}/\tau^2)$.  This also holds after stopping,
+when that density is one.  Every actual Gaussian incoming coordinate
+has variance at most $\tau^2$, since $d\geq1$ and
+$J_{\ell-1}\geq1$.
+Choose
+\[
+ B_0=\max\left\{1,\frac K{\zeta J_H},
+       \sqrt{4G_1^{\rm orig}+2\log(8P_0)}\right\}.
+\]
+For every incoming coordinate, conditionally on all earlier layers,
+its probability of absolute value above $B_0$ is at most
+\[
+ 2\exp\left[-\frac{B_0^2-4G_1^{\rm orig}}{2\tau^2}\right]
+       \leq2e^{-\log(8P_0)}=\frac1{4P_0}.
+\]
+A union bound gives simultaneous coefficient bounds with probability
+at least $3/4$.  Intersecting with covariance success therefore gives
+a deterministic realization with all these properties.  Importantly,
+the bounds $J_\ell,B_0$ and the input net do not depend on $\tau$.
+
+It remains to count bounded networks, rather than to use the
+mean-field mass-packing bound, whose entropy cost would now contain
+$1/\tau^2$.  Put $M=\max_\ell J_\ell$ and
+\[
+ \Lambda=(d+1+(H+1)M)[1+M(B_0+1)]^H.
+\]
+Round each of the at most $P_0$ actual coefficients to a grid of mesh
+$\zeta/(8\Lambda)$, keeping the fixed unequal layer widths.
+The layerwise coordinate-error induction, using $|\tanh|\leq1$ and
+the one-Lipschitz property, bounds the resulting output perturbation
+by $\zeta/8$ on the cube.  The grid contains at most
+\[
+ \exp\left[P_0\log\left(3+\frac{16B_0\Lambda}{\zeta}\right)\right]
+\]
+networks.  Evaluate their outputs at the fixed nearest input-net
+point, and clip the values to $[-\sqrt K,\sqrt K]$.
+Clipping cannot increase error to a good output, which already has
+this range.  The total error is at most
+$3\zeta/8+\zeta/8+\zeta/4=3\zeta/4<a$.
+These functions form a single deterministic cover for every $\tau$.
+
+For the stated degrees, write $q_\ell=K/\delta_\ell$.
+The recursion $q_H=8K^2/\zeta^2$,
+$q_{\ell-1}=2304q_\ell^2$ gives
+\[
+ J_\ell\leq C_H(d+1)
+   K^{2^{H-\ell+2}-2}\zeta^{-2^{H-\ell+2}}
+                \log\frac{C_H(d+1)K}{\zeta}.
+\]
+The uniform width threshold is a constant times
+$\delta_1^{-2}\log(2s^2+1)$, with degrees $v_H-2$ and $v_H$.
+Among the adjacent products in $P_0$, $J_1J_2$ is largest and has
+degrees $3v_H/2-4$ and $3v_H/2$; these also dominate the first-layer
+and readout counts for $H\geq2$ and $K\geq128$.
+The rounding logarithm is bounded by
+$C_H\log[C_H(d+1)K/\zeta]$.  This proves
+\eqref{eq:scaled-mf-cover-bounds}, after absorbing $\zeta=a/4$
+into constants depending only on $H$.
+\end{proof}

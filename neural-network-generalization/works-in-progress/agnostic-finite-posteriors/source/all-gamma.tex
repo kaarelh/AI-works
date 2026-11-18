@@ -1,0 +1,224 @@
+\section{One fixed-prefactor oracle bound for every exponent at least one}
+\label{sec:fixed-all-gamma-raw}
+
+The two approximation arguments cover complementary Gaussian scales.
+The covariance cover works when the internal Gaussian scale is bounded
+below; spectral truncation works when that scale is small.  Combining
+them gives a rate independent of the fixed exponent $\gamma\geq1$,
+without modifying the Gaussian prior's prefactor.
+
+Use $H\geq2$ hidden tanh layers, inputs in $[-1,1]^d$, and bounded
+IID labels $|Y|\leq1$.  For each fixed $\gamma\geq1$, the actual
+independent centered Gaussian variances are
+\[
+ \operatorname{Var}(W^1_{jk})=N^{1-\gamma}/d,\qquad
+ \operatorname{Var}(W^\ell_{ji})=N^{-\gamma},\qquad
+ \operatorname{Var}(v_j)=N^{-\gamma-1}.
+\]
+The Gaussian likelihood variance is $n\lambda N^{-\gamma}$.
+Thus the posterior is exactly
+\[
+ \Pi_{N,\gamma,S}(dw)=Z^{-1}
+        e^{-N^\gamma\widehat R_S(z_w)/(2\lambda)}\mu_{N,\gamma}(dw).
+\]
+Write $A_g(\rho),E,U$ for the teacher quantities in
+\eqref{eq:mf-teacher-cost}; in particular
+$E=d(d+1)B^2+2Hm^2B^2$, $U=mB$, and
+$\rho=\lambda/[4(U+1)]$.
+
+\begin{theorem}[A raw oracle bound at every mean-field-or-stronger exponent]
+\label{thm:fixed-all-gamma-raw}
+Let
+\[
+ v_H=2^{H+1},\qquad b_H=\max\{1,(H-1)/2\},\qquad
+ a_H=v_H+2b_H.
+\]
+There are finite computable constants $C_H$ and $\lambda_H>0$, depending
+only on $H$, with the following property.  Suppose $n\geq2$,
+$0<\lambda\leq\min\{\epsilon,\lambda_H\}$, $\epsilon\leq1$,
+$0<\delta<1$, and
+\begin{equation}
+ n\geq C_H(d+1)^2
+    \log^6\!\frac{2n(d+1)}{\lambda\epsilon\delta}\,
+                 \lambda^{-a_H}\epsilon^{-3}.
+ \label{eq:fixed-all-gamma-budget}
+\end{equation}
+For each fixed width-$m$, weight-$B$ teacher $g$ with $B\geq1$, with
+probability at least $1-\delta$, simultaneously for every
+$\gamma\geq1$ and every learner width $N\geq m$,
+\begin{align}
+ \int R(z_w)\,\Pi_{N,\gamma,S}(dw)
+ \leq\;&R(g)+2\lambda A_g(\rho)
+            +C_H\left[\epsilon+\lambda\log\frac{8(d+H+4)}\delta\right]
+ \notag\\
+ &+(U+1)\sqrt{\frac{2R(g)\log(8/\delta)}n}
+        +\frac{2(U+1)^2\log(8/\delta)}{3n}.
+ \label{eq:fixed-all-gamma-oracle}
+\end{align}
+The same bound holds for the ordinary raw-output posterior mean and
+for the usual clipped prediction conventions.
+The constants, calibration, and probability event are common to all
+the stated widths and prior exponents.
+
+For a fixed teacher, dimension, depth, and confidence level, setting
+$\epsilon=\lambda$ gives the excess rate
+\begin{equation}
+ \widetilde O\!\left(n^{-1/(2^{H+1}+2\max\{1,(H-1)/2\}+3)}\right).
+ \label{eq:fixed-all-gamma-rate}
+\end{equation}
+For two, three, and four hidden layers these exponents are
+$1/13$, $1/21$, and $1/38$.  For every
+\begin{equation}
+ \alpha<\frac1{4a_H},
+ \label{eq:fixed-all-gamma-growing}
+\end{equation}
+the posterior also competes, with vanishing additive excess, with the
+best population risk in the class of teachers whose width and weight
+caps are both at most $n^\alpha$.  At a fixed weight cap the sufficient
+width exponent is twice as large.
+\end{theorem}
+
+\begin{proof}
+Put $\tau_N=N^{(1-\gamma)/2}$ and $\omega_N=N^\gamma=N/\tau_N^2$.
+Choose a sufficiently small constant $c_H>0$, depending only on $H$,
+and introduce the proof threshold
+\[
+ \kappa=c_H\lambda^{b_H}.
+\]
+This threshold only selects the argument used for a given width; it
+does not change any weight variance.
+
+First consider widths with $\tau_N<\kappa$.
+The sample condition \eqref{eq:fixed-all-gamma-budget} implies the
+spectral statistical calibrations \eqref{eq:raw-all-lambda}, with
+failure parameter $\delta/4$.  Indeed $a_H\geq H$, while its logarithm
+and $(d+1)^2$ factors dominate those in the displayed calibrations.
+It also makes
+\[
+ r_n+\frac{512C_0^2Tu_n}{\lambda}\leq C_H\epsilon,
+ \qquad M_n\leq\overline M_H:=7T
+\]
+for a finite constant $\overline M_H$ depending only on $H$;
+here $T=64(1+c_H^{\rm eff})$ and $c_H^{\rm eff}$ is the constant
+in \eqref{eq:effective-mgf-constant}.
+The dimension-free bound follows because the effective energy omits
+the first layer, whose weights are unrestricted in the capacity bound.
+Taking the threshold constant $c_H$ no larger than
+\[
+ \left[768\sqrt{\overline M_H}(H-1)2^{(H-1)/2}
+       T^{\max\{(H-3)/2,0\}}\right]^{-1}
+\]
+ensures \eqref{eq:raw-all-prefactor}.  Theorem~\ref{thm:raw-all-scales}
+then proves \eqref{eq:fixed-all-gamma-oracle} at all these widths on
+one common event.  Its teacher contribution is at most
+$2\lambda A_g(\rho)+C_H\lambda$, since $\tau_N\leq1$;
+its remaining spectral transfer term is $O_H(\kappa)\leq O_H(\lambda)$.
+
+It remains to treat $\tau_N\geq\kappa$.  Set $K_0=128$,
+$K_j=K_0 2^j$ up to the least $J$ for which $K_J\geq128/\lambda$,
+and let $a_j=c_*(\epsilon+\lambda K_j)$ for the same sufficiently
+small numerical constant as in the mean-field proof.
+Apply Lemma~\ref{lem:truncated-scale-cover} to these levels.
+Its width threshold has no $\kappa$ dependence, so
+\begin{equation}
+ N_0:=\left\lceil\max_j T_H''(d,K_j,1/a_j)\right\rceil
+ \leq C_H(d+1)\log\!\frac{2n(d+1)}{\lambda\epsilon\delta}\,
+                   \lambda^{-(v_H-2)}\epsilon^{-2}.
+ \label{eq:fixed-all-gamma-width-threshold}
+\end{equation}
+At $N\geq N_0$, define $q_{N,\gamma}$ to be twice the largest failed
+cover level, or $K_0$ when no level fails.  The normalized Gaussian
+failure probabilities give exactly
+\[
+ \log\int e^{\omega_Nq_{N,\gamma}/128}\,d\mu_{N,\gamma}
+       \leq\omega_N B_H.
+\]
+Thus the posterior variational comparison pays
+$(\lambda/64)q_{N,\gamma}$ as in
+\eqref{eq:mf-complexity-comparison}.
+
+The cover family is common to every $\tau\in[\kappa,1]$ and every
+width.  Its cardinality bound differs from the mean-field bound only
+by a factor $\kappa^{-2}$ and the logarithm involving $1/\kappa$.
+The finite-class smooth-loss calculation from the mean-field proof
+therefore applies on one common sample event whenever
+\begin{equation}
+ n\geq C_H(d+1)^2
+    \log^6\!\frac{2n(d+1)}{\lambda\epsilon\delta}\,
+                  \kappa^{-2}\lambda^{-v_H}\epsilon^{-2}.
+ \label{eq:fixed-all-gamma-large-width-budget}
+\end{equation}
+In detail, the relevant maximum is bounded by
+\[
+ \kappa^{-2}\sup_{x>0}
+       \frac{x^{v_H}}{(\epsilon+\lambda x)^{v_H+2}}
+       \leq C_H\kappa^{-2}\lambda^{-v_H}\epsilon^{-2}.
+\]
+The log factor involving $\kappa=c_H\lambda^{b_H}$ is absorbed into
+$C_H$ times the displayed logarithm.
+On empirical risk at most eight and below the top failed complexity
+level, the raw risk deviation is at most
+$\lambda q_{N,\gamma}/64+C_H\epsilon$.
+
+The posterior tail estimates from the mean-field proof also remain
+valid.  Under the scaled prior,
+$r_N=N\|v\|^2=N^{-\gamma}\chi_N^2$ has first and second moments
+at most one and three.  Hence $\int R(z_w)^2d\mu\leq24$, and the
+centered readout implies $Z\geq e^{-\omega_N/\lambda}$.
+Both omitted weighted posterior tails are at most
+$C_He^{-3\omega_N/\lambda}\leq C_He^{-3/\lambda}$.
+Integration of the raw deviation, followed by the teacher-cylinder
+comparison, proves the desired bound for all widths with
+$\tau_N\geq\kappa$ and $N\geq N_0$.
+
+For the remaining widths use
+Lemma~\ref{lem:simultaneous-scale-small-width}, with failure level
+$\delta/(8N^2)$.  At each width its one event covers every
+$\tau\in[\kappa,1]$, hence every eligible $\tau_N$ without an
+uncountable union.  Its sample remainder is at most
+\[
+ \frac{512N}{n\lambda^2\kappa^2}
+     \leq\frac{512N_0\kappa^{-2}}{n\lambda^2}.
+\]
+Using \eqref{eq:fixed-all-gamma-width-threshold}, this is at most
+$C_H\epsilon$ whenever
+\[
+ n\geq C_H(d+1)
+       \log\!\frac{2n(d+1)}{\lambda\epsilon\delta}\,
+                     \kappa^{-2}\lambda^{-v_H}\epsilon^{-3}.
+\]
+Increasing its constant also ensures the lemma's calibration.
+This requirement and \eqref{eq:fixed-all-gamma-large-width-budget}
+follow from \eqref{eq:fixed-all-gamma-budget}, because
+$\kappa^{-2}=c_H^{-2}\lambda^{-2b_H}$.
+The additional scale-grid entropy and confidence costs are uniform
+in width and scale by \eqref{eq:simultaneous-scale-confidence}:
+\[
+ \frac{4\lambda\kappa^2}{N}
+    [1+\log M_N+\log(8N^2/\delta)]
+ \leq4\lambda\left[4+\log\frac{8(d+H+4)}\delta\right].
+\]
+The auxiliary scale mixture used in that lemma only constructs its
+common sample event.  The posteriors in this theorem retain their
+individual Gaussian priors.
+The small-width exceptional probabilities sum to less than $\delta/4$.
+Together with the two common statistical events and one fixed-teacher
+Bernstein event, the total failure probability is at most $\delta$.
+Every event is now common to all the asserted exponents and widths.
+Jensen and posterior square integrability prove the assertion for the
+ordinary mean.
+
+Finally $\epsilon=\lambda$ gives sample power $a_H+3$.
+For growing teacher caps take $\lambda=n^{-\theta}$ and
+$\epsilon=n^{-\eta}$, where
+\[
+ 4\alpha<\theta<1/a_H,\qquad
+ 0<\eta\leq\theta,\qquad a_H\theta+3\eta<1.
+\]
+These choices exist under \eqref{eq:fixed-all-gamma-growing}.
+They make $\lambda E$ and every other oracle remainder vanish for the
+population-risk minimizer of the compact capped class.  The minimizer
+is fixed before sampling and has risk at most one, because the zero
+network belongs to the class.  With weights fixed, replace $4\alpha$
+by $2\alpha$.
+\end{proof}

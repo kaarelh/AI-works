@@ -1,0 +1,417 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,amsmath,amssymb,amsthm,mathtools,booktabs,microtype}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\hypersetup{pdftitle={Agnostic Bayesian neural-network learning with nonexpansive internal layers},pdfauthor={ChatGPT-6 Astra; Claude Opus 5.5; Kaarel Hänni; Dmitry Vaintrob}}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{definition}\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}\newtheorem{remark}[theorem]{Remark}
+\newcommand{\R}{\mathbb R}\newcommand{\E}{\mathbb E}
+\newcommand{\Prob}{\mathbb P}\newcommand{\Rad}{\mathfrak R}
+\newcommand{\clip}{\operatorname{clip}}
+\title{Agnostic Bayesian neural-network learning\\with nonexpansive internal layers}
+\author{ChatGPT-6 Astra \and Claude Opus 5.5 \and Kaarel H\"anni \and
+Dmitry Vaintrob\thanks{Authors are listed in alphabetical order.}}
+\date{17 November 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+Can a Bayesian neural network compete with the best small network when labels are noisy or the target is misspecified? We prove a coefficient-one squared-loss oracle inequality for a dense Gaussian weight prior conditioned on a simple internal-gain bound: each hidden-to-hidden matrix has absolute row sums at most one. This makes each internal layer nonexpansive in the coordinate maximum norm. For tanh and a class of bounded monotone Lipschitz activations, the strong-prior learner's ordinary raw-output posterior mean competes with every teacher satisfying the same condition, at every learner width above the teacher width. If the teacher has width $m$, $H$ hidden layers, and weights bounded by $B$, a sufficient sample bound is, up to logarithms,
+$O(((d+1)(d(d+1)B^2+Hm+m^2B^2)+(mB+1)^2)/\varepsilon^2)$.
+At fixed input dimension and weight bound this is $\widetilde O((m^2+Hm)/\varepsilon^2)$: quadratic in width and linear in depth. Labels may have any bounded IID distribution. The proof combines a depth-independent capacity bound with quadratic regularization and a smooth-loss inequality. On bounded input domains, the same polynomial rate holds for the actual finite posterior at Gaussian scaling exponents $\gamma\geq2$, and with one hidden layer at every $\gamma\geq1$. For this conditioned prior and likelihood family, the deep finite-scale threshold is sharp: at every $1\leq\gamma<2$, a constant target already defeats a guarantee uniform in learner width. The positive result concerns a restricted teacher class; it does not establish this rate for unrestricted multilayer perceptrons.
+\end{abstract}
+
+\section{The approximation problem and the restriction}
+
+Exact realizability by a small network is a strong assumption. For noisy data, a more useful guarantee compares a learner's test loss with the best small neural approximation. Let $D$ be any probability law on $\R^d\times[-1,1]$, where $d\geq1$. For a measurable real-valued predictor $f$, put
+\[
+ R(f)=\E_{(X,Y)\sim D}(f(X)-Y)^2,
+ \qquad
+ \widehat R_S(f)=\frac1n\sum_{i=1}^n(f(X_i)-Y_i)^2,
+\]
+where $S$ consists of $n$ independent observations from $D$. We seek
+\[
+ R(\widehat f_S)\leq \inf_{g\in\mathcal G}R(g)+o(1),
+\]
+with a leading coefficient exactly one and with a remainder independent of the learner's possibly much larger width.
+
+Our restriction controls amplification between hidden layers. If a matrix $W$ has absolute row sums at most one, then
+\[
+ \|Wu-Wu'\|_\infty\leq\|u-u'\|_\infty.
+\]
+A $1$-Lipschitz activation preserves this inequality when applied coordinatewise. Such a layer is called \emph{nonexpansive}. This is a direct sufficient condition for internal perturbations not to grow. It concerns the hidden-to-hidden maps, not the first layer or the final readout.
+
+We condition a dense independent Gaussian prior on this restriction. There is no prior over network widths and no choice of a sparse architecture: every coordinate of a specified dense architecture remains random. The comparator must satisfy the same internal restriction. Arbitrary bounded-weight tanh networks cannot in general be put into this class by rescaling layers without changing their function.
+
+The unrestricted agnostic Gaussian argument in~\cite{sharper,opus} has a sample exponent that deteriorates with depth. Here the restriction gives a square-root statistical rate at every depth, both in the strong-prior limit and in the finite-scale regimes specified in Section~\ref{sec:finite}. Its role is explicit: it converts hidden features into nested convex combinations to which contraction applies without multiplying the complexity at each layer.
+
+\section{Model, Gaussian prior, and posterior}
+
+Fix a continuous odd nondecreasing $1$-Lipschitz activation $\phi:\R\to[-1,1]$. Examples include tanh, hardtanh, softsign, and $\phi(t)=\operatorname{erf}(\sqrt\pi t/2)$. In particular $\phi(0)=0$. There are $H\geq1$ hidden layers of common width $N$, followed by one scalar linear readout. Thus total depth is $L=H+1$. Write $\bar x=(1,x)\in\R^{d+1}$ and
+\begin{align*}
+ h^1(x)&=\phi(W^1\bar x),\\
+ h^\ell(x)&=\phi(W^\ell h^{\ell-1}(x)),\quad 2\leq\ell\leq H,\\
+ z_w(x)&=v^\top h^H(x).
+\end{align*}
+There are no internal biases. The constant input coordinate supplies first-layer biases. Define
+\begin{equation}
+ Q_N(w)=\frac dN\|W^1\|_F^2+
+       \sum_{\ell=2}^H\|W^\ell\|_F^2+N\|v\|_2^2.
+ \label{eq:energy}
+\end{equation}
+
+We prove a slightly more general result with prescribed internal gains $s_\ell>0$. Set
+\begin{equation}
+ \mathcal S_N(s)=\left\{w:
+   \max_j\sum_i|W^\ell_{ji}|\leq s_\ell
+       \text{ for every }2\leq\ell\leq H\right\},
+ \qquad
+ G=\max\left\{1,\prod_{\ell=2}^H s_\ell\right\}.
+ \label{eq:support}
+\end{equation}
+Empty sums and products have their usual values when $H=1$. The case $s_\ell=1$ is the nonexpansive theorem. The gains are chosen before observing data. For example, $s_\ell=1+c/(H-1)$ permits slight expansion at each internal layer while keeping $G\leq e^c$.
+
+For $\sigma>0$, start with independent centered Gaussian weights of variances
+\[
+ \operatorname{Var}(W^1_{jk})=N\sigma^2/d,
+ \quad \operatorname{Var}(W^\ell_{jk})=\sigma^2\ (\ell\geq2),
+ \quad \operatorname{Var}(v_j)=\sigma^2/N,
+\]
+and condition on $\mathcal S_N(s)$. This event has positive probability at every fixed width and scale. With Gaussian observation likelihood of mean $z_w(X_i)$ and variance $n\lambda\sigma^2$, the posterior is
+\begin{equation}
+ \Pi_{\sigma,N,S}(dw)=\frac1{Z_{\sigma,N,S}}
+ \mathbf1_{\mathcal S_N(s)}(w)
+ \exp\left[-\frac{Q_N(w)+\lambda^{-1}\widehat R_S(z_w)}{2\sigma^2}\right]dw.
+ \label{eq:posterior}
+\end{equation}
+The normalizing constant of the conditioned Gaussian prior cancels in this expression. The likelihood uses raw real-valued outputs and does not require interpolation of noisy labels.
+
+The strong-prior limit means $\sigma\downarrow0$ after fixing $n,S,N$, and $\lambda$. Its optimization problem is
+\begin{equation}
+ \min_{w\in\mathcal S_N(s)}
+       \{\widehat R_S(z_w)+\lambda Q_N(w)\}.
+ \label{eq:objective}
+\end{equation}
+The predictions of primary interest are the raw posterior average risk and the ordinary posterior mean
+\[
+ \int R(z_w)\,\Pi_{\sigma,N,S}(dw),
+ \qquad
+ \bar z_{\sigma,N,S}(x)=\int z_w(x)\,\Pi_{\sigma,N,S}(dw).
+\]
+The first will control the risk of the second by Jensen's inequality.
+
+\section{Teacher cloning and capacity}
+
+\begin{lemma}[Cloning preserves the internal-gain restriction]
+\label{lem:clone}
+Let $g$ have hidden width $m$, $H$ hidden layers, weights bounded in absolute value by $B$, and internal row-sum bounds $s_\ell$. At every learner width $N\geq m$, it has an exact implementation in $\mathcal S_N(s)$ with
+\begin{equation}
+ Q_N\leq E:=d(d+1)B^2+2m\sum_{\ell=2}^H s_\ell^2+2m^2B^2.
+ \label{eq:teacher-energy}
+\end{equation}
+Also $|g(x)|\leq U:=mB$ for every input.
+\end{lemma}
+\begin{proof}
+Partition the $N$ neurons in each layer into $m$ groups of sizes
+$k_i\in\{\lfloor N/m\rfloor,\lceil N/m\rceil\}$. Copy each teacher first-layer row to its group. For a teacher internal matrix $A^\ell$, set every edge from a copy of neuron $i$ to a copy of neuron $j$ to $A^\ell_{ji}/k_i$. Set a copy's readout coefficient to $u_j/k_j$.
+Every copy has exactly the corresponding teacher activation, and every internal absolute row sum is exactly its teacher row sum. Thus the function and support condition are preserved.
+
+The first-layer energy is at most $d(d+1)B^2$. Each internal layer costs
+\[
+ \sum_{j,i}\frac{k_j}{k_i}|A^\ell_{ji}|^2
+ \leq2\|A^\ell\|_F^2
+ \leq2m s_\ell^2.
+\]
+The readout energy is at most $2m\|u\|_2^2\leq2m^2B^2$, because $k_j\geq N/(2m)$. Finally $|\phi|\leq1$ gives $|g|\leq\|u\|_1\leq mB$.
+\end{proof}
+
+Write $q_N(w)=N\|v\|_2^2$ for the readout energy. For $K>0$, let
+\[
+ \mathcal F_K=\bigcup_{N\geq1}
+    \{z_w:w\in\mathcal S_N(s),\ q_N(w)\leq K\}.
+\]
+The union is over every learner width, at the fixed depth and gains. This class only bounds the readout energy; in particular it contains every admissible network with $Q_N\leq K$.
+
+\begin{lemma}[Capacity independent of depth under nonexpansiveness]
+\label{lem:capacity}
+On every list of $n$ inputs, the empirical Rademacher complexity satisfies
+\begin{equation}
+ \widehat\Rad_n(\mathcal F_K)
+ \leq G\sqrt K\sqrt{\frac{2(d+1)\log(n+1)}n}.
+ \label{eq:capacity}
+\end{equation}
+In particular, when all $s_\ell=1$, the bound has no depth factor.
+\end{lemma}
+\begin{proof}
+Fix the sample inputs. Let $\mathcal A_1\subset[-1,1]^n$ be the closed convex hull of all vectors $(\phi(a\cdot\bar X_i))_{i=1}^n$, $a\in\R^{d+1}$. Recursively put
+\[
+ \mathcal A_\ell=\overline{\operatorname{conv}}
+       \{(\phi(s_\ell f_i))_{i=1}^n:f\in\mathcal A_{\ell-1}\}.
+\]
+Every $\mathcal A_\ell$ is symmetric, convex, contains zero, and lies in $[-1,1]^n$. By induction, every layer-$\ell$ neuron of an admissible network gives a sample vector in $\mathcal A_\ell$: divide its preactivation coefficients by $s_\ell$, whose total absolute value is at most one, and use symmetry, convexity, and zero in $\mathcal A_{\ell-1}$.
+
+Rademacher complexity is unchanged by closed convex hulls. Since $u\mapsto\phi(s_\ell u)$ is $s_\ell$-Lipschitz, the contraction inequality gives
+\[
+ \operatorname{Rad}(\mathcal A_\ell)
+ \leq s_\ell\operatorname{Rad}(\mathcal A_{\ell-1}).
+\]
+The output lies in $\|v\|_1\mathcal A_H$. By Cauchy--Schwarz,
+$\|v\|_1\leq\sqrt N\|v\|_2\leq\sqrt K$. Symmetry and convexity then put the whole output class inside $\sqrt K\mathcal A_H$.
+
+Put $a=\lim_{t\to\infty}\phi(t)\in[0,1]$. If $a=0$, oddness and monotonicity imply $\phi=0$, and the claim is immediate. Otherwise $(1+\phi(t)/a)/2$ is a continuous distribution function. For a random variable $T$ with that law, $\phi(u)=a\E\operatorname{sign}(u-T)$. Thus $\mathcal A_1$ is contained in the convex hull of affine-halfspace sign vectors and zero. There are at most $(n+1)^{d+1}$ such dichotomies, so the Sauer--Shelah and finite-class Rademacher bounds give
+\[
+ \operatorname{Rad}(\mathcal A_1)
+ \leq\sqrt{2(d+1)\log(n+1)/n}.
+\]
+Combining the estimates proves the claim.
+\end{proof}
+
+The same bound holds for worst-case sample Rademacher complexity. All classes are symmetric, so the convention with an absolute value inside the supremum gives the same quantity. Suprema are measurable: at each width, strict readout-energy and row-sum inequalities admit a countable dense set of rational parameter vectors, and boundary points are limits of interior points. The union over widths is countable.
+
+\section{An explicit oracle bound for raw predictions}
+
+We state the smooth-loss tool used below. This is the form of the theorem of Srebro, Sridharan, and Tewari~\cite[Theorem 1]{sst} used in~\cite{sharper}.
+
+\begin{lemma}[Uniform smooth-loss inequality]
+\label{lem:sst}
+There is a universal constant $C_*\geq1$ with the following property. Suppose a nonnegative loss is $s$-smooth in its scalar prediction and is bounded by $b_0$ on a class $\mathcal F$. With probability at least $1-\eta$, simultaneously for $f\in\mathcal F$,
+\begin{align}
+ R(f)-\widehat R_S(f)
+ \leq C_*\biggl[&\sqrt{\widehat R_S(f)}
+  \left(\sqrt{s}\log^{3/2}(2n)\Rad_n(\mathcal F)
+                 +\sqrt{\frac{b_0\log(1/\eta)}n}\right)\notag\\
+ &+s\log^3(2n)\Rad_n(\mathcal F)^2
+                 +\frac{b_0\log(1/\eta)}n\biggr].
+ \label{eq:sst}
+\end{align}
+Here $\Rad_n$ is worst-case Rademacher complexity. Neither convexity of $\mathcal F$ nor a realizable data law is required.
+\end{lemma}
+
+Throughout the following theorem, $C_*$ is fixed to a constant for which Lemma~\ref{lem:sst} holds. This avoids assigning an untracked numerical value to an imported universal constant.
+
+For $n\geq2$ and $0<\delta<1$, define
+\begin{align}
+ D_n&=G\sqrt{2(d+1)\log(n+1)}, &
+ J_n&=\lceil\log_2n\rceil,\notag\\
+ t_n&=\log\frac{2(J_n+1)}\delta, & q_n&=t_n/n,\notag\\
+ A_n&=\frac{\sqrt2D_n\log^{3/2}(2n)}{\sqrt n}, &
+ a_n&=\sqrt2 A_n,\notag\\
+ b_n&=a_n+2\sqrt{2q_n},&c_n&=a_n^2+8q_n,\notag\\
+ r_n&=C_*(A_n+2\sqrt{q_n}+A_n^2+4q_n).&&
+ \label{eq:constants}
+\end{align}
+For a fixed teacher $g$ from Lemma~\ref{lem:clone}, put
+\begin{equation}
+ h_n(g,\delta)=(U+1)\sqrt{\frac{2R(g)\log(2/\delta)}n}
+             +\frac{2(U+1)^2\log(2/\delta)}{3n}.
+ \label{eq:teacher-concentration}
+\end{equation}
+
+\begin{theorem}[Raw-output agnostic oracle inequality]
+\label{thm:oracle}
+Let $g$ have width $m$, weights bounded by $B$, and the prescribed internal row-sum bounds. Suppose
+\begin{equation}
+ \frac1n\leq\lambda\leq1,\qquad \lambda\geq2C_*c_n.
+ \label{eq:calibration-condition}
+\end{equation}
+With sample probability at least $1-\delta$, simultaneously for every learner width $N\geq m$,
+\begin{equation}
+ \limsup_{\sigma\downarrow0}
+      \int R(z_w)\,\Pi_{\sigma,N,S}(dw)
+ \leq R(g)+\lambda E+r_n+\frac{C_*^2b_n^2}{2\lambda}
+                    +h_n(g,\delta).
+ \label{eq:oracle}
+\end{equation}
+The same right side bounds
+$\limsup_{\sigma\downarrow0}R(\bar z_{\sigma,N,S})$, the risk after clipping this mean to $[-1,1]$, and the risk of the posterior mean of clipped outputs. The sample event is common to every eligible width; the strong-prior limit is taken separately at each fixed width.
+\end{theorem}
+\begin{proof}
+On $\mathcal F_K$, squared loss is $2$-smooth and bounded by $(\sqrt K+1)^2$, since $|z_w|\leq\sqrt N\|v\|_2=\sqrt{q_N(w)}\leq\sqrt K$. Apply Lemma~\ref{lem:sst} to $K=2^j$, $0\leq j\leq J_n$, with failure probability $\delta/[2(J_n+1)]$ for each class. A union bound gives one event valid at every width.
+
+Let $w$ minimize~\eqref{eq:objective}. The zero network belongs to the support, so
+\[
+ \widehat R_S(z_w)+\lambda Q_N(w)\leq\widehat R_S(0)\leq1.
+\]
+Write $k=Q_N(w)$. Thus $k\leq1/\lambda\leq n$ and $\widehat R_S(z_w)\leq1$. If $k\leq1$, Lemma~\ref{lem:sst} and~\eqref{eq:capacity} give deviation at most $r_n$. If $k>1$, choose the least dyadic $K$ containing $k$, so $K\leq2k$ and $(\sqrt K+1)^2\leq8k$. Substitution gives
+\begin{align*}
+ R(z_w)-\widehat R_S(z_w)
+ &\leq C_*\{a_n\sqrt k+a_n^2k+2\sqrt{2kq_n}+8kq_n\}\\
+ &=C_*b_n\sqrt k+C_*c_n k.
+\end{align*}
+The calibration and completion of the square yield
+\[
+ C_*c_n k\leq\frac{\lambda k}{2},\qquad
+ C_*b_n\sqrt k\leq\frac{\lambda k}{2}
+                         +\frac{C_*^2b_n^2}{2\lambda}.
+\]
+In both cases,
+\[
+ R(z_w)\leq\widehat R_S(z_w)+\lambda Q_N(w)
+                       +r_n+\frac{C_*^2b_n^2}{2\lambda}.
+\]
+The exact teacher clone is an eligible competitor, so minimization bounds its first two terms by $\widehat R_S(g)+\lambda E$.
+
+The teacher is chosen independently of the sample. Its loss lies in $[0,(U+1)^2]$, with variance at most $(U+1)^2R(g)$. Bernstein's inequality therefore gives $\widehat R_S(g)\leq R(g)+h_n(g,\delta)$ with failure probability at most $\delta/2$. This proves the bound for all minimizers, on the stated common event.
+
+To pass to the posterior, fix $N,S$ and put $F=Q_N+\lambda^{-1}\widehat R_S(z_w)$. On the closed support, $F$ is continuous and coercive, so it has a nonempty compact minimizer set. Every support point is a limit of interior points: slightly shrink each internal matrix. Consequently, for every $\eta>0$ there is a positive-volume ball in the support on which $F\leq F_*+\eta/4$, where $F_*=\min_{\mathcal S_N(s)}F$.
+
+The raw risk is continuous on compact parameter sets, by dominated convergence, and satisfies $R(z_w)\leq2Q_N(w)+2$. For $\rho=\eta/[4(F_*+\eta)]$, on the set $F>F_*+\eta$ one has
+\[
+ F\geq (1-\rho)(F_*+\eta)+\rho Q_N
+      =F_*+3\eta/4+\rho Q_N.
+\]
+The integral of $(1+Q_N)e^{-Q_N\rho/(2\sigma^2)}$ over the whole parameter space is a Gaussian integral, with at most polynomial dependence on $\sigma$. Dividing the resulting tail bound by the positive-volume denominator bound shows
+\[
+ \lim_{\sigma\downarrow0}\int(1+Q_N)
+       \mathbf1_{\{F>F_*+\eta\}}\,d\Pi_{\sigma,N,S}=0.
+\]
+Near-optimal sublevel sets approach the compact minimizer set, so posterior-average risk has upper limit at most the maximum risk over that set. This proves~\eqref{eq:oracle}. Jensen's inequality gives the raw posterior mean. Clipping cannot increase squared loss against labels in $[-1,1]$, which gives the remaining predictions.
+\end{proof}
+
+\section{Teacher-class comparison and the joint polynomial}
+
+\begin{corollary}[An optimized teacher-resource calibration]
+\label{cor:optimized}
+Suppose a deterministic resource cap $E_0\geq E$ is known. Set
+\begin{equation}
+ \lambda=\max\left\{
+       \frac{C_*b_n}{\sqrt{2(E_0+1)}},\ 2C_*c_n,\ \frac1n\right\},
+ \label{eq:optimized-calibration}
+\end{equation}
+and assume $n$ is large enough that $\lambda\leq1$. In Theorem~\ref{thm:oracle}, the sum of the two energy-dependent terms satisfies
+\begin{equation}
+ \lambda E+\frac{C_*^2b_n^2}{2\lambda}
+ \leq\sqrt2 C_*b_n\sqrt{E_0+1}+2C_*c_nE_0+E_0/n.
+ \label{eq:optimized-cost}
+\end{equation}
+\end{corollary}
+\begin{proof}
+Let $\lambda_0=C_*b_n/\sqrt{2(E_0+1)}$. The maximum in~\eqref{eq:optimized-calibration} is at least $\lambda_0$ and at most $\lambda_0+2C_*c_n+1/n$. Hence
+\begin{align*}
+ \lambda E+\frac{C_*^2b_n^2}{2\lambda}
+ &\leq\lambda_0E_0+\frac{C_*^2b_n^2}{2\lambda_0}
+                 +2C_*c_nE_0+E_0/n\\
+ &\leq\sqrt2 C_*b_n\sqrt{E_0+1}+2C_*c_nE_0+E_0/n.
+\end{align*}
+\end{proof}
+
+Let $\mathcal G_{m,B,H}(s)$ be all networks of hidden width at most $m$, weights bounded by $B$, and the prescribed internal row-sum bounds. This is a compact parameter class after zero padding to width $m$, and its population risk is continuous. It contains the zero network. A population-risk minimizer $g_*$ therefore exists and has $R(g_*)\leq1$.
+
+\begin{corollary}[Comparison with the best small admissible network]
+\label{cor:class}
+Use~\eqref{eq:optimized-calibration} with
+\[
+ E_0=d(d+1)B^2+2m\sum_{\ell=2}^Hs_\ell^2+2m^2B^2,
+ \qquad U=mB.
+\]
+Whenever its calibration condition holds, with sample probability at least $1-\delta$, simultaneously for every $N\geq m$,
+\begin{align}
+ \limsup_{\sigma\downarrow0}R(\bar z_{\sigma,N,S})
+ \leq \min_{g\in\mathcal G_{m,B,H}(s)}R(g)
+ +r_n+\sqrt2C_*b_n\sqrt{E_0+1}+2C_*c_nE_0+E_0/n\notag\\
+ \hspace{6mm} +(U+1)\sqrt{\frac{2\log(2/\delta)}n}
+             +\frac{2(U+1)^2\log(2/\delta)}{3n}.
+ \label{eq:class-bound}
+\end{align}
+The same holds for posterior-average raw risk and the other predictions in Theorem~\ref{thm:oracle}.
+\end{corollary}
+\begin{proof}
+Apply Theorem~\ref{thm:oracle} to the deterministic population minimizer $g_*$. Although it depends on the data law and may depend on $n$, it is chosen before the sample is drawn. No event simultaneous over teachers is needed. Use $R(g_*)\leq1$ and Corollary~\ref{cor:optimized}.
+\end{proof}
+
+Suppressing logarithms in $n$ and $1/\delta$, the remainder in~\eqref{eq:class-bound} is
+\begin{equation}
+ \widetilde O\left(
+    \frac{G\sqrt{(d+1)(E_0+1)}+U+1}{\sqrt n}
+   +\frac{G^2(d+1)(E_0+1)+(U+1)^2}{n}\right).
+ \label{eq:rate}
+\end{equation}
+No learner-width factor is suppressed. For $s_\ell=1$, a sufficient sample bound for excess at most $\varepsilon\in(0,1)$ is
+\begin{equation}
+ n=\widetilde O\left(
+  \frac{(d+1)\{d(d+1)B^2+Hm+m^2B^2+1\}+(mB+1)^2}
+       {\varepsilon^2}\right).
+ \label{eq:sample}
+\end{equation}
+The tilde denotes logarithmic factors, which can be recovered from~\eqref{eq:constants}--\eqref{eq:class-bound}. The universal constants do not depend on $H$. At fixed $d$ and $B\geq1$, this is $\widetilde O((m^2+Hm)/\varepsilon^2)$.
+
+\begin{corollary}[Polynomially growing comparator classes]
+\label{cor:growing}
+Fix $d,H,\delta$, and the gain bounds. If $m_n=\lfloor n^\alpha\rfloor$ and $B_n=n^\alpha$, then for every $0\leq\alpha<1/4$, the calibration above gives, at every learner width $N\geq m_n$,
+\[
+ \limsup_{\sigma\downarrow0}R(\bar z_{\sigma,N,S})
+ \leq \min_{g\in\mathcal G_{m_n,B_n,H}(s)}R(g)
+            +\widetilde O(n^{2\alpha-1/2})
+\]
+with sample probability at least $1-\delta$. If instead $B$ is fixed, the range improves to $0\leq\alpha<1/2$, with remainder $\widetilde O(n^{\alpha-1/2})$. The same predictions and common-width event as above are covered.
+\end{corollary}
+\begin{proof}
+For the first assertion $E_0=O(n^{4\alpha})$ and $U=O(n^{2\alpha})$; for the second $E_0=O(n^{2\alpha})$ and $U=O(n^\alpha)$. Substitute in~\eqref{eq:rate}. The calibration is eventually at most one in both cases.
+\end{proof}
+
+\begin{corollary}[Depth may grow with the sample size]
+\label{cor:growing-depth}
+Fix $d$, $B\geq1$, and $\delta$, and take all internal gains equal to one. The depth and teacher width may be prescribed functions $H_n,m_n$ of the sample size. If
+\[
+ \frac{(m_n^2+H_nm_n)\log^4(2n)}n\longrightarrow0,
+\]
+then the oracle excess in Corollary~\ref{cor:class} tends to zero. In particular, $m_n=\lfloor n^\alpha\rfloor$ and $H_n=\lceil n^\beta\rceil$ work whenever $2\alpha<1$ and $\alpha+\beta<1$.
+\end{corollary}
+\begin{proof}
+The capacity constants do not depend on $H$. At fixed $d,B$, the energy cap is $O(m_n^2+H_nm_n)$ and the output cap is $O(m_n)$. Substitute these in the explicit constants of Corollary~\ref{cor:class}. The condition also makes the required calibration eventually at most one. The architecture is fixed before drawing each sample; simultaneity over all depths is not asserted.
+\end{proof}
+
+\input{finite-section}
+\input{counterexample-section}
+
+\section{Interpretation and remaining limitations}
+
+\paragraph{Why depth no longer changes the sample exponent.}
+Each internal neuron takes a signed combination with bounded total absolute weight. Consequently its values on the sample lie in a convex hull to which a fixed Lipschitz map is applied. Rademacher contraction controls that operation at each layer. Nonexpansiveness keeps the product of those bounds equal to one; the depth cost that remains is the teacher's quadratic energy, with at most $2m$ per internal layer. The statistical argument thus behaves like the one-hidden-layer argument even for deep networks.
+
+\paragraph{How restrictive is the condition?}
+Absolute row-sum bounds are a familiar sufficient condition for Lipschitz robustness. They do not use a selected neuron partition, a compression map, or the sample itself. They are exactly preserved by cloning. They are nevertheless conservative: signed cancellations can stabilize a network whose absolute row sums are large. Some useful networks amplify intermediate signals, and are excluded. This paper does not show that the condition is typical of trained networks or that every small Boolean circuit admits a low-energy implementation satisfying it.
+
+\paragraph{A tanh-specific depth caveat.}
+With tanh and unit internal row-sum bounds, hidden amplitudes themselves decrease with depth:
+\[
+ \|h^H(x)\|_\infty\le\tanh^{\circ(H-1)}(1)
+       \le\sqrt{\frac3{H+2}},
+ \qquad |z_g(x)|\le mB\sqrt{\frac3{H+2}}.
+\]
+Indeed, the first-layer amplitude is at most one, and every following layer applies tanh to a number no larger in absolute value than the preceding maximum. On $0\le t\le1$, concavity gives $\tanh t\ge t\tanh1\ge t/\sqrt2$, hence $\tanh t\le t-t^3/6$ after integrating the derivative bound. Therefore $1/\tanh^2t\ge1/t^2+1/3$, which proves the displayed iteration bound. At fixed width and readout cap, very deep teachers in this class consequently have small output amplitude; retaining a nonvanishing signal can require increasing width or readout magnitude. This is part of the restriction's cost, not an unrestricted depth-independence statement. It is specific to activations such as tanh: hardtanh, also covered here, passes every value in $[-1,1]$ unchanged, so identity internal layers preserve signals exactly.
+
+\paragraph{Prior scale and order of limits.}
+The strong-prior theorem works on arbitrary input domains at each fixed width. The finite-scale theorem uses bounded inputs and applies at every $\gamma\geq2$, and at every $\gamma\geq1$ with one hidden layer. For deeper networks, Theorem~\ref{thm:finite-failure} shows that the same conditioned prior fails throughout $1\leq\gamma<2$ under the stated width-independent likelihood calibration. Thus the restriction improves capacity but also changes the prior's large-width function probabilities; its learning behavior cannot be inferred from stability alone.
+
+\paragraph{Prediction and computation.}
+The theorem controls the ordinary mean of the raw outputs, not only the mean after clipping each posterior draw. It allows arbitrary bounded label noise and arbitrary approximation error. It is an information-theoretic statement about exact Bayesian inference; it does not supply an efficient sampler or a gradient-descent guarantee.
+
+\paragraph{Verification status.}
+The statements and proofs in this paper are conventional mathematical arguments. They have not been formalized in Lean. The result uses the imported smooth-loss theorem stated explicitly in Lemma~\ref{lem:sst}.
+
+\begin{thebibliography}{9}
+\bibitem{sst}
+Nathan Srebro, Karthik Sridharan and Ambuj Tewari.
+\emph{Smoothness, Low Noise and Fast Rates}.
+Advances in Neural Information Processing Systems 23, 2010.
+\url{https://www.cs.cornell.edu/~sridharan/smoothness.pdf}.
+
+\bibitem{sharper}
+ChatGPT-6 Astra, Claude Opus 5.5, Kaarel H\"anni and Dmitry Vaintrob.
+\emph{Sharper agnostic bounds for dense Gaussian Bayesian neural networks}.
+Research manuscript, 2026.
+\url{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/works-in-progress/agnostic-oracle-improvements}.
+
+\bibitem{opus}
+Claude Opus 5.5.
+\emph{Tempered-likelihood agnostic learning for Bayesian tanh networks}.
+Research note and short theorem statement, 2026.
+\url{https://github.com/kaarelh/AI-works/blob/main/neural-network-generalization/works-in-progress/agnostic-learning/research-notes/B-tempered-likelihood.md}.
+\end{thebibliography}
+\end{document}

@@ -1,0 +1,140 @@
+\section{A sharper cover when the Gaussian scale is bounded below}
+\label{sec:truncated-scale-mass-cover}
+
+The finite-grid cover from Lemma~\ref{lem:scaled-mf-cover} is uniform
+even as the Gaussian standard deviation tends to zero.  When its scale
+is bounded below, the more economical entropy packing argument can
+also be made uniform.  We use an auxiliary probability measure only
+to count separated output functions.  This does not change the
+learner's Gaussian prior, likelihood, or fixed architecture.
+
+\begin{lemma}[A common entropy cover above a scale threshold]
+\label{lem:truncated-scale-cover}
+Fix $H\geq2$, put $v_H=2^{H+1}$, and let
+$K\geq128$, $0<a<1$, and $0<\kappa\leq1$.
+There are computable constants $C_H$ and a finite deterministic family
+$\mathcal E_{K,a,\kappa}$, common to every scale
+$\tau\in[\kappa,1]$ and every learner width, such that
+\begin{gather}
+ T_H''(d,K,1/a)\leq
+ C_H(d+1)K^{v_H-2}a^{-v_H}
+                      \log\frac{C_H(d+1)K}{a},\notag\\
+ \log|\mathcal E_{K,a,\kappa}|\leq
+ C_H\kappa^{-2}(d+1)K^{v_H-1}a^{-v_H}
+                      \log\frac{C_H(d+1)K}{a\kappa}.
+ \label{eq:truncated-scale-cover-bounds}
+\end{gather}
+For every $N\geq T_H''(d,K,1/a)$ and every
+$\tau\in[\kappa,1]$, the Borel good event from
+Lemma~\ref{lem:scaled-mf-cover} obeys
+\begin{gather*}
+ \mu_{N,\tau}(G_{N,\tau,K,a}^c)
+       \leq2(H+1)e^{-NK/(16\tau^2)},\qquad
+ N\|v\|_2^2\leq K\quad\hbox{on }G_{N,\tau,K,a},\\
+ \inf_{h\in\mathcal E_{K,a,\kappa}}
+          \sup_{x\in[-1,1]^d}|z_w(x)-h(x)|<a
+             \quad(w\in G_{N,\tau,K,a}).
+\end{gather*}
+The centers can be chosen bounded in absolute value by $\sqrt K$.
+\end{lemma}
+\begin{proof}
+Retain the net, $\zeta=a/4$, the tolerances $\delta_\ell$, and widths
+$J_\ell$ from the preceding two cover constructions.  Consider the
+single fixed auxiliary architecture with these unequal layer widths.
+For a scale $\tau$, its reference measure $\mu_\tau^{\rm aux}$ has
+independent centered Gaussian coordinates of variances
+$\tau^2/d$ in the first layer, $\tau^2/J_{\ell-1}$ in internal layer
+$\ell$, and $\tau^2/J_H^2$ in the readout.
+Its number of coordinates, denoted $P_{\rm aux}$, satisfies
+\[
+ P_{\rm aux}\leq(d+1)J_1+
+                   \sum_{\ell=2}^H J_\ell J_{\ell-1}+J_H.
+\]
+This architecture is used only for the counting argument.
+
+Fix an actual good output $f$ at any learner width and any scale
+$\tau\in[\kappa,1]$.  The normalized adaptive tilts from
+\eqref{eq:scaled-regularized-dual}, stopped after the first covariance
+failure, have conditional row relative entropy at most $2K/\tau^2$.
+On successful hidden sampling use the readout mean
+$v_i^*=(\beta\cdot h_i)/J_H$, and on failure use zero mean, retaining
+reference readout variance $\tau^2/J_H^2$ in both cases.
+As in Lemma~\ref{lem:mf-entropy-cover},
+$J_H\|v^*\|_2^2\leq9K/8$, so the readout entropy is at most
+$9KJ_H/(16\tau^2)$.  The full comparison law $\nu_{f,\tau}$ therefore
+satisfies
+\begin{equation}
+ \operatorname{KL}(\nu_{f,\tau}\Vert\mu_\tau^{\rm aux})
+       \leq B/\tau^2,
+ \qquad B=2K\sum_{\ell=1}^H J_\ell+9KJ_H/16.
+ \label{eq:scaled-auxiliary-entropy}
+\end{equation}
+The covariance sampling succeeds with probability at least $3/4$.
+Readout noise at each net point has variance at most
+$\tau^2/J_H\leq1/J_H$, so its maximum is at most $\zeta/8$ except
+with probability at most $1/4$.  Thus $\nu_{f,\tau}$ gives probability
+at least $1/2$ to auxiliary nearest-net-point outputs within $\zeta$
+of $f$ uniformly on the input cube.  These are exactly the same
+approximation bounds used for the mean-field entropy cover.
+
+To obtain one counting measure for all $\tau$, set
+$r=1+1/P_{\rm aux}$ and let
+\[
+ \tau_j=\kappa r^j\quad(0\leq j\leq J_*),
+ \qquad J_* = \min\{j\geq0:\kappa r^j\geq1\}.
+\]
+Let $M_*=J_*+1$ and use the equally weighted auxiliary measure
+\[
+ \overline\mu^{\rm aux}=\frac1{M_*}
+                   \sum_{j=0}^{J_*}\mu_{\tau_j}^{\rm aux}.
+\]
+The finite-dimensional Gaussian covariance matrices of these measures
+are all scalar multiples of the same positive definite diagonal matrix.
+For every $\tau\in[\kappa,1]$, a grid point satisfies
+$\tau\leq\tau_j\leq r\tau$.  At every weight vector,
+\[
+ \frac{d\mu_{\tau_j}^{\rm aux}}{d\mu_\tau^{\rm aux}}
+ =\left(\frac\tau{\tau_j}\right)^{P_{\rm aux}}
+   \exp\left[\frac{Q_{
+       \rm aux}}2(\tau^{-2}-\tau_j^{-2})\right]
+ \geq r^{-P_{\rm aux}}\geq e^{-1},
+\]
+where $Q_{\rm aux}\geq0$ is the reference diagonal quadratic form.
+Consequently
+\begin{equation}
+ \operatorname{KL}(\nu_{f,\tau}\Vert\overline\mu^{\rm aux})
+ \leq B/\tau^2+1+\log M_*
+ \leq B/\kappa^2+1+\log M_*.
+ \label{eq:common-scale-entropy}
+\end{equation}
+No scale is mixed in the actual learner.  The auxiliary measure in
+\eqref{eq:common-scale-entropy} is solely a device proving that each
+of many disjoint function balls has nonnegligible mass under one
+probability measure.
+
+Push $\overline\mu^{\rm aux}$ forward to auxiliary outputs evaluated
+at the fixed nearest-net-point map.  Binary relative-entropy data
+processing and the comparison probability at least $1/2$ show that
+every $\zeta$-ball around a good actual output has reference mass at
+least
+\[
+ \exp\{-2[B/\kappa^2+1+\log M_*+\log2]\}.
+\]
+A maximal packing with pairwise distances greater than $2\zeta$
+therefore has at most the reciprocal of this mass in cardinality and
+is a $2\zeta$-cover of all good outputs, simultaneously over learner
+width and $\tau\in[\kappa,1]$.  Choose its centers from the good
+outputs themselves, so they have magnitude at most $\sqrt K$.
+
+Finally, $\log(1+1/P_{\rm aux})\geq1/(2P_{\rm aux})$ implies
+\[
+ M_*\leq2+2P_{\rm aux}\log(1/\kappa).
+\]
+The degrees of $P_{\rm aux}$ are those in
+Lemma~\ref{lem:scaled-mf-cover}, while
+$B\leq C_HKJ_1$ has degrees $v_H-1$ and $v_H$.
+Thus $\log M_*$ is absorbed by the logarithm in
+\eqref{eq:truncated-scale-cover-bounds}.  The width threshold remains
+the same uniform normalized-certificate threshold, independent of
+$\kappa$.  This proves the asserted bounds.
+\end{proof}

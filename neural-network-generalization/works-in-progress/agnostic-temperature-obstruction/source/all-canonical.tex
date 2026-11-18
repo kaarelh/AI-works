@@ -1,0 +1,152 @@
+\section{All canonical exponents at a larger width}
+\label{sec:all-canonical}
+Keeping the comparison Gaussian's covariance unchanged avoids the width-dependent entropy cost at weaker canonical priors. This gives the same negative comparator exponents at every $\gamma\ge1$, at a larger polynomial learner-width threshold.
+
+\begin{lemma}[A shifted Gaussian memorizer]
+\label{lem:native-memorizer}
+Fix $H\ge2$ and $1\le D\le d$. Let $r:\{-1,1\}^D\to[-1,1]$ have squared counting norm at most $s\ge1$, and let $0<t\le1/4$. Put
+\begin{align*}
+ A_*&=(D+1)\sqrt s,&
+ M&=\left\lceil2(D+1)A_*^2\log2/t^2\right\rceil+1,\\
+ R^2&=\max\{4,A_*^{2/H},768/t\},&
+ \eta&=\frac{t}{36H^2R^{H-1}},\\
+ \beta&=16+\log(16A_*/\eta),&
+ N_0&=\left\lceil\max\left\{M,\frac8{t^2},
+ \frac{16A_*^2}{\eta^2}\log\frac{288HR^2}{t^2}\right\}\right\rceil.
+\end{align*}
+For every $N\ge N_0$ and every $\sigma^2$ with $N\sigma^2\le1$, a parameter mean $w_0$ exists such that
+\[
+ Q_N(w_0)\le K_*:=\beta^2dD^2+(4H+1)R^2.
+\]
+For $\xi$ drawn from the original centered Gaussian prior, the following pointwise mean-square bound is uniform over the Boolean coordinates and all additional ignored coordinates in $[-1,1]$:
+\[
+ \left(\E|z_{w_0+\xi}(x)-r(x)|^2\right)^{1/2}\le2t.
+\]
+The comparison law keeps the prior covariance. Its relative entropy is $Q_N(w_0)/(2\sigma^2)$.
+\end{lemma}
+\begin{proof}
+The sign-feature representation and sampling argument in Lemma~\ref{lem:memorizer} give $A\le A_*$ and $M$ margin-one affine halfspaces with augmented row norms at most $D$ such that
+\[
+ f(x)=\frac A M\sum_{j=1}^M\operatorname{sign}(\omega_j\cdot\bar x),
+ \qquad |f-r|\le t,\qquad |f|\le5/4.
+\]
+If $r=0$, the unshifted prior already has output root mean square at most $\sigma\le N^{-1/2}\le t$, so assume the representation is nonzero. Partition the first layer into balanced groups of sizes $k_j\ge N/(2M)$ and use mean rows $\beta\omega_j$.
+
+Write $\upsilon=N\sigma^2\le1$. A first-layer noise preactivation at any input has variance at most two. For $\beta\ge16$ and a margin-one sign $\varepsilon$,
+\[
+ \E|\tanh(\beta\omega_j\cdot\bar x+G)-\varepsilon|
+ \le2e^{-\beta}+2e^{-\beta^2/16}\le4e^{-\beta}
+ \le\frac{\eta}{4A_*}.
+\]
+This follows by splitting according to $\varepsilon G\ge-\beta/2$ and using a Gaussian tail bound. Let $\widehat F$ be the weighted first-layer mean with coefficient $A/(Mk_j)$ on each copy in group $j$, and let $S_1=N^{-1}\sum_i(h_i^1)^2$. Hoeffding's inequality, the bound $\sum_i[A/(Mk_{j(i)})]^2\le2A^2/N$, and the preceding mean errors imply
+\begin{equation}
+ |\widehat F-f|\le\eta,\qquad |S_1-1|\le\eta
+ \label{eq:native-first}
+\end{equation}
+except on probability at most $4\exp[-N\eta^2/(16A_*^2)]$.
+
+Define the deterministic zero-mean variance recursion
+\[
+ b_1=1,\qquad
+ b_\ell=\E\tanh^2(\sqrt{\upsilon b_{\ell-1}}G),\qquad
+ a_\ell=1-b_\ell\quad(2\le\ell\le H),
+\]
+with $G$ standard normal. Here $1/2\le a_\ell\le1$: indeed
+$\log\cosh u\le u^2/2$ implies
+$\E\operatorname{sech}^2(\sqrt qG)\ge\E e^{-qG^2}=(1+2q)^{-1/2}>1/2$ for $0\le q\le1$.
+
+Use layer-two mean weights $A/(Mk_j a_2R^{H-1})$, identical across output rows, mean weights $R/(a_\ell N)$ in layers $3,\ldots,H$, and readout means $R/N$. Write $M_\ell=N^{-1}\sum_jh_j^\ell$ and $S_\ell=N^{-1}\sum_j(h_j^\ell)^2$. Conditional on preceding layers, the current hidden neurons are independent with the same law
+\[
+ \tanh(u_\ell+\sqrt{\upsilon S_{\ell-1}}G),\qquad
+ u_2=\widehat F/(a_2R^{H-1}),\quad
+ u_\ell=RM_{\ell-1}/a_\ell\ (\ell\ge3).
+\]
+At each layer, Hoeffding bounds the deviations of $M_\ell$ and $S_\ell$ from their conditional means by $\eta$, except on probability at most $4e^{-N\eta^2/2}$. Together with~\eqref{eq:native-first}, all these bounds hold on an event of probability at least
+\begin{equation}
+ 1-4H\exp[-N\eta^2/(16A_*^2)]
+ \ge1-t^2/(72R^2).
+ \label{eq:native-good}
+\end{equation}
+
+For completeness we control the deterministic recursion on this event. Set
+$\psi(q,u)=\E\tanh(u+\sqrt qG)$ and
+$B(q,u)=\E\tanh^2(u+\sqrt qG)$.
+Gaussian differentiation and bounded derivatives of tanh give
+\begin{align*}
+ |\psi(q,u)-a(q_0)u|&\le |u||q-q_0|+|u|^3/3,\\
+ |B(q,u)-B(q_0,0)|&\le|q-q_0|+u^2,
+ \qquad a(q_0)=\E\operatorname{sech}^2(\sqrt{q_0}G).
+\end{align*}
+One may verify these inequalities using $|\tanh'''|\le2$, $|(\tanh^2)''|\le2$, the heat identity $\partial_q\E h(u+\sqrt qG)=\frac12\E h''(u+\sqrt qG)$, and oddness or evenness at $u=0$.
+
+Put $j_\ell=H-\ell+1$ and $Y_\ell=R^{j_\ell}M_\ell$. As long as $|Y_{\ell-1}-f|\le1$, one has $|u_\ell|\le6/R^{j_\ell}$. Induction in the variance recursion then gives
+\[
+ |S_\ell-b_\ell|\le H\eta+48R^{-2j_\ell}.
+\]
+The scaled mean error increases at a step by at most
+\[
+ 6H\eta+144R^{-2j_\ell}+R^{j_\ell}\eta.
+\]
+Summing the geometric series, including the initial error $|\widehat F-f|$, bounds every accumulated mean error by
+\[
+ \frac{192}{R^2}+9H^2R^{H-1}\eta\le t/2.
+\]
+This is less than one and therefore closes the induction. In particular $|RM_H-f|\le t/2$ on~\eqref{eq:native-good}. Off this event it is at most $R+5/4\le3R$. The independent readout noise has conditional variance $\sigma^2S_H\le1/N$. Hence
+\[
+ \E|z_{w_0+\xi}-f|^2
+ \le t^2/4+9R^2\frac{t^2}{72R^2}+\frac1N\le t^2.
+\]
+Combining this with $|f-r|\le t$ proves the output claim.
+
+The first-layer mean energy is at most $\beta^2dD^2$. The second layer costs at most $2A^2/(a_2^2R^{2H-2})\le8R^2$. Each later hidden layer costs at most $4R^2$, and the readout costs $R^2$. Their sum is at most $K_*$. The final relative-entropy statement is the exact formula for a mean shift of a Gaussian with unchanged covariance.
+\end{proof}
+
+\begin{lemma}[Posterior operator moments at all canonical exponents]
+\label{lem:all-canonical-moments}
+Assume $N\ge d+1$ and $\sigma^2=N^{-\gamma}$ with $\gamma\ge1$. At any sample with labels in $[-1,1]$, the half-difference of the ordinary raw posterior mean at inputs differing only by $\pm\delta$ in one coordinate is at most
+\[
+ \frac\delta{\sqrt d}
+ \left[2+\sqrt{3/\lambda+2\log L+2\lceil L/2\rceil}\right]^L.
+\]
+The same bound holds for clipping the raw mean and for the mean of clipped outputs.
+\end{lemma}
+\begin{proof}
+Normalize the parameter matrices as
+$A_1=\sqrt{d/N}W^1$, $A_\ell=W^\ell$ internally, and $A_L=\sqrt N v^\top$.
+Their entries have variance $\sigma^2$. Gaussian operator-norm expectation bounds give $\E\|A_\ell\|_{\rm op}\le2$ because $N\sigma^2\le1$ and $N\ge d+1$. Gaussian concentration and a union bound give, for $T=\max_\ell\|A_\ell\|_{\rm op}$,
+\[
+ \mu(T>2+u)\le L e^{-u^2/(2\sigma^2)}.
+\]
+Prior expected empirical loss is at most two, hence conservatively at most three. Jensen gives $Z\ge e^{-3/(2\lambda\sigma^2)}$. Since the likelihood is at most one, the posterior law of $(T-2)_+^2$ is stochastically dominated by $3/\lambda+2\sigma^2\log L$ plus an exponential variable of mean $2\sigma^2$. Minkowski and its moments give
+\[
+ \left(\int T^L\,d\Pi\right)^{1/L}
+ \le2+\sqrt{3/\lambda+2\log L+2\lceil L/2\rceil}.
+\]
+Input sensitivity is at most $d^{-1/2}\prod_\ell\|A_\ell\|_{\rm op}\le d^{-1/2}T^L$. Integrating this pointwise bound proves the ordinary-mean claim; the clipped conventions are $1$-Lipschitz transformations or averages of such transformations.
+\end{proof}
+
+\begin{theorem}[Actual finite failure for every $\gamma\ge1$]
+\label{thm:all-canonical}
+Under the exponent conditions of Theorem~\ref{thm:main}, its data law and sample event give the same $1/100$ excess lower bounds simultaneously for every $\gamma\ge1$, every $\lambda>0$, and every learner width
+\[
+ N\ge N_{**}(n)=O_H\bigl(n^a+n^2(\log n)^5\bigr)
+\]
+at the actual prior scale $\sigma^2=N^{-\gamma}$. No limit is taken. The localized-noise and fixed-width conclusions also hold with the same enlarged polynomial threshold, replacing the teacher-width term as appropriate.
+\end{theorem}
+\begin{proof}
+Apply Lemma~\ref{lem:native-memorizer} to the noisy empirical-mean function on the Boolean tag and nuisance coordinates, with $s=n$ and $t=n^{-1/(2H)}$. Its mean energy satisfies
+\[
+ K_*=O_H(d^5+n^{1/H}d^{2/H}),\qquad
+ N_0=O_H(n^2(\log n)^5).
+\]
+The original sign-sampling threshold is smaller than this enlarged width threshold. Take $N_{**}$ to dominate these requirements, $d+1$, and the teacher width.
+
+The comparison Gaussian has exactly the prior covariance, so the Gibbs variational identity bounds posterior expected empirical loss by its comparison loss plus $\lambda K_*$. Pointwise output root mean square error at most $2t$ gives the noisy-residual inequality
+\[
+ \int\frac1n\sum_j k_j(z_w(0,+1,z_j)-r_j)^2\,d\Pi
+ \le4t^2+\frac{n_s}{n}(1+2t)^2+\lambda K_*.
+\]
+Thus, for the original split $\lambda\le\tau_n=n^{-1/H}d^{-3}$, the residual tends to $q=1/10$ uniformly over all the widths and exponents in the theorem. The previous Jensen and reverse-triangle argument gives excess greater than $1/100$ for all stated prediction conventions.
+
+For $\lambda\ge\tau_n$, Lemma~\ref{lem:all-canonical-moments} bounds the inner-pair half-difference by $O_H(\delta d^{-1/2}\tau_n^{-L/2})$, which tends to zero under the original strict exponent condition. The signal-component proof again gives excess greater than $1/100$. The event is common to all parameters. The same comparison proof with the modified component masses proves the localized-noise statement; the width-two construction changes only the teacher-width term, as before.
+\end{proof}

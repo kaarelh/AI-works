@@ -1,0 +1,136 @@
+\section{Fixed-prefactor priors at every exponent above one}
+\label{sec:fixed-above-one-raw}
+
+The small-width PAC--Bayes bound and the large-width spectral bound
+also give a raw-output oracle inequality at every fixed
+$\gamma>1$, with the fixed prefactor $t=1$.  Its rate is slower
+than Theorem~\ref{thm:raw-all-scales}, but no sample-dependent change
+to the prior is needed.  For $\gamma\geq2$, Theorem~\ref{thm:fixed-raw-oracle}
+already gives the better rate and should be used instead.
+
+Fix $H\geq2$ and $\gamma>1$, and put
+\begin{equation}
+ b_H=\max\{1,(H-1)/2\},\qquad
+ \kappa_{H,\gamma}=
+   \frac{\gamma-1}{3(\gamma-1)+2b_H\gamma},\qquad
+ \lambda_n=n^{-\kappa_{H,\gamma}}.
+ \label{eq:fixed-above-one-rate}
+\end{equation}
+The prior scale is $\sigma^2=N^{-\gamma}$ and the likelihood variance
+is $n\lambda_nN^{-\gamma}$.
+
+\begin{theorem}[A raw oracle bound for every fixed $\gamma>1$]
+\label{thm:fixed-above-one-raw}
+Let inputs lie in $[-1,1]^d$, labels lie in $[-1,1]$, and let $g$ be a
+fixed width-$m$, weight-$B$ teacher.  For all sufficiently large $n$,
+with probability at least $1-\delta$ over the sample, the actual
+finite posterior satisfies, simultaneously for every $N\geq m$,
+\begin{equation}
+ \int R(z_w)\,\Pi_{N,\gamma,S}(dw)
+ \leq R(g)+\widetilde O_{d,H,\gamma,\delta,g}
+                         (n^{-\kappa_{H,\gamma}}).
+ \label{eq:fixed-above-one-oracle}
+\end{equation}
+The same result holds for the ordinary posterior mean.  More
+explicitly, the excess is bounded by
+\begin{equation}
+ C_{d,H,\gamma,\delta}\,n^{-\kappa_{H,\gamma}}
+ \left[E+1+D_g\log\bigl((n+1)P_0(U+1)\bigr)\right]
+       +b_n(g,\delta/2),
+ \label{eq:fixed-above-one-teacher}
+\end{equation}
+for a finite constant independent of $m,B,N$ and the data law, after a
+sample threshold depending only on $d,H,\gamma,\delta$.
+The teacher quantities $E,U,D_g,P_0$ are those of
+Lemma~\ref{lem:effective-teacher-tube}.
+\end{theorem}
+
+\begin{proof}
+Write $\kappa=\kappa_{H,\gamma}$.  Directly from its definition,
+$0<\kappa<1/H\leq1/2$.  Hence $\lambda_n$ satisfies
+\eqref{eq:raw-all-lambda} for sufficiently large $n$, using
+$\delta/2$ in that theorem.  Its risk budget $M_n$ is then bounded
+above and below by positive constants depending only on $d,H,\delta$.
+The threshold in the fixed-prefactor corollary after
+Theorem~\ref{thm:raw-all-scales} is therefore at most
+\[
+ W_n=C_{d,H,\gamma,\delta}\lambda_n^{-2b_H/(\gamma-1)}
+\]
+for a sufficiently large constant $C_{d,H,\gamma,\delta}$.  Every integer
+width $N\geq\max\{m,W_n\}$ satisfies the scale condition of that
+theorem.  Its bound is at most~\eqref{eq:fixed-above-one-teacher},
+since the statistical residuals $\widetilde O(n^{-1/2})$ and
+$\widetilde O(n^{-1}/\lambda_n)$ are faster than $n^{-\kappa}$,
+and the spectral transfer residual is $O(\lambda_n^{b_H})$.
+
+For $m\leq N<W_n$, apply Lemma~\ref{lem:raw-small-width} with
+$\sigma^2=N^{-\gamma}$ and $\delta'_N=\delta/(4N^2)$.  Its sample
+term is bounded uniformly by
+\begin{align*}
+ \frac{512W_n^\gamma}{n\lambda_n^2}
+ &\leq C_{d,H,\gamma,\delta}\,
+ n^{-1+\kappa(2+2b_H\gamma/(\gamma-1))}
+ = C_{d,H,\gamma,\delta}\,n^{-\kappa}.
+\end{align*}
+The last equality is exactly~\eqref{eq:fixed-above-one-rate}.  In
+particular the calibration~\eqref{eq:raw-small-calibration} holds
+throughout these widths once $n$ is sufficiently large.
+The confidence term is uniform because
+\[
+ N^{-\gamma}\log(4N^2/\delta)\leq\log(4/\delta)+1.
+\]
+The cylinder cost $\mathcal A_g(\lambda_n)$ is at most a constant
+multiple of $E+1+D_g\log((n+1)P_0(U+1))$, so the remaining terms of
+the lemma have the asserted form.
+
+The large-width proof uses one sample event of probability at least
+$1-\delta/2$, including its fixed-teacher Bernstein event.  Intersect
+it with the small-width PAC--Bayes events.  Since
+$\sum_{N\geq1}\delta/(4N^2)<\delta/2$, the total probability is at
+least $1-\delta$.  The teacher concentration event supplies
+$b_n(g,\delta/2)$ at the smaller widths as well.  Every width is
+covered, and Jensen gives the ordinary-mean assertion.
+\end{proof}
+
+\subsection{Calibrating to a growing competitor class}
+
+The fixed-teacher calibration is not optimal for a growing class.  Put
+\[
+ p_{H,\gamma}=2+\frac{2b_H\gamma}{\gamma-1},
+ \qquad \kappa_{H,\gamma}=\frac1{p_{H,\gamma}+1}.
+\]
+The proof above gives, more generally, a leading tradeoff
+\[
+ \widetilde O\left(\lambda E_0+
+                  \frac1{n\lambda^{p_{H,\gamma}}}\right)
+\]
+for a specified competitor-energy cap $E_0$, whenever
+$\lambda=n^{-\theta}$ with $0<\theta<1/p_{H,\gamma}$.
+Indeed $p_{H,\gamma}>H$, so this range also satisfies the spectral
+statistical calibration $\theta<1/H$.  Other terms in the proof are
+smaller at the calibrations below.
+
+For width and weight caps both at most $n^\alpha$, choose
+\[
+ \alpha<\frac1{4p_{H,\gamma}},\qquad
+ \theta=\frac{1+4\alpha}{p_{H,\gamma}+1},\qquad
+ \lambda_n=n^{-\theta}.
+\]
+Then $4\alpha<\theta<1/p_{H,\gamma}$.  A population-risk minimizer in
+the compact capped class has risk at most one, since zero is included.
+The same all-width proof yields the coefficient-one oracle excess
+\[
+ \widetilde O\left(n^{-(1-4p_{H,\gamma}\alpha)/(p_{H,\gamma}+1)}\right).
+\]
+The fixed-teacher Bernstein term is faster, and the cylinder logarithm
+is smaller than the energy term up to logarithms.  With a fixed weight
+cap and only width growing as $n^\alpha$, the corresponding range and
+rate are
+\[
+ \alpha<\frac1{2p_{H,\gamma}},\qquad
+ \lambda_n=n^{-(1+2\alpha)/(p_{H,\gamma}+1)},\qquad
+ \widetilde O\left(n^{-(1-2p_{H,\gamma}\alpha)/(p_{H,\gamma}+1)}\right).
+\]
+These calibrations use the specified class caps, not the unknown data
+law or a selected minimizer.  The prior remains a single dense
+Gaussian at each width; no mixture over architectures is used.

@@ -1,0 +1,390 @@
+\section{A Gaussian mean-field cover from entropy balls}
+\label{sec:mf-entropy-cover}
+
+This section concerns the unmodified mean-field Gaussian prior:
+first-layer variance $1/d$, internal variance $1/N$, and readout
+variance $1/N^2$.  The learner has $H\geq2$ hidden tanh layers.
+We construct a finite cover of most prior outputs.  The construction
+uses an auxiliary Gaussian measure on one deterministic finite
+architecture solely to count separated functions.  This auxiliary
+measure is not the learner's prior and introduces no mixture over
+learner architectures.
+
+For a finite set of $s$ inputs and a positive semidefinite covariance
+matrix $Q$, let $P_Q$ be the law of $h=\tanh Z$ for
+$Z\sim\mathcal N(0,Q)$.  Write
+\[
+ \|A\|_1=\sum_{i,j}|A_{ij}|,\qquad
+ \|A\|_{\max}=\max_{i,j}|A_{ij}|,
+\]
+for entrywise matrix norms.  Define the compact convex moment set
+\begin{equation}
+ \mathcal M(Q,K)=
+ \left\{\int hh^{\mathsf T}\,d\nu(h):
+        \operatorname{KL}(\nu\Vert P_Q)\leq K\right\}.
+ \label{eq:mf-entropy-moment-set}
+\end{equation}
+Compactness follows from weak compactness of probability measures on
+$[-1,1]^s$, lower semicontinuity of relative entropy, and continuity of
+the bounded moment functions.  The reference covariance may be singular.
+
+\subsection{Changing the reference covariance without increasing entropy}
+
+\begin{lemma}[Entropy-ball covariance stability]
+\label{lem:mf-entropy-stability}
+Suppose $K>0$ and $\Delta=\|Q-Q'\|_{\max}\leq K$.
+The Hausdorff distance between $\mathcal M(Q,K)$ and
+$\mathcal M(Q',K)$ in maximum norm is at most
+\begin{equation}
+ 2\sqrt{2K\Delta}+3\Delta\leq6\sqrt{K\Delta}.
+ \label{eq:mf-entropy-stability}
+\end{equation}
+\end{lemma}
+\begin{proof}
+For $\|A\|_1\leq1$, put $U_A(h)=h^{\mathsf T}Ah$ and
+$\psi_Q(\tau)=\log\mathbb E_{P_Q}e^{\tau U_A}$.
+The support function of~\eqref{eq:mf-entropy-moment-set} is
+\begin{equation}
+ h_Q(A)=\inf_{\tau>0}\frac{K+\psi_Q(\tau)}\tau.
+ \label{eq:mf-entropy-support}
+\end{equation}
+Here is an elementary justification valid for any reference law.
+The entropy variational inequality gives the upper bound.
+The tilted law $d\nu_\tau=e^{\tau U_A-\psi_Q(\tau)}dP_Q$ has
+entropy $k(\tau)=\tau\psi_Q'(\tau)-\psi_Q(\tau)$.
+This is continuous, nondecreasing, and tends to zero as
+$\tau\downarrow0$.  If it reaches $K$, the tilted law proves
+sharpness of the upper bound.  If it never exceeds $K$, these tilted
+laws remain feasible, and their means tend to the essential supremum
+of the bounded variable $U_A$ as $\tau\to\infty$.
+The right side of~\eqref{eq:mf-entropy-support} has that same upper
+limit.  These two cases establish equality, including degenerate
+reference laws.
+
+Restricting the infimum in~\eqref{eq:mf-entropy-support} to
+$0<\tau\leq T$ increases it by at most $K/T$.
+Indeed convexity and $\psi_Q(0)=0$ imply that
+$\psi_Q(\tau)/\tau$ is nondecreasing.  For every $\tau>T$,
+\[
+ \frac{K+\psi_Q(T)}T
+ \leq\frac KT+\frac{\psi_Q(\tau)}\tau
+ \leq\frac KT+\frac{K+\psi_Q(\tau)}\tau.
+\]
+For $\tau\leq T$ the restricted infimum is already no larger than
+that candidate, proving the assertion without assuming attainment.
+
+Gaussian differentiation along the segment from $Q$ to $Q'$ gives
+\begin{equation}
+ |\psi_Q(\tau)-\psi_{Q'}(\tau)|
+       \leq(3\tau+2\tau^2)\Delta.
+ \label{eq:mf-logpartition-stability}
+\end{equation}
+To check the constants, set
+$V(z)=\tau\tanh(z)^{\mathsf T}A\tanh(z)$.
+The sums of the absolute first and second derivatives of $V$ are
+bounded respectively by $2\tau$ and $6\tau$.
+The covariance derivative of the log partition function is one half
+of the tilted expectation of $\nabla^2V+\nabla V\nabla V^{\mathsf T}$,
+paired with $Q'-Q$.  This proves~\eqref{eq:mf-logpartition-stability}.
+Adding a small multiple of the identity and passing to the limit
+justifies singular covariances; the functions being integrated are
+bounded uniformly for fixed $\tau$.
+
+It follows that, uniformly in $\|A\|_1\leq1$,
+\[
+ |h_Q(A)-h_{Q'}(A)|\leq K/T+(3+2T)\Delta.
+\]
+For $\Delta>0$, choose $T=\sqrt{K/(2\Delta)}$.
+The case $\Delta=0$ is immediate.  This gives the first bound in
+\eqref{eq:mf-entropy-stability}; its second uses $\Delta\leq K$.
+Support-function comparison for compact convex sets, and duality of
+entrywise $\ell^1$ and maximum norms, give the stated Hausdorff bound.
+Equivalently, the support inequality implies that each moment set is
+contained in the other plus the indicated maximum-norm ball, by the
+finite-dimensional separating-hyperplane theorem.
+\end{proof}
+
+\begin{lemma}[A continuous choice of a nearby bounded-entropy tilt]
+\label{lem:mf-regularized-tilt}
+Let $P$ be a law on $[-1,1]^s$, let $A$ be a target second-moment
+matrix, and suppose some $\nu$ satisfies
+\[
+ \operatorname{KL}(\nu\Vert P)\leq K,
+ \qquad\left\|\int hh^{\mathsf T}d\nu-A\right\|_{\max}\leq\alpha,
+ \qquad K,\alpha>0.
+\]
+Put $G=K/\alpha$ and $r=\alpha^2/(4K)$.
+Maximize, over symmetric matrices of entrywise norm at most $G$,
+\begin{equation}
+ \langle\Gamma,A\rangle-
+   \log\int e^{h^{\mathsf T}\Gamma h}\,dP(h)-r\|\Gamma\|_F^2.
+ \label{eq:mf-regularized-dual}
+\end{equation}
+There is a unique maximizer.  Its quadratic exponential tilt $P_*$
+satisfies
+\[
+ \operatorname{KL}(P_*\Vert P)\leq2K,
+ \qquad\left\|\int hh^{\mathsf T}dP_*-A\right\|_{\max}\leq3\alpha.
+\]
+For $P=P_Q$, the maximizer is continuous in $(Q,A)$ and hence is a
+Borel choice, including singular $Q$.
+\end{lemma}
+\begin{proof}
+Write $J(\Gamma)=\langle\Gamma,A\rangle-\log\int e^{h^{\mathsf T}\Gamma h}dP$.
+The entropy variational inequality with the given witness gives
+$J(\Gamma)\leq K+G\alpha=2K$ throughout the feasible ball.
+Strict concavity of~\eqref{eq:mf-regularized-dual} gives uniqueness.
+Let $\Gamma_*$ be its maximizer and
+$E=A-\int hh^{\mathsf T}dP_*$.
+First-order optimality with the zero matrix gives
+$\langle\Gamma_*,E\rangle\geq2r\|\Gamma_*\|_F^2\geq0$.
+Thus
+\[
+ \operatorname{KL}(P_*\Vert P)
+       =J(\Gamma_*)-\langle\Gamma_*,E\rangle\leq2K.
+\]
+First-order optimality with a feasible matrix maximizing its pairing
+with $E$ also gives
+\[
+ G\|E\|_{\max}
+ \leq\langle\Gamma_*,E\rangle+4rG^2
+ \leq J(\Gamma_*)+4rG^2\leq3K.
+\]
+For symmetric $E$ the dual norm identity still holds on symmetric
+matrices: an off-diagonal maximizing entry is represented by two
+symmetric entries of half the weight.  Dividing by $G$ proves the
+moment bound.
+Finally the Gaussian integral in~\eqref{eq:mf-regularized-dual} is
+jointly continuous in $Q,A,\Gamma$ on every fixed compact feasible
+ball.  The unique maximizer is therefore continuous by compactness
+and the elementary maximum theorem.
+\end{proof}
+
+\subsection{The improved finite cover}
+
+\begin{lemma}[A Gaussian mean-field output cover]
+\label{lem:mf-entropy-cover}
+Fix $H\geq2$ and put $v_H=2^{H+1}$.  There are computable constants
+$C_H\geq1$ such that, for $K\geq128$ and $0<a<1$, a deterministic
+finite family $\mathcal C_{K,a}$ and Borel events $G_{N,K,a}$ satisfy
+\begin{gather}
+ \mu_N(G_{N,K,a}^c)\leq2(H+1)e^{-NK/16},\qquad
+ N\|v\|_2^2\leq K\quad\hbox{on }G_{N,K,a},\notag\\
+ \inf_{h\in\mathcal C_{K,a}}\sup_{x\in[-1,1]^d}|z_w(x)-h(x)|<a
+       \quad\hbox{for every }w\in G_{N,K,a},\notag\\
+ T_H(d,K,1/a)
+    \leq C_H(d+1)K^{v_H-2}a^{-v_H}
+                         \log\frac{C_H(d+1)K}{a},\notag\\
+ \log|\mathcal C_{K,a}|
+    \leq C_H(d+1)K^{v_H-1}a^{-v_H}
+                         \log\frac{C_H(d+1)K}{a}.
+ \label{eq:mf-entropy-cover-bounds}
+\end{gather}
+The assertions hold for every $N\geq T_H(d,K,1/a)$.
+The family is independent of learner width and of the training sample.
+Its centers may be chosen bounded in absolute value by $\sqrt K$.
+\end{lemma}
+\begin{proof}
+Use an internal accuracy $\zeta=a/4$.
+Require the norm event
+\[
+ \|W^1\|_F^2\leq NK,\qquad
+ \|W^\ell\|_{\mathrm{op}}\leq\sqrt K\ (2\leq\ell\leq H),\qquad
+ N\|v\|_2^2\leq K.
+\]
+The first-layer and readout chi-square bounds and Gaussian sphere-net
+bound give failure at most $(H+1)e^{-NK/16}$ for $K\geq128$.
+For example the internal estimate is
+$2\exp[(2\log9-K/8)N]\leq e^{-NK/16}$.
+On this event, $z_w$ has Lipschitz constant at most
+$K^{(H+1)/2}$.
+Choose a deterministic Euclidean input net of radius
+$\zeta/(4K^{(H+1)/2})$ with cardinality
+\[
+ s\leq\left(1+\frac{8\sqrt d\,K^{(H+1)/2}}\zeta\right)^d,
+\]
+and a Borel nearest-net-point map.
+
+Set the backward covariance tolerances
+\begin{equation}
+ \delta_H=\frac{\zeta^2}{8K},\qquad
+ \delta_{\ell-1}=\frac{\delta_\ell^2}{2304K}
+       \quad(2\leq\ell\leq H),\qquad
+ G_\ell^{\rm orig}=\frac{8K}{\delta_\ell}.
+ \label{eq:mf-entropy-budgets}
+\end{equation}
+For a reference feature law $P$ and empirical covariance $A$, define
+\[
+ \mathcal J_G(A;P)=\max_{\|\Gamma\|_1\leq G}
+       \left[\langle\Gamma,A\rangle-
+               \log\mathbb E_Pe^{h^{\mathsf T}\Gamma h}\right].
+\]
+The distribution-free covariance certificate gives
+\begin{equation}
+ \mathbb P\{\mathcal J_G>K\}
+ \leq\exp\{q\log(2s^2+1)-NK/2\},\qquad
+ q=\lceil G^2/K\rceil.
+ \label{eq:mf-slack-certificate}
+\end{equation}
+For completeness, approximate every entrywise $\ell^1$-ball parameter
+by the average of $q$ independent atoms from
+$\{0,\pm Ge_1,\ldots,\pm Ge_{s^2}\}$.
+The expected log-partition error is at most $G^2/(2q)\leq K/2$,
+by Hoeffding's exponential-moment bound and Jensen.
+The empirical dual is therefore at most $K/2$ plus the maximum over
+at most $(2s^2+1)^q$ atomic averages.  Each averaged parameter has
+exponential moment one for its empirical dual multiplied by $N$.
+Markov and a union bound prove~\eqref{eq:mf-slack-certificate}.
+
+Take $N$ at least
+$4\lceil(G_1^{\rm orig})^2/K\rceil\log(2s^2+1)/K$.
+The conditional Gaussian row law at every layer is exact, so
+\eqref{eq:mf-slack-certificate} and a union bound show that all
+$H$ layer certificates are at most $K$, except with probability
+$He^{-NK/4}$.  Define $G_{N,K,a}$ by this certificate event and the
+norm event.  Both are Borel.  The displayed exception bound follows.
+
+Fix a draw in this event, and denote its actual activation covariances
+on the net by $Q_1,\ldots,Q_H$.
+The usual dual lift gives a law of entropy at most $K$ relative to
+$P_{Q_{\ell-1}}$ whose moment is within
+$K/G_\ell^{\rm orig}=\delta_\ell/8$ of $Q_\ell$.
+At the first layer the reference is the fixed Gaussian input field.
+To see the lift, a maximizing unregularized parameter satisfies
+\[
+ \mathcal J_G=\operatorname{KL}(P_*\Vert P)
+                 +G\|A-\mathbb E_{P_*}hh^{\mathsf T}\|_{\max}.
+\]
+This is the first-order condition over the entrywise $\ell^1$ ball.
+
+We next construct a finite sampler that approximates these covariances
+while paying only a bounded entropy cost per row.  Its layer widths are
+\begin{equation}
+ J_\ell=\left\lceil32\delta_\ell^{-2}\log(8Hs^2)\right\rceil.
+ \label{eq:mf-adaptive-widths}
+\end{equation}
+The auxiliary reference law has independent Gaussian incoming weights:
+variance $1/d$ at the first layer and $1/J_{\ell-1}$ at layer
+$\ell\geq2$, followed by readout variance $1/J_H^2$.
+This one reference law depends only on $d,H,K,a$.
+
+Suppose the preceding empirical covariance $\widehat Q_{\ell-1}$
+is within $\delta_{\ell-1}$ of $Q_{\ell-1}$.
+Lemma~\ref{lem:mf-entropy-stability}, followed by the preceding
+certificate lift, supplies a law of entropy at most $K$ relative to
+$P_{\widehat Q_{\ell-1}}$ whose moment is within
+\[
+ \delta_\ell/8+6\sqrt{K\delta_{\ell-1}}
+       =\delta_\ell/4
+\]
+of $Q_\ell$.  At the first layer the reference is unchanged and the
+same conclusion holds directly.
+Apply Lemma~\ref{lem:mf-regularized-tilt} with
+$\alpha=\delta_\ell/4$ and target $Q_\ell$.
+Its tilt has entropy at most $2K$ per row and moment error at most
+$3\delta_\ell/4$.
+Generate the $J_\ell$ incoming Gaussian rows with this tilt,
+independently given the past.  Their induced field has the required
+reference covariance because the weights are divided by
+$\sqrt{J_{\ell-1}}$.
+Hoeffding and~\eqref{eq:mf-adaptive-widths} put their empirical moment
+within $\delta_\ell/4$ of its expectation, except with conditional
+probability at most $1/(4H)$.  Thus the resulting covariance is within
+$\delta_\ell$ of $Q_\ell$.
+
+After the first failure of a covariance condition, use the unmodified
+Gaussian reference at all later layers.  This is stopping, not
+conditioning, so no extra entropy cost is incurred.
+The continuously selected tilts make this a Borel probability kernel.
+The chain rule bounds its total hidden-weight relative entropy by
+$2K\sum_\ell J_\ell$, and all covariance conditions succeed with
+probability at least $3/4$.
+
+Approximate-readout duality gives a vector $\beta$ with
+\[
+ \|\beta\|_1\leq K/\zeta,\qquad
+ \|Q_H\beta-z_w|_{\rm net}\|_\infty\leq\zeta/4,
+ \qquad \beta^{\mathsf T}Q_H\beta\leq K.
+\]
+For clarity, minimize $N\|u\|_2^2/2$ subject to approximating the
+original output within $\zeta/4$ on the net.
+The original readout is strictly feasible.  Convex optimality gives
+$Nu=\Phi^{\mathsf T}\beta$, where $\Phi$ is the feature matrix.
+Complementarity and Cauchy--Schwarz give
+\[
+ (\zeta/4)\|\beta\|_1=Nv^{\mathsf T}u-N\|u\|_2^2
+ \leq\sqrt K\,r-r^2\leq K/4,\qquad r=\sqrt N\|u\|_2.
+\]
+The minimizer's norm is no larger than that of the feasible original
+readout, proving the last inequality as well.
+
+On successful hidden sampling, give readout coordinate $i$ mean
+$v_i^*=(\beta\cdot h_i)/J_H$ and keep its reference variance
+$1/J_H^2$; on failure use zero mean.
+Since $\|\widehat Q_H-Q_H\|_{\max}\leq\delta_H$,
+\[
+ J_H\|v^*\|_2^2=\beta^{\mathsf T}\widehat Q_H\beta
+       \leq K+\delta_H(K/\zeta)^2=9K/8.
+\]
+The conditional readout entropy is at most $9KJ_H/16$.
+Thus the full comparison law $\nu_f$ for $f=z_w$ satisfies
+\begin{equation}
+ \operatorname{KL}(\nu_f\Vert\mu_{\rm aux})
+ \leq B:=2K\sum_{\ell=1}^H J_\ell+9KJ_H/16.
+ \label{eq:mf-auxiliary-entropy}
+\end{equation}
+Readout noise has variance at most $1/J_H$ at each net point.
+Its maximum is at most $\zeta/8$ except with probability
+$2s\exp(-J_H\zeta^2/128)\leq1/4$, by
+\eqref{eq:mf-adaptive-widths} and~\eqref{eq:mf-entropy-budgets}.
+Consequently, with comparison probability at least $1/2$, its output
+evaluated at nearest-net points differs from $f$ everywhere by at most
+\[
+ \zeta/4\quad\hbox{(readout dual)}
+ +\zeta/8\quad\hbox{(covariance)}
+ +\zeta/8\quad\hbox{(readout noise)}
+ +\zeta/4\quad\hbox{(input net)}
+ =3\zeta/4<\zeta.
+\]
+
+Let $\rho_{\rm aux}$ be the distribution of these auxiliary
+nearest-net-point functions under the single reference Gaussian law.
+The distance from a fixed continuous $f$ to such a function is a
+continuous function of its finitely many net values, so the balls
+below are measurable.  Binary data processing for relative entropy gives
+\[
+ \rho_{\rm aux}\{h:\|h-f\|_\infty<\zeta\}
+       \geq\exp[-2(B+\log2)].
+\]
+Indeed if a comparison law gives a set probability at least $1/2$,
+its entropy is at least one half the negative logarithm of the
+reference probability, minus $\log2$.
+Every good output, at every original learner width, has this lower
+bound under the same auxiliary measure.
+Balls of radius $\zeta$ around functions separated by more than
+$2\zeta$ are disjoint.  A maximal such packing therefore has at most
+$\exp[2(B+\log2)]$ centers and covers the entire good output class
+to accuracy $2\zeta=a/2<a$.
+The packing centers may be selected from that class, so their absolute
+values are at most $\sqrt K$.
+This is a finite existence argument; no efficient construction of the
+cover is claimed.
+
+It remains to record the degrees.  Put $q_\ell=K/\delta_\ell$.
+Then $q_H=8K^2/\zeta^2$ and
+$q_{\ell-1}=2304q_\ell^2$.
+At fixed depth,
+\[
+ \delta_1^{-2}\leq C_H K^{v_H-2}\zeta^{-v_H},
+ \qquad v_H=2^{H+1}.
+\]
+The net logarithms are at most
+$C_H(d+1)\log[C_H(d+1)K/\zeta]$.
+The certificate width threshold is bounded by this logarithm times
+$C_H\delta_1^{-2}$, giving the stated $T_H$ bound.
+The widths $J_\ell$ decrease with $\ell$, and
+\eqref{eq:mf-auxiliary-entropy} is at most $C_HKJ_1$.
+This proves the cover-cardinality bound in
+\eqref{eq:mf-entropy-cover-bounds}.  Replacing $\zeta$ by $a/4$
+changes only constants depending on $H$.
+\end{proof}

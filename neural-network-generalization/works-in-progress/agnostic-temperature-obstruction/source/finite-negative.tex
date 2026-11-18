@@ -1,0 +1,72 @@
+\section{Actual canonical finite priors}
+\label{sec:canonical-finite}
+The same obstruction holds without taking a prior-strength limit at every canonical exponent $\gamma\ge2$.
+
+\begin{theorem}[Finite-scale failure at every temperature]
+\label{thm:canonical-finite}
+For the law and sufficiently large sample counts of Theorem~\ref{thm:main}, with the same sample probability, simultaneously for every $N\ge N_*(n)$, every $\gamma\ge2$, and every $\lambda>0$, the posterior at $\sigma^2=N^{-\gamma}$ has all the stated raw and clipped risks at least $p+1/100$.
+
+There is no prior-strength or width limit, and the parameters may be selected from the sample within these ranges. The scaled-label conclusion of Corollary~\ref{cor:small-noise} also holds in this finite regime.
+\end{theorem}
+\begin{proof}
+Write $P=N(d+2)+(H-1)N^2$ for parameter dimension and $D_0=d+H+1$. At every $\gamma\ge2$,
+\[
+ P\sigma^2\le D_0,\qquad N\sigma^2\le1,\qquad\sigma^2\le1.
+\]
+For prior noise $\xi$, $Q_N(\xi)/\sigma^2$ is chi-square with $P$ degrees of freedom. In particular,
+\begin{equation}
+ \E Q_N(\xi)\le D_0,\qquad
+ \E Q_N(\xi)^L\le(D_0+2L)^L.
+ \label{eq:finite-noise-moments}
+\end{equation}
+
+\paragraph{A comparison measure around the memorizer.}
+Let $w_0$ be the memorizer, with $Q_N(w_0)\le K=K_{\mathrm{mem}}$. Its empirical loss is at most nine, since its data-support output has magnitude at most $1+3t\le7/4$. Consider the Gaussian law of $w_0+r\xi$, where $0<r\le1$. It perturbs every parameter coordinate.
+
+Telescope the network maps through the layers. Since tanh is $1$-Lipschitz and vanishes at zero, the weighted layer norms give, uniformly on the input cube,
+\[
+ |z_{w_0+r\xi}(x)-z_{w_0}(x)|
+ \le\sqrt2 Lr\sqrt{Q_N(\xi)}
+               (\sqrt K+r\sqrt{Q_N(\xi)})^{L-1}.
+\]
+The first-layer and readout normalization factors cancel the learner width; the remaining input factor is at most $\sqrt{(d+1)/d}\le\sqrt2$. Using~\eqref{eq:finite-noise-moments} and the elementary power inequality for the sum inside the parentheses gives output root mean square perturbation at most $rV$, where
+\[
+ V=L2^{L-1}\left[D_0K^{L-1}+(D_0+2L)^L\right]^{1/2}.
+\]
+Take $r_n=1/[8n(V+1)]$. Minkowski makes the comparison law's expected empirical loss at most $\empRisk_S(z_{w_0})+1/n$.
+
+The exact Gaussian relative entropy and Gibbs variational identity now give
+\begin{align*}
+ \int\empRisk_S\,d\Pi
+ &\le\empRisk_S(z_{w_0})+\frac1n
+       +\lambda K+\lambda P\sigma^2(r_n^2-1-\log r_n^2)\\
+ &\le\empRisk_S(z_{w_0})+\frac1n
+       +\lambda[K+2D_0\log(1/r_n)].
+\end{align*}
+For $\lambda\le\tau_n$, the expected noisy residual is therefore at most
+\[
+ 9t^2+(q+n^{-1/3})(1+3t)^2+\frac1n
+       +\tau_n[K+2D_0\log(1/r_n)]=q+o(1).
+\]
+Here $K$ and $V$ grow only polynomially with $n$ at fixed depth, so the extra logarithmic entropy term vanishes after multiplication by $\tau_n$. All bounds are uniform over $N,\gamma$ in the theorem. For large $n$ the residual is at most $1/5$ and $S_1/n\ge1/3$. The same Jensen and reverse-triangle argument as in~\eqref{eq:uniform-noise} gives excess greater than $1/100$ for all listed predictions.
+
+\paragraph{Posterior energy moments at large temperatures.}
+The prior's centered readout and bounded tanh activations give prior expected empirical loss at most $1+\sigma^2\le2$, hence conservatively at most three. Jensen and the Gaussian energy exponential moment imply
+\[
+ \int e^{Q_N/(4\sigma^2)}\,d\Pi
+     \le2^{P/2}e^{3/(2\lambda\sigma^2)}.
+\]
+Thus $Q_N$ under the posterior is stochastically dominated by
+$2P\sigma^2\log2+6/\lambda$ plus an exponential random variable of mean $4\sigma^2$. For $j=\lceil L/2\rceil$, Minkowski gives
+\[
+ \left(\int Q_N^{L/2}\,d\Pi\right)^{2/L}
+    \le2D_0\log2+\frac6\lambda+4j.
+\]
+For $\lambda\ge\tau_n$, write $B_n=2D_0\log2+6/\tau_n+4j$. Lemma~\ref{lem:lipschitz} then bounds the inner-pair half-difference of the raw posterior mean by
+\[
+ \eta_{\mathrm{fin}}=\delta d^{-1/2}(B_n/L)^{L/2}\longrightarrow0.
+\]
+The strict exponent hypothesis gives this limit because $1/\tau_n$ dominates $D_0$. The same half-difference bound holds for the mean of clipped outputs and for the clipped raw mean. For large $n$ it is at most $1/2$, so each has excess at least $q/8>1/100$. Jensen implies the Gibbs-risk bounds. This proves the theorem uniformly in all its parameters.
+
+Scaling labels and teacher readout by a fixed $\rho>0$ changes the low-temperature residual limit to $q\rho^2$ and the singleton norm to $\rho^2S_1$. The large-temperature half-difference still tends to zero. Using the corresponding scaled residual and difference thresholds gives the final assertion.
+\end{proof}

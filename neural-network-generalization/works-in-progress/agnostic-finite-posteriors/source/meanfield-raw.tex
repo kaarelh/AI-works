@@ -1,0 +1,313 @@
+\section{The fixed mean-field prior: raw predictions at every width}
+\label{sec:fixed-meanfield}
+
+The next result keeps the prior prefactor equal to one.  It applies to
+ordinary posterior predictions at finite width under mean-field scaling;
+no additional prior-strength limit or sample-dependent prior prefactor is
+used.  Its sample exponent is weaker than the strong-prior exponent, but
+it holds in a regime where the typical internal Frobenius energy grows
+with learner width.
+
+There are $H\ge2$ hidden tanh layers, a scalar linear readout, and input
+$\bar x=(1,x)$ with $x\in[-1,1]^d$, $d\ge1$.  The independent Gaussian
+variances are
+\[
+ \operatorname{Var}(W^1_{jk})=1/d,\qquad
+ \operatorname{Var}(W^\ell_{ji})=1/N\quad(2\le\ell\le H),
+ \qquad \operatorname{Var}(v_j)=1/N^2.
+\]
+Write $\mu_N$ for this prior and use observation variance $n\lambda/N$.
+The actual finite posterior is therefore
+\begin{equation}\label{eq:mf-raw-posterior}
+ \Pi_{N,S}(dw)=Z_{N,S}^{-1}
+     e^{-N\widehat R_S(z_w)/(2\lambda)}\mu_N(dw).
+\end{equation}
+The IID data law is arbitrary on $[-1,1]^d\times[-1,1]$.
+
+Put
+\begin{equation}\label{eq:mf-improved-degrees}
+ v_H=2^{H+1},\qquad D_H=v_H-1,\qquad A_H=v_H.
+\end{equation}
+The symbol $v_H$ is an exponent, not the network's readout vector.
+For a width-$m$, weight-$B$ teacher $g$, let
+\begin{gather}
+ E=d(d+1)B^2+2Hm^2B^2,\qquad U=mB,\qquad
+ \rho=\frac{\lambda}{4(U+1)},\notag\\
+ b_0=2\sqrt{2(2\log9+\log(4(H+1)))},\qquad
+ P_g=1+2mB(d+H+2)(2+3mB+b_0)^{H-1},\notag\\
+ \eta_\rho=\min\{1/2,\rho/(2P_g)\},\qquad c_0=3/8,\notag\\
+ A_g(\rho)=\frac E2+[d+2+(H-1)m]\log\frac1{c_0\eta_\rho}+\log2.
+ \label{eq:mf-teacher-cost}
+\end{gather}
+The teacher-cylinder estimate gives
+$\mu_N\{\|z_w-g\|_\infty<\rho\}\ge e^{-NA_g(\rho)}$
+for every $N\ge m$.
+
+\begin{theorem}[A finite mean-field oracle inequality for raw outputs]
+\label{thm:fixed-meanfield-raw}
+For every $H\ge2$ there are finite computable constants $C_H$ and
+$\lambda_H>0$ with the following property.  Fix
+$0<\lambda\le\min\{\epsilon,\lambda_H\}$, $\epsilon\le1$,
+$0<\delta<1$, and $n\ge2$, and suppose
+\begin{equation}\label{eq:mf-two-parameter-budget}
+ n\ge C_H(d+1)^2
+ \log^6\!\frac{2n(d+1)}{\lambda\epsilon\delta}
+ \lambda^{-v_H}\epsilon^{-3}.
+\end{equation}
+For each fixed teacher $g$ with $B\ge1$, with probability at least
+$1-\delta$, simultaneously at every learner width $N\ge m$,
+\begin{align}
+ \int R(z_w)\,\Pi_{N,S}(dw)
+ \le\;&R(g)+2\lambda A_g(\rho)
+       +C_H\left[\epsilon+\lambda\log\frac4\delta\right]
+ \notag\\
+ &+(U+1)\sqrt{\frac{2R(g)\log(4/\delta)}n}
+       +\frac{2(U+1)^2\log(4/\delta)}{3n}.
+ \label{eq:mf-raw-oracle}
+\end{align}
+The same bound holds for the risk of the ordinary posterior mean
+$\int z_w\,d\Pi_{N,S}$, and for the usual clipped prediction
+conventions.
+
+For a fixed teacher, dimension, depth, and confidence level, setting
+$\epsilon=\lambda$ gives the rate
+\begin{equation}\label{eq:mf-raw-rate}
+ \widetilde O\!\left(n^{-1/(2^{H+1}+3)}\right).
+\end{equation}
+Thus the exponents for two, three, and four hidden layers are
+$1/11$, $1/19$, and $1/35$, respectively.
+\end{theorem}
+
+The constants in this theorem can grow rapidly with depth.  The theorem
+improves finite mean-field coverage and the quantitative covariance
+cover; it does not establish the conjectural exponent $1/H$ at this
+fixed prior prefactor.
+
+\subsection{A multiscale complexity with an exponential prior moment}
+
+Set $K_0=128$ and let $K_j=K_0 2^j$, $0\le j\le J$, where $J$ is the least index with
+$K_J\ge128/\lambda$.  Choose $\lambda_H$ small enough that
+$K_J<256/\lambda$.  Fix a sufficiently small numerical $c_*>0$ and set
+\[
+ a_j=c_*(\epsilon+\lambda K_j),\qquad
+ N_0=\left\lceil\max_j T_H(d,K_j,1/a_j)\right\rceil.
+\]
+For $N\ge N_0$, abbreviate the events in Lemma~\ref{lem:mf-entropy-cover}
+by $G_j$ and define the sample-independent Borel quantity
+\[
+ q_N(w)=
+ \begin{cases}
+ K_0,&w\in\bigcap_jG_j,\\
+ 2\max\{K_j:w\notin G_j\},&\text{otherwise}.
+ \end{cases}
+\]
+If $q_N=K_j$ for $j\le J$, then $w\in G_j$.  The only other
+possibility is $q_N=2K_J$, in which case $w\notin G_J$.
+
+\begin{lemma}[Entropy pays the multiscale complexity]
+\label{lem:mf-multiscale-entropy}
+With $B_H=K_0/128+\log(1+4(H+1))$,
+\[
+ \log\int e^{Nq_N/128}\,d\mu_N\le NB_H.
+\]
+Consequently the posterior in \eqref{eq:mf-raw-posterior} satisfies,
+for every comparison distribution $Q$ of finite relative entropy,
+\begin{equation}\label{eq:mf-complexity-comparison}
+ \int\left[\widehat R_S(z_w)+\frac\lambda{64}q_N(w)\right]d\Pi
+ \le\int\widehat R_S(z_w)\,dQ
+       +\frac{2\lambda}{N}\KL(Q\Vert\mu_N)+2\lambda B_H.
+\end{equation}
+\end{lemma}
+\begin{proof}
+The cover failure bounds give
+\[
+ \int e^{Nq_N/128}\,d\mu_N
+ \le e^{NK_0/128}+2(H+1)\sum_{j=0}^J e^{-3NK_j/64}
+ \le e^{NK_0/128}+4(H+1)\le e^{NB_H}.
+\]
+The entropy variational inequality implies
+$\KL(Q\Vert\mu_N)\ge N\int q_N\,dQ/128-NB_H$.
+Apply this to the posterior and use its exact variational optimality
+for $\int\widehat R_S\,dQ+(2\lambda/N)\KL(Q\Vert\mu_N)$.
+\end{proof}
+
+\subsection{Raw statistical deviations and posterior tails}
+
+Clip each cover center, only for the proof, to
+$[-\sqrt{K_j}-1,\sqrt{K_j}+1]$.  Its approximation to an output in
+$G_j$ is preserved.  Adjoin its negative and zero if needed.  The
+worst-case Rademacher complexity of this finite class is at most
+\[
+ (\sqrt{K_j}+1)
+       \sqrt{2\log(2|\mathcal C_{K_j,a_j}|+1)/n}.
+\]
+Apply the smooth-loss inequality to all these finite classes with total
+failure probability at most $\delta/4$.  If $q_N(w)=K_j$ and
+$\widehat R_S(z_w)\le8$, an approximating center $h$ has empirical risk
+less than $16$, provided $c_*$ was chosen small enough.  On the common
+sample event,
+\[
+ R(h)-\widehat R_S(h)
+ \le C\left[
+ \sqrt{\frac{K_jM_j\log^3(2n)}n}
+       +\frac{K_jM_j\log^3(2n)}n\right],
+ \quad
+ M_j=\log(2|\mathcal C_{K_j,a_j}|+1)
+                 +\log\frac{4(J+1)}\delta.
+\]
+The norm inequalities
+$|\sqrt{R(z_w)}-\sqrt{R(h)}|\le a_j$ and their empirical counterpart
+then give
+\begin{equation}\label{eq:mf-low-objective-deviation}
+ R(z_w)\le\widehat R_S(z_w)+\frac\lambda{64}q_N(w)+C\epsilon,
+\end{equation}
+as soon as
+\[
+ n\ge C\log^3(2n)
+          \max_j\frac{K_jM_j}{(\epsilon+\lambda K_j)^2}.
+\]
+Indeed, make the preceding center deviation a sufficiently small
+multiple of $\epsilon+\lambda K_j$; its population risk then remains
+bounded by a numerical constant, so transferring squared loss costs
+only a constant times $a_j$.
+
+The sample budget \eqref{eq:mf-two-parameter-budget} implies this
+condition.  The relevant elementary maximization is
+\[
+ \sup_{x>0}\frac{x^{D_H+1}}
+                     {(\epsilon+\lambda x)^{A_H+2}}
+ \le C_H\lambda^{-v_H}\epsilon^{-2},
+\]
+since $D_H+1=A_H=v_H$ and $\epsilon\le1$.  The remaining factors are absorbed by the six
+logarithms in that sample budget.
+
+We next control the two regions excluded from
+\eqref{eq:mf-low-objective-deviation}.  Put $r_N=N\|v\|^2$.
+Under the prior, $r_N\sim\chi_N^2/N$, so
+$\E r_N=1$, $\E r_N^2\le3$, and
+\[
+ R(z_w)\le2r_N+2,\qquad \int R(z_w)^2\,d\mu_N\le24.
+\]
+The centered readout gives $\int\widehat R_S(z_w)d\mu_N\le1+1/N$,
+so Jensen yields
+\begin{equation}\label{eq:mf-jensen-normalizer}
+ Z_{N,S}\ge e^{-(N+1)/(2\lambda)}\ge e^{-N/\lambda}.
+\end{equation}
+The posterior risk contribution of $\widehat R_S(z_w)>8$ is at most
+$2e^{-3N/\lambda}$.  For the top complexity state, Cauchy--Schwarz gives
+\[
+ \int R(z_w)\mathbf1_{G_J^{\mathsf c}}\,d\mu_N
+ \le\sqrt{48(H+1)}e^{-NK_J/32}.
+\]
+Using $K_J\ge128/\lambda$ and
+\eqref{eq:mf-jensen-normalizer}, its posterior contribution is at most
+$\sqrt{48(H+1)}e^{-3N/\lambda}$.  Both tails are bounded by
+$C_He^{-3/\lambda}$.
+
+Integrate \eqref{eq:mf-low-objective-deviation} on its valid region,
+extend the nonnegative empirical-risk-plus-complexity integral to the
+whole posterior, and apply
+\eqref{eq:mf-complexity-comparison}.  Take $Q$ to be the prior
+conditioned on the teacher tube of radius $\rho$ in
+\eqref{eq:mf-teacher-cost}.  Then
+\[
+ \int\widehat R_S(z_w)dQ\le\widehat R_S(g)+\lambda,
+ \qquad \frac{2\lambda}{N}\KL(Q\Vert\mu_N)
+             \le2\lambda A_g(\rho).
+\]
+This proves the theorem at every $N\ge\max\{m,N_0\}$ after the fixed
+teacher's Bernstein bound.
+
+\subsection{The raw small-width bridge}
+
+For completeness, we give the bounded-loss argument that treats every
+remaining width without changing the learner.  Set $M^2=128/\lambda$
+and use the proof loss
+$\ell_M=(\clip_{[-M,M]}z_w-Y)^2$, with range
+$B=(M+1)^2\le512/\lambda$.
+Put $\beta=N/(2\lambda)$ and $u=\beta B/n$.
+For every fixed parameter, boundedness of this loss implies
+\[
+ \E_S\exp\left\{\frac nB(1-e^{-u})R(\clip_{[-M,M]}z_w)
+                     -\beta\widehat R_S(\clip_{[-M,M]}z_w)\right\}
+ \le1.
+\]
+Tonelli, Markov and entropy duality give, with sample failure at most
+$\delta_N$,
+\[
+ \int R(\clip_{[-M,M]}z_w)d\Pi
+ \le\frac u{1-e^{-u}}
+ \left[\int\widehat R_S(\clip_{[-M,M]}z_w)d\Pi
+       +\frac{\KL(\Pi\Vert\mu_N)}\beta
+       +\frac{\log(1/\delta_N)}\beta\right].
+\]
+The posterior's raw variational objective is at most
+$\int\widehat R_S(z_w)d\mu_N\le2$.  Clipping cannot increase empirical
+loss.  Use $u/(1-e^{-u})\le1+u$ and the teacher comparison on the
+unmultiplied objective.  When $u\le1$, this proves
+\begin{align}
+ \int R(\clip_{[-M,M]}z_w)d\Pi
+ \le\;&\widehat R_S(g)+\lambda+2\lambda A_g(\rho)
+ \notag\\
+ &+\frac{4\lambda}{N}\log\frac1{\delta_N}
+        +\frac{512N}{n\lambda^2}.
+ \label{eq:mf-small-width-raw}
+\end{align}
+The clipping is solely a proof device; the likelihood still uses raw
+outputs.  Since $|z_w(x)|\le\sqrt{r_N}$, a chi-square tail,
+Cauchy--Schwarz, and \eqref{eq:mf-jensen-normalizer} give
+\[
+ \int R(z_w)\mathbf1_{\{r_N>M^2\}}d\Pi
+                  \le\sqrt{24}e^{-7N/\lambda}.
+\]
+Adding this quantity restores the ordinary raw posterior risk in
+\eqref{eq:mf-small-width-raw}.
+
+Take $\delta_N=\delta/(4N^2)$ and intersect these events.  Their total
+failure is less than $\delta/2$, and
+$\log(1/\delta_N)/N\le\log(4/\delta)+1$.
+By the threshold in \eqref{eq:mf-entropy-cover-bounds},
+\[
+ N_0\le C_H(d+1)\log\!\frac{2n(d+1)}{\lambda\epsilon\delta}
+                 \lambda^{-(v_H-2)}\epsilon^{-2}.
+\]
+Here we used
+$\sup_{x>0}x^{v_H-2}/(\epsilon+\lambda x)^{v_H}
+\le C_H\lambda^{-(v_H-2)}\epsilon^{-2}$.
+The sample budget \eqref{eq:mf-two-parameter-budget} therefore bounds
+$512N_0/(n\lambda^2)$ by $C_H\epsilon$ and ensures $u\le1$ after
+increasing its constant.  This covers every $m\le N<N_0$.
+
+Intersect the large-width event, these small-width events, and the
+fixed teacher's Bernstein event of failure $\delta/4$.  This proves
+\eqref{eq:mf-raw-oracle} on one event for all learner widths.
+The posterior has finite raw second moments because its density
+relative to the Gaussian prior is bounded; Jensen proves the claim
+for the ordinary posterior mean.
+
+\subsection{Rates and growing comparator classes}
+
+When $\epsilon=\lambda$, the sample budget has power $v_H+3$.
+This proves \eqref{eq:mf-raw-rate}, with logarithmic factors included in
+the calibration.
+
+For width and weight caps $m,B\le n^\alpha$, choose
+$\lambda=n^{-\theta}$ and $\epsilon=n^{-\eta}$ with
+\[
+ 4\alpha<\theta<\frac1{v_H},\qquad
+ 0<\eta\le\theta,\qquad
+ v_H\theta+3\eta<1.
+\]
+These choices exist for every
+\begin{equation}\label{eq:mf-growing-class}
+ \alpha<\frac1{4v_H}=2^{-(H+3)},
+\end{equation}
+by choosing $\eta>0$ sufficiently small.
+The teacher energy is $O(n^{4\alpha})$, its cylinder logarithm is
+smaller up to logarithms, and its Bernstein term tends to zero.
+Choose a population-risk minimizer in the compact capped teacher class,
+which contains zero and hence has minimum risk at most one.
+The resulting coefficient-one oracle inequality has a vanishing
+remainder uniformly over all learner widths above the cap.  For a fixed
+weight cap and only width growing, replace $4$ by $2$ in
+\eqref{eq:mf-growing-class}.

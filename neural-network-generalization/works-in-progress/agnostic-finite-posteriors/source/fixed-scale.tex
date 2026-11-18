@@ -1,0 +1,241 @@
+\section{Ordinary posterior predictions at a fixed Gaussian scale}
+\label{sec:fixed-raw-oracle}
+
+The finite-scale posterior also admits a coefficient-one oracle bound
+for its \emph{raw} predictions.  This includes the ordinary posterior
+mean, without clipping either the likelihood or the predictor.  For
+two or more hidden layers this section assumes $\gamma\geq2$; with one
+hidden layer it covers every $\gamma\geq1$.  Sections~\ref{sec:effective-energy} and~\ref{sec:raw-all-scales} treat all
+$\gamma\geq1$ at larger depth using a sample-dependent overall prior
+scale.
+
+Use the tanh architecture and the full and after-first-layer energies
+$Q_N$ and $Q_N^+$ defined above, with $H$
+hidden layers, inputs in $[-1,1]^d$, and labels in $[-1,1]$.  In this
+section the prior scale is exactly $s^2=N^{-\gamma}$, and the likelihood
+variance is $n\lambda s^2$.  Thus
+\[
+ \Pi(dw)=Z^{-1}\exp[-\widehat R_S(z_w)/(2\lambda s^2)]\,\mu(dw).
+\]
+A fixed teacher $g$ of width $m$ and weights at most $B\geq1$ has
+clones of energy at most
+\[
+ E=d(d+1)B^2+2Hm^2B^2,\qquad |g|\leq U=mB.
+\]
+Define
+\begin{gather*}
+ D_0=d+H+1,\qquad T=8+2H\log2,\qquad
+ A_g=\sqrt2mB,\\
+ K_g=1+A_g\left(\sqrt2 A_g^{H-1}
+                   +\sum_{j=0}^{H-2}A_g^j\right),\\
+ G_g(\lambda)=E+1+H\log2
+              +2D_0\log\frac{4K_g(U+1)}\lambda .
+\end{gather*}
+The sum is empty when $H=1$, in which case $K_g=1+2mB$.
+We fix a universal constant $C_0\geq1$ for the following smooth-loss
+inequality of Srebro, Sridharan, and Tewari~\cite[Theorem~1]{sst}.
+For a class $\mathcal F$ on which a nonnegative $s_0$-smooth loss is
+bounded by $b$, with probability at least $1-\eta$, simultaneously for
+$f\in\mathcal F$,
+\begin{align}
+ R(f)-\widehat R_S(f)
+ &\leq C_0\biggl[\sqrt{\widehat R_S(f)}
+   \left(\sqrt{s_0}\log^{3/2}(2n)\mathfrak R_n(\mathcal F)
+      +\sqrt{\frac{b\log(1/\eta)}n}\right)\notag\\
+ &\hspace{24mm}+s_0\log^3(2n)\mathfrak R_n(\mathcal F)^2
+             +\frac{b\log(1/\eta)}n\biggr].
+ \label{eq:finite-raw-sst}
+\end{align}
+Here $\mathfrak R_n$ is worst-case Rademacher complexity.  Increasing
+$C_0$ absorbs harmless logarithm conventions.  For raw square loss,
+$s_0=2$, and its bound on $\mathcal Z_K$ is $(\sqrt K+1)^2$.
+The energy classes are symmetric under readout sign reversal, so the
+absolute-value Rademacher convention in that theorem agrees with the
+one used here.
+
+For $n\geq2$ and $0<\delta<1$, put
+\begin{gather*}
+ p=H/2,\qquad J=\lceil\log_2(Tn)\rceil,\qquad
+ q_n=\frac1n\log\frac{2(J+1)}\delta,\\
+ D_n=\sqrt{2(d+1)\log(n+1)}+\frac{H-1}{2},\qquad
+ A_n=\frac{\sqrt2D_n\log^{3/2}(2n)}{H^p\sqrt n},\qquad
+ a_n=2^p A_n,\\
+ r_n=C_0\left[\sqrt T(A_n+2\sqrt{q_n})+A_n^2+4q_n\right],
+ \qquad C_0\geq1,\\
+ b_n(g,\delta)=(U+1)\sqrt{\frac{2R(g)\log(2/\delta)}n}
+       +\frac{2(U+1)^2\log(2/\delta)}{3n}.
+\end{gather*}
+
+\begin{theorem}[Finite-scale raw-output oracle inequality]
+\label{thm:fixed-raw-oracle}
+Suppose $H\geq2$ and
+\[
+ \frac1n\leq\lambda\leq1,\qquad
+ \lambda^p\geq8C_0a_nT^{p-1/2},\qquad
+ \lambda\geq64C_0q_n.
+\]
+For every fixed teacher $g$, with sample probability at least
+$1-\delta$, simultaneously for every $N\geq m$ and $\gamma\geq2$,
+\begin{align}
+ \int R(z_w)\,\Pi(dw)
+ &\leq R(g)+b_n(g,\delta)+\lambda G_g(\lambda)+r_n
+       +\frac{16C_0^2Tq_n}{\lambda}
+       +2(1+2H)e^{-1/\lambda}.
+ \label{eq:fixed-raw-oracle}
+\end{align}
+The ordinary posterior mean $\int z_w\,d\Pi$ has the same risk bound.
+For $H=1$, the statement holds simultaneously for every $\gamma\geq1$
+if its calibration and its penultimate term are replaced by
+\[
+ \frac1n\leq\lambda\leq1,\qquad
+ \lambda\geq4C_0(a_n^2+8q_n),\qquad
+ \frac{V_n}{\lambda},\quad
+ V_n=C_0^2T(a_n+2\sqrt{2q_n})^2.
+\]
+For a fixed teacher, the resulting rates are
+$\widetilde O(n^{-1/H})$ for $H\geq2$ and
+$\widetilde O(n^{-1/2})$ for $H=1$, with no learner-width factor.
+\end{theorem}
+
+\subsection{The raw posterior tail}
+
+There are $P_N^+=N+(H-1)N^2$ parameters after the first layer, and
+the stated regimes give $P_N^+s^2\leq H$.  Let
+$F=\widehat R_S(z_w)+\lambda Q_N^+(w)$.
+For every sample and every $0<\lambda\leq1$,
+\begin{equation}
+ \int(1+Q_N^+)\mathbf1_{\{F>T\}}\,d\Pi
+     \leq(1+2H)e^{-1/\lambda}.
+ \label{eq:fixed-raw-tail}
+\end{equation}
+Indeed, the centered independent readout gives
+$\mathbb E_\mu\widehat R_S(z_w)\leq1+s^2$, so Jensen yields
+$Z\geq\exp[-(1+s^2)/(2\lambda s^2)]$.  Split the exponent $F/(2\lambda s^2)$ in half on $F>T$ and discard
+the remaining nonnegative empirical loss.  The Gaussian first-layer
+factor is left intact.  The resulting Gaussian integral is exact, giving
+\begin{align*}
+ \int(1+Q_N^+)\mathbf1_{\{F>T\}}\,d\Pi
+ &\leq (1+2P_N^+s^2)
+ \exp\left[-\frac{T}{4\lambda s^2}
+       +\frac{P_N^+}2\log2+\frac{1+s^2}{2\lambda s^2}\right].
+\end{align*}
+Here $s^2\leq1$, $P_N^+s^2\leq H$, and $\lambda\leq1$ make the
+exponent at most $-1/(\lambda s^2)\leq-1/\lambda$ for the stated $T$.
+Also $R(z_w)\leq2Q_N^++2$, so the raw risk beyond this objective threshold
+is at most twice~\eqref{eq:fixed-raw-tail}.
+
+\subsection{Statistical absorption and the Gaussian comparison}
+
+The smooth-loss bound of Srebro, Sridharan, and Tewari, in the form
+stated above, applied to the dyadic energy classes
+$\mathcal Z_{2^j}$ for $0\leq j\leq J$ gives a common sample event of
+probability at least $1-\delta/2$.  On $F\leq T$, write $k=Q_N^+(w)$;
+then $k\leq T/\lambda\leq Tn$ and $\widehat R_S(z_w)\leq T$.
+For $k\leq1$ the unit-energy event bounds the deviation by $r_n$.
+For $k>1$, the shell of radius at most $2k$ gives
+\begin{equation}
+ R(z_w)-\widehat R_S(z_w)
+ \leq C_0\left[\sqrt T a_nk^p+a_n^2k^{2p}
+                   +2\sqrt{2T}\sqrt{kq_n}+8kq_n\right].
+ \label{eq:fixed-raw-shell}
+\end{equation}
+For $p\geq1$, the four terms are at most
+\[
+ \frac{\lambda k}8,\quad
+ \frac{\lambda k}{64C_0},\quad
+ \frac{\lambda k}8+\frac{16C_0^2Tq_n}{\lambda},\quad
+ \frac{\lambda k}8,
+\]
+respectively.  For $p=1/2$, the right side of
+\eqref{eq:fixed-raw-shell} is
+\[
+ C_0\sqrt T(a_n+2\sqrt{2q_n})\sqrt k
+             +C_0(a_n^2+8q_n)k
+ \leq\frac\lambda2 k+\frac{V_n}\lambda.
+\]
+Thus the respective residual, together with $r_n$, bounds the deviation
+above $\widehat R_S+\lambda Q_N^+/2$ throughout $F\leq T$.
+
+The Gaussian entropy inequality gives
+\[
+ \mathrm{KL}(\nu\Vert\mu)
+   \geq\frac1{4s^2}\int Q_N^+\,d\nu-\frac{P_N^+}2\log2.
+\]
+Posterior variational optimality therefore implies
+\begin{align}
+ \int[\widehat R_S(z_w)+\lambda Q_N^+/2]\,d\Pi
+ &\leq\int\widehat R_S(z_w)\,d\nu
+       +2\lambda s^2\mathrm{KL}(\nu\Vert\mu)
+       +\lambda H\log2.
+ \label{eq:fixed-raw-variation}
+\end{align}
+Choose $\nu=\mathcal N(w_*,r^2\Sigma)$ around an exact teacher clone,
+where $\Sigma$ is the prior covariance,
+$\rho=\lambda/[4(U+1)]$, and $r=\rho/K_g$.  The clone's internal
+operator norms and its normalized readout norm are at most $A_g$.
+For the normalized hidden-layer root mean square errors $e_\ell$,
+independence of each perturbation matrix from the preceding layer gives
+\[
+ e_1\leq\sqrt2r,\qquad
+ e_\ell\leq A_ge_{\ell-1}+r,
+ \qquad
+ (\mathbb E_\nu|z_w(x)-g(x)|^2)^{1/2}\leq rK_g=\rho.
+\]
+Only $s\sqrt N\leq1$ and $s\leq1$ are used here.  Minkowski gives
+$\int\widehat R_S(z_w)d\nu\leq\widehat R_S(g)+\lambda$.
+The full parameter count is $P_N=N(d+2)+(H-1)N^2$, with
+$P_Ns^2\leq D_0$ in the stated regimes, so the Gaussian entropy formula
+gives
+\[
+ 2\lambda s^2\mathrm{KL}(\nu\Vert\mu)
+   \leq\lambda E+2\lambda D_0\log(1/r).
+\]
+Substitution into~\eqref{eq:fixed-raw-variation} bounds its left side
+by $\widehat R_S(g)+\lambda G_g(\lambda)$.
+
+Integrate the low-objective deviation, add
+\eqref{eq:fixed-raw-tail}, and use nonnegativity to extend the integral
+of $\widehat R_S+\lambda Q_N^+/2$ to the whole parameter space.
+Bernstein's inequality for the fixed teacher gives
+$\widehat R_S(g)\leq R(g)+b_n(g,\delta)$ except on a set of sample
+probability $\delta/2$.  This proves the theorem.  All sample events are
+independent of $N$ and $\gamma$.  The posterior has bounded density
+relative to the Gaussian prior and hence finite second moments of its
+predictions; Jensen proves the ordinary-mean assertion.
+
+\subsection{Nearly square-root competitor width in a shallow network}
+
+The shallow theorem can be calibrated to the competitor class instead
+of a single fixed teacher.  Fix caps $m_0,B_0\geq1$ before observing the
+sample and put
+\begin{gather*}
+ E_0=d(d+1)B_0^2+2m_0^2B_0^2,\quad U_0=m_0B_0,\quad K_0=1+2m_0B_0,\\
+ G_0=E_0+1+H\log2+2D_0\log[4K_0(U_0+1)n],\\
+ v_n=\max\{1/n,\,4C_0(a_n^2+8q_n)\},\qquad
+ \lambda_n=\max\{\sqrt{V_n/G_0},v_n\}.
+\end{gather*}
+Whenever $\lambda_n\leq1$, every teacher in the capped class satisfies
+\[
+ \lambda_nG_g(\lambda_n)+\frac{V_n}{\lambda_n}
+       \leq2\sqrt{V_nG_0}+v_nG_0.
+\]
+The population-risk minimizer over this compact teacher class exists
+and has risk at most one, because the zero network is included.  It is
+fixed before sampling and can be used in the preceding theorem.  At
+fixed $d$ and $\delta$, this proves the coefficient-one oracle bound
+\[
+ R\left(\int z_w\,d\Pi\right)
+ \leq\inf_{\substack{\mathrm{width}(g)\leq m_0\\
+                     \mathrm{weights}(g)\leq B_0}}R(g)
+ +\widetilde O\left(\frac{m_0B_0+1}{\sqrt n}
+                         +\frac{m_0^2B_0^2+1}{n}\right),
+\]
+with the same statement for posterior-averaged risk.  The notation
+$\mathrm{weights}(g)\leq B_0$ means that every absolute weight is at
+most $B_0$; the constants may depend on $d$.  The guarantee holds on
+one sample event for every $N\geq m_0$ and every $\gamma\geq1$.
+Consequently, fixed weight cap and width $m_0\leq n^\alpha$ are allowed
+for every $\alpha<1/2$.  If both width and weight cap are at most
+$n^\alpha$, every $\alpha<1/4$ is allowed.  Smaller teachers can be
+zero-padded to width $m_0$; this is a comparator construction and does
+not put a prior on network sizes.

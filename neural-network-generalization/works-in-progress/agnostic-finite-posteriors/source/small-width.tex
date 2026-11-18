@@ -1,0 +1,128 @@
+\section{A raw-output PAC--Bayes bound for smaller widths}
+\label{sec:raw-small-width}
+
+A second finite-posterior argument complements spectral compression.
+It is useful when the Gaussian inverse scale is modest relative to the
+sample count.  Unlike a direct bounded-loss Hoeffding argument, it uses
+the posterior's own empirical objective to avoid one inverse power of
+$\lambda$.
+
+Fix a learner width $N$ and a Gaussian scale $\sigma>0$ with
+$N\sigma^2\leq1$.  The likelihood variance remains
+$n\lambda\sigma^2$, where $0<\lambda\leq1$.  For a teacher $g$ use the
+constants in Lemma~\ref{lem:effective-teacher-tube} and put
+\begin{equation}
+ \rho=\frac\lambda{4(U+1)},\quad
+ \eta=\min\{1/2,\rho/(2P_0)\},\quad
+ \mathcal A_g(\lambda)=\frac E2
+          +D_g\log\frac1{c_0\eta}+\log2.
+ \label{eq:raw-small-Ag}
+\end{equation}
+The comparison~\eqref{eq:effective-comparison} implies that the
+posterior's raw empirical objective is at most
+$\widehat R_S(g)+\lambda+2\lambda\mathcal A_g(\lambda)$.
+
+\begin{lemma}[Raw-output PAC--Bayes comparison]
+\label{lem:raw-small-width}
+Let $N\sigma^2\leq1$, $0<\lambda\leq1$, and $0<\delta'<1$.  Suppose
+\begin{equation}
+ \frac{256}{n\lambda^2\sigma^2}\leq1.
+ \label{eq:raw-small-calibration}
+\end{equation}
+With sample probability at least $1-\delta'$,
+\begin{align}
+ \int R(z_w)\,\Pi(dw)
+ &\leq\widehat R_S(g)+\lambda+2\lambda\mathcal A_g(\lambda)
+       +4\lambda\sigma^2\log(1/\delta')\notag\\
+ &\quad+\frac{512}{n\lambda^2\sigma^2}
+                   +\sqrt{24}e^{-7/(\lambda\sigma^2)}.
+ \label{eq:raw-small-width-bound}
+\end{align}
+The same bound holds for the ordinary posterior mean.
+\end{lemma}
+
+\begin{proof}
+Let $M^2=128/\lambda$, and write
+$z_w^{[M]}=\max\{-M,\min\{M,z_w\}\}$.  Its square loss is bounded by
+$b=(M+1)^2\leq512/\lambda$.  Write $\beta=1/(2\lambda\sigma^2)$ and
+$u=\beta b/n\leq1$.
+
+For any random loss $\ell\in[0,b]$, convexity of the exponential gives
+\[
+ \mathbb E e^{-u\ell/b}
+ \leq1-(1-e^{-u})\mathbb E\ell/b
+ \leq\exp[-(1-e^{-u})\mathbb E\ell/b].
+\]
+Apply this independently to the $n$ observations, integrate over the
+prior, and use Markov's inequality and the entropy variational
+inequality.  On an event of probability at least $1-\delta'$, every
+comparison law $\nu$ satisfies
+\[
+ \int R(z_w^{[M]})\,d\nu
+ \leq\frac{u}{1-e^{-u}}\left[
+       \int\widehat R_S(z_w^{[M]})\,d\nu
+       +\frac{\mathrm{KL}(\nu\Vert\mu)+\log(1/\delta')}{\beta}
+                          \right].
+\]
+Since $u/(1-e^{-u})\leq1+u$, put
+\[
+ A_\Pi=\int\widehat R_S(z_w^{[M]})\,d\Pi
+                  +\frac{\mathrm{KL}(\Pi\Vert\mu)}\beta.
+\]
+Clipping to $[-M,M]$ cannot increase squared loss because $M\geq1$.
+Posterior variational optimality, compared with the prior itself,
+therefore gives
+\[
+ 0\leq A_\Pi
+ \leq\int\widehat R_S(z_w)\,d\Pi
+                  +\frac{\mathrm{KL}(\Pi\Vert\mu)}\beta
+ \leq\int\widehat R_S(z_w)\,d\mu
+ \leq1+\sigma^2\leq2.
+\]
+Consequently
+\begin{align*}
+ \int R(z_w^{[M]})\,d\Pi
+ &\leq A_\Pi+2u+\frac{2\log(1/\delta')}{\beta}\\
+ &\leq\widehat R_S(g)+\lambda+2\lambda\mathcal A_g(\lambda)
+       +\frac{512}{n\lambda^2\sigma^2}
+       +4\lambda\sigma^2\log(1/\delta').
+\end{align*}
+This step does not assume a low-noise or Bernstein condition on the
+unknown data law.
+
+It remains to remove the auxiliary clipping.  Set $r=N\|v\|_2^2$.
+Under the prior, $r/\sigma^2$ has the chi-square law with $N$ degrees
+of freedom.  Thus $\mathbb E_\mu r\leq1$,
+$\mathbb E_\mu r^2\leq3$, and
+$R(z_w)\leq2r+2$ gives $\mathbb E_\mu R(z_w)^2\leq24$.
+The elementary exponential-moment bound for a chi-square variable
+implies
+\[
+ \mu\{r>M^2\}\leq e^{-M^2/(8\sigma^2)},
+\]
+since $M^2/\sigma^2\geq3N$.  The centered readout and Jensen give
+$Z\geq e^{-1/(\lambda\sigma^2)}$.  As the likelihood is at most one,
+Cauchy--Schwarz yields
+\begin{align*}
+ \int R(z_w)\mathbf1_{\{r>M^2\}}\,d\Pi
+ &\leq\sqrt{24}\exp\left[\frac1{\lambda\sigma^2}
+                              -\frac{M^2}{16\sigma^2}\right]
+ =\sqrt{24}e^{-7/(\lambda\sigma^2)}.
+\end{align*}
+On $r\leq M^2$ the raw and auxiliary predictions coincide at every
+input.  Adding this tail proves~\eqref{eq:raw-small-width-bound}.
+The finite posterior second moments also justify Jensen's inequality
+for the ordinary posterior mean.
+\end{proof}
+
+For the fixed-prefactor prior $\sigma^2=N^{-\gamma}$, $\gamma\geq1$,
+the leading sample term in this lemma is
+$512N^\gamma/(n\lambda^2)$.  To obtain one event for all widths at a
+fixed $\gamma$, take $\delta'_N=\delta/(4N^2)$ and use a union bound.
+The confidence term remains uniform because
+\[
+ \frac{\log(4N^2/\delta)}{N^\gamma}
+       \leq\log(4/\delta)+1.
+\]
+A separate fixed-teacher concentration event replaces
+$\widehat R_S(g)$ by its population risk and Bernstein remainder.

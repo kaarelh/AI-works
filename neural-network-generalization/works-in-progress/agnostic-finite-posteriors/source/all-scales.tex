@@ -1,0 +1,242 @@
+\section{Raw predictions throughout the mean-field-or-stronger regime}
+\label{sec:raw-all-scales}
+
+We now prove a finite-posterior oracle bound for the ordinary raw-output
+posterior mean at every $\gamma\geq1$ and every eligible width, at any
+fixed depth.  The overall prior scale decreases explicitly with sample
+size.  Thus this theorem does not claim the same result at a fixed
+prefactor $t=1$.
+
+Use the model~\eqref{eq:effective-posterior}, with $H\geq2$, and the
+effective energy $q_N$ from~\eqref{eq:effective-energy}.  Write
+$a_N=\sigma\sqrt N$; the theorem below applies to any finite
+$\sigma>0$ satisfying its stated bound on $a_N$.  To apply the preceding
+lemmas, represent the same Gaussian law with $\gamma=1$ and $t=a_N$.
+Recall the constants
+$C_N,c_H$ from
+\eqref{eq:effective-mgf-constant}.  Put
+\begin{gather}
+ T=64(1+c_H),\quad p=H/2,\quad J=\lceil\log_2(Tn)\rceil,
+ \quad u_n=\frac1n\log\frac{2(J+1)}\delta,\notag\\
+ D_n=\sqrt{2(d+1)\log(n+1)}+\frac{H-1}{2},\quad
+ A_n=\frac{\sqrt2D_n\log^{3/2}(2n)}{H^p\sqrt n},\quad a_n=2^pA_n,
+ \notag\\
+ r_n=C_0[2\sqrt T(A_n+2\sqrt{u_n})+A_n^2+4u_n].
+ \label{eq:raw-all-statistics}
+\end{gather}
+For each eligible $\lambda$, also define
+\begin{equation}
+ \nu_H=\frac{H-1}{2},\qquad b_H=\max\{1,\nu_H\},\qquad
+ M_n=5T+r_n+\frac{512C_0^2Tu_n}{\lambda}.
+ \label{eq:raw-all-risk-budget}
+\end{equation}
+Here $C_0\geq1$ is the same universal smooth-loss constant as in
+\eqref{eq:finite-raw-sst}.  For a fixed teacher $g$ use $E,U,D_g,P_0,c_0$
+from Lemma~\ref{lem:effective-teacher-tube}, and set
+\[
+ \rho=\frac\lambda{4(U+1)},\qquad
+ \eta=\min\{1/2,\rho/(2P_0)\}.
+\]
+The fixed-teacher Bernstein term is
+\[
+ b_n(g,\delta)=(U+1)\sqrt{\frac{2R(g)\log(2/\delta)}n}
+        +\frac{2(U+1)^2\log(2/\delta)}{3n}.
+\]
+
+\begin{theorem}[An all-width, all-exponent raw-output oracle bound]
+\label{thm:raw-all-scales}
+Let $H\geq2$, $n\geq2$, and $0<\delta<1$.  Suppose
+\begin{gather}
+ \frac1n\leq\lambda\leq1,\qquad
+ \lambda^p\geq128C_0a_nT^{p-1/2},\qquad
+ \lambda\geq512C_0u_n,
+ \label{eq:raw-all-lambda}\\
+ 0<a_N\leq\min\left\{1,
+       \frac{\lambda^{b_H}}
+       {768\sqrt{M_n}(H-1)2^{\nu_H}T^{\max\{\nu_H-1,0\}}}\right\}.
+ \label{eq:raw-all-prefactor}
+\end{gather}
+For every fixed width-$m$, weight-$B$ teacher $g$, with probability at
+least $1-\delta$ over the sample, simultaneously for every $N\geq m$,
+and every $\sigma>0$ satisfying~\eqref{eq:raw-all-prefactor},
+\begin{align}
+ \int R(z_w)\,\Pi(dw)
+ &\leq R(g)+b_n(g,\delta)
+  +\lambda\left[E+1+2a_N^2\left\{c_H
+                 +D_g\log\frac1{c_0\eta}+\log2\right\}\right]
+       \notag\\
+ &\quad+r_n+\frac{512C_0^2Tu_n}{\lambda}
+              +48\sqrt{M_n}a_N(H-1)2^{\nu_H}+66e^{-1/\lambda}.
+ \label{eq:raw-all-oracle}
+\end{align}
+The same right side bounds the risk of the ordinary posterior mean.
+It also bounds the usual clipped prediction conventions.
+No limit in width or prior scale is taken.
+\end{theorem}
+
+For sufficiently large $n$, an explicit calibration is
+\begin{gather}
+ \lambda_n=\max\left\{1/n,
+            [128C_0a_nT^{p-1/2}]^{1/p},512C_0u_n\right\},\qquad
+ t_n=\frac{\lambda_n^{b_H}}
+  {768\sqrt{M_n}(H-1)2^{\nu_H}T^{\max\{\nu_H-1,0\}}}.
+ \label{eq:raw-all-schedule}
+\end{gather}
+For every $\gamma\geq1$ and every $N\geq m$, the prior
+$\sigma^2=t_n^2N^{-\gamma}$ satisfies~\eqref{eq:raw-all-prefactor},
+because $a_N=t_nN^{(1-\gamma)/2}\leq t_n$.  The same $t_n$ therefore
+works simultaneously at all these widths and exponents.
+At fixed $d,H,\delta$ these have orders
+$\widetilde O(n^{-1/H})$ and $\widetilde O(n^{-b_H/H})$,
+respectively; $M_n$ remains bounded as $n$ grows with these resources
+fixed.  Thus the sufficient prefactor has exponent $1/2$ at $H=2$,
+$1/3$ at $H=3$, and $(H-1)/(2H)$ for $H\geq4$.
+The excess in~\eqref{eq:raw-all-oracle} is
+$\widetilde O(n^{-1/H})$ for a fixed teacher.  The calibration depends
+on $n,d,H,\delta$, not on the unknown data law or on a selected teacher.
+
+\subsection{A weighted posterior tail for effective energy}
+
+Let $F(w)=\widehat R_S(z_w)+\lambda q_N(w)$.  Every sample satisfies
+\begin{equation}
+ \int(1+q_N)\mathbf1_{\{F>T\}}\,d\Pi
+       \leq33e^{-1/(\lambda\sigma^2)}\leq33e^{-1/\lambda}.
+ \label{eq:raw-effective-tail}
+\end{equation}
+To prove this, the centered readout gives
+$\mathbb E_\mu\widehat R_S\leq1+\sigma^2$ and hence
+$Z\geq\exp[-(1+\sigma^2)/(2\lambda\sigma^2)]$.
+Write $\beta=1/(2\lambda\sigma^2)$.  On $F>T$,
+\[
+ e^{-\beta\widehat R_S}
+   \leq e^{-\beta T/16}e^{q_N/(32\sigma^2)},\qquad
+ (1+q_N)e^{q_N/(32\sigma^2)}
+    \leq(1+32\sigma^2)e^{q_N/(16\sigma^2)}
+    \leq33e^{q_N/(16\sigma^2)}.
+\]
+The moment bound~\eqref{eq:effective-mgf} therefore makes the left
+side of~\eqref{eq:raw-effective-tail} at most
+\[
+ 33\exp\left(C_N+\frac{1+\sigma^2}{2\lambda\sigma^2}
+                         -\frac{T}{32\lambda\sigma^2}\right).
+\]
+Since $\sigma^2C_N\leq c_H$, $\sigma^2\leq1$, and $\lambda\leq1$,
+the exponent is at most
+\[
+ \frac{2c_H+2-T/16}{2\lambda\sigma^2}
+       \leq-\frac1{\lambda\sigma^2}.
+\]
+This proves the claim.  Hard spectral truncation leaves the readout
+unchanged, so both original and truncated outputs have absolute value
+at most $\sqrt{q_N}$.  Thus the raw population risk on $F>T$ contributes
+at most $66e^{-1/\lambda}$.
+
+\subsection{Smooth-loss absorption on the low-objective region}
+
+Apply~\eqref{eq:finite-raw-sst} to the deterministic energy classes
+$\mathcal Z_{2^j}$, $0\leq j\leq J$, with failure probabilities
+$\delta/[2(J+1)]$.  The common event has probability at least
+$1-\delta/2$ and does not depend on $N$ or $\sigma$.
+On $F\leq T$ write $q=q_N(w)$ and let $\widetilde w$ denote the
+truncated network.  Then $q\leq T/\lambda\leq Tn$,
+$\widehat R_S(z_w)\leq T$, and
+Lemma~\ref{lem:effective-approximation} gives
+\[
+ e_w:=\|z_w-z_{\widetilde w}\|_\infty
+       \leq8a_N(H-1)(1+q)^{\nu_H}\leq\frac{T}{96\sqrt{M_n}}
+       \leq\sqrt T.
+\]
+For this use~\eqref{eq:raw-all-prefactor},
+$1+T/\lambda\leq2T/\lambda$, $\lambda\leq1$, and $M_n\geq T$.
+In particular, Minkowski yields
+$\sqrt{\widehat R_S(z_{\widetilde w})}\leq2\sqrt T$.
+
+For $q\leq1$, the unit-energy smooth-loss bound is at most $r_n$.
+For $q>1$, a dyadic shell of radius at most $2q$ gives
+\begin{align*}
+ R(z_{\widetilde w})-\widehat R_S(z_{\widetilde w})
+ \leq C_0[2\sqrt T a_nq^p+a_n^2q^{2p}
+                  +4\sqrt{2T}\sqrt{qu_n}+8qu_n].
+\end{align*}
+The four terms are at most
+\[
+ \frac{\lambda q}{64},\quad
+ \frac{\lambda q}{16384C_0},\quad
+ \frac{\lambda q}{64}+\frac{512C_0^2Tu_n}{\lambda},\quad
+ \frac{\lambda q}{64},
+\]
+respectively, by~\eqref{eq:raw-all-lambda}, $p\geq1$, and
+$q\leq T/\lambda$.  Their sum is at most
+$\lambda q/16+512C_0^2Tu_n/\lambda$.
+
+For both energy cases, the preceding inequality implies
+\[
+ R(z_{\widetilde w})\leq
+ \widehat R_S(z_{\widetilde w})+\lambda q/16
+             +r_n+512C_0^2Tu_n/\lambda\leq M_n.
+\]
+Here $\widehat R_S(z_{\widetilde w})\leq4T$ and $\lambda q\leq T$.
+Minkowski therefore transfers the two raw losses with cost at most
+\begin{align*}
+ R(z_w)-R(z_{\widetilde w})
+  +\widehat R_S(z_{\widetilde w})-\widehat R_S(z_w)
+ &\leq2e_w(\sqrt{M_n}+\sqrt T)+2e_w^2\\
+ &\leq6\sqrt{M_n}e_w\\
+ &\leq48\sqrt{M_n}a_N(H-1)(1+q)^{\nu_H}.
+\end{align*}
+If $q>1$ and $\nu_H\geq1$, use
+$(1+q)^{\nu_H}\leq2^{\nu_H}(T/\lambda)^{\nu_H-1}q$;
+if $0<\nu_H<1$, use $(1+q)^{\nu_H}\leq2^{\nu_H}q$.
+In either case~\eqref{eq:raw-all-prefactor} bounds the transfer cost
+by $\lambda q/16$.  For $q\leq1$ its bound is
+$48\sqrt{M_n}a_N(H-1)2^{\nu_H}$.
+Consequently, throughout $F\leq T$,
+\begin{equation}
+ R(z_w)\leq\widehat R_S(z_w)+\frac\lambda8 q_N(w)
+       +r_n+\frac{512C_0^2Tu_n}{\lambda}
+       +48\sqrt{M_n}a_N(H-1)2^{\nu_H}.
+ \label{eq:raw-effective-deviation}
+\end{equation}
+
+\begin{proof}[Proof of Theorem~\ref{thm:raw-all-scales}]
+Integrate~\eqref{eq:raw-effective-deviation} over $F\leq T$ and use
+\eqref{eq:raw-effective-tail} outside.  The integrand
+$\widehat R_S+\lambda q_N/8$ is nonnegative, so its restricted integral
+is at most its full integral.  Apply the variational comparison
+\eqref{eq:effective-variational} with the teacher-cylinder comparison
+from~\eqref{eq:effective-comparison}.  The moment constant satisfies
+$\sigma^2C_N\leq a_N^2c_H$.  These statements give the right side of
+\eqref{eq:raw-all-oracle} with $\widehat R_S(g)$ in place of
+$R(g)+b_n(g,\delta)$.
+
+Bernstein's inequality for the fixed teacher supplies that replacement
+except on a sample set of probability $\delta/2$.  The resulting event
+is common to all the claimed widths and scales.  The posterior has
+bounded density relative to its Gaussian prior, and
+$|z_w|^2\leq Q_N(w)$; thus the ordinary posterior mean is integrable,
+and Jensen proves its risk bound.  Clipping cannot increase squared
+loss for labels in $[-1,1]$, giving the remaining conventions.
+\end{proof}
+
+The general scale condition also covers a fixed prefactor $t=1$
+when $\gamma>1$ and
+\[
+ N\geq\left(\frac{768\sqrt{M_n}(H-1)2^{\nu_H}
+                          T^{\max\{\nu_H-1,0\}}}
+                         {\lambda_n^{b_H}}\right)^{2/(\gamma-1)}.
+\]
+At fixed $d,H,\delta,\gamma$, this sufficient width is
+$\widetilde O(n^{2b_H/[H(\gamma-1)]})$.  It is an additional large-width
+corollary, not an all-width fixed-prefactor theorem for
+$1\leq\gamma<2$.
+
+The coefficient of $R(g)$ is one.  A teacher may therefore be a
+population-risk minimizer over any specified compact bounded-weight
+class, chosen before sampling.  At fixed $d,H,\delta$, the theorem
+competes with every such class whose width and weight caps are at most
+$n^\alpha$, for every $\alpha<1/(4H)$: its excess tends to zero,
+uniformly over every learner width above the class width and every
+$\gamma\geq1$.  With a fixed weight cap the allowed range is
+$\alpha<1/(2H)$.  This follows from $E=O(m^2B^2+B^2)$,
+$U=mB$, the polynomial teacher-cylinder constants, and the fact that
+the population minimizer has risk at most one.

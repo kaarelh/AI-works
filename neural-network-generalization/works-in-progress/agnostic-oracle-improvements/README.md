@@ -42,7 +42,7 @@ The strong-prior limit is taken separately at each fixed width; no width-uniform
 
 The likelihood is calibrated rather than required to fit every noisy label exactly. The new finite-scale result uses likelihood variance `nλ_n N^(-γ)`. Arbitrarily tight conditioning can memorize noise. Teacher weight magnitude is still counted; the paper proves a width-one obstruction using two nearby inputs and the strong-prior energy budget.
 
-The sample exponent still deteriorates with depth. A favorable bound based only on teacher parameter count for dense Gaussian Bayesian learning remains open. The improved deep finite-scale rate for `1≤γ<2`, and raw-output finite-scale predictions, also remain open here.
+The sample exponent deteriorates with depth. The [finite-posterior sequel](../agnostic-finite-posteriors/) proves ordinary raw-output bounds for actual finite priors throughout `γ≥1`; its mean-field rate is weaker than the stronger-prior rate. The [ReLU sequel](../agnostic-relu-sharp/) gives matching strict comparator-growth exponents. A [nonexpansive support restriction](../agnostic-nonexpansive/) yields a nearly parameter-count polynomial against teachers satisfying that restriction. This paper retains the earlier, shorter arguments.
 
 These are conventional mathematical proofs with independent AI-agent reviews, **not Lean formalizations or external peer review**. Run `./build.sh` to rebuild the PDF using TeX Live.
 

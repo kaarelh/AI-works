@@ -1,0 +1,138 @@
+\subsection{One small-width event for every Gaussian scale}
+\label{sec:simultaneous-scale-pacbayes}
+
+The small-width event can be made simultaneous over an interval of
+prior scales.  A finite mixture is used only as the reference measure
+in the proof of a PAC--Bayes inequality.  Each learner still has its
+specified single dense Gaussian prior.
+
+For width $N$ let $\mu_{N,\tau}$ have first-layer, internal, and readout
+variances $\tau^2/d$, $\tau^2/N$, and $\tau^2/N^2$, respectively.
+Let $\Pi_{N,\tau,S}$ be its posterior with raw Gaussian likelihood
+variance $n\lambda\tau^2/N$.  Its inverse empirical-risk temperature is
+$\beta_\tau=N/(2\lambda\tau^2)$.
+
+\begin{lemma}[Simultaneous-scale raw PAC--Bayes bound]
+\label{lem:simultaneous-scale-small-width}
+Fix $N\geq1$, $0<\kappa\leq1$, $0<\lambda\leq1$, and
+$0<\delta'<1$.  Put
+\[
+ P_N=N(d+2)+(H-1)N^2,\qquad
+ M_N=1+\left\lceil
+       \frac{\log(1/\kappa)}{\log(1+1/P_N)}\right\rceil.
+\]
+Assume $256N/(n\lambda^2\kappa^2)\leq1$.
+With sample probability at least $1-\delta'$, simultaneously for every
+$\tau\in[\kappa,1]$ and every fixed eligible teacher $g$,
+\begin{align}
+ \int R(z_w)\,\Pi_{N,\tau,S}(dw)
+ &\leq\widehat R_S(g)+\lambda+2\lambda\mathcal A_g(\lambda)
+       +\frac{512N}{n\lambda^2\kappa^2}\notag\\
+ &\quad+\frac{4\lambda\kappa^2}{N}
+       [1+\log M_N+\log(1/\delta')]
+       +\sqrt{24}e^{-7N/\lambda}.
+ \label{eq:simultaneous-scale-small-bound}
+\end{align}
+Here $\mathcal A_g(\lambda)$ is the teacher-cylinder quantity
+in~\eqref{eq:raw-small-Ag}.  The same bound holds for each ordinary
+posterior mean.  The event does not depend on $\tau$ or on the teacher.
+\end{lemma}
+
+\begin{proof}
+Let $r_N=1+1/P_N$ and form the grid
+$\tau_j=\min\{1,\kappa r_N^j\}$ for $j=0,\ldots,M_N-1$.
+The last point is one.  For every $\tau\in[\kappa,1]$ there is a grid
+point with $\tau\leq\tau_j\leq r_N\tau$.
+As all Gaussian coordinate variances scale together, their densities
+satisfy the pointwise comparison
+\[
+ \frac{d\mu_{N,\tau_j}}{d\mu_{N,\tau}}(w)
+ =\left(\frac\tau{\tau_j}\right)^{P_N}
+   \exp\left[\frac{\mathcal Q_N(w)}2
+                  (\tau^{-2}-\tau_j^{-2})\right]
+ \geq r_N^{-P_N}\geq e^{-1}.
+\]
+Here $\mathcal Q_N$ is the nonnegative quadratic form for the
+unit-scale prior; its exact expression is unnecessary in this comparison.
+For the single auxiliary reference
+$\overline\mu_N=M_N^{-1}\sum_j\mu_{N,\tau_j}$, it follows that
+\begin{equation}
+ \operatorname{KL}(Q\Vert\overline\mu_N)
+ \leq\operatorname{KL}(Q\Vert\mu_{N,\tau})+1+\log M_N
+ \label{eq:scale-grid-domination}
+\end{equation}
+whenever the right side is finite.
+
+Set $M^2=128/\lambda$ and use the proof loss of
+$z_w^{[M]}=\operatorname{clip}_{[-M,M]}z_w$.
+Its range is at most $b=(M+1)^2\leq512/\lambda$.
+Apply the bounded-loss Catoni argument from
+Lemma~\ref{lem:raw-small-width} once, with reference
+$\overline\mu_N$ and the fixed parameter
+\[
+ \beta_* =\frac{N}{2\lambda\kappa^2},\qquad
+ u_* =\frac{\beta_*b}{n}\leq1.
+\]
+On one event, every probability law $Q$ of finite relative entropy
+obeys that PAC--Bayes inequality.  In particular it applies to every
+$\Pi_{N,\tau,S}$ without a union over $\tau$.
+
+For such a posterior, define
+\[
+ A_\tau=\int\widehat R_S(z_w^{[M]})\,d\Pi_{N,\tau,S}
+      +\frac{\operatorname{KL}(\Pi_{N,\tau,S}\Vert\mu_{N,\tau})}
+                   {\beta_*}.
+\]
+Since $\beta_*\geq\beta_\tau$, relative entropy is nonnegative, and
+clipping cannot increase empirical loss,
+\[
+ 0\leq A_\tau
+ \leq\int\widehat R_S(z_w)\,d\Pi_{N,\tau,S}
+       +\frac{\operatorname{KL}(\Pi_{N,\tau,S}\Vert\mu_{N,\tau})}
+                    {\beta_\tau}
+ \leq\int\widehat R_S(z_w)\,d\mu_{N,\tau}\leq2.
+\]
+The penultimate inequality compares the true posterior objective with
+its own prior.  The same objective is at most
+$\widehat R_S(g)+\lambda+2\lambda\mathcal A_g(\lambda)$ by the
+teacher comparison, because $\tau\leq1$.
+Use~\eqref{eq:scale-grid-domination},
+$u_* /(1-e^{-u_*})\leq1+u_*$, and $A_\tau\leq2$ in the PAC--Bayes
+bound.  This gives
+\begin{align*}
+ \int R(z_w^{[M]})\,d\Pi_{N,\tau,S}
+ &\leq A_\tau+2u_*
+        +\frac{2}{\beta_*}[1+\log M_N+\log(1/\delta')]\\
+ &\leq\widehat R_S(g)+\lambda+2\lambda\mathcal A_g(\lambda)
+       +\frac{512N}{n\lambda^2\kappa^2}
+       +\frac{4\lambda\kappa^2}{N}
+                       [1+\log M_N+\log(1/\delta')].
+\end{align*}
+The weighted readout tail proved in Lemma~\ref{lem:raw-small-width}
+is deterministic in the sample and holds for each $\tau$ with
+$\sigma^2=\tau^2/N$.  It is at most
+$\sqrt{24}\exp[-7N/(\lambda\tau^2)]\leq\sqrt{24}e^{-7N/\lambda}$,
+so adding it proves~\eqref{eq:simultaneous-scale-small-bound}.
+All pointwise scale comparisons are valid on the same PAC--Bayes
+event.  Jensen proves the posterior-mean assertion.
+\end{proof}
+
+Taking $\delta'_N=\delta/(4N^2)$ and intersecting the countably many
+width events gives total failure below $\delta/2$.
+The extra scale-grid term remains uniformly bounded.  Indeed, with
+$D_0=d+H+1$ and $L=\log(1/\kappa)$,
+\[
+ M_N\leq2+(P_N+1)L
+       \leq N^2[2+(D_0+1)L].
+\]
+The inequalities $4\log N/N\leq2$ and
+$\kappa^2\log(1+L)\leq1$ give
+\begin{equation}
+ \frac{4\lambda\kappa^2}{N}
+       [1+\log M_N+\log(4N^2/\delta)]
+ \leq4\lambda\left[4+\log\frac{4(D_0+3)}\delta\right].
+ \label{eq:simultaneous-scale-confidence}
+\end{equation}
+Thus the simultaneous-scale event has the same sample power as the
+pointwise-scale small-width argument.  A fixed-teacher Bernstein event
+can be shared with the large-width and spectral regimes.

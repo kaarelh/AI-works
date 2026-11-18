@@ -1,0 +1,383 @@
+\section{Raw oracle bounds for globally Lipschitz activations}
+\label{sec:general-lipschitz-raw}
+
+Fix a scalar activation $\phi$ and a constant $A\geq1$ such that
+$\operatorname{Lip}(\phi)\leq A$ and $|\phi(0)|\leq A$.
+The activation need not be bounded, homogeneous, odd, or zero at the
+origin.  In particular the argument covers tanh, ReLU, GELU, sigmoid,
+and softplus, with their appropriate fixed Lipschitz constants.
+
+There are $H\geq1$ hidden layers of width $N$, a scalar linear readout,
+and a first-layer constant input.  Internal layers have no biases.
+Inputs belong to $[-1,1]^d$, labels to $[-1,1]$, and their joint IID
+law is arbitrary.  Write $\tau\in(0,1]$ for the actual Gaussian scale:
+first-layer, internal, and readout coordinate variances are
+$\tau^2/d$, $\tau^2/N$, and $\tau^2/N^2$.
+Put $\omega=N/\tau^2$.  The likelihood variance is $n\lambda/\omega$,
+so the actual posterior is
+\[
+ d\Pi=Z^{-1}\exp[-\omega\widehat R_S(z_w)/(2\lambda)]\,d\mu.
+\]
+Taking $\tau^2=N^{1-\gamma}$ gives the original prefactor-one priors
+at every $\gamma\geq1$.  No scale mixture appears in this learner.
+
+\subsection{A teacher cylinder without bounded activations}
+
+Let $g$ be a width-$m$ teacher, with all coefficients at most $B\geq1$
+in absolute value.  Define the weighted Gaussian energy
+\[
+ Q_N(w)=\frac dN\|W^1\|_F^2+
+             \sum_{\ell=2}^H\|W^\ell\|_F^2+N\|v\|_2^2.
+\]
+The Gaussian density has exponent $-\omega Q_N(w)/2$.
+To represent the teacher at any $N\geq m$, partition each hidden
+layer into clone groups of sizes
+$k_j\in\{\lfloor N/m\rfloor,\lceil N/m\rceil\}$.
+Copy each teacher first-layer row to its group. For an internal
+teacher edge from neuron $i$ to neuron $j$, assign its weight divided
+by $k_i$ to every edge between the corresponding clone groups.
+Divide each teacher readout weight by its group size in the same way.
+The sums entering every clone equal the teacher sums, so this network
+computes exactly $g$, for any activation.
+
+The first-layer contribution is at most $d(d+1)B^2$.
+Since $k_j/k_i\leq2$, each internal-layer contribution is at most
+$2m^2B^2$. Since $N/k_i\leq2m$, the readout contribution is at most
+$2m^2B^2$. Thus the clone $w_*$ satisfies
+\[
+ Q_N(w_*)\leq E:=d(d+1)B^2+2Hm^2B^2.
+\]
+Every learner neuron belongs to a nonempty clone group, so this
+construction does not require $\phi(0)=0$.
+Define
+\begin{gather*}
+ b_0=2\sqrt{2[2\log9+\log(4(H+1))]},\qquad
+ T_g=A[3+2mB+B(d+1)+b_0],\\
+ P_g=1+(\sqrt2mB+1)A(d+1+H\sqrt m)T_g^{H-1}+T_g^H,\\
+ D_g=d+2+(H-1)m,\qquad
+ \eta_\rho=\min\{1/2,\rho/(2P_g)\},\qquad c_0=3/8,\\
+ \mathcal A_g(\rho)=E/2+D_g\log(1/(c_0\eta_\rho))+\log2.
+\end{gather*}
+Let $U\geq\|g\|_\infty$ be any specified output bound;
+one may always take $U=mBT_g^H$, and for tanh one may take $U=mB$.
+
+\begin{lemma}[A finite-width teacher neighborhood]
+\label{lem:general-activation-cylinder}
+For every $N\geq m$, $0<\tau\leq1$, and $0<\rho\leq1$,
+\[
+ -\log\mu\{\|z_w-g\|_\infty<\rho\}
+ \leq\omega E/2+ND_g\log(1/(c_0\eta_\rho))+\log2
+ \leq\omega\mathcal A_g(\rho).
+\]
+\end{lemma}
+\begin{proof}
+Let $w_*$ be the balanced clone.  At each hidden layer let $P$ project
+onto the $m$-dimensional subspace of vectors constant on clone groups.
+In standardized independent Gaussian coordinates, require absolute
+value at most $\eta_\rho$ for all first-layer and readout coordinates,
+and for every internal row's projections onto an orthonormal basis of
+this group subspace.  There are $ND_g$ independent scalar constraints,
+whose joint probability is at least $(c_0\eta_\rho)^{ND_g}$.
+
+Conditioning on these intervals preserves independent centered
+unit-subgaussian coordinates in the corresponding orthonormal bases.
+Two sphere nets, each of size at most $9^N$, give for an internal
+standardized matrix $Z$
+\[
+ \Pr\{\|Z\|_{\rm op}>b_0\sqrt N\mid\text{cylinder}\}
+ \leq2\exp[(2\log9-b_0^2/8)N].
+\]
+A union bound over internal layers leaves a centrally symmetric event
+of probability at least one half the cylinder probability.
+
+Translate this event by $w_*$.  The internal perturbation has operator
+norm at most $b_0$, while its restriction to the teacher's group
+subspace has operator norm at most $\eta_\rho\sqrt m$.
+The clone internal operator norm is at most $\sqrt2mB$.
+Teacher hidden coordinates are at most $T_g^\ell$ at layer $\ell$,
+because $|\phi(s)|\leq A(1+|s|)$.
+For normalized hidden errors $e_\ell=\|h^\ell-h_*^\ell\|_2/\sqrt N$,
+Lipschitz propagation gives
+\[
+ e_1\leq A\eta_\rho(d+1),\qquad
+ e_\ell\leq A(\sqrt2mB+b_0)e_{\ell-1}
+                +A\eta_\rho\sqrt m\,T_g^{\ell-1}.
+\]
+Consequently
+$e_H\leq\eta_\rho A(d+1+H\sqrt m)T_g^{H-1}$.
+The clone readout has $\sqrt N\|v_*\|_2\leq\sqrt2mB$, and its
+perturbation has $\sqrt N\|v-v_*\|_2\leq\eta_\rho$.
+Thus the output error is at most
+$(\sqrt2mB+1)e_H+\eta_\rho T_g^H<\rho$.
+
+For a centered Gaussian measure and a centrally symmetric event,
+translation by a vector of squared standardized length $r$ decreases
+its probability by at most the factor $e^{-r/2}$; this follows by
+pairing opposite points and applying Jensen to the Gaussian density
+ratio.  Here $r\leq\omega E$.  This proves the first bound; $N\leq\omega$
+and $1\leq\omega$ prove the second.
+\end{proof}
+
+\subsection{Width-uniform prior moments and norm tails}
+
+Define
+\[
+ K(w)=\max\{128,\|W^1\|_F^2/N,
+          \|W^2\|_{\rm op}^2,\ldots,\|W^H\|_{\rm op}^2,
+          N\|v\|_2^2\}.
+\]
+Gaussian chi-square tails for the first layer and readout, and two
+sphere nets for internal layers, imply for $u\geq128$
+\begin{equation}
+ \mu\{K>u\}\leq(H+1)e^{-\omega u/16}.
+ \label{eq:general-activation-norm-tail}
+\end{equation}
+For example the internal estimate is
+$2\exp[2N\log9-\omega u/8]\leq e^{-\omega u/16}$.
+The first-layer term in $K$ is $(\tau^2/(dN))\chi^2_{N(d+1)}$;
+the readout term is $(\tau^2/N)\chi^2_N$, so the same weaker bound
+applies to them.
+Tail integration yields
+\begin{equation}
+ \log\int e^{\omega K/32}d\mu\leq\omega B_H,
+ \qquad B_H=4+\log(H+2).
+ \label{eq:general-activation-norm-mgf}
+\end{equation}
+
+There are also width-uniform raw-output moments.  Let
+$S_\ell=\|h^\ell(x)\|_2^2/N$, and use $S_0=\|\bar x\|_2^2/d\leq2$
+for the first conditional Gaussian field.  Conditional on previous
+layers, each new field has variance $\tau^2S_{\ell-1}$.
+The bounds $|\phi(s)|\leq A(1+|s|)$ and Gaussian second and fourth
+moments give
+\[
+ \mathbb E S_\ell\leq2(4A^2)^\ell,
+ \qquad \mathbb E S_\ell^2\leq4(32A^4)^\ell.
+\]
+For the second assertion, Jensen applied to the average of squared
+coordinates and $|\phi(s)|^4\leq8A^4(1+|s|^4)$ suffice; these bounds
+also apply to the first layer with the stated $S_0$.
+The centered Gaussian readout therefore implies, uniformly in $x$,
+\[
+ \mathbb E_\mu z_w(x)^2\leq 2(4A^2)^H/N,
+ \qquad \mathbb E_\mu z_w(x)^4\leq12(32A^4)^H/N^2.
+\]
+Put
+\[
+ R_0=1+2(4A^2)^H,\qquad V_0=8+96(32A^4)^H.
+\]
+Tonelli and Jensen give, for every sample and every data law under
+consideration,
+\begin{equation}
+ \int\widehat R_S(z_w)d\mu\leq R_0,\qquad
+ \int R(z_w)d\mu\leq R_0,\qquad
+ \int R(z_w)^2d\mu\leq V_0,
+ \qquad Z\geq e^{-\omega R_0/(2\lambda)}.
+ \label{eq:general-activation-prior-moments}
+\end{equation}
+
+\subsection{A common function cover and raw statistical transfer}
+
+Write $L=H+1$.  On $K(w)\leq k$, Lipschitz propagation gives
+\[
+ \operatorname{Lip}(z_w)\leq A^H k^{L/2},\qquad
+ \|z_w\|_\infty\leq C_{d,H,A}k^{L/2}.
+\]
+For the amplitude bound, normalized hidden norms satisfy
+$a_\ell\leq A(1+\sqrt k\,a_{\ell-1})$ starting from
+$a_0\leq\sqrt{d+1}$, and the readout multiplies by at most $\sqrt k$.
+Thus this bound includes nonzero $\phi(0)$.
+An input grid of mesh proportional to $a/k^{L/2}$, followed by rounding
+values to multiples of $a$, provides a deterministic finite cover
+$\mathcal C_{k,a}$ in uniform norm, common to all widths and scales,
+with centers bounded by $C_{d,H,A}k^{L/2}+1$ and
+\begin{equation}
+ \log|\mathcal C_{k,a}|
+ \leq C_{d,H,A} k^{dL/2}a^{-d}
+                  \log\frac{C_{d,H,A}k}{a}
+ \qquad(k\geq128,\ 0<a<1).
+ \label{eq:general-activation-cover}
+\end{equation}
+Nearest-grid-point functions are sufficient; the cover centers need
+not themselves be networks.
+
+\begin{theorem}[Fixed-dimensional raw oracle inequality]
+\label{thm:general-activation-fixed-d}
+Fix $d,H,A$ as above and set
+\[
+ p_{d,H}=\frac{(H+1)(d+2)}2.
+\]
+There is a finite computable constant $C_{d,H,A}$ such that, whenever
+$0<\lambda\leq1$, $0<\delta<1$, $n\geq2$, and
+\begin{equation}
+ n\geq C_{d,H,A}\lambda^{-p_{d,H}}
+             \log^6\!\frac{2n}{\lambda\delta},
+ \label{eq:general-activation-budget}
+\end{equation}
+for every fixed width-$m$, weight-$B$ teacher $g$, with probability
+at least $1-\delta$ simultaneously at every $N\geq m$ and every
+$0<\tau\leq1$,
+\begin{align}
+ \int R(z_w)d\Pi
+ \leq\;&R(g)+2\lambda\mathcal A_g(\rho)+C_{d,H,A}\lambda\notag\\
+ &+(U+1)\sqrt{\frac{2R(g)\log(2/\delta)}n}
+       +\frac{2(U+1)^2\log(2/\delta)}{3n},
+ \qquad \rho=\frac\lambda{4(U+1)}.
+ \label{eq:general-activation-oracle}
+\end{align}
+The same bound holds for the ordinary raw posterior mean.
+In particular it holds on one event for every original exponent
+$\gamma\geq1$ and every eligible learner width, without changing the
+prior prefactor.  At fixed teacher resources the rate is
+$\widetilde O(n^{-2/((H+1)(d+2))})$.
+\end{theorem}
+
+\begin{proof}
+Take $k_j=128\cdot2^j$ up to the least $J$ with
+$k_J\geq(16R_0+128)/\lambda$, and use cover tolerances
+$a_j=c_{H,A}\lambda k_j$ with a sufficiently small fixed positive
+$c_{H,A}$.  In particular all tolerances are below one.
+Apply Lemma~\ref{lem:finite-cover-bernstein} to these finite classes,
+dividing failure probability $\delta/2$ among them. Their loss ranges
+are at most $C_{d,H,A}k_j^L$.
+When $\widehat R_S(z_w)\leq R_0+8$, an approximating center has
+empirical risk bounded by a constant depending only on $H,A$.
+The finite-cover Bernstein bound therefore makes its population-minus-empirical
+risk a sufficiently small multiple of $\lambda k_j$, provided
+\[
+ n\geq C_{d,H,A}\log^6\!\frac{2n}{\lambda\delta}
+    \max_{j\leq J}
+       \frac{k_j^{L+dL/2}}{(\lambda k_j)^{d+2}}.
+\]
+The displayed maximum is at most $C_{H,A}\lambda^{-p_{d,H}}$:
+$p_{d,H}\geq d+2$ and $k_j\leq C_{H,A}/\lambda$.
+This verifies the condition from~\eqref{eq:general-activation-budget}.
+Minkowski transfers population and empirical square-root risks between
+a network and its center.  Their risks remain bounded by constants on
+this region, so taking $c_{H,A}$ small enough gives
+\[
+ R(z_w)\leq\widehat R_S(z_w)+\lambda K(w)/16
+ \quad\text{when }K(w)\leq k_J,\qquad
+                       \widehat R_S(z_w)\leq R_0+8.
+\]
+Here select a dyadic shell $K(w)\leq k_j\leq2K(w)$ and absorb that
+factor into the constants.  This one sample event covers all widths
+and all scales, since the finite classes did.
+
+The two omitted regions have small weighted posterior risk.
+Using~\eqref{eq:general-activation-prior-moments},
+\[
+ \int R(z_w)\mathbf1_{\{\widehat R_S>R_0+8\}}d\Pi
+ \leq R_0e^{-4\omega/\lambda}.
+\]
+Cauchy--Schwarz,~\eqref{eq:general-activation-norm-tail}, and the
+normalizer bound give
+\[
+ \int R(z_w)\mathbf1_{\{K>k_J\}}d\Pi
+ \leq\sqrt{V_0(H+1)}
+     e^{\omega R_0/(2\lambda)-\omega k_J/32}
+ \leq\sqrt{V_0(H+1)}e^{-4\omega/\lambda}.
+\]
+These deterministic estimates are simultaneous in all scales and
+widths.  From~\eqref{eq:general-activation-norm-mgf} and posterior
+variational optimality, for every comparison law $Q$,
+\[
+ \int[\widehat R_S+\lambda K/16]d\Pi
+ \leq\int\widehat R_SdQ+
+          \frac{2\lambda}\omega\operatorname{KL}(Q\Vert\mu)
+          +2\lambda B_H.
+\]
+Choose $Q$ to be the prior conditioned on the teacher cylinder of
+radius $\rho$.  Its empirical risk is at most
+$\widehat R_S(g)+2\rho(U+1)+\rho^2\leq\widehat R_S(g)+\lambda$,
+and Lemma~\ref{lem:general-activation-cylinder} bounds its entropy cost
+by $2\lambda\mathcal A_g(\rho)$.
+Integrate the deviation bound, add the two tails, and use
+$e^{-4/\lambda}\leq\lambda$ to obtain the claimed bound with
+$\widehat R_S(g)$ in place of the final teacher-risk terms.
+Bernstein's inequality for this fixed teacher supplies those terms
+with remaining failure probability $\delta/2$.
+
+Finally the prior fourth moment is finite and the posterior density
+relative to the prior is bounded by $1/Z$.  The raw posterior mean
+therefore exists, and Jensen proves its risk bound.
+\end{proof}
+
+\subsection{Competing with a growing class}
+
+Fix $d,H,A,\delta$, and let $p=p_{d,H}$. Choose the likelihood parameter
+of order $\widetilde O(n^{-1/p})$, with a sufficiently large logarithmic
+factor to meet \eqref{eq:general-activation-budget}. The same learner
+then competes with the population-risk minimizer among teachers whose
+width and weight caps are at most $n^\alpha$, whenever
+\[
+ \alpha<\frac1{4p}=\frac1{2(H+1)(d+2)}.
+\]
+Its oracle excess is $\widetilde O(n^{-1/p+4\alpha})$.
+Indeed the teacher energy is $O(n^{4\alpha})$, the remaining cylinder
+cost is $O(n^\alpha\log n)$, and one may take
+$U=O(n^{2\alpha(H+1)})$. The minimizer has risk at most one because
+zero is an available prediction. Its Bernstein terms therefore vanish
+faster than the displayed excess, using $p\geq H+1$ and the stated
+range of $\alpha$.
+
+With a fixed weight cap and width cap $n^\alpha$, the sufficient range
+and excess are instead
+\[
+ \alpha<\frac1{2p},\qquad
+ \widetilde O(n^{-1/p+2\alpha}).
+\]
+Compactness of each capped parameter class and continuity of the risk
+give a minimizer chosen before sampling. The Gaussian likelihood
+calibration depends on the declared resources and confidence level,
+not on that minimizer or on the unknown data distribution.
+
+\subsection{A faster bound when averaging clipped outputs}
+
+The likelihood can remain exactly the same while the prediction
+convention clips individual network outputs before averaging.  Write
+$c(w,x)=\operatorname{clip}_{[-1,1]}z_w(x)$ and
+$\widehat f_S^{\rm clip}(x)=\int c(w,x)d\Pi(w)$.
+This is generally different from clipping the ordinary raw posterior
+mean, so the following refinement specifically concerns the displayed
+predictor and individual clipped posterior draws.
+
+\begin{corollary}[Clipped-output oracle bound]
+\label{cor:general-activation-clipped}
+Theorem~\ref{thm:general-activation-fixed-d} also bounds both
+\[
+ \int R(c(w,\cdot))d\Pi
+ \quad\text{and}\quad R(\widehat f_S^{\rm clip})
+\]
+under the weaker sample condition
+\[
+ n\geq C_{d,H,A}\lambda^{-p_{d,H}^{\rm clip}}
+          \log^6\!\frac{2n}{\lambda\delta},\qquad
+ p_{d,H}^{\rm clip}=\max\{d+2,d(H+1)/2\}.
+\]
+The actual posterior still uses the raw squared-loss likelihood and
+the same single Gaussian prior.
+\end{corollary}
+\begin{proof}
+Clipping preserves the Lipschitz constant and gives output amplitude
+one.  The uniform cover construction therefore has the same power
+$k^{d(H+1)/2}a^{-d}$ in its logarithmic cardinality, but now a constant
+loss range.  Lemma~\ref{lem:finite-cover-bernstein} requires only
+\[
+ n\geq C_{d,H,A}\log^6\!\frac{2n}{\lambda\delta}
+     \max_j\frac{k_j^{d(H+1)/2}}{(\lambda k_j)^{d+2}}.
+\]
+Since $128\leq k_j\leq C_{H,A}/\lambda$, this maximum is bounded
+by a constant times $\lambda^{-\max\{d+2,d(H+1)/2\}}$.
+The empirical clipped risk is at most four, so no empirical-risk
+truncation is needed.  The resulting common sample event gives
+\[
+ R(c(w,\cdot))\leq\widehat R_S(c(w,\cdot))+\lambda K(w)/16
+             \leq\widehat R_S(z_w)+\lambda K(w)/16
+ \qquad(K(w)\leq k_J).
+\]
+The omitted norm tail is controlled by the same weighted raw-risk
+estimate, since clipping cannot increase loss against $|Y|\leq1$.
+The entropy and teacher comparisons are unchanged.  Integrating and
+then applying Jensen proves the two stated conclusions.
+\end{proof}

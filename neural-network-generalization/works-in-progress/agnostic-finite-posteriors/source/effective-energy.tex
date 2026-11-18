@@ -1,0 +1,271 @@
+\section{A finite-scale effective energy with no quadratic width cost}
+\label{sec:effective-energy}
+
+Write $H\geq2$ for the number of hidden layers and fix
+\[
+  \sigma^2=t^2N^{-\gamma},\qquad 0<t\leq1,\qquad\gamma\geq1.
+\]
+The independent Gaussian weight variances are $N\sigma^2/d$ in the
+first layer, $\sigma^2$ in each internal layer, and $\sigma^2/N$ in
+the readout.  The likelihood variance is $n\lambda\sigma^2$.  Thus the
+posterior is the probability law
+\begin{equation}
+ \Pi(dw)=Z^{-1}\exp\left[-\frac{\widehat R_S(z_w)}{2\lambda\sigma^2}\right]
+ \mu(dw).
+ \label{eq:effective-posterior}
+\end{equation}
+The construction below applies at the displayed finite parameters.
+No limit in width or prior strength is used.
+
+The ordinary quadratic energy under this prior has an internal-layer
+contribution of order $t^2N^{2-\gamma}$.  This is unbounded in width
+when $1\leq\gamma<2$, despite the much smaller operator norm of the
+Gaussian matrices.  We retain only their singular values above the
+Gaussian operator-norm scale when measuring complexity.  This changes
+an auxiliary quantity in the proof; it does not restrict or modify the
+learner's prior.
+
+\subsection{Spectral truncation and an exponential moment}
+
+Set $a_N=\sigma\sqrt N=tN^{(1-\gamma)/2}$ and $b_N=8a_N$.
+The quantity $a_N$ measures the scale of the Gaussian internal
+operator norms.  For each internal
+matrix $W^\ell$, let $T^\ell=(W^\ell)_{>b_N}$ retain singular values
+strictly greater than $b_N$ and set the others to zero.  Let
+$\widetilde w$ be the network with these internal matrices and the
+original first layer and readout.  Define
+\begin{equation}
+ q_N(w):=Q_N^+(\widetilde w)
+ =\sum_{\ell=2}^H\|T^\ell\|_F^2+N\|v\|_2^2.
+ \label{eq:effective-energy}
+\end{equation}
+This is a nonnegative Borel function and is at most $Q_N^+(w)$.
+The first-layer weights are unrestricted in the capacity estimate
+for $Q_N^+$ and are unchanged by truncation, so they need not enter
+this auxiliary energy.  They still contribute to the prior and to
+the teacher comparison below.
+
+\begin{lemma}[Dimension-free cost of the internal Gaussian bulk]
+\label{lem:effective-mgf}
+Put
+\begin{align}
+ C_N&=\frac N2\log\frac87+(H-1)\log\frac32,
+ \notag\\
+ c_H&=\frac12\log\frac87+(H-1)\log\frac32.
+ \label{eq:effective-mgf-constant}
+\end{align}
+Then
+\begin{equation}
+ \log\mathbb E_\mu\exp\left(\frac{q_N}{16\sigma^2}\right)
+ \leq C_N,
+ \qquad \sigma^2 C_N\leq a_N^2c_H.
+ \label{eq:effective-mgf}
+\end{equation}
+Consequently, for every probability law $\nu\ll\mu$ of finite
+relative entropy,
+\begin{equation}
+ \operatorname{KL}(\nu\Vert\mu)
+ \geq\frac1{16\sigma^2}\int q_N\,d\nu-C_N.
+ \label{eq:effective-entropy}
+\end{equation}
+\end{lemma}
+\begin{proof}
+The readout contribution, divided by $\sigma^2$,
+has a chi-square distribution with $N$ degrees of freedom.
+Its exponential moment at parameter $1/16$ is therefore
+$(8/7)^{N/2}$.
+
+For an internal matrix $W=\sigma Z$, where $Z$ has independent standard
+Gaussian entries, the Gaussian operator-norm bound
+\[
+ \mathbb P(\|Z\|_{\mathrm{op}}>2\sqrt N+u)\leq e^{-u^2/2}
+\]
+implies that the operator-norm ball
+$B=\{A:\|A\|_{\mathrm{op}}\leq b_N/2\}$ has probability at least
+$1/2$.  For example, $u=2\sqrt N$ gives a failure probability at
+most $e^{-2N}<1/2$.  The squared Frobenius distance to this ball is
+\[
+ \operatorname{dist}_F(W,B)^2
+   =\sum_j(s_j(W)-b_N/2)_+^2.
+\]
+Since $s\leq2(s-b_N/2)$ whenever $s>b_N$,
+\[
+ \|W_{>b_N}\|_F^2\leq4\operatorname{dist}_F(W,B)^2.
+\]
+Gaussian isoperimetry and $1-\Phi(u)\leq\tfrac12e^{-u^2/2}$ yield
+\begin{equation}
+ \mathbb P(\|W_{>b_N}\|_F^2>a)
+ \leq\frac12\exp\left(-\frac a{8\sigma^2}\right),
+ \qquad a>0.
+ \label{eq:effective-internal-tail}
+\end{equation}
+Tail integration now gives
+\begin{align*}
+ \mathbb E\exp\left(\frac{\|W_{>b_N}\|_F^2}{16\sigma^2}\right)
+ &=1+\frac1{16\sigma^2}\int_0^\infty
+      e^{a/(16\sigma^2)}
+      \mathbb P(\|W_{>b_N}\|_F^2>a)\,da
+ \leq\frac32.
+\end{align*}
+Independence of the layer blocks proves the first inequality
+in~\eqref{eq:effective-mgf}.  Its second inequality follows from $\sigma^2N=a_N^2$
+and $\sigma^2\leq a_N^2$.
+The entropy variational inequality proves
+\eqref{eq:effective-entropy}; truncation of $q_N$ justifies the same
+conclusion if its integrability has not yet been established.
+\end{proof}
+
+\begin{lemma}[Approximation by the truncated network]
+\label{lem:effective-approximation}
+For every parameter vector and every input,
+\begin{align}
+ |z_w(x)-z_{\widetilde w}(x)|
+ &\leq b_N\sum_{j=1}^{H-1}q_N(w)^{j/2}
+ \notag\\
+ &\leq8a_N(H-1)(1+q_N(w))^{(H-1)/2}.
+ \label{eq:effective-approximation}
+\end{align}
+Both outputs have absolute value at most $\sqrt{q_N(w)}$.
+\end{lemma}
+\begin{proof}
+The first hidden layers agree.  Write
+$e_\ell=\|h^\ell-\widetilde h^\ell\|_2/\sqrt N$.
+Using
+\[
+ W^\ell h^{\ell-1}-T^\ell\widetilde h^{\ell-1}
+ =T^\ell(h^{\ell-1}-\widetilde h^{\ell-1})
+      +(W^\ell-T^\ell)h^{\ell-1},
+\]
+the contraction of tanh, $\|h^{\ell-1}\|_2\leq\sqrt N$, and
+$\|T^\ell\|_{\mathrm{op}}\leq\sqrt{q_N}$ give
+\[
+ e_1=0,\qquad e_\ell\leq\sqrt{q_N}\,e_{\ell-1}+b_N.
+\]
+Multiplication by $\sqrt N\|v\|_2\leq\sqrt{q_N}$ gives the first
+bound.  The second follows from $b_N=8a_N$ and
+$q_N^{j/2}\leq(1+q_N)^{(H-1)/2}$.  Bounded hidden activations give
+the output bounds.  In particular, no operator-norm contribution
+$b_N$ is needed in the multiplying gain of the recursion.
+\end{proof}
+
+The posterior variational identity and
+Lemma~\ref{lem:effective-mgf} imply, for every comparison law $\nu$
+of finite relative entropy,
+\begin{align}
+ \int\left[\widehat R_S(z_w)+\frac\lambda8q_N(w)\right]\Pi(dw)
+ &\leq\int\widehat R_S(z_w)\,\nu(dw)
+       +2\lambda\sigma^2\operatorname{KL}(\nu\Vert\mu)
+       +2\lambda\sigma^2 C_N.
+ \label{eq:effective-variational}
+\end{align}
+All these quantities are finite for the comparison law constructed
+next and for the posterior.  For the latter, its density relative to
+$\mu$ is bounded by $1/Z$, and $q_N\leq Q_N$ has all Gaussian moments.
+
+\subsection{A teacher neighborhood with linear width cost}
+
+Let $g$ have width $m$, depth $H+1$, and weights bounded by $B\geq1$.
+At any $N\geq m$, balanced cloning computes $g$ exactly and has energy
+at most
+\begin{equation}
+ E=d(d+1)B^2+2Hm^2B^2,
+ \qquad |g(x)|\leq U:=mB.
+ \label{eq:effective-teacher-energy}
+\end{equation}
+The neighborhood below narrows only the noise components that act on
+the teacher's group-constant activations.  The other Gaussian
+coordinates remain present.
+
+\begin{lemma}[Teacher neighborhood at every finite width and scale]
+\label{lem:effective-teacher-tube}
+For $0<\rho\leq1$, define
+\begin{align*}
+ b_0&=2\sqrt{2[2\log9+\log(4(H+1))]},
+ & A_0&=2+3mB+b_0,\\
+ P_0&=1+2mB(d+H+2)A_0^{H-1},
+ & \eta&=\min\{1/2,\rho/(2P_0)\},\\
+ D_g&=d+2+(H-1)m,
+ & c_0&=3/8.
+\end{align*}
+Let $U_\rho(g)$ be the event that $|z_w(x)-g(x)|<\rho$ at every
+$x\in[-1,1]^d$.  Then, for $N\geq m$, $\gamma\geq1$, and $0<t\leq1$,
+\begin{equation}
+ -\log\mu(U_\rho(g))
+ \leq\frac E{2\sigma^2}+ND_g\log\frac1{c_0\eta}+\log2.
+ \label{eq:effective-teacher-tube}
+\end{equation}
+In particular, with $\rho=\lambda/[4(U+1)]$ and $0<\lambda\leq1$,
+there is a comparison law $\nu$ with
+\begin{align}
+ \int\widehat R_S(z_w)\,d\nu
+    +2\lambda\sigma^2\operatorname{KL}(\nu\Vert\mu)
+ &\leq\widehat R_S(g)+\lambda E+\lambda
+ \notag\\
+ &\quad+2\lambda a_N^2
+       \left[D_g\log\frac1{c_0\eta}+\log2\right].
+ \label{eq:effective-comparison}
+\end{align}
+\end{lemma}
+\begin{proof}
+Let $w_*$ be the balanced clone and let $P$ project onto its
+$m$-dimensional group-constant subspace, with orthonormal basis
+$u_j=k_j^{-1/2}\mathbf1_{\text{group }j}$.  In standardized Gaussian
+coordinates impose $|\xi|\leq\eta$ on each first-layer and readout
+coordinate, and
+$|\langle Z_{i,*},u_j\rangle|\leq\eta$ for every internal row and
+group.  There are $ND_g$ independent scalar constraints.  A centered
+standard Gaussian has probability at least $c_0\eta$ of lying in
+$[-\eta,\eta]$ when $0<\eta\leq1$; for example, combine symmetric
+unimodality with Chebyshev's probability $3/4$ for $[-2,2]$.
+The cylinder therefore has probability at least $(c_0\eta)^{ND_g}$.
+
+Conditioning on this centrally symmetric convex cylinder preserves
+centered unit-subgaussian linear forms.  This follows directly by
+factorizing into Gaussian coordinates along the orthonormal constrained
+subspaces, or from the strongly log-concave moment-generating-function
+bound.  Two sphere nets of cardinality at most $9^N$ consequently give
+\[
+ \mathbb P(\|Z\|_{\mathrm{op}}>2u\sqrt N\mid\text{cylinder})
+ \leq2\exp[(2\log9-u^2/2)N].
+\]
+Intersecting with $\|Z\|_{\mathrm{op}}\leq b_0\sqrt N$ for every
+internal layer leaves a symmetric event $A$ with probability at least
+$\tfrac12(c_0\eta)^{ND_g}$.
+
+Translate by the standardized clone.  Write
+$a_N=\sigma\sqrt N=tN^{(1-\gamma)/2}\leq1$.
+The internal perturbation is
+$a_NZ/\sqrt N=a_NZP/\sqrt N+a_NZ(I-P)/\sqrt N$.
+Its second term annihilates the clone's activations, while the first
+has operator norm at most $\eta\sqrt m$.
+For the normalized hidden errors this gives, uniformly on the cube,
+\[
+ e_1\leq\eta(d+1),\qquad
+ e_\ell\leq(\sqrt2mB+b_0)e_{\ell-1}+\eta\sqrt m.
+\]
+Thus $e_H\leq\eta(d+H+2)A_0^{H-1}$.
+The clone readout has $\sqrt N\|v_*\|_2\leq\sqrt2mB$, and the
+perturbation readout has $\ell^1$ norm at most $\eta$.
+The output error is at most $\eta P_0\leq\rho/2$.
+Hence the translated event is contained in $U_\rho(g)$.
+
+For standard Gaussian measure $G$ and a centrally symmetric event $A$,
+\[
+ G(A+a_*)\geq G(A)e^{-\|a_*\|_2^2/2}.
+\]
+Indeed, the Gaussian density ratio averaged over $A$ is
+$e^{-\|a_*\|_2^2/2}\mathbb E[e^{-\langle Z,a_*\rangle}\mid A]$,
+and its second factor is at least one by symmetry and Jensen.
+Here $\|a_*\|_2^2=Q_N(w_*)/\sigma^2\leq E/\sigma^2$.
+This proves~\eqref{eq:effective-teacher-tube}.
+
+For the last assertion, use $\nu=\mu(\cdot\mid U_\rho(g))$.
+Its relative entropy is $-\log\mu(U_\rho(g))$, and
+\[
+ \int\widehat R_S(z_w)\,d\nu
+ \leq\widehat R_S(g)+2\rho(U+1)+\rho^2
+ \leq\widehat R_S(g)+\lambda.
+\]
+Finally $\sigma^2N=a_N^2$ and
+$\sigma^2\leq a_N^2$ give~\eqref{eq:effective-comparison}.
+\end{proof}
