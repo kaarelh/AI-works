@@ -1,22 +1,23 @@
 # Independent mathematical review
 
-Reviewed 18 November 2026 (UTC) by a separate mathematical-review agent. This review covers the complete current ReLU manuscript, including both actual finite-prior extensions and the fixed-width corollary. It is conventional mathematical review, not Lean verification or external human peer review.
+Reviewed 18 November 2026 (UTC) by a separate mathematical-review agent. This review covers the complete current ReLU manuscript, including the all-canonical-exponent negative extension, the finite positive theorem, and the fixed-width and localized-noise corollaries. It is conventional mathematical review, not Lean verification or external human peer review.
 
 ## Reviewed source hashes
 
 | Source | SHA-256 |
 |---|---|
-| `source/paper.tex` | `f8041282d7d747de0b8065c38d45374e731072f4bc7273ac381a296fcbd20b4d` |
-| `source/finite-positive.tex` | `abe39a1507add7febebe56f182f3ac3e2263d81b0b6b7254af354e33ebdd1fee` |
+| `source/all-canonical.tex` | `0b0c6a7ce335d7ce500cc0f73b2b8e6ea2b24f88783c6f2a7cb504ab3f7ffd83` |
 | `source/finite-negative.tex` | `cb062efced5e0d596d579bdc48cc0a694134e36bd1ea8320dd8338b0794b5af4` |
-
-Localized-noise source SHA-256: `1bd5f088c1dd9d03938392409a49f658e32adcec01f8ffd56900522a52925427`.
+| `source/finite-positive.tex` | `abe39a1507add7febebe56f182f3ac3e2263d81b0b6b7254af354e33ebdd1fee` |
+| `source/localized-noise.tex` | `1bd5f088c1dd9d03938392409a49f658e32adcec01f8ffd56900522a52925427` |
+| `source/paper.tex` | `ef40e5aade887cbb9d75927298bc8cd441e9e75d2bbf56a6e690186b11bf4f95` |
+| `paper.pdf` | `b7a91e8c32634d2a19fcdb962b97b132265795c032a080d5adacb3354ccc225e` |
 
 ## Verdict and theorem scope
 
 I found no substantive mathematical gap. The positive and negative strict exponent conditions match at `Ha+(H+1)b=1/2`. The positive theorem treats arbitrary bounded IID labels, raw squared-error likelihoods, every learner width above comparator width, and coefficient-one comparison with the best bounded-weight teacher. The negative theorem uses one law and one sample event for all sufficiently large learner widths and all temperatures, including temperatures selected from the data.
 
-Both conclusions hold for actual finite canonical Gaussian priors at every gamma at least two. For one hidden layer they hold at every gamma at least one. Separate strong-prior theorems remain available outside these finite regimes. The main negative exponent statement assumes positive width-growth exponent; a separate width-four corollary handles arbitrarily growing coefficient bounds.
+Both conclusions hold for actual finite canonical Gaussian priors at every gamma at least two. For one hidden layer they hold at every gamma at least one. The negative conclusion now extends to every gamma at least one at every hidden depth, at the larger polynomial width threshold proved by the native-covariance construction. The sharp positive boundary for multiple hidden layers at exponents between one and two remains open. Separate strong-prior theorems retain their stated scope. The main negative exponent statement assumes positive width-growth exponent; a separate width-four corollary handles arbitrarily growing coefficient bounds.
 
 The lower-bound dimension is logarithmic in sample count. The matching threshold concerns distribution-uniform guarantees with polynomial dimension dependence; it is not claimed at one fixed dimension. Equality is open. These restrictions appear in the abstract and main statements.
 
@@ -50,7 +51,7 @@ At high temperature, the evidence lower bound and exact Gaussian energy moment s
 
 The width-four corollary follows by taking one neuron per tent group and a coefficient cap growing faster than `n^(1/(2L))`. Its dimension qualification is stated explicitly. The obstruction to one joint polynomial in teacher width, depth, and dimension follows by fixing a depth larger than the proposed width degree and then taking sufficiently large sample counts along the lower-bound sequence.
 
-This does not prove an exponential-in-depth lower bound at one fixed teacher width. The laws vary with sample size, so consistency on one fixed law is not refuted. Scaling labels scales both signal and noise; the small-noise remark does not claim a small flip probability or an excess independent of noise magnitude. Mixing posteriors across temperatures is outside the individual-temperature result. Deep finite exponents between one and two remain outside this manuscript's conclusions.
+This does not prove an exponential-in-depth lower bound at one fixed teacher width. The laws vary with sample size, so consistency on one fixed law is not refuted. The localized-noise corollary does not claim a small independent flip probability or an excess independent of noise magnitude. Mixing posteriors across temperatures is outside the individual-temperature result. At deep finite exponents between one and two, the negative conclusion is proved here while the sharp positive boundary remains open.
 
 The theorem statements, proof conventions, abstract, comparison table, and corollaries are consistent about these limits. The exact computational construction checks are useful corroboration but are not assumptions of the mathematical proofs.
 
@@ -59,7 +60,7 @@ The theorem statements, proof conventions, abstract, comparison table, and corol
 
 The added ReLU comparator remark was independently checked. An ordinary teacher with all weights and hidden/readout biases bounded by B at least one compiles into the specified architecture by adding one constant-one neuron per hidden layer. The first bias and subsequent self-edges are one, and every original bias becomes an incoming edge of that value. Width increases from m to m+1, while depth and coefficient cap are unchanged. All positive theorems consequently apply with m+1; the learner prior remains the same.
 
-Reviewed PDF SHA-256: `9665ea57ec490250c962d4ad5d57873c56c270cc51b2bd50971554e473013dd6`.
+Reviewed PDF SHA-256: `b7a91e8c32634d2a19fcdb962b97b132265795c032a080d5adacb3354ccc225e`.
 
 
 ## Localized unit-amplitude noise
@@ -69,3 +70,11 @@ The final `localized-noise.tex` corollary was independently checked. Its noise c
 The same singleton concentration event applies with singleton rate at least `p exp(-p)`. The exact memorizer is zero on the entire negative-tag component, so its residual comparison cost tends to r. For sufficiently large sample count the residual is at most `p exp(-p)/16`, while singleton mass is at least `p exp(-p)/2`. Reverse triangle and Jensen give noisy excess exceeding `p² exp(-p)/5`. In the large-temperature branch the unit-amplitude close pair gives excess at least `p exp(-p)/128`, exceeding the stated common constant `p² exp(-p)/256`. The finite Gaussian comparison and stochastic-energy estimates remain uniform over the asserted widths, exponents, and temperatures.
 
 The corollary keeps signal amplitude one while making noisy input mass arbitrarily small. It correctly allows its excess constant, covariance lower bound, and sufficiently-large-sample threshold to depend on p, and does not describe this as an independent fixed-probability label-flip model. No substantive mathematical issue was found.
+
+## Final all-canonical-exponent integration
+
+The integrated `all-canonical.tex` is byte-identical to the independently reviewed frozen native-covariance source. Its exact shifted-half-integer Boolean features, balanced mean energies, Gaussian-smoothed first-layer bias, signed-pair conditional mean identity, total-variance recursion, Gaussian relative entropy, and high-temperature operator moment all check. The detailed native-covariance review is retained separately in this verification folder.
+
+The final theorem gives the negative result simultaneously for every finite gamma>=1, every temperature, and every learner width at least O_H(m+n^(2-1/L) polylog n). The localized-noise and fixed-width-four variants have the same enlarged threshold and respective constants. This does not change the positive theorem's finite-prior range.
+
+The abstract, introductory regime statement, README, and final limitations correctly distinguish negative all-gamma coverage from the still-open sharp positive boundary for deep finite1<=gamma<2. The corollary excluding one joint polynomial in dimension, teacher width, and teacher depth now correctly cites the all-canonical negative theorem. Its exponent selection and logarithmically growing dimension justify the stated extension to each fixed gamma>=1. The source and PDF hashes above describe this final integrated package. No new mathematical gap was found.

@@ -1,0 +1,289 @@
+\section{Finite-prior failure at every exponent at least one}
+\label{sec:relu-native-covariance}
+
+The lower bound extends to every canonical exponent $\gamma\geq1$.
+The comparison distribution below retains the prior's full covariance.
+It only translates the Gaussian means.  Signed pairs of ReLU
+populations transport their conditional mean difference exactly, even
+when the common Gaussian background variance is large.
+
+\begin{lemma}[A native-covariance Boolean memorizer]
+\label{lem:relu-native-memorizer}
+Let $H\geq2$, $L=H+1$, $1\leq D\leq d$, and
+$r:\{-1,1\}^D\to[-1,1]$ satisfy $\sum_xr(x)^2\leq n$.
+Put
+\begin{gather*}
+ M=(D+1)2^D,\qquad Q_1=4d(D+1)^2,\qquad
+ Q_2=40(D+1)^2n,\\
+ R^2=(Q_1Q_2\,6^{L-2})^{1/L},\qquad
+ \beta=R/\sqrt{Q_1},\qquad
+ e_n=\frac{\sqrt{20}(D+1)\sqrt n}{\beta}
+                                      e^{-\beta^2/16}.
+\end{gather*}
+For every $N\geq M$ and every $\sigma^2$ with
+$\tau^2=N\sigma^2\leq1$, there is a Gaussian comparison law $\nu$
+with exactly the covariance of the prior $\mu_{N,\sigma}$ such that
+\begin{gather}
+ 2\sigma^2\operatorname{KL}(\nu\Vert\mu_{N,\sigma})\leq LR^2,
+ \label{eq:relu-native-entropy}\\
+ |\mathbb E_\nu z_w(x)-r(x_{[D]})|\leq e_n,\qquad
+ \operatorname{Var}_\nu z_w(x)
+                 \leq\frac{12H(R^2+1)^H}{N}
+ \label{eq:relu-native-accuracy}
+\end{gather}
+whenever the designated $D$ coordinates $x_{[D]}$ are Boolean and
+all other coordinates lie in $[-1,1]$.
+\end{lemma}
+
+\begin{proof}
+We first construct features whose hinge arguments stay away from zero
+at every Boolean input.  For a parity on $j\geq1$ coordinates, let
+$t$ be their sum, $t_i=-j+2i$, and $y_i=y_0(-1)^i$ its values.
+The identity
+\begin{equation}
+ \chi(t)=2y_0\relu(t+j+1/2)
+             -4\sum_{i=0}^{j-1}y_i\relu(t-t_i-1/2)
+ \label{eq:relu-margin-parity}
+\end{equation}
+holds at $t=t_0,\ldots,t_j$.
+For example it follows by shifting the triangular interpolant by
+one half and multiplying by two, or directly by summing the alternating
+slopes.  Every hinge argument has absolute value at least $1/2$ on
+these points.  The constant parity is $2\relu(1/2)$.
+Each parity uses at most $D+1$ features, each augmented row has norm
+at most $2(D+1)$, and its coefficient squared sum is at most
+$4+16j\leq20(D+1)$.
+
+Apply this to the normalized Fourier expansion of $r$.  Keeping
+separate copies of all features, and adding constant features with
+coefficient zero if necessary, gives exactly $M$ affine forms $\ell_j$
+and coefficients $c_j$ such that
+\[
+ r(x_{[D]})=\sum_{j=1}^M c_j\relu(\ell_j(x)),\qquad
+ |\ell_j(x)|\geq1/2,\qquad
+ T_c:=\sum_jc_j^2\leq20(D+1)n/2^D.
+\]
+The features ignore the other input coordinates.
+Partition the first hidden layer into $M$ balanced nonempty groups,
+with sizes $k_j\geq N/(2M)$.  Set each row mean in group $j$ to
+$\beta\ell_j$.  Let $F_1=\sum_jc_j\overline h^1_j$, where the bar
+denotes the empirical average in that group.
+
+Split each later hidden layer into two groups of sizes $k_+,k_-$,
+differing by at most one.  For the second layer use incoming row
+means $+a_2c_j/k_j$ in its positive group and $-a_2c_j/k_j$ in its
+negative group, where $a_2=R/\sqrt{Q_2}$.
+For each layer $3\leq\ell\leq H$, put
+$a_\ell=R/\sqrt6$.  A positive row has incoming means
+$+a_\ell/k_+$ on the previous positive group and
+$-a_\ell/k_-$ on its negative group; a negative row has their negatives.
+Finally set $a_L=R/\sqrt6$ and readout means
+$+a_L/k_+$ and $-a_L/k_-$.
+All covariances remain exactly those of the original independent
+Gaussian prior.
+
+The first mean-layer energy is at most $Q_1\beta^2=R^2$.
+The second is at most
+$2MT_ca_2^2\leq Q_2a_2^2=R^2$.
+Every subsequent internal mean-layer energy and the readout mean
+energy is at most $6a_\ell^2=R^2$, because
+$N(1/k_++1/k_-)\leq6$.
+Moreover
+\[
+ \beta\prod_{\ell=2}^La_\ell
+ =\frac{R^L}{\sqrt{Q_1Q_2\,6^{L-2}}}=1.
+\]
+The mean weights therefore have total energy at most $LR^2$, proving
+\eqref{eq:relu-native-entropy} by the exact Gaussian shift formula.
+In particular every internal mean matrix has operator norm at most $R$.
+
+For any $u$ and any centered symmetric scalar random variable $Z$,
+\[
+ \mathbb E\relu(u+Z)-\mathbb E\relu(-u+Z)=u.
+\]
+This follows from $\relu(t)-\relu(-t)=t$ and symmetry.
+Conditionally on the preceding layers, all fields in a paired layer
+have the same Gaussian variance
+$q=\sigma^2\|h^{\ell-1}(x)\|_2^2$ and means $\pm u$.
+If $D_\ell$ is the positive-group average minus the negative-group
+average, it follows that
+\[
+ \mathbb E[D_2\mid h^1]=a_2F_1,\qquad
+ \mathbb E[D_\ell\mid h^{\ell-1}]=a_\ell D_{\ell-1}
+                    \quad(3\leq\ell\leq H).
+\]
+The readout conditional mean is $a_LD_H$.
+
+At the first layer every Gaussian field has variance at most two.
+For $s\leq\sqrt2$ and $|u|\geq\beta/2$,
+\[
+ 0\leq\mathbb E\relu(u+sZ)-\relu(u)
+      \leq s(2\pi)^{-1/2}e^{-u^2/(2s^2)}
+      \leq e^{-\beta^2/16},
+ \qquad Z\sim N(0,1).
+\]
+Thus $|\mathbb E F_1-\beta r|\leq\sum_j|c_j|e^{-\beta^2/16}$.
+Since $\sum_j|c_j|\leq\sqrt{MT_c}\leq\sqrt{20}(D+1)\sqrt n$,
+the conditional identities and product of gains prove the mean bound
+in~\eqref{eq:relu-native-accuracy}.
+
+We check the finite-width variance explicitly.  For any scalar
+one-Lipschitz function $f$ and random variable $Z$,
+$\operatorname{Var}(f(Z))\leq\operatorname{Var}(Z)$, by using an
+independent copy in the identity for variance.
+Consequently
+\[
+ \operatorname{Var}F_1\leq2\sum_jc_j^2/k_j
+             \leq4MT_c/N\leq2Q_2/N.
+\]
+Let $S_\ell=\|h^\ell(x)\|_2^2/N$.
+The first mean-layer norm and the conditional Gaussian covariance give
+\[
+ \mathbb E S_1\leq2(R^2+1),\qquad
+ \mathbb E S_\ell\leq(R^2+1)\mathbb E S_{\ell-1}
+                 \leq2(R^2+1)^\ell.
+\]
+Here the cross term vanishes because the Gaussian perturbation is
+centered, and $\relu(t)^2\leq t^2$.
+Conditional independence of the rows also gives
+\[
+ \operatorname{Var}(D_\ell\mid h^{\ell-1})
+ \leq(1/k_++1/k_-)\tau^2S_{\ell-1}
+ \leq6S_{\ell-1}/N.
+\]
+Its expectation is at most $12(R^2+1)^{\ell-1}/N$.
+The native readout noise contributes at most
+$\mathbb E S_H/N\leq2(R^2+1)^H/N$.
+
+Iterating the law of total variance, the first-layer contribution to
+output variance is at most
+\[
+ \beta^{-2}(2Q_2/N)
+ =\frac{2Q_1Q_2}{R^2N}
+ =\frac{2R^{2H}}{6^{L-2}N}
+ \leq\frac{2(R^2+1)^H}{N}.
+\]
+Each of the $H-1$ paired hidden layers contributes at most
+$12(R^2+1)^H/N$ after the later gains, since each remaining squared
+gain is at most $R^2+1$.  Adding the readout contribution proves the
+stated upper bound $12H(R^2+1)^H/N$.
+\end{proof}
+
+\begin{theorem}[All-temperature failure for every finite $\gamma\geq1$]
+\label{thm:relu-native-all-gamma}
+Use the laws and sample event of Theorem~\ref{thm:lower}.
+For every sufficiently large $n$, there is a deterministic polynomial
+width threshold $N_{\rm nat}(n)$ such that, on that same sample event,
+simultaneously for every $N\geq N_{\rm nat}(n)$, every $\gamma\geq1$,
+and every $\lambda>0$, all the raw and clipped prediction risks stated
+in Theorem~\ref{thm:lower} are at least $p+1/100$.
+One may take, for $H\geq2$,
+\[
+ N_{\rm nat}(n)=\max\left\{m,(D+1)2^D,
+                  \left\lceil12Hn(R^2+1)^H\right\rceil\right\},
+ \qquad D=\log_2n+1,
+\]
+with $R$ as in Lemma~\ref{lem:relu-native-memorizer} and $d=D+1$.
+Thus $N_{\rm nat}=O_H(m+n^{2-1/L}\operatorname{polylog}n)$.
+For $H=1$, the earlier canonical finite-prior theorem already covers
+all these exponents.
+\end{theorem}
+\begin{proof}
+For the low-temperature branch set
+$\tau_n=n^{-1/L}d^{-4}$ as before.
+Use the empirical noisy means as $r$, assigning zero to all
+negative-tag Boolean points.  Their squared counting norm is at most
+$n$, so Lemma~\ref{lem:relu-native-memorizer} applies to the same
+memorization problem.  Its normalized mean-energy cost is
+\[
+ LR^2=O_H(n^{1/L}d^{5/L}),\qquad \tau_nLR^2=o(1).
+\]
+Furthermore
+$\beta^2=R^2/[4d(D+1)^2]$ grows as a positive power of $n$ up to
+logarithms, so $e_n=o(n^{-2})$.
+The chosen width makes the comparison output variance at most $1/n$.
+At every sample point its expected squared loss exceeds the
+memorizer loss by at most $4e_n+e_n^2+1/n$, and this increment is
+at most $2/n$ for sufficiently large $n$.
+Posterior variational optimality gives
+\[
+ \int\widehat R_S(z_w)d\Pi
+ \leq\widehat R_S(r)+2/n+\lambda LR^2.
+\]
+This inequality is uniform in $N\geq N_{\rm nat}$ and $\gamma\geq1$,
+because the comparison covariance is exactly the native one.
+For $\lambda\leq\tau_n$, the posterior noisy residual is at most
+$q+o(1)$ after subtracting the within-atom residual.
+The occupancy event and the same Jensen/reverse-triangle argument
+used in Theorem~\ref{thm:lower} give excess at least $1/100$ for all
+its stated prediction conventions.
+
+For completeness, the high-temperature argument is also uniform in
+all canonical exponents.  Normalize the matrices by
+\[
+ A_1=\sqrt{d/N}\,W^1,\qquad A_\ell=W^\ell\ (2\leq\ell\leq H),
+ \qquad A_L=\sqrt N\,v^{\mathsf T}.
+\]
+Every coordinate has variance $\sigma^2=N^{-\gamma}$.
+With $T=\max_\ell\|A_\ell\|_{\rm op}$ and
+$M_d=1+\sqrt{d+1}$, Gaussian operator-norm concentration gives
+\[
+ \mu\{T\geq M_d+t\}\leq L e^{-t^2/(2\sigma^2)}.
+\]
+The prior expected empirical risk is at most three, so
+$Z\geq e^{-3/(2\lambda\sigma^2)}$.
+The resulting posterior tail, integrated by comparison with a
+mean-one exponential variable, implies
+\[
+ \left(\int T^L d\Pi\right)^{1/L}
+ \leq M_d+\sqrt{3/\lambda+2\log L}+2\sqrt L.
+\]
+The input-coordinate Lipschitz constant is at most $d^{-1/2}T^L$.
+For $\lambda\geq\tau_n$, the inner steep pair therefore has raw-mean
+half-difference at most
+\[
+ \delta d^{-1/2}
+ [M_d+\sqrt{3/\tau_n+2\log L}+2\sqrt L]^L
+ =O_H(n^{1/2-Ha-Lb}\operatorname{polylog}n)=o(1).
+\]
+The same estimate applies to its clipping and to the mean of clipped
+outputs; Jensen bounds the corresponding Gibbs risks from below.
+The inner-pair argument again gives excess at least $q/8>1/100$.
+Both temperature ranges use exactly the same law and sample event,
+completing the proof.
+\end{proof}
+
+\begin{corollary}[Localized noise and fixed comparator width]
+\label{cor:relu-native-variants}
+The localized-noise conclusion of Corollary~\ref{cor:localized-noise}
+also holds simultaneously for every finite $\gamma\geq1$, every
+$\lambda>0$, and every $N\geq N_{\rm nat}(n)$, with the same excess
+$c(p)=p^2e^{-p}/256$ for each fixed $0<p\leq9/10$.
+
+Likewise, the fixed-width-four conclusion of
+Corollary~\ref{cor:fixed-width} holds throughout the same finite-prior
+range whenever $b>1/(2L)$, with the width-four teacher and with $m=4$
+in $N_{\rm nat}(n)$.  The sufficiently large sample thresholds may
+depend on the fixed depth and on $p$.
+\end{corollary}
+\begin{proof}
+For localized noise, apply the same native-covariance memorizer to the
+empirical noisy means, setting its target to zero on every negative-tag
+point.  The extra comparison loss is at most $2/n$, and the normalized
+entropy cost is still $LR^2$.  Thus at $\lambda\leq\tau_n$ the noisy
+residual differs by $o(1)$ from the inner-pair sample mass used in
+Corollary~\ref{cor:localized-noise}.  Its occupancy estimates and
+reverse-triangle proof give exactly the stated constant $c(p)$.
+The all-exponent high-temperature estimate above has the same vanishing
+inner-pair half-difference, so that corollary's second branch is also
+unchanged.
+
+For a width-four teacher, the memorization problem and its comparison
+law are again unchanged.  The steep separation is now
+$\delta=2B^{-L}$, and the high-temperature estimate becomes
+$O_H(n^{1/2-Lb}\operatorname{polylog}n)=o(1)$ under $Lb>1/2$.
+This proves the fixed-width assertion without an assumption $a>0$.
+All comparisons are uniform in the displayed widths, exponents, and
+temperatures, and use the same sample events as the respective original
+constructions.
+\end{proof}
