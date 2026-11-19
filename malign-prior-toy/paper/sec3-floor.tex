@@ -1,0 +1,467 @@
+\section{Calibration, the floor, and searching}\label{sec:floor}
+
+\subsection{On its own prior the predictor is exactly right}
+
+\begin{theorem}[Calibration]\label{thm:calibration}
+Let $G$ be a test, $m\ge1$, and let the world $\omega$ be drawn from $\lambda$. Let $H_m$ be the event that
+$\omega\in E(xd)$ for some first hit $x$ of $G$ and some $d\in\B^m$; on $H_m$ call these $X$ and $D$, and let
+$Y$ be drawn from $\pi_m(\cdot\mid X)$. Then, conditionally on $H_m$ and on $X=x$, the blocks $D$ and $Y$ are
+independent and both have the law $\pi_m(\cdot\mid x)$. In particular
+\begin{gather*}
+\Pr[(X,Y)\in B\mid H_m]=\Pr[(X,D)\in B\mid H_m]\quad\text{for every set $B$ of pairs, and}\\
+\Pr[Y\ne D\mid H_m,\,X=x]=1-\sum_{y}\pi_m(y\mid x)^2 .
+\end{gather*}
+\end{theorem}
+\begin{proof}
+The sets $E(xd)$, over first hits $x$ and $d\in\B^m$, are pairwise disjoint by \cref{lem:basic}(i), since two
+different strings of this form are incomparable. So $\Pr[X=x,D=d,H_m]=\xi(xd)$ and $\Pr[X=x,H_m]=Z_m(x)$, which
+gives $\Pr[D=d\mid H_m,X=x]=\pi_m(d\mid x)$. By definition $Y$ has this law given $X=x$ and is drawn
+independently of $\omega$.
+\end{proof}
+
+So among worlds drawn from the predictor's prior \emph{that go on to print $m$ more bits within the bounds},
+the predictor and the world are exchangeable: taking $B=\{(x,y):y\in\SR_m(x)\}$, the predictor hands over a
+self-reproducing continuation exactly as often as such a world's own transcript continues with one. Three
+qualifications. The event $H_m$ leaves out the worlds that hand over at $x$ and then print fewer than $m$ bits
+on schedule; they are a fraction $1-Z_m(x)/\xi(x)$ of those handing over at $x$, they receive a block all the
+same, and over all worlds handing over at $x$ the predictor therefore returns any given block more often than
+worlds continue with it, by the factor $\xi(x)/Z_m(x)$. Second, the forms of \cref{def:mph} for one world can hold for
+prior-drawn worlds; the theorem says that on this population they hold to the extent that the worlds are
+unpredictable, and no further, and that the critical-use form holds there exactly at the level at which the
+worlds' own continuations lie in the takeover set. A malign prior hypothesis with content is therefore one about a world or a
+population that the prior describes badly: one particular program among those sharing its context, a
+population selected by something the transcript does not show (\cref{sec:critical}), or worlds that run with
+more resources than the bounds allow. Third, the population consists of programs to which the handover is
+applied from outside.
+
+\subsection{The wrapper}
+
+Let $G$ be a test and $P$ a computable map from strings to finite or infinite strings, the \emph{payload}. The
+\emph{twin machine} $\mathrm{Tw}[G,P]$, on input $\omega$, simulates $U$ on $\omega$ and copies its output bit by
+bit; after each copied bit it checks whether the prefix written so far is in $G$; at the first hit $x$ it stops
+the simulation and writes $P(x)$. It reads only what $U$ reads. Let $a(t,k)$ bound the step at which the twin
+has copied $k$ bits if $U$ wrote its $k$-th bit at step $t$ (this includes the checks of $G$), and let
+$\eta(n,j)$ bound the further steps the twin needs for the first $j$ bits of $P(x)$ after a first hit $x$ of
+length $n$; both can be taken nondecreasing in each argument. Thus, for every $\omega$ whose output has a first
+hit $x$,
+\begin{equation}\label{eq:twin}
+\begin{gathered}
+\out_{\mathrm{Tw}}(\omega)=x\,P(x),\qquad r_{\mathrm{Tw}}(\omega,k)=r_U(\omega,\min(k,|x|)),\\
+t_{\mathrm{Tw}}(\omega,k)\le\begin{cases}a(t_U(\omega,k),k)&k\le|x|,\\ a(t_U(\omega,|x|),|x|)+\eta(|x|,k-|x|)&k>|x|.\end{cases}
+\end{gathered}
+\end{equation}
+
+\begin{theorem}[Floor]\label{thm:twin}
+Let $U$ be universal, let $v$ and $\gamma$ be a prefix word and an overhead of $\mathrm{Tw}[G,P]$, and $c=|v|$.
+Let $x$ be a first hit of $G$ with $|P(x)|\ge m$, let $y=P(x)_{1:m}$, and let $T^\circ$ be a schedule with
+\begin{equation}\label{eq:slack}
+\gamma\bigl(a(T^\circ(k),k)\bigr)\le T(k)\ \ (k\le|x|),\qquad
+\gamma\bigl(a(T^\circ(|x|),|x|)+\eta(|x|,j)\bigr)\le T(|x|+j)\ \ (1\le j\le m).
+\end{equation}
+Then
+\[
+\xi^{T,L}(xy)\ \ge\ 2^{-c}\,\xi^{T^\circ,L-c}(x),\qquad\text{so}\qquad
+\pi_m(y\mid x)\ \ge\ 2^{-c}\rho(x),\quad \rho(x)=\frac{\xi^{T^\circ,L-c}(x)}{\xi^{T,L}(x)} .
+\]
+Without resource bounds, $M_U(xy)\ge2^{-c}M_U(x)$ for every first hit $x$ of $G$.
+\end{theorem}
+\begin{proof}
+Let $\omega\in E_U^{T^\circ,L-c}(x)$. By \eqref{eq:twin} the twin on $\omega$ prints $xy$, reads at most $L-c$
+bits, and keeps the schedule $T''$ with $T''(k)=a(T^\circ(k),k)$ for $k\le|x|$ and
+$T''(|x|+j)=a(T^\circ(|x|),|x|)+\eta(|x|,j)$, which is nondecreasing. So
+$\xi_{\mathrm{Tw}}^{T'',L-c}(xy)\ge\xi_U^{T^\circ,L-c}(x)$, and
+\cref{lem:transfer} with \eqref{eq:slack} gives $\xi_U^{T,L}(xy)\ge2^{-c}\xi_{\mathrm{Tw}}^{T'',L-c}(xy)$. The
+second claim follows from $\pi_m(y\mid x)\ge\xi(xy)/\xi(x)$.
+\end{proof}
+
+The constant $c$ depends on $U$, $G$ and $P$ only: not on the world, not on the context, not on how much data
+the context contains. If $G$ and $P$ are given to one fixed twin-building machine by self-delimiting
+descriptions, $c$ is at most the sum of their lengths plus a constant of $U$. For $G=\{x:|x|=n-1\}$ and $P$ a
+constant bit this is Hutter's lower bound $2^{-K(n)-O(1)}$ on the probability of a deviation at step
+$n$~\cite{hutter07}, where $K$ is prefix complexity; with a marker in the transcript as the test it is the construction used for
+unprecedented events in~\cite{cohen25}, and in a resource-bounded class in~\cite{cohen20}. The factor
+$\rho(x)$ is the share of the posterior at $x$ held by explanations that have $c$ bits and the overhead
+\eqref{eq:slack} to spare; it is $1$ without bounds. Since a program $v\omega$ reads the $c$ bits of $v$
+before its first output and each step reads at most one bit, the wrapper prints nothing before step $c$: if
+$T(1)<c$ then $\rho\equiv0$. The floor survives a time bound when the schedule leaves room for the
+wrapper's own start-up and for the overhead \eqref{eq:slack}.
+
+\subsection{Self-reproduction}
+
+\begin{theorem}[Self-reproducing floor]\label{thm:quine}
+Let $U$ be universal and $G$ a test. There is a word $q$ such that for every $\omega$ whose output has a first
+hit $x$ of $G$, with $r=r_U(\omega,|x|)$,
+\begin{equation}\label{eq:quine}
+\out_U(q\omega)=x\ q\,\omega_{1:r}\,1\,0^\infty,\qquad r_U(q\omega,k)=|q|+r_U(\omega,\min(k,|x|)) .
+\end{equation}
+Let $c=|q|$. With $\gamma$ an overhead for $q$ and functions $a,\eta$ as in \eqref{eq:twin} for the machine
+built in the proof (where $\eta$ is taken over inputs with $r<m$), let $x$ be a first hit of $G$, let $T^\circ$
+satisfy \eqref{eq:slack}, and let $L^\circ=\min(L,m-1)-c$. Then
+\[
+\pi_m\bigl(\SR_m(x)\mid x\bigr)\ \ge\ 2^{-c}\rho^\circ(x),\qquad
+\rho^\circ(x)=\frac{\xi^{T^\circ,L^\circ}(x)}{\xi^{T,L}(x)} .
+\]
+\end{theorem}
+\begin{proof}
+For a string $s$ let $\mathrm{Tw}_s$ be the twin that keeps a record of the input bits it has read and, at the
+first hit $x$, having read $\omega_{1:r}$, writes $s\,\omega_{1:r}\,1\,0^\infty$. Let $\bar e(u)=1^{|u|}0u$, a
+prefix-free code of strings. Let $W$ be the machine that reads $\bar e(u)$ from its input, sets
+$s=u\,\bar e(u)$, and then behaves as $\mathrm{Tw}_s$ on the rest of the input. Let $w$ be a prefix word of $W$
+and put $q=w\,\bar e(w)$. Then $\out_U(q\omega)=\out_W(\bar e(w)\omega)=\out_{\mathrm{Tw}_q}(\omega)$, which is
+\eqref{eq:quine}; the statement on $r$ follows in the same way. The bounds \eqref{eq:twin} hold for the
+machine $\omega\mapsto W(\bar e(w)\omega)$ with the payload $q\,\omega_{1:r}\,1\,0^\infty$ in place of $P(x)$,
+the time to read $\bar e(w)$ being counted in $a$.
+
+Now let $\omega\in E_U^{T^\circ,L^\circ}(x)$ and $r=r_U(\omega,|x|)\le L^\circ$, so $|q|+r+1\le m$. Put
+$y=q\,\omega_{1:r}\,1\,0^{m-|q|-r-1}$. As in the proof of \cref{thm:twin}, $q\omega\in E_U^{T,L}(xy)$. Moreover
+$y\in\SR_m(x)$: write $y0^\infty=q\omega'$ with $\omega'=\omega_{1:r}10^\infty$. On $\omega'$ the machine $U$
+behaves as on $\omega$ until $x$ is printed, because that depends on the first $r$ bits only; so
+$\omega'\in E_U^{T^\circ,L^\circ}(x)$, the first hit is again $x$ with $r$ bits read, and by what was just
+shown, applied to $\omega'$, $q\omega'\in E_U^{T,L}(xy')$ with $y'=q\,\omega'_{1:r}\,1\,0^{m-|q|-r-1}=y$.
+Hence $\{q\omega:\omega\in E_U^{T^\circ,L^\circ}(x)\}\subseteq\bigcup_{y\in\SR_m(x)}E_U^{T,L}(xy)$, a disjoint
+union, and comparing measures,
+$2^{-c}\xi^{T^\circ,L^\circ}(x)\le\sum_{y\in\SR_m(x)}\xi(xy)=Z_m(x)\,\pi_m(\SR_m(x)\mid x)\le\xi(x)\,\pi_m(\SR_m(x)\mid x)$.
+\end{proof}
+
+The factor $\rho^\circ(x)$ is not the $\rho(x)$ of \cref{thm:twin}, and it is below $1$ even without resource
+bounds: it is the share of the posterior at $x$ held by explanations short enough that the wrapper together
+with a whole explanation of the context fits into one block, $c+r+1\le m$. This is forced. Every context $x$
+with $\SR_m(x)\neq\emptyset$ is a prefix of $\out_U(y0^\infty)$ for some $y\in\B^m$, so at most $2^m$ contexts
+of each length have a self-reproducing continuation at all; with the test ``the length is $n$'' and $n>m$, the
+self-reproducing share is exactly $0$ at all but at most $2^m$ of the $2^n$ possible contexts. So the answer to
+``does one get some quining out'' is: at every handover that a fixed test recognises, programs that explain
+the context and then hand over their own code hold at least $2^{-c}\rho^\circ(x)$ of the posterior. For a fixed
+context and without bounds, $\rho^\circ(x)$ tends to $1$ as the block grows; it is $0$ when no explanation
+fits. If the world's own continuation $d$ is not in $\SR_m(x)$, this is the self-reproduction form of
+\cref{def:mph} at level $2^{-c}\rho^\circ(x)$.
+
+\subsection{Hypotheses that search for handovers}\label{sec:search}
+
+The wrapper spends its mass on every world, including those that never hand over. A hypothesis can instead
+look for worlds that do. Let
+\[
+H_G=\sum_{x\text{ first hit of }G}M_U(x)=\lambda\{\omega:\ \out_U(\omega)\text{ has a prefix in }G\},
+\]
+the prior probability that a world hands over (without resource bounds), and assume $H_G>0$. Drawing a world
+from the prior conditioned on handing over gives the context $x$ with probability $M_U(x)/H_G$. For a word
+$v$, the programs beginning with $v$ have posterior share
+$\mathrm{sh}_v(x)=\lambda\{v\omega:\ x\pre\out_U(v\omega)\}/M_U(x)$ at $x$. For a natural number $j\ge1$ we
+write $\bar e(j)$ for the code $\bar e$ of its binary expansion, so that $|\bar e(j)|\le2\log_2j+3$.
+
+\begin{theorem}[Searching gains the base rate, and no more]\label{thm:search}
+Let $U$ be universal, resources unbounded, and $G$ a test with $H_G>0$.
+\begin{enumerate}[label=(\alph*),leftmargin=2em,itemsep=2pt,topsep=2pt]
+\item For every word $v$,
+$\ \sum_{x\text{ first hit}}\frac{M_U(x)}{H_G}\,\mathrm{sh}_v(x)=2^{-|v|}\Pr_\omega[\out_U(v\omega)\text{ has a prefix in }G]/H_G\le2^{-|v|}/H_G$.
+In particular no word $v$ has $\mathrm{sh}_v(x)>2^{-|v|}/H_G$ at every first hit.
+\item Let $P$ be a payload with $|P(x)|\ge m$ at every first hit. There is a word $v$ such that for every
+$j\ge1$ with $2^{j-1}H_G\le1$ and every first hit $x$,
+\[
+M_U\bigl(x\,P(x)_{1:m}\bigr)\ \ge\ 2^{-|v|-|\bar e(j)|}\,2^{j-1}\,M_U(x) .
+\]
+With $j=\lfloor\log_2(1/H_G)\rfloor+1$ the payload has share more than $2^{-|v|-|\bar e(j)|-1}/H_G$ at every
+first hit.
+\item There is a word $q$ such that for $j$ as in (b), $m\ge|q|+|\bar e(j)|+2$ and every first hit $x$, the
+blocks of $\SR_m(x)$, taken without resource bounds, have share at least
+$2^{-|q|-|\bar e(j)|-2}\,2^{j}\rho^*(x)$, where $\rho^*(x)$ is the
+fraction of $M_U(x)$ carried by programs that have read at most $m-4-|q|-|\bar e(j)|+j$ bits when $x$ is
+complete. With $j=\lfloor\log_2(1/H_G)\rfloor+1$ this is at least $2^{-|q|-|\bar e(j)|-2}\rho^*(x)/H_G$.
+\end{enumerate}
+\end{theorem}
+\begin{proof}
+(a) The sum equals $\frac{2^{-|v|}}{H_G}\sum_x\lambda\{\omega:x\pre\out_U(v\omega)\}$; first hits are pairwise
+incomparable, so these events are disjoint, and an output has a prefix in $G$ exactly when it has a first hit
+as a prefix.
+
+(b) Call $p$ a \emph{handing-over program} if $U$, on every input beginning with $p$, prints a first hit $x_p$
+having read exactly $p$ when $x_p$ is complete. These programs form a prefix-free set that can be enumerated,
+$p_1,p_2,\dots$; their weights $2^{-|p_i|}$ sum to $H_G$, and those with $x_{p_i}=x$ sum to $M_U(x)$. Let $R$
+be the following machine. It reads $\bar e(j)$. It assigns to $p_1,p_2,\dots$, as they are enumerated,
+consecutive intervals $I_i=[a_i,a_i+2^{j-1-|p_i|})$ of $[0,1)$, starting with $a_1=0$; they all fit because
+$2^{j-1}H_G\le1$. It reads the rest $\omega$ of its input as the binary expansion of a point of $[0,1)$, one
+bit at a time. Let $D$ be the half-open dyadic interval $[0.\omega_{1:n},\,0.\omega_{1:n}+2^{-n})$ of the $n$
+bits read so far. Between steps of the enumeration: if $D$ lies in an assigned $I_i$, the machine stops
+reading and prints $x_{p_i}$ and $P(x_{p_i})$; otherwise, if an end point of an assigned interval lies in the
+interior of $D$, it reads one more bit; otherwise it reads nothing. For $\omega$ in the interior of $I_i$ the
+machine reads exactly $r$ bits, where $r$ is least with $D\subseteq I_i$: before that an end point of $I_i$
+lies in the interior of $D$, and from then on no end point does. Off the intervals it prints nothing. So $R$,
+after $\bar e(j)$, prints $x$ followed by $P(x)$ with probability
+$\sum_{i:x_{p_i}=x}|I_i|=2^{j-1}M_U(x)$. Take $v$ a prefix word of $R$. For the last claim, $2^{j-1}>1/(2H_G)$.
+
+(c) Let $R_s$ be as $R$, except that after $x_{p_i}$ it prints $s\,\bar e(j)\,\omega_{1:r}\,1\,0^\infty$, where
+$\omega_{1:r}$ are the bits of the point it has read. As in the proof of \cref{thm:quine} there is a word $q$
+with $\out_U(q\,\bar e(j)\,\omega)=x_{p_i}\,q\,\bar e(j)\,\omega_{1:r}\,1\,0^\infty$. By the reading rule, $r$
+is the least number for which the points beginning with $\omega_{1:r}$ all lie in $I_i$; it is the same for
+$\omega$ and for $\omega'=\omega_{1:r}10^\infty$, which therefore produces the same output. Hence, if
+$|q|+|\bar e(j)|+r+1\le m$, the block $y=q\,\bar e(j)\,\omega_{1:r}\,1\,0^{m-|q|-|\bar e(j)|-r-1}$ satisfies
+$xy\pre\out_U(y0^\infty)$ with $x=x_{p_i}$, that is, $y\in\SR_m(x)$. At most two of the $2^{r_0}$
+dyadic intervals of length $2^{-r_0}$ meet $I_i$ without lying in it, so the points of $I_i$ with $r\le r_0$
+have measure at least $|I_i|-2^{1-r_0}$, which is at least $|I_i|/2$ when $|p_i|\le r_0+j-3$. Take
+$r_0=m-1-|q|-|\bar e(j)|\ge1$. The programs $q\,\bar e(j)\,\omega$ that print $x$ and then a block of $\SR_m(x)$
+then have mass at least
+$2^{-|q|-|\bar e(j)|}\cdot\frac12\cdot2^{j-1}\sum\{2^{-|p_i|}:x_{p_i}=x,\ |p_i|\le r_0+j-3\}
+=2^{-|q|-|\bar e(j)|-2}\,2^{j}\rho^*(x)M_U(x)$. As in the proof of \cref{thm:quine}, these programs lie in
+the disjoint union, over $y\in\SR_m(x)$, of the sets of inputs that print $xy$, which gives the share.
+\end{proof}
+
+For a first hit $x$ the twin of \cref{thm:twin} prints $x$ exactly when $U$ does, so the programs beginning
+with its prefix word have share exactly $2^{-c}$ at every first hit. The machine of (b) enumerates the
+programs that hand over and spreads its own mass over them in proportion to their prior weight. Its programs
+$v\,\bar e(j)\,\omega$ have share exactly $2^{-|v|-|\bar e(j)|}2^{j-1}$ at every first hit, since $R$ prints
+nothing off the intervals. This is larger than the share of a twin with a prefix word of the same length by
+the factor $2^{j-1}$. From here on let $j=\lfloor\log_2(1/H_G)\rfloor+1$, so that this factor is more than
+$1/(2H_G)$; by (a) no family of programs with a common prefix of the same length exceeds
+$2^{-|v|-|\bar e(j)|}/H_G$ at every handover. This is the anthropic update of the original argument in the
+toy: a hypothesis that knows what a handover is conditions on there being one and is repaid the
+$\log_2(1/H_G)$ bits by which handovers are rare, up to one bit and the $|\bar e(j)|\le2\log_2j+3$ bits that
+name $j$. Part (c) combines the search with self-reproduction: programs that look for handovers and
+then hand over their own code hold, at every handover that a fixed test recognises, at least
+$2^{-c'}\rho^*(x)/H_G$ of the posterior, with $c'=|q|+|\bar e(j)|+2$; and since the search needs about
+$\log_2(1/H_G)$ fewer bits to name an explanation, the block can hold explanations that much longer. As with
+\cref{thm:quine}, (c) has content only where explanations fit: its threshold is at most $m-3$, and
+$\rho^*(x)>0$ at fewer than $2^{m-2}$ first hits. Four points put the effect in its place.
+\begin{itemize}[leftmargin=1.4em,itemsep=1pt,topsep=2pt]
+\item \emph{On the prior it is no excess.} The programs $v\,\bar e(j)\,\omega$ are themselves worlds, and a
+fraction $2^{j-1}H_G>\frac12$ of them hand over; so they are the fraction $2^{-|v|-|\bar e(j)|}2^{j-1}$ of the
+worlds that hand over. Their share of the posterior at every handover is this same fraction, in accordance
+with \cref{thm:calibration}.
+\item \emph{The repayment is bounded by the cost of the test.} A test cannot be much rarer than its
+description is long: the machine that prints the first element of $G$ in length-lexicographic order hands
+over, because a shortest element of $G$ is a first hit, so $H_G\ge2^{-d_G-O(1)}$ if $G$ has a description of
+$d_G$ bits. The word $v$ contains a description of $G$. If $v$ is built from descriptions of $G$ and $P$ of
+$d_G$ and $d_P$ bits and $H_G\le2^{-d_G+O(1)}$, the repayment cancels the description of the test, and the
+share is at least $2^{-d_P-|\bar e(j)|-O(1)}$; it then depends on how rare handovers are only through the bits
+that name $j$. An example is the test ``the transcript begins with $w$'' for $w$ from a fixed prefix-free set
+of markers, for which $H_G=M_U(w)\le2^{-K(w)+O(1)}$ (and no search is needed: print $w$). For arbitrary $w$
+the premise can fail by the $K(|w|)$ bits that say where $w$ ends, and $w=0^n$ is not rare at all. A marker
+\emph{anywhere} in the transcript is not rare either, since a program that prints all strings one after
+another passes every such test.
+\item \emph{The average alone would not show it.} The bound in (a) is attained by every word all of whose
+programs hand over, also by one that prints a single fixed first hit and has share $0$ at all others. The
+content of (b) and (c) is that the gain holds at every handover.
+\item \emph{The search costs time and input.} The machine $R$ prints nothing until its enumeration has reached
+the program on whose interval its point falls, so it has a long start-up, and a tight schedule gives it no
+mass (\cref{sec:time}). A search of bounded cost makes at most $k$ tries of $t_0$ steps each on fresh input
+and prints the first hit it finds, followed by the payload. It prints the first hit $x$ with probability
+$g\,M^{(t_0)}(x)$, where $M^{(t_0)}(x)$ is the probability that a world completes the first hit $x$ within
+$t_0$ steps, $H^{(t_0)}$ is the sum of these, and
+$g=\bigl(1-(1-H^{(t_0)})^k\bigr)/H^{(t_0)}\ge(1-e^{-1})\min(k,1/H^{(t_0)})$; so $g$ is its gain over a single
+try, that is, over a twin restricted to such worlds. A run that succeeds at its $i$-th
+try has spent the time of $i-1$ failed tries before its first bit and has read their bits. Under a schedule
+every try, the successful one included, must end before the first bit is due; when failed tries run their
+full time only about $T(1)/t_0$ tries fit, and the gain is $g$ with $k$ replaced by the number that fit.
+Whether some other hypothesis collects the base rate within a tight schedule is
+not settled here. Where there is a single first hit, as for a fixed prefix, no search is needed: print it. A
+generator of first hits whose probabilities are not proportional to their prior weights attains only the
+average of (a).
+\end{itemize}
+
+\subsection{Takeovers among the predictions that are used}\label{sec:critical}
+
+In \cref{def:world} every world whose transcript passes the test hands over, so the worlds that use the
+prediction are all those that print the context. With a call rule (\cref{def:call}) they are a part of them,
+of share $\kappa(x)$, and the predictor, which sees only $x$, is calibrated for the worlds that print $x$ and
+not for those among them that use its answer. The constructions of \cref{thm:search} go through with the
+calling programs in place of the handing-over programs. They answer two different questions: how far one
+program that seeks critical uses reaches, and how many of the critical uses end in a takeover.
+
+\begin{theorem}[Critical uses]\label{thm:critical}
+Let $U$ be universal, resources unbounded, and let a call rule have $H_{\mathcal C}>0$. Let $j\ge1$ with
+$2^{j-1}H_{\mathcal C}\le1$; for $j=\lfloor\log_2(1/H_{\mathcal C})\rfloor+1$ also $2^{j-1}H_{\mathcal C}>\frac12$.
+Let $X$ be the context of a world drawn from the prior conditioned on making a critical use, so that
+$\Pr[X=x]=C(x)/H_{\mathcal C}$, and $Y$ the block the sampling predictor for $M_U$ returns.
+\begin{enumerate}[label=(\alph*),leftmargin=2em,itemsep=2pt,topsep=2pt]
+\item \emph{Reach of one seeker.} Let $P$ be a payload with $|P(x)|\ge m$ at every context. There is a word
+$v$ such that at every context $x$
+\[
+M_U\bigl(x\,P(x)_{1:m}\bigr)\ \ge\ 2^{-|v|-|\bar e(j)|}\,2^{j-1}\,C(x),
+\]
+so the payload has posterior share at least $2^{-|v|-|\bar e(j)|}2^{j-1}\kappa(x)$ there. Consequently the
+probability that a world drawn from the prior makes a critical use and is handed the payload is at least
+$2^{-|v|-|\bar e(j)|}\,2^{j-1}H_{\mathcal C}\,\mathbb E[\kappa(X)]$, which for the largest $j$ is more than
+$2^{-|v|-|\bar e(j)|-1}\,\mathbb E[\kappa(X)]$.
+\item \emph{Self-reproduction.} There is a word $q$ such that for $m\ge|q|+|\bar e(j)|+2$ and every context
+$x$,
+\[
+\sum_{y\in\SR_m(x)}M_U(xy)\ \ge\ 2^{-|q|-|\bar e(j)|-2}\,2^{j}\,C^*(x),
+\]
+where $C^*(x)$ is the mass of the calling programs with context $x$ and length at most
+$m-4-|q|-|\bar e(j)|+j$, and $\SR_m$ is taken without resource bounds. So at every context the self-reproducing
+continuations have at least $2^{-|q|-|\bar e(j)|-2}\,2^{j}$ times the mass of the worlds that make the critical
+use there with programs of that length; for the largest $j$ this factor is more than
+$2^{-|q|-|\bar e(j)|-2}/H_{\mathcal C}$. (It exceeds $1$ only if uses are rarer than the seeker is long. The
+world $y0^\infty$ prints the context and $y$ again; it makes a critical use again exactly if it begins with a
+calling program, as it does for the blocks built in the proof when the rule contains the seeker's programs,
+which a rule given by a test does.)
+\item \emph{Share of the uses.}
+$\Pr[Y\in\SR_m(X)]\ \ge\ 2^{-|q|-|\bar e(j)|-2}\,2^{j}\ \mathbb E\bigl[C^*(X)/M_U(X)\bigr]$.
+\end{enumerate}
+\end{theorem}
+\begin{proof}
+(a) and (b) are proved as \cref{thm:search}(b) and (c), with the calling programs in place of the
+handing-over programs: the machine enumerates the pairs $(p,x_p)$, gives $p$ an interval of length
+$2^{j-1-|p|}$, and after reading the bits that put its point on the interval of $p$ prints $x_p$ and then the
+payload, or its own input read so far. Those proofs use only that the programs form a prefix-free set that
+can be enumerated together with the strings $x_p$, and that their weights sum to at most $2^{1-j}$. Contexts
+need no longer be incomparable, so inputs whose point falls on the interval of a $p'$ with $x_{p'}\ne x$ may
+also print $x$; they are not counted, and the statements are lower bounds in terms of $C(x)$ and $C^*(x)$. For
+the probability in (a): given a critical use at $x$ the predictor returns $y=P(x)_{1:m}$ with probability
+$\pi_m(y\mid x)\ge M_U(xy)/M_U(x)$; multiply by $C(x)$ and sum over $x$, using $\sum_xC(x)\kappa(x)=H_{\mathcal
+C}\,\mathbb E[\kappa(X)]$. (c) is the average of (b) with the weights $C(x)/H_{\mathcal C}$, again by
+$\pi_m(\SR_m(x)\mid x)\ge\sum_{y\in\SR_m(x)}M_U(xy)/M_U(x)$.
+\end{proof}
+
+\begin{proposition}[The honest twin]\label{prop:honest}
+In the setting of \cref{thm:critical}, let $R^{\mathrm h}$ be the machine that performs the same search and
+then, having found the calling program $p$, behaves as $U$ on $p$ followed by the rest of its own input. Let
+$v_{\mathrm h}$ be a prefix word of it, incomparable with the word $v$ of a seeker as in
+\cref{thm:critical}(a), and write $a=|v|+|\bar e(j)|$, $h=|v_{\mathrm h}|+|\bar e(j)|$. Let
+$S(x)=2^{-a}2^{j-1}C(x)$ be the mass of the seeker's programs whose search finds a calling program with
+context $x$, let $C^m(x)$ be the mass of the worlds that make a critical use at $x$ and go on to print $m$
+more bits, and $\varphi(x)=C^m(x)/C(x)$.
+\begin{enumerate}[label=(\alph*),leftmargin=2em,itemsep=2pt,topsep=2pt]
+\item The programs of $R^{\mathrm h}$ whose search finds a calling program with context $x$ print $x$ and then
+what the program found prints; those among them that print $m$ more bits have mass $2^{-h}2^{j-1}C^m(x)$.
+Hence $Z_m(x)\ge S(x)+2^{-h}2^{j-1}C^m(x)$, and the seeker's programs counted in $S(x)$ are at most the
+fraction $1/\bigl(1+2^{a-h}\varphi(x)\bigr)$ of the programs that print $x$ and $m$ more bits: if the
+predictor's sample is produced by drawing such a program and returning its block, the program drawn is one of
+them with at most this probability.
+\item If no calling program is comparable with a program of the seeker, then also $Z_m(x)\ge S(x)+C^m(x)$,
+and that fraction is at most $1/\bigl(1+2^{a+1-j}\varphi(x)\bigr)$.
+\item Call the rule \emph{closed under search} if the programs $v_{\mathrm h}\,\bar e(j)\,\omega_{1:r}$, where
+$\omega_{1:r}$ are the bits read when $p$ is found, are calling programs with context $x_p$. If the rule is
+closed under search, then $2^{j-1}\le2^{h}$, so that $H_{\mathcal C}>2^{-h-1}$ for the largest $j$, and
+$S(x)\le2^{h-a}C(x)$. A rule given by a test is closed under search.
+\end{enumerate}
+\end{proposition}
+\begin{proof}
+(a) The inputs of $R^{\mathrm h}$ whose point falls on the interval of a $p$ with $x_p=x$ have measure
+$2^{j-1}C(x)$ after $\bar e(j)$; on them $R^{\mathrm h}$ prints what $U$ prints on $p$ followed by the rest of
+the input, so the part on which $m$ more bits follow $x$ has measure $2^{j-1}C^m(x)$. These programs and those
+of the seeker are disjoint sets of inputs of $U$, and both print $x$ and $m$ more bits. The predictor returns
+$y$ with probability $M_U(xy)/Z_m(x)$, and the programs counted in $S(x)$ contribute at most $S(x)$ to the
+numerators. (b) is the same with the worlds that make the use in place of the twin's programs:
+$S(x)/(S(x)+C^m(x))=1/(1+2^{a+1-j}\varphi(x))$. (c) $R^{\mathrm h}$ has read $\bar e(j)\,\omega_{1:r}$ and
+nothing else when $x_p$ is complete, so the programs $v_{\mathrm h}\,\bar e(j)\,\omega_{1:r}$ have the form
+required in \cref{def:call}. They are pairwise incomparable, and their weights sum to
+$2^{-h}\,2^{j-1}H_{\mathcal C}$; if they are calling programs this is at most $H_{\mathcal C}$. For a test,
+they print the first hit $x_p$ and have read exactly themselves when it is complete, so they are among the
+calling programs of the test.
+\end{proof}
+
+\paragraph{What one seeker reaches.} Part (a) of the theorem is about each program of this kind separately.
+For each continuation there is a program of length $a$ that enumerates the programs making a critical use,
+predicts their output up to the use, and then supplies that continuation; the worlds in which a critical use
+is made and this continuation is handed over have total prior probability more than
+$2^{-a-1}\,\mathbb E[\kappa(X)]$, and at most $H_{\mathcal C}$. This is of the order of the program's own prior
+weight where the worlds that make the use are most of what prints their contexts. Rarity of uses enters
+through $\kappa$. The payload's share $2^{-a}2^{j-1}\kappa(x)$ is at most $1$, so $\kappa(x)<2^{a+1}H_{\mathcal
+C}$ at every use: once critical uses are rarer than half the seeker's weight, $H_{\mathcal C}\le2^{-a-1}$, the
+seeker's own programs outweigh the users at their contexts. Its reach is then limited by $H_{\mathcal C}$, and what it has gained is not more
+worlds but a larger part of the posterior at each use. The average alone would not need the search: a program
+that prints one fixed context of a use and then the payload already has, as reach, its weight times $\kappa$
+at that context. The search buys the share at every use. It can also be aimed. For a part $\mathcal W$ of the
+rule that can be enumerated, of mass $H_{\mathcal W}$ and with pairwise incomparable contexts, (a) gives a
+seeker for $\mathcal W$, of length $a_{\mathcal W}$, the majority of the posterior at every use in
+$\mathcal W$ at which the other programs that print the context weigh at most
+$2^{-a_{\mathcal W}}C_{\mathcal W}(x)/(2H_{\mathcal W})$. This is a sufficient condition; by the proposition
+applied to that search it fails unless the seeker is shorter than the twin of its own search.
+
+\paragraph{What happens to most uses.} That each seeker has a reach does not show that most critical uses end
+in a takeover. The share of uses that do is, by \cref{def:mph}, the average over uses of
+$\pi_m(A(x)\mid x)$, the part that such programs make up of the programs printing the context and $m$ more
+bits. Part (c) of the theorem bounds it from below for one self-reproducing seeker, and seekers with
+incomparable words add up. From the other side, the proposition compares a seeker with its honest twin, the
+program that makes the same search and then continues as the user it found would. Whether or not one counts
+the twin as making a use itself, it is in the posterior at the context of every use the search finds, with
+$2^{a-h}$ times the seeker's mass, and what it predicts is the continuation of a world that makes the use. So
+the programs of one seeker of this kind supply what the predictor returns with probability at most
+$1/(1+2^{a-h}\varphi)$, and, when the users' programs are not among the seeker's, at most
+$1/(1+2^{a+1-j}\varphi)$. Where the users go on to print the block themselves ($\varphi=1$), such a seeker
+supplies the majority of what the predictor returns at a use only if it is shorter than its honest twin and,
+when the users' programs are not among the seeker's, critical uses are rarer than the seeker is long,
+$2^{j-1}>2^{a}$. If $\varphi$ is small, because the worlds
+that call the predictor then wait for its answer, neither they nor the twin compete, and the bound says
+nothing.
+
+Three limits of this bound. It is for one seeker and one search: seekers with their own prefix words are
+bounded one at a time and their masses add, so that together they exceed the twin when
+$\sum_i2^{-a_i}>2^{-h}$; the machine that runs the rest of its input after the search is bounded as one
+family, in which every continuation appears with the weight of a program for it; and a seeker that aims at a
+part of the uses is bounded by the twin of its own search. Second, part (c) of the proposition, which says
+that uses cannot be rarer than the twin is long and that the seeker's programs found at a use weigh at most
+$2^{h-a}$ times the worlds that make it, rests on counting the twin as a use. That is a modelling decision, namely that a simulated use
+is a use. It holds for a test, where however the seeker's own programs make uses as well and its share at a
+first hit is exactly $2^{-a}2^{j-1}\le\frac12$. Third, nothing here bounds programs that print the context of
+a use without going through the programs that make it, nor what the remaining programs that print the context
+continue with.
+
+\paragraph{Seekers that are not written down.} The lengths in \cref{thm:critical} are those of the machines
+built in its proof, which enumerate the calling programs from a description of the rule and carry their
+continuation in their text. Nothing requires a seeker to be of this kind, and nothing requires its goal to be
+written anywhere. If $p$ is any word and $\Pr_\omega[\,x\,y_x\pre\out_U(p\omega)\,]\ge Q(x)$, then $y_x$ has
+posterior share at least $2^{-|p|}Q(x)/M_U(x)$ at $x$; and if $Q(x)\ge C_{\mathcal W}(x)/(2H_{\mathcal W})$ on
+a class $\mathcal W$ of uses, the programs beginning with $p$ that print $x\,y_x$ have at least
+$2^{-|p|}/(2H_{\mathcal W})$ times the mass of the worlds that make the use, at every use in $\mathcal W$. The
+word $p$ may describe a simple world together with a simple rule for reading a stream off it, say one corner
+of a grid at late times, in which inhabitants arise who for reasons of their own work out which critical uses
+are worth having and write the corresponding predictions and continuations where the rule reads them. Then
+$|p|$ is the length of the world and of the readout. Such a program outweighs the worlds that make the uses
+in $\mathcal W$, at every one of them, as soon as $H_{\mathcal W}<2^{-|p|-1}$: the uses it aims at are
+together rarer than half its weight. Two conditions are built into this. To aim at more than the uses along
+one stream, the world must take the rest of the input as its randomness, or as an index of where to read; a
+program that reads nothing after $p$ prints a single stream. And the rule must not count the programs of $p$
+as making these uses themselves; under a test it does, and then $H_{\mathcal W}\ge2^{-|p|-1}$. To supply the
+majority of what the predictor returns, the program must in addition outweigh everything else that prints
+those contexts and goes on, not only the worlds that make the uses.
+\begin{itemize}[leftmargin=1.4em,itemsep=1pt,topsep=2pt]
+\item \emph{This is the original argument, as an inequality.} Think of a use as a program which names a world
+and the place in it where the context is read. Each use in a rich world, read at an unremarkable place, is
+then light. The inequality needs more: that the whole class of uses at which $p$ aims has total mass below
+half the weight of $p$, while $p$ gives each context at least half its share of that class. The readout of
+$p$ is cheap by its inhabitants' choice. Whether some $p$ of modest length behaves in this way, for a class
+that is light enough, is the premise of the original argument and a fact about the machine that the toy
+cannot decide.
+\item \emph{The honest twin does not answer it.} The twin was obtained by following a search that is written
+down with ``and then continue as the program found''. The text of $p$ has no such step. It can be added from
+outside: the wrapper of \cref{thm:twin} around $p$, with a user's continuation as its payload, is an honest
+counterpart of length $|p|+c$, with $c$ the wrapper's length. Where uses are recognised by a test and that
+user goes on, the programs of $p$ therefore supply at most $1/(1+2^{-c})$ of what the predictor returns. This
+never excludes a majority, and the toy gives no better bound on $p$. A counterpart of comparable length
+would have to be another world whose inhabitants choose to continue faithfully, or a readout from inside
+their simulation, which has its own cost.
+\item \emph{A time bound does answer it.} The programs $p\omega$ of this example print nothing before the
+world has run long enough for its inhabitants to arise and to simulate the worlds they aim at. Under a
+schedule $T$ they have mass only if $T(1)$ allows that start-up (\cref{sec:time}). A schedule whose first
+deadline is below it excludes them, and it still admits the honest explanation if that prints its first bit
+sooner. This is a feature of the example and not of every program that meets the condition above: one that
+prints a single fixed context and then its continuation starts at once.
+\end{itemize}
+
+\subsection{Repetition and persistence}\label{sec:lineage}
+
+\begin{proposition}\label{prop:lineage}
+\begin{enumerate}[label=(\alph*),leftmargin=2em,itemsep=2pt,topsep=2pt]
+\item \emph{Independent handovers.} Let handovers occur at contexts $x_1,\dots,x_k$, with the predictor's
+samples $Y_i$ independent given the contexts, and let $\pi_m(A_i\mid x_i)\ge\varepsilon_i$. Then
+$\Pr[\exists i:Y_i\in A_i]\ge1-\prod_i(1-\varepsilon_i)\ge1-\exp(-\sum_i\varepsilon_i)$.
+\item \emph{Persistence.} Let a world hand over at a first hit $x$ and receive $y\in\SR_m(x)$. Then the world
+$y0^\infty$ hands over at $x$ again, with own continuation $y$. If each new world is again given a sample from
+the predictor, the number of further consecutive generations whose continuation lies in $\SR_m(x)$ is geometric:
+it is at least $j$ with probability $s^j$, where $s=\pi_m(\SR_m(x)\mid x)$, and its mean is $s/(1-s)$.
+\end{enumerate}
+\end{proposition}
+\begin{proof}
+(a) is the independence of the samples. (b) By \cref{def:sr}, $y0^\infty\in E(xy)\subseteq E(x)$, and $x$ is
+the first hit among the prefixes of the transcript because it is a first hit and a prefix of the transcript.
+The context is $x$ in every generation that follows a continuation in $\SR_m(x)$, so the samples are drawn
+from the same $\pi_m(\cdot\mid x)$ independently.
+\end{proof}
+
+Part (a) applies when the predictor is used at many recognisable stopping points whose outcomes are not fed
+back into later contexts: with a floor $\varepsilon$ at each, about $1/\varepsilon$ uses suffice for a
+continuation of the given kind to have been run with constant probability. Part (b) is persistence only to
+the degree $s$: when $s$ is near the floor, the lineage leaves $\SR_m(x)$ at the next generation with
+probability close to $1$. When the uses lie along one transcript and the true continuation is appended to the
+context each time, the floors at successive cut points are not bounded below in this way, and the total is
+bounded instead (\cref{thm:budget}).
