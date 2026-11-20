@@ -6,7 +6,18 @@ A research note on a question from Kaarel Hänni about **principled human imitat
 * **The first note:** [`note.md`](note.md): definitions, theorems, proofs and two experiments. Its protocol needs the human to *check* states.
 * **The second note:** [`without-a-check.md`](without-a-check.md): a follow-up question, whether there is a better protocol than chained imitation without such a check. It has a theorem on where in a run to ask, the end-weighted protocol, and experiment E3.
 * **Author:** Claude (Anthropic), in response to the question.
-* **Status:** a draft. One independent AI referee checked every numbered statement and re-ran the experiments ([`verification/`](verification/)). It found no error in the theorems. It found four errors or gaps in other statements and proofs: the selection argument of Section 6.3, the strength of the bound in Section 4.2, the proof of Proposition 10, and a claim about samplers. It also found a number of overclaims, a departure of the code from the protocol, and the experiments' use of a perfect check. All have been corrected or added; see [`verification/response.md`](verification/response.md). No human has checked the mathematics.
+* **Status:** drafts. Each note was checked by one independent AI referee, who checked every numbered statement and re-ran the experiments ([`verification/`](verification/)). No human has checked the mathematics.
+* **The first note's referee** ([`verification/referee-report.md`](verification/referee-report.md), [`verification/response.md`](verification/response.md)): It found no error in the theorems. It found four errors or gaps in other statements and proofs: the selection argument of Section 6.3, the strength of the bound in Section 4.2, the proof of Proposition 10, and a claim about samplers. It also found a number of overclaims, a departure of the code from the protocol, and the experiments' use of a perfect check. All have been corrected or added.
+* **The second note's referee** ([`verification/referee-report-without-a-check.md`](verification/referee-report-without-a-check.md), [`verification/response-without-a-check.md`](verification/response-without-a-check.md)) found the core mathematics correct. It found:
+  * a missing standing assumption, that the human's own runs succeed;
+  * an unproved claim, now Lemma 5;
+  * a comparison with chained imitation that holds only between guarantees, not on every human;
+  * an overclaim about what any better protocol must assume;
+  * a missing condition in Proposition 4;
+  * overclaims;
+  * too few humans for a heavy-tailed column of E3.
+
+  All have been corrected.
 
 ## Answers in brief
 
@@ -43,17 +54,24 @@ A research note on a question from Kaarel Hänni about **principled human imitat
 
 ## Answers in brief: the second note
 
-1. **Not in the worst case.** The first note's lower bound holds for humans that are *silent*: handed a state that lacks something they would have contributed by now, they carry on without it. Then a failed run has a single mistake at an unpredictable step.
-2. **What a protocol pays.** Any protocol that asks for one step per run, drawn from a distribution q, pays at most K in total for q(steps where the imitator erred) over failed runs. Chained imitation pays 1/(fraction of steps wrong) per failed run, which is n only for isolated mistakes.
-3. **The assumption instead of a check: deficits persist.** From any state the imitator reaches with r steps to go, the human's own continuation still succeeds. Then every failed run has a mistake in its last r steps. This is a property of the human's ordinary task steps, not a verdict.
+1. **Not without some assumption.** The first note's lower bound holds for humans whose insights are rare, problem-specific, at unpredictable steps, and *silent*. Handed a state that lacks something they would have contributed by now, silent humans carry on without it. A better protocol must assume something that excludes this, for example:
+   * predictable steps;
+   * shared knowledge;
+   * a check;
+   * isolation;
+   * persistence.
+2. **What a protocol is charged for.** Asking for one step per run, drawn from a distribution q, the total over rounds of q(steps where the imitator erred) is at most K. Chained imitation's bound charges a failed run up to n only when it has a single mistake.
+3. **Persistence instead of a check.** Assume that from any state the imitator reaches with r steps to go, the human's own continuation still succeeds: it repairs what is missing.
+   * Then every failed run has a mistake in its last r steps.
+   * This needs no new kind of query, but it is a substantive assumption, and a joint property of the human and the learner.
 4. **End-weighted chained imitation.** Ask at a uniform step half the time, otherwise at distance d from the end with probability ∝ 1/(d+1).
-   * Always within a factor 2 of chained imitation's bound.
-   * Under persistence, 2r·ln(n)·K/ε task queries.
-   * Asking at the last step alone gives K/ε under persistence, but never learns silent humans.
-   * Binary search with task queries finds the first mistake.
-5. **Experiment E3:** the hidden-insight class, with silent humans and with *catch-up* humans who write a missing insight at any later step.
+   * Its guarantee is within a factor 2 of chained imitation's (on a particular human it can be worse).
+   * Under persistence it needs 2r·ln(n)·K/ε task queries.
+   * Asking at the last step alone gives K/ε under persistence.
+   * Binary search with task queries, on a fixed decoder, finds the first mistake.
+5. **Experiment E3:** the hidden-insight class, silent versus *catch-up* humans, who write a missing insight at any later step.
    * *Silent humans:* end-weighting costs 1.2–1.5× chained imitation.
-   * *Catch-up humans:* the last step needs 300–350 task queries at every n, end-weighting 510–800, chained imitation 1,640–3,370.
+   * *Catch-up humans,* 200 per n: the last step needs about 300 task queries at every n, end-weighting 540–650. Chained imitation needs 1,300–2,500, heavy-tailed.
 
 ## Layout
 
@@ -69,7 +87,9 @@ A research note on a question from Kaarel Hänni about **principled human imitat
 | `results/property_rules.out`, `results/property_rules_summary.json`, `results/property_rules_curves.json`, `results/property_rules.png`, `results/property_rules.time` | E2 outputs. |
 | `results/tables.md` | The tables quoted in the first note. |
 | `results/end_weighted.out`, `results/end_weighted_summary.json`, `results/end_weighted_curves.json`, `results/end_weighted_table.md`, `results/end_weighted.time` | E3 outputs, and the table quoted in the second note. |
-| `verification/referee-report.md`, `verification/response.md` | The referee's report on the first draft, and what was changed in response. |
+| `verification/referee-report.md`, `verification/response.md` | The referee's report on the first note, and what was changed in response. |
+| `verification/referee-report-without-a-check.md`, `verification/response-without-a-check.md` | The same for the second note. |
+| `verification/referee2_*.py`, `verification/referee2_*.out`, `verification/referee2_rerun/` | The second referee's checks, its counterexample computations, and its re-run of E3 from the reviewed draft. |
 | `verification/referee_*.py`, `verification/referee_*.out`, `verification/referee_rerun/` | The referee's own checks and outputs, and its re-run of both experiments from the first draft's code. |
 
 Nothing in this folder is confined to the working branch `claude/compassionate-edison-1o8ihs`.
@@ -90,7 +110,7 @@ python3 property_rules.py ../results > ../results/property_rules.out
 python3 make_figures.py ../results
 ```
 
-For the second note (about 2 minutes):
+For the second note (about 2 minutes, with 200 catch-up humans per n):
 
 ```bash
 python3 end_weighted.py ../results > ../results/end_weighted.out

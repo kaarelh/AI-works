@@ -19,10 +19,15 @@ one task query per run and no checks:
         for the first step at which the human would write the insight (catch-up
         class only, where "the human writes at (p, j, None)" is monotone in j).
 
-Posteriors are exact (the class prior; problems are independent). After every run we
-record task queries and the exact probability that the decoder's run on a fresh
-problem ends in the wrong state, and at the end also the probability that the run
-differs from the human's anywhere.
+Posteriors are exact (the class prior; problems are independent). The decoder never
+writes an insight value the data have not confirmed: for an unknown k_p each value has
+posterior mass at most eta/q per step, below that of "no insight" whenever
+eta (n-1)/n <= q/(q+1), so the code does not model q (any q >= 2 at eta = 1/2). After
+every run we record task queries and the exact probability that the decoder's run on a
+fresh problem ends in the wrong state, and at the end also the probability that the
+run differs from the human's anywhere. The run stops the first time that failure, for
+the true human, is at most eps: an oracle stopping rule, used to measure cost, not a
+protocol a learner could run.
 
 Usage: python3 end_weighted.py OUTDIR
 """
@@ -145,13 +150,16 @@ def main(outdir):
     os.makedirs(outdir, exist_ok=True)
     m, eta, eps = 100, 0.5, 0.02
     summary, curves = {}, {}
+    # Silent humans: 10 per n (chained imitation needs up to ~3*10^5 runs per human).
+    # Catch-up humans: 200 per n, because chained imitation's cost there is heavy-tailed.
+    humans = {"silent": 10, "catch-up": 200}
     for cls in ["silent", "catch-up"]:
         for n in [16, 64, 256, 1024]:
             for proto in ["CI", "EW", "LAST", "BIS"]:
                 if proto == "BIS" and cls == "silent":
                     continue
                 rows = []
-                for s in range(10):
+                for s in range(humans[cls]):
                     rng = np.random.default_rng(1000 * n + s)
                     trig = rng.random(m) < eta
                     t = np.where(trig, rng.integers(0, n, size=m), n)
@@ -162,10 +170,13 @@ def main(outdir):
                     if s == 0:
                         curves[f"{cls}_{proto}_n{n}"] = log[:: max(1, len(log) // 2000)] + [log[-1]]
                 key = f"{cls}_{proto}_n{n}"
+                tasks = np.array([r[0] for r in rows], dtype=float)
                 summary[key] = {
                     "class": cls, "protocol": proto, "n": n,
                     "reached": int(sum(r[1] <= eps for r in rows)), "humans": len(rows),
-                    "task_mean": float(np.mean([r[0] for r in rows])),
+                    "task_mean": float(tasks.mean()),
+                    "task_sem": float(tasks.std(ddof=1) / np.sqrt(len(tasks))),
+                    "task_median": float(np.median(tasks)),
                     "runs_mean": float(np.mean([r[4] for r in rows])),
                     "final_failure_mean": float(np.mean([r[1] for r in rows])),
                     "run_differs_mean": float(np.mean([r[2] for r in rows])),
