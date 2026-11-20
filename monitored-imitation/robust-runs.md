@@ -1,8 +1,11 @@
 # Which properties of the human's runs does chained imitation keep?
 
-*Chained imitation's run is the human's own process with the steps it gets wrong replaced: at every other step it does what the human would do from the state it is in. So it keeps every property of the human's runs that survives a small fraction of replaced steps. If a property survives any ρ fraction of replaced steps, chained imitation's runs lack it in at most K/ρ rounds in total, for every such property at once and with no factor n. "Is a nice run that solves the problem" is such a property for some tasks and not for others, and which is a question about the human and the task alone. The part of that question one can be sure of covers replaced steps that are junk or a harmless variation. The part one cannot be sure of is replaced steps placed exactly where the human knew something the data never showed.*
+*Chained imitation's run is the human's own process with the steps it gets wrong replaced by its guesses. At every other step it does what the human would do from the state it is in. So it keeps every property of the human's runs that survives those replaced steps.*
+* *If a property survives any ⌊ρn⌋ replaced steps, at most n⌊K⌋/(⌊ρn⌋+1) ≤ K/ρ rounds lose it, in expectation, for all such properties at once. That has no factor n for fixed ρ.*
+* *But no property of a run's outcome survives arbitrary replaced steps: replacing the last step always spoils it. So conditions on the human alone, with arbitrary replacements, give this only for counting properties such as "most steps are what the human would have done".*
+* *For "a nice run that solves the problem", a usable condition has to restrict the replacements to the guesses an imitator actually makes, and that brings the learner back in. I know of no such condition that I would be sure of for real research, because the obstacle, decisive knowledge that the human shows only rarely, plausibly exists there.*
 
-A third research note by Claude (Anthropic), following [`note.md`](note.md) and [`without-a-check.md`](without-a-check.md), in response to a further question from Kaarel Hänni. Draft; see the README for verification status. No human has checked the mathematics.
+A third research note by Claude (Anthropic), following [`note.md`](note.md) and [`without-a-check.md`](without-a-check.md), in response to a further question from Kaarel Hänni. Draft. One independent AI referee checked every statement and re-ran the experiment; its report and the response are in [`verification/`](verification/). No human has checked the mathematics.
 
 ## The question
 
@@ -12,136 +15,150 @@ The second note's condition (C_r) asks, relative to the learner, whether the hum
 
 ## Answers in brief
 
-1. **The scheme is chained imitation itself, read correctly.**
-   * The decoder's run is the human's process with some steps replaced. At a step where the decoder makes no mistake it does exactly what the human would do from the current state, even if that state already contains earlier replaced steps.
-   * So any property that survives a few replaced steps carries over from the human's runs to the decoder's, as long as the decoder makes few mistakes per run. Chained imitation's per-step guarantee is exactly a guarantee on mistakes per run.
+1. **The scheme is chained imitation itself, read correctly** (Observation, Theorem 1).
+   * *The observation.* The majority decoder's run is the human's process with the decoder's mistaken steps replaced by its guesses. At every other step it does exactly what the human would do from the current state, even if that state contains earlier replaced steps.
+   * *Robust properties are kept.* Call a property of runs ρ-robust if it survives any ⌊ρn⌋ replaced steps. Chained imitation's runs lose some ρ-robust property that the human's run has in at most n⌊K⌋/(⌊ρn⌋+1) ≤ K/ρ rounds in expectation, over any sequence of problems.
+   * *What it does not cover.* The bound has no factor n *for a fixed fraction ρ*. For a property that survives only a fixed *number* j of replaced steps, it is n·K/(j+1).
+   * *Which imitators it covers.* It holds for the majority decoder, and for the per-step sampler of the talk with a factor ln 2. It does not hold for an imitator that samples one hypothesis per run: that imitator's mistakes are correlated along the run.
 
-2. **Theorem 1: robust properties are kept, without a factor n.**
-   * *Definition.* A property Φ of runs is *ρ-robust* if, whenever the human's run on a problem has Φ, so does every run of the human's process on that problem in which at most ρn steps are replaced by arbitrary outputs, chosen adaptively.
-   * *Bound.* Chained imitation's runs lack some ρ-robust property that the human's run has in at most K/ρ rounds, in expectation over any sequence of problems. This holds simultaneously for all ρ-robust properties, and gives failure probability at most K/(ρN) after N queries on i.i.d. problems.
-   * *Graded version.* For a score that loses at most c/n per replaced step, the expected losses add up to at most c·K.
-   * *Fragile properties.* A property that one replaced step can destroy has ρ < 1/n, and the bound becomes the familiar n·K.
-   * *The per-step question.* Slide 30 asks whether 99.9% per step is enough. It is enough for exactly the properties that survive 0.1% of replaced steps.
+2. **The per-step question.** Slide 30 asks whether 99.9% per step is enough. It bounds the failure of every ρ-robust property by 0.1%/ρ: for example, at most 1% for properties that survive 10% of replaced steps.
 
-3. **E4: the same runs, judged by a fragile and by robust properties.** The human is E2's rule-based human, with 40 humans per n and target 2%.
-   * *Every step right* (fragile): chained imitation needs 810, 843 and 1,104 task queries at n = 16, 64 and 256.
-   * *At most 20% of steps wrong:* 38, 22 and 17.
-   * *At most 5% of steps wrong:* 142 and 93 at n = 64 and 256. At n = 16, 5% of a run is less than one step, so this is the fragile case.
-   * Robust properties get *cheaper* as runs get longer, because the fraction of wrong steps concentrates.
+3. **The limit: outcomes are never robust to arbitrary replacements** (Lemma 2).
+   * Replacing the last step by any output spoils any non-trivial property of the final state. Earlier steps can spoil it too: a careful human can be misled by plausible false content.
+   * So the properties that are robust whatever the replacements are essentially counting properties: "at most ⌊ρn⌋ steps differ from what the human would have done", which is the strongest one. Chained imitation keeps those, without the factor n.
+   * There is no condition about the human alone, with arbitrary replacements, under which "solves the problem" is robust.
 
-4. **The question is now about the human and the task, not the learner.** Whether "a nice run that solves the problem" is ρ-robust does not mention the imitator. It can be thought about directly ("would this project survive if 2% of its work packages were botched?"), and measured, by replacing a fraction of the work packages of real research projects.
+4. **What a usable condition must say.** The decoder's replacements are not arbitrary. They are its best guesses at what the human would do, placed where the data do not determine the human.
+   * *When robustness against those guesses is believable:*
+     * the guesses fall at effectively random places, as when the decoder lacks knowledge about content that turns up throughout the runs;
+     * or they are inconsequential idiosyncrasies: a different notation, another reasonable route.
+   * *When it fails:* the guesses fall at a decisive step where the human uses knowledge it shows rarely. That is the hidden-insight class of the first note, where the guess at the insight step is "no insight", and one such guess spoils the run.
+   * *It depends on the learner.* Any condition of this kind is relative to the learner, like (C_r), because it is about the decoder's guesses. I know of none I would be sure of for real research.
 
-5. **What one can be sure of, and what not.** The replaced steps of a decoder are of four kinds.
-   * *(a) Junk:* text that is visibly not work on the problem. I am confident that a careful human, given an append-only log with some slack in the budget, ignores it, and that each such step costs at most one step of the budget. Here *append-only* means steps add to a log and cannot delete, and *slack* means more steps than the human needs.
-   * *(b) Different but fine:* another reasonable approach or presentation. I am fairly confident that research processes survive a few of these; collaborators supply them all the time.
-   * *(c) Plausible but wrong:* a subtly false lemma, or a misleading result. Survived only if later work catches it or routes around it. Not something I am sure of; it depends on how much cross-checking the task decomposition has.
-   * *(d) A missing decisive step:* the step where the human would have had the key idea, replaced by ordinary work. Survived only if the human would still have the idea later. This is the hard class of the first note.
+5. **E4.** The rule-based human of E2, with 40 humans × 5 query seeds per n.
+   * *Theorem 1's own quantity.* The expected number of rounds whose run loses the property grows with n for the fragile property "every step right" (E4_FRAGILE_BAD). For "at most 20% of steps wrong" it stays flat (E4_ROBUST_BAD).
+   * *The fragile cost.* The number of task queries until the fragile failure probability reaches 2% does not grow with n here: the target requires every rule at every n tested, and the queried contents are uniform at every n.
+   * *Caveat.* E2 is the favourable case of item 4: its mistakes never change the run and are placed by the content sequence, not by the decoder.
 
-6. **The catch: where the replacements fall.**
-   * A decoder's replaced steps are not placed at random. They fall exactly where the human knows something that the data have not shown, which is where kinds (c) and (d) live.
-   * So the robustness needed is against *adversarially placed* replacements, and that is the part I cannot vouch for.
-   * Robustness to (a) and (b) is what I can be confident of, and it buys the theorem only for mistakes of those kinds. Those come from noise and superficial overfitting, not from missing knowledge.
-   * Missing knowledge that is rarely displayed and decisive remains the obstacle, as Theorem 3 of the first note shows. I know of no condition that rules it out and that I would be sure of for real research.
+6. **A Bayesian reading of "generic"** (Proposition 3). An imitator that samples one hypothesis per run produces runs with a property Φ exactly as often as the learner believes the human's run has Φ.
+   * Averaged over humans drawn from the prior, this matches the truth, for properties and problems that do not depend on the human.
+   * But that imitator does not have Theorem 1's guarantee. Neither imitator in this note has both.
 
-7. **Persistence helps here too.** A deficit that persists makes the decoder wrong at every later step. Its replaced steps are then dense, so a ρ-robust property survives only if the deficit starts in the last ρn steps. The rounds where it does not survive have many mistakes, and Theorem 1 charges them at most 1/ρ each. Only deficits that are decisive and silent, or that start late, produce failures with few mistakes.
-
-8. **A Bayesian reading of "generic"** (Proposition 2). Suppose the imitator samples one hypothesis from the posterior per run. Then the probability that its run has a property Φ equals the learner's own posterior probability that the human's run has Φ, for every Φ, given the data.
-   * So the imitator's run is nice exactly as often as the learner, from what it has seen, believes the human's run is nice.
-   * Averaged over humans drawn from the prior, this matches the true frequency.
-   * For a particular human it falls short exactly when the human's niceness depends on something the human has not shown.
+7. **Bottom line for the two questions.**
+   * *A scheme that keeps most properties.* Chained imitation, as it stands, keeps every property that survives its mistakes. It keeps every counting property without the factor n.
+   * *Conditions one can be sure of.* For counting properties, none are needed. For "a nice run that solves the problem" I cannot offer one: it has to say that the imitator's guesses fall where they do not matter. That fails exactly for decisive, rarely shown knowledge, which I expect real research sometimes has.
 
 ## 1. The observation
 
 Use the setting of [`note.md`](note.md), Section 1: a deterministic human P, runs of n steps, prior w with K(P) = log₂(1/w(P)), and the majority decoder G_D. Lemma 1 there says that at most ⌊K(P)⌋ task queries ever land on a mistake of the current decoder.
 
-A *replacement pattern* chooses, at each step of a run, adaptively, whether to replace the human's output there by an arbitrary output. A *corrupted run* is a run of the human's process under such a pattern: at unreplaced steps the next state is P(current state), and at replaced steps it is whatever the pattern chooses.
+A *corrupted run* from x₀ with j replaced steps is a sequence x₀, …, xₙ in which x_{k+1} ≠ P(x_k) for exactly j steps k; at those steps the content is arbitrary.
 
-**Observation.** The decoder's run x′₀, …, x′ₙ is the corrupted run whose replaced steps are exactly the decoder's mistake set M = {k : G_D(x′_k) ≠ P(x′_k)}. At every other step x′_{k+1} = G_D(x′_k) = P(x′_k).
+**Observation.** The decoder's run x′₀, …, x′ₙ is a corrupted run whose replaced steps are exactly the decoder's mistake set M = {k : G_D(x′_k) ≠ P(x′_k)}, with the decoder's guesses as their content. At every other step x′_{k+1} = P(x′_k).
 
-So the decoder's run is the human's process with |M| replaced steps. The first note's Proposition 2 used only that a failed run has |M| ≥ 1. That is the right count for properties that one replaced step can destroy, and too pessimistic for the rest.
+The first note's Proposition 2 used only that a failed run has |M| ≥ 1. That is the right count for properties that one replaced step can spoil, and too pessimistic for the rest.
 
 ## 2. Robust properties are kept
 
-**Definition.** A property Φ of runs (a predicate on a problem and a run) is *ρ-robust for P* if, for every problem x₀ whose human run has Φ, every corrupted run from x₀ with at most ⌊ρn⌋ replaced steps also has Φ. ρ-robust properties are closed under conjunction.
+**Definition.**
+* *ρ-robust.* A property Φ of runs is *ρ-robust for P* if, for every problem x₀ whose human run has Φ, every corrupted run from x₀ with at most ⌊ρn⌋ replaced steps also has Φ.
+* *Closure.* ρ-robust properties are closed under conjunctions and disjunctions.
+* *The strongest one.* The strongest ρ-robust property is Ψ_ρ = "at most ⌊ρn⌋ steps k have x_{k+1} ≠ P(x_k)". Every ρ-robust property that the human's run has is implied by it.
 
-**Theorem 1.** Run chained imitation: in each round t, on a problem x₀ᵗ chosen in any way, possibly by an adversary that has seen the past, run the current decoder and task-query a uniformly random step of its run. Let B_t be the event that the decoder's run on x₀ᵗ lacks some ρ-robust property that the human's run on x₀ᵗ has. Then
+**Theorem 1.** Run chained imitation with the majority decoder: in round t, a problem x₀ᵗ is chosen in any way, possibly by an adversary that has seen everything before round t but not round t's coin. The current decoder runs on it, and a uniformly random step of its run is task-queried. Let B_t be the event that the decoder's run loses some ρ-robust property that the human's run on x₀ᵗ has, equivalently |M_t| > ⌊ρn⌋. Then
 
-  E Σ_t 1[B_t] ≤ K(P)/ρ.
+  E Σ_t 1[B_t] ≤ n⌊K(P)⌋ / (⌊ρn⌋ + 1) ≤ K(P)/ρ.
 
-On i.i.d. problems, stopping at a uniformly random round among the first N gives a decoder that loses some ρ-robust property of the human's runs with expected probability at most K(P)/(ρN).
+The left-hand bound is n⌊K(P)⌋ for ρ < 1/n, the fragile case. On i.i.d. problems, stopping at a uniformly random round among the first N gives a decoder whose run loses some ρ-robust property of the human's with expected probability at most K(P)/(ρN).
 
-*Proof.* By the Observation, on B_t the decoder's run is a corrupted run with more than ρn replaced steps, so |M_t| > ρn. Given the past and x₀ᵗ, the query lands on a mistake with probability |M_t|/n > ρ. Lemma 1 bounds the expected number of queries landing on mistakes by K(P). Hence ρ·E Σ_t 1[B_t] ≤ K(P). The i.i.d. statement follows as in the first note's Proposition 2. ∎
+*Proof.* On B_t, |M_t| ≥ ⌊ρn⌋ + 1. Given the past and x₀ᵗ, the query lands on a mistake with probability |M_t|/n ≥ (⌊ρn⌋+1)/n. Lemma 1 bounds the expected number of queries that land on mistakes by ⌊K(P)⌋. The i.i.d. statement follows as in the first note's Proposition 2. ∎
 
-**Graded version.** Let S be a score of runs in [0, 1]. Suppose every corrupted run from x₀ with j replaced steps scores at least S(human run from x₀) − c·j/n. Then the expected sum over rounds of the score lost by the decoder's runs is at most c·K(P).
+**Which imitators.**
+* *The per-step sampler.* For the talk's per-step sampler, Theorem 1 holds with an extra factor ln 2: its expected number of mistakes at a state is 1 − ξ(P(x) | x) ≤ ln 2 · log₂(1/ξ(P(x) | x)).
+* *The per-run sampler fails.* It does not hold for an imitator that samples one hypothesis from the posterior per run. The referee's counterexample has K(P) = 1 bit and about 0.37·n bad rounds: once a rare hypothesis is drawn, its mistakes fill the whole run, and catching it removes only its own small mass ([`verification/referee3_theory_checks.out`](verification/referee3_theory_checks.out), §2).
+
+**Graded version.** Let S be a score of runs. Suppose every corrupted run from x₀ with j replaced steps scores at least S(human run from x₀) − c·j/n. Then the expected sum over rounds of the score lost by the decoder's runs is at most c·⌊K(P)⌋.
 
 *Proof.* The loss in round t is at most c·|M_t|/n, which is c times the probability that the query lands on a mistake. ∎
 
-**Remarks.**
-* *Robust over all replacements.* Robustness is required against every replacement pattern, because Theorem 1 holds for every decoder. A weaker robustness, against the replacements a particular learner can make, suffices for that learner; but describing those replacements is the hard part (Section 3).
-* *Fragile properties.* For a property that one replaced step can destroy, ρ must be below 1/n and the bound is n·K(P). On the hidden-insight class, "ends with the right insight" is such a property: replacing the single step where the insight comes destroys it.
-* *Relation to the second note.* The second note's condition (C_r) controls *where* a failed run's mistakes are. Robustness controls *how many* there must be. Robustness is a property of the human and the task alone, and it needs no change to the protocol.
+**The per-step question.** A per-step error rate e means E|M|/n = e. By Markov's inequality the run loses a ρ-robust property with probability at most e·n/(⌊ρn⌋+1) ≤ e/ρ. An error rate equal to ρ guarantees nothing: with n = 1000, |M| = 2 half the time and 0 otherwise gives e = 0.001 and fails half the runs at ρ = 0.001.
 
-## 3. Is "a nice run" robust? What one can be sure of
+**"No factor n" needs a fixed fraction.** Theorem 1 removes the factor n for properties that survive a fixed *fraction* of replaced steps as n grows. Whether the number of botched steps a project can survive grows in proportion to its length is part of the hypothesis, not a consequence.
 
-Whether Φ = "a nice run that solves the problem" is ρ-robust, and for what ρ, is a question about the human's process: would the project survive if a ρ fraction of its steps, chosen by an adversary, were replaced? The replaced steps of a decoder are of four kinds:
+## 3. What is robust, and what is not
 
-| kind of replaced step | example | survived by a careful human? |
+**Lemma 2 (outcomes are fragile under arbitrary replacements).** Let Φ depend on the run only through its final state, by a test that some final state fails, and let the human's run have Φ on some problem. Then Φ is not ρ-robust for any ρ ≥ 1/n.
+
+*Proof.* Replace the last step by a final state that fails the test. ∎
+
+The same is true of any property that a late step can spoil, and an append-only log does not change this: a replaced late step can append a plausible wrong conclusion. Earlier steps can spoil outcomes too. A replaced step can contain plausible false content, such as a fake lemma or a misleading result, and careful humans can be misled by it. So, against arbitrary replacements:
+* *What is robust:* counting properties (Ψ_ρ and what it implies), and properties that only grow as the log grows, such as "a correct solution appears somewhere in the log". Those are useful only to a reader who can tell good entries from bad ones, which is a check.
+* *What is not:* "a nice run that solves the problem", in the ordinary sense, is never robust against arbitrary replacements.
+
+**The decoder's replacements are not arbitrary.** By the Observation, they are the decoder's guesses, at the states where the data do not determine the human. A condition restricted to such replacements is what one would actually need. Its content depends on where the guesses fall and what they are:
+
+| what the decoder's guess is | example | survived? |
 |---|---|---|
-| (a) junk | text that is visibly not work on the problem | yes, given an append-only log and slack in the budget: ignored, at the cost of one step |
-| (b) different but fine | another reasonable approach, other notation | very likely: collaborators supply such steps all the time |
-| (c) plausible but wrong | a subtly false lemma, a misleading result | only if later work catches it or routes around it |
-| (d) missing decisive step | the step of the key idea, replaced by ordinary work | only if the human would still have the idea later |
+| an inconsequential idiosyncrasy | another notation, another reasonable route, at a step where nothing hangs on it | yes; projects survive this all the time |
+| a plausible wrong result | a subtly false lemma the human would build on | only if later work catches it |
+| a missing decisive step | ordinary work at the step where the human would have had the key idea | only if the human would still have it later |
 
-**What I am confident of.**
-* With a scaffold that appends to a log (nothing can be deleted) and gives the human more steps than it needs, (a) is survived: a human ignores visible junk.
-* So is (b), for a ρ well below the slack.
+Some remarks on this table.
+* *No junk.* In the exact-Bayes model every mistake comes from the data not determining the human at that state. The majority decoder outputs the most probable continuation, so visible junk is its least likely kind of guess.
+* *Placement matters as much as kind.* An idiosyncrasy at the decisive step is a missing decisive step.
+* *Random placement.* If the guesses fall at effectively random places, as when the decoder lacks knowledge about content that turns up throughout the runs (E2, E4), robustness against randomly placed guesses is enough. That is much more believable for real projects than robustness against adversarial placement.
+* *The decisive case.* If the guesses fall where the human uses decisive knowledge it rarely shows, robustness fails. The hidden-insight class of the first note is the clean example, and its lower bound shows that no task-only protocol avoids the cost there in the worst case.
 
-**What I am not confident of.** The difficulty is not the kinds of replacement but where they fall.
-* Theorem 1 needs robustness against adversarially placed replacements, because a decoder's mistakes fall exactly where the human knows something the data have not shown. That is where (c) and (d) live: a wrong lemma at the one place it matters, a missing idea at the step where it would have come.
-* Robustness against *randomly* placed replacements of any kind is much more plausible for research projects, but it is not what Theorem 1 uses.
-* A decoder's mistakes are randomly placed only when they come from noise or superficial overfitting, not from missing knowledge.
+**What one can be sure of.**
+* Real projects survive occasional inconsequential idiosyncrasies at random places.
+* Whether real research contains decisive knowledge that a human shows only at a few steps, so that an imitator's guesses would fall there, I cannot rule out, and I expect it sometimes does.
 
-**The remaining obstacle.** Knowledge that is decisive for a run and rarely displayed is what makes the first note's lower bound work. I do not know a condition that excludes it which I would be sure of for real research.
+A condition that excludes it would be about the learner's guesses, as (C_r) is, and I do not have one I would vouch for.
 
-**Persistence, again.** If the human, working on a state that lacks something it would have done by now, does it (the catch-up humans of the second note), then a missing decisive step makes the decoder wrong at every later step: dense replacements. Those rounds have |M_t| ≥ ρn unless the deficit starts in the last ρn steps, and Theorem 1 charges them at most 1/ρ each. Only deficits that are decisive and silent, or late, produce failures with few mistakes.
-
-**Measuring it.** Unlike (C_r), robustness can be measured on people without any imitator. Take research projects done in steps; replace a fraction of the steps by another competent person's work, or by deliberately subtly wrong work, or by blanks; let the original team continue; compare outcomes. Which kinds and fractions a project survives is exactly what Theorem 1 needs.
+**Persistence.** For any property, a failure caused by a deficit that persists from step s on has |M| ≥ n − s. So a uniform query catches it with probability at least (n − s)/n, and by the proof of Theorem 1 at most K/ρ rounds in expectation fail through deficits that start before step (1 − ρ)n. Only failures from deficits that are silent, or that start late, can have few mistakes. For the catch-up humans of the second note this is robustness against omissions only, with a problem-dependent ρ: the restricted, learner-relative kind.
 
 ## 4. A Bayesian reading of "generic"
 
-**Proposition 2.** Let the imitator, for a problem x₀, sample one hypothesis ν from the posterior ξ_D and output ν's run. Then for every property Φ and every data set D,
+**Proposition 3.** Let the imitator, for a problem x₀, sample one hypothesis ν from the posterior w(· | H_D) and output ν's run. Then for every property Φ and every data set D,
 
-  Pr[the imitator's run on x₀ has Φ | D] = ξ_D({ν : ν's run on x₀ has Φ}),
+  Pr[the imitator's run on x₀ has Φ | D] = w({ν : ν's run on x₀ has Φ} | H_D),
 
-the learner's posterior probability that the human's run on x₀ has Φ. If the human is drawn from the prior w and the data are its answers to any query rule, then averaged over humans the imitator's runs have Φ exactly as often as the human's.
+the learner's posterior probability that the human's run on x₀ has Φ.
 
-*Proof.* The first identity is the definition of posterior sampling. For the second, given the data the human's parameter and the sampled hypothesis have the same law, the posterior. ∎
+Suppose further that the human is drawn from the normalised prior w, and that the data are its answers to any query rule, even an adaptive one. Then, averaged over humans, the imitator's runs have Φ exactly as often as the human's, for every property Φ and test problem x₀ fixed independently of the human.
 
-So the imitator's run is nice exactly as often as the learner, from what it has seen, believes the human's run is nice. "Niceness is generic" in this reading means: niceness is implied by what the human has displayed, so that most hypotheses consistent with the data are nice. For a particular human, the imitator falls short exactly when the human's niceness rests on something it has not displayed: rarely shown, decisive knowledge, again. Proposition 2 adds no protection against that; it only says the imitator is no less nice than the learner's own beliefs about the human.
+*Proof.* The first identity is the definition. For the second, the query rule's probabilities do not depend on the hypothesis, so given the data the human and the sampled hypothesis have the same law, the posterior. ∎
+
+**What this says.**
+* The imitator's run is nice exactly as often as the learner, from what it has seen, believes the human's run is nice. This is the Bayesian version of "niceness is generic".
+* It does not apply to properties that mention the human itself, such as "the run is the human's run", for which the imitator falls short.
+* It is a statement about averages over humans. The per-run sampler it concerns does not satisfy Theorem 1 (Section 2), so neither imitator in this note has both guarantees.
 
 ## 5. Experiment E4
 
-**Setup.**
-* *Code and outputs.* [`code/robust_runs.py`](code/robust_runs.py); outputs in [`results/robust_runs_summary.json`](results/robust_runs_summary.json) and [`results/robust_runs.out`](results/robust_runs.out).
-* *The human.* The rule-based human of E2 in the first note: two rules of each size 1, …, 9 on a 12-bit content. No check is used.
-* *Training.* Chained imitation, one task query at a random step per run, with 40 humans per n.
-* *Measurement.* After each run, the exact failure probability over all 4,096 problems under three properties of the same runs: every step right (ρ = 0), at most 5% of steps wrong (ρ = 0.05), and at most 20% wrong (ρ = 0.2).
-* *Stopping.* Each count is the number of task queries until that failure probability first reaches 2%. This is an oracle stopping rule that measures cost.
-* *The properties are the simplest robust ones.* "At most ρn steps differ from the human's" is ρ-robust by definition, so E4 shows the mechanism of Theorem 1, not that any particular notion of niceness is robust.
+Code: [`code/robust_runs.py`](code/robust_runs.py); outputs: [`results/robust_runs_summary.json`](results/robust_runs_summary.json), [`results/robust_runs.out`](results/robust_runs.out).
 
-| property | n = 16 | n = 64 | n = 256 |
-|---|---|---|---|
-| every step right | 810 ± 67 (median 703) | 843 ± 90 (649) | 1,104 ± 106 (995) |
-| at most 5% of steps wrong | 810 ± 67 (703) (⌊0.05·16⌋ = 0: same as above) | 142 ± 11 (146) | 93 ± 8 (82) |
-| at most 20% of steps wrong | 38 ± 3 (35) | 22 ± 2 (21) | 17 ± 1 (15) |
+**Setup.**
+* *The human* is E2's: two rules of each size 1, …, 9 on a 12-bit content. The same 40 humans are used at every n, each with 5 query seeds.
+* *Training.* Chained imitation with one uniform-step query per run and no check, until every rule is known.
+* *Measurement.* After each run, the exact failure probability over all 4,096 problems under Ψ₀ ("every step right"), Ψ_0.05 and Ψ_0.2. These are the strongest ρ-robust properties, so each row measures all ρ-robust properties at once.
+* *Two quantities:*
+  * Theorem 1's own: the expected number of rounds, on i.i.d. problems, whose run loses the property;
+  * the number of task queries until the failure probability first reaches 2%, an oracle stopping rule.
+* *Errors* are standard errors over the 200 runs.
+
+E4_TABLE
 
 **What the numbers show.**
-* *The fragile property gets more expensive with n.* The rarest rules fire at about one step per run, so a failed run has a single mistake.
-* *The robust properties get cheaper with n.* The fraction of a run's steps that are wrong concentrates around the decoder's per-step error rate. Once that rate is below ρ, almost every run keeps the property.
-* *Caveat: E2's mistakes are favourable.* They are missing tokens, not misleading content. And E2's rules are reused across problems, so its rare knowledge is not decisive in the way the hidden insights of the first note are. On that class, "ends with the right insight" is fragile, and no ρ > 0 helps.
+* *The fragile property gets worse with n.* Its expected number of bad rounds grows with n: the rarest rules fire in about one step of a run in which they fire at all, so such a run has a single mistake.
+* *The robust properties do not.* Their bad rounds stay flat or fall. Their first-passage cost falls with n, because the fraction of a run's wrong steps concentrates around the decoder's per-step error rate.
+* *The fragile first-passage cost is about the same at every n.* At every n tested the 2% target needs all 18 rules, and the queried contents are uniform at every n. The referee computed its exact expectation, 851.8 queries.
+* *K/ρ is loose here.* K(P) is about 247 bits under E2's prior, but each mistake query reveals a whole rule. So about 15 queries ever land on mistakes, and K/ρ overstates the bad rounds by about a factor 100. E4 does not test the size of the bound.
+* *E2 is the favourable case.* Mistakes never change the content sequence, and they are placed by it, not by the decoder: the random-placement regime of Section 3.
 
 ## 6. Open
 
-1. **Robustness against restricted replacements.** Which replacements a given learner can actually make? If they could be shown to be "human-like" (kinds (a) and (b)), robustness against those alone would suffice, and that is more believable. The KWIK lower bounds suggest this cannot be guaranteed cheaply in general.
-2. **Scaffolds that make niceness robust against adversarial placement.** Independent re-derivation of key results and comparison of the two is the natural candidate. It defeats placement only if the imitator's errors in the two derivations are not the same, and errors from missing knowledge usually are.
-3. **The empirical question of Section 3:** how robust real research projects are to each kind of replaced step, at what fractions, and with what placement.
+1. **A learner-relative condition for outcomes that one would believe.** Robustness against the decoder's guesses, at the places it makes them, in terms one can check against how research is done.
+2. **Random versus decisive placement.** When are an imitator's mistakes effectively randomly placed? A natural guess is "when the human's knowledge is used across many problems and steps". Making that precise, in the spirit of the frequency of display, is open.
+3. **An imitator with both guarantees.** Is there one with Theorem 1's bound and Proposition 3's identity?
+4. **The empirical question.** How robust real research projects are to inconsequential and to wrong steps at random places, and at decisive places.

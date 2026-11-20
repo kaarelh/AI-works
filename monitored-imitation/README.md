@@ -4,7 +4,10 @@ A research note on a question from Kaarel Hänni about **principled human imitat
 
 * **The question.** The talk's best protocol, *chained imitation*, does Solomonoff function induction on a human's input–output pairs, chains the learned map as in task decomposition, and queries the human on the distribution this induces ("train on test"). Find a protocol more likely to work, for a human that is a fixed deterministic program, under assumptions likely to be true of humans. Ideally, show that O(K(human)) reasonable queries suffice.
 * **The first note:** [`note.md`](note.md): definitions, theorems, proofs and two experiments. Its protocol needs the human to *check* states.
-* **The third note:** [`robust-runs.md`](robust-runs.md): which properties of the human's runs chained imitation keeps. Its runs are the human's process with the wrong steps replaced, so they keep every property that survives a small fraction of replaced steps, with no factor n. It has experiment E4.
+* **The third note:** [`robust-runs.md`](robust-runs.md): which properties of the human's runs chained imitation keeps.
+  * Its runs are the human's process with the wrong steps replaced, so they keep every property that survives the replacements.
+  * Under arbitrary replacements that covers counting properties, with no factor n, but not outcomes.
+  * It has experiment E4.
 * **The second note:** [`without-a-check.md`](without-a-check.md): a follow-up question, whether there is a better protocol than chained imitation without such a check. It has a theorem on where in a run to ask, the end-weighted protocol, and experiment E3.
 * **Author:** Claude (Anthropic), in response to the question.
 * **Status:** drafts. Each note was checked by one independent AI referee, who checked every numbered statement and re-ran the experiments ([`verification/`](verification/)). No human has checked the mathematics.
@@ -17,6 +20,14 @@ A research note on a question from Kaarel Hänni about **principled human imitat
   * a missing condition in Proposition 4;
   * overclaims;
   * too few humans for a heavy-tailed column of E3.
+
+  All have been corrected.
+* **The third note's referee** ([`verification/referee-report-robust-runs.md`](verification/referee-report-robust-runs.md), [`verification/response-robust-runs.md`](verification/response-robust-runs.md)) found Sections 1–2 correct for the majority decoder. It found:
+  * that no outcome property is robust to arbitrary replacements, which changed the note's conclusion;
+  * that the main theorem fails for the per-run sampler;
+  * a wrong statement about the per-step question;
+  * an inverted conditional;
+  * a seed artefact in E4.
 
   All have been corrected.
 
@@ -76,18 +87,14 @@ A research note on a question from Kaarel Hänni about **principled human imitat
 
 ## Answers in brief: the third note
 
-1. **Chained imitation keeps robust properties.** Its runs are runs of the human's process with the mistaken steps replaced. If a property of the human's runs survives any ρ fraction of replaced steps, chained imitation's runs lack it in at most K/ρ rounds in total: no factor n, and for all such properties at once.
-2. **The per-step question.** "Is 99.9% per step enough?" Yes, for properties that survive 0.1% of replaced steps.
-3. **E4: the same runs of E2's human, judged three ways.**
-   * *Every step right:* 810–1,104 task queries, growing with n.
-   * *At most 20% of steps wrong:* 38 → 17, *shrinking* with n.
-4. **Whether "a nice run" is robust is a question about the human and the task alone, and is measurable.** Split by kind of replaced step:
-   * *Junk:* I am confident a careful human survives it, with an append-only log and slack.
-   * *Different but fine work:* very likely survived.
-   * *Plausible but wrong work, or a missing decisive idea:* not sure.
-
-   The catch: an imitator's mistakes fall exactly where the human knows something unshown, so the robustness needed is against adversarially placed replacements.
-5. **Generic, in the Bayesian sense.** An imitator that samples one hypothesis per run produces nice runs exactly as often as the learner believes the human would.
+1. **Chained imitation keeps every property that survives its mistakes.** Its runs are the human's process with the mistaken steps replaced by the decoder's guesses. If a property survives any ⌊ρn⌋ replaced steps, at most n⌊K⌋/(⌊ρn⌋+1) ≤ K/ρ rounds lose it, in expectation. That is no factor n for a fixed fraction ρ. This holds for the majority decoder, not for an imitator that samples one hypothesis per run.
+2. **But outcomes are never robust to arbitrary replacements.** Replacing the last step spoils any property of the final state, and earlier misleading content can too. So a condition on the human alone gives the result only for counting properties, such as "at most ρn steps differ from the human's".
+3. **For "a nice run that solves the problem",** a condition has to restrict the replacements to the guesses an imitator actually makes, which brings the learner back in.
+   * It is believable when the guesses are inconsequential or fall at effectively random places.
+   * It fails for decisive, rarely shown knowledge, the hidden-insight case.
+   * I know of no such condition I would vouch for.
+4. **E4.** On E2's human, the expected number of bad rounds grows with n for "every step right" and stays flat for "at most 20% of steps wrong". This is the favourable, random-placement regime.
+5. **Generic, in the Bayesian sense.** An imitator that samples one hypothesis per run produces nice runs exactly as often as the learner believes the human would. That imitator lacks the first guarantee.
 
 ## Layout
 
@@ -108,6 +115,8 @@ A research note on a question from Kaarel Hänni about **principled human imitat
 | `results/end_weighted.out`, `results/end_weighted_summary.json`, `results/end_weighted_curves.json`, `results/end_weighted_table.md`, `results/end_weighted.time` | E3 outputs, and the table quoted in the second note. |
 | `verification/referee-report.md`, `verification/response.md` | The referee's report on the first note, and what was changed in response. |
 | `verification/referee-report-without-a-check.md`, `verification/response-without-a-check.md` | The same for the second note. |
+| `verification/referee-report-robust-runs.md`, `verification/response-robust-runs.md` | The same for the third note. |
+| `verification/referee3_*.py`, `verification/referee3_*.out`, `verification/referee3_*.json`, `verification/referee3_rerun/` | The third referee's checks, its counterexample for the per-run sampler, and its re-run of E4 from the reviewed draft. |
 | `verification/referee2_*.py`, `verification/referee2_*.out`, `verification/referee2_rerun/` | The second referee's checks, its counterexample computations, and its re-run of E3 from the reviewed draft. |
 | `verification/referee_*.py`, `verification/referee_*.out`, `verification/referee_rerun/` | The referee's own checks and outputs, and its re-run of both experiments from the first draft's code. |
 
@@ -129,7 +138,7 @@ python3 property_rules.py ../results > ../results/property_rules.out
 python3 make_figures.py ../results
 ```
 
-For the third note (about 2 minutes):
+For the third note (about 15 minutes):
 
 ```bash
 python3 robust_runs.py ../results > ../results/robust_runs.out
