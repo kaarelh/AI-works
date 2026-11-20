@@ -3,7 +3,13 @@
 A research note on a question from Kaarel Hänni about **principled human imitation** (section 3.2 of his talk *Simpler versions of the alignment problem we still can't solve*, MISO, 16 November 2026).
 
 * **The question.** The talk's best protocol, *chained imitation*, does Solomonoff function induction on a human's input–output pairs, chains the learned map as in task decomposition, and queries the human on the distribution this induces ("train on test"). Find a protocol more likely to work, for a human that is a fixed deterministic program, under assumptions likely to be true of humans. Ideally, show that O(K(human)) reasonable queries suffice.
-* **The fourth note, the answer to the latest question:** [`slack-imitation.md`](slack-imitation.md). It gives the scheme I am most sure would work with a deterministic human, a proof that it works if the human has *bounded setback*, the case that humans have it, and experiment E6. It synthesizes the earlier notes and five research threads in [`research/`](research/) (working branch only).
+* **The fourth note, the answer to the latest question:** [`slack-imitation.md`](slack-imitation.md), version 2. It gives the scheme I am most sure would work with a deterministic human, a proof that it works if the human has *bounded setback*, the case that humans have it, and experiment E6. It synthesizes the earlier notes and five research threads in [`research/`](research/) (working branch only).
+* **The fourth note's referee and red team** ([`verification/referee-report-slack-imitation.md`](verification/referee-report-slack-imitation.md), [`research/threadE-redteam.md`](research/threadE-redteam.md), [`verification/response-slack-imitation.md`](verification/response-slack-imitation.md)). Both found the main theorems correct, and the referee reproduced E6 exactly. The referee found:
+  * three errors in secondary claims: the read-out premise, "omissions are uncertain", and a factor 1/(1−ρ) in the fallback;
+  * two factual errors about E6;
+  * overclaims.
+
+  The red team found a misreading of the decoder's behaviour, which lowered my confidence numbers, and proposed ask-before-committing, now part of the scheme. All have been addressed.
 * **The first note:** [`note.md`](note.md): definitions, theorems, proofs and two experiments. Its protocol needs the human to *check* states.
 * **The third note:** [`robust-runs.md`](robust-runs.md): which properties of the human's runs chained imitation keeps.
   * Its runs are the human's process with the wrong steps replaced, so they keep every property that survives the replacements.
@@ -34,22 +40,30 @@ A research note on a question from Kaarel Hänni about **principled human imitat
 
 ## Answers in brief: the fourth note
 
-1. **The scheme, slack imitation.** Chained imitation with an append-only notebook, a hidden clock, more steps than the human needs (n = n₀ + σ, σ = ρn), and optionally a "nothing bizarre" check. Each run gets one task query at a uniformly random step.
-2. **The theorem.** Assume *bounded setback D*: an entry the human would not have written costs it at most D extra steps to finish, and part of its own next step costs it none. Then:
-   * the expected number of failed runs is at most (D+1)·K/ρ, over any sequence of problems;
-   * on i.i.d. problems, O((D+1)·K·log(K/δ)/(ρε)) task queries give failure probability at most ε;
-   * chained imitation's factor n is gone.
-3. **Why.** With slack, a run fails only if it has at least (σ+1)/(D+1) wrong steps. A uniform query finds one with probability at least ρ/(D+1), and each costs the posterior a bit.
-4. **The case for humans.**
-   * Omissions, the imitator's typical mistake, are safe: an empty step is exactly a delay, by determinism and the hidden clock, and partial steps very plausibly are too.
-   * The weak link is plausible wrong content that the human builds on and never revisits ("fooled").
-   * The first note's lower bound is attained by humans who never recover a missed insight, so some assumption of this kind is necessary.
-5. **E6.** The task queries until at most 2% of runs fail, for n = 16 → 256:
-   * bounded-setback humans with slack: about 200 at every n;
-   * without slack: 6,000 → 97,000;
+1. **The scheme: slack imitation with ask-before-committing.**
+   * *The scaffold.* Chained imitation with an append-only notebook, a hidden clock, and more steps than the human needs (n = n₀ + σ, σ = ρn).
+   * *Ask before committing.* During a run, ask the human for any step where the imitator's top output has posterior mass below 1 − α; this is the question's first optimization, made safe by slack.
+   * *After the run,* one task query at a uniformly random step. An optional "nothing bizarre" check catches junk.
+   * *With a verifier of results,* rerun each problem until its result is verified.
+2. **The theorems.** The assumption is *bounded setback D* at the imitator's confident mistakes: an entry the human would not have written costs it at most D extra steps, and part of its own next step costs it nothing. Then:
+   * the expected number of failed runs is at most min{n, (D+1)n/(σ+1)}·K ≤ (D+1)K/ρ, over any sequence of problems;
+   * asking costs at most about 0.69K/α queries over the whole lifetime;
+   * on i.i.d. problems, O((D+1)·K·log(K/δ)/(ρε)) task queries suffice;
+   * with a verifier, no failed run is ever output, and at most K runs are rejected.
+3. **Why.** With slack, a run fails only if it has at least (σ+1)/(D+1) wrong steps, so a uniform query finds one with probability at least ρ/(D+1). Asking removes the steps the imitator is unsure of.
+4. **The case for humans, after a red team (thread E).** The axis that matters is confidence:
+   * unconfident steps are asked;
+   * confident omissions need the human to recover the idea later, which fails for by-product insights and hedges;
+   * confident commissions need the human not to be fooled for long. The worst case is a confident negative result, "tried A; it fails", where A is what would have worked.
+
+   My graded probabilities, for theoretical work: 70% for omissions, and 55% for commissions (with asking). I put 50% on a 5× gain over chained imitation for a real human. With a verifier, all of this affects only cost, never correctness: that is the version I am most sure of.
+5. **E6, on the same humans,** in task queries until at most 2% of runs fail, for n₀ = 8 → 128:
+   * chained imitation: 2,900 → 51,000 for bounded-setback humans;
+   * slack imitation: about 200;
    * fooled humans: 1,600 → 4,300;
-   * silent humans: 4,500 → 93,000;
-   * with a verifier of the result (Proposition 4), bounded-setback humans need about 14 task queries for all 100 problems at every n, and no failed run is ever output.
+   * silent humans: slack doubles the cost.
+
+   With a verifier, bounded-setback humans need about 14 task queries for all 100 problems. Asking (α = 0.3) makes fooled humans flat, at 240–360.
 
 ## Answers in brief: the first note
 
@@ -129,11 +143,15 @@ A research note on a question from Kaarel Hänni about **principled human imitat
 | `code/robust_runs.py` | E4: chained imitation on E2's human, judged by fragile and robust properties. |
 | `code/make_figures.py` | Tables and figures from the saved outputs, and the novelty-firing curve. |
 | `slack-imitation.md` | The fourth note: slack imitation, the scheme I am most sure of. |
-| `code/slack_imitation.py` | E6: slack imitation on noticing, misled, fooled and silent humans, exact posteriors; protocols CI with and without slack, LAST, MIX. |
-| `code/setback_check.py` | Brute-force check of the fourth note's Lemma S on random append-only humans. |
+| `code/slack_imitation.py` | E6: slack imitation on noticing, misled, fooled and silent humans, exact posteriors; protocols CI with and without slack, LAST, MIX, SI-V and SI-V-ABC. |
+| `code/setback_check.py` | An arithmetic sanity check of the bookkeeping in the fourth note's Lemma S, on random append-only humans. It cannot test bounded setback. |
 | `results/slack_imitation.out`, `results/slack_imitation_summary.json`, `results/slack_imitation_mix.out`, `results/slack_imitation_mix.json`, `results/slack_imitation_table.md`, `results/slack_imitation.time` | E6 outputs, and the table quoted in the fourth note. |
 | `results/slack_imitation_verifier.out`, `results/slack_imitation_verifier.json` | E6 with a verifier (Protocol SI-V). |
-| `results/setback_check.out` | Output of the brute-force check. |
+| `results/slack_imitation_verifier_abc.out`, `results/slack_imitation_verifier_abc.json`, `results/slack_imitation_verifier_abc.time` | E6 with a verifier and ask-before-committing (SI-V-ABC, α = 0.1 and 0.3). |
+| `results/slack_imitation_same.out`, `results/slack_imitation_same.json`, `results/slack_imitation_same.time` | E6: chained imitation without slack on the same humans as the slack cells. |
+| `results/setback_check.out` | Output of the arithmetic check. |
+| `verification/referee-report-slack-imitation.md`, `verification/response-slack-imitation.md` | Referee 4's report on the fourth note, and the response to it and to the red team. |
+| `verification/referee4_*.py`, `verification/referee4_*.out`, `verification/referee4_rerun/` | Referee 4's re-run of E6, its run-level setback check, and its same-humans comparison. |
 | `results/hidden_insights_summary.json`, `results/hidden_insights_curves.json`, `results/hidden_insights.png` | E1 outputs. |
 | `results/property_rules.out`, `results/property_rules_summary.json`, `results/property_rules_curves.json`, `results/property_rules.png`, `results/property_rules.time` | E2 outputs. |
 | `results/tables.md` | The tables quoted in the first note. |
@@ -176,7 +194,7 @@ For the second note (about 2 minutes, with 200 catch-up humans per n):
 python3 end_weighted.py ../results > ../results/end_weighted.out
 ```
 
-For the fourth note (on 4 cores, E6 takes about 25 minutes and its MIX cells about 7; the table and the check about a second):
+For the fourth note (on 4 cores: E6 about 25 minutes, MIX about 7, same humans about 7, ask-before-committing about 3, the verifier under a minute, the table and the check about a second):
 
 ```bash
 python3 slack_imitation.py ../results > ../results/slack_imitation.out
@@ -184,6 +202,14 @@ python3 slack_imitation.py ../results > ../results/slack_imitation.out
 
 ```bash
 python3 slack_imitation.py ../results --mix > ../results/slack_imitation_mix.out
+```
+
+```bash
+python3 slack_imitation.py ../results --same > ../results/slack_imitation_same.out
+```
+
+```bash
+python3 slack_imitation.py ../results --abc > ../results/slack_imitation_verifier_abc.out
 ```
 
 ```bash

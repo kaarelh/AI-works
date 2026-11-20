@@ -19,7 +19,7 @@ The human's own run writes k_p at step t_p and has n0 - t_p - 1 units at step n0
 n = n0 + sigma steps *succeeds* if its final draft builds on k_p with at least that many units.
 
 Every hypothesis knows the human's kind; the unknowns are (t_p, k_p), with the prior above.
-The imitator is the majority decoder of the exact posterior (ties keep the draft unchanged,
+The imitator is the majority decoder of the exact posterior (ties continue the current notebook,
 then go to "write nothing", then to the value 1). One task query per round: a uniformly
 random problem, a step chosen by the protocol, and the human's answer at the decoder's draft
 there. We stop the first time the fraction of failing problems is at most EPS (an oracle
@@ -29,11 +29,13 @@ Bounded setback (slack-imitation.md): the human's remaining time to success rise
 when a wrong value is appended, and by 0 when a step is left out, for the persistent kinds.
 The silent and fooled kinds have unbounded setback.
 
-Usage: python3 slack_imitation.py OUTDIR [--quick] [--mix] [--table] [--verifier]
+Usage: python3 slack_imitation.py OUTDIR [--quick] [--mix] [--table] [--verifier] [--abc] [--same]
   default: CI without slack, CI with slack n/2 (slack imitation) and LAST with slack n/2;
   --mix:   MIX (last step with probability 1/2, else uniform) with slack n/2;
   --table: write results/slack_imitation_table.md from the saved summaries;
-  --verifier: Protocol SI-V of Proposition 4 (rerun each problem until it succeeds), slack n/2.
+  --verifier: Protocol SI-V of Proposition 4 (rerun each problem until it succeeds), slack n/2;
+  --abc:   SI-V with ask-before-committing at alpha = 0.1 and 0.3 (Proposition 5), slack n/2;
+  --same:  chained imitation without slack on the same humans as the slack cells (n = n0 = n/2).
 """
 
 import json
@@ -88,7 +90,7 @@ class Problem:
         for j in range(n):
             out = self.outputs(j, a, u, t, k)
             mass = np.array([w[out == c].sum() for c in range(4)])
-            # ties: keep the draft (INC if a != 0, NOTHING if a == 0), then NOTHING, then 1
+            # ties: continue the current notebook (INC if a != 0, NOTHING if a == 0), then NOTHING, then 1
             order = [INC, NOTHING, SET1, SET2] if a != 0 else [NOTHING, SET1, SET2, INC]
             best = order[0]
             for c in order[1:]:
@@ -196,6 +198,80 @@ def one_human_verifier(args):
     return queries, rejected, worst
 
 
+def run_abc(pr, tp, kp, alpha):
+    """Ask before committing (thread E's SI-ABC): build the run step by step; wherever the top
+    output's posterior mass is below 1 - alpha, ask the human for that step, add the answer to
+    the data at once, and append the human's step. Returns the number of such queries; the run
+    is stored in pr.run / pr.codes, and pr.asked marks the asked steps."""
+    asked = 0
+    a, u = 0, 0
+    run, codes, flags = [(0, 0)], [], []
+    for j in range(pr.n):
+        idx = np.flatnonzero(pr.alive)
+        t, k, w = pr.t[idx], pr.k[idx], pr.w[idx]
+        out = pr.outputs(j, a, u, t, k)
+        mass = np.array([w[out == c].sum() for c in range(4)])
+        tol = 1e-12 * w.sum()
+        order = [INC, NOTHING, SET1, SET2] if a != 0 else [NOTHING, SET1, SET2, INC]
+        best = order[0]
+        for c in order[1:]:
+            if mass[c] > mass[best] + tol:
+                best = c
+        if mass[best] < (1 - alpha) * w.sum() - tol:
+            hum = int(pr.outputs(j, a, u, np.array([tp]), np.array([kp]))[0])
+            pr.alive[idx[out != hum]] = False
+            best = hum
+            asked += 1
+            flags.append(True)
+        else:
+            flags.append(False)
+        if best == INC:
+            u += 1
+        elif best in (SET1, SET2):
+            a, u = best, 0
+        run.append((a, u))
+        codes.append(best)
+    pr.run, pr.codes, pr.asked = run, codes, flags
+    return asked
+
+
+def one_human_verifier_abc(args):
+    """Protocol SI-V with ask-before-committing: as one_human_verifier, but every run is built
+    by run_abc. Returns (all task queries, of which asked during runs, rejected runs)."""
+    kind, n, sigma, seed, alpha = args
+    persistent, D = KINDS[kind]
+    n0 = n - sigma
+    rng = np.random.default_rng(seed)
+    tp = rng.integers(0, n0, size=M)
+    kp = np.where(rng.random(M) < PI, 1, 2)
+    rng2 = np.random.default_rng(seed + 3 * 10**8)
+    queries = asked = rejected = 0
+    for p in range(M):
+        pr = Problem(n, n0, persistent, D)
+        q = run_abc(pr, tp[p], kp[p], alpha)
+        queries += q
+        asked += q
+        while not pr.success(tp[p], kp[p]):
+            rejected += 1
+            held = []
+            while True:
+                j = int(rng2.integers(n))
+                queries += 1
+                a, u = pr.run[j]
+                hum = pr.human_step(j, tp[p], kp[p])
+                if hum != pr.decoder_step(j):
+                    break
+                held.append((j, a, u, hum))
+            for (jj, aa, uu, hh) in [(j, a, u, hum)] + held:
+                idx = np.flatnonzero(pr.alive)
+                out = pr.outputs(jj, aa, uu, pr.t[idx], pr.k[idx])
+                pr.alive[idx[out != hh]] = False
+            q = run_abc(pr, tp[p], kp[p], alpha)
+            queries += q
+            asked += q
+    return queries, asked, rejected
+
+
 def summarise(rows):
     q = np.array([r[0] for r in rows], dtype=float)
     f = np.array([r[1] for r in rows], dtype=float)
@@ -240,32 +316,99 @@ def main(outdir, quick=False, mix=False):
 
 
 def table(outdir):
-    """The markdown table quoted in slack-imitation.md, from the saved summaries."""
+    """The markdown tables quoted in slack-imitation.md, from the saved summaries."""
     d = {}
-    for name in ["slack_imitation_summary.json", "slack_imitation_mix.json"]:
+    for name in ["slack_imitation_summary.json", "slack_imitation_mix.json",
+                 "slack_imitation_same.json", "slack_imitation_verifier.json",
+                 "slack_imitation_verifier_abc.json"]:
         path = os.path.join(outdir, name)
         if os.path.exists(path):
             with open(path) as f:
                 d.update(json.load(f))
-    rows = [("CI, no slack", "CI", False), ("SI: CI with slack n/2", "CI", True),
-            ("MIX with slack n/2", "MIX", True), ("LAST with slack n/2", "LAST", True)]
+
+    def cell(e):
+        if e is None:
+            return "–"
+        if e.get("reached", e["humans"]) < e["humans"]:
+            return f"stalls at {100 * e['final_failure_mean']:.0f}%"
+        return f"{e['task_mean']:,.0f} ± {e['task_sem']:,.0f}"
+
+    rows = [("CI, no slack, same humans (n = n₀)", lambda k, n: f"{k}_n{n}_same_CI_n0"),
+            ("SI: CI with slack (n = 2n₀)", lambda k, n: f"{k}_n{n}_sigma{n // 2}_CI"),
+            ("MIX with slack", lambda k, n: f"{k}_n{n}_sigma{n // 2}_MIX"),
+            ("LAST with slack", lambda k, n: f"{k}_n{n}_sigma{n // 2}_LAST"),
+            ("CI, no slack, n₀ = n (different humans)", lambda k, n: f"{k}_n{n}_sigma0_CI")]
     lines = ["| protocol | human | n = 16 | n = 64 | n = 256 |", "|---|---|---|---|---|"]
-    for label, proto, slack in rows:
+    for label, key in rows:
+        for kind in KINDS:
+            cells = [cell(d.get(key(kind, n))) for n in [16, 64, 256]]
+            lines.append(f"| {label} | {kind} | " + " | ".join(cells) + " |")
+    lines += ["", "| protocol | human | n = 16 | n = 64 | n = 256 |", "|---|---|---|---|---|"]
+    vrows = [("SI-V", lambda k, n: f"{k}_n{n}_sigma{n // 2}_SIV")] + [
+        (f"SI-V-ABC, α = {al}", (lambda al: lambda k, n: f"{k}_n{n}_sigma{n // 2}_SIV-ABC_alpha{al}")(al))
+        for al in (0.3, 0.1)]
+    for label, key in vrows:
         for kind in KINDS:
             cells = []
             for n in [16, 64, 256]:
-                e = d.get(f"{kind}_n{n}_sigma{n // 2 if slack else 0}_{proto}")
+                e = d.get(key(kind, n))
                 if e is None:
                     cells.append("–")
-                elif e["reached"] < e["humans"]:
-                    cells.append(f"stalls at {100 * e['final_failure_mean']:.0f}%")
+                elif "asked_mean" in e:
+                    cells.append(f"{e['task_mean']:,.0f} ± {e['task_sem']:,.0f} "
+                                 f"({e['asked_mean']:,.0f} asked; {e['rejected_mean']:.1f} rejected)")
                 else:
-                    cells.append(f"{e['task_mean']:,.0f} ± {e['task_sem']:,.0f}")
+                    cells.append(f"{e['task_mean']:,.0f} ± {e['task_sem']:,.0f} "
+                                 f"({e['rejected_mean']:.1f} rejected; "
+                                 f"{e['queries_per_rejection']:.0f} per rejection)")
             lines.append(f"| {label} | {kind} | " + " | ".join(cells) + " |")
     text = "\n".join(lines) + "\n"
     with open(os.path.join(outdir, "slack_imitation_table.md"), "w") as f:
         f.write(text)
     print(text)
+
+
+def main_same(outdir):
+    """Chained imitation without slack on the same humans as the slack cells: horizon
+    n0 = n/2, the same seeds, run for n0 steps."""
+    H = 40
+    out = {}
+    t0 = time.time()
+    with Pool(4) as pool:
+        for n in [16, 64, 256]:
+            n0 = n // 2
+            for kind in KINDS:
+                rows = pool.map(one_human, [(kind, n0, 0, "CI", 1000 * n + s, 40 * M * n0)
+                                            for s in range(H)])
+                key = f"{kind}_n{n}_same_CI_n0"
+                out[key] = dict(kind=kind, n=n, n0=n0, sigma=0, protocol="CI at n0, same humans",
+                                **summarise(rows))
+                print(json.dumps(out[key]), f"[{time.time() - t0:.0f}s]")
+                sys.stdout.flush()
+    with open(os.path.join(outdir, "slack_imitation_same.json"), "w") as f:
+        json.dump(out, f, indent=1)
+
+
+def main_verifier_abc(outdir, alphas=(0.1, 0.3)):
+    H = 40
+    out = {}
+    t0 = time.time()
+    with Pool(4) as pool:
+        for alpha, n, kind in [(al, n, kd) for al in alphas for n in [16, 64, 256] for kd in KINDS]:
+            if True:
+                rows = pool.map(one_human_verifier_abc,
+                                [(kind, n, n // 2, 1000 * n + s, alpha) for s in range(H)])
+                q = np.array([r[0] for r in rows], dtype=float)
+                key = f"{kind}_n{n}_sigma{n // 2}_SIV-ABC_alpha{alpha}"
+                out[key] = dict(kind=kind, n=n, sigma=n // 2, protocol="SI-V-ABC", alpha=alpha,
+                                humans=H, task_mean=float(q.mean()),
+                                task_sem=float(q.std(ddof=1) / np.sqrt(H)),
+                                asked_mean=float(np.mean([r[1] for r in rows])),
+                                rejected_mean=float(np.mean([r[2] for r in rows])))
+                print(json.dumps(out[key]), f"[{time.time() - t0:.0f}s]")
+                sys.stdout.flush()
+    with open(os.path.join(outdir, "slack_imitation_verifier_abc.json"), "w") as f:
+        json.dump(out, f, indent=1)
 
 
 def main_verifier(outdir):
@@ -291,6 +434,12 @@ def main_verifier(outdir):
 
 
 if __name__ == "__main__":
+    if "--same" in sys.argv:
+        main_same(sys.argv[1] if len(sys.argv) > 1 else ".")
+        sys.exit(0)
+    if "--abc" in sys.argv:
+        main_verifier_abc(sys.argv[1] if len(sys.argv) > 1 else ".")
+        sys.exit(0)
     if "--verifier" in sys.argv:
         main_verifier(sys.argv[1] if len(sys.argv) > 1 else ".")
         sys.exit(0)
