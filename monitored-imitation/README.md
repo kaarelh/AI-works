@@ -5,36 +5,35 @@ A research note on a question from Kaarel Hänni about **principled human imitat
 * **The question.** The talk's best protocol, *chained imitation*, does Solomonoff function induction on a human's input–output pairs, chains the learned map as in task decomposition, and queries the human on the distribution this induces ("train on test"). Find a protocol more likely to work, for a human that is a fixed deterministic program, under assumptions likely to be true of humans. Ideally, show that O(K(human)) reasonable queries suffice.
 * **The note:** [`note.md`](note.md): definitions, theorems, proofs and two experiments.
 * **Author:** Claude (Anthropic), in response to the question.
-* **Status:** a draft. One independent AI referee checked every numbered statement and the experiments ([`verification/`](verification/)). No human has checked the mathematics.
+* **Status:** a draft. One independent AI referee checked every numbered statement and re-ran the experiments ([`verification/`](verification/)). It found no error in the theorems. It found four errors or gaps in other statements and proofs: the selection argument of Section 6.3, the strength of the bound in Section 4.2, the proof of Proposition 10, and a claim about samplers. It also found a number of overclaims, a departure of the code from the protocol, and the experiments' use of a perfect check. All have been corrected or added; see [`verification/response.md`](verification/response.md). No human has checked the mathematics.
 
 ## Answers in brief
 
-1. **Chained imitation loses a factor n over runs of n steps.** It needs about n·K/ε task queries for run failure ε, where K is the human's complexity.
-2. **No protocol that asks only for task steps does much better.** Some humans of complexity K need Ω(n·K/(ε log(n/ε))) task queries, however the queries are chosen, synthetic inputs and uncertainty sampling included.
-   * The hard humans spend their complexity on problem-specific insights at unpredictable steps. Until the learner has found such a step, all steps of a run look alike to it.
-   * So chained imitation is optimal up to a log factor.
+1. **Chained imitation loses a factor n over runs of n steps.** It needs about n·K/ε task queries for runs to match the human's with probability 1 − ε, where K is the human's complexity.
+2. **In the worst case, no protocol that asks only for task steps does much better.** For every n and ε there is a class of humans of complexity about K on which every task-only protocol needs Ω(n·K/(ε log(n/ε))) task queries. This holds however the queries are chosen, synthetic inputs and uncertainty sampling included.
+   * The hard humans spend their complexity on problem-specific insights at unpredictable steps.
+   * So in the worst case chained imitation is within a log factor of every task-only protocol. On particular humans, others can be cheaper by constants.
 3. **The two optimizations in the question don't get around this.**
-   * Querying where the predictor is uncertain cannot find mistakes made with confidence, which are the ones that matter.
-   * "The first time the run has a new simple property" is, in Solomonoff induction, a special case of uncertainty: small separation complexity, in the notation of [`../ultranatural/`](../ultranatural/). It fires at almost every step of a run that writes new things, or misses the properties that matter.
+   * Uncertainty sampling cannot tell a confident mistake from a confident correct answer.
+   * In the program mixture, "the first time the run has a new simple property" (small separation complexity, as in [`../ultranatural/`](../ultranatural/)) forces posterior doubt, so it is a case of uncertainty. It fires at almost every step of a run that writes new things, or misses the properties that matter.
 4. **Monitored imitation with bisection.** Suppose the human can *check* a state, saying whether it looks off track, and never turns a state it judges fine into one it judges off track.
-   * **Protocol.** Check the end of each imitator run. If it fails, binary-search the run with checks for the step where the verdict flips. Ask the human for that one step and update.
+   * **Protocol.** Check the end of each imitator run. If it fails, binary-search the run with checks for a step where the verdict flips. Ask the human for that one step, update, and rerun.
    * **Online guarantee.** Then:
-     * no failing run is ever output;
-     * at most K runs fail in total;
+     * no run that fails the check is ever output;
+     * at most K runs fail the check in total;
      * the protocol makes at most K task queries, plus about log₂ n checks per failure and one check per output.
-   * **Frozen-imitator guarantee.** With batched checks, O(K·(log(K/δ) + log(n/ε))) queries in total give an imitator that fails on fewer than an ε fraction of future problems.
-   * **Every task query lands on a mistake.** So each teaches at least a bit, and typically many: the "many bits per query" the talk hoped for.
-5. **Why the check helps.** The check is where the human's knowledge enters. A Bayesian imitator's mistakes come from hypotheses that agree with everything the human has said, so nothing computed from the imitator's beliefs can flag them.
-   * The weakest useful check, "nothing bizarre here", is very plausibly preserved by a careful human.
-   * It already covers the talk's "no bizarre behaviour" desideratum.
-6. **Robustness.**
-   * *Imperfect checks.* The extra failures are runs that pass through states from which the human itself would go off track.
-   * *Silent deviations.* Deviations no check can see are bounded at chained imitation's rate by adding its random queries.
-   * *No optimization against the check.* The check decides only where to ask, never which output to keep.
-   * *Trees.* For decomposition trees, a failure is located with about log(number of calls) checks.
-7. **Experiments.**
-   * *E1, the lower-bound class.* Chained imitation needs 5k → 316k task queries as n goes 16 → 1024. Monitored bisection needs about 48 task queries at every n.
-   * *E2, rules triggered by simple properties.* Monitored bisection needs about 15 task queries; chained imitation needs hundreds. The "new simple property" rule either misses rare rules or queries almost every step.
+   * **Frozen-imitator guarantee.** An imitator whose runs fail the check with probability below ε, with probability 1 − δ. The cost is at most K task queries and O(K·log(K/δ)/ε) looks at results. Batched 1/ε results per query, that is O(K·(log(K/δ) + log(n/ε))) queries.
+   * **Bits per task query.** Every task query lands on a mistake, so each teaches at least a bit; random queries mostly teach nothing.
+5. **Why the check helps.** The check is where the human's knowledge enters.
+   * The weakest useful check, "nothing bizarre here", is plausibly preserved by a careful human, and addresses the talk's "no bizarre behaviour" desideratum.
+   * The check does nothing for deviations the human cannot see. Adding chained imitation's random queries bounds those at chained imitation's rate.
+   * The check decides only where to ask, never which output to keep.
+6. **Trees.** For decomposition trees, a failure is located with about log(number of calls) batch checks.
+7. **Experiments.** Both use exact posteriors.
+   * *E1, the lower-bound class.* Chained imitation needs 5k → 316k task queries as n goes 16 → 1024. Monitored bisection needs about 48 at every n.
+   * *E2, rules triggered by simple properties.* Monitored bisection needs about 15 task queries; chained imitation needs 370–840.
+   * *Caveat.* The main runs use the strongest possible check.
+   * *A weak check* that sees half the rules shows the gap: monitored bisection alone leaves 84% of runs differing from the human's. Adding audits closes it, with about as many task queries as chained imitation.
 8. **Open.**
    * Stochastic humans.
    * Deviations no human check can see.
@@ -52,7 +51,8 @@ A research note on a question from Kaarel Hänni about **principled human imitat
 | `results/hidden_insights_summary.json`, `results/hidden_insights_curves.json`, `results/hidden_insights.png` | E1 outputs. |
 | `results/property_rules.out`, `results/property_rules_summary.json`, `results/property_rules_curves.json`, `results/property_rules.png`, `results/property_rules.time` | E2 outputs. |
 | `results/tables.md` | The tables quoted in the note. |
-| `verification/` | The referee's report, its scripts and outputs, and the response. |
+| `verification/referee-report.md`, `verification/response.md` | The referee's report on the first draft, and what was changed in response. |
+| `verification/referee_*.py`, `verification/referee_*.out`, `verification/referee_rerun/` | The referee's own checks and outputs, and its re-run of both experiments from the first draft's code. |
 
 Nothing in this folder is confined to the working branch `claude/compassionate-edison-1o8ihs`.
 

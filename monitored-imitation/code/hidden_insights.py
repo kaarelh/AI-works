@@ -25,7 +25,6 @@ Usage: python3 hidden_insights.py OUTDIR
 """
 
 import json
-import math
 import os
 import sys
 
@@ -94,6 +93,7 @@ def run_protocol(name, rng, t, n, eta, max_runs, eps_stop, gamma=None):
                     excluded[p].add(k)
                 found[p] = True
                 n_unfound -= 1
+                checks += 1  # the rerun of the same problem, which now passes
         elif name == "MB":
             checks += 1
             if triggered[p] and not found[p]:
@@ -110,6 +110,7 @@ def run_protocol(name, rng, t, n, eta, max_runs, eps_stop, gamma=None):
                 task += 1
                 found[p] = True
                 n_unfound -= 1
+                checks += 1  # the rerun of the same problem, which now passes
         else:
             raise ValueError(name)
         if r % max(1, max_runs // 4000) == 0 or failure() <= eps_stop:
@@ -127,7 +128,9 @@ def main(outdir):
     summary = {}
     curves = {}
     for n in ns:
-        K = m * (-(eta * math.log2(eta) + (1 - eta) * math.log2(1 - eta)) + eta * math.log2(n))
+        # Theorem 3 with q -> infinity: failure >= eta (1 - 2Q/(nm)), so failure <= eps
+        # needs Q >= (nm/2)(1 - eps/eta) task queries, on average over the prior.
+        lower = n * m / 2 * (1 - eps / eta)
         for name, kw in [("CI", {}), ("US", {"gamma": 0.5 * eta / n}),
                          ("US-high", {"gamma": 2.0 * eta / n}), ("CS", {}), ("MB", {})]:
             proto = "US" if name.startswith("US") else name
@@ -144,7 +147,7 @@ def main(outdir):
                 if s == 0:
                     curves[f"{name}_n{n}"] = log
             summary[f"{name}_n{n}"] = {
-                "n": n, "protocol": name, "K_bits_expected": K,
+                "n": n, "protocol": name, "theorem3_lower_bound": lower,
                 "reached_fraction": float(np.mean([r["reached"] for r in rows])),
                 "runs_mean": float(np.mean([r["runs"] for r in rows])),
                 "task_mean": float(np.mean([r["task"] for r in rows])),

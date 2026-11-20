@@ -1,0 +1,46 @@
+## 1. E[K] bound in Theorem 3 (eta = 8 eps, q = 2)
+
+| eps | n | E[K]/m | 8 eps log2(en/(4eps)) | ratio |
+|---|---|---|---|---|
+| 0.0625 | 2 | 2.0000 | 2.2213 | 0.900 |
+| 0.0625 | 16 | 3.5000 | 3.7213 | 0.941 |
+| 0.0625 | 1024 | 6.5000 | 6.7213 | 0.967 |
+| 0.03125 | 2 | 1.3113 | 1.3607 | 0.964 |
+| 0.03125 | 16 | 2.0613 | 2.1107 | 0.977 |
+| 0.03125 | 1024 | 3.5613 | 3.6107 | 0.986 |
+| 0.01 | 2 | 0.5622 | 0.5669 | 0.992 |
+| 0.01 | 16 | 0.8022 | 0.8069 | 0.994 |
+| 0.01 | 1024 | 1.2822 | 1.2869 | 0.996 |
+| 0.001 | 2 | 0.0832 | 0.0833 | 0.999 |
+| 0.001 | 16 | 0.1072 | 0.1073 | 1.000 |
+| 0.001 | 1024 | 0.1552 | 0.1553 | 1.000 |
+
+The bound holds in every case (it uses h(x) <= x log2(e/x)).
+
+## 2. 'Fixed humans': smallest m with Pr[K > 2E[K]] <= eps
+
+K = N log2(nq/eta) + (m - N) log2(1/(1-eta)) with N ~ Bin(m, eta). Smallest m (searched over a grid) for which the exact tail is at most eps, and the corresponding E[K].
+
+| eps | n | smallest m | E[K] at that m (bits) |
+|---|---|---|---|
+| 0.0625 | 16 | 2 | 7 |
+| 0.0625 | 1024 | 2 | 13 |
+| 0.03125 | 16 | 8 | 16 |
+| 0.03125 | 1024 | 8 | 28 |
+| 0.01 | 16 | 46 | 37 |
+| 0.01 | 1024 | 54 | 69 |
+
+So 'm large' means m of order ln(1/eps)/eta (or smaller); the remark is right but the fixed-human version of the lower bound only applies to humans of at least this complexity.
+
+## 3. Theorem 7 query count with B = ceil(1/eps)
+
+Worst case allowed by Theorem 7(b): sum_{i <= K+1} m_i batch checks + K ceil(log2 B) halving batch checks + K ceil(log2 n) single checks + K task queries; every batch check covers B final states.
+
+| K | n | eps | delta | human queries (bound) | K(log2(K/delta)+log2(n/eps)) | states the human looks at in batches |
+|---|---|---|---|---|---|---|
+| 100 | 64 | 0.01 | 0.01 | 2,657 | 2,593 | 195,700 |
+| 1000 | 1024 | 0.001 | 0.01 | 37,977 | 36,575 | 26,977,000 |
+| 10000 | 10000 | 0.001 | 0.001 | 488,480 | 465,070 | 338,480,000 |
+
+The O(K (log(K/delta) + log(n/eps))) count of Theorem 7 is right, but each batch check is a look at ceil(1/eps) results, so the number of results the human inspects is of order K log(K/delta)/eps.
+

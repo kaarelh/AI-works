@@ -24,12 +24,12 @@ def e1(res):
     s = json.load(open(os.path.join(res, "hidden_insights_summary.json")))
     ns = sorted({v["n"] for v in s.values()})
     names = ["CI", "US", "US-high", "CS", "MB"]
-    rows = ["| n | CI task | US(γ=η/2n) task | US(γ=2η/n) final failure | CS task / checks | MB task / checks |",
-            "|---|---|---|---|---|---|"]
+    rows = ["| n | Theorem 3 lower bound | CI task | US(γ=η/2n) task | US(γ=2η/n) final failure | CS task / checks | MB task / checks |",
+            "|---|---|---|---|---|---|---|"]
     for n in ns:
         g = {nm: s[f"{nm}_n{n}"] for nm in names}
         rows.append(
-            f"| {n} | {g['CI']['task_mean']:,.0f} | {g['US']['task_mean']:,.0f} | "
+            f"| {n} | {g['CI']['theorem3_lower_bound']:,.0f} | {g['CI']['task_mean']:,.0f} | {g['US']['task_mean']:,.0f} | "
             f"{g['US-high']['final_failure_mean']:.2f} (never queries) | "
             f"{g['CS']['task_mean']:,.0f} / {g['CS']['checks_mean']:,.0f} | "
             f"{g['MB']['task_mean']:,.1f} / {g['MB']['checks_mean']:,.0f} |")
@@ -82,7 +82,7 @@ def e2(res):
     s = json.load(open(os.path.join(res, "property_rules_summary.json")))
     c = json.load(open(os.path.join(res, "property_rules_curves.json")))
     labels = ["CI", "US(0.01)", "US(0.001)", "NOV(3)", "NOV(6)", "NOV(9)", "CS", "MB"]
-    ns = sorted({v["n"] for v in s.values()})
+    ns = sorted({v["n"] for k, v in s.items() if not k.startswith("weak")})
     rows = ["| protocol | " + " | ".join(f"n = {n}: task / checks (reached; final failure)" for n in ns) + " |",
             "|---|" + "---|" * len(ns)]
     for lab in labels:
@@ -90,9 +90,20 @@ def e2(res):
         for n in ns:
             v = s[f"{lab}_n{n}"]
             cells.append(f"{v['task_mean']:,.0f} / {v['checks_mean']:,.0f} "
-                         f"({v['reached_fraction']*10:.0f}/10; {v['final_failure_mean']:.3f})")
+                         f"({v['reached']}/{v['n_humans']}; {v['final_failure_mean']:.3f})")
         rows.append(f"| {lab} | " + " | ".join(cells) + " |")
     table = "\n".join(rows)
+    wrows = ["| protocol (n = 16, weak check) | task / checks when check failure first ≤ 2% (humans) | "
+             "task / checks at the end (humans with run failure ≤ 2%) | final run failure | final check failure |",
+             "|---|---|---|---|---|"]
+    for lab in ["weak-CI", "weak-MB", "weak-MBA(0.1)", "weak-MBA(1.0)"]:
+        v = s[f"{lab}_n16"]
+        at = (f"{v['task_at_check_mean']:,.1f} / {v['checks_at_check_mean']:,.0f} ({v['check_reached']}/{v['n_humans']})"
+              if v["check_reached"] else "never")
+        wrows.append(f"| {lab[5:]} | {at} | {v['task_mean']:,.1f} / {v['checks_mean']:,.0f} "
+                     f"({v['reached']}/{v['n_humans']}) | {v['final_failure_mean']:.3f} | "
+                     f"{v['final_check_failure_mean']:.3f} |")
+    table = table + "\n\n" + "\n".join(wrows)
 
     qs, nov = novelty_curve()
     nrows = ["| task queries at random contents | " + " | ".join(str(q) for q in qs) + " |",
@@ -107,7 +118,7 @@ def e2(res):
     style = {"CI": ("C0", "-"), "US(0.001)": ("C1", ":"), "NOV(6)": ("C4", "--"),
              "NOV(9)": ("C5", "-."), "CS": ("C2", "-"), "MB": ("C3", "-")}
     for lab, (col, ls) in style.items():
-        log = np.array(c[f"{lab}_n{n}"])
+        log = np.array(c[f"{lab}_n{n}"])[:, :4]
         log = log[log[:, 1] > 0]  # drop the point before the first query (log axis)
         ax[0].step(log[:, 1], log[:, 3], where="post", color=col, linestyle=ls, lw=1.8, label=lab)
     ax[0].set_xscale("log")
@@ -117,9 +128,9 @@ def e2(res):
     ax[0].legend(fontsize=8)
     ax[0].grid(alpha=0.3)
     for sz, col in zip((3, 6, 9), ("C6", "C4", "C5")):
-        ax[1].plot(np.maximum(qs, 1), nov[sz], marker="o", color=col, label=f"size ≤ {sz}")
+        ax[1].plot(np.maximum(qs, 1), nov[sz], marker="o", color=col, label=f"size ≤ {sz}")  # Q = 0 drawn at 1
     ax[1].set_xscale("log")
-    ax[1].set_xlabel("task queries at random contents")
+    ax[1].set_xlabel("task queries at random contents (0 drawn at 1)")
     ax[1].set_ylabel("fraction of steps with a new simple property")
     ax[1].set_title("how often 'new simple property' fires")
     ax[1].legend(fontsize=8)
