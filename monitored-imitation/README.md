@@ -4,6 +4,7 @@ A research note on a question from Kaarel Hänni about **principled human imitat
 
 * **The question.** The talk's best protocol, *chained imitation*, does Solomonoff function induction on a human's input–output pairs, chains the learned map as in task decomposition, and queries the human on the distribution this induces ("train on test"). Find a protocol more likely to work, for a human that is a fixed deterministic program, under assumptions likely to be true of humans. Ideally, show that O(K(human)) reasonable queries suffice.
 * **The first note:** [`note.md`](note.md): definitions, theorems, proofs and two experiments. Its protocol needs the human to *check* states.
+* **The third note:** [`robust-runs.md`](robust-runs.md): which properties of the human's runs chained imitation keeps. Its runs are the human's process with the wrong steps replaced, so they keep every property that survives a small fraction of replaced steps, with no factor n. It has experiment E4.
 * **The second note:** [`without-a-check.md`](without-a-check.md): a follow-up question, whether there is a better protocol than chained imitation without such a check. It has a theorem on where in a run to ask, the end-weighted protocol, and experiment E3.
 * **Author:** Claude (Anthropic), in response to the question.
 * **Status:** drafts. Each note was checked by one independent AI referee, who checked every numbered statement and re-ran the experiments ([`verification/`](verification/)). No human has checked the mathematics.
@@ -73,19 +74,37 @@ A research note on a question from Kaarel Hänni about **principled human imitat
    * *Silent humans:* end-weighting costs 1.2–1.5× chained imitation.
    * *Catch-up humans,* 200 per n: the last step needs about 300 task queries at every n, end-weighting 540–650. Chained imitation needs 1,300–2,500, heavy-tailed.
 
+## Answers in brief: the third note
+
+1. **Chained imitation keeps robust properties.** Its runs are runs of the human's process with the mistaken steps replaced. If a property of the human's runs survives any ρ fraction of replaced steps, chained imitation's runs lack it in at most K/ρ rounds in total: no factor n, and for all such properties at once.
+2. **The per-step question.** "Is 99.9% per step enough?" Yes, for properties that survive 0.1% of replaced steps.
+3. **E4: the same runs of E2's human, judged three ways.**
+   * *Every step right:* 810–1,104 task queries, growing with n.
+   * *At most 20% of steps wrong:* 38 → 17, *shrinking* with n.
+4. **Whether "a nice run" is robust is a question about the human and the task alone, and is measurable.** Split by kind of replaced step:
+   * *Junk:* I am confident a careful human survives it, with an append-only log and slack.
+   * *Different but fine work:* very likely survived.
+   * *Plausible but wrong work, or a missing decisive idea:* not sure.
+
+   The catch: an imitator's mistakes fall exactly where the human knows something unshown, so the robustness needed is against adversarially placed replacements.
+5. **Generic, in the Bayesian sense.** An imitator that samples one hypothesis per run produces nice runs exactly as often as the learner believes the human would.
+
 ## Layout
 
 | path | contents |
 |---|---|
 | `note.md` | The first note. |
 | `without-a-check.md` | The second note: protocols without a check. |
+| `robust-runs.md` | The third note: which properties chained imitation keeps. |
 | `code/hidden_insights.py` | E1: the class of Theorem 3 (hidden insights), exact posteriors; protocols CI, US, CS, MB. |
 | `code/property_rules.py` | E2: a human whose rules are triggered by conjunctions of literals on 12-bit content; protocols CI, US, NOV, CS, MB. |
 | `code/end_weighted.py` | E3: silent and catch-up versions of the hidden-insight class; protocols CI, EW (end-weighted), LAST, BIS. |
+| `code/robust_runs.py` | E4: chained imitation on E2's human, judged by fragile and robust properties. |
 | `code/make_figures.py` | Tables and figures from the saved outputs, and the novelty-firing curve. |
 | `results/hidden_insights_summary.json`, `results/hidden_insights_curves.json`, `results/hidden_insights.png` | E1 outputs. |
 | `results/property_rules.out`, `results/property_rules_summary.json`, `results/property_rules_curves.json`, `results/property_rules.png`, `results/property_rules.time` | E2 outputs. |
 | `results/tables.md` | The tables quoted in the first note. |
+| `results/robust_runs.out`, `results/robust_runs_summary.json`, `results/robust_runs.time` | E4 outputs. |
 | `results/end_weighted.out`, `results/end_weighted_summary.json`, `results/end_weighted_curves.json`, `results/end_weighted_table.md`, `results/end_weighted.time` | E3 outputs, and the table quoted in the second note. |
 | `verification/referee-report.md`, `verification/response.md` | The referee's report on the first note, and what was changed in response. |
 | `verification/referee-report-without-a-check.md`, `verification/response-without-a-check.md` | The same for the second note. |
@@ -108,6 +127,12 @@ python3 property_rules.py ../results > ../results/property_rules.out
 
 ```bash
 python3 make_figures.py ../results
+```
+
+For the third note (about 2 minutes):
+
+```bash
+python3 robust_runs.py ../results > ../results/robust_runs.out
 ```
 
 For the second note (about 2 minutes, with 200 catch-up humans per n):
