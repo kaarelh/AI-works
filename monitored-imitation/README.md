@@ -3,7 +3,8 @@
 A research note on a question from Kaarel Hänni about **principled human imitation** (section 3.2 of his talk *Simpler versions of the alignment problem we still can't solve*, MISO, 16 November 2026).
 
 * **The question.** The talk's best protocol, *chained imitation*, does Solomonoff function induction on a human's input–output pairs, chains the learned map as in task decomposition, and queries the human on the distribution this induces ("train on test"). Find a protocol more likely to work, for a human that is a fixed deterministic program, under assumptions likely to be true of humans. Ideally, show that O(K(human)) reasonable queries suffice.
-* **The note:** [`note.md`](note.md): definitions, theorems, proofs and two experiments.
+* **The first note:** [`note.md`](note.md): definitions, theorems, proofs and two experiments. Its protocol needs the human to *check* states.
+* **The second note:** [`without-a-check.md`](without-a-check.md): a follow-up question, whether there is a better protocol than chained imitation without such a check. It has a theorem on where in a run to ask, the end-weighted protocol, and experiment E3.
 * **Author:** Claude (Anthropic), in response to the question.
 * **Status:** a draft. One independent AI referee checked every numbered statement and re-ran the experiments ([`verification/`](verification/)). It found no error in the theorems. It found four errors or gaps in other statements and proofs: the selection argument of Section 6.3, the strength of the bound in Section 4.2, the proof of Proposition 10, and a claim about samplers. It also found a number of overclaims, a departure of the code from the protocol, and the experiments' use of a perfect check. All have been corrected or added; see [`verification/response.md`](verification/response.md). No human has checked the mathematics.
 
@@ -40,17 +41,34 @@ A research note on a question from Kaarel Hänni about **principled human imitat
    * Learned checks.
    * Malign hypotheses that no check sees.
 
+## Answers in brief: the second note
+
+1. **Not in the worst case.** The first note's lower bound holds for humans that are *silent*: handed a state that lacks something they would have contributed by now, they carry on without it. Then a failed run has a single mistake at an unpredictable step.
+2. **What a protocol pays.** Any protocol that asks for one step per run, drawn from a distribution q, pays at most K in total for q(steps where the imitator erred) over failed runs. Chained imitation pays 1/(fraction of steps wrong) per failed run, which is n only for isolated mistakes.
+3. **The assumption instead of a check: deficits persist.** From any state the imitator reaches with r steps to go, the human's own continuation still succeeds. Then every failed run has a mistake in its last r steps. This is a property of the human's ordinary task steps, not a verdict.
+4. **End-weighted chained imitation.** Ask at a uniform step half the time, otherwise at distance d from the end with probability ∝ 1/(d+1).
+   * Always within a factor 2 of chained imitation's bound.
+   * Under persistence, 2r·ln(n)·K/ε task queries.
+   * Asking at the last step alone gives K/ε under persistence, but never learns silent humans.
+   * Binary search with task queries finds the first mistake.
+5. **Experiment E3:** the hidden-insight class, with silent humans and with *catch-up* humans who write a missing insight at any later step.
+   * *Silent humans:* end-weighting costs 1.2–1.5× chained imitation.
+   * *Catch-up humans:* the last step needs 300–350 task queries at every n, end-weighting 510–800, chained imitation 1,640–3,370.
+
 ## Layout
 
 | path | contents |
 |---|---|
-| `note.md` | The note. |
+| `note.md` | The first note. |
+| `without-a-check.md` | The second note: protocols without a check. |
 | `code/hidden_insights.py` | E1: the class of Theorem 3 (hidden insights), exact posteriors; protocols CI, US, CS, MB. |
 | `code/property_rules.py` | E2: a human whose rules are triggered by conjunctions of literals on 12-bit content; protocols CI, US, NOV, CS, MB. |
+| `code/end_weighted.py` | E3: silent and catch-up versions of the hidden-insight class; protocols CI, EW (end-weighted), LAST, BIS. |
 | `code/make_figures.py` | Tables and figures from the saved outputs, and the novelty-firing curve. |
 | `results/hidden_insights_summary.json`, `results/hidden_insights_curves.json`, `results/hidden_insights.png` | E1 outputs. |
 | `results/property_rules.out`, `results/property_rules_summary.json`, `results/property_rules_curves.json`, `results/property_rules.png`, `results/property_rules.time` | E2 outputs. |
-| `results/tables.md` | The tables quoted in the note. |
+| `results/tables.md` | The tables quoted in the first note. |
+| `results/end_weighted.out`, `results/end_weighted_summary.json`, `results/end_weighted_curves.json`, `results/end_weighted_table.md`, `results/end_weighted.time` | E3 outputs, and the table quoted in the second note. |
 | `verification/referee-report.md`, `verification/response.md` | The referee's report on the first draft, and what was changed in response. |
 | `verification/referee_*.py`, `verification/referee_*.out`, `verification/referee_rerun/` | The referee's own checks and outputs, and its re-run of both experiments from the first draft's code. |
 
@@ -70,6 +88,12 @@ python3 property_rules.py ../results > ../results/property_rules.out
 
 ```bash
 python3 make_figures.py ../results
+```
+
+For the second note (about 2 minutes):
+
+```bash
+python3 end_weighted.py ../results > ../results/end_weighted.out
 ```
 
 All three are seeded and reproduce the saved outputs.
