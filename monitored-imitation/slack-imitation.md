@@ -142,11 +142,18 @@ Then, for every sequence of problems:
 
 Output runs are correct exactly to the extent that V is sound for the real goal. With a verifier, then, bounded setback is needed only for the cost, never for correctness. A fooled human costs at most n task queries per rejected run, and still at most ⌊K⌋ rejected runs. Verification costs no human time if V is a machine. This is the first note's monitored bisection with the "on track" check replaced by a verifier of the result, and bisection replaced by uniform search, which slack makes cheap.
 
+*Relation to thread D's Scheme B* ("detect at the end, repair near the end", [`research/threadD-literature.md`](research/threadD-literature.md) §3). It is the same protocol, with the search in the last r steps, under (C_r).
+* *What changes.* Proposition 4 replaces (C_r), a condition on the imitator's states, with slack and bounded setback, a one-step condition on the human's remaining time.
+* *Thread D's reasons why (C_r) might hold* are three. Each is one ingredient here:
+  * "triggers do not expire" is (B-omit);
+  * "the downstream work fits in r steps" is the slack;
+  * "later entries do not mislead" is (B-commit).
+
 **Remarks.**
 1. *Comparison.*
    * Chained imitation is the case σ = 0, D unrestricted: its bound n·K comes from failed runs with a single mistake.
    * Slack imitation replaces the factor n by (D+1)/ρ, for example by 4 for ρ = ½ and D = 1.
-   * K is not changed. Thread B's knowledge-base and probe results (Theorem 4 there) reduce K but not n; they compose with this.
+   * K is not changed. Thread B's knowledge-base and probe results reduce K but not n (Theorems 3 and 4 there); they compose with this.
 2. *The fallback.* Without (B_D), Theorem 1 of the second note still charges every failed run at least 1/n. So E[#failed] ≤ n·K, chained imitation's guarantee. More finely, a run fails only if the setbacks of its mistakes add up past σ: Σ_{k∈M}(1 + D_k) ≥ σ+1, where D_k is the actual setback at mistake k. Runs that fail through many small setbacks are charged at the good rate; only runs sunk by a few huge setbacks are charged at the 1/n rate.
 3. *Read-out.* If the answer must be extracted from the notebook by one more step of the human ("which entry is the solution?"), that step is a single step, and its failures are not protected by slack. Query the read-out step with probability ½ and a uniform step otherwise. Then read-out failures are charged ½ each and the others ρ/(2(D+1)), so all failures together are at most 2(D+1)K/ρ in expectation.
 4. *The hidden clock is not used in the proofs.* If the human sees the step, make the step part of the state and define τ(y, k) from step k. Then (T1), (T2) and Lemma S hold verbatim, with (B_D) read as τ(y ∪ g, k+1) ≤ τ(y, k) + D. The hidden clock matters only in Section 4: it makes an empty step exactly a one-step delay, and it removes deadline effects. E6 uses a visible step, with humans whose idea, once available, stays available.
@@ -285,7 +292,10 @@ The table is `results/slack_imitation_table.md`, written by `slack_imitation.py 
 | last step + persistence, Protocol Z and BIS (thread C) | persistence (P₁) on non-bizarre notebooks | ≤ K ripe failures; late ideas not caught without slack | medium; BIS beyond toy classes not shown |
 | **slack imitation (this note)** | **bounded setback D** | **(D+1)K/ρ failed runs; O((D+1)K log(K/δ)/(ρε)) queries** | **high for omissions, medium for commissions** |
 | **slack imitation with a verifier (Proposition 4)** | **bounded setback, for the cost only** | **no failed run output; ≤ K rejected runs; (D+1)K/ρ task queries (n·K without (B_D))** | **high, where the result is verifiable** |
-| probes / knowledge base (thread B) | answers to located questions | reduces K, not n | composes with any of the above |
+| endorsed logs (thread D, Scheme A) | the human endorses each entry as a step it accepts; every fully endorsed run ends well | ≤ K failed runs, as monitored bisection | a lenient endorsement passes runs that lack the insight; a strict one costs a task step per look |
+| detect at the end, repair near the end (thread D, Scheme B) | an outcome check, and (C_r) | ≤ K rejected runs, ≤ r·K task queries | the precursor of Proposition 4, with (C_r) in place of slack and bounded setback |
+| the human as equivalence oracle (thread D, Scheme C) | the human finds a mistake of the imitator whenever it fails often | ≤ K+1 requests | only for knowledge the human knows it has; the hard class's is not |
+| probes / knowledge base (thread B) | answers to questions about what the human knows | reduces K, not n | composes with any of the above |
 
 ## 8. Limits
 
