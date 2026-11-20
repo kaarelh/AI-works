@@ -108,6 +108,11 @@ A research note on a question from Kaarel Hänni about **principled human imitat
 | `code/end_weighted.py` | E3: silent and catch-up versions of the hidden-insight class; protocols CI, EW (end-weighted), LAST, BIS. |
 | `code/robust_runs.py` | E4: chained imitation on E2's human, judged by fragile and robust properties. |
 | `code/make_figures.py` | Tables and figures from the saved outputs, and the novelty-firing curve. |
+| `slack-imitation.md` | The fourth note: slack imitation, the scheme I am most sure of. |
+| `code/slack_imitation.py` | E6: slack imitation on noticing, misled, fooled and silent humans, exact posteriors; protocols CI with and without slack, LAST, MIX. |
+| `code/setback_check.py` | Brute-force check of the fourth note's Lemma S on random append-only humans. |
+| `results/slack_imitation.out`, `results/slack_imitation_summary.json`, `results/slack_imitation_mix.json`, `results/slack_imitation.time` | E6 outputs. |
+| `results/setback_check.out` | Output of the brute-force check. |
 | `results/hidden_insights_summary.json`, `results/hidden_insights_curves.json`, `results/hidden_insights.png` | E1 outputs. |
 | `results/property_rules.out`, `results/property_rules_summary.json`, `results/property_rules_curves.json`, `results/property_rules.png`, `results/property_rules.time` | E2 outputs. |
 | `results/tables.md` | The tables quoted in the first note. |
@@ -120,7 +125,7 @@ A research note on a question from Kaarel Hänni about **principled human imitat
 | `verification/referee2_*.py`, `verification/referee2_*.out`, `verification/referee2_rerun/` | The second referee's checks, its counterexample computations, and its re-run of E3 from the reviewed draft. |
 | `verification/referee_*.py`, `verification/referee_*.out`, `verification/referee_rerun/` | The referee's own checks and outputs, and its re-run of both experiments from the first draft's code. |
 
-Nothing in this folder is confined to the working branch `claude/compassionate-edison-1o8ihs`.
+**Working branch only:** `research/` stays on the working branch `claude/compassionate-edison-1o8ihs`. It holds the four research threads behind the fourth note (A: checks, B: knowledge elicitation, C: persistence, D: literature, and E: a red-team of the fourth note's assumption), with their scripts and outputs. Remove it when publishing.
 
 ## Reproducing
 
@@ -150,4 +155,18 @@ For the second note (about 2 minutes, with 200 catch-up humans per n):
 python3 end_weighted.py ../results > ../results/end_weighted.out
 ```
 
-All three are seeded and reproduce the saved outputs.
+For the fourth note (E6 takes about 10 minutes on 4 cores; the check about a second):
+
+```bash
+python3 slack_imitation.py ../results > ../results/slack_imitation.out
+```
+
+```bash
+python3 slack_imitation.py ../results --mix > ../results/slack_imitation_mix.out
+```
+
+```bash
+python3 setback_check.py > ../results/setback_check.out
+```
+
+All are seeded and reproduce the saved outputs.
