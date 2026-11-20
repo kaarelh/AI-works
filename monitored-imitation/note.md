@@ -163,7 +163,10 @@ So Ω(n·K/(ε log(n/ε))) task queries are needed, against O(n·K/ε) for chain
 * A threshold γ ≤ η/n fires at every step of every run until the insight is found. That is the cheating protocol, with n task queries per insight.
 * Experiment E1 shows both behaviours. In E2, US(0.01) reached the target in 1 of 30 cases. US(0.001) reached it in 25 of 30, with about as many task queries as chained imitation.
 
-**Synthetic inputs.** Theorem 3 allows them, and they do not help there. In general they also cost bits on behaviour that does not matter for the runs, such as how the human reacts to gibberish.
+**Synthetic inputs.** Theorem 3 allows them, and they do not help there. In general they also cost bits on behaviour that does not matter for the runs.
+* Maximizing uncertainty over all inputs picks inputs far from anything the human has seen, where the posterior is most diffuse: gibberish, odd formats, questions no one would ask.
+* The human's answers there pay down the part of K(P) that describes its reactions to such inputs, which the runs never reach.
+* Restricting the search to states the imitator's runs reach, as in E2, avoids this. It still leaves the confident mistakes.
 
 ### 4.2 The first time the run has a new simple property
 
@@ -262,7 +265,7 @@ A *batch check* of a list of states returns 1 iff V = 1 on every state in the li
 
 With B = ⌈1/ε⌉ we have m_i ≤ ⌈ln(i(i+1)/δ)⌉. The total number of human queries is then
 
-  O( K(P) · (log(K(P)/δ) + log(n/ε)) ),
+  O( (K(P)+1) · (log((K(P)+1)/δ) + log(n/ε)) ),
 
 of which at most K(P) are task queries. The protocol does not need to know K(P).
 
