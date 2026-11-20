@@ -10,11 +10,11 @@
 | SI: CI with slack n/2 | misled-8 | 485 ± 40 | 227 ± 14 | 205 ± 14 |
 | SI: CI with slack n/2 | fooled | 1,631 ± 124 | 2,811 ± 287 | 4,296 ± 469 |
 | SI: CI with slack n/2 | silent | 4,467 ± 107 | 21,964 ± 424 | 92,819 ± 2,130 |
-| MIX with slack n/2 | noticing | – | – | – |
-| MIX with slack n/2 | misled-2 | – | – | – |
-| MIX with slack n/2 | misled-8 | – | – | – |
-| MIX with slack n/2 | fooled | – | – | – |
-| MIX with slack n/2 | silent | – | – | – |
+| MIX with slack n/2 | noticing | 143 ± 10 | 169 ± 11 | 161 ± 11 |
+| MIX with slack n/2 | misled-2 | 152 ± 14 | 172 ± 12 | 161 ± 11 |
+| MIX with slack n/2 | misled-8 | 203 ± 19 | 180 ± 12 | 164 ± 10 |
+| MIX with slack n/2 | fooled | 2,847 ± 202 | 7,130 ± 723 | 7,864 ± 982 |
+| MIX with slack n/2 | silent | 9,271 ± 180 | 42,292 ± 841 | 178,644 ± 3,697 |
 | LAST with slack n/2 | noticing | 123 ± 9 | 156 ± 10 | 142 ± 11 |
 | LAST with slack n/2 | misled-2 | 123 ± 9 | 156 ± 10 | 142 ± 11 |
 | LAST with slack n/2 | misled-8 | 123 ± 9 | 156 ± 10 | 142 ± 11 |

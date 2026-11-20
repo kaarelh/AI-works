@@ -3,6 +3,7 @@
 A research note on a question from Kaarel Hänni about **principled human imitation** (section 3.2 of his talk *Simpler versions of the alignment problem we still can't solve*, MISO, 16 November 2026).
 
 * **The question.** The talk's best protocol, *chained imitation*, does Solomonoff function induction on a human's input–output pairs, chains the learned map as in task decomposition, and queries the human on the distribution this induces ("train on test"). Find a protocol more likely to work, for a human that is a fixed deterministic program, under assumptions likely to be true of humans. Ideally, show that O(K(human)) reasonable queries suffice.
+* **The fourth note, the answer to the latest question:** [`slack-imitation.md`](slack-imitation.md). It gives the scheme I am most sure would work with a deterministic human, a proof that it works if the human has *bounded setback*, the case that humans have it, and experiment E6. It synthesizes the earlier notes and five research threads in [`research/`](research/) (working branch only).
 * **The first note:** [`note.md`](note.md): definitions, theorems, proofs and two experiments. Its protocol needs the human to *check* states.
 * **The third note:** [`robust-runs.md`](robust-runs.md): which properties of the human's runs chained imitation keeps.
   * Its runs are the human's process with the wrong steps replaced, so they keep every property that survives the replacements.
@@ -31,7 +32,26 @@ A research note on a question from Kaarel Hänni about **principled human imitat
 
   All have been corrected.
 
-## Answers in brief
+## Answers in brief: the fourth note
+
+1. **The scheme, slack imitation.** Chained imitation with an append-only notebook, a hidden clock, more steps than the human needs (n = n₀ + σ, σ = ρn), and optionally a "nothing bizarre" check. Each run gets one task query at a uniformly random step.
+2. **The theorem.** Assume *bounded setback D*: an entry the human would not have written costs it at most D extra steps to finish, and part of its own next step costs it none. Then:
+   * the expected number of failed runs is at most (D+1)·K/ρ, over any sequence of problems;
+   * on i.i.d. problems, O((D+1)·K·log(K/δ)/(ρε)) task queries give failure probability at most ε;
+   * chained imitation's factor n is gone.
+3. **Why.** With slack, a run fails only if it has at least (σ+1)/(D+1) wrong steps. A uniform query finds one with probability at least ρ/(D+1), and each costs the posterior a bit.
+4. **The case for humans.**
+   * Omissions, the imitator's typical mistake, are safe: an empty step is exactly a delay, by determinism and the hidden clock, and partial steps very plausibly are too.
+   * The weak link is plausible wrong content that the human builds on and never revisits ("fooled").
+   * The first note's lower bound is attained by humans who never recover a missed insight, so some assumption of this kind is necessary.
+5. **E6.** The task queries until at most 2% of runs fail, for n = 16 → 256:
+   * bounded-setback humans with slack: about 200 at every n;
+   * without slack: 6,000 → 97,000;
+   * fooled humans: 1,600 → 4,300;
+   * silent humans: 4,500 → 93,000;
+   * with a verifier of the result (Proposition 4), bounded-setback humans need about 14 task queries for all 100 problems at every n, and no failed run is ever output.
+
+## Answers in brief: the first note
 
 1. **Chained imitation loses a factor n over runs of n steps.** It needs about n·K/ε task queries for runs to match the human's with probability 1 − ε, where K is the human's complexity.
 2. **In the worst case, no protocol that asks only for task steps does much better.** For every n and ε there is a class of humans of complexity about K on which every task-only protocol needs Ω(n·K/(ε log(n/ε))) task queries. This holds however the queries are chosen, synthetic inputs and uncertainty sampling included.
@@ -111,7 +131,8 @@ A research note on a question from Kaarel Hänni about **principled human imitat
 | `slack-imitation.md` | The fourth note: slack imitation, the scheme I am most sure of. |
 | `code/slack_imitation.py` | E6: slack imitation on noticing, misled, fooled and silent humans, exact posteriors; protocols CI with and without slack, LAST, MIX. |
 | `code/setback_check.py` | Brute-force check of the fourth note's Lemma S on random append-only humans. |
-| `results/slack_imitation.out`, `results/slack_imitation_summary.json`, `results/slack_imitation_mix.json`, `results/slack_imitation.time` | E6 outputs. |
+| `results/slack_imitation.out`, `results/slack_imitation_summary.json`, `results/slack_imitation_mix.out`, `results/slack_imitation_mix.json`, `results/slack_imitation_table.md`, `results/slack_imitation.time` | E6 outputs, and the table quoted in the fourth note. |
+| `results/slack_imitation_verifier.out`, `results/slack_imitation_verifier.json` | E6 with a verifier (Protocol SI-V). |
 | `results/setback_check.out` | Output of the brute-force check. |
 | `results/hidden_insights_summary.json`, `results/hidden_insights_curves.json`, `results/hidden_insights.png` | E1 outputs. |
 | `results/property_rules.out`, `results/property_rules_summary.json`, `results/property_rules_curves.json`, `results/property_rules.png`, `results/property_rules.time` | E2 outputs. |
@@ -155,7 +176,7 @@ For the second note (about 2 minutes, with 200 catch-up humans per n):
 python3 end_weighted.py ../results > ../results/end_weighted.out
 ```
 
-For the fourth note (E6 takes about 10 minutes on 4 cores; the check about a second):
+For the fourth note (on 4 cores, E6 takes about 25 minutes and its MIX cells about 7; the table and the check about a second):
 
 ```bash
 python3 slack_imitation.py ../results > ../results/slack_imitation.out
@@ -163,6 +184,14 @@ python3 slack_imitation.py ../results > ../results/slack_imitation.out
 
 ```bash
 python3 slack_imitation.py ../results --mix > ../results/slack_imitation_mix.out
+```
+
+```bash
+python3 slack_imitation.py ../results --table
+```
+
+```bash
+python3 slack_imitation.py ../results --verifier > ../results/slack_imitation_verifier.out
 ```
 
 ```bash

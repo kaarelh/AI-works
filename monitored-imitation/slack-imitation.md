@@ -29,12 +29,15 @@ The request: *try lots of threads and report back with the scheme you are most s
      * If the human would notice the problem, or a contradiction surfaces within D steps, the bound holds.
      * If the human builds on a plausible wrong result and never revisits it, D is unbounded, and that run is charged as in chained imitation.
 5. **Some assumption of this kind is necessary.** The first note's lower bound (Theorem 3) is attained by *silent* humans: a missed insight is never recovered, which is unbounded setback from an omission. Every way round the factor n that the threads found uses some human signal that a contribution is missing. Here the signal is that the human still makes the contribution later, on a notebook that lacks it.
-6. **When the assumption fails, the guarantee falls back to chained imitation's.** Slack imitation is chained imitation plus spare steps. Its worst-case guarantee is chained imitation's n·K failed runs, and every failed run with many wrong steps is still caught at the better rate. (This compares guarantees, not humans: as the second note's referee showed, a query can make the majority decoder worse on a particular human.)
-7. **Experiment E6** (exact Bayes, 40 humans per cell). It uses a class with an obvious idea and a problem-specific one, and dependent work. The task queries needed until at most 2% of runs fail, for n = 16 → 64 → 256, with ρ = ½ for slack imitation:
+6. **If the result can be verified** (a proof checker, a test suite, the human checking a finished result), no failed run is ever output. Then (B_D) affects only the cost: at most (D+1)K/ρ task queries in expectation in total, and n·K without it (Proposition 4). This is the version I am most sure of, for problems where it applies.
+7. **When the assumption fails, the guarantee falls back to chained imitation's.** Slack imitation is chained imitation plus spare steps. Its worst-case guarantee is chained imitation's n·K failed runs, and every failed run with many wrong steps is still caught at the better rate. (This compares guarantees, not humans: as the second note's referee showed, a query can make the majority decoder worse on a particular human.)
+8. **Experiment E6** (exact Bayes, 40 humans per cell). It uses a class with an obvious idea and a problem-specific one, and dependent work. The task queries needed until at most 2% of runs fail, for n = 16 → 64 → 256, with ρ = ½ for slack imitation:
    * *bounded-setback humans* (D = 0, 2, 8): 160–490 at n = 16, and 200–230 at n = 64 and 256;
    * *the same humans without slack:* 6,000 → 25,000 → 97,000;
    * *fooled humans:* 1,600 → 2,800 → 4,300;
    * *silent humans:* 4,500 → 22,000 → 93,000. Slack does not help them at all; they are the lower-bound class.
+
+   With a verifier, bounded-setback humans need about 14 task queries for all 100 problems at every n, with every output correct.
 
 ## 1. Setting
 
@@ -117,6 +120,27 @@ rounds, each with one task query, plus checks. With the check, "fail" means fail
 *Proof.*
 * *Epochs.* Every epoch but the last ends with a hit, which is a task query on a mistake of the decoder in use. The later answers of the epoch are correct labels added after it. By Lemma 1 of note.md there are at most ⌊K⌋ hits, hence at most ⌊K⌋+1 epochs.
 * *Error.* Suppose the frozen imitator of epoch i fails with probability p > ε. By the two cases in the proof of Theorem 2, each round is then a hit with probability at least γp > γε, and the rounds are independent given the frozen imitator. So it survives m_i rounds without a hit with probability at most (1 − γε)^{m_i} ≤ δ/(i(i+1)). A union bound over epochs gives total probability at most δ. ∎
+
+**Verifiable problems.** Sometimes success can be checked at the end of a run: by a proof checker, a test suite, or the human's own verification of a finished result. Then slack imitation never outputs a failed run, and its cost has no factor 1/ε.
+
+**Proposition 4 (with a verifier).** Let S be decided by a verifier V on final notebooks. As above, S must be preserved by appending, and the human's own runs must satisfy it (τ(x₀) ≤ n₀). Consider Protocol SI-V:
+* for each problem, run the current imitator and apply V to the final notebook;
+* if V accepts, output the run and go to the next problem;
+* otherwise, keep the imitator fixed and task-query independent uniform steps of this run until one lands on a mistake;
+* add that answer to the data, then the others, and rerun.
+
+Then, for every sequence of problems:
+* (a) no run that V rejects is ever output;
+* (b) on every path, at most ⌊K⌋ runs are rejected in total;
+* (c) the expected number of task queries is at most ⌊K⌋·(D+1)·n/(σ+1) ≤ (D+1)K/ρ under (B_D), and at most n·⌊K⌋ without it;
+* (d) V is applied once per problem, plus at most ⌊K⌋ times.
+
+*Proof.*
+* (a) holds by construction.
+* *A rejected run has a mistake.* A run with no mistake is the human's own run for n ≥ n₀ steps, which satisfies S because S is preserved by appending. So the search ends, and it ends with a task query on a mistake of the decoder in use, with the other answers added after it. Lemma 1 of note.md gives (b), and (d) follows.
+* (c): by Lemma S, a rejected run has at least (σ+1)/(D+1) mistakes under (B_D), and at least one in any case. Each search is geometric, with success probability |M|/n given the past. Summing over at most ⌊K⌋ searches gives the bound. ∎
+
+Output runs are correct exactly to the extent that V is sound for the real goal. With a verifier, then, bounded setback is needed only for the cost, never for correctness. A fooled human costs at most n task queries per rejected run, and still at most ⌊K⌋ rejected runs. Verification costs no human time if V is a machine. This is the first note's monitored bisection with the "on track" check replaced by a verifier of the result, and bisection replaced by uniform search, which slack makes cheap.
 
 **Remarks.**
 1. *Comparison.*
@@ -201,7 +225,30 @@ rounds, each with one task query, plus checks. With the check, "fail" means fail
 
 **Results.** Mean task queries ± standard error; "stalls at x%" means the cap was reached with failure x%.
 
-RESULTS_TABLE
+| protocol | human | n = 16 | n = 64 | n = 256 |
+|---|---|---|---|---|
+| CI, no slack | noticing | 6,012 ± 117 | 25,256 ± 709 | 97,489 ± 2,711 |
+| CI, no slack | misled-2 | 6,012 ± 117 | 25,256 ± 709 | 97,589 ± 2,718 |
+| CI, no slack | misled-8 | 6,022 ± 115 | 25,256 ± 709 | 97,589 ± 2,718 |
+| CI, no slack | fooled | 6,022 ± 115 | 25,208 ± 707 | 97,568 ± 2,720 |
+| CI, no slack | silent | 5,088 ± 93 | 22,845 ± 481 | 93,399 ± 2,022 |
+| SI: CI with slack n/2 | noticing | 160 ± 12 | 204 ± 14 | 204 ± 14 |
+| SI: CI with slack n/2 | misled-2 | 186 ± 14 | 208 ± 14 | 204 ± 14 |
+| SI: CI with slack n/2 | misled-8 | 485 ± 40 | 227 ± 14 | 205 ± 14 |
+| SI: CI with slack n/2 | fooled | 1,631 ± 124 | 2,811 ± 287 | 4,296 ± 469 |
+| SI: CI with slack n/2 | silent | 4,467 ± 107 | 21,964 ± 424 | 92,819 ± 2,130 |
+| MIX with slack n/2 | noticing | 143 ± 10 | 169 ± 11 | 161 ± 11 |
+| MIX with slack n/2 | misled-2 | 152 ± 14 | 172 ± 12 | 161 ± 11 |
+| MIX with slack n/2 | misled-8 | 203 ± 19 | 180 ± 12 | 164 ± 10 |
+| MIX with slack n/2 | fooled | 2,847 ± 202 | 7,130 ± 723 | 7,864 ± 982 |
+| MIX with slack n/2 | silent | 9,271 ± 180 | 42,292 ± 841 | 178,644 ± 3,697 |
+| LAST with slack n/2 | noticing | 123 ± 9 | 156 ± 10 | 142 ± 11 |
+| LAST with slack n/2 | misled-2 | 123 ± 9 | 156 ± 10 | 142 ± 11 |
+| LAST with slack n/2 | misled-8 | 123 ± 9 | 156 ± 10 | 142 ± 11 |
+| LAST with slack n/2 | fooled | stalls at 10% | stalls at 10% | stalls at 10% |
+| LAST with slack n/2 | silent | stalls at 100% | stalls at 100% | stalls at 100% |
+
+The table is `results/slack_imitation_table.md`, written by `slack_imitation.py ../results --table`.
 
 **Reading.**
 * *Without slack, every kind pays in proportion to n,* as in thread C's CHAIN experiment. An idea written a little late leaves too little time for the work that depends on it, and such a failure has few mistakes.
@@ -210,6 +257,20 @@ RESULTS_TABLE
 * *Silent humans cost the same with and without slack,* in proportion to n: a missed idea is never recovered, however long the run.
 * *Asking at the last step* is the cheapest protocol for the bounded-setback kinds, 120–160. Their failed runs end with a mistake: at the last step the human would still write or correct the idea (thread C's "ripe" failures). LAST has no guarantee, though. It stalls at 10% failure for fooled humans (the problems where the obvious idea was wrong) and at 100% for silent ones.
 * *MIX,* half last step and half uniform, gets most of LAST's advantage on bounded-setback humans. On the others it costs about twice what slack imitation costs, because only half its queries are uniform. I recommend SI for its guarantee, and MIX where one expects most failures to be ripe.
+
+**With a verifier (Proposition 4).** Protocol SI-V on the same humans, with slack n/2 (`slack_imitation.py ../results --verifier`). Each problem is rerun until its final notebook succeeds, so every output is correct. The entry is the total number of task queries for all 100 problems (± standard error over 40 humans), and in parentheses the number of task queries per rejected run.
+
+| human | n = 16 | n = 64 | n = 256 |
+|---|---|---|---|
+| noticing | 13 ± 1 (1.3) | 14 ± 1 (1.4) | 14 ± 1 (1.4) |
+| misled-2 | 14 ± 1 (1.4) | 14 ± 1 (1.4) | 14 ± 1 (1.4) |
+| misled-8 | 38 ± 3 (3.6) | 16 ± 1 (1.5) | 14 ± 1 (1.4) |
+| fooled | 181 ± 13 (12.4) | 750 ± 76 (39.0) | 2,636 ± 238 (143) |
+| silent | 1,610 ± 24 (16.1) | 6,450 ± 111 (64.5) | 26,091 ± 385 (261) |
+
+* *Bounded-setback humans* need about 14 task queries for all 100 problems, at every n. Only the ten or so problems whose idea is the specific one are ever rejected, and each rejected run has so many mistakes that the first query or two finds one.
+* *Fooled and silent humans* cost about n/2 task queries per rejected run, as Proposition 4(c) allows. Their outputs are still all correct.
+* Compared with SI without a verifier (about 200 task queries for 2% failure), the verifier removes the cost of *detecting* failures. That cost is the 1/ε factor.
 
 **What E6 does not show.** The class is tiny, so K is small and the posterior exact; the point is the dependence on n and on the kind of human. It does not test whether real humans have bounded setback, which only the tests of Section 4 can.
 
@@ -223,6 +284,7 @@ RESULTS_TABLE
 | nothing-bizarre check alone (thread A) | a preserved junk check | ≤ K junk runs; says nothing about other failures | high, but weak |
 | last step + persistence, Protocol Z and BIS (thread C) | persistence (P₁) on non-bizarre notebooks | ≤ K ripe failures; late ideas not caught without slack | medium; BIS beyond toy classes not shown |
 | **slack imitation (this note)** | **bounded setback D** | **(D+1)K/ρ failed runs; O((D+1)K log(K/δ)/(ρε)) queries** | **high for omissions, medium for commissions** |
+| **slack imitation with a verifier (Proposition 4)** | **bounded setback, for the cost only** | **no failed run output; ≤ K rejected runs; (D+1)K/ρ task queries (n·K without (B_D))** | **high, where the result is verifiable** |
 | probes / knowledge base (thread B) | answers to located questions | reduces K, not n | composes with any of the above |
 
 ## 8. Limits

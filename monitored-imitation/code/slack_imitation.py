@@ -29,10 +29,11 @@ Bounded setback (slack-imitation.md): the human's remaining time to success rise
 when a wrong value is appended, and by 0 when a step is left out, for the persistent kinds.
 The silent and fooled kinds have unbounded setback.
 
-Usage: python3 slack_imitation.py OUTDIR [--quick] [--mix] [--table]
+Usage: python3 slack_imitation.py OUTDIR [--quick] [--mix] [--table] [--verifier]
   default: CI without slack, CI with slack n/2 (slack imitation) and LAST with slack n/2;
   --mix:   MIX (last step with probability 1/2, else uniform) with slack n/2;
-  --table: write results/slack_imitation_table.md from the saved summaries.
+  --table: write results/slack_imitation_table.md from the saved summaries;
+  --verifier: Protocol SI-V of Proposition 4 (rerun each problem until it succeeds), slack n/2.
 """
 
 import json
@@ -159,6 +160,42 @@ def one_human(args):
     return cap, float((M - ok.sum()) / M), hits
 
 
+def one_human_verifier(args):
+    """Protocol SI-V (Proposition 4): each problem is rerun until its final notebook succeeds;
+    after each rejection, uniform task queries on the fixed run until one lands on a mistake.
+    Returns (task queries, rejected runs, maximum queries spent on one rejected run)."""
+    kind, n, sigma, seed = args
+    persistent, D = KINDS[kind]
+    n0 = n - sigma
+    rng = np.random.default_rng(seed)
+    tp = rng.integers(0, n0, size=M)
+    kp = np.where(rng.random(M) < PI, 1, 2)
+    rng2 = np.random.default_rng(seed + 2 * 10**8)
+    queries = rejected = worst = 0
+    for p in range(M):
+        pr = Problem(n, n0, persistent, D)
+        while not pr.success(tp[p], kp[p]):
+            rejected += 1
+            held, spent = [], 0
+            while True:
+                j = int(rng2.integers(n))
+                spent += 1
+                a, u = pr.run[j]
+                hum = pr.human_step(j, tp[p], kp[p])
+                if hum != pr.decoder_step(j):
+                    break
+                held.append((j, a, u, hum))
+            queries += spent
+            worst = max(worst, spent)
+            # the hit's answer first, then the held answers (all at states of the fixed run)
+            for (jj, aa, uu, hh) in [(j, a, u, hum)] + held:
+                idx = np.flatnonzero(pr.alive)
+                out = pr.outputs(jj, aa, uu, pr.t[idx], pr.k[idx])
+                pr.alive[idx[out != hh]] = False
+            pr.recompute()
+    return queries, rejected, worst
+
+
 def summarise(rows):
     q = np.array([r[0] for r in rows], dtype=float)
     f = np.array([r[1] for r in rows], dtype=float)
@@ -231,7 +268,32 @@ def table(outdir):
     print(text)
 
 
+def main_verifier(outdir):
+    H = 40
+    out = {}
+    t0 = time.time()
+    with Pool(4) as pool:
+        for n in [16, 64, 256]:
+            for kind in KINDS:
+                rows = pool.map(one_human_verifier, [(kind, n, n // 2, 1000 * n + s) for s in range(H)])
+                q = np.array([r[0] for r in rows], dtype=float)
+                rej = np.array([r[1] for r in rows], dtype=float)
+                out[f"{kind}_n{n}_sigma{n // 2}_SIV"] = dict(
+                    kind=kind, n=n, sigma=n // 2, protocol="SI-V", humans=H,
+                    task_mean=float(q.mean()), task_sem=float(q.std(ddof=1) / np.sqrt(H)),
+                    rejected_mean=float(rej.mean()),
+                    queries_per_rejection=float(q.sum() / max(rej.sum(), 1)),
+                    worst_search=int(max(r[2] for r in rows)))
+                print(json.dumps(out[f"{kind}_n{n}_sigma{n // 2}_SIV"]), f"[{time.time() - t0:.0f}s]")
+                sys.stdout.flush()
+    with open(os.path.join(outdir, "slack_imitation_verifier.json"), "w") as f:
+        json.dump(out, f, indent=1)
+
+
 if __name__ == "__main__":
+    if "--verifier" in sys.argv:
+        main_verifier(sys.argv[1] if len(sys.argv) > 1 else ".")
+        sys.exit(0)
     if "--table" in sys.argv:
         table(sys.argv[1] if len(sys.argv) > 1 else ".")
         sys.exit(0)
