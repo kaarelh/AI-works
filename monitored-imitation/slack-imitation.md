@@ -300,4 +300,4 @@ The table is `results/slack_imitation_table.md`, written by `slack_imitation.py 
 1. Measure D on humans, with the tests of Section 4.
 2. A commission-safe imitator. An imitator that writes only content the human would write (omissions only) would need only (B-omit). The majority decoder commits whenever the content is predictable. Abstaining below a confidence 1 − α costs a factor of about 1/α in Lemma 1 of note.md. Is there a better trade-off?
 3. Composition with BIS. BIS (thread C) found the exact step of a missed insight in log₂ n queries in CHAIN, which removes lateness without slack. Does it carry over beyond such classes?
-4. Trees. Slack for decomposition trees (time budget per subtask) should give the same theorem with the tree's critical path in place of n; not worked out.
+4. Trees. Not worked out. Running a decomposition tree depth-first in one shared notebook makes it a chain, and the theorem applies. But that gives up the isolation of subcalls that tree decomposition is usually after. A version with a slack budget per subtask, and setback measured at the parent, is the natural candidate.
