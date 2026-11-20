@@ -1,0 +1,169 @@
+\section{A near-optimal full-margin witness at polynomial width}
+The next argument supplies the energy hypothesis for the actual Gaussian
+posterior. Put $E_*=s/\rho$, $E_0=(1+\varepsilon/4)E_*$, where now
+$0<\varepsilon\le1$, and set
+\[
+ N_0=\left\lceil\frac{128E_0^2}{\varepsilon^2s^2}
+                                  \log(4\cdot2^r)\right\rceil.
+ \tag{13}
+\]
+For every $N\ge N_0$ there is a width-$N$ network with energy exactly
+$E_0$ and signed margins at least $(1+\varepsilon/8)s$ everywhere.
+To prove this, sample independent uniform orientations $z_i\in X$ and
+use incoming weights $U_i=\sqrt{E_0}(0,z_i/\sqrt r)$ and readouts
+$a_i=\sqrt{E_0}\sigma_i$, where
+$\sigma_i=\operatorname{sgn}(b_r)\chi(z_i)$.
+Character projection gives $\E_{z_i}a_i\relu(U_i\cdot\bar x)
+=E_0\rho\chi(x)$.
+Each single-neuron output has second moment $E_0^2/2$, since
+$\E_z\relu(z\cdot x/\sqrt r)^2=1/2$.
+Its centered absolute value is at most $2E_0\sqrt r$.
+Bernstein's inequality with $t=\varepsilon s/8$ gives
+\[
+ \Pr\{|F_N(x)-E_0\rho\chi(x)|>t\}
+ \le2\exp\left[-\frac{Nt^2}{E_0^2+(4/3)E_0\sqrt r\,t}\right]
+ \le2\exp\left[-\frac{N\varepsilon^2s^2}{128E_0^2}\right].
+\]
+For the second inequality, use
+$(4/3)\sqrt r\,t/E_0\le\rho\sqrt r/6\le1$.
+A union bound over the cube makes the probability of any failure at most
+$1/2$. Every neuron has energy $E_0$, so the energy assertion is exact.
+This existence proof is used only to lower-bound Bayesian evidence; the
+learner is not given the witness or its orientations.
+
+\section{Uniform posterior energy control at a cold finite scale}
+Let $p=r+2$ be the number of scalar parameters per neuron and choose
+\[
+ a_0=\min\left\{1,\frac{\varepsilon\sqrt{E_*}}{32\sqrt p},
+ \frac{\varepsilon s}
+ {32\sqrt D\{\sqrt{E_0}+(\sqrt{E_0}+1)\sqrt D\}}\right\},
+ \qquad L_0=\log^+\frac{\sqrt{2\pi}}{2a_0}.             \tag{14}
+\]
+Here $a_0$ denotes a box radius, not a neuron readout.
+Around the preceding witness, constrain every scalar parameter to within
+$a_0$ of its center. For each neuron the output perturbation is at most
+\[
+ a_0\sqrt{E_0}\sqrt D+(\sqrt{E_0}+a_0)Da_0
+                                                    \le\varepsilon s/32.
+\]
+Thus the entire box has every signed margin strictly above $s$.
+Its energy per neuron is at most
+\[
+ \frac12(\sqrt{2E_0}+\sqrt p\,a_0)^2
+ \le E_0+\frac{\sqrt{5/2}}{32}\varepsilon E_*
+                      +\frac{\varepsilon^2}{2048}E_*
+ <(1+\varepsilon/2)E_* .                              \tag{15}
+\]
+
+Give all scalar parameters independent $N(0,\tau^2)$ priors, with
+$0<\tau\le1$, and condition only on signed margins $>s$ at the observed
+pretraining inputs. The full-margin box is contained in every such
+history event, whether or not the inputs are independent. Multiplying
+Gaussian density lower bounds over the box yields, at every history,
+\[
+ P_0^N(H_S)\ge
+ \exp\left[-N\left\{\frac{(1+\varepsilon/2)E_*}{\tau^2}
+                                                    +pL_0\right\}\right].
+ \tag{16}
+\]
+Replacing a Gaussian interval prefactor larger than one by one only
+weakens this lower bound. For $0<t<1$, the Gaussian energy moment is
+\[
+ \E_0\exp(tNE_N/\tau^2)=(1-t)^{-Np/2}.
+\]
+Take $t=1-\varepsilon/8$ and $B=(1+\varepsilon)E_*$.
+Then $tB-(1+\varepsilon/2)E_*\ge\varepsilon E_*/4$.
+It follows that, for any $\beta\in(0,1)$, the sufficient scale condition
+\[
+ 0<\tau^2\le\tau_0^2:=
+ \min\left\{1,
+ \frac{\varepsilon E_*}
+ {4\{pL_0+(p/2)\log(8/\varepsilon)+\log(1/\beta)\}}\right\}
+ \tag{17}
+\]
+implies the deterministic posterior tail bound
+\[
+                  \Pi_{N,S}\{E_N>B\}\le\beta^N
+                  \qquad\text{for every }N\ge N_0.     \tag{18}
+\]
+The same $\tau_0$ works for every width and every history. No limiting
+exchange between prior scale and width is involved.
+
+\section{Polynomial IID pretraining and transfer}
+Let the pretraining inputs be $m$ independent uniform cube points, with
+their full-parity labels. The norm class
+\[
+ \mathcal F_B=\left\{\sum_i c_i\relu(u_i\cdot\bar x):
+                               \sum_i|c_i|\|u_i\|\le B\right\}
+\]
+contains every network with $E_N\le B$, regardless of width.
+Its Rademacher complexity is at most $2B\sqrt{D/m}$, by contraction
+from the Euclidean linear class and the absolute convex hull.
+The margin loss $(s-\chi F)_+$ is one-Lipschitz and bounded by
+$s+B\sqrt D$. Standard symmetrization, contraction, and bounded
+differences therefore give a common sample event of probability
+at least $1-\zeta$ on which every $F\in\mathcal F_B$ with observed
+signed margins $>s$ satisfies
+\[
+ \E(s-\chi F)_+\le h_m:=\frac{8B\sqrt D}{\sqrt m}
+            +(s+B\sqrt D)\sqrt{\frac{\log(1/\zeta)}{2m}}.
+ \tag{19}
+\]
+This common event is a statement about a function class, so it already
+holds simultaneously over widths. It does not require a union bound
+over an infinite collection of posterior distributions.
+
+\begin{theorem}[Actual Gaussian posterior with polynomial pretraining]
+Fix $r,s,\varepsilon,\beta$ as above, any $N\ge N_0$, and any
+$0<\tau\le\tau_0$. With probability at least $1-\zeta$ over the IID
+pretraining sample, the observed-margin posterior assigns mass at least
+$1-\beta^N$ to networks satisfying Theorem~\ref{thm:transfer} with
+$E\le B=(1+\varepsilon)s/\rho$ and $h=h_m$.
+The sample event is common to all these widths and scales.
+
+For every fixed $k$ and $s$, choosing
+\[
+ \varepsilon=\Theta_k(\delta^2r^{-4k-2}),\qquad
+ h_m\le s\varepsilon
+\]
+with a sufficiently small positive leading constant gives downstream
+error $O(\delta)$ for every parity missing $2k$ coordinates, with sufficient
+width and sample bounds of the following orders:
+\[
+ N_0=O_k(r^{8k+7}\delta^{-4}),\qquad
+ m=O_k(r^{8k+7}\delta^{-4}\log(2/\zeta)),\qquad
+ n=O_k(r^{2k+3}\delta^{-2}\log(2/\zeta')).
+ \tag{20}
+\]
+More precisely, (13), (17), (19), and (12) specify inequalities without
+big-$O$ threshold notation. One may choose a positive prior variance of
+order at least
+\[
+ \tau^2=\Omega_{k,s}\left(
+ \frac{\delta^2r^{-4k-2}}
+ {\log(r/\delta)+r^{-1}\log(1/\beta)}\right)
+\]
+while satisfying (17), for $0<\delta\le1/2$.
+The joint failure probability for a fixed eligible width and scale,
+a posterior feature draw, and a fresh downstream sample is at most
+$\zeta+\beta^N+\zeta'$.
+\end{theorem}
+\begin{proof}
+On the common sample event (19), every posterior draw with energy at
+most $B$ meets the deterministic hypotheses. Equation (18) bounds the
+exceptional posterior mass. The transfer certificate and downstream
+margin argument then apply. Since $\rho=\Theta(r^{-1})$,
+$E_0=\Theta(s r)$ and (13) is $O(r^3\varepsilon^{-2})$.
+Equation (19) is at most $s\varepsilon$ for
+$m=O(r^3\varepsilon^{-2}\log(2/\zeta))$, with a sufficiently large
+constant. Also (14) gives
+$L_0=O_s(\log(r/\varepsilon))$, which proves the claimed scale order.
+Substituting the chosen $\varepsilon$ proves (20).
+\end{proof}
+
+The downstream algorithm uses the same even features for all targets;
+it does not need to know the deleted set $A$. The explicit $q_A$ is a
+comparator for the statistical proof. A target may be selected after
+pretraining, before the fresh downstream sample. A simultaneous guarantee
+for separate downstream samples for all $\binom r{2k}$ targets follows
+by replacing $\zeta'$ with $\zeta'/\binom r{2k}$.

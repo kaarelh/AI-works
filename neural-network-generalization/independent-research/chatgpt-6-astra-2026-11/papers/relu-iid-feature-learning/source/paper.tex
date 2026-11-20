@@ -1,0 +1,443 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}
+\newcommand{\relu}{\operatorname{ReLU}}\newcommand{\Prb}{\mathbb P}
+\title{Width-uniform IID learning and feature amplification for Gaussian ReLU Bayes}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author. Verification scope and provenance are stated in the accompanying research collection.}}\date{18 November 2026; independent research draft}
+\emergencystretch=3em
+\hypersetup{pdftitle={Width-uniform IID learning and feature amplification for Gaussian ReLU Bayes},pdfauthor={ChatGPT-6 Astra}}
+\begin{document}\maketitle
+
+This note gives a simpler statistical complement to the sharp posterior
+condensation calculations. It uses only a cloned-teacher probability
+bound, Gaussian energy tails, and the classical Rademacher margin bound
+for a norm-controlled shallow network. The result concerns the actual
+posterior at every representational width. It does not identify which
+neurons learn the feature, and it gives neither efficient sampling nor
+an adversarial online bound. The generalization ingredients are standard;
+no literature-novelty claim is made.
+
+\section{Model and an explicit all-width IID bound}
+Let $X=\{-1,1\}^d$, $D=d+1$, $f:X\to\{-1,1\}$, and let $\mu$ be
+any input distribution on $X$. A shallow mean-field network is
+\[
+ F_N(x)=N^{-1}\sum_{j=1}^N a_j\relu(U_j\cdot\bar x),
+ \qquad \bar x=(1,x),\qquad a_j,U_{j,i}\overset{\rm iid}\sim N(0,\tau^2).
+\]
+Here $\tau>0$. The posterior $\Pi_{N,S}$ conditions only on
+$f(x_i)F_N(x_i)>1/2$ for the observed IID sample
+$S=(x_i,f(x_i))_{i=1}^m$, $x_i\sim\mu$. There is no initial conditioning
+on unobserved inputs.
+
+Assume a teacher
+$F_T(x)=\sum_{i=1}^C v_i\relu(U_i^T\cdot\bar x)$ has signed margin
+strictly greater than $1/2$ everywhere. Put
+\[
+ V=\max_i|v_i|,\quad W=\max_i\|U_i^T\|_2,\quad A=4CV,
+ \quad h=[8\sqrt D\{W+(A+1)\sqrt D\}]^{-1}.
+\]
+In particular $0<h<1$. Define the per-neuron teacher cost
+\[
+ J=(D+1)\log^+\frac{\sqrt{2\pi}\tau}{2h}
+       +\frac{(A+h)^2+(W+\sqrt D h)^2}{2\tau^2}.            \tag{1}
+\]
+For a desired posterior tail $\beta\in(0,1)$ let
+\[
+ B=2\tau^2\left[J+\frac{D+1}{2}\log2+\log(1/\beta)\right],
+ \qquad H=\frac12+B\sqrt D.                               \tag{2}
+\]
+For a sample confidence $\eta\in(0,1)$ put
+\[
+ e_m=\frac{8B\sqrt D}{\sqrt m}
+           +H\sqrt{\frac{\log(1/\eta)}{2m}}.              \tag{3}
+\]
+
+\begin{theorem}[Observed-margin IID learning uniformly over width]
+With probability at least $1-\eta$ over the training sample, the following
+statements hold simultaneously for every integer $N\ge C$.
+The posterior assigns probability at least $1-\beta^N$ to networks with
+\[
+ E_N:=\frac1{2N}\sum_j(a_j^2+\|U_j\|^2)\le B,
+ \qquad \E_{x\sim\mu}(1/2-f(x)F_N(x))_+\le e_m.           \tag{4}
+\]
+In particular its expected sampling classification risk satisfies
+\[
+ \E_{F_N\sim\Pi_{N,S}}\Prb_{x\sim\mu}(f(x)F_N(x)\le0)
+                         \le2e_m+\beta^N.                \tag{5}
+\]
+For any fixed success-confidence threshold $\theta<1$, the $\mu$-mass
+of inputs whose posterior correct-sign probability is at most $\theta$
+is at most $(2e_m+\beta^N)/(1-\theta)$.
+All displayed constants are polynomial in the teacher parameters and
+input dimension, up to logarithms. At bounded positive prior scale they
+do not depend on width. They remain bounded as $\tau\downarrow0$.
+\end{theorem}
+No assumption is made that the teacher itself is drawn from the prior.
+The guarantee covers posterior draws; it is not a statement that a
+particular numerical chain approximates those draws.
+
+\section{Cloning gives an evidence bound at every width}
+Fix $N\ge C$ and partition the $N$ neuron slots into $C$ nonempty groups
+of sizes $n_i\in\{\lfloor N/C\rfloor,\lceil N/C\rceil\}$.
+Then $n_i\ge N/(2C)$. In group $i$ use centers
+\[
+             a_j^*=\frac{2Nv_i}{n_i},\qquad U_j^*=U_i^T.
+\]
+Their averaged output is exactly $2F_T$, and $|a_j^*|\le A$.
+Constrain every scalar parameter within $h$ of its center. For any input,
+\begin{align*}
+ |a_j\relu(U_j\cdot\bar x)-a_j^*\relu(U_j^*\cdot\bar x)|
+ &\le hW\sqrt D+(A+h)Dh\\
+ &\le h\sqrt D\{W+(A+1)\sqrt D\}=1/8.
+\end{align*}
+Thus the averaged output differs from $2F_T$ by at most $1/8$,
+and has signed margin greater than $7/8$ on the entire cube.
+
+Lower-bounding each Gaussian density throughout its interval shows that
+the probability of this box is at least $e^{-NJ}$. For an incoming
+center of norm at most $W$, the sum of the squared maximum coordinate
+magnitudes in the box is at most $(W+\sqrt D h)^2$, by Cauchy--Schwarz.
+If the Gaussian interval prefactor exceeds one, replacing it by one
+only weakens the lower bound; this explains $\log^+$ in (1).
+Therefore every observed-history evidence obeys
+\[
+                    P_0^N(H_S)\ge e^{-NJ}.               \tag{6}
+\]
+This uniform lower bound is a proof device. The learner does not actually
+condition on the full-cube teacher event.
+
+Gaussian exponential moments give
+\[
+ P_0^N(E_N>B)
+ \le\exp\left[-N\left\{\frac{B}{2\tau^2}
+                              -\frac{D+1}{2}\log2\right\}\right].
+\]
+Divide by (6) and use (2) to obtain, for every history separately,
+\[
+                         \Pi_{N,S}(E_N>B)\le\beta^N.      \tag{7}
+\]
+No union bound over possible histories or widths is used.
+
+\section{A common function class for all widths}
+Define the ReLU variation ball
+\[
+ \mathcal F_B=\left\{F=\sum_i c_i\relu(u_i\cdot\bar x):
+                       \sum_i|c_i|\|u_i\|_2\le B\right\}.
+\]
+Allow arbitrary finite width. By $|a|\|U\|\le(a^2+\|U\|^2)/2$,
+every network with $E_N\le B$ belongs to this same class. Also
+$|F(x)|\le B\sqrt D$.
+Here is a conservative derivation of the uniform bound, included to make
+the normalization explicit. For fixed sample inputs and independent
+Rademacher signs $\varepsilon_i$, the empirical Rademacher average is
+\begin{align*}
+ \E_\varepsilon\sup_{F\in\mathcal F_B}
+        \frac1m\sum_i\varepsilon_i F(x_i)
+ &=\frac Bm\E_\varepsilon\sup_{\|u\|\le1}
+                     \left|\sum_i\varepsilon_i\relu(u\cdot\bar x_i)\right|\\
+ &\le\frac{2B}{m}\E_\varepsilon
+                         \left\|\sum_i\varepsilon_i\bar x_i\right\|_2
+ \le2B\sqrt{D/m}.                                       \tag{8}
+\end{align*}
+The middle inequality is the Lipschitz contraction inequality with an
+absolute supremum; the factor two is a conservative convention.
+Symmetrization and a second contraction, now for
+$t\mapsto(1/2-f(x_i)t)_+$ after subtracting its value at zero, bound the
+expected supremum of population-minus-empirical hinge risk by
+$8B\sqrt{D/m}$. This is the standard Rademacher margin argument;
+see \href{https://www.jmlr.org/papers/volume3/bartlett02a/bartlett02a.pdf}
+{Bartlett and Mendelson (2002)} for the contraction and risk-bound tools.
+The loss lies in $[0,H]$. Changing one sample point changes that supremum
+by at most $H/m$, so bounded differences adds the second term of (3).
+Thus, with sample probability at least $1-\eta$,
+\[
+ \E_\mu(1/2-fF)_+
+ \le\frac1m\sum_i(1/2-f(x_i)F(x_i))_++e_m
+                              \quad\text{for every }F\in\mathcal F_B. \tag{9}
+\]
+One can take the separable closure of the finite-width class; on the
+finite cube all these suprema are ordinary finite-dimensional measurable
+suprema. The event (9) is common to every width.
+
+Every posterior network has zero empirical hinge risk. Combining (9)
+with (7) proves (4). On $fF\le0$, the hinge loss is at least $1/2$,
+so good-energy networks have error at most $2e_m$. Bad-energy networks
+have classification error at most one, giving (5). The confidence bound
+is Markov's inequality applied to the posterior error probability at
+an independent test input.
+
+Finally expand (2):
+\[
+ B=(A+h)^2+(W+\sqrt D h)^2+
+ 2\tau^2(D+1)\log^+\frac{\sqrt{2\pi}\tau}{2h}
+ +(D+1)\tau^2\log2+2\tau^2\log(1/\beta).
+\]
+It is bounded uniformly for $0<\tau\le\tau_{\max}$ at fixed teacher
+and tail probability. This establishes the asserted cold-scale
+qualification; it does not interchange a width limit with a limiting
+posterior or imply an adversarial online guarantee.
+
+The same argument permits different layer standard deviations. Replace
+(1) by
+\[
+ J=\log^+\frac{\sqrt{2\pi}\tau_a}{2h}
+   +D\log^+\frac{\sqrt{2\pi}\tau_u}{2h}
+   +\frac{(A+h)^2}{2\tau_a^2}
+   +\frac{(W+\sqrt D h)^2}{2\tau_u^2},
+\]
+and replace the leading $2\tau^2$ in (2) by
+$2\max(\tau_a^2,\tau_u^2)$. The energy exponential moment is bounded
+by the same $2^{N(D+1)/2}$ using the larger variance. All remaining
+steps are unchanged. In particular fan-in scaling $\tau_u=\tau_a/\sqrt d$
+retains polynomial sample bounds, and a common cold scale with fixed
+layer-variance ratio retains bounded constants.
+
+\section{Polynomially many parity examples force feature amplification}
+For the actual incoming-feature kernel
+\[
+ \mathcal K_N(x,y)=N^{-1}\sum_j
+           \relu(U_j\cdot\bar x)\relu(U_j\cdot\bar y),
+\]
+define its quadratic form in the target direction, with input law $\mu$,
+\[
+ \lambda_f(\mathcal K_N)=\E_{x,y\sim\mu}
+                                  f(x)\mathcal K_N(x,y)f(y).
+\]
+This notation denotes a quadratic form, not an eigenvalue unless $f$
+happens to be an eigenfunction.
+
+\begin{corollary}[A feature direction already grows with polynomial data]
+On the sample event in the theorem, if $e_m<1/2$, a posterior draw has,
+with probability at least $1-\beta^N$,
+\[
+ \lambda_f(\mathcal K_N)\ge\frac{(1/2-e_m)^2}{2B}.        \tag{10}
+\]
+For uniform full parity on even $r\ge6$, at fixed $\tau,\beta$ the
+explicit width-$(r+1)$ teacher gives $B=O(r^2)$. Thus
+\[
+ m=O\!\left(r^5\epsilon^{-2}[1+\log(1/\eta)]\right)
+ \quad\Longrightarrow\quad e_m\le\epsilon,
+ \qquad \lambda_\chi(\mathcal K_N)\ge\Omega(r^{-2})       \tag{11}
+\]
+for fixed $\epsilon<1/2$, uniformly for every $N\ge r+1$.
+The initial Gaussian incoming-feature kernel instead has
+$\lambda_\chi(\mathcal K_0)\le3\tau^2 2^{-r}$.
+Hence polynomially many IID labels already force an exponentially large
+increase in this feature quadratic form under the actual posterior.
+\end{corollary}
+\begin{proof}
+The hinge inequality gives $\E_\mu fF_N\ge1/2-e_m$.
+Put $g_j=\E_\mu f(x)\relu(U_j\cdot\bar x)$. Then
+\[
+ (1/2-e_m)^2\le\left(N^{-1}\sum_j a_jg_j\right)^2
+ \le\left(N^{-1}\sum_j a_j^2\right)
+                         \left(N^{-1}\sum_jg_j^2\right)
+ \le2B\lambda_f(\mathcal K_N).
+\]
+For parity, the explicit hinge teacher in the companion has
+$C=r+1$, $V\le2$, $W\le\sqrt{r^2+r}+1$, and signed output exactly one.
+Thus $A=O(r)$, $h^{-1}=O(r^2)$, and (2) gives $B=O(r^2)$ at fixed
+$\tau,\beta$. Equations (3) and (10) prove (11).
+The prior bound is the companion's Gaussian ReLU kernel estimate,
+scaled by incoming variance $\tau^2$.
+\end{proof}
+The learned network itself is a function in the RKHS of its empirical
+kernel with squared norm at most $N^{-1}\sum a_j^2\le2B$. This makes
+(10) a general consequence of low-risk, controlled-readout-norm learning;
+it is not a special new property of the condensation geometry.
+
+\section{A stronger parity bound at polynomially large width}
+A finite mixture of nearly critical neurons improves the energy certificate.
+This does not assume that the posterior itself has reached the exact-count
+regime. For even $r\ge6$, retain the companion's sharp correlation $\rho$
+and canonical critical directions
+\[
+ v_z=(0,z/\sqrt r),\quad z_1=1,\qquad
+ \sigma_z=\operatorname{sgn}(G(v_{\boldsymbol1}))\chi(z).
+\]
+Their identity is
+$K^{-1}\sum_{z:z_1=1}\sigma_z\relu(v_z\cdot\bar x)=\rho\chi(x)$,
+where $K=2^{r-1}$. Put
+\[
+ R^2=2/\rho,\qquad
+ \nu=\min\{\tau,[4R\sqrt{r+1}]^{-1}\},\qquad q=\nu^2/\tau^2.
+\]
+Let $Q_T$ mix uniformly over these $K$ directions and, conditional on $z$,
+take independent
+\[
+ a\sim N(\sigma_zR,\tau^2),\qquad
+ U\sim N(Rv_z,\nu^2I_{r+1}).
+\]
+Its mean output differs from $2\chi$ by at most
+$R\nu\sqrt{r+1}\le1/4$. Its relative entropy is at most
+\[
+ K_T=\frac{R^2}{\tau^2}
+             +\frac{r+1}{2}(q-1-\log q),                 \tag{12}
+\]
+by entropy convexity and the Gaussian component formula. There is no
+extra $\log K$ cost: the mixture entropy is bounded above by the average
+of the component entropies.
+
+The neuron output under $Q_T$ has a uniform exponential-moment bound
+\[
+ \E_{Q_T}e^{|\Phi_x|/\Psi}\le2,
+                 \qquad \Psi=16(R^2+\tau^2+1).           \tag{13}
+\]
+Here is a direct verification. Under the mixture, the preactivation has
+mean $Rx_1/\sqrt r$ and its centered part is sub-Gaussian with variance
+proxy at most $R^2+\nu^2(r+1)$, by the independent signs in $z_2,\ldots,z_r$.
+Its mean-square-plus-variance proxy is therefore at most
+$B_1=2R^2+\nu^2(r+1)$. The readout, for an even observable such as its
+square, has the same law as $R+\tau G$, so take $A_1=R^2+\tau^2$.
+For a variable of mean $m$ and centered sub-Gaussian proxy $v$, with
+$m^2+v\le C$, the Gaussian-square integral gives
+\[
+ \E e^{Y^2/(8C)}
+ \le(1-v/(4C))^{-1/2}e^{m^2/(8C-2v)}
+ \le\sqrt{4/3}\,e^{1/6}<2.
+\]
+Young's inequality and Cauchy--Schwarz thus give
+$\E e^{|a\,U\cdot\bar x|/(8\sqrt{A_1B_1})}\le2$ without needing
+independence of those two mixture marginals. Since
+$8\sqrt{A_1B_1}\le\Psi$ and $|\Phi_x|\le|a\,U\cdot\bar x|$,
+(13) follows.
+
+To make the concentration constant explicit, (13) implies
+$\E|\Phi_x-\E\Phi_x|^k\le2^{k+1}k!\Psi^k$. Summing the
+centered exponential series gives
+$\log\E e^{t(\Phi_x-\E\Phi_x)}\le16t^2\Psi^2$ for
+$|t|\le1/(4\Psi)$. Chernoff with $t=1/(32\Psi^2)$ and the
+mean signed margin at least $7/4$ therefore gives
+\[
+ Q_T^N\{\exists x:\chi(x)F_N(x)\le1/2\}
+                      \le M e^{-N/(64\Psi^2)}.
+\]
+For
+\[
+ N\ge N_0:=\left\lceil64\Psi^2\log(2M)\right\rceil,
+\]
+the full teacher-margin event has $Q_T^N$ probability at least $1/2$.
+Binary relative entropy therefore bounds its original-prior negative log
+probability by $2NK_T+2\log2$. Use
+\[
+ J_{\rm large}=2K_T+2\log2,\qquad
+ B_{\rm large}=2\tau^2[J_{\rm large}+(r+2)\log2/2+\log M]  \tag{14}
+\]
+in place of the earlier energy certificate. Every history then has
+posterior energy-tail probability at most $M^{-N}$.
+
+Uniformly for $0<\tau\le\tau_{\max}$, with fixed $\tau_{\max}$,
+\[
+ N_0=O(r^3),\qquad B_{\rm large}=O(r\log(r+1)).
+\]
+Equations (3) and (10) consequently give, at every $N\ge N_0$,
+\[
+ m=O\!\left(r^3\log^2(r+1)\,\epsilon^{-2}
+                               [1+\log(1/\eta)]\right),
+ \qquad
+ \lambda_\chi(\mathcal K_N)\ge\Omega\!\left(\frac1{r\log(r+1)}\right)
+                                                               \tag{15}
+\]
+for fixed $\epsilon<1/2$, on the same high-probability sample and posterior
+events. The probability and polynomial constants are explicit above,
+although very conservative.
+
+The mixture in this proof has exponentially many components, but it is
+only an entropy certificate, not the realized learner width. Its product
+law supplies a positive-probability margin network already at polynomial
+width $N_0$. Thus (15) is a simultaneous width-and-dimension statistical
+statement. It neither requires nor implies exponentially many exceptional
+neurons. The exact-count theorem takes a different regime, with dimension
+fixed before width tends to infinity.
+
+\section{A smooth width-scaled likelihood also has an all-width IID bound}
+There is a corresponding statement for the ordinary Gaussian ReLU prior
+with a logistic likelihood, without requiring any endpoint exponential
+moments of the neuron output. Here use all $m$ observations with their
+multiplicity and put
+\[
+ d\Pi_{N,S}^{\log}\ \propto\
+ \exp\left[-N\lambda\sum_{i=1}^m
+             \log(1+e^{-f(x_i)F_N(x_i)})\right]dP_0^N,
+ \qquad\lambda>0.
+\]
+The factor $N$ is part of the model. This IID assertion does not need
+memorized prediction at repeated inputs; it concerns test risk rather
+than a lifetime count of repeated stochastic prediction errors.
+
+Set $T=2\log(e+\lambda m)$. Replace the cloned teacher's readout centers
+by $2N(T+1)v_i/n_i$. In (1) replace $A$ by $A_T=4C(T+1)V$ and recompute
+$h,J$, calling the latter $J_T$. The same box argument puts every signed
+output above $T$. Since $\lambda m e^{-T}\le1$, its logistic evidence
+is at least $e^{-N\bar J_T}$, where $\bar J_T=J_T+1$.
+Put $t=\log(1/\beta)$ and
+\[
+ B_T=2\tau^2[\bar J_T+(D+1)\log2/2+t],\qquad
+ H_T=\log2+B_T\sqrt D.
+\]
+For every sample separately, the posterior gives probability at least
+$1-2\beta^N$ to the simultaneous events
+\[
+ E_N\le B_T,\qquad
+ \frac1m\sum_i\log(1+e^{-f(x_i)F_N(x_i)})
+                         \le\frac{\bar J_T+t}{\lambda m}. \tag{16}
+\]
+The energy estimate follows as before. For the loss estimate, on the
+complement of the second event the likelihood is at most
+$e^{-N(\bar J_T+t)}$; dividing by the evidence proves the claim.
+
+The logistic loss is one-Lipschitz and lies in $[0,H_T]$ on the energy
+ball. The same contraction and bounded-differences proof therefore
+shows, with sample probability at least $1-\eta$, that simultaneously
+for every $N\ge C$ the posterior's expected classification risk is at most
+\[
+ \frac1{\log2}\left[
+ \frac{\bar J_T+t}{\lambda m}
+ +\frac{8B_T\sqrt D}{\sqrt m}
+ +H_T\sqrt{\frac{\log(1/\eta)}{2m}}\right]+2\beta^N.       \tag{17}
+\]
+The inequality uses that a nonpositive signed score incurs logistic loss
+at least $\log2$. These constants are explicit and polynomial in the
+teacher parameters and positive likelihood/prior scales, up to logarithms.
+At fixed such parameters, $J_T,B_T=O((1+\log m)^2)$. Thus (17) gives
+polynomial sample complexity uniformly over all representational widths.
+For an elementary explicit polynomial reduction, use
+$(1+\log m)^2\le12m^{1/4}$ for $m\ge1$ and solve the resulting
+$m^{-1/4}$ bound. No sharp sample exponent is claimed.
+
+This extension does not have the hard-margin theorem's uniform cold-scale
+sample bound: its first term contains $J_T/(\lambda m)$, which can grow
+as $\tau^{-2}/m$. It also does not settle the Gaussian ReLU adversarial
+online problem. The unscaled Bernoulli likelihood is a different model.
+
+\section{What this does and does not settle}
+The result removes the full-cube-data requirement for a \emph{weaker}
+feature-learning conclusion: polynomial IID samples force a polynomial
+quadratic form in the target direction. It does not show that these
+samples produce the exact exceptional-neuron count, the full-data
+orientation law, or the nearby-parity transfer guarantee. The learned
+kernel need not have parity as an eigenvector after a partial sample.
+The strong-prior adversarial OOD mistake problem for ordinary ReLU with
+margins imposed only at observed inputs also remains open. Those distinctions matter: IID sampling cannot choose
+queries adaptively to avoid informative regions indefinitely.
+
+The proof has standard statistical ingredients and an explicit posterior
+energy estimate. It has not received independent review or formal verification.
+It is published as a draft in the separate independent-research collection,
+with no change to the existing shared manuscripts.
+
+\paragraph{A finite-dimensional diagnostic, not scaling evidence.}
+Six-bit, width-512 coordinate/gauge/rotation chains were run for 30000
+sweeps on each of two IID datasets at 16, 32, 64, and 128 draws, from
+both a full-parity start and a prior-feature readout fit to the observed
+labels. Averaged unseen-input errors over the second halves and those
+four runs were approximately $0.623,0.536,0.251,0.125$, respectively.
+At 128 draws both chains for one dataset gave zero errors on unseen
+inputs, while both chains for the other gave errors on two of its eight
+unseen inputs. Some 64-draw runs show
+initialization differences. These are small-dimension chain diagnostics,
+without mixing certification, and do not test the polynomial asymptotic
+sample law. The summary and all these traces are retained separately.
+\end{document}

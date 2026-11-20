@@ -1,0 +1,517 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{lemma}[theorem]{Lemma}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}
+\newcommand{\relu}{\operatorname{ReLU}}\newcommand{\HH}{\mathcal H}
+\title{Transfer to nearby parity targets after Bayesian feature learning}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author. Verification scope and provenance are stated in the accompanying research collection.}}\date{18 November 2026; independent research draft}
+\emergencystretch=3em
+\hypersetup{pdftitle={Transfer to nearby parity targets after Bayesian feature learning},pdfauthor={ChatGPT-6 Astra}}
+\begin{document}\maketitle
+
+The posterior companion learns full even parity after observing every
+cube label. This note extracts a downstream consequence for different
+targets: its frozen incoming-feature kernel permits polynomial online
+mistakes for every parity missing a fixed even number of bits. The same
+target has exponentially large RKHS norm in the initial Gaussian kernel.
+The latter comparison is about norm, not a mistake lower bound for an
+arbitrary kernel algorithm. Pretraining still uses all $2^r$ labels; this
+is not an efficient method for learning the original parity from scratch.
+A further typical-orientation result gives raw-feature transfer uniformly
+down to arbitrarily cold positive prior scales, still in a width-first,
+full-cube-pretraining regime.
+
+\section{Model and the downstream statement}
+Fix even $r\ge6$, $X=\{-1,1\}^r$, and $\chi(x)=\prod_i x_i$.
+Use the unit-Gaussian mean-field ReLU posterior of the companion,
+conditioned on all signed margins exceeding $s=1/2$.
+Write $M=2^r$, $K=M/2$,
+\[
+ \rho=\frac{\binom{r-2}{(r-2)/2}}{2^{r-1}\sqrt r},\quad
+ Q_*=e^{Z/\rho}P_0/M_*,\quad m_c=\E_{Q_*}Z,\quad
+ \delta=s-m_c>1/8.
+\]
+The previous arguments give $M_*\le r/(r-2)$ and $m_c<3/8$.
+For a balanced orientation set $S$ containing one representative of each
+antipodal pair, the incoming-feature kernel limit is
+\[
+ \mathcal K_S(x,y)=\mathcal K_*(x,y)+
+      \alpha\sum_{z\in S}h_z(x)h_z(y),\quad
+ \alpha=\frac{\delta}{K\rho},\quad
+ h_z(x)=\relu(z\cdot x/\sqrt r).
+\]
+Here $\mathcal K_* =\E_{Q_*}h_U\otimes h_U$ is the ordinary-neuron
+kernel. All kernels act with uniform measure on $X$. The associated RKHS
+uses the usual evaluation kernel, without an extra factor $M$ in its norm.
+
+Put $h=h_{\boldsymbol1}$ and $b_j=\widehat h(T)$ for $|T|=j$.
+For even $j\ge2$, the formula proved below is
+\[
+ b_j=\rho(-1)^{(j-2)/2}
+   \frac{\binom{(r-2)/2}{(j-2)/2}}{\binom{r-2}{j-2}}.       \tag{1}
+\]
+
+\begin{theorem}[Uniform transfer over orientation sectors]
+For every even nonempty $T\subseteq[r]$, $j=|T|$, the downstream target
+$g=\chi_T$ satisfies, in every balanced sector,
+\[
+ \|g\|_{\HH(\mathcal K_S)}^2
+ \le B_j^2:=\frac{\rho/\delta+M_*/r}{b_j^2},\qquad
+ \max_x\mathcal K_S(x,x)
+ \le R^2:=\frac{r+1+m_c/\rho}{2}+\frac\delta\rho.           \tag{2}
+\]
+Consequently the ordinary kernel perceptron using this frozen kernel
+makes at most $R^2B_j^2$ mistakes along every input sequence labeled by
+$g$. If $j=r-2k$ for fixed $k\ge0$, these bounds give
+\[
+ \|g\|_{\HH(\mathcal K_S)}^2=O_k(r^{2k+1}),\qquad
+          \text{perceptron mistakes}=O_k(r^{2k+2}).        \tag{3}
+\]
+For the initial unit-Gaussian ReLU feature kernel $\mathcal K_0$, when
+$j\ge4$,
+\[
+ \|\chi_T\|_{\HH(\mathcal K_0)}^2
+ \ge \frac{2\pi(j/2-1)}{e\sqrt2(r+1)}\,2^j.              \tag{4}
+\]
+For fixed $k$, (4) is exponential in $r$. The positive downstream bound
+also holds with probability tending to one for a frozen actual finite-
+width posterior kernel, with a constant-factor relaxation, as width
+tends to infinity at fixed $r$.
+\end{theorem}
+The bound in (2) is deliberately conservative. For full parity itself,
+balancing gives the exact identity
+$\|\chi\|_{\HH(\mathcal K_S)}^2=1/(s\rho)$.
+No efficient posterior-sampling or quantitative width threshold is asserted.
+One explicit bound, needing no numerical estimate of the critical law,
+is
+\[
+ \text{mistakes}\le
+   \frac{160\,r^{2k+2}}{[(2k-1)!!]^2}
+ \quad(r\ge6,\ r-2k\ge2).
+\]
+Indeed $B_j^2\le(8\rho+1/(r-2))/b_j^2$, while
+$R^2\le(r+1)/2+1/(2\rho)$. The elementary bounds
+$1/(2\sqrt2r)\le\rho\le1/r$ and (5) give
+$B_j^2\le76r^{2k+1}/[(2k-1)!!]^2$ and $R^2\le2r$.
+
+\section{Exact even Fourier coefficients}
+Let $T$ have even cardinality $j\ge2$ and single out two of its coordinates.
+Averaging the first signed coordinate differentiates the ReLU across a
+unit step. The sum of the other $r-1$ signs is odd, so
+\[
+ b_j=\frac1{\sqrt r}\E_{r-1}
+       \chi_{j-1}\mathbf1_{\{\sum x_i\ge1\}}.
+\]
+Averaging a second signed coordinate leaves only the zero layer of the
+remaining even-dimensional cube:
+\[
+ b_j=\frac1{2\sqrt r}\E_{r-2}
+                    \chi_{j-2}\mathbf1_{\{\sum x_i=0\}}.
+\]
+Conditional on that layer, the signs comprise $(r-2)/2$ of each value.
+For any fixed such vector, the elementary symmetric generating polynomial
+is $(1+t)^{(r-2)/2}(1-t)^{(r-2)/2}=(1-t^2)^{(r-2)/2}$.
+Permutation symmetry therefore makes its $(j-2)$-coordinate product
+mean equal to
+$(-1)^{(j-2)/2}\binom{(r-2)/2}{(j-2)/2}/\binom{r-2}{j-2}$.
+The zero-layer probability is $2^{-(r-2)}\binom{r-2}{(r-2)/2}$,
+which proves (1). In particular
+\[
+ |b_{r-2k}|=\rho\,
+ \frac{(2k-1)!!}{(r-3)(r-5)\cdots(r-2k-1)}
+                      =\Theta_k(r^{-k-1}),               \tag{5}
+\]
+with the empty product and $(-1)!!$ interpreted as one. The analogous
+low-degree coefficients $b_{2k+2}$ have the same magnitude.
+
+\section{Canceling the linear part using ordinary neurons}
+ReLU at zero bias has only even Fourier coefficients and singleton
+coefficients. The even coefficient of $h_z$ at $V$ is
+$b_{|V|}\chi_V(z)$; its singleton coefficient at $i$ is $z_i/(2\sqrt r)$.
+Characters of even subsets are orthogonal on the antipodal quotient.
+Choose
+\[
+ c_z=\frac{\chi_T(z)}{K b_j},\qquad z\in S.
+\]
+Then the even part of $\sum_zc_zh_z$ is exactly $\chi_T$. Its only
+other part is a linear function $l(x)=\sum_i l_ix_i$, where
+\[
+ l_i=\sum_{z\in S}\frac{c_zz_i}{2\sqrt r}.
+\]
+The rows of the $r\times K$ matrix $L_{i,z}=z_i/(2\sqrt r)$ are
+orthogonal: summing $z_i z_{i'}$ over any one representative of each
+antipodal pair gives $K\mathbf1_{i=i'}$. Thus
+\[
+ \sum_zc_z^2=\frac1{Kb_j^2},\qquad
+ \|l\|_2^2\le\frac{K}{4r}\sum_zc_z^2=\frac1{4r b_j^2}.   \tag{6}
+\]
+The exceptional kernel realizes $\chi_T+l$ with squared RKHS norm
+at most $\sum c_z^2/\alpha=\rho/(\delta b_j^2)$.
+
+The ordinary kernel is diagonal in Walsh characters. Its singleton
+eigenvalue is at least $1/(4M_*)$. Indeed the incoming $Q_*$ density
+relative to the standard Gaussian is $e^{G(U)^2/(2\rho^2)}/M_*\ge1/M_*$.
+For a standard Gaussian incoming vector, integration by parts gives
+\[
+ \E_0[w_i\widehat h_U(\{i\})]
+ =\E_x x_i\E_0[x_i\mathbf1_{\{U\cdot(1,x)>0\}}]=1/2.
+\]
+Cauchy--Schwarz and $\E_0 w_i^2=1$ give
+$\E_0\widehat h_U(\{i\})^2\ge1/4$, proving the eigenvalue bound.
+Hence $-l$ has ordinary-kernel squared RKHS norm at most
+$4M_*\|l\|_2^2\le M_*/(r b_j^2)$.
+The sum-of-kernels feature representation concatenates the two feature
+spaces; adding these two squared costs proves the first part of (2).
+This step is necessary: a nearby even parity need not itself be an
+eigenvector of an orientation-conditioned kernel, because of its
+potential coupling to singleton features.
+
+\section{Feature radius and the perceptron consequence}
+The incoming critical law is invariant under every coordinate sign
+change of $w$, and under $U\mapsto-U$. Its mixed second moments vanish.
+As $x_i^2=1$, these symmetries and the companion's energy identity give
+\[
+ \mathcal K_*(x,x)=\frac12\E_{Q_*}(U\cdot(1,x))^2
+                 =\frac12(r+1+m_c/\rho).
+\]
+For each orientation $h_z(x)^2\le(z\cdot x)^2/r$.
+The antipodal-pair second-moment identity gives
+$\sum_{z\in S}(z\cdot x)^2/r=K$. Thus the exceptional diagonal is
+at most $\alpha K=\delta/\rho$, proving the radius bound.
+Since $\rho=\Theta(1/r)$, $R^2=O(r)$. Equation (5), $\delta>1/8$,
+and $M_*\le r/(r-2)$ give $B_j^2=O_k(r^{2k+1})$.
+
+For completeness, let $\phi$ be the frozen-kernel feature map and let
+$w_*$ realize $g$ with norm at most $B_j$. On each perceptron mistake,
+update $w\leftarrow w+g(x)\phi(x)$. The scalar product with $w_*$
+increases by exactly one, while the squared norm increases by at most
+$R^2$, since the mistaken signed score is nonpositive. After $m$
+mistakes, $m\le\langle w,w_*\rangle\le B_jR\sqrt m$, giving the
+claimed bound. Fixed deterministic tie rules are covered by updating
+at a zero score whenever its predicted label is wrong.
+
+The ordinary kernel is strictly positive definite on the finite cube,
+because its incoming law has positive density and ReLU ridge vectors
+span all output tables. Therefore every $\mathcal K_S$ is strictly
+positive definite. There are finitely many sectors at fixed $r$.
+The posterior kernel convergence from the companion, continuity of
+matrix inversion, and the finite number of target characters imply
+that (2) holds for the actual frozen finite-width kernel with, for
+example, each right side multiplied by two, with probability tending
+to one. The perceptron mistake bound then worsens by at most four.
+There is no uniform control of the required width as $r$ grows.
+
+\section{The initial kernel comparison}
+The standard Gaussian ReLU kernel has the absolutely convergent expansion
+\[
+ \mathcal K_0(x,y)=(r+1)\left\{\frac c4+
+     \frac1{2\pi}\left[1+\sum_{l\ge1}a_lc^{2l}\right]\right\},
+ \quad c=\frac{1+x\cdot y}{r+1},\quad
+ 0<a_l=\frac{\binom{2l}{l}}{4^l(2l-1)^2}\le l^{-5/2}.
+\]
+For a degree-$j$ character, the coefficient of $c^n$ is the probability
+that $j$ specified nonzero symbols have odd multiplicity in $n$ uniform
+draws from $\{0,\ldots,r\}$. It vanishes for $n<j$. Poissonizing
+the counts and conditioning their total to be $n$ bounds it by
+$e\sqrt n\,2^{-j}$, using
+$\Pr(\mathrm{Poisson}(n)=n)\ge1/(e\sqrt n)$.
+Consequently for $j\ge4$ the corresponding kernel eigenvalue obeys
+\[
+ \lambda_j(\mathcal K_0)
+ \le\frac{e\sqrt2(r+1)}{2\pi}\,2^{-j}
+                        \sum_{l\ge j/2}l^{-2}
+ \le\frac{e\sqrt2(r+1)}{2\pi(j/2-1)}\,2^{-j}.
+\]
+It is positive because the $n=j$ term is positive. A unit-normalized
+Walsh character has squared RKHS norm $1/\lambda_j$, proving (4).
+This norm comparison makes no lower-bound claim about an algorithm
+that can exploit the parity description rather than the fixed kernel.
+
+\section{Perfect fitting alone does not force this transfer geometry}
+There is an explicit obstruction to deriving the transfer conclusion from
+an arbitrary polynomial energy bound. For every even $r\ge6$, put
+\[
+ b_*=\frac r{r-3},\qquad h_z(x)=\relu(b_*+z\cdot x),
+ \qquad z\in\{-1,1\}^r.
+\]
+Write $g_j(b)$ for the degree-$j$ Walsh coefficient of
+$\relu(b+\sum_i x_i)$; permutation symmetry makes it independent of
+the particular subset of size $j$. The zero-bias coefficient formulas give
+\[
+ g_r(0)=(-1)^{r/2-1}\sqrt r\,\rho,\qquad
+ g_{r-2}(0)=-\frac{g_r(0)}{r-3}.
+\]
+On $0\le b\le2$ the ridge is pointwise affine in $b$, because the
+possible sums $\sum x_i$ are even integers. For an even nonempty subset
+$T$, its coefficient's slope is
+$\E\chi_T\mathbf1_{\{\sum x_i\ge0\}}
+=\frac12\E\chi_T\mathbf1_{\{\sum x_i=0\}}$.
+The zero layer has probability $2^{-r}\binom r{r/2}$ and conditional
+character mean
+$(-1)^{|T|/2}\binom{r/2}{|T|/2}/\binom r{|T|}$.
+Consequently
+\[
+ g_r(b)=g_r(0)\left(1-\frac{r-1}{r}b\right),\qquad
+ g_{r-2}(b)=g_{r-2}(0)\left(1-\frac{r-3}{r}b\right).
+\]
+Thus at $b=b_*$ every degree-$(r-2)$ coefficient is zero, while
+\[
+ g:=g_r(b_*)=-\frac{2g_r(0)}{r-3}\ne0.
+\]
+Group averaging projects exactly onto full parity:
+\[
+ 2^{-r}\sum_z\frac{\chi(z)}g\,h_z(x)=\chi(x).
+\]
+The incoming-feature kernel of this network annihilates every
+degree-$(r-2)$ character, since that character is orthogonal to every
+one of its features. It cannot learn any of those targets as an RKHS
+function, despite perfectly computing the pretraining target.
+
+This example can have polynomial physical energy. Let
+$W=\sqrt{r+b_*^2}$, choose $t^2=1/(|g|W)$, and realize each neuron as
+\[
+ U_z=t(b_*,z),\qquad a_z=\frac{\chi(z)}{gt}.
+\]
+Both layer squared norms equal $W/|g|$. The width-$2^r$ mean-field
+network therefore has
+\[
+ E=\frac W{|g|}
+   =\frac{(r-3)\sqrt{r+b_*^2}}{2\sqrt r\,\rho}=\Theta(r^2).
+\]
+The same obstruction has a polynomial-width classification version.
+Sample $z_1,\ldots,z_N$ independently and uniformly from the cube and
+use the balanced neurons just displayed. For each $x$, the unscaled
+single-neuron output $Y_z(x)=\chi(z)h_z(x)/g$ has mean $\chi(x)$ and
+lies in $[-A,A]$, where $A=(r+b_*)/|g|=O(r^{5/2})$.
+Hoeffding and a union bound give
+\[
+ \Pr\left\{\max_x|F_N(x)-\chi(x)|>1/4\right\}
+       \le2M\exp[-N/(32A^2)].
+\]
+Thus every $N\ge\lceil32A^2\log(4M)\rceil=O(r^6)$ admits a
+network with signed margin at least $3/4$ on every cube input,
+physical energy exactly $W/|g|=\Theta(r^2)$, and a kernel that still
+annihilates every degree-$(r-2)$ character. Each sampled feature already
+has the zero coefficient, so the blindness assertion is exact rather
+than an approximation. Polynomial width therefore suffices if perfect
+classification replaces exact real-valued interpolation.
+
+These are finite-dimensional identities and a standard concentration
+argument. They are not statements about what the Gaussian posterior
+selects: the energy exceeds its exact full-data optimum.
+They also do not rule out a transfer theorem under the sharper
+$O(r\log r)$ energy bound from polynomial-width IID learning. They do
+show that the coarse $O(r^2)$ norm certificate and perfect fitting,
+by themselves, are insufficient. The specialized critical-ray geometry
+in the preceding sections supplies additional information.
+
+\section{A quantitative near-minimum-energy condition}
+The opposite conclusion has a useful quantitative sufficient condition.
+Consider any finite-width ReLU network with
+\[
+ F=N^{-1}\sum_i a_i\relu(U_i\cdot\bar x),\qquad
+ E=(2N)^{-1}\sum_i(a_i^2+\|U_i\|^2),
+\]
+on the uniform $r$-cube. Suppose $\E\chi F\ge s>0$ and
+$E\le(1+\varepsilon)s/\rho$. This assumption uses the sharp minimum
+energy for a given full-parity correlation, rather than an arbitrary
+polynomial norm bound. For any even $j\ge2$, let $b_j\ne0$ be (1).
+If $0\le\varepsilon\le b_j^2/16$, then for every $|T|=j$ the actual
+incoming kernel satisfies
+\[
+ \E_{x,y}\chi_T(x)\mathcal K_N(x,y)\chi_T(y)
+       \ge\frac{s b_j^2}{32(1+\varepsilon)\rho}.           \tag{7}
+\]
+This is a feature quadratic-form bound, not an RKHS interpolation bound
+or a complete downstream learning theorem.
+
+To prove it, write $R_i=\|U_i\|$, $u_i=U_i/R_i$ when $R_i>0$,
+and $G(u)=\E\chi\relu(u\cdot\bar x)$. Put
+$P=N^{-1}\sum_i|a_i|R_i$. The correlation assumption and sharp atom
+bound give $P\ge s/\rho$ and
+\[
+ N^{-1}\sum_i|a_i|R_i\{\rho-|G(u_i)|\}
+                \le\rho E-s\le\varepsilon s.
+\]
+Set $\delta=b_j^2/8$. Call a neuron good when
+$|G(u_i)|\ge(1-\delta)\rho$. The product mass of bad neurons is
+at most $\varepsilon s/(\delta\rho)$, so the good product mass is
+at least $s/(2\rho)$.
+
+For a good unit incoming vector $u=(b,w)$, the sharper inequality
+$|G(u)|\le\rho\sqrt r\min_i|w_i|$ implies that the critical vector
+$v=(0,\operatorname{sgn}(w)/\sqrt r)$ has
+$u\cdot v\ge1-\delta$, hence $\|u-v\|\le\sqrt{2\delta}$.
+Each Fourier coefficient of the ReLU ridge is one-Lipschitz in its
+incoming vector: by Cauchy--Schwarz,
+\[
+ \left|\E\chi_T\{\relu(u\cdot\bar x)-\relu(v\cdot\bar x)\}\right|
+ \le\E|(u-v)\cdot\bar x|\le\|u-v\|.
+\]
+Here $\E\bar x\bar x^\top=I$. Therefore the degree-$j$ coefficient
+of every good unit ridge has magnitude at least $|b_j|/2$.
+Writing $A=N^{-1}\sum_i a_i^2\le2E$, Cauchy--Schwarz on the good
+neurons gives
+\[
+ N^{-1}\sum_{i\ \mathrm{good}}R_i^2
+ \ge\frac{(s/(2\rho))^2}{A}
+ \ge\frac{s}{8(1+\varepsilon)\rho}.
+\]
+Multiplying by $b_j^2/4$ proves (7).
+
+For $j=r-2k$ with fixed $k$, a sufficiently small relative energy
+excess of order $r^{-2k-2}$ therefore forces a feature quadratic form
+of order at least $s r^{-2k-1}$, uniformly in width. This explains
+one precise sense in which near-optimal energy provides more information
+than the coarse polynomial certificate. This particular argument does
+not put the posterior in that regime from polynomial IID data, and a
+large quadratic form alone does not give the earlier perceptron guarantee.
+The separate cold-prior companion described below supplies the missing
+finite-data and actual-comparator arguments.
+
+\section{Typical raw exceptional features suffice even at cold scales}
+The preceding uniform-over-sectors theorem uses ordinary background
+features to cancel a possibly large linear term. A different argument
+shows that this cancellation is unnecessary in a typical orientation
+sector as dimension grows. This result uses the orientation-law
+companion's Fourier concentration theorem, which in turn invokes the
+known asymptotic count of first-order resilient Boolean functions.
+
+Let $S$ have that limiting hard-margin orientation law, and suppose its
+odd character means satisfy
+\[
+ t(S):=\max_{|B|\text{ odd}}\left|K^{-1}\sum_{z\in S}\chi_B(z)\right|
+                                      \le Cr/\sqrt K.
+\]
+For a target $T$ of even degree $j$, the exceptional-only comparator
+\[
+ q_T(x)=\frac1{K b_j}\sum_{z\in S}\chi_T(z)h_z(x)
+       =\chi_T(x)+\sum_{l=1}^r
+                   \frac{m_{T\triangle\{l\}}(S)}{2\sqrt r\,b_j}x_l
+\]
+therefore obeys
+\[
+ \|q_T-\chi_T\|_\infty
+ \le\frac{\sqrt r\,t(S)}{2|b_j|}
+ \le\frac{Cr^{3/2}}{2|b_j|\sqrt K}.                   \tag{8}
+\]
+For fixed $k$ and $j=r-2k$, this is
+$O_k(r^{k+5/2}2^{-r/2})$, simultaneously for every such target.
+For all sufficiently large even $r$ it is at most $1/2$.
+
+For a scale $C_0>0$, let
+$K_S^{\rm exc}=C_0^2K^{-1}\sum_{z\in S}h_z\otimes h_z$.
+The comparator has squared RKHS norm at most $(C_0^2b_j^2)^{-1}$.
+Moreover, for every input,
+\[
+ K^{-1}\sum_{z\in S}h_z(x)^2
+ \le K^{-1}\sum_{z\in S}(z\cdot x)^2/r=1,
+\]
+since the quadratic expression is even in $z$ and its average over one
+representative per antipodal pair equals its full-cube average.
+Consequently the perceptron using only these raw exceptional features
+has an arbitrary-sequence mistake bound $4/b_j^2=O_k(r^{2k+2})$
+on the event above. The scale $C_0$ cancels from the bound.
+
+\begin{theorem}[Width-first raw transfer uniformly down to cold priors]
+Fix $k\ge0$. For each even $r$, choose any prior scale $0<\tau_r\le1$,
+and give all neuron coordinates independent $N(0,\tau_r^2)$ priors.
+Condition only on all observed full-cube parity margins exceeding $1/2$.
+For constants $c>0$ and $C_k<\infty$, and all sufficiently large even $r$,
+\[
+ \liminf_{N\to\infty}\Pr_{\rm posterior}\left\{
+ \begin{array}{c}
+ \text{every target of degree }r-2k\text{ has a raw frozen-feature}\\
+ \text{perceptron mistake bound at most }C_k r^{2k+2}
+ \end{array}\right\}\ge1-e^{-cr^2}.                    \tag{9}
+\]
+There is no even projection or input skip in (9).
+The width limit is taken separately at each dimension and prior scale;
+no uniform effective width or polynomial pretraining sample bound is claimed.
+\end{theorem}
+\begin{proof}
+Rescaling all parameters by $\tau_r$ turns the conditioning margin into
+$1/(2\tau_r^2)>m_c$ in the unit-prior theorem. The ordinary-neuron
+kernel becomes $\tau_r^2K_*$ and the exceptional scale is
+\[
+ C_0^2=\delta_r/\rho,\qquad
+ \delta_r=1/2-\tau_r^2m_c>1/8.
+\]
+The hard-margin orientation probabilities do not depend on the margin
+level. Equivalently, the scaled output covariance is $\tau_r^4\Sigma$,
+whose common determinant factor cancels from every orientation ratio.
+Thus the orientation-law Fourier event has probability at least
+$1-e^{-cr^2}$, uniformly in these prior scales.
+
+On that event (8) provides a margin-$1/2$ comparator of squared norm at
+most $\rho/(\delta_rb_j^2)$. Adding the positive ordinary kernel cannot
+increase its RKHS norm. The full kernel's diagonal is bounded by
+\[
+ R_r^2=\frac{\tau_r^2}{2}(r+1+m_c/\rho)+\delta_r/\rho
+       \le(r+1)/2+1/(2\rho)=O(r),
+\]
+whereas the comparator norm is $O_k(r^{2k+1})$ uniformly in $\tau_r$.
+Rescaling the comparator to unit margin proves the polynomial bound.
+
+Finally the finite-width posterior theorem supplies convergence of the
+$K$ exceptional incoming weights, after division by $\sqrt N$, to their
+stated critical vectors, and convergence of the full kernel on the fixed
+finite cube. Use those exceptional neurons in the displayed comparator.
+At fixed $r,\tau_r$, its coefficients, cube values, and feature radius
+converge to the stated limits. The strict margin reserve and a constant
+factor enlargement of $C_k$ transfer the bound to all sufficiently large
+finite widths in probability. There are finitely many targets at each
+fixed $r$, so this holds simultaneously and proves the liminf assertion.
+\end{proof}
+
+As a finite-dimensional diagnostic, an exhaustive calculation over all
+807,980 six-bit balanced patterns projects a fixed four-bit parity onto
+the exceptional raw feature space alone. The mean uniform classification
+error of this population least-squares projection is approximately
+$0.0741$ under the numerically estimated posterior orientation weights;
+approximately $31.2\%$ of patterns have zero classification error.
+The direct comparator in (8) has strictly positive full-cube margin in
+only approximately $5.98\%$ of that weighted population. These are
+floating-point calculations with Monte Carlo covariance weights, and
+$r=6$ is not asserted to lie above the theorem's dimension threshold.
+They concern the exceptional subkernel alone, not regression with the
+full ordinary-plus-exceptional kernel.
+
+This typical-sector conclusion is compatible with the exact bad-sector
+construction in the finite-energy companion. The bad construction shows
+that near-optimal source energy alone is insufficient for raw transfer.
+The present theorem additionally uses the posterior's distribution over
+orientations. It does not establish raw transfer from polynomial IID
+pretraining samples. The later low-rank companion obtains that distinct
+finite-data conclusion for each fixed nearby task, with an explicit
+confidence--dimension condition.
+
+\section{Interpretation and next question}
+Full-parity pretraining yields a family of downstream high-degree parity
+features, uniformly over the posterior's unresolved orientation choice.
+For fixed $k$, there are $\binom r{2k}$ possible downstream targets in
+(3), each with a deterministic polynomial online guarantee once the
+kernel is frozen. The almost-prior ordinary background has a concrete
+role: it cancels the unwanted linear component of an exceptional-feature
+representation. The ordinary background is therefore needed for that guarantee in every
+sector, despite carrying little source signal. The typical-sector theorem
+above shows that it can be omitted with high probability as dimension grows.
+
+The present full-data proof uses exponentially many pretraining labels.
+The later companion \emph{Polynomial-data feature transfer for cold
+Gaussian ReLU Bayes} proves a finite-width, polynomial-IID-data result
+at a sufficiently cold prior scale. Its downstream features are either
+the even part of each ReLU feature or the raw features with a linear
+skip kernel. That result addresses the smaller-pretraining-set question
+under these explicit conventions. The subsequent companion
+\emph{Finite-data raw-feature transfer by removing a low-rank component}
+also handles the original raw feature map at a sufficiently cold prior,
+for each fixed nearby task after averaging over the IID pretraining
+sample and posterior draw. Its confidence--dimension condition is
+material; it is not a simultaneous guarantee for every task in each
+representation. Polynomial-data raw transfer at a fixed,
+dimension-independent prior
+scale remains open. The present full-data raw-feature theorem retains
+its own width-first and all-input-conditioning assumptions.
+\end{document}

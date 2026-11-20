@@ -1,0 +1,179 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{lemma}[theorem]{Lemma}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}
+\newcommand{\relu}{\operatorname{ReLU}}
+\title{An exact partially learned parity attractor}
+\date{18 November 2026; independent research draft}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author. Verification scope and provenance are stated in the accompanying research collection.}}\emergencystretch=3em
+\hypersetup{pdftitle={An exact partially learned parity attractor},pdfauthor={ChatGPT-6 Astra}}
+\begin{document}\maketitle
+
+This note explains a stationary state seen while testing the rare-seed
+recovery conjecture. The general possibility of dead-ReLU local minima
+is familiar. The useful point here is the exact prediction table and
+risk, which distinguish partial recovery from complete learning in the
+specific three-bit experiment. It also gives a fully explicit open
+basin of bad minima, although not a theorem that small random
+initialization reaches that basin.
+
+\section{Model and exact projection}
+Let $x=(x_1,x_2,x_3)\in\{\pm1\}^3$, $0<\rho<1$, and
+\[
+ P(x)=\frac{1-\rho x_1x_2x_3}{8},\qquad f(x)=x_2x_3.
+\]
+All inputs have positive probability. The trained architecture is
+bias-free $F(x)=\sum_j a_j\relu(w_j\cdot x)$, with population square
+risk $R(F)=\frac12\E_P(F-f)^2$. A scaling of the first coordinate
+by $L>0$ is absorbed into its incoming weight and does not change the
+following representational facts.
+
+Every such network has zero cubic Fourier coefficient. Indeed
+$F(x)-F(-x)=\sum_ja_jw_j\cdot x$ is linear, so its only odd Fourier
+terms have degree one. Conversely the network feature span is exactly
+\[
+ \mathcal B=\operatorname{span}\{1,x_1,x_2,x_3,x_1x_2,x_1x_3,x_2x_3\}.
+\]
+Let $x_*=(1,1,1)$ and impose the dead-point constraint $F(x_*)=0$.
+The unique least-squares projection of $f$ onto
+$\mathcal H=\{F\in\mathcal B:F(x_*)=0\}$ is
+\[
+ F_*(x)=x_2x_3+
+ \frac{\rho-1-x_1-x_2-x_3-x_1x_2-x_1x_3-x_2x_3}{7-\rho}. \tag{1}
+\]
+Its risk is
+\[
+ R(F_*)=\frac{1-\rho}{2(7-\rho)}.                         \tag{2}
+\]
+Every other signed output is strictly positive, while $F_*(x_*)=0$.
+At $\rho=.9$, the risk is exactly $1/122$; the nonzero signed outputs
+are among $42/61,60/61,62/61,80/61$. This is the table found in the
+numerical partial-recovery states, up to cube symmetries.
+
+To verify the projection directly, set $e=F-f$. Its constraints are
+$e(x_*)=-1$ and $\sum_xx_1x_2x_3e(x)=0$. On the seven other points
+the weighted least-squares minimizer is
+$e(x)=\lambda x_1x_2x_3/P(x)$, with
+\[
+ \lambda=\left(\sum_{x\ne x_*}P(x)^{-1}\right)^{-1}
+        =\frac{1-\rho^2}{8(7-\rho)}.
+\]
+Expanding the indicator of $x_*$ yields (1). Substitution into the
+risk gives (2). The signed outputs other than zero have minimum
+$2(3-\rho)/(7-\rho)>0$, proving the classification statement.
+A zero output is not a correct positive-margin prediction. With fair
+random ties the uniform-distribution error is $1/16$; a deterministic
+zero tie can give either zero or $1/8$ error here. Flipping all labels
+or changing the dead vertex can make that tie wrong for either fixed
+convention. Squared risk and positive-margin failure avoid this ambiguity.
+
+\section{A six-neuron realization and an open attracting basin}
+Define
+\[
+ h_i(x)=\relu(-x_i)=\frac{1-x_i}{2},\qquad
+ h_{ij}(x)=\relu(-x_i-x_j)
+       =\frac{1-x_i-x_j+x_ix_j}{2}.
+\]
+These six features form a basis of $\mathcal H$, and every incoming
+vector is strictly inactive at $x_*$. Equation (1) has the realization
+\[
+ F_* =\sum_i A_i h_i+\sum_{i<j}B_{ij}h_{ij},
+\]
+where
+\[
+ A_1=\frac6{7-\rho},\quad A_2=A_3=-\frac{2(4-\rho)}{7-\rho},\qquad
+ B_{12}=B_{13}=-\frac2{7-\rho},\quad
+ B_{23}=\frac{2(6-\rho)}{7-\rho}.                         \tag{3}
+\]
+The pair features have zero preactivations at some other cube points.
+To obtain a smooth parameter neighborhood, perturb the six incoming
+vectors arbitrarily slightly and generically. They remain strictly
+inactive at $x_*$, all preactivations become nonzero, and their feature
+vectors remain linearly independent by continuity. They still lie in
+$\mathcal H$, which is six dimensional, so unique readout coefficients
+realize exactly $F_*$. These coefficients stay close to the nonzero
+values in (3).
+
+\begin{theorem}[An open basin of a nonoptimal population minimum]
+The perturbed realization is an interior local minimum of the full
+six-neuron bias-free training problem. It has a neighborhood such that
+population gradient flow for square risk, starting sufficiently near
+this realization, remains in a neighborhood with the same activation
+gates and converges in output to $F_*$.
+\end{theorem}
+\begin{proof}
+In a sufficiently small parameter ball every neuron remains inactive
+at $x_*$. Thus every nearby network output belongs to $\mathcal H$,
+and the projection property makes its risk at least $R(F_*)>0$.
+On a smaller ball all gates are fixed and the objective is smooth.
+The six readout derivatives are the six feature vectors; their least
+singular value as a map onto $\mathcal H$ is bounded below by a
+positive constant throughout that ball.
+
+Writing $e=F-F_*\in\mathcal H$, orthogonality of $f-F_*$ gives
+$R(F)-R(F_*)=\frac12\|e\|_{L^2(P)}^2$. The readout gradient alone
+therefore implies
+$\|\nabla R\|\ge c\sqrt{R-R(F_*)}$. Along gradient flow the risk
+gap decreases exponentially. Its total path length is at most
+\[
+ \int_0^\infty\|\nabla R\|dt
+ \le c^{-1}\int_0^{R(F(0))-R(F_*)}u^{-1/2}du
+ =2c^{-1}\sqrt{R(F(0))-R(F_*)}.
+\]
+Choose the initial point close enough that this length is smaller than
+the distance to the fixed-gate ball boundary. A first-exit argument
+then keeps the trajectory inside for all time. The risk gap and output
+error tend to zero, proving attraction to $F_*$. The network need not
+converge to one unique parameter realization.
+\end{proof}
+The same construction works with more neurons if their features remain
+inactive at $x_*$ and a six-feature subcollection retains full rank.
+One may positively balance each neuron without changing its output,
+so this is compatible with the balanced parameterization used in the
+experiments. It does not establish reachability from infinitesimal
+isotropic Gaussian initialization.
+
+\section{A fresh feature immediately exposes descent}
+For any bias-free ReLU feature $h$ one has $h\in\mathcal B$.
+Projection orthogonality shows that the residual functional on
+$\mathcal B$ is proportional to evaluation at $x_*$:
+\[
+ \E_P[(f-F_*)h]=\frac{1-\rho}{7-\rho}\,h(x_*).             \tag{4}
+\]
+To identify the constant, use $h=f$, for which $f(x_*)=1$, and
+$\E_P[(f-F_*)f]=\E_P(f-F_*)^2=2R(F_*)$.
+Thus every incoming direction $v$ with $v\cdot x_*>0$ admits a fresh
+correctly signed neuron giving descent. Appending parameters
+$(a,w)=(t,tv)$ changes the output by $t^2\relu(v\cdot x)$ and changes
+risk by exactly
+\[
+ -t^2\frac{1-\rho}{7-\rho}\relu(v\cdot x_*)
+       +\frac{t^4}{2}\E_P\relu(v\cdot x)^2<0
+\]
+for sufficiently small $t>0$. This contrasts a stable local minimum
+at fixed architecture with an immediate descent direction after adding
+one neuron. A randomly signed isotropic fresh neuron has the needed
+sign and activity with probability $1/4$; that observation alone is not
+a recovery-time or full-training theorem.
+
+\section{Numerical interpretation}
+In the three-bit rare-seed experiment, the input distribution is written
+as $(1+\rho x_1x_2x_3)/8$, with $\rho=.9$ and first-coordinate scale
+$L=2$. Flipping suitable cube coordinates and, when necessary, the
+output sign maps its low-probability dead vertices to the convention
+above. Several width-1024 runs reach (1), with gradient norms around
+$10^{-15}$ and risk agreeing with $1/122$ to displayed double precision.
+Other runs hover near its nonsmooth boundary under a fixed time step.
+These are numerical observations, not verified trajectories.
+
+The proposed shortcut-escape criterion counted seeds with both readout
+signs in a frozen residual field. This is insufficient to guarantee full
+network recovery: the nonlinear evolution can instead enter the open
+basin above. Counting all four parity-ray orientations is sufficient in
+the completed sample of runs but not necessary; some runs generate
+missing directions during training. Neither empirical statement has
+been proved as a random-initialization theorem. Reported recovery should
+require positive margins or near-zero square risk, not a floating-point
+sign at an output mathematically equal to zero.
+\end{document}

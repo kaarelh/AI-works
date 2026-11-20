@@ -1,0 +1,214 @@
+\documentclass[11pt]{article}
+\usepackage{amsmath,amssymb,amsthm,geometry,hyperref}
+\geometry{margin=1in}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\E}{\mathbb E}
+\newcommand{\KL}{\operatorname{KL}}
+\newcommand{\relu}{\operatorname{ReLU}}
+\title{A critical exponential tilt of a Gaussian ReLU neuron}
+\date{18 November 2026; independent research draft}
+\emergencystretch=3em
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author. Verification scope and provenance are stated in the accompanying research collection.}}
+\hypersetup{pdftitle={A critical exponential tilt of a Gaussian ReLU neuron},pdfauthor={ChatGPT-6 Astra}}
+\begin{document}\maketitle
+\begin{abstract}
+The Gaussian ReLU parity statistic has a finite moment-generating
+function at its positive critical boundary and a finite critical mean
+in input dimension at least four. Above that mean, the scalar entropy
+problem has a linear rate and no minimizing probability law. We prove
+the exact local power-law tail under the critical tilt, use a cited
+local large-deviation theorem, and derive a conditional-product limit with a
+single exceptional neuron under scalar-statistic conditioning, together
+with the leading evidence constant. A sampled conditioned network can
+retain classification error approaching one quarter as the parity
+dimension grows, despite an arbitrarily large enforced parity statistic.
+Its posterior majority is correct. The joint conditional limit also
+gives an independent posterior construction with total-variation error
+tending to zero at fixed dimension. Its output fluctuations are stable
+in dimension four, Gaussian with a logarithmic normalization in dimension
+five, and Gaussian with the usual normalization in higher dimensions.
+These results distinguish scalar
+conditioning from conditioning on the individual labeled examples.
+\end{abstract}
+\noindent\textbf{Status.} The endpoint-integrability and entropy
+nonattainment arguments are followed by a proved scalar-statistic
+conditional condensation theorem, using the cited local big-jump result. The distinct posterior conditioned on all cube
+margins is proved for even $r=d\ge6$ in the two later ReLU companions,
+including its exact exceptional-neuron count. This manuscript is part of
+the separate independent-research collection.
+
+\section{The parity statistic and its critical tilt}
+Let $x\in\{-1,1\}^d$, let $r\le d$ be even and at least two, and put
+$\chi(x)=\prod_{i=1}^r x_i$. Write $\bar x=(1,x)$ and let
+$U\sim N(0,I_{d+1})$ and $a\sim N(0,1)$ be independent. Define
+\[
+ G(U)=2^{-d}\sum_x\chi(x)\relu(U\cdot\bar x),\qquad Z=aG(U),
+ \qquad \rho=\frac{\binom{r-2}{(r-2)/2}}{2^{r-1}\sqrt r}.
+\]
+The repository's sharp parity-correlation lemma establishes
+$|G(U)|\le\rho\|U\|$, with equality precisely on the $2^r$ rays
+\[
+ v_s=(0,s_1/\sqrt r,\ldots,s_r/\sqrt r,0,\ldots,0),
+ \qquad s\in\{-1,1\}^r.
+\]
+Both orientations of a line occur in this list. Let
+$M(t)=\E e^{tZ}$ and $t_*=1/\rho$.
+
+\begin{theorem}[Finite slope at the Gaussian boundary]\label{thm:boundary}
+The moment generating function is finite for $|t|<t_*$ and infinite for
+$|t|>t_*$. At the positive endpoint, for every integer $k\ge0$,
+\[
+ M^{(k)}(t_*-)<\infty\quad\Longleftrightarrow\quad d>2k+1.
+\]
+In particular, at $d=4$ the endpoint value and first derivative are finite,
+while the second derivative is infinite. For every $d\ge4$ define
+\[
+ Q_*(dU\,da)=\frac{e^{t_*Z}}{M(t_*)}P_0(dU\,da),\qquad
+ m_c=\E_{Q_*}Z=\frac{M'(t_*)}{M(t_*)}<\infty.
+\]
+The scalar Cram\'er rate $I(s)=\sup_t\{ts-\log M(t)\}$ has the exact
+linear branch $I(s)=t_*s-\log M(t_*)$ for all $s\ge m_c$.
+\end{theorem}
+
+\begin{lemma}[A sharp corner at every maximizing ray]\label{lem:corner}
+For $z\perp v_s$, define
+\[
+ h_s(z)=2^{-d-1}\sum_{x:\,\sum_{i\le r}s_ix_i=0}
+                   |z\cdot\bar x|.
+\]
+This is a norm on the $d$-dimensional space $v_s^\perp$. For a sufficiently
+small fixed $\eta>0$, whenever $R>0$ and $\|z\|\le\eta R$,
+\[
+ |G(Rv_s+z)|=\rho R-h_s(z).
+\]
+\end{lemma}
+\begin{proof}
+Since $r\ge2$, the affine part of $\relu(t)=(t+|t|)/2$ has zero
+parity coefficient. At $v_s$, the inputs with zero preactivation have
+parity $(-1)^{r/2}\chi(s)$, opposite to the sign of $G(v_s)$.
+The nonzero preactivations keep their signs in a sufficiently small
+conical neighborhood. Their contribution is exactly linear there.
+Symmetry under permutations of relevant coordinates, sign changes of
+irrelevant coordinates, and simultaneous input negation implies that its
+gradient has no transverse component. Hence the zero preactivations
+contribute precisely the displayed positive norm subtracted from the
+absolute correlation.
+
+To see positive definiteness, the zero-preactivation augmented input
+vectors span $v_s^\perp$. Flipping an irrelevant coordinate spans its
+coordinate axis. Averaging paired opposite core inputs supplies the bias
+axis. Finally, differences of balanced subsets differing by one swap span
+the relevant-coordinate hyperplane orthogonal to $(s_1,\ldots,s_r)$.
+Thus $h_s(z)=0$ forces $z=0$ in $v_s^\perp$.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:boundary}]
+Integrating the Gaussian readout gives
+\[
+ M(t)=(2\pi)^{-(d+1)/2}\int
+       \exp\{-\tfrac12(\|U\|^2-t^2G(U)^2)\}\,dU.
+\]
+The sharp correlation bound proves finiteness inside the stated interval.
+Outside it, continuity supplies an open cone on which the exponent grows
+quadratically, proving divergence.
+
+At $t=t_*$, outside small cones around the finitely many maximizing rays,
+compactness of the unit sphere gives a strict quadratic gap. Within a
+cone, use $U=Rv_s+z$ and Lemma~\ref{lem:corner}. Then
+\[
+ \|U\|^2-G(U)^2/\rho^2
+ =2Rh_s(z)/\rho+\|z\|^2-h_s(z)^2/\rho^2.
+\]
+Norm equivalence and a smaller choice of $\eta$ bound this expression
+above and below by positive constants times $R\|z\|$ on
+$\|z\|\le\eta R$. After the substitution $z=w/R$, the integral with
+an additional factor $G(U)^{2k}$ is comparable at infinity to
+\[
+ \int_1^\infty R^{2k-d}\,dR.
+\]
+For the lower comparison restrict $\|w\|$ to a fixed ball; for the upper
+comparison integrate $e^{-c\|w\|}$ over all of $\mathbb R^d$.
+This proves convergence exactly when $d>2k+1$.
+Differentiating $e^{t^2G^2/2}$ $k$ times produces a polynomial in $G^2$
+with nonnegative coefficients and positive leading coefficient at $t_*>0$,
+so the same criterion applies to the endpoint derivative. For the final
+claim, $\log M$ is convex and its largest finite left derivative is $m_c$;
+therefore the Legendre supremum for $s\ge m_c$ is attained at $t_*$.
+\end{proof}
+
+\section{An entropy problem with no minimizing probability law}
+Let $\Phi(U,a)=(a\relu(U\cdot\bar x))_x$ be the full one-neuron
+output vector. All its components are integrable under $Q_*$ when $d\ge4$:
+the ray-tube calculation controls $\E_{Q_*}(|a|\|U\|)$ by the same
+integral as the first moment above. Cube symmetries then imply
+\[
+ \E_{Q_*}\Phi=m_c\chi.
+\]
+For clarity, a relevant input sign change can be compensated by changing
+the readout by its parity character; this preserves both $P_0$ and $Z$.
+Irrelevant input sign changes preserve the same laws without a readout
+change. These symmetries force the mean vector into the one-dimensional
+parity subspace.
+
+\begin{theorem}[Nonattainment despite an exact small teacher]\label{thm:noattain}
+Suppose $d\ge4$ and $s>m_c$. Each of the following entropy minimization
+problems has value $t_*s-\log M(t_*)$ and has no minimizer:
+\begin{align*}
+ &\inf\{\KL(Q\|P_0):\E_Q Z\ge s\},\\
+ &\inf\{\KL(Q\|P_0):\chi(x)\E_Q\Phi_x\ge s\text{ for every }x\},\\
+ &\inf\{\KL(Q\|P_0):\E_Q\Phi=s\chi\}.
+\end{align*}
+The claims concern laws with finite indicated moments. The target is an
+ordinary shallow ReLU parity function; $r=2$ already suffices if the input
+has at least four coordinates.
+\end{theorem}
+\begin{proof}
+The entropy inequality at $t_*$ gives
+\[
+ \KL(Q\|P_0)\ge t_*\E_Q Z-\log M(t_*).
+\]
+Equality requires $Q=Q_*$. Since its mean is $m_c<s$, no law can attain
+the proposed lower bound in any of the three feasible sets.
+
+It remains to match that bound. Let $\kappa=G(v_{\boldsymbol1})$.
+For $R>0$, define $\Pi_R$ as the uniform mixture over $s\in\{-1,1\}^r$
+of Gaussians with identity covariance and respective means
+\[
+ U=\sqrt{R/\rho}\,v_s,\qquad
+ a=\operatorname{sgn}(\kappa)\chi(s)\sqrt{R/\rho}.
+\]
+Convexity of relative entropy and the Gaussian shift formula give
+$\KL(\Pi_R\|P_0)\le R/\rho$.
+Without the Gaussian smoothing, the mean output is exactly $R\chi$,
+by Walsh projection over the orientations. ReLU's Lipschitz property
+and independence of the readout imply that smoothing changes each output
+by at most $\sqrt{R/\rho}\sqrt{d+1}$. The same symmetries as above force
+the smoothed mean to be $m_R\chi$, where $m_R=R+O(\sqrt R)$.
+
+For large $R$, put $\eta_R=(s-m_c)/(m_R-m_c)\in(0,1)$ and
+$Q_R=(1-\eta_R)Q_*+\eta_R\Pi_R$. Then $\E_{Q_R}\Phi=s\chi$ exactly,
+and
+\[
+ \limsup_{R\to\infty}\KL(Q_R\|P_0)
+ \le\KL(Q_*\|P_0)+(s-m_c)/\rho=t_*s-\log M(t_*).
+\]
+This proves all three infima. Notice also that $Q_R\to Q_*$ in total
+variation while their mean outputs remain $s\chi$: a vanishing amount of
+probability at increasingly large weights carries the missing mean.
+\end{proof}
+
+The full-output Cram\'er rate consequently obeys
+$I_{\Phi}(s\chi)=t_*s-\log M(t_*)$ for $s\ge m_c$.
+The lower bound uses the parity dual direction; the upper bound follows
+by applying the entropy inequality for every exponential tilt to $Q_R$.
+This does not invalidate a Cram\'er large-deviation principle. It prevents
+identifying the conditioned limit with an ordinary entropy-minimizing
+one-neuron probability law beyond the critical mean.
+
+\input{relu-scalar-condensation}
+\input{relu-scalar-sampler}
+\input{relu-scalar-fluctuations}
+\input{relu-angular-tail-criterion}
+\end{document}

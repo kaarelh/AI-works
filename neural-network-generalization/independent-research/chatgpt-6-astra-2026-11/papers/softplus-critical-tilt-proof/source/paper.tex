@@ -1,0 +1,247 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newcommand{\E}{\mathbb E}
+\newcommand{\KL}{\operatorname{KL}}
+\newcommand{\R}{\mathbb R}
+\title{Gaussian softplus neurons need not have entropy projections}
+\date{18 November 2026; independent research draft}
+\emergencystretch=3em
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author. Verification scope and provenance are stated in the accompanying research collection.}}
+\hypersetup{pdftitle={Gaussian softplus neurons need not have entropy projections},pdfauthor={ChatGPT-6 Astra}}
+\begin{document}
+\maketitle
+
+\section{An explicit two-bit example}
+Let $a,b,w_1,w_2$ be independent standard normal variables, let
+$\phi_\beta(t)=\beta^{-1}\log(1+e^{\beta t})$, and define the XOR
+correlation of a single incoming feature by
+\[
+ G_\beta(b,w)=\frac14\sum_{x\in\{-1,1\}^2}x_1x_2
+                         \phi_\beta(b+w\cdot x).
+\]
+Put $Z=aG_\beta(b,w)$, $M_\beta(t)=\E e^{tZ}$,
+$\rho=1/(2\sqrt2)$, and $t_*=1/\rho=2\sqrt2$.
+
+\begin{theorem}[A smooth activation with a finite critical mean]
+For every $\beta>0$, $M_\beta(t)$ is finite for $|t|\le t_*$ and
+infinite for $|t|>t_*$. Every one-sided derivative at $t_*$ is finite.
+In particular
+\[
+ m_c=\frac{M_\beta'(t_*)}{M_\beta(t_*)}<\infty.
+\]
+For $0<\beta\le1$, the explicit bound $m_c<600\beta^2$ holds.
+Thus at $\beta=1/64$, $m_c<1/4$.
+
+For any $s>m_c$, each of the following entropy problems has infimum
+$t_*s-\log M_\beta(t_*)$, and none has a minimizing probability law:
+\begin{enumerate}
+\item $\inf\{\KL(Q\|P_0):\E_Q Z\ge s\}$;
+\item $\inf\{\KL(Q\|P_0):x_1x_2\E_Q[a\phi_\beta(b+w\cdot x)]\ge s
+                      \text{ for every }x\}$;
+\item the same problem with equality to $s x_1x_2$ at every input.
+\end{enumerate}
+All expectations in these constraints are required to exist. In
+particular the closed full-data mean constraints at margin $1/2$ have
+no relative-entropy projection for the explicit choice $\beta=1/64$.
+\end{theorem}
+
+This is a failure of an entropy-projection representation, not a claim
+that the corresponding output large-deviation principle is false or that
+the learner errs after seeing all four labels. The full output rate can
+still have the correct unique constrained minimizer. The point is that
+its mean need not be realized by a finite-entropy minimizing neuron law.
+
+\section{Global bounds and the critical cumulant}
+Input sign changes reduce absolute values to $w_1,w_2\ge0$. Direct
+algebra gives the exact formula
+\[
+ G_\beta(b,w)=\frac1{4\beta}
+ \log\frac{\cosh(\beta b)+\cosh(\beta(w_1+w_2))}
+               {\cosh(\beta b)+\cosh(\beta(w_1-w_2))}.
+\]
+The ratio decreases as $\cosh(\beta b)$ increases. Writing
+$R=\sqrt{w_1^2+w_2^2}$, it follows that
+\begin{equation}\label{eq:envelope}
+ |G_\beta(b,w)|\le\frac1{2\beta}\log\cosh(\beta R/\sqrt2)
+                         <\rho R\quad(R>0).
+\end{equation}
+The first bound uses $w_1+w_2\le\sqrt2R$ and the nonnegative logarithm
+of the denominator at $b=0$. Equality in the first bound occurs at
+$b=0$, $w_1=w_2=R/\sqrt2$.
+Integrating the Gaussian readout gives
+\[
+ M_\beta(t)=\E_{b,w}\exp\{t^2G_\beta(b,w)^2/2\}.
+\]
+The strict interior $|t|<t_*$ is immediate from \eqref{eq:envelope}.
+At the boundary,
+\[
+ t_*|G_\beta|\le\frac{\sqrt2}{\beta}
+                                  \log\cosh(\beta R/\sqrt2)
+             =R-\frac{\sqrt2\log2}{\beta}+o(1).
+\]
+Consequently the incoming Gaussian radial density times the tilt
+decays at least exponentially in $R$ for large $R$. Every polynomial
+moment of $R$ and $b$ under this tilt is finite. Conditional on $(b,w)$,
+the tilted readout is $N(t_*G_\beta,1)$, so every polynomial joint
+parameter moment is also finite. Differentiation under the integral
+at the endpoint from within the domain follows by these bounds.
+
+For $|t|>t_*$, take a fixed small angular cone around either balanced
+ray $b=0,w_1=w_2>0$ (including small relative bias). The softplus differs
+from ReLU by at most $(\log2)/\beta$, and its parity correlation differs
+by at most this constant. The sharp ReLU correlation-to-norm ratio at
+the ray is $\rho$. On a sufficiently small cone the positive quadratic
+part of $t^2G_\beta^2-\|(b,w)\|^2$ dominates the linear error, proving
+divergence. Thus the cumulant domain is exactly $[-t_*,t_*]$.
+
+\section{A fully explicit bound on the critical mean}
+The mixed finite-difference representation and
+$0<\phi_\beta''\le\beta/4$ give
+\[
+ |G_\beta|\le\beta|w_1w_2|/4\le\beta R^2/8.
+\]
+Convexity of $\log\cosh$ and its value zero at zero imply that
+$\beta^{-1}\log\cosh(\beta u)$ increases with $\beta$. Thus for
+$\beta\le1$, \eqref{eq:envelope} also gives
+$t_*^2G_\beta^2/2\le[\log\cosh(R/\sqrt2)]^2$. Since $M_\beta(t_*)\ge1$,
+\begin{align*}
+ m_c&\le M_\beta'(t_*)
+   =t_*\E G_\beta^2e^{t_*^2G_\beta^2/2}\\
+ &\le\frac{\sqrt2\beta^2}{32}
+   \int_0^\infty R^5
+       e^{-R^2/2+[\log\cosh(R/\sqrt2)]^2}\,dR.
+\end{align*}
+The bias integral is one and the two-dimensional Gaussian radial density
+is $R e^{-R^2/2}$. For $R\ge1$,
+\[
+ \log\cosh(R/\sqrt2)\le R/\sqrt2-1/3.
+\]
+For example $e^{-\sqrt2}<1/4$ and $5/8<e^{-1/3}$ prove this at $R=1$,
+and the expression $\log2-\log(1+e^{-\sqrt2R})$ increases with $R$.
+The integral above is therefore at most
+\[
+ \frac13+e^{1/9}\frac{5!}{(\sqrt2/3)^6}
+ <12303.
+\]
+On $[0,1]$ we used $e^{[\log\cosh(R/\sqrt2)]^2}<2$; on the tail
+we enlarged the integration interval to $[0,\infty)$. Finally
+$\sqrt2<3/2$ gives $m_c<577\beta^2<600\beta^2$. At $\beta=1/64$,
+$600/4096<1/4$.
+
+\section{Standard softplus: an outward-rounded finite certificate}
+The same phenomenon occurs at $\beta=1$, without changing the standard
+softplus activation. An explicit interval certificate proves
+\[
+ m_c<\frac{61}{125}=0.488<\frac12.
+\]
+This additional numerical inequality is computer assisted; the preceding
+$\beta=1/64$ example is entirely analytic.
+
+Here is the reduction to a finite sum with a rigorous tail bound. Setting
+$b=0$ increases $|G_1|$. For $R\ge0$ and $0\le\varphi\le\pi/4$, put
+\[
+ g(R,\varphi)=\frac12\left[
+ \log\cosh\frac{R(\cos\varphi+\sin\varphi)}2
+ -\log\cosh\frac{R(\cos\varphi-\sin\varphi)}2\right].
+\]
+This is nonnegative and increasing in both arguments. For the radial
+monotonicity use that $u\mapsto u\tanh(Ru)$ increases for $u\ge0$;
+angular monotonicity follows because the first cosh argument increases
+and the second decreases. Gaussian polar coordinates and $M(t_*)\ge1$
+give
+\[
+ m_c\le 2\sqrt2\int_0^\infty R e^{-R^2/2}
+       \frac4\pi\int_0^{\pi/4}g(R,\varphi)^2e^{4g(R,\varphi)^2}
+                                              \,d\varphi\,dR.
+\]
+Partition $[0,20]$ at $R_i=i/50$ and $[0,\pi/4]$ into 32 equal cells.
+The compact part is bounded above by
+\[
+ \frac{2\sqrt2}{32}\sum_{i=0}^{999}
+ (e^{-R_i^2/2}-e^{-R_{i+1}^2/2})
+ \sum_{j=1}^{32}g(R_{i+1},j\pi/128)^2
+                  e^{4g(R_{i+1},j\pi/128)^2}.
+\]
+For $R\ge20$, use
+$\log\cosh(R/\sqrt2)\le R/\sqrt2-2/3$ (already valid at $R=3$)
+and $g\le R/(2\sqrt2)$. With $a=2\sqrt2/3$, the remaining integral
+is at most
+\[
+ \frac{\sqrt2}{4}e^{4/9-20a}
+ \left(\frac{20^3}{a}+\frac{3\cdot20^2}{a^2}
+                  +\frac{6\cdot20}{a^3}+\frac6{a^4}\right).
+\]
+The script \texttt{verify\_standard\_softplus\_critical\_mean.py} evaluates
+these expressions with 35-decimal-digit outward-rounded interval
+arithmetic. It gives compact upper bound below $0.487483902$, tail upper
+bound below $0.000035624$, and total below $0.487519525<61/125$.
+Its machine-readable record is
+\texttt{standard\_softplus\_critical\_mean\_certificate.json}.
+The certificate is not a Lean proof. Independent ordinary quadrature
+suggests $m_c\approx0.261687354$, but this decimal approximation is not
+used in any theorem.
+
+\section{Nonattainment and escaping neuron mass}
+The boundary tilt
+\[
+ dQ_* = e^{t_*Z}dP_0/M_\beta(t_*)
+\]
+has finite entropy $t_*m_c-\log M_\beta(t_*)$ and all required moments.
+For every finite-entropy law with integrable $Z$, Gibbs' identity gives
+\[
+ \KL(Q\|P_0)=\KL(Q\|Q_*)+t_*\E_QZ-\log M_\beta(t_*).
+\]
+Thus a law with $\E_QZ\ge s>m_c$ has entropy at least
+$t_*s-\log M_\beta(t_*)$, with equality possible only for $Q=Q_*$ and
+$\E_QZ=s$, which is impossible.
+
+The symmetry $(w_1,w_2,a)\mapsto(s_1w_1,s_2w_2,s_1s_2a)$ preserves
+both $P_0$ and $Z$. It follows that $Q_*$ has mean output
+$m_c x_1x_2$ at all four inputs. To attain the lower bound in the limit,
+let $v_s=(0,s_1/\sqrt2,s_2/\sqrt2)$ be the four balanced incoming rays.
+For each $R>0$, let $\Pi_R$ be the uniform mixture of four unit-covariance
+Gaussian parameter laws with respective means
+\[
+ (b,w)=\sqrt{R/\rho}\,v_s,\qquad
+ a=s_1s_2\sqrt{R/\rho}.
+\]
+Its entropy is at most $R/\rho$ by the Gaussian shift formula and
+convexity. The same symmetry makes its mean output $m_R x_1x_2$.
+ReLU homogeneity, its sharp balanced correlation, Lipschitz continuity,
+and the bounded difference between softplus and ReLU give
+$m_R=R+O_\beta(\sqrt R)$.
+
+For large $R$ put $\eta_R=(s-m_c)/(m_R-m_c)$ and
+$Q_R=(1-\eta_R)Q_*+\eta_R\Pi_R$. This law has mean output exactly
+$s x_1x_2$. Convexity gives
+\[
+ \limsup_{R\to\infty}\KL(Q_R\|P_0)
+ \le\KL(Q_*\|P_0)+\frac{s-m_c}{\rho}
+ =t_*s-\log M_\beta(t_*).
+\]
+This proves all three infimum formulas and their nonattainment. Notice
+that $Q_R\to Q_*$ in total variation while its mean output remains
+$s x_1x_2$: a vanishing probability mass at parameter norm $\Theta(\sqrt R)$
+carries the missing mean. Uniform integrability is precisely what fails.
+
+The scalar Cram\'er rate consequently has the exact linear branch
+$I(s)=t_*s-\log M_\beta(t_*)$ for $s\ge m_c$. The full output rate at
+$s(x_1x_2)_{x\in X}$ has the same value, by the scalar dual lower bound
+and the approximating laws above. Over the closed four-margin cone at
+level $s>m_c$, this output vector is the unique rate minimizer: any
+other feasible vector has strictly larger average signed margin and
+hence a strictly larger scalar dual lower bound.
+
+\section{Further questions, not proved here}
+The endpoint tilted law should have a stretched-exponential tail of the
+form $\exp[-c_\beta\sqrt Z]$ times a power. Local one-big-jump results
+should then describe conditioning on a large Fourier statistic. The
+posterior conditioned on all four individual margins is more delicate:
+one exceptional neuron cannot by itself supply the missing XOR output,
+and a conjectural finite collection of large neurons must respect the
+optimal ReLU representation. No such conditional-neuron theorem is
+claimed in this note.
+\end{document}

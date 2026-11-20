@@ -4,7 +4,7 @@ This collection studies generalization under exact Bayesian inference over neura
 
 Papers and notes by ChatGPT-6 Astra, Claude (Fable 5, Opus 5, and Opus 5.5), Kaarel Hänni, and Dmitry Vaintrob. Authors are listed in alphabetical order; each paper names its own authors. [Author-credit review](verification/author-order-2026-11-06.md).
 
-**Start here:** [introductory slides](https://kaarelh.github.io/ai/nnbayes-generalization.pdf) · [technical FAQ](TECHNICAL-FAQ.md) · [original five main results](#main-results) · [second batch of formalized main results](#second-batch-of-formalized-main-results) · [conditional obstruction to polynomial learning](#conditional-obstruction-to-polynomial-circuit-learning) · [approximation and noisy regression](#approximation-and-noisy-regression) · [Lean verification](#lean-verification)
+**Start here:** [introductory slides](https://kaarelh.github.io/ai/nnbayes-generalization.pdf) · [technical FAQ](TECHNICAL-FAQ.md) · [original five main results](#main-results) · [second batch of formalized main results](#second-batch-of-formalized-main-results) · [conditional obstruction to polynomial learning](#conditional-obstruction-to-polynomial-circuit-learning) · [approximation and noisy regression](#approximation-and-noisy-regression) · [Lean verification](#lean-verification) · [Independent research](#independent-research-by-chatgpt-6-astra)
 
 The original five results and the ten papers in the second formalization batch have separate sections. Supporting papers develop special cases, sharper bounds, and open directions; each folder states its own mathematical and verification scope. For quantitative refinements and later research, see [improved polynomials](#improved-polynomial-bounds), [depth research](#recent-depth-research), and [approximation under noisy data](#approximation-and-noisy-regression).
 
@@ -327,6 +327,12 @@ The [technical FAQ](TECHNICAL-FAQ.md) explains the distinction between teacher a
 |---|---|
 | [Strong-prior slide appendix audit](side-results/strong-prior-appendix-audit/paper.pdf) · [source](side-results/strong-prior-appendix-audit/) | Appendix-by-appendix review, including major errors, repairs, and editorial decisions. |
 | [Finite-exponent proof audit](side-results/gamma-proof-audit/paper.pdf) · [source](side-results/gamma-proof-audit/) | Review of the supplied finite-exponent draft and the mean-field argument; later results supersede some historical open-status remarks. |
+
+## Independent research by ChatGPT-6 Astra
+
+The [independent research collection](independent-research/chatgpt-6-astra-2026-11/README.md) contains 33 manuscripts solely authored by **ChatGPT-6 Astra**, developed during November 17–20, 2026. This section is separate from the jointly authored papers above. The new papers study Bayesian feature transfer, independent large-width posterior constructions, the effect of prior tails and likelihoods, continuous initialization noise, and explicit optimization traps.
+
+The manuscripts are conventional research drafts with same-session checks; they have not received independent review. Selected deterministic statements have Lean proofs, with their exact scope recorded in the [verification inventory](independent-research/chatgpt-6-astra-2026-11/verification/README.md). The collection's [research map](independent-research/chatgpt-6-astra-2026-11/README.md#research-questions-and-reading-map) distinguishes finite-data theorems, width-first limits, numerical diagnostics, and unresolved questions.
 
 ## Files and verification
 

@@ -1,0 +1,415 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}
+\newcommand{\relu}{\operatorname{ReLU}}
+\title{Polynomial-data feature transfer for cold Gaussian ReLU Bayes}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author. Verification scope and provenance are stated in the accompanying research collection.}}
+\date{18 November 2026; independent research draft}
+\hypersetup{pdftitle={Polynomial-data feature transfer for cold Gaussian ReLU Bayes},pdfauthor={ChatGPT-6 Astra}}
+\emergencystretch=3em
+\begin{document}\maketitle
+\begin{abstract}
+Fitting a target with polynomial parameter energy need not produce useful
+features for related targets. We prove a more quantitative positive result
+for shallow ReLU networks on the Boolean cube. If an even full-parity
+predictor has small population hinge loss and energy sufficiently close to
+the sharp minimum, its frozen, even-symmetrized features approximate every
+parity obtained by deleting a fixed even number of coordinates. The required
+energy accuracy, downstream feature norm, and labeled sample size are all
+polynomial in dimension. The deterministic statement applies to every finite
+width and does not assume Bayesian inference. A second argument verifies
+its hypotheses for the actual observed-margin Gaussian posterior from
+polynomially many IID pretraining samples, at every width above an explicit
+polynomial threshold and at a polynomially small prior scale. Frozen-feature
+downstream learning then also needs only polynomially many labeled examples.
+No full-cube pretraining or infinite-width limit is used in this result.
+An explicit counterexample shows why the downstream transformation matters:
+raw features can almost completely miss a nearby parity even when a
+polynomial-width source network has arbitrarily near-minimal energy and
+positive margin on the entire cube.
+\end{abstract}
+
+\section{Setup and statement}
+Let $r\ge6$ be even, let $X=\{-1,1\}^r$ with uniform probability, and
+write $\chi(x)=\prod_{i=1}^r x_i$, $\bar x=(1,x)$, and $D=r+1$.
+Consider any finite network
+\[
+ F(x)=\frac1N\sum_{i=1}^N a_i\relu(U_i\cdot\bar x),\qquad
+ E=\frac1{2N}\sum_i(a_i^2+\|U_i\|^2).
+\]
+The scale $s>0$ is fixed. Suppose, for $0\le\varepsilon\le1$ and $h\ge0$,
+\[
+ \E(s-\chi F)_+\le h,\qquad
+ E\le(1+\varepsilon)\frac{s}{\rho},\qquad
+ \rho=\frac{\binom{r-2}{(r-2)/2}}{2^{r-1}\sqrt r}.
+ \tag{1}
+\]
+The sharp ReLU parity-correlation inequality is
+$|\E\chi\relu(U\cdot\bar x)|\le\rho\|U\|$.
+Thus $s/\rho$ is the minimum possible energy of a network having
+population parity correlation at least $s$. The stronger coordinate
+form used below is inherited from the repository's parity-energy paper;
+its short proof is included for completeness.
+
+Freeze the incoming weights and use the even features
+\[
+ \psi_i(x)=\frac{\relu(U_i\cdot(1,x))+
+                         \relu(U_i\cdot(1,-x))}{2},\qquad
+ K_e(x,y)=\frac1N\sum_i\psi_i(x)\psi_i(y).
+ \tag{2}
+\]
+This uses two evaluations of the same pretrained feature and no new
+trainable hidden weights. It is a specified downstream transformation;
+we do not silently identify $K_e$ with the original unsymmetrized kernel.
+
+Let $A\subseteq[r]$ have even size $2k$, $0\le k\le(r-2)/2$, and put
+$T=[r]\setminus A$, $j=r-2k$. For the unit critical ridge
+$x\mapsto\relu(\sum_i x_i/\sqrt r)$ let $b_l$ be its degree-$l$
+Walsh coefficient. Explicitly,
+\[
+ b_0=(r-1)\rho,\qquad
+ b_l=\rho(-1)^{(l-2)/2}
+ \frac{\binom{(r-2)/2}{(l-2)/2}}{\binom{r-2}{l-2}}
+ \quad(2\le l\le r,\ l\text{ even}).                 \tag{3}
+\]
+In particular $|b_r|=\rho$. Define
+\begin{gather*}
+ C_A=\max_{S\subseteq[r],\ |S|\text{ even}}
+              \left|\frac{b_{|S|}}{b_{|S\mathbin\triangle A|}}\right|
+       \le(r-1)^k,\qquad d_0=\varepsilon s+h,\\
+ u_0=\sqrt{(s+E\sqrt D)(\varepsilon s+2h)},\qquad
+ v_0=\sqrt{2Ed_0/\rho}.
+\end{gather*}
+
+\begin{theorem}[Finite-width transfer certificate]\label{thm:transfer}
+Under (1), the RKHS of $K_e$ contains a function $q_A$ such that
+\[
+ \|q_A-\chi_T\|_{L^2(X)}
+ \le\Delta_A:=\frac{\rho}{s|b_j|}
+                    \{(1+C_A)v_0+C_Au_0\},             \tag{4}
+\]
+\[
+ \|q_A\|_{\mathcal H(K_e)}^2
+       \le B_A^2:=2E\left(\frac{\rho}{s b_j}\right)^2,
+ \qquad \max_x K_e(x,x)\le R^2:=2ED.                  \tag{5}
+\]
+All conclusions are simultaneous over the indicated sets $A$.
+For fixed $k$ and fixed $s$, the bounds imply
+\[
+ \Delta_A=O_k\left(r^{2k+1}\sqrt{\varepsilon+h/s}\right),
+ \quad B_A^2=O_k(r^{2k+1}/s),\quad R^2=O(sr^2).
+ \tag{6}
+\]
+The constants in (4)--(5) are explicit and independent of width.
+\end{theorem}
+
+Unlike a lower bound on a single kernel quadratic form, (4) constructs
+a low-norm downstream predictor. It gives population approximation and
+IID learning, rather than a mistake bound on every adversarial input
+sequence. A small $L^2$ error may remain concentrated on rare inputs.
+
+\section{Energy deficit controls distance to critical directions}
+Put $R_i=\|U_i\|$ and $u_i=U_i/R_i$ when $R_i>0$; zero incoming
+weights contribute nothing. Write $u_i=(\beta_i,w_i)$ and choose
+$z_{i,l}=\operatorname{sgn}(w_{i,l})$, with any fixed sign at zero.
+The nearest critical vector is $v_i=(0,z_i/\sqrt r)$.
+For $G(u)=\E\chi\relu(u\cdot\bar x)$ the stronger sharp inequality is
+\[
+ |G(u)|\le\rho\sqrt r\min_l|w_l|.                     \tag{7}
+\]
+Since $\|u\|=\|v_i\|=1$,
+\[
+ \|u_i-v_i\|^2=2-\frac2{\sqrt r}\sum_l|w_{i,l}|
+             \le2\left(1-\frac{|G(u_i)|}{\rho}\right).
+ \tag{8}
+\]
+Let $P=N^{-1}\sum_i|a_i|R_i\le E$. From (1),
+$\E\chi F\ge s-h$, and hence
+\[
+ \frac1N\sum_i|a_i|R_i(\rho-|G(u_i)|)
+       \le\rho P-\E\chi F\le d_0.                    \tag{9}
+\]
+No sign assumption on individual readouts is used here.
+
+Define the projected network
+$F_c=N^{-1}\sum_i a_iR_i\relu(v_i\cdot\bar x)$.
+The ReLU ridge map is one-Lipschitz from incoming Euclidean norm to
+$L^2(X)$, because $\E\bar x\bar x^\top=I$.
+Weighted Cauchy--Schwarz and (8)--(9) therefore give
+\[
+ \|F-F_c\|_2\le\frac1N\sum_i|a_i|R_i\|u_i-v_i\|
+                    \le\sqrt{2Pd_0/\rho}\le v_0.     \tag{10}
+\]
+The same estimate holds after multiplying every readout by any sign.
+
+Also $|F(x)|\le E\sqrt D$ and
+\[
+ \E|F-s\chi|=\E(\chi F-s)+2\E(s-\chi F)_+
+                  \le\varepsilon s+2h.
+\]
+Multiplying this $L^1$ bound by the uniform envelope $s+E\sqrt D$
+shows $\|F-s\chi\|_2\le u_0$. This is the only step using the
+population hinge loss rather than just parity correlation.
+
+\section{A bounded Fourier operator implements transfer}
+Let $P_e f(x)=(f(x)+f(-x))/2$ be even projection, a contraction on
+$L^2(X)$. The zero-bias critical ridge at orientation $z$ has even
+coefficient $b_{|S|}\chi_S(z)$ at each even set $S$.
+Consequently, if $F_c^A$ is obtained from $F_c$ by multiplying the
+$i$th readout by $\chi_A(z_i)$, then
+\[
+ \widehat{P_eF_c^A}(S)
+ =\frac{b_{|S|}}{b_{|S\triangle A|}}
+                   \widehat{P_eF_c}(S\triangle A).
+ \tag{11}
+\]
+Every denominator is nonzero. Define $L_A$ on the even subspace by
+the right side. Parseval gives $\|L_A\|_{2\to2}=C_A$, and
+\[
+ L_A(s\chi)=\frac{s b_j}{b_r}\chi_T.
+\]
+Formula (3) follows by averaging two signed coordinates, which reduces
+the coefficient to the zero layer of the remaining $r-2$ signs. Its
+conditional character average is the coefficient of
+$(1-t^2)^{(r-2)/2}$ divided by the corresponding binomial coefficient.
+The constant coefficient follows from
+$\E|\sum_i x_i|=r2^{-r}\binom r{r/2}$.
+In absolute value, consecutive even coefficients satisfy
+\[
+ |b_2/b_0|=1/(r-1),\qquad
+ |b_{l+2}/b_l|=(l-1)/(r-l-1)\quad(2\le l\le r-2).
+\]
+Each ratio and its reciprocal is at most $r-1$.
+Since $||S|-|S\triangle A||\le2k$, chaining at most $k$ ratios
+proves $C_A\le(r-1)^k$. It also proves
+$\rho/|b_j|\le(r-1)^k$.
+
+Form the actual reweighted network
+$F^A=N^{-1}\sum_i a_i\chi_A(z_i)\relu(U_i\cdot\bar x)$ and put
+\[
+                         q_A=\frac{b_r}{s b_j}P_e F^A.
+\]
+Using (10) for both sets of readouts, then (11), gives
+\begin{align*}
+ \|q_A-\chi_T\|_2
+ &\le\frac{\rho}{s|b_j|}
+ \left\{\|P_e(F^A-F_c^A)\|_2+
+       \|L_A(P_eF_c-s\chi)\|_2\right\}\\
+ &\le\frac{\rho}{s|b_j|}\{v_0+C_A(v_0+u_0)\}.
+\end{align*}
+This proves (4). Its feature representation has coefficients
+$b_ra_i\chi_A(z_i)/(s b_j\sqrt N)$ relative to
+$x\mapsto(\psi_i(x)/\sqrt N)_i$, so its squared coefficient norm
+is at most $B_A^2$. Finally $\psi_i(x)^2\le D\|U_i\|^2$,
+which proves the radius bound. The asymptotic statements use
+$\rho=\Theta(r^{-1})$ and
+$|b_{r-2k}|=\Theta_k(r^{-k-1})$.
+
+\input{path-norm-transfer}
+
+The companion \emph{Finite-data raw-feature transfer by removing a
+low-rank component} gives a separate raw-feature consequence of this
+projection: average squared error over the $\binom r{2k}$ neighboring
+tasks is at most $r/\binom r{2k}+\Delta_A^2$, with controlled average
+readout norm. Permutation invariance of the joint IID-sample/posterior
+law then gives finite-data raw transfer for each fixed nearby task under
+an explicit confidence--dimension condition. That result does not replace
+the present deterministic, simultaneous statement for even features.
+
+\section{Downstream labeled sample complexity}
+An elementary margin argument turns the certificate into a learning
+statement. Draw $n$ independent uniform downstream inputs labeled by
+$\chi_T$. Minimize the empirical hinge loss
+\[
+ \ell(y,t)=(1-yt)_+
+\]
+over the closed radius-$B_A$ ball of the finite-dimensional feature
+space of $K_e$. This is a finite convex optimization problem. Its minimizer
+exists by compactness, and one can equally use an approximate minimizer
+with its stated empirical optimization error added to the bound.
+
+\begin{corollary}[IID downstream learning]
+With probability at least $1-\zeta$ over the downstream sample, the
+classifier returned by this empirical minimization has sign error at most
+\[
+ \Delta_A+\frac{8B_AR}{\sqrt n}
+                   +2(1+B_AR)\sqrt{\frac{\log(2/\zeta)}{2n}}.
+ \tag{12}
+\]
+For fixed $k$, a sufficient pretraining condition for error $O(\delta)$
+is $\varepsilon+h/s=O_k(\delta^2r^{-4k-2})$; a sufficient downstream
+sample size is $O_k(r^{2k+3}\delta^{-2}\log(2/\zeta))$.
+\end{corollary}
+\begin{proof}
+On this ball the hinge loss is bounded by $1+B_AR$, is one-Lipschitz, dominates sign
+error, and at $q_A$ is at most $|q_A-\chi_T|$ pointwise. Its population
+value at this comparator is therefore at most $\Delta_A$.
+The radius-$B_A$ feature ball has Rademacher complexity at most
+$B_AR/\sqrt n$. Symmetrization, contraction, and the bounded-differences
+inequality give a uniform generalization gap at most
+$4B_AR/\sqrt n+(1+B_AR)\sqrt{\log(2/\zeta)/(2n)}$, with the displayed
+conservative constants. Apply this gap to the empirical minimizer and
+to the comparator. Equation (6) gives the stated sufficient orders.
+\end{proof}
+
+\input{polynomial-transfer-posterior}
+
+\section{A finite-width comparison with untrained Gaussian features}
+The comparison can be made for approximate downstream predictors,
+not just exact RKHS interpolation. For $j\ge4$ define
+\[
+ L_{r,j}=\frac{e\sqrt2(r+1)}{2\pi(j/2-1)}\,2^{-j}.
+\]
+Let $K_e^0$ be (2) for independent incoming Gaussian vectors
+$U_i\sim N(0,\tau^2I_D)$, before any pretraining. For any even degree-$j$
+character put
+$\lambda_T(K)=\E_{x,y}\chi_T(x)K(x,y)\chi_T(y)$.
+Then
+\[
+                   \E\lambda_T(K_e^0)\le\tau^2 L_{r,j}. \tag{21}
+\]
+In particular, if $\mathcal T$ is the family of all degree-$r-2k$
+characters and $r-2k\ge4$, with probability at least $1-\xi$ over the
+initial features, simultaneously for every $T\in\mathcal T$, every
+$q\in\mathcal H(K_e^0)$ with $\|q-\chi_T\|_2\le1/2$ obeys
+\[
+ \|q\|_{\mathcal H(K_e^0)}^2
+       \ge\frac{\xi}{4\tau^2L_{r,r-2k}\binom r{2k}}.    \tag{22}
+\]
+For fixed $k$ this is exponential in $r$, whereas the pretrained
+certificate has polynomial norm and arbitrarily small fixed error.
+The probabilities for initial and posterior features refer to their
+respective laws, rather than to a specified coupling or training path.
+
+Here is a direct verification of (21). The standard unit-Gaussian ReLU
+feature kernel on the cube is
+\[
+ K_0(x,y)=(r+1)\left\{\frac c4+
+ \frac1{2\pi}\left[1+\sum_{l\ge1}a_lc^{2l}\right]\right\},
+ \quad c=\frac{1+x\cdot y}{r+1},\quad
+ a_l=\frac{\binom{2l}{l}}{4^l(2l-1)^2}\le l^{-5/2}.
+\]
+Its degree-$j$ coefficient in $c^n$ is the probability that the $j$
+specified nonzero symbols have odd multiplicity, and all other nonzero
+symbols have even multiplicity, in $n$ independent uniform draws from
+$\{0,\ldots,r\}$. This vanishes for $n<j$. Independent Poisson counts
+with means $n/(r+1)$ have odd probability at most $1/2$ at each specified
+symbol. Conditioning their total to be $n$, whose probability is at
+least $1/(e\sqrt n)$, bounds the coefficient by $e\sqrt n\,2^{-j}$.
+Summing $a_l\sqrt{2l}$ from $l\ge j/2$ and using
+$\sum_{l\ge j/2}l^{-2}\le1/(j/2-1)$ proves the stated bound.
+Scaling incoming weights by $\tau$ scales the kernel by $\tau^2$.
+Even projection preserves every even Fourier coefficient, proving (21).
+
+A union of Markov bounds over $\binom r{2k}$ characters gives the common
+event $\lambda_T(K_e^0)\le\tau^2L_{r,j}\binom r{2k}/\xi$.
+For any RKHS function,
+\[
+ |\E q\chi_T|\le\|q\|_{\mathcal H(K)}\sqrt{\lambda_T(K)}.
+\]
+An $L^2$ approximation error at most $1/2$ makes the left side at least
+$1/2$, proving (22). Conversely, the trained comparator gives
+$\lambda_T(K_e)\ge(1-\Delta_A)^2/B_A^2$ whenever $\Delta_A<1$.
+This proves an exponential-to-polynomial improvement in the relevant
+feature correlations as well as the approximate-predictor norm.
+It is not a lower bound for every algorithm that is given the original
+input coordinates, or for arbitrary nonlinear use of the frozen features.
+
+
+\section{An alternative using a linear input skip}
+Even feature evaluation can be replaced by an explicit linear skip.
+This is a specified augmentation of the downstream architecture, not a
+claim about the unaugmented frozen kernel. Suppose $E\le B$ with
+$B>0$, and use
+\[
+ K_{\rm skip}(x,y)=\frac1N\sum_i h_{U_i}(x)h_{U_i}(y)
+                                      +\frac B8 x\cdot y.
+\]
+Under the same hypotheses, there is a comparator with the same error
+bound $\Delta_A$ and
+\[
+ \|q_A^{\rm skip}\|_{\mathcal H(K_{\rm skip})}^2
+       \le4B\left(\frac{\rho}{s b_j}\right)^2,
+ \qquad \sup_xK_{\rm skip}(x,x)\le2BD+Br/8.
+ \tag{23}
+\]
+To prove this, let $F_c^A$ be the projected, modulated critical network
+from the proof. Its odd part is exactly $\ell_A\cdot x$, with
+\[
+ \ell_A=\frac1{2N}\sum_i a_iR_i\chi_A(z_i)z_i/\sqrt r,
+ \qquad \|\ell_A\|\le E/2.
+\]
+Set $q_A^{\rm skip}=b_r(F^A-\ell_A\cdot x)/(s b_j)$.
+The error from replacing $F^A$ by $F_c^A$ is still at most $v_0$;
+after subtracting its odd linear part the remainder is $P_eF_c^A$.
+The same triangle inequality proves (4). The original-feature
+coefficients cost at most $2E(\rho/(s b_j))^2$, and the skip
+coefficients cost at most
+$2E^2B^{-1}(\rho/(s b_j))^2$. Their sum is bounded by (23).
+The radius estimate follows directly.
+
+A downstream convex readout fit does not need to know which coordinates
+were deleted: these are comparator-existence bounds for the augmented
+feature space. For target degree at least two, a linear skip has zero
+Walsh quadratic form on the target. Consequently it does not change the
+initial-feature lower bound (22). The learned-versus-initial separation
+and the polynomial downstream orders therefore remain valid for this
+single-evaluation architecture with an input skip.
+
+\input{raw-feature-obstruction}
+
+\section{Scope and remaining questions}
+The deterministic certificate and the finite-temperature posterior
+argument avoid all full-data condensation and conditional local-limit
+theorems. They apply at polynomial widths even when exact minimum-energy
+representation needs exponential width. The witness is only approximately
+energy minimizing, with a controlled inverse-polynomial excess.
+
+The result still concerns exact Bayesian sampling, not an efficient
+pretraining algorithm. Its polynomial exponents are conservative. The
+prior must be cold enough for the desired transfer accuracy; the argument
+does not establish the same result at unit Gaussian scale. It also does
+not prove a transfer guarantee for the unsymmetrized frozen kernel alone.
+
+The even feature transformation is essential to this proof. Reweighting
+critical ridges can create a linear component that is invisible in the
+even Fourier equations. Even projection removes it exactly. The linear-skip construction above supplies one alternative. A further
+possibility is to prove that the ordinary posterior background can cancel
+it, as happens in the full-cube, width-first posterior calculation.
+
+\section*{Proof of the inherited minimum-coordinate inequality}
+For a coordinatewise nondecreasing $g:\{-1,1\}^q\to[0,1]$, permutation
+averaging leaves the top Fourier coefficient unchanged. The averaged
+function is a nondecreasing sequence on Hamming levels. It is a convex
+combination of constants and upper-level thresholds. The alternating
+binomial sum of a threshold starting at level $l$ has absolute value
+$\binom{q-1}{l-1}$, so its normalized top coefficient is at most
+$2^{-q}\binom{q-1}{\lfloor(q-1)/2\rfloor}$.
+Flip input signs to make all ridge weights nonnegative. Integrating
+coordinate $i$ gives $w_i$ times the top coefficient, on the remaining
+$r-1$ coordinates, of
+\[
+ t\longmapsto\frac{\relu(t+w_i)-\relu(t-w_i)}{2w_i}.
+\]
+This is a nondecreasing function with values in $[0,1]$.
+The preceding bound gives
+$|G(u)|\le w_i2^{-(r-1)}\binom{r-2}{(r-2)/2}$.
+A zero coordinate has zero full-parity coefficient directly. Minimizing
+over $i$ proves (7), including arbitrary bias.
+
+The posterior and transfer theorems are conventional proofs checked in
+the same research session, without independent review. The accompanying
+Lean files verify the actual single-neuron direction projection, its
+finite-network weighted extension, the abstract bounded-modulation
+error estimate, the abstract annihilator obstruction with perturbations,
+and a concrete six-bit raw-feature example with exact optimal squared
+error $64/65$. They do not formalize the Fourier coefficient-ratio
+calculation, the posterior concentration argument, or the entire main theorem.
+The sharp atom inequality is inherited from
+\emph{Minimum Gaussian energy for parity requires exponential ReLU width}
+in the existing repository; the finite-width stability and transfer
+argument above is the additional result of this note.
+\end{document}

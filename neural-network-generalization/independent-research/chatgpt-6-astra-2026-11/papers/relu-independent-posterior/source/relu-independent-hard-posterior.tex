@@ -1,0 +1,286 @@
+\section{An independent construction for hard observed margins}
+The hard-margin posterior also admits an independent construction, but
+its ordinary readouts require a conditional Gaussian draw. Replacing the
+hard constraint by the quadratic weight of (12) would be incorrect.
+Fix $s>m_c$ and let
+\[
+ \Pi_N^H=P_0^N(\,\cdot\mid \chi(x)F_N(x)>s\text{ for every }x\in X).
+ \tag{18}
+\]
+All labels are observed. The standard margin $s=1/2$ satisfies the
+assumption by the analytic critical-mean bound.
+
+For each $S$, choose an $M$ by $K$ matrix $B_S$ with orthonormal
+columns spanning the orthogonal complement of $\operatorname{im}A_S$.
+Thus $B_SB_S^\top=P_S$. Such a basis can be fixed once per orientation
+pattern. Put $D_\chi=\operatorname{diag}(\chi(x))$.
+For a transverse mark define the finite output vector
+\[
+ \psi_z(t)_x=\sigma_z\left[
+   \one_{\{z\cdot x>0\}}\,t\cdot(1,x)
+       +\one_{\{z\cdot x=0\}}\relu(t\cdot(1,x))\right]. \tag{19}
+\]
+Here indicator symbols in (19) denote scalar zero-one values. Inside the
+critical cone the exceptional output has the exact formula
+\[
+              \Phi(\theta_j^{\rm big})=c_j f_{z_j}
+                           +q_j\psi_{z_j}(t_j),\qquad
+                       q_j=A_j/\sqrt{c_j}.              \tag{20}
+\]
+In particular replacing $q_j$ by one incurs an $o_P(1)$ output error
+when $c_j/N\to\alpha>0$ and the marks are tight.
+
+We need a known positive covariance cutoff. Let
+\[
+ K_0=\E_{U\sim N(0,I_{r+1})}
+       [\phi(U)\phi(U)^\top],\qquad
+ \phi(U)_x=\relu(U\cdot(1,x)),
+ \qquad \epsilon=\frac{r-2}{4r}\lambda_{\min}(K_0)>0.
+ \tag{21}
+\]
+The Gaussian ReLU kernel formula gives every entry of $K_0$ explicitly.
+It is positive definite: an invertible finite evaluation matrix of
+ReLU features, and positive Gaussian mass near its incoming vectors,
+make its quadratic form strictly positive in every nonzero direction.
+Thus (21) is defined without any unknown critical-law quantity.
+
+The following procedure is considered for sufficiently large $N$; in
+particular $N\ge M$ is necessary for its covariance matrix to have full
+rank. The proof establishes positive acceptance for all sufficiently large
+widths. Every rejection restarts the whole proposal.
+\begin{enumerate}
+\item Draw a uniform balanced orientation set $S$, and draw $n=N-K$
+independent incoming vectors from the incoming marginal of $Q_*$.
+Let $H$ be the $M$ by $n$ matrix with columns $\phi(U_i)$, let
+$m_i=G(U_i)/\rho$, and put
+\[
+ C=B_S^\top HH^\top B_S,\qquad b=B_S^\top Hm.
+\]
+Reject if $C\not\succeq\epsilon N I_K$.
+\item Draw the $K$ independent marks $(v_j,t_j)\sim\mathcal M_{z_j}$,
+and $M$ independent positive slack variables $u_x$ of exponential
+rate $(M\rho)^{-1}$. Set
+\[
+ e_\infty=\sum_j\psi_{z_j}(t_j),\qquad
+ d=B_S^\top(D_\chi u-e_\infty).
+\]
+Accept this proposal with probability
+\[
+ d_EJ_S\frac{(\epsilon N)^{K/2}}{\sqrt{\det C}}
+        \exp[-\tfrac12(d-b)^\top C^{-1}(d-b)].           \tag{22}
+\]
+The covariance cutoff and (3) make this probability at most one.
+\item Draw $\xi\sim N(0,I_n)$ independently, and set
+\[
+ a=m+\xi+H^\top B_SC^{-1}\{d-B_S^\top H(m+\xi)\}.
+ \tag{23}
+\]
+These are the ordinary-neuron readouts. Put $Y=Ha$ and
+\[
+              c=A_S^+(Ns\chi+D_\chi u-e_\infty-Y).      \tag{24}
+\]
+Draw no new marks: construct the exceptional neurons from these $c_j$
+and the previously drawn $(v_j,t_j)$ using (7).
+\item Reject if some $c_j\le0$, a constructed neuron is outside its
+critical cone, an exceptional norm is not larger than all ordinary
+norms, or the actual combined network fails a hard margin in (18).
+Otherwise apply the uniform ordered injection as in the soft construction.
+\end{enumerate}
+Formula (23) samples the Gaussian law $N(m,I_n)$ conditional on
+$B_S^\top Ha=d$. Its covariance may be singular; this is intentional.
+Formula (24) supplies the complementary $K$ degrees of freedom, and
+the independent $M$-dimensional slack restores the full parameter
+law. No point conditioning of the whole network is imposed on its
+final output distribution.
+
+\begin{theorem}[Hard-margin independent approximation]
+At each fixed even $r\ge6$ and $s>m_c$, the output law
+$\widehat\Pi_N^H$ of this procedure satisfies
+\[
+                   \|\widehat\Pi_N^H-\Pi_N^H\|_{\rm TV}\to0.
+ \tag{25}
+\]
+The combined probability of passing the covariance and rejection tests
+has a strictly positive limit. Conditional on passing them, the final
+restart probability tends to zero. The expected idealized arithmetic
+and elementary-proposal cost is $O_{r,s}(N)$, with the same absence of
+finite-width, dimension-uniform, or bit-complexity claims as before.
+The algorithm uses neither $m_c$, $\Sigma$, $M_*$, nor a numerical
+estimate of the posterior evidence.
+\end{theorem}
+\begin{proof}
+Let $Q_U$ be the incoming marginal of $Q_*$. Its density relative to the
+standard incoming Gaussian is $M_*^{-1}e^{G(U)^2/(2\rho^2)}$.
+The critical rejection envelope gives $M_*\le r/(r-2)$, so
+\[
+ \overline K:=\E_{Q_U}\phi(U)\phi(U)^\top
+                      \succeq\frac{r-2}{r}K_0\succeq4\epsilon I_M.
+ \tag{26}
+\]
+Its entries have finite means. The law of large numbers therefore gives
+$C/N\to C_S:=B_S^\top\overline K B_S\succeq4\epsilon I_K$;
+the covariance rejection probability tends to zero, uniformly over the
+finite set of $S$.
+
+Put $T=\operatorname{Cov}_{Q_U}(\phi(U)G(U)/\rho)$, which is finite
+by the fourth incoming moment. Its mean vector is $m_c\chi$, killed
+by $B_S^\top$. The central limit theorem gives
+\[
+             b/\sqrt N\Longrightarrow W_S,
+                         \qquad W_S\sim N(0,B_S^\top T B_S).
+\]
+The proposed marks and slacks are tight, so $d/\sqrt N\to0$.
+The integrand (22), including the cutoff, is bounded by one, and its
+limit has strictly positive expectation for each $S$. Thus the combined
+acceptance probability converges to a positive number. The resulting
+bounded density change preserves all high-probability incoming and
+mark events.
+
+The conditional-Gaussian formula (23) follows by removing the projection
+of $\xi$ onto the row space of $B_S^\top H$, then adding the unique
+minimum-norm correction to the specified value. Before the correction,
+$H(m+\xi)$ is the output of independent critical neurons. Its
+$B_S$ component is $O_P(\sqrt N)$, whereas $d=O_P(1)$.
+On the covariance-good event, the correction to the readout vector has
+squared Euclidean norm
+\[
+ [d-B_S^\top H(m+\xi)]^\top C^{-1}
+ [d-B_S^\top H(m+\xi)]=O_P(1).
+\]
+Also $HH^\top/N\to\overline K$, so its output correction is
+$O_P(\sqrt N)$. Consequently $Y/N\to m_c\chi$, the largest
+ordinary parameter norm divided by $\sqrt N$ tends to zero, and
+(24) gives $c_j/N\to\alpha>0$. The construction is therefore in
+its cones and correctly separates exceptional norms with probability
+tending to one. Formula (20) gives
+\[
+ Y+\sum_j\Phi(\theta_j^{\rm big})
+    =Ns\chi+D_\chi u+o_P(1).                           \tag{27}
+\]
+Because the law of the proposed slacks after acceptance has a density
+bounded by a fixed multiple of their product exponential density, their
+minimum is bounded away from zero with arbitrarily high probability
+by first choosing a sufficiently small positive bound. Equation (27)
+therefore proves that the final hard-margin rejection probability also
+tends to zero.
+
+We now compare densities, retaining their full parameter dimension.
+Gaussian disintegration and the coarea Jacobian of $c\mapsto A_Sc$
+give the identity, for any nonnegative function $w$,
+\begin{align*}
+ &\int N(m,I_n)(da)\int_{\R^K}w(Ha+A_Sc+e_\infty)\,dc\\
+ &\quad=J_S\int_{\R^M}w(Ns\chi+D_\chi u)
+     \varphi_C\bigl(B_S^\top(D_\chi u-e_\infty)-b\bigr)\,du,
+                                                               \tag{28}
+\end{align*}
+where the readout conditional law for a fixed $u$ is exactly (23).
+The shift $Ns\chi$ lies in $\operatorname{im}A_S$, and the diagonal
+sign matrix has determinant of absolute value one. These facts explain
+why neither produces another Jacobian.
+
+Let $W_N^H$ be the hard residual weight after tilting to $Q_*^N$:
+\[
+ W_N^H(V)=e^{-\sum_x(\chi(x)V_x-Ns)/(M\rho)}
+                         \prod_x\one_{\{\chi(x)V_x>Ns\}}.
+\]
+Equation (28), the exponential slack density, and (22) show that before
+its final negligible restarts the proposal has density proportional to
+\[
+ Q_*^n(d\theta)\prod_j\mathcal M_{z_j}(dv_j\,dt_j)\,
+       W_N^H(Y+A_Sc+e_\infty)\,dc                       \tag{29}
+\]
+with counting measure on $S$, and the covariance cutoff retained.
+Denote its normalizing constant by $T_N^H$.
+The Gaussian density in (28), multiplied by $N^{K/2}$ and the cutoff,
+is bounded by $(2\pi\epsilon)^{-K/2}$. The joint limit just proved
+therefore gives, by bounded convergence,
+\[
+ T_N^H\sim N^{-K/2}(M\rho)^M(2\pi)^{-K/2}
+            \sum_{S\in\mathcal B}J_S
+                          \det(B_S^\top\Sigma B_S)^{-1/2}.
+ \tag{30}
+\]
+Here total covariance gives $\Sigma=T+\overline K$. Integrating the
+limiting density of a centered Gaussian with covariance $C_S$ against
+$W_S$ supplies their covariance sum in (30). The finitely many
+orientation choices and the independent normalized marks cause no
+additional limiting factor.
+
+The elementary block-determinant identity
+\[
+ J_S\det(B_S^\top\Sigma B_S)^{-1/2}
+   =(\det\Sigma)^{-1/2}
+                   \det(A_S^\top\Sigma^{-1}A_S)^{-1/2}
+ \tag{31}
+\]
+identifies (30) with the hard orientation-law constant. Thus its actual
+residual posterior normalizer obeys
+\[
+ Z_N^H\sim (N)_K L_r^K(N\alpha)^{-K\nu}T_N^H.          \tag{32}
+\]
+On proposal-typical coordinates, (15) gives the ratio of the true big
+neuron densities to the mark approximation. Equations (20), (27), and
+the strictly positive proposed slacks give
+\[
+ \frac{W_N^H(Y+\sum_j\Phi(\theta_j^{\rm big}))}
+      {W_N^H(Y+A_Sc+e_\infty)}\to1
+ \quad\text{in probability}.                           \tag{33}
+\]
+The numerator event already holds after final acceptance, and the
+exponential ratio tends to one because the output difference is
+$o_P(1)$.
+
+The exact-count theorem again allows canonical ordering of the true
+exceptional neurons, losing posterior mass $o(1)$. On the proposal's
+good-coordinate space, the density $R_N$ of the corresponding restricted
+true law relative to the proposal tends to one in probability, by
+(15), (32), and (33). Its integral is at most one; the true law may
+also assign mass outside this coordinate subset. Nevertheless,
+$\E\min(R_N,1)\to1$ implies $\E R_N\to1$ and
+$\E|R_N-1|\to0$. Thus that omitted true mass tends to zero as well.
+This avoids assuming in advance that approximate slacks are positive
+under the true law. The common random injection recovers the labeled
+network and proves (25).
+
+At fixed dimension, forming $H$, $C$, and the Gaussian conditional
+correction costs $O_r(N)$ arithmetic operations; matrix inversions
+have dimension $K$, independent of $N$. The other proposals have the
+finite costs described earlier. A positive limiting acceptance rate
+and negligible final rejection give the asserted expected cost.
+\end{proof}
+
+The hard construction retains both the odd-output constraint and the
+small positive final slacks. It therefore approximates the original
+hard-margin posterior rather than a smoothed replacement. As before,
+observing the entire cube and fixing the dimension before the width
+limit are material assumptions. The result does not supply a polynomial
+algorithm in the parity dimension or a posterior sampler for arbitrary
+partial data sets.
+
+\paragraph{A less conservative covariance envelope.}
+The scalar cutoff in (21) is convenient for the proof but can lead to a
+small acceptance constant. An anisotropic alternative uses only the
+known prior kernel. Let $D_O$ be the restriction of $K_0$ to the odd
+Walsh subspace, fix $0<\kappa<(r-2)/r$, and put
+\[
+ \Lambda_S=\kappa B_S^\top K_0B_S,\qquad
+ h_0=\kappa^{K/2}d_E\sqrt{\det D_O}.
+\]
+Replace the covariance test by $C\succeq N\Lambda_S$, and (22) by
+\[
+ h_0 N^{K/2}\,\frac{J_S}{\sqrt{\det C}}
+          e^{-(d-b)^\top C^{-1}(d-b)/2}.
+\]
+This is again bounded by one. To see it, use (31) with $K_0$ in place
+of $\Sigma$ and the lower bound
+$A_S^\top K_0^{-1}A_S\succeq E^\top D_E^{-1}E$, where $D_E$ is the
+prior even Walsh block. Since $K_0$ is diagonal in Walsh coordinates,
+\[
+ \frac{J_S}{\sqrt{\det(B_S^\top K_0B_S)}}
+       \le \frac1{d_E\sqrt{\det D_O}}.
+\]
+The strict choice of $\kappa$ and (26) make the covariance test pass
+with probability tending to one. The new prefactor is independent of
+$S$, so it leaves the target density (29) unchanged. The preceding proof
+therefore applies verbatim. This improves a proposal envelope; it does
+not provide a dimension-uniform cost bound.

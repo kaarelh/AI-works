@@ -1,0 +1,272 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{lemma}[theorem]{Lemma}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}
+\title{A full-support Boolean shortcut trap}
+\date{18 November 2026; independent research draft}
+\emergencystretch=3em
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author. Verification scope and provenance are stated in the accompanying research collection.}}
+\hypersetup{pdftitle={A full-support Boolean shortcut trap},pdfauthor={ChatGPT-6 Astra}}
+\begin{document}\maketitle
+
+This strengthens the three-bit shortcut construction to seven ordinary
+Boolean coordinates and a training distribution with full support. It
+still concerns biasless ReLU, balanced initialization, and population
+gradient flow. The mechanism is early alignment followed by permanent
+gate separation, closely related to the early-alignment literature; the
+claim here is the explicit Boolean construction and its complete limiting
+classifier, not discovery of that general mechanism.
+
+\section{An explicit distribution and target}
+Write $X=(s_1,\ldots,s_5,z_1,z_2)\in\{-1,1\}^7$ and
+$y=z_1z_2$. Let $P_{\rm dup}$ be supported on $s_1=\cdots=s_5=S$ with
+\[
+ P_{\rm dup}(S,z_1,z_2)=\frac{1+\rho S z_1z_2}{8},
+ \qquad \rho=9/10.
+\]
+The actual training distribution is
+\[
+ P=(1-\epsilon)P_{\rm dup}+\epsilon\operatorname{Unif}(\{-1,1\}^7),
+ \qquad\epsilon=1/1000.
+\]
+Every input has probability at least $1/128000$. The actual distribution
+therefore does not constrain any two coordinates to be equal.
+The test distribution is uniform on the entire seven-bit cube.
+
+The target has the exact four-neuron representation
+\[
+ z_1z_2=\tfrac12[\operatorname{ReLU}(z_1+z_2)
+ +\operatorname{ReLU}(-z_1-z_2)-\operatorname{ReLU}(z_1-z_2)
+ -\operatorname{ReLU}(-z_1+z_2)].
+\]
+Every displayed coefficient is bounded by one.
+Put $u=(1,1,1,1,1,0,0)/\sqrt5$.
+
+\begin{theorem}[Small initialization converges to the shortcut]
+Train $F_\theta(X)=\sum_{j=1}^N a_j\operatorname{ReLU}(w_j\cdot X)$
+by population gradient flow of squared loss or logistic loss. Fix finite
+$c_j>0$, signs $\sigma_j\in\{-1,1\}$ of both kinds, and unit directions
+$v_j\ne-\sigma_j u$. Initialize
+\[
+ a_j=\sigma_j\alpha c_j,\qquad w_j=\alpha c_jv_j.
+\]
+For every sufficiently small $\alpha>0$, the output converges to
+$F(X)=b_*u\cdot X$, where $b_*>0$. Under squared loss,
+\[
+ b_* = \frac{(1-\epsilon)\sqrt5\rho}{5(1-\epsilon)+\epsilon}.
+\]
+Under logistic loss, $b_*$ is the unique positive minimizer of
+$\E_P\log(1+e^{-yb(u\cdot X)})$.
+Thus the final classifier is the majority of the five shortcut bits,
+with training error $0.05045$ and uniform test error exactly $1/2$.
+
+The threshold on $\alpha$ may depend on the full finite initialization
+and its width. No width-uniform threshold, trainable-bias statement,
+or stochastic-gradient statement is asserted.
+\end{theorem}
+At least two readouts of each sign suffice for the architecture to
+represent the four-neuron teacher. For iid spherical directions the
+excluded antipodal directions have probability zero. Conditioning on
+both readout signs therefore gives failure probability tending to one
+as the common initialization scale tends to zero at fixed width.
+
+\section{A uniform frozen alignment inequality}
+Write $w=pu+b$, $b\perp u$, and $L=\sqrt5$. On the duplicate component,
+the zero-output squared-loss utility is
+\[
+ U_{\rm dup}(w)=\E_{P_{\rm dup}}y\operatorname{ReLU}(w\cdot X)
+               =\rho Lp/2+G(p,b_1,b_2),
+\]
+where $b_1,b_2$ are the two relevant-coordinate components and
+\[
+ G=\frac{\operatorname{sgn}(b_1b_2)}4
+ [\max(L|p|,|b_1|+|b_2|)-\max(L|p|,||b_1|-|b_2||)].
+\]
+The shortcut-orthogonal components of $b$ do not occur in $G$.
+For a unit direction $v$ with $t=u\cdot v$, a direct cellwise estimate gives
+\[
+ (u-tv)\cdot\nabla U_{\rm dup}(v)
+ \ge c_0(1-t^2),\qquad
+ c_0=\frac L2\left(\rho-\frac12-\frac1{L^2}\right)=\frac{\sqrt5}{10}.
+\]
+Here is the cellwise calculation, including the unused shortcut directions.
+Put $B_1=|b_1|$ and $B_2=|b_2|$. In the central region
+$|B_1-B_2|\le L|t|\le B_1+B_2$,
+\[
+ |(u-tv)\cdot\nabla G|
+ \le\tfrac14[L(1-t^2)+|t|(B_1+B_2)]
+ \le\tfrac14(L+2/L)(1-t^2),
+\]
+because $|t|\le(B_1+B_2)/L$ and
+$(B_1+B_2)^2\le2(B_1^2+B_2^2)\le2(1-t^2)$.
+If $B_1>L|t|+B_2$, then $G=\operatorname{sgn}(b_1)b_2/2$,
+so the absolute directional contribution is
+$|tb_2|/2\le B_1B_2/(2L)\le(1-t^2)/(4L)$.
+The other side-dominant cell is identical. If $L|t|>B_1+B_2$,
+then $G=0$. Adding the linear utility $\rho Lt/2$ proves the bound.
+Unused shortcut-orthogonal components only enlarge $1-t^2$, so these
+estimates cover all seven dimensions. They hold for every convex
+combination of limiting gradients and hence genuine Clarke selections.
+
+Let $U_0$ be the utility under the uniform seven-bit distribution.
+Its gradient has norm at most $\sqrt7$. Moreover it vanishes identically
+in the two Euclidean caps of radius
+$r_0=1/(2\sqrt{5\cdot7})$ about $\pm u$. Indeed
+$|u\cdot X|\ge1/\sqrt5$ for every Boolean input, so within either cap
+a neuron's activation depends only on the majority of the shortcut
+bits. Averaging $y$, $yz_1$, and $yz_2$ over the two relevant bits then
+makes every gradient coordinate zero.
+
+Outside both caps,
+$\sqrt{1-t^2}\ge1/(4\sqrt{5\cdot7})$. Therefore everywhere
+\[
+ |(u-tv)\cdot\nabla U_0(v)|\le28\sqrt5(1-t^2).
+\]
+For the actual mixture utility $U=(1-\epsilon)U_{\rm dup}+\epsilon U_0$,
+\[
+ (u-tv)\cdot\nabla U(v)
+ \ge c(1-t^2),\qquad
+ c=(1-\epsilon)\frac{\sqrt5}{10}-28\epsilon\sqrt5>0.\tag{A}
+\]
+Negative readouts are reduced to the same estimate by simultaneously
+reversing all shortcut bits and one relevant bit, a symmetry of $P$
+that reverses the target. Logistic loss halves the frozen field.
+
+Balance is preserved by the actual gradient flow. With
+$Q=\sum_j a_j^2$, one has $|F(X)|\le\sqrt7 Q$, and the directional
+field differs from the frozen one by $O(Q)$, uniformly in all inputs.
+Radial logarithmic growth is bounded while $Q$ stays small. For the
+fixed finite initialization, (A) therefore allows a fixed alignment
+time at which every signed direction is as close to $u$ as desired,
+while $Q=O(\alpha^2)$ remains arbitrarily small. All neurons then have
+strict gates given by the appropriate majority half of the shortcut
+cube. To make the comparison explicit, choose $\zeta<1$ inside the desired
+cap and $\zeta_0$ strictly below the smallest initial signed projection
+but above $-1$. On the compact interval $[\zeta_0,\zeta]$, the right
+side of (A) has a positive lower bound. Choose a fixed upper bound on
+$Q$ making its perturbation smaller than half that bound. Every signed
+projection then increases at a fixed positive speed until it reaches
+$\zeta$, and cannot cross back through $\zeta$. A fixed time suffices
+for all finitely many neurons. The bounded logarithmic growth implies
+$Q(t)\le C\alpha^2$ on that time interval, verifying the chosen bound
+for sufficiently small $\alpha$. ReLU homogeneity gives balance at
+each limiting smooth gradient; bounded radial logarithmic growth also
+prevents a readout sign change in finite time. This applies to genuine
+Clarke selections of the complete risk, using the same limiting cells
+to compare the true and frozen residual fields.
+
+\section{Absorption in the majority gates}
+After gate separation the two readout-sign groups act on disjoint input
+halves. Apply the target-reversing symmetry to the negative group. In
+either group write $a_j>0$, $w_j=p_j u+b_j$, $p_j>0$, $b_j\perp u$.
+Its signed output on the active half is
+\[
+ A(u\cdot X)+v\cdot X,\qquad
+ A=\sum_j a_jp_j,\quad v=\sum_j a_jb_j.
+\]
+Let $R(A,v)$ denote that half's contribution to the population risk.
+The exact equations are
+\[
+ a_j'=-p_jR_A-b_j\cdot R_v,\qquad
+ p_j'=-a_jR_A,\qquad b_j'=-a_jR_v.\tag{F}
+\]
+The active-half input vectors span $\R^7$. Thus $R$ is strictly convex
+for either loss, with positive Hessian on every compact output set.
+Shortcut permutations and simultaneous reversal of the two relevant
+bits preserve the conditional distribution and labels. Their common
+fixed coefficient space is precisely $\operatorname{span}(u)$.
+Averaging these symmetries and using convexity shows that for every $A$,
+$v=0$ minimizes $R(A,v)$. Hence
+\[
+ v\cdot R_v\ge0,\qquad
+ B^2:=\sum_j\|b_j\|^2\text{ is nonincreasing}.
+\]
+Balance also gives, while $p_j>0$,
+\[
+ A\le Q_b:=\sum_j a_j^2\le A+B^2,
+ \qquad \|v\|\le\sqrt{Q_b}\,B.\tag{B}
+\]
+The unique output minimizer is $(b_*,0)$, with $b_*>0$ because the
+risk derivative at $(0,0)$ in the $A$ direction is negative.
+
+For completeness, logistic risk is coercive on the branch. Under the
+uniform component restricted to either majority half,
+$\E[yX]=0$. The inequality
+$\log(1+e^{-yt})\ge(|t|-yt)/2$ therefore gives a positive multiple of
+$\E|c\cdot X|$ as a lower bound for risk. On a finite spanning input
+set this expectation is bounded below by a positive multiple of
+$\|c\|$, by compactness of the unit sphere. Thus risk sublevels are
+compact for logistic as well as squared loss.
+
+While output remains sufficiently small, $-R_A$ is bounded below by a
+positive constant. Every $p_j$ grows, whereas $B$ decreases. Continuing
+this phase for a further fixed time, and decreasing $\alpha$ to keep the
+output small, makes $B/p_{\min}$ arbitrarily small in each branch.
+The majority gate has the uniform margin
+\[
+ p_j|u\cdot X|-|b_j\cdot X|
+ \ge p_j/\sqrt5-\sqrt7\|b_j\|.
+\]
+Thus the gates remain strict as long as $R_A<0$: the $p_j$ increase
+and $B$ does not increase.
+
+If $R_A$ never reaches zero, bounded risk and (B) bound all parameters.
+Strong convexity on the resulting output sublevel and the $p_j,b_j$
+components of the parameter gradient give
+\[
+ \|\nabla_\theta R\|^2\ge Q_b\|\nabla R\|^2
+               \ge c_1 Q_b(R-R_*).
+\]
+Since $Q_b\ge p_{\min}^2>0$, this PL inequality proves convergence to
+the branch optimum.
+
+Otherwise let $T$ be the first time $R_A=0$. Since $\nabla_vR(A,0)=0$
+and $R$ has bounded Hessian and positive $A$-curvature on its compact
+sublevel, $|A(T)-b_*|\le C\|v(T)\|$. Equations (B) then give
+$R(T)-R_*\le C B^2$. For small $\alpha$, subsequent loss sublevels
+remain near $(b_*,0)$, so $A\ge b_*/2$ and $Q_b\ge b_*/2$.
+The PL constant is now bounded below independently of $\alpha$.
+Integrating gradient-flow speed using this PL inequality bounds the
+entire remaining parameter path length by $C B$. Choosing the earlier
+ratio $B/p_{\min}$ small enough makes this length shorter than the
+distance to any majority-gate boundary. A first-exit argument therefore
+shows there is no gate exit, and the same PL inequality proves convergence.
+This completes the absorption argument.
+
+\section{The limiting error}
+The two branch risks are related by the target-reversing symmetry, so
+both have the same positive $b_*$. For square loss, minimizing the
+one-dimensional risk gives
+\[
+ b_* = \frac{\E[y(u\cdot X)]}{\E[(u\cdot X)^2]}
+      =\frac{(1-\epsilon)\sqrt5\rho}{5(1-\epsilon)+\epsilon}.
+\]
+Since five is odd, $u\cdot X$ never vanishes. On the duplicate component
+its sign is $S$ and its error is $(1-\rho)/2$. Under uniform input the
+shortcut majority and the two-bit target are independent and balanced.
+The training error is therefore
+\[
+ (1-\epsilon)(1-\rho)/2+\epsilon/2=0.05045,
+\]
+and the uniform test error is $1/2$.
+
+\section{Numerical checks and unresolved extensions}
+The script \texttt{full\_support\_shortcut.py} uses all 128 inputs with
+exact distribution weights and a midpoint Lorentz update preserving
+balance. At width 16, the first square-loss experiment used eight seeds
+and scales $10^{-4},10^{-2},10^{-1},1/2$. Every run at the first three
+scales had the stated training and test classification errors by time
+1000; seven of eight runs at scale $1/2$ learned perfectly. Logistic
+replications and step-size checks are recorded separately. These are
+checks, not the proof of infinite-time behavior.
+
+The companion note \emph{Imbalance and one-neuron renewal at the shortcut
+trap} extends the proof to initialization with $|a_j|\ge\|w_j\|$.
+Ordinary independent
+Gaussian initialization requires an additional argument about neurons
+whose readout sign changes. Biases and finite-sample stochastic training
+are separate unresolved extensions. Width-uniform trapping for a prior
+bounded away from the balanced antipodal directions may be possible;
+it is not part of the theorem above.
+\end{document}

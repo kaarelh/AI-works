@@ -1,0 +1,329 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\newcommand{\R}{\mathbb R}
+\title{A one-neuron target that defeats wide sign-only Bayes}
+\date{18 November 2026; independent research draft}
+\emergencystretch=3em
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author. Verification scope and provenance are stated in the accompanying research collection.}}
+\hypersetup{pdftitle={A one-neuron target that defeats wide sign-only Bayes},pdfauthor={ChatGPT-6 Astra}}
+\begin{document}
+\maketitle
+
+\section{Statement and interpretation}
+This note gives a particularly transparent separation between sign-only
+Bayesian conditioning and fixed positive training margins. It uses a
+cosine activation, not the repository's usual tanh or ReLU activation.
+The connection between Gaussian kernels and parity hardness is classical;
+the precise online construction and its finite-neural-width transfer below
+still need a targeted novelty check. The mathematical claims should be
+assessed on their own, without an assertion that the phenomenon is new.
+
+Let $X=\{-1,1\}^d$ and $f(x)=\prod_{i=1}^d x_i$. Consider
+\[
+ F_N(x)=\frac1N\sum_{j=1}^N a_j\cos(w_j\cdot x+b_j),
+\]
+with independent $a_j\sim N(0,1)$, $w_j\sim N(0,\sigma^2I_d)$,
+and $b_j$ uniform modulo $2\pi$. The teacher has just one neuron:
+\[
+ f(x)=\cos\left(\frac\pi2\sum_i x_i-\frac{d\pi}{2}\right).
+\]
+Its weights are bounded by $\pi/2$ and its phase can be reduced modulo
+$2\pi$. Thus its description and number of parameters are $O(d)$.
+
+The sign-only posterior conditions on $f(x)F_N(x)>0$ at observed inputs.
+There is no initial global output restriction. Present the cube in
+binary lexicographic order by writing $x_i=1-2z_i$, $z_i\in\{0,1\}$.
+
+\begin{theorem}[Wide sign-only failure]
+For every $d\ge1$ and $\sigma>0$, all sufficiently large finite widths
+$N$ have posterior-majority prediction errors on every input after the
+first in this order: exactly $2^d-1$ forced errors, irrespective of how
+the first tie is resolved. Fresh posterior sampling has expected errors
+at least $0.49(2^d-1)$ for all sufficiently large $N$. When $\sigma$ is
+fixed, an explicit width threshold of the form $\exp(O(d))$ suffices
+for either statement, with constants depending on $\sigma$.
+\end{theorem}
+
+\begin{corollary}[Width and margin separations]
+At width one, the same sign-only prior has an $O(d\log(d+1))$ total
+expected sampling-mistake bound, uniform over all input orders, and a
+bound of the same order for any fixed-confidence mistakes. Thus widening
+can change polynomial online behavior into exponential behavior.
+
+If instead training requires $f(x)F_N(x)>1/2$, the quantitative entropy
+projection argument in the companion note gives polynomial
+total mistake bounds uniform over every $N\ge1$. The same prior and
+activation are used. This latter statement uses mean-field normalization
+$1/N$ and a fixed, nonvanishing training margin.
+\end{corollary}
+
+The sign-only rule is invariant under positive rescaling of $F_N$.
+It therefore sees a central-limit Gaussian process at large width.
+A fixed positive mean-field margin is a large-deviation constraint and
+does not remain in that Gaussian-process regime. This is the mechanism
+behind the separation, rather than an alteration of the target.
+
+There is also a necessary width scale. At any width, keep one teacher
+neuron in the width-one box below and constrain all other readouts to
+$|a_j|\le1/(8N)$, leaving their incoming weights unrestricted. Their
+total unnormalized interference is less than $1/8$, so every target sign
+is still correct. This event has negative log prior mass at most
+$O_\sigma(d\log(d+1)+N\log(N+1))$. If all $M-1$ later posterior-majority
+predictions are wrong, each next correct-label probability is at most
+$1/2$, so the full-label evidence is at most $2^{-(M-1)}$. Comparing
+the two estimates forces $N=\Omega_\sigma(2^d/d)$ for large $d$.
+Thus the width scale for the all-but-first failure is exponential in
+dimension, up to the different exponential constants in the upper bound.
+
+\section{An exact Gaussian-process calculation}
+Put $r=e^{-2\sigma^2}\in(0,1)$ and $M=2^d$. The normalized covariance
+of the cosine features is
+\[
+ K(z,z')=r^{|z\mathbin\triangle z'|}.
+\]
+Indeed averaging over the phase removes the sum-frequency term, and
+the Gaussian characteristic function gives
+$2\E\cos(w\cdot x+b)\cos(w\cdot x'+b)=K(z,z')$.
+Let $G$ be the centered Gaussian vector with covariance $K$, and let
+$H_z=(-1)^{|z|}G_z$ be its signed version. Its covariance is
+\[
+ \widetilde K=
+ \begin{pmatrix}1&-r\\-r&1\end{pmatrix}^{\otimes d}.
+\]
+Write $q=\sqrt{1-r^2}$. In lexicographic order the Cholesky factor is
+$\bigl(\begin{smallmatrix}1&0\\-r&q\end{smallmatrix}\bigr)^{\otimes d}$.
+Its inverse is
+$\bigl(\begin{smallmatrix}1&0\\r/q&1/q\end{smallmatrix}\bigr)^{\otimes d}$.
+Consequently the exact autoregressive representation is
+\begin{equation}\label{eq:ar}
+ H_z=-\sum_{y\subsetneq z}r^{|z\setminus y|}H_y+q^{|z|}\varepsilon_z,
+ \qquad \varepsilon_z\stackrel{\rm iid}{\sim}N(0,1).
+\end{equation}
+Every proper subset $y$ precedes $z$; the innovation is independent of
+the entire preceding Gaussian vector, not merely the displayed subsets.
+If all previous signed outputs are positive and $z\ne\varnothing$,
+the conditional mean in \eqref{eq:ar} is strictly negative. Averaging
+over the truncated distribution of preceding values therefore gives
+\[
+ \Pp(H_z>0\mid H_y>0\text{ for all preceding }y)<1/2.
+\]
+This proves the $M-1$ majority errors for the Gaussian process. The
+conditioning probabilities are all positive because $K\succ0$.
+The multivariate central limit theorem already transfers each strict
+inequality to all sufficiently large neural widths; there are only
+$M-1$ inequalities. The next section supplies quantitative bounds.
+
+\section{A finite-width transfer using only scalar concentration}
+Set
+\[
+ a=(1-r)^d,\qquad b=(1+r)^d.
+\]
+Every principal covariance matrix of $\widetilde K$ has eigenvalues
+between $a$ and $b$. A lower bound for the probability of the full
+positive orthant, and hence every prefix orthant, is
+\begin{equation}\label{eq:orthantlower}
+ p_*:=\left(\frac{a}{2\pi e b}\right)^{M/2}.
+\end{equation}
+To see this, integrate its Gaussian density on $[0,\sqrt a]^M$:
+the determinant is at most $b^M$ and the quadratic form at most $M$.
+
+Let $h_j(x)=\sqrt2\cos(w_j\cdot x+b_j)$ and
+$K_N=N^{-1}\sum_j h_jh_j^T$. Conditional on all incoming weights and
+phases, $\sqrt{2N}F_N$ is exactly Gaussian with covariance $K_N$.
+Since every product $h_j(x)h_j(y)$ lies in $[-2,2]$, scalar Hoeffding
+and a union bound give
+\begin{equation}\label{eq:covconcentration}
+ \Pp\{\|K_N-K\|_{\rm op}>\epsilon a\}
+ \le2M^2\exp\left(-\frac{N\epsilon^2a^2}{8M^2}\right).
+\end{equation}
+Here entrywise error $\epsilon a/M$ implies the indicated operator
+bound. On its complement,
+$(1-\epsilon)K\preceq K_N\preceq(1+\epsilon)K$.
+
+For any cone $C\subseteq\R^M$, not necessarily convex, these Loewner
+bounds imply
+\begin{equation}\label{eq:coneratio}
+ e^{-2M\epsilon}\Pp_K(C)\le\Pp_{K_N}(C)
+                 \le e^{2M\epsilon}\Pp_K(C),\qquad 0<\epsilon\le1/2.
+\end{equation}
+Indeed compare densities with those of the scalar multiples
+$(1\pm\epsilon)K$, whose cone probabilities equal $\Pp_K(C)$;
+the determinant factors are bounded by
+$[(1+\epsilon)/(1-\epsilon)]^{M/2}\le e^{2M\epsilon}$.
+Prefix training events and their intersections with a query sign are
+cones. If the bad covariance probability is at most $q_*$, the neural
+posterior correct-sign probability is therefore at most
+\begin{equation}\label{eq:posteriortransfer}
+ \frac{e^{4M\epsilon}}{1-q_*}\,p_{\mathrm{GP}}
+ +\frac{q_*e^{2M\epsilon}}{(1-q_*)p_*},
+\end{equation}
+where $p_{\mathrm{GP}}$ is the Gaussian-process correct-sign probability.
+This explicitly accounts for reweighting the incoming features by the
+rare training event; convergence of unconditioned covariances alone
+would not suffice.
+
+For the sampling assertion use $\epsilon=1/(1000M)$ and
+$q_*=p_*/1000$. Substituting $p_{\mathrm{GP}}\le1/2$ in
+\eqref{eq:posteriortransfer} makes the result less than $0.51$.
+It suffices to take
+\[
+ N\ge\frac{8M^2}{\epsilon^2a^2}
+                    \log\frac{2M^2}{q_*}.
+\]
+At fixed $r$, its logarithm is $O(d)$. Fresh draws along this deterministic
+order are independent, so ordinary Bernoulli concentration also gives
+an exponential-in-$M$ high-probability lower bound on the number of
+mistakes, if desired.
+
+\section{A uniform strict majority gap}
+The following elementary bound avoids leaving the majority width
+threshold unquantified. For every nonempty query,
+\begin{equation}\label{eq:gap}
+ p_{\mathrm{GP}}\le\frac12-\delta_d,
+ \qquad\delta_d=\frac{r^d a^2}{1000b^{3/2}\sqrt M}.
+\end{equation}
+Let $V$ be the Gaussian vector at the $k\le M$ preceding inputs,
+already signed by parity, conditioned on its positive orthant. Whitening
+turns this event into a cone. The Gaussian radius is independent of its
+direction and is unchanged by conditioning on a cone. Consequently
+$\E[\|V\|^2\mid V>0]\le bk$. With conditional probability at least
+$3/4$, all coordinates other than the first have norm at most
+$2\sqrt{bM}$.
+
+Conditional on these other coordinates, the first coordinate is a normal
+$N(\mu,s^2)$ truncated to $(0,\infty)$. The inverse covariance bounds
+give $s^2\in[a,b]$ and
+$\mu\ge-T$, where $T=2b^{3/2}\sqrt M/a$, on that event. Set
+$u=a/[4(T+\sqrt b)]$. The standard-normal hazard bound
+$\phi(t)/\overline\Phi(t)\le t_++1$ implies
+\[
+ \frac{\overline\Phi((u-\mu)/s)}{\overline\Phi(-\mu/s)}
+ \ge\exp\left(-\frac{uT}{a}-\frac{u^2}{2a}-\frac{u}{\sqrt a}\right)
+ \ge e^{-1}.
+\]
+Thus $\Pp(V_0\ge u\mid V>0)\ge3/(4e)$. In \eqref{eq:ar}, the
+coefficient of $V_0$ is at least $r^d$, and the innovation variance is
+at most one. Hence the excess wrong-sign probability over $1/2$ is
+at least
+\[
+ \frac{3}{4e}[\Phi(r^du)-1/2]
+ \ge\frac{3\phi(1)}{4e}r^du
+ \ge\frac{\phi(1)}{16e}
+           \frac{r^da^2}{b^{3/2}\sqrt M}>\delta_d.
+\]
+We used $u\le1$, $T+\sqrt b\le3b^{3/2}\sqrt M/a$, and
+$\phi(1)/(16e)>1/1000$. The hazard bound follows from the usual Mills
+ratio lower bound $\overline\Phi(t)/\phi(t)\ge1/(t+1)$ for $t\ge0$;
+for $t<0$ the hazard is at most $\sqrt{2/\pi}<1$.
+
+Now take $\epsilon=\delta_d/(64M)$ and $q_*=\delta_dp_*/16$ in
+\eqref{eq:covconcentration}--\eqref{eq:posteriortransfer}. The latter
+is less than $1/2-\delta_d/2$. This proves all $M-1$ majority mistakes
+at an explicit finite width threshold whose logarithm is again $O(d)$
+for fixed $r$. The constants are large and no sharp transition width
+is claimed.
+
+\section{The small-width and positive-margin guarantees}
+At width one, take the incoming weight center $w_i^*=\pi/2$, phase
+$b^*=-d\pi/2$ modulo $2\pi$, and readout in $[1,2]$. If
+$|w_i-w_i^*|\le1/(8d)$ and the circular phase error is at most $1/8$,
+then the phase error at every input is at most $1/4$. Thus
+$f(x)F_1(x)\ge\cos(1/4)>1/2$ everywhere. This box has prior probability
+at least $\exp[-O_\sigma(d\log(d+1))]$. The ordinary evidence-potential
+argument therefore bounds total expected sign mistakes, and fixed-
+confidence mistakes, by $O_\sigma(d\log(d+1))$ on every sequence.
+
+For the positive-margin large-width theorem, an explicit mean teacher
+law is especially simple. Take $w\sim N(w^*,I_d/d)$, phase uniformly
+within circular distance $1/4$ of $b^*$, and independently
+$a\sim N(\mu,1)$, where
+\[
+ \mu=\frac{2e^{1/2}}{\operatorname{sinc}(1/4)}<4,
+ \qquad\operatorname{sinc}(t)=\sin(t)/t.
+\]
+Its mean output is exactly $2f(x)$ everywhere. Its entropy relative to
+the stated prior is
+\[
+ K=\frac d2\left[\frac{(\pi/2)^2}{\sigma^2}
+       +\frac1{d\sigma^2}-1+\log(d\sigma^2)\right]
+       +\log(4\pi)+\frac{\mu^2}{2}.
+\]
+This is $O_\sigma(d\log(d+1))$. The bounded cosine feature gives all
+the same output-moment and conditional-Gaussian-readout estimates as
+the tanh theorem. Its covariance $K/2$ is positive definite, proving
+full feature span. Thus the sufficient width and mistake bound are
+polynomial. For smaller widths pad and amplify the single-neuron teacher
+as in the companion note; the product-box prior cost is polynomial in
+$N,d$, and the split at the polynomial sufficient width yields a
+uniform polynomial over every $N\ge1$.
+
+\section{A related separation for ordinary Gaussian tanh}
+The cosine example gives the stronger all-but-first majority conclusion,
+but a superpolynomial confidence and sampling separation for ordinary
+tanh already follows by combining an existing repository lower bound
+with this round's new positive-margin upper bound. We state this
+consequence explicitly so the role of the activation is not misleading.
+
+Use $F_N=N^{-1}\sum_j a_j\tanh(u_j\cdot(1,x))$, with
+$a_j\sim N(0,\tau^2)$ and $u_j\sim N(0,\tau^2I_{d+1}/d)$ at fixed
+$\tau>0$. Let $f$ be full parity and $d\ge25$. Put
+\[
+ T_d=1+\left\lfloor\frac1{6000}
+           \binom d{\lfloor\sqrt d/5\rfloor}\right\rfloor.
+\]
+The repository paper \emph{Parity under standard-scaling neural-network
+Gaussian processes}, Theorem ``Sign-only learner'' and its network
+corollary, prove the following existing fact: after any history of at
+most $T_d-1$ inputs, at least a quarter of the cube has limiting
+correct-sign posterior probability at most $13/20$.
+Its constant $C_0<1000$ makes the displayed conservative threshold valid.
+Positive rescaling of the output leaves sign-only conditioning unchanged,
+so its Gaussian-process limit applies to the mean-field normalization
+used here as well. The first-layer gain is chosen to match the same
+incoming variance; the cited bound is uniform in this gain.
+
+Recursively choose an input in this bad quarter using the limiting
+posterior. It is unseen, since observed labels have posterior probability
+one. This yields one fixed sequence of $T_d$ distinct inputs, depending
+on $d$ and the prior but not on sufficiently large $N$. Posterior
+convergence at its finitely many histories makes the finite-width
+correct probabilities less than $2/3$ at every round once $N$ is large
+enough. Consequently sign-only learning has $T_d$ confidence failures
+and at least $T_d/3$ expected fresh-sampling mistakes. Here
+$T_d=\exp(\Omega(\sqrt d\log d))$; no finite-width threshold is claimed.
+This is an online consequence of the repository's existing theorem,
+not a new proof of its parity lower bound, and it does not imply a
+majority-error lower bound.
+
+For comparison, a small integer-weight tanh teacher is explicit. With
+$S=\sum_i x_i$ and $c_d=(1+(-1)^d)/2$, set
+\[
+ F_T(x)=c_d\tanh(d)+\sum_{j=1}^d(-1)^{d-j}
+                 \tanh\bigl(d(S+d-2j+1)\bigr).
+\]
+Replacing tanh by sign makes the expression exactly parity. Each
+nonconstant argument has absolute value at least $d$, so its uniform
+error is at most $2(d+1)e^{-2d}<1/2$. This is a width-at-most-$d+1$
+teacher with integer parameter magnitudes at most $d^2$ and positive
+margin greater than $1/2$. The companion entropy-projection theorem
+therefore gives polynomial total mistakes over every width $N\ge d+1$
+when the same prior instead conditions only on observed margins
+$f(x)F_N(x)>1/2$. Its explicit constants are polynomial in the teacher
+weight bound, so using $B_0=d^2$ preserves polynomial dependence on $d$.
+
+Thus changing zero training margin to a fixed positive one separates
+superpolynomial and polynomial lifetime sampling/confidence bounds even
+for the ordinary Gaussian tanh prior. Neither side imposes a global
+margin restriction at unobserved inputs.
+
+\section{Verification status and remaining questions}
+Independent review and formal verification remain outstanding. The
+analogous majority-error lower bound for ordinary tanh or ReLU, and a
+practical transition width, remain open.
+\end{document}

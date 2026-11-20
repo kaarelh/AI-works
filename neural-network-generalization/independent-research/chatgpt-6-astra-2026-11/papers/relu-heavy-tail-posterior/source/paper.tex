@@ -1,0 +1,356 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{lemma}[theorem]{Lemma}
+\newcommand{\E}{\mathbb E}\newcommand{\Pp}{\mathbb P}
+\newcommand{\R}{\mathbb R}\newcommand{\relu}{\operatorname{ReLU}}
+\newcommand{\one}{\mathbf1}
+\title{Sparse posterior condensation under heavier-than-Gaussian ReLU priors}
+\date{18 November 2026; independent research draft}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author. Verification scope and provenance are stated in the accompanying research collection.}}\emergencystretch=3em
+\hypersetup{pdftitle={Sparse posterior condensation under heavier-than-Gaussian ReLU priors},pdfauthor={ChatGPT-6 Astra}}
+\begin{document}\maketitle
+
+This note supplies the third side of the prior-tail comparison. For a
+fixed finite input set and independent coordinate tails $e^{-|u|^p}$,
+$1\le p<2$, fitting nonzero mean-field outputs occurs at speed $N^{p/2}$,
+not speed $N$. The ordinary neurons retain their prior distribution;
+large neurons carry the fitted function. Their limiting representation
+minimizes a strictly concave atomic cost and admits effective compression
+by simply keeping its largest terms. The general large-jump mechanism is
+well established in probability; the elementary argument below states the
+finite-dimensional neural version needed here. No novelty claim is made.
+
+\section{Model and the atomic cost}
+Let $X\subset\R^d$ be a fixed finite set of size $M$, let
+$f:X\to\{-1,1\}$, and let $s>0$. Put $D=d+1$ and
+$\bar x=(1,x)$. A neuron has parameters $\theta=(a,U)\in\R^{D+1}$,
+output vector $\Phi_x(\theta)=a\relu(U\cdot\bar x)$, and independent
+coordinate density proportional to $e^{-|u/\ell|^p}$, with fixed
+$\ell>0$ and $1\le p<2$. Write
+\[
+ q=p/2\in[1/2,1),\qquad V(\theta)=\sum_i|\theta_i/\ell|^p,
+ \qquad F_N=N^{-1}\sum_{j=1}^N\Phi(\theta_j).
+\]
+The prior is $P_p$, and the observed-margin event is
+$H_N=\{f(x)F_N(x)>s\ \forall x\in X\}$. The ReLU ridge vectors
+span $\R^X$ because biases are allowed and $X$ is finite with distinct
+points. Hence every output table has a finite representation.
+Let
+\[
+ \mathcal A=\{\Phi(\theta):V(\theta)=1\},\qquad
+ B=\max_{h\in\mathcal A}\|h\|_\infty<\infty.
+\]
+This compact atom set is symmetric under changing the readout sign.
+For $X=\{\pm1\}^d$, one may use
+$B\le\ell^2D^{1-1/p}/2^{2/p}$. Define
+\[
+ J(z)=\inf\left\{\sum_{j=1}^L c_j^q:
+ z=\sum_{j=1}^L c_jh_j,\quad c_j\ge0,\ h_j\in\mathcal A,
+ \ L<\infty\right\}.                                    \tag{1}
+\]
+Equivalently it is the infimum of $\sum_jV(\vartheta_j)$ over
+finite neuron collections with $\sum_j\Phi(\vartheta_j)=z$.
+The equivalence uses the degree-two homogeneity of $\Phi$.
+
+\begin{lemma}[Finite minimizers and compact level sets]
+Every $z$ has a minimizing representation with at most $M$ nonzero
+atoms. The function $J$ is lower semicontinuous, finite, and coercive,
+and $J(tz)=t^qJ(z)$ for $t\ge0$. In particular
+\[
+ J(z)\ge(\|z\|_\infty/B)^q.
+\]
+Any cost-minimizing representation, even allowing countably many atoms
+with finite cost, has at most $M$ nonzero terms.
+\end{lemma}
+\begin{proof}
+If a finite representation has more than $M$ positive coefficients,
+its atom vectors are linearly dependent. Vary the coefficients along a
+nonzero dependence while retaining nonnegativity. If the dependence has
+both signs, its admissible interval has two finite endpoints, and the
+strictly concave function $\sum c_j^q$ is strictly smaller at one endpoint
+than at an interior point. If all dependence coefficients have one sign,
+move to the finite endpoint in the direction decreasing all affected
+coefficients, again strictly lowering cost. An endpoint deletes a term.
+Repeat to obtain at most $M$ terms without increasing cost.
+
+A minimizing sequence with costs bounded by $C$ now has at most $M$
+coefficients, each at most $C^{1/q}$, and atoms in a compact set. Pad
+by zero terms and take a subsequence to obtain a minimizer. The same
+compactness proves lower semicontinuity on bounded-cost output sequences.
+Also $\sum c_j\le(\sum c_j^q)^{1/q}$, proving coercivity. Scaling proves
+homogeneity. Finally a countable representation with more than $M$
+positive terms has a finite dependent subcollection; the same strict
+cost decrease contradicts optimality. Its output series converges
+absolutely because finite $q$-cost bounds its coefficient sum.
+\end{proof}
+
+\section{The finite-dimensional large-deviation principle}
+\begin{theorem}[Speed $N^q$ and nonconvex atomic rate]
+The empirical output $F_N$ obeys a large-deviation principle in
+$\R^X$ with speed $N^q$ and good rate function $J$.
+Consequently, with
+\[
+ J_* =\min\{J(z): f(x)z_x\ge s\ \forall x\}>0,
+\]
+one has
+\[
+ -\log P_p^N(H_N)=N^qJ_*+o(N^q).                          \tag{2}
+\]
+Under the actual posterior, the empirical parameter law converges weakly
+in probability to the original prior $P_p$. Its output concentrates on
+the compact set of margin-feasible $J$-minimizers.
+\end{theorem}
+\begin{proof}
+We give the truncation and large-jump details. Since
+$\|\Phi(\theta)\|_\infty\le BV(\theta)^{1/q}$, split each output
+according to $V(\theta)^{1/p}\le\varepsilon\sqrt N$ or its complement.
+Denote the corresponding average outputs by $T_N^\varepsilon$ and
+$R_N^\varepsilon$. Readout sign symmetry makes every coordinate of the
+truncated neuron output have mean exactly zero.
+
+For $\lambda=A N^{q-1}$ and on the truncated set,
+\[
+ \lambda|\Phi_x|\le AB\varepsilon^{2-p}V.
+\]
+Choose $\varepsilon$ small enough that $AB\varepsilon^{2-p}\le1/2$.
+The exponential Taylor estimate gives
+\[
+ \log\E\exp\{\lambda\Phi_x\one_{V^{1/p}\le\varepsilon\sqrt N}\}
+ \le C\lambda^2,
+\]
+because $\E\Phi_x^2e^{V/2}<\infty$. The same estimate holds with
+$-\lambda$. Since $N\lambda^2=o(N^q)$,
+\[
+ \limsup_N N^{-q}\log\Pp(\|T_N^\varepsilon\|_\infty>u)
+ \le-Au.                                                 \tag{3}
+\]
+The finite union over $M$ coordinates changes no exponent. Taking
+$\varepsilon\downarrow0$ allows $A\uparrow\infty$; thus the small
+neurons are an exponentially negligible output at the relevant speed.
+
+The variable $V$ has a gamma distribution of shape $(D+1)/p$ and
+unit rate: each coordinate contributes a gamma variable of shape $1/p$.
+In particular its tail is a polynomial times $e^{-v}$. For a fixed
+$\varepsilon>0$, the chance that at least $L$ neurons exceed the cutoff
+is at most
+\[
+ \binom NL\Pp(V>\varepsilon^pN^q)^L,
+\]
+whose normalized logarithm has limsup at most $-L\varepsilon^p$.
+The chance that any normalized parameter has
+$V(\theta/\sqrt N)>R$ has limsup at most $-R$.
+Thus for any desired exponential accuracy one may restrict to finitely
+many large neurons and a compact set of their normalized parameters.
+
+For each specified set of $L$ indices, the joint density of the
+normalized parameters $\vartheta_j=\theta_j/\sqrt N$ is a fixed
+normalizing constant times
+\[
+ N^{L(D+1)/2}\exp[-N^q\textstyle\sum_jV(\vartheta_j)].
+\]
+On compact sets the elementary Laplace upper bound gives rate
+$\sum_jV(\vartheta_j)$. There are at most $N^L$ choices of indices,
+and $\log N=o(N^q)$. Therefore the upper bound for any compact output
+set under $R_N^\varepsilon$ is bounded by the infimum of the same sum
+over the corresponding finite-atom representations, hence by $J$.
+The count and norm exclusions can be made arbitrarily expensive.
+Combining with (3), then taking the output-neighborhood radius to zero,
+gives the upper bound on compact sets; lower semicontinuity of $J$
+justifies this last passage.
+
+For completeness the family is exponentially tight, so the same upper
+bound holds for closed sets. Write
+$S_N^\varepsilon=\sum_jV(\theta_j)\one_{V>\varepsilon^pN^q}$.
+Because $\sum v_j^{1/q}\le(\sum v_j)^{1/q}$,
+$\|R_N^\varepsilon\|_\infty\le B(S_N^\varepsilon/N^q)^{1/q}$.
+For any fixed $\eta\in(0,1)$,
+\[
+ \E e^{(1-\eta)V\one_{V>\varepsilon^pN^q}}=1+o(N^{-1}),
+\]
+since its excess is bounded by a polynomial in $N$ times
+$e^{-\eta\varepsilon^pN^q}$. Chernoff therefore gives
+\[
+ \limsup_N N^{-q}\log\Pp(S_N^\varepsilon>C N^q)
+                      \le-(1-\eta)C.                    \tag{4}
+\]
+Together with (3), this makes outputs outside a growing compact cube
+arbitrarily expensive.
+
+For the lower bound on an open set, choose any finite neuron
+representation whose sum lies in it. Restrict those fixed, finitely
+many normalized neurons to sufficiently small open balls. Their density
+integral has liminf exponent at least minus the sum of their costs,
+up to an arbitrarily small error. The remaining $N-L$ neurons have
+average output tending to zero by the ordinary law of large numbers,
+independently of those balls. Thus their additional probability tends
+to one. Minimize over representations and output points to get the
+open-set lower bound with rate $J$.
+
+The closed margin set has rate minimum $J_*>0$ by coercivity.
+Amplifying a minimizer by $1+\delta$ puts its output in the strict
+margin event and multiplies its cost by $(1+\delta)^q$. Hence the
+open and closed infima agree, proving (2) and posterior output
+concentration. Bounded-test empirical-law deviations under the product
+prior have probabilities $e^{-cN}$ by Hoeffding. Dividing by the
+evidence (2), whose speed is $N^q=o(N)$, makes their posterior
+probabilities vanish. A countable convergence-determining family and
+the same argument for compact-set indicators prove weak empirical-law
+convergence and tightness.
+\end{proof}
+
+\section{The correct likelihood scale changes with the prior tail}
+The speed $N^q$ has a direct consequence for soft likelihoods. If
+$\mathcal L:\R^X\to[0,\infty)$ is continuous, then the likelihood
+$\exp[-N^q\lambda\mathcal L(F_N)]$ has
+\[
+ -N^{-q}\log\mathcal Z_{N,\lambda}
+       \longrightarrow\inf_z\{J(z)+\lambda\mathcal L(z)\}, \tag{8}
+\]
+and its outputs concentrate on that objective's minimizers. This is the
+Laplace principle from the proved LDP; the integrand is bounded above
+by one, and exponential tightness controls the tails. The ordinary
+empirical law still tends to $P_p$, because its deviations cost order
+$N$, while the evidence costs order $N^q$. Thus the natural nontrivial
+likelihood scale is $N^q$, unlike the $N$ scale in the Gaussian and
+faster-than-Gaussian companions.
+
+At the old scale $\exp[-N\lambda\|F_N-f\|_2^2/2]$, with fixed
+$\lambda>0$ and the uniform input norm, the posterior instead tends to
+exact interpolation:
+\[
+ F_N\to f,\qquad -N^{-q}\log\mathcal Z_{N,\lambda}\to J(f). \tag{9}
+\]
+For the upper bound, outside any fixed ball about $f$ the likelihood
+is $e^{-cN}$; inside that ball use the LDP and then shrink the ball.
+For the lower bound, choose an optimal finite representation of $f$.
+Restrict its normalized neurons to balls of radius $N^{-b}$, with
+$(1-q)/2<b<1/2$. Their log-volume cost is $O(\log N)=o(N^q)$,
+their rate cost tends to $J(f)$, and their total output error is
+$O(N^{-b})$. The remaining ordinary neurons have average output within
+$N^{-b}$ with probability tending to one by Chebyshev. The likelihood
+penalty is $O(N^{1-2b})=o(N^q)$, proving (9). The same estimates give
+output concentration. These limits fix the finite dataset first.
+
+There is a simple exact example of a discontinuous transition at the
+matched scale (8). With a single input $x$ and target one,
+\[
+ J(z)=c_x|z|^q,\qquad
+ c_x=2\ell^{-p}\|\bar x\|_{p^*}^{-q},\qquad
+ 1/p+1/p^*=1,
+\]
+where $p^*=\infty$ at $p=1$. H\"older bounds the incoming dot product,
+balancing the two layers attains the bound, and the inequality
+$\sum|z_j|^q\ge|\sum z_j|^q$ shows that splitting into more neurons
+cannot lower the cost. For square loss the limiting scalar objective is
+\[
+ c_x|z|^q+\frac\lambda2(1-z)^2.
+\]
+Its unique minimizer is zero for $\lambda<\lambda_c$. At
+$\lambda=\lambda_c$ its minimizers are zero and $z_c$, where
+\[
+ z_c=\frac{2(1-q)}{2-q},\qquad
+ \lambda_c=c_x(2-q)z_c^{q-1}.
+\]
+For $\lambda>\lambda_c$ the unique global minimizer lies in $(z_c,1)$.
+To verify this, negative $z$ and $z>1$ cannot minimize. Comparing a
+candidate $z\in(0,1]$ with zero gives the threshold
+$\lambda\ge c_x z^{q-1}/(1-z/2)$; its unique minimum over $z$ occurs
+at $z_c$. The nonzero stationary equation is
+$c_xqz^{q-1}=\lambda(1-z)$, whose larger root is the unique nonzero
+local minimum; the smaller root, when present, is a local maximum.
+The output jump is the familiar nonconvex $\ell_q$-penalty threshold.
+Here it follows from the actual wide neural posterior, rather than
+being imposed as a deterministic regularizer.
+
+\section{Where the fitted output resides}
+The preceding proof also gives a parameter-level interpretation.
+Normalize neurons by $\vartheta_j=\theta_j/\sqrt N$, and view their
+nonzero values as an unordered point configuration. For every fixed
+cutoff $\varepsilon$, (4), divided by the evidence, gives
+\[
+ \lim_{N\to\infty}\Pp\left\{
+ \sum_{j:V(\vartheta_j)>\varepsilon^p}V(\vartheta_j)>J_*+u
+                      \ \middle|\ H_N\right\}=0          \tag{5}
+\]
+for every $u>0$, by taking $\eta>0$ sufficiently small.
+Equations (3)--(4) likewise make the small-neuron output arbitrarily
+small in posterior probability as the cutoff tends to zero.
+
+Here are explicit compactness details to interpret the limiting
+configuration. Order the atoms by decreasing $V$, break ties arbitrarily,
+and first restrict their total cost above each fixed cutoff by (5).
+Each fixed ordered atom lies in a common compact parameter set, and
+there are at most $C/\varepsilon^p$ atoms above a fixed cutoff.
+A diagonal subsequence gives a countable configuration of total cost
+at most $J_*$. Its output sum converges absolutely, since
+\[
+ \sum_{V(\vartheta_j)\le\varepsilon^p}
+       \|\Phi(\vartheta_j)\|_\infty
+ \le B\varepsilon^{2-p}\sum_jV(\vartheta_j).
+\]
+The probabilistic small-output estimate (3) identifies its full output
+with a posterior limit and therefore with a margin-feasible table.
+Its cost must be exactly $J_*$, by definition of the minimum and the
+finite representation lemma (or by compressing finite partial sums and
+using lower semicontinuity). The last part of that lemma shows that
+it has at most $M$ nonzero atoms. The argument can be applied to any
+subsequence of posterior laws: compactness, followed by concentration
+outside any fixed neighborhood of the optimal-configuration set, gives
+the stated parameter-level conclusion.
+
+In particular all nonzero limiting signal comes from finitely many
+neurons of order $\sqrt N$, while the ordinary empirical law stays
+exactly the prior. There need not be a unique optimal output table or
+atomic representation. This note does not identify their posterior
+mixing weights or a universal exact neuron count below $M$.
+
+\section{Keeping the largest neurons gives polynomial compression}
+Every limiting optimal configuration has coefficients $c_j$ with
+$\sum_j c_j^q=J_*$. Put them in decreasing order. Then
+$c_j\le(J_*/j)^{1/q}$, so retaining its first $L\ge1$ terms gives
+uniform output error at most
+\[
+ B\sum_{j>L}c_j
+ \le B\frac{q}{1-q}J_*^{1/q}L^{-(1-q)/q}.                \tag{6}
+\]
+This is deletion only: the retained coefficients are not changed.
+The same inequality, with an arbitrarily small additive tolerance,
+holds with posterior probability tending to one for the finite-width
+network after keeping its $L$ largest neurons by $V(\theta_j)$.
+It follows from the limiting-configuration argument, since the remaining
+ordinary-neuron output vanishes. Ties can be resolved in any order;
+the bound uses only sorted costs.
+
+For full even parity on $\{\pm1\}^r$, an exact width-$r+1$ teacher
+uses the constant feature and the hinges in $S=\sum_i x_i$ from the
+Gaussian companion. Its readout magnitudes are at most two and its
+incoming $p$-energies are at most $r^p+r$, apart from the constant.
+Balancing each readout against its incoming vector gives an explicit
+polynomial cost bound
+\[
+ J_*\le C_{p,\ell}s^q\bigl(1+r^{1+p/2}+r^{3/2}\bigr).    \tag{7}
+\]
+Indeed a coefficient $v\relu(U\cdot\bar x)$ can be realized with
+cost $2\ell^{-p}|v|^{p/2}(\sum_i|U_i|^p)^{1/2}$, by optimizing the
+positive rescaling of its two layers. Summing over the teacher proves
+(7). Combining (6)--(7) gives a polynomial number of retained neurons
+for any fixed $p<2$ and inverse-polynomial uniform error.
+The exponent worsens as $p\uparrow2$; no uniform boundary claim is made.
+
+This differs sharply from the Gaussian posterior companion. There,
+for fixed even $r\ge6$, the $K=2^{r-1}$ exceptional neurons have equal
+parity contributions $(s-m_c)/K$. Retaining only $L$ of them, even
+while keeping the entire ordinary background, leaves a parity
+coefficient error $(s-m_c)(1-L/K)$. Uniform error is at least that
+coefficient error. Thus deletion without rescaling requires a constant
+fraction of the exponentially many neurons. This is fully consistent
+with the separate polynomial-width approximation obtained by resampling
+and reweighting: deletion and reconstruction are different operations.
+
+The contrast concerns representation and posterior structure after all
+cube labels have been observed. It is not an online mistake lower bound,
+a sample-efficiency guarantee, or a claim about tractable posterior
+sampling. All results in this note are conventional proof drafts and
+have not been formally verified.
+\end{document}

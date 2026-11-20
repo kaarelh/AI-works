@@ -1,0 +1,374 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}
+\newcommand{\relu}{\operatorname{ReLU}}
+\title{Finite-data raw-feature transfer by removing a low-rank component}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author. Verification scope and provenance are stated in the accompanying research collection.}}
+\date{18 November 2026; independent research draft}
+\hypersetup{pdftitle={Finite-data raw-feature transfer by removing a low-rank component},pdfauthor={ChatGPT-6 Astra}}
+\emergencystretch=3em
+\begin{document}\maketitle
+\begin{abstract}
+Near-minimum-energy parity pretraining guarantees transfer after even
+symmetrization of the hidden features, but an explicit optimal-energy
+representation can fail on a particular nearby target with raw features.
+We prove a complementary finite-width statement for the original raw
+feature map. A family of $M$ orthonormal targets whose approximate
+comparators have contamination in an $r$-dimensional space has average
+squared approximation error at most $r/M$ plus its original squared
+approximation deficit, with a controlled average coefficient norm.
+For shallow ReLU parity features the contamination is linear in the input,
+so $M=\binom r{2k}$ nearby tasks give an exceptional fraction of order
+$r^{1-2k}$. Coordinate-permutation invariance converts this deterministic
+average into a high-probability theorem for every fixed nearby target
+under an actual finite-width, polynomial-data cold posterior.
+The downstream learner uses ordinary raw features, with neither even
+projection nor a linear input skip. The guarantee has an explicit
+confidence--dimension condition; it is not simultaneous over all targets
+in every representation. For each fixed $k\ge2$, the deterministic
+$r/M$ error order is asymptotically sharp.
+\end{abstract}
+
+\paragraph{Relation to existing representation-learning work.}
+Collins, Hassani, Soltanolkotabi, Mokhtari, and Shakkottai prove
+multi-task feature extraction and downstream guarantees for a specified
+gradient-trained ReLU model
+(\href{https://proceedings.mlr.press/v235/collins24a.html}{ICML 2024}).
+Van Meegen and Sompolinsky study learned coding schemes in Bayesian
+networks under non-lazy scaling
+(\href{https://doi.org/10.1038/s41467-025-58276-6}{Nature Communications 2025}).
+The question here is more specific: transfer from a single full-parity
+source under a finite cold posterior. General representation learning,
+Bayesian feature adaptation, and elementary Hilbert--Schmidt projection
+identities are not claimed as new themes or general discoveries.
+
+\section{A finite-rank contamination lemma}
+Let $\mathcal H$ and $\mathcal C$ be finite-dimensional real Hilbert
+spaces. Let $\Phi:\mathcal C\to\mathcal H$ be a feature synthesis map,
+and let $J:\R^M\to\mathcal H$ be an isometry, whose columns are
+orthonormal target functions. Suppose a coefficient map
+$C:\R^M\to\mathcal C$ obeys
+\[
+                 \Phi C=J+L+E,
+\]
+where $\operatorname{rank}L\le d$. No orthogonality between the ranges
+of these three maps is assumed. The Hilbert--Schmidt norm is denoted
+$\|\cdot\|_{\rm HS}$.
+
+\begin{lemma}[Remove a low-rank component]
+Let $P$ be the orthogonal projection onto $\ker L$. Then
+\[
+ \|\Phi CP-J\|_{\rm HS}^2
+  =\operatorname{rank}L+\|EP\|_{\rm HS}^2
+  \le d+\|E\|_{\rm HS}^2,
+ \qquad
+ \|CP\|_{\rm HS}^2\le\|C\|_{\rm HS}^2.
+ \tag{1}
+\]
+In particular, if each column of $E$ has norm at most $\Delta$ and
+each column of $C$ has norm at most $B$, the $M$ functions
+$g_t=\Phi CP e_t$ have
+\[
+ \frac1M\sum_t\|g_t-Je_t\|^2\le\frac dM+\Delta^2,
+ \qquad \frac1M\sum_t\|CPe_t\|^2\le B^2.
+ \tag{2}
+\]
+\end{lemma}
+\begin{proof}
+Because $LP=0$, the residual is $EP-J(I-P)$.
+Its cross term in the Hilbert--Schmidt inner product vanishes:
+\[
+ \operatorname{tr}((I-P)J^*EP)
+   =\operatorname{tr}(P(I-P)J^*E)=0.
+\]
+Also $J^*J=I$, so $\|J(I-P)\|_{\rm HS}^2
+=\operatorname{tr}(I-P)=\operatorname{rank}L$.
+Right composition by an orthogonal projection cannot increase a
+Hilbert--Schmidt norm. This proves (1) and then (2).
+The cancellation of the cross term avoids an unnecessary factor $M$
+in the approximation deficit.
+\end{proof}
+
+\section{Application to actual raw ReLU features}
+Fix even $r\ge6$, an integer $k\ge1$ with $j=r-2k\ge2$, and
+$X=\{-1,1\}^r$ with uniform probability. Put
+\[
+ \chi(x)=\prod_{l=1}^r x_l,\quad D=r+1,\quad
+ \rho=\frac{\binom{r-2}{(r-2)/2}}{2^{r-1}\sqrt r},\quad
+ b_j=\rho(-1)^{(j-2)/2}
+ \frac{\binom{(r-2)/2}{(j-2)/2}}{\binom{r-2}{j-2}}.
+\]
+Consider any finite network
+\[
+ F(x)=N^{-1}\sum_i a_i\relu(b_i+w_i\cdot x),\qquad
+ E_0=(2N)^{-1}\sum_i(a_i^2+b_i^2+\|w_i\|^2).
+\]
+Suppose for fixed $s>0$ that
+\[
+ E_0\le(1+\epsilon)s/\rho,\qquad
+ \E(s-\chi F)_+\le h,\qquad 0\le\epsilon\le1.
+ \tag{3}
+\]
+Use the original raw kernel
+$K(x,y)=N^{-1}\sum_i\relu(b_i+w_i\cdot x)\relu(b_i+w_i\cdot y)$.
+Define
+\begin{align*}
+ M&=\binom r{2k},&C_k&=(r-1)^k,&\alpha&=b_r/(s b_j),\\
+ u&=\sqrt{(s+E_0\sqrt D)(\epsilon s+2h)},&
+ v&=\sqrt{2E_0(\epsilon s+h)/\rho},\\
+ \Delta&=|\alpha|\{(1+C_k)v+C_ku\},&
+ B^2&=2E_0\alpha^2,&R^2&=2E_0D.
+\end{align*}
+Here $b_r$ is the same formula at $j=r$, so $|b_r|=\rho$.
+The constants can be replaced by common deterministic upper bounds
+when (3) is a random event.
+
+\begin{theorem}[Average raw-feature transfer at finite width]
+There are actual raw-feature predictors $g_A\in\mathcal H(K)$ for
+all sets $A\subseteq[r]$ of size $2k$, such that
+\[
+ \frac1M\sum_{|A|=2k}\|g_A-\chi_{[r]\setminus A}\|_2^2
+       \le\frac rM+\Delta^2,
+ \qquad
+ \frac1M\sum_{|A|=2k}\|g_A\|_{\mathcal H(K)}^2\le B^2.
+ \tag{4}
+\]
+The kernel radius is at most $R^2$. For fixed $k,s$, the scales are
+\[
+ \Delta=O_k(r^{2k+1}\sqrt{\epsilon+h/s}),\quad
+ B^2=O_k(r^{2k+1}),\quad R^2=O(r^2).
+ \tag{5}
+\]
+These statements are deterministic and hold at every finite width.
+\end{theorem}
+\begin{proof}
+We recall precisely the geometric input from the companion
+\emph{Polynomial-data feature transfer for cold Gaussian ReLU Bayes}.
+Write $U_i=(b_i,w_i)$, $R_i=\|U_i\|$, and let $z_i$ be the vector of
+coordinate signs of $w_i$, with a common fixed choice at zero.
+Project $U_i$ to the zero-bias critical direction
+$U_i'=R_i(0,z_i/\sqrt r)$. The sharp minimum-coordinate parity
+inequality and weighted Cauchy--Schwarz give an $L^2(X)$ change at most
+$v$ in the source network, and also after multiplying the readouts by
+any signs. The source itself is within $u$ of $s\chi$.
+For critical ridges the even Walsh coefficients are
+$b_{|S|}\chi_S(z_i)$. Modulation by $\chi_A(z_i)$ therefore transports
+even coefficients by an operator of norm at most $C_k$.
+
+In particular the raw reweighted function
+\[
+ q_A(x)=\frac{\alpha}{N}\sum_i a_i\chi_A(z_i)
+                                      \relu(U_i\cdot(1,x))
+\]
+can be written
+\[
+ q_A=\chi_{[r]\setminus A}+\ell_A+e_A,
+ \qquad \|e_A\|_2\le\Delta,
+ \tag{6}
+\]
+where the entire odd part of the projected critical network is linear:
+\[
+ \ell_A(x)=\frac{\alpha}{2N\sqrt r}
+                         \sum_i a_iR_i\chi_A(z_i)z_i\cdot x.
+\]
+To check (6), the raw projection error contributes $|\alpha|v$.
+The even part of the projected function differs from its target by at
+most $|\alpha|C_k(u+v)$. No assertion that the original odd part is
+linear is needed; its nonlinear projection error is included in $e_A$.
+
+Take $\mathcal C=\R^N$, synthesis features
+$\relu(U_i\cdot(1,x))/\sqrt N$, and coefficient columns
+$C_{i,A}=\alpha a_i\chi_A(z_i)/\sqrt N$.
+Their squared norms are at most $B^2$. The targets are orthonormal,
+and the map with columns $\ell_A$ has rank at most $r$.
+Apply (2). The coefficient norms bound the RKHS norms, even if the
+feature synthesis map is not injective. Finally the raw feature radius
+is at most $D N^{-1}\sum_i\|U_i\|^2\le R^2$.
+The scales in (5) follow from $\rho=\Theta(r^{-1})$ and
+$|b_{r-2k}|=\Theta_k(r^{-k-1})$.
+\end{proof}
+
+For a uniformly random nearby task, chosen independently of this fixed
+representation, (4) gives for any $a,L>0$ an approximation-and-norm
+failure probability at most
+\[
+                   \frac{r/M+\Delta^2}{a^2}+\frac{B^2}{L^2}.
+ \tag{7}
+\]
+This is a guarantee for most tasks, not for all tasks. It is compatible
+with an optimal-energy source representation having order-one error on
+an explicitly chosen nearby task.
+
+\section{Fixed tasks under a permutation-invariant posterior}
+There is a useful distinction between averaging the task and averaging
+the representation. Suppose a random pretrained parameter vector has a
+law invariant under coordinate permutations, and let $\mathcal G$ be an
+invariant event on which (3) holds with common constants. The construction
+above is equivariant: permutations carry the family of deleted sets into
+itself and permute the rows of the linear-contamination matrix. Its
+orthogonal kernel projection is consequently equivariant as well.
+The explicit coefficient norms and approximation errors are therefore
+identically distributed over all $M$ tasks, conditional on $\mathcal G$.
+
+\begin{corollary}[A fixed raw-feature task]
+For every specified set $A$ of size $2k$, with probability at least
+\[
+ 1-\Pr(\mathcal G^c)-\frac{r/M+\Delta^2}{a^2}-\frac{B^2}{L^2},
+ \tag{8}
+\]
+the raw kernel contains a predictor within $a$ of
+$\chi_{[r]\setminus A}$ in $L^2(X)$ and of RKHS norm at most $L$.
+\end{corollary}
+\begin{proof}
+Average the two pointwise bounds in (4) conditional on $\mathcal G$.
+Equivariance makes each individual task's expectations equal to those
+averages. Apply Markov's inequality twice and add the probability of
+$\mathcal G^c$. If that event has probability zero, the assertion is
+vacuous and no conditioning is required.
+\end{proof}
+
+The relevant Bayesian law has exactly this invariance. Draw uniform IID
+inputs labeled by full parity, use an IID isotropic Gaussian parameter
+prior, and condition on the observed margins only. A coordinate
+permutation preserves the source labels, the sample law, the prior, and
+the posterior normalization for the permuted sample. Thus the joint law
+of the sample and a posterior draw is invariant. This argument uses the
+joint random-sample law; a particular fixed sample need not be invariant.
+The same observation applies to the exponential-power priors and the
+narrower scalar hidden-bias priors in the power-prior companion.
+
+\section{Polynomial-data raw transfer for a cold actual posterior}
+The finite-posterior theorem of the Gaussian transfer companion supplies
+(3), with $h\le s\epsilon$, on a joint event of probability at least
+$1-\zeta_0-\beta^N$. Its sufficient width and pretraining size have orders
+$N_0=O_s(r^3\epsilon^{-2})$ and
+$m=O_s(r^3\epsilon^{-2}\log(2/\zeta_0))$, with an explicitly specified
+inverse-polynomial upper ceiling on the prior standard deviation.
+The good event may be taken to be (3) itself, which is invariant.
+No conditioning on the entire cube is added.
+
+\begin{theorem}[Finite Gaussian posterior, raw features, fixed nearby task]
+Fix $k\ge1$, $s>0$, accuracy $0<\delta<1$, and confidence
+$0<\zeta<1/4$. Assume
+\[
+       \frac r{\binom r{2k}}\le\frac{\zeta\delta^2}{128}.
+ \tag{9}
+\]
+Choose $\epsilon=c_{k,s}\zeta\delta^2r^{-4k-2}$ with a sufficiently
+small positive constant. At every width above the companion's finite
+threshold, and at its stated cold Gaussian prior scale, draw one actual
+posterior representation from uniform IID source data. Freeze its raw
+features and minimize empirical hinge loss over the raw-feature RKHS
+ball of squared radius $8B^2/\zeta$, where
+$B^2=2(1+\epsilon)(s/\rho)\alpha^2$ is the deterministic energy-ceiling bound.
+For every fixed target obtained by deleting $2k$ source coordinates,
+polynomially many independent uniform target examples give test
+classification error at most $\delta$, with probability at least
+$1-\zeta$, for sufficient orders
+\[
+ \begin{split}
+ N_0&=O_{k,s}(r^{8k+7}\delta^{-4}\zeta^{-2}),\\
+ m&=O_{k,s}(r^{8k+7}\delta^{-4}\zeta^{-2}\log(1/\zeta)),\\
+ n&=O_{k,s}(r^{2k+3}\delta^{-2}\zeta^{-1}\log(1/\zeta)).
+ \end{split}                                                   \tag{10}
+\]
+Exact posterior sampling is assumed. The downstream procedure uses no
+even feature transformation, input skip, or new hidden units.
+\end{theorem}
+\begin{proof}
+Take $\zeta_0\le\zeta/8$ and choose $\beta$ so that
+$\beta^N\le\zeta/8$. Make the constant in $\epsilon$ small enough
+that $\Delta^2\le\zeta\delta^2/128$.
+In (8) use $a=\delta/2$ and $L^2=8B^2/\zeta$.
+By (9), the error-probability term is at most $\zeta/16$ and the
+norm term is at most $\zeta/8$. Together with pretraining failure this
+is less than $\zeta/2$.
+
+The raw-feature hinge class has radius product $LR$ and loss bounded
+by $1+LR$. Its comparator has population hinge loss at most $a$, since
+$\E(1-\chi_Tg)_+\le\|g-\chi_T\|_2$.
+The standard uniform Rademacher hinge bound, applied to the empirical
+minimizer and comparator, adds at most
+\[
+ \frac{8LR}{\sqrt n}
+       +2(1+LR)\sqrt{\frac{\log(4/\zeta)}{2n}}.
+\]
+Choose $n$ to make this at most $\delta/2$, with downstream failure
+at most $\zeta/2$. Equations (5) give its order in (10); substituting
+$\epsilon$ into the finite evidence and source-generalization thresholds
+gives the other two orders.
+\end{proof}
+
+For fixed $k$, condition (9) is satisfied when
+$r^{2k-1}\ge C_k/(\zeta\delta^2)$. It is material: this proof does
+not give arbitrary confidence and accuracy at a fixed small dimension.
+It gives a finite-width, polynomial-data theorem for each fixed nearby
+task as dimension grows, without taking a width-first limit.
+A union over all $M$ tasks would lose the gain in (9), and is not claimed.
+
+The same rank argument applies to the power-cost projection in
+\emph{Polynomial-data parity transfer under Gaussian and lighter tails}.
+For every fixed $p\ge2$, replacing its deterministic error by
+$O_{p,k,s}(r^{2k+1}(\epsilon+h/s)^{1/p})$ gives raw transfer with
+$\epsilon=c_{p,k,s}\zeta^{p/2}\delta^p r^{-p(2k+1)}$ and
+$N_0,m$ of order $r^{4pk+2p+3}\delta^{-2p}\zeta^{-p}$, with the
+same logarithmic source-confidence factor. The downstream order in (10)
+is unchanged. For its narrower continuous hidden-bias prior, the
+Gaussian-order pretraining exponents in (10) apply for every fixed $p$.
+The coordinate-permutation argument is unchanged in both cases.
+
+\section{The average-error order is sharp for $k\ge2$}
+Fix $k\ge2$, let $j=r-2k\ge2$, and choose a set $S$ of size $j+1$.
+It is odd and at most $r-3$. Use all critical orientations
+\[
+                 Z=\{z\in\{-1,1\}^r:\chi_S(z)=1\}.
+\]
+There is one orientation from each antipodal pair. Give each incoming
+vector $\sqrt{s/\rho}(0,z/\sqrt r)$ and each readout
+$\sqrt{s/\rho}\operatorname{sgn}(b_r)\chi(z)$.
+The resulting source network is exactly $s\chi$, at energy $s/\rho$.
+Indeed the uniform law on $Z$ has density $1+\chi_S$ relative to the
+cube. Its even character moments agree with the uniform law, and its
+source linear moments vanish because $S$ is not a set of size $r-1$.
+
+For every $l\in S$, the nearby target $T=S\setminus\{l\}$ satisfies
+$\chi_T(z)=z_l$ on $Z$. Thus the functional
+\[
+             f\longmapsto\langle f,\chi_T-2\sqrt r\,b_j x_l\rangle
+\]
+annihilates every raw feature. Its squared norm is $1+4r b_j^2$.
+Cauchy--Schwarz gives minimum squared approximation error at least
+$1/(1+4r b_j^2)$. Equality holds: Fourier modulation produces
+$\chi_T+x_l/(2\sqrt r b_j)$, whose best scalar multiple attains
+that error. These are $j+1$ distinct nearby targets. Therefore
+\[
+ \frac1M\sum_{|A|=2k}\inf_{g\in\operatorname{span}K}
+          \|g-\chi_{[r]\setminus A}\|_2^2
+       \ge\frac{r-2k+1}{M(1+4r b_j^2)}.
+ \tag{11}
+\]
+For fixed $k\ge2$, this is asymptotic to $r/M$, matching (4) when
+$\Delta=0$. The construction uses exponentially many orientations;
+it establishes sharpness of the unrestricted finite-width deterministic
+statement. It is not a posterior-probability lower bound, nor does it
+show that the rate is sharp for $k=1$.
+
+\section*{Scope and provenance}
+The critical-ridge geometry comes from the shared repository's
+parity-energy work. The quantitative projection, Fourier modulation,
+and finite-posterior evidence bounds are proved in this collection's
+Gaussian and power-prior transfer companions. The present addition is
+the low-rank cancellation and its fixed-task invariant-law consequence.
+The accompanying Lean file constructs the finite orthogonal kernel
+projection and proves the existential coefficient, error, and norm
+conclusion of the finite matrix lemma. The worst-case raw obstruction, the earlier width-first typical-sector
+result, and the finite-data statement here have different quantifiers.
+All are compatible. Numerical checks and selected formal algebraic
+lemmas document their stated finite scope; the full posterior theorem
+is a conventional proof, not an independently reviewed or fully
+formalized result. No adversarial-sequence mistake theorem follows from
+these $L^2$ approximation estimates.
+\end{document}

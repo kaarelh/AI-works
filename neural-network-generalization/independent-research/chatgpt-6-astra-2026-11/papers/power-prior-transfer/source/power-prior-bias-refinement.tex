@@ -1,0 +1,96 @@
+\section{A bias-scale refinement with Gaussian-order sample exponents}
+The preceding isotropic result permits trainable hidden biases at the
+same scale as the other coordinates. Its sufficient pretraining exponent
+depends on $p$. A simple variation of the prior removes this dependence.
+This is a distinct anisotropic prior, not an improvement claimed for the
+unchanged isotropic model.
+
+First consider networks with hidden biases fixed to zero. H\"older gives
+\[
+ P:=\E_i|a_i|\|w_i\|_2
+ \le r^{1/2-1/p}(V/2)^{2/p}
+ \le(1+\epsilon)^{2/p}s/\rho
+ \le(1+\epsilon)s/\rho.                              \tag{16}
+\]
+The path-norm form of the Gaussian transfer companion's deterministic
+lemma therefore gives comparator error
+$O_{p,k,s}(r^{2k+1}\sqrt{\epsilon+h/s})$, with the same norm and radius
+orders as (6). Unlike the direct incoming-power projection bound, this
+argument does not lose a $p$th root of the cost deficit.
+
+The same conclusion holds with a positive continuous bias prior.
+For $p>2$ put
+\[
+ \gamma=\min\{1,r\epsilon\}^{(p-2)/(2p)},
+ \qquad
+ V_\gamma=\E_i\left(|a_i|^p+|b_i/\gamma|^p
+                                      +\sum_l|w_{i,l}|^p\right).
+ \tag{17}
+\]
+At $p=2$ set $\gamma=1$. Give $a_i,w_{i,l}$ density (7) and give
+$b_i/\gamma$ that same density, independently. Thus all physical
+coordinates have continuous full-support priors, but the hidden bias
+has scale $\gamma\tau$. The sharp minimum cost is still $V_*$:
+the lower bound from the minimum-coordinate inequality is unchanged,
+and the critical zero-bias witness attains it.
+
+For $p>2$, weighted H\"older gives the incoming Euclidean bound
+\[
+ \|(b,w)\|_2\le
+ \left(r+\gamma^{2p/(p-2)}\right)^{1/2-1/p}
+       \left(|b/\gamma|^p+\sum_l|w_l|^p\right)^{1/p}.
+\]
+Consequently, if $V_\gamma\le(1+\epsilon)V_*$, then
+\begin{align*}
+ P&\le\left(r+\gamma^{2p/(p-2)}\right)^{1/2-1/p}
+                                            (V_\gamma/2)^{2/p}\\
+ &\le\frac{s}{\rho}(1+\epsilon)^{1/2-1/p+2/p}
+ \le(1+\epsilon)\frac{s}{\rho}.                      \tag{18}
+\end{align*}
+Here $\gamma^{2p/(p-2)}/r\le\epsilon$, and
+$1/2+1/p\le1$. At $p=2$ the same conclusion is the ordinary
+quadratic arithmetic--geometric mean bound. The path-norm transfer
+lemma again applies. The coefficient and radius bounds in (5) still
+hold with $V_\gamma$ in place of $V$, since $0<\gamma\le1$.
+
+\begin{theorem}[Polynomial transfer with a narrower continuous bias prior]
+Fix $p\ge2$, $k$, and $s>0$. In the independent prior (17), use the
+full-margin witness threshold (8), prior-scale bound (11), and IID
+pretraining condition (12), with cost $V_\gamma$. Choose
+\[
+ \epsilon=\Theta_{p,k,s}(\delta^2r^{-4k-2})
+\]
+with a sufficiently small positive constant. Then an actual posterior
+feature draw, followed by the same even-feature hinge fit, has error
+$O(\delta)$ at the stated joint high probability. Sufficient orders are
+\[
+ N_0=O_{p,k,s}(r^{8k+7}\delta^{-4}),\quad
+ m=O_{p,k,s}(r^{8k+7}\delta^{-4}\log(2/\zeta)),\quad
+ n=O_{p,k,s}(r^{2k+3}\delta^{-2}\log(2/\zeta')).       \tag{19}
+\]
+These exponents no longer depend on $p$. Both physical prior scales can
+be chosen inverse polynomially small. The theorem also holds with biases
+fixed to zero, using $d=r+1$ scalar parameters per neuron in the evidence
+calculation.
+\end{theorem}
+\begin{proof}
+Use the same full-margin witness and boxes, with the bias-box coordinate
+interpreted as $b/\gamma$. The witness has zero bias, its cost and mean
+output are unchanged, and a bias-box perturbation changes the physical
+bias by at most the original box radius. Thus all cost, strict-margin,
+and evidence estimates (8)--(11) remain valid. The prior gamma moment
+uses the $d$ standardized independent coordinates and is unchanged.
+The common variation-ball sample event (12) also remains valid: the
+physical variation norm is bounded either by its original expression or
+by the sharper (18). The path-norm lemma, (18), and the original
+readout/radius moment bounds give the asserted deterministic error and
+downstream sample count. Substituting the new $\epsilon$ into
+$N_0,m=O_{p,s}(r^3\epsilon^{-2})$ gives (19).
+The previously proved lower bound on the admissible $\tau^p$ is inverse
+polynomial, and (17) makes $\gamma$ inverse polynomial as well.
+\end{proof}
+
+This refinement concerns statistical sufficiency under an explicitly
+specified prior. It does not prove that changing the bias scale makes
+posterior sampling efficient, or that the isotropic $p>2$ exponents in
+(13) are necessary. Sharper stability for the latter prior remains open.

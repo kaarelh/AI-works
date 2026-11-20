@@ -1,0 +1,260 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}
+\newcommand{\relu}{\operatorname{ReLU}}
+\title{Locality of parity transfer in a learned neural representation}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author. Verification scope and provenance are stated in the accompanying research collection.}}
+\date{18 November 2026; independent research draft}
+\hypersetup{pdftitle={Locality of parity transfer in a learned neural representation},pdfauthor={ChatGPT-6 Astra}}
+\emergencystretch=3em
+\begin{document}\maketitle
+\begin{abstract}
+A representation can transfer efficiently to neighboring tasks while
+remaining expensive for other tasks of equally small neural complexity.
+We make this distinction explicit for a shallow ReLU network pretrained
+on full parity. The accompanying cold-Gaussian posterior theorem supplies
+polynomial-norm predictors for every parity obtained by deleting a fixed
+even number of coordinates. Conversely, permutation symmetry and a trace
+budget imply an exponential RKHS approximation-norm lower bound for any
+specified parity on about half the coordinates, with high probability over
+pretraining. This negative result holds at finite width and needs no
+condensation limit. A fresh Gaussian linear readout with fixed positive
+likelihood variance then requires exponentially many labels for small
+squared prediction error on that distant task. An averaged sequential
+version of the same readout learns the neighboring tasks with polynomially
+many labels. The lower bound concerns frozen-feature regression, not
+end-to-end classification mistakes.
+\end{abstract}
+
+\section{A general trace and symmetry principle}
+Let $X=\{-1,1\}^r$ carry uniform probability and let
+$\chi_T(x)=\prod_{i\in T}x_i$. Kernels act on $L^2(X)$ with its
+probability normalization. For a positive semidefinite kernel $K$, put
+\[
+ \lambda_T(K)=\langle\chi_T,K\chi_T\rangle,
+ \qquad \operatorname{tr}K=\E_xK(x,x).
+\]
+Every RKHS predictor satisfies
+\[
+ |\langle g,\chi_T\rangle|
+       \le \|g\|_{\mathcal H(K)}\sqrt{\lambda_T(K)}. \tag{1}
+\]
+This follows by writing $g$ in feature coordinates and applying
+Cauchy--Schwarz; equivalently use the adjoint of the RKHS embedding.
+Consequently $\|g-\chi_T\|_2\le a<1$ implies
+\[
+ \|g\|_{\mathcal H(K)}^2\ge(1-a)^2/\lambda_T(K),       \tag{2}
+\]
+with the natural interpretation when $\lambda_T=0$.
+
+\begin{theorem}[A fixed target in a large symmetric family]\label{thm:trace}
+Let $K$ be random and let $G$ be an event such that the joint law
+of $(K,\mathbf1_G)$ is invariant under permutations of the input
+coordinates. Suppose $\operatorname{tr}K\le Q$ on $G$.
+For every fixed $T$ of size $j$, every $0<\xi<1$, and $0\le a<1$,
+\[
+ \Pr\left(G\ \text{and}\
+ \inf_{\|g-\chi_T\|_2\le a}\|g\|_{\mathcal H(K)}^2
+              <\frac{(1-a)^2\xi\binom rj}{Q}\right)\le\xi.
+ \tag{3}
+\]
+The infimum is over the RKHS of the realized kernel. The target is
+fixed before that realization; no adversarial target selection is needed.
+\end{theorem}
+\begin{proof}
+Bessel's inequality for the orthonormal Walsh family gives
+$\sum_{|S|=j}\lambda_S(K)\le\operatorname{tr}K$.
+Permutation invariance makes
+$\E[\mathbf1_G\lambda_S(K)]$ the same for every such $S$.
+Thus $\E[\mathbf1_G\lambda_T(K)]\le Q/\binom rj$.
+Markov's inequality bounds the probability on $G$ that
+$\lambda_T>Q/(\xi\binom rj)$ by $\xi$. Apply (2).
+The proof also gives a deterministic fraction statement: on every
+realization in $G$, at least $1-\xi$ of these characters have the
+norm lower bound in (3).
+\end{proof}
+
+The argument is elementary and applies to any feature-learning method
+with the stated symmetry and trace budget. It does not say that a
+preselected arbitrary task is hard for every learned representation.
+Symmetry is what turns a large hard fraction into a fixed-target
+probability statement.
+
+\section{Application to finite neural posteriors}
+Consider
+\[
+ F(x)=\frac1N\sum_i a_i\relu(U_i\cdot(1,x)),\qquad
+ E=\frac1{2N}\sum_i(a_i^2+\|U_i\|^2).
+\]
+Let $K$ be either the original frozen incoming kernel
+$N^{-1}\sum h_{U_i}\otimes h_{U_i}$ or the even kernel with
+$\psi_i(x)=[h_{U_i}(x)+h_{U_i}(-x)]/2$ in place of $h_{U_i}$.
+Both satisfy the sharper average, rather than uniform-radius, bound
+\[
+ \operatorname{tr}K\le\frac1N\sum_i\|U_i\|^2\le2E.   \tag{4}
+\]
+Indeed $\E_x(U\cdot(1,x))^2=\|U\|^2$, ReLU does not increase
+absolute value, and even projection is an $L^2$ contraction.
+
+Pretrain on the full-parity target $\chi_{[r]}$ from uniform IID
+inputs. A product Gaussian prior with common coordinate variance,
+together with an observed-margin or square likelihood, is equivariant
+under coordinate permutations. Its joint sample--posterior law therefore
+has the symmetry in Theorem~\ref{thm:trace}.
+This is a joint-law statement: a particular asymmetric training sample
+need not have a permutation-invariant conditional posterior.
+
+The cold-Gaussian hard-margin companion proves, for fixed even $r\ge6$,
+margin $s>0$, and arbitrarily prescribed sufficiently small
+$\epsilon>0$, explicit polynomial thresholds on prior scale, sample
+size, and width with these properties:
+\begin{enumerate}
+\item On a common sample event of probability at least $1-\zeta$,
+      the posterior assigns mass at least $1-\beta^N$ to a
+      permutation-invariant good event $G$.
+\item On $G$, $E\le B=(1+\epsilon)s/\rho$, where
+      $\rho=\binom{r-2}{(r-2)/2}/(2^{r-1}\sqrt r)=\Theta(r^{-1})$.
+\item For each fixed $k$, every degree-$(r-2k)$ target has a comparator
+      in the even-feature RKHS with squared norm
+      $B_k^2=O_k(r^{2k+1})$, squared feature radius $R^2=O(r^2)$,
+      and any prescribed inverse-polynomial $L^2$ approximation error,
+      by choosing the pretraining accuracy correspondingly.
+\end{enumerate}
+Here $G$ can be taken as the population hinge-loss and energy event;
+these conditions themselves are invariant. The sample event need not
+be separately included in $G$. The square-likelihood companion supplies
+an alternative using a smooth likelihood and a population objective gap.
+All these conclusions concern actual finite-width posteriors.
+
+\begin{corollary}[Near-task and distant-task separation]\label{cor:separation}
+Use a pretraining regime just described and let
+$j=2\lfloor r/4\rfloor$. Fix in advance a set $T$ of size $j$.
+With joint pretraining probability at least
+$1-\zeta-\beta^N-1/r$, all the neighboring-task comparators hold and
+\[
+ \inf_{\|g-\chi_T\|_2\le1/4}\|g\|_{\mathcal H(K_e)}^2
+               \ge\frac{9\binom rj}{32Br}
+               \ge\frac{9\,2^r}{64Br(r+1)}.            \tag{5}
+\]
+The lower bound is $\Omega(2^r/r^3)$ at fixed $s$. It also holds
+for the original unsymmetrized frozen kernel.
+\end{corollary}
+\begin{proof}
+Apply (3) with $Q=2B$, $a=1/4$, and $\xi=1/r$.
+The chosen binomial coefficient is central or one step from central,
+so it is at least $2^{r-1}/(r+1)$.
+Intersect with $G$, whose failure probability is at most
+$\zeta+\beta^N$.
+For a simultaneous statement about both kernels one need not union
+bound: their quadratic forms on every even character are identical,
+because even projection leaves that character unchanged.
+\end{proof}
+
+The source, neighboring targets, and distant target all have shallow
+ReLU teachers of width $O(r)$ and polynomially bounded coefficients.
+For a parity on $j$ variables, interpolate its alternating values at
+$-j,-j+2,\ldots,j$ with the hinge basis of the coordinate sum.
+Thus the separation is in transfer geometry, not the existence of a
+small target network. The distant target can in fact have fewer
+relevant coordinates than the source.
+
+\section{An exponential downstream regression obstruction}
+For either realized frozen feature map, use its normalized coordinates
+with a standard Gaussian readout prior and Gaussian likelihood variance
+$v>0$. For $n$ labels $y_i\in\{-1,1\}$ the posterior mean $g_n$
+minimizes
+\[
+ \sum_{i=1}^n(y_i-g(x_i))^2+v\|g\|_{\mathcal H(K)}^2.
+\]
+Comparison with zero gives $\|g_n\|_{\mathcal H(K)}^2\le n/v$.
+This holds for every dataset, including adaptive choices of inputs.
+Therefore on (5), whenever
+\[
+                 n<\frac{9v\,2^r}{64Br(r+1)},           \tag{6}
+\]
+its uniform mean squared error is greater than $1/16$.
+Expected squared error of a posterior prediction draw is at least the
+error of its mean. Any convex average of posterior means from prefixes
+of that dataset has the same norm ceiling and the same obstruction.
+
+If downstream inputs are uniform and independent of the past, the
+bound holds conditionally on every past dataset. Hence for every horizon
+below (6), the expected cumulative squared prediction loss of the
+sequential posterior mean exceeds one sixteenth of the horizon.
+This is a squared-loss statement. Small amplitude with the correct
+sign can evade an approximation-norm lower bound, so no analogous
+zero--one mistake conclusion follows from this proof alone.
+
+\section{Polynomial neighboring-task learning with the same readout}
+An elementary sequential-ridge identity supplies a useful positive
+comparison. Let a fixed feature map have squared radius at most $R^2$,
+and let $g_t$ be the Gaussian posterior mean after $t$ labels, with the
+same variance $v$. For every deterministic sequence and comparator
+$q\in\mathcal H(K)$,
+\[
+ \sum_{t=1}^n(y_t-g_{t-1}(x_t))^2
+ \le(1+R^2/v)\left\{\sum_{t=1}^n(y_t-q(x_t))^2
+                                      +v\|q\|_{\mathcal H(K)}^2\right\}.
+ \tag{7}
+\]
+To verify this, write $A_t=vI+\sum_{i\le t}\phi_i\phi_i^\top$,
+$b_t=\sum_{i\le t}y_i\phi_i$, and
+$M_t=\min_w\{\sum_{i\le t}(y_i-w\cdot\phi_i)^2+v\|w\|^2\}$.
+The rank-one inverse formula gives
+\[
+ M_t-M_{t-1}
+ =\frac{(y_t-g_{t-1}(x_t))^2}
+        {1+\phi_t^\top A_{t-1}^{-1}\phi_t}.
+\]
+The denominator is at most $1+R^2/v$. Sum this equality and compare
+$M_n$ with the objective at $q$ to obtain (7).
+The feature dimension can be arbitrary finite width.
+
+For IID downstream samples labeled by a fixed target $f$, define
+$\bar g_n=n^{-1}\sum_{t=1}^n g_{t-1}$ as a function on the input
+space. Conditional independence, (7), and convexity give
+\[
+ \E\|\bar g_n-f\|_2^2
+ \le(1+R^2/v)
+       \left\{\|q-f\|_2^2+v\|q\|_{\mathcal H(K)}^2/n\right\}.
+ \tag{8}
+\]
+The expectation here is only over the downstream data; the pretrained
+features are fixed. This estimator is explicitly an average of Bayesian
+posterior means, rather than a claim about monotonicity of the final
+posterior mean's risk.
+
+For a neighboring parity, choose the pretraining accuracy so that
+its comparator error is at most
+$\delta/\sqrt{2(1+R^2/v)}$ and take
+\[
+ n\ge 2(v+R^2)B_k^2/\delta^2.
+\]
+Then (8) is at most $\delta^2$, with
+$n=O_k(r^{2k+3}\delta^{-2})$ at fixed $v$.
+The extra inverse-polynomial pretraining accuracy is permitted by the
+finite cold-prior theorem, so pretraining remains polynomial as well.
+This same averaged estimator remains subject to the distant-task lower
+bound (6). Thresholding gives a positive classification guarantee for
+the neighboring tasks, while the negative distant-task assertion remains
+one about squared prediction error.
+
+\section*{Scope and verification}
+The trace, symmetry, and sequential-ridge arguments are elementary
+consequences of orthogonality and regularized least squares; they are
+not presented as new general tools. Their role is to give a finite-width
+local-versus-distant transfer separation for the actual neural posterior
+constructed in the companions. No efficient pretraining sampler is
+claimed. The prior scale and the width/sample relation are part of that
+model. Fine-tuning hidden weights, choosing a very diffuse new readout
+prior, changing downstream likelihood variance with dimension, or using
+an algorithm outside the stated norm budget can evade this conclusion.
+These are conventional same-session proofs without independent review.
+The accompanying Lean file checks finite orthogonal-target capacity,
+coefficient Cauchy--Schwarz, and the ridge norm budget. The posterior
+symmetry argument, its probabilistic application, and the sequential
+readout identity are not formalized there.
+\end{document}

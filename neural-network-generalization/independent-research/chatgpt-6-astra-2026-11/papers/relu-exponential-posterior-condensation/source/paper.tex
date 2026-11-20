@@ -1,0 +1,741 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{lemma}[theorem]{Lemma}
+\newcommand{\E}{\mathbb E}\newcommand{\Pp}{\mathbb P}
+\newcommand{\R}{\mathbb R}\newcommand{\relu}{\operatorname{ReLU}}
+\newcommand{\one}{\mathbf1}
+\title{Exponentially many exceptional neurons in a Gaussian ReLU posterior}
+\date{18 November 2026; independent research draft}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author. Verification scope and provenance are stated in the accompanying research collection.}}\emergencystretch=3em
+\hypersetup{pdftitle={Exponentially many exceptional neurons in a Gaussian ReLU posterior},pdfauthor={ChatGPT-6 Astra}}
+\begin{document}\maketitle
+
+The repository already proves that an exact minimum-energy realization
+of even parity needs exponentially many ReLU neurons. This note concerns
+the actual fixed-temperature Gaussian posterior at large width. The
+critical ordinary-neuron law is nontrivial, but cannot carry the full
+learned signal. The remaining signal requires exponentially many
+exceptional neurons. The companion \emph{The exact ReLU condensate count
+and its polynomial evidence cost} sharpens the coarse count proved here
+to exactly $2^{r-1}$ and identifies the logarithmic evidence correction.
+All limits fix the dimension before sending width to infinity.
+
+\section{Statement}
+Let $r\ge6$ be even, $X=\{-1,1\}^r$, $M=2^r$, $K=M/2$, and
+$\chi(x)=\prod_i x_i$. Take independent standard Gaussian coordinates
+in every $\theta_j=(a_j,b_j,w_j)\in\R^{r+2}$ and define
+\[
+ \Phi_x(\theta)=a\relu(b+w\cdot x),\qquad
+ F_N(x)=N^{-1}\sum_{j=1}^N\Phi_x(\theta_j).
+\]
+The posterior conditions only on the observed positive margins, with
+every cube input observed in this experiment:
+\[
+ H_N=\{\chi(x)F_N(x)>s\text{ for all }x\},\qquad s=1/2.
+\]
+There is no initial global output restriction.
+Set
+\[
+ \rho=\frac{\binom{r-2}{(r-2)/2}}{2^{r-1}\sqrt r},\quad
+ Z=\E_x\chi(x)\Phi_x,\quad t_*=1/\rho,\quad
+ M_* =\E_0e^{t_*Z},\quad dQ_*=M_*^{-1}e^{t_*Z}dP_0.
+\]
+The companion critical-tilt proof gives $M_*<\infty$ and
+$\E_{Q_*}\|\theta\|^4<\infty$ for $r\ge6$.
+Put $m_c=\E_{Q_*}Z$ and $I(s)=t_*s-\log M_*$.
+
+\begin{theorem}[Actual posterior, not just energy minimization]
+One has $m_c<3/8<s$. Under $P_0^N(\cdot\mid H_N)$:
+\begin{enumerate}
+\item The empirical parameter law converges weakly in probability to
+      $Q_*$, whose mean output is $m_c\chi$, while $F_N\to s\chi$.
+\item The evidence obeys
+\[
+ NI(s)\le-\log P_0^N(H_N)\le NI(s)+D_r\log N+O_r(1),
+ \qquad D_r=\frac{K(r+4)}2.                                \tag{1}
+\]
+\item There is a constant $\varepsilon_r>0$ such that
+\[
+ \Pp\left\{
+ K\le\#\{j:\|\theta_j\|>\varepsilon_r\sqrt N\}\le D_r
+       \ \middle|\ H_N\right\}\longrightarrow1.            \tag{2}
+\]
+      Moreover the total normalized parameter energy is bounded in
+      posterior probability, and every parameter of norm at least
+      $\varepsilon\sqrt N$, for any fixed $\varepsilon>0$, approaches
+      one of the balanced parity rays in angle.
+\item The readout and incoming energies have explicit limits:
+\[
+ N^{-1}\sum_j a_j^2\longrightarrow1+s/\rho,\qquad
+ N^{-1}\sum_j(b_j^2+\|w_j\|^2)\longrightarrow r+1+s/\rho.
+                                                               \tag{3}
+\]
+      In particular total normalized energy tends to $r+2+2s/\rho$.
+\end{enumerate}
+The parity target nevertheless has an exact ReLU teacher of width
+$r+1$ and weights bounded by $2r+2$ (in either the sum or averaged
+teacher convention), hence a polynomial description.
+\end{theorem}
+
+Thus the posterior has at least $2^{r-1}$ exceptional neurons at the
+$\sqrt N$ scale for a function with a linear-width teacher. The upper
+bound $D_r$ is only a convenient finite bound. The result does not
+assert that $D_r$ is attained or that the number exceeds $K$.
+It is neither an OOD prediction lower bound nor a simultaneous
+dimension-width theorem.
+
+\section{Critical law and its mean}
+Write $U=(b,w)$ and $G(U)=\E_x\chi(x)\relu(U\cdot(1,x))$.
+The repository's sharp correlation inequality is
+\[
+ |G(U)|\le\rho\sqrt r\min_i|w_i|\le\rho\|U\|.
+\]
+Equality in the last inequality occurs exactly at
+$v_z=(0,z/\sqrt r)$, $z\in X$, up to positive scaling.
+If $\kappa=G(v_{\one})$, then $|\kappa|=\rho$ and the critical
+parameter rays are
+\[
+ \mathcal R=\{R(\sigma_z,v_z):R\ge0,\ z\in X\},\qquad
+ \sigma_z=\operatorname{sgn}(\kappa)\chi(z).
+\]
+The continuous homogeneous quadratic function
+\[
+ D_0(\theta)=\tfrac12\|\theta\|^2-Z(\theta)/\rho
+\]
+is nonnegative and vanishes precisely on $\mathcal R$.
+The density of $Q_*$ is a fixed positive constant times $e^{-D_0}$.
+
+For completeness, endpoint fourth-moment finiteness follows from the
+sharp corner calculation in the companion note. In a cone about a
+maximizing incoming ray, write $U=Rv_z+u$, $u\perp v_z$. Then
+$|G(U)|=\rho R-h_z(u)$, where $h_z$ is a norm on the $r$-dimensional
+transverse space. After integrating out the readout, the exponent is
+comparable to $-R\|u\|$. The substitution $u=v/R$ shows that a
+fourth parameter moment is bounded by a multiple of
+$\int_1^\infty R^{4-r}dR$, finite for $r>5$.
+Outside the cones there is a strict Gaussian quadratic gap.
+
+The analytic bound in the softplus companion applies without change
+to ReLU. With $T=\min_i|w_i|$ and $c=\sqrt{2/\pi}$,
+\[
+ m_c\le\rho r^2c\int_0^\infty t^2
+       [e^{t^2/2}2\overline\Phi(t)]^{r-1}dt
+ \le\frac{\pi\rho r^2}{(r-2)(r-3)(r-4)}<\frac38.           \tag{4}
+\]
+The first inequality integrates the Gaussian readout and uses
+$M_*\ge1$. The second uses
+$e^{t^2/2}2\overline\Phi(t)\le(1+ct)^{-1}$, proved by the elementary
+one-sign-change differential comparison in that note. The final bound
+holds at $r=6$, where it is $9\pi/(32\sqrt6)$, and decreases over
+subsequent even dimensions. Cube sign symmetries force
+$\E_{Q_*}\Phi=m_c\chi$.
+
+\section{A polynomial lower bound for a centered small box}
+We give the local probability argument explicitly, so no unverified
+local central-limit assumption enters the conditioning step.
+
+\begin{lemma}[A Gaussian component gives a local lower bound]\label{lem:local}
+Let $V\in\R^m$ have finite second moment and mean $\mu$.
+Suppose some convolution power of its law has a centered nondegenerate
+Gaussian component: for some integer $b\ge1$, $p>0$, and $\sigma>0$,
+\[
+ \mathcal L(V_1+\cdots+V_b)
+       =pN(0,\sigma^2I_m)+(1-p)R.
+\]
+Then, for every fixed $a>0$ and all sufficiently large $n$,
+\[
+ \Pp\{\|V_1+\cdots+V_n-n\mu\|_\infty<a\}
+              \ge c_a n^{-m/2},
+\]
+where $c_a>0$ may depend on the law and the dimension.
+\end{lemma}
+\begin{proof}
+First take $n=bq$. Represent each block by an independent Bernoulli
+choice of the Gaussian component or $R$. Let $J$ count the Gaussian
+blocks and let $T$ sum the non-Gaussian blocks, treating Gaussian
+choices as zero in $T$. Then $\E T=n\mu$ and
+$\E\|T-n\mu\|^2\le Cq$. The residual law has finite second moment
+because the full block law and the Gaussian component do.
+Chebyshev and the binomial lower-tail bound give a fixed positive
+probability to
+\[
+ \|T-n\mu\|\le C'\sqrt q,\qquad pq/2\le J\le q.
+\]
+Conditional on these choices and residual values, the remaining sum
+is $N(0,J\sigma^2I_m)$. Throughout a fixed box about $n\mu-T$ its
+density is bounded below by $cq^{-m/2}$, uniformly on this event.
+Integrating the box proves the claim. If $n$ is not a multiple of
+$b$, condition the at most $b-1$ remaining variables to a fixed bounded
+set of positive probability; their bounded offset changes no estimate.
+\end{proof}
+
+The lemma applies to $V=\Phi(\theta)$ under $Q_*$. ReLU features on
+the finite cube span $\R^M$: use a linear score taking distinct values,
+a constant positive feature, and hinges between consecutive score
+values, obtaining an invertible triangular evaluation matrix.
+Choose $M$ incoming vectors in compact neighborhoods of such a basis.
+Under $Q_*$, each incoming law has a strictly positive density.
+Conditional on the incoming vectors, the readouts are independent
+Gaussians with variance one and means $G(U)/\rho$.
+Their output sum is therefore a full-dimensional Gaussian whose mean
+is uniformly bounded and whose covariance lies between two fixed
+positive multiples of the identity on those neighborhoods.
+Every Gaussian in this compact family has density at least a fixed
+positive multiple of a sufficiently narrow centered Gaussian density,
+uniformly on all of $\R^M$. Multiplying by the positive probability
+of the incoming neighborhoods gives the required Gaussian component
+of the $M$-fold output convolution. Fourth parameter moments imply
+second output moments. Thus Lemma~\ref{lem:local} applies with $m=M$.
+
+\section{Polynomial evidence and posterior domination}
+Put $\delta=s-m_c>0$ and use the canonical hemisphere
+$\mathcal S=\{z:z_1=1\}$, of size $K$. The repository's Fourier
+identity gives
+\[
+ \sum_{z\in\mathcal S}\sigma_z\relu(z\cdot x/\sqrt r)
+                         =K\rho\chi(x),\qquad r\ge4.       \tag{5}
+\]
+Reserve $K$ fixed neuron indices at centers
+$R_N(\sigma_z,v_z)$, where
+\[
+ R_N^2=\frac{N\delta+Km_c+2}{K\rho}.
+\]
+Their total output is $(N\delta+Km_c+2)\chi$.
+Constrain the other $N-K$ neurons' total output to a fixed small box
+about $(N-K)m_c\chi$. By the preceding lemma this has probability
+at least $cN^{-M/2}=cN^{-K}$ under $Q_*^{N-K}$.
+
+Constrain each reserved parameter to a ball of radius $c'/\sqrt N$
+about its center. Choose $c'>0$ small enough that the combined output
+perturbation is at most $1/4$ at each input. This is possible because
+ReLU output has local Lipschitz constant $O_r(\sqrt N)$ there.
+At the centers $D_0=0$ and throughout these balls $D_0=O_r(1)$.
+Their total $Q_*$ probability is at least
+$cN^{-K(r+2)/2}$. On the combined event all signed total outputs
+are between $Ns+1$ and $Ns+3$.
+
+The exact change of measure is
+\[
+ P_0^N(H_N)=e^{-NI(s)}
+ \E_{Q_*^N}\left[
+ e^{-t_*(\sum_jZ_j-Ns)}\one_{H_N}\right].                  \tag{6}
+\]
+The exponential factor is at most one on $H_N$, and is bounded below
+by a positive constant on the constructed event. This proves (1).
+It also proves the useful domination, for every event $A$,
+\[
+ P_0^N(A\mid H_N)\le C_r N^{D_r}Q_*^N(A).                 \tag{7}
+\]
+Bounded-test concentration under the product law, followed by (7),
+proves weak empirical convergence to $Q_*$. A countable convergence-
+determining family plus tightness gives the probability-measure statement.
+For tightness, choose a compact set with arbitrarily large $Q_*$ mass
+and apply the same Bernoulli concentration to its empirical mass.
+
+On $H_N$, if one signed average output exceeds $s+u$, then
+$N^{-1}\sum_jZ_j\ge s+u/M$. Equation (6) and its polynomial lower
+bound make its posterior probability at most
+$C_rN^{D_r}e^{-Nt_*u/M}$. Hence $F_N\to s\chi$.
+
+\section{Only finitely many large neurons can carry the missing mean}
+First, total energy is bounded. Under the original Gaussian prior,
+\[
+ P_0^N\left\{N^{-1}\sum_j\|\theta_j\|^2>B\right\}
+ \le\exp\{-N[B/4-(r+2)\log2/2]\}.
+\]
+Choose $B>4[I(s)+(r+2)\log2/2+1]$ and divide by the evidence lower
+bound. The posterior probability tends to zero exponentially.
+
+For any fixed $\varepsilon>0$, fourth-moment Markov gives
+\[
+ Q_*\{\|\theta\|>\varepsilon\sqrt N\}\le C_\varepsilon N^{-2}.
+\]
+Independence and a union bound over index sets show that the chance of
+$D_r+1$ or more such parameters is $O_\varepsilon(N^{-D_r-1})$.
+By (7), the posterior count is at most $D_r$ with probability tending
+to one.
+
+For any fixed angular separation from $\mathcal R$, the function
+$D_0$ has a strictly positive minimum on the corresponding part of
+the unit sphere. On the annulus
+$\varepsilon\sqrt N\le\|\theta\|\le\sqrt{BN}$, its $Q_*$ density
+is therefore at most $Ce^{-cN}$. The annulus volume is polynomial
+in $N$. Union over the neurons, use (7), and use the energy bound
+for the outside region. Thus all these large parameters approach
+$\mathcal R$ in angle in posterior probability.
+
+We also need to exclude a collective signal from arbitrarily many
+smaller neurons. There is a constant $C_r$ such that
+$\|\Phi(\theta)\|_\infty\le C_r\|\theta\|^2$.
+Truncate at $\|\theta\|\le\varepsilon\sqrt N$ and denote the
+truncated output vector by $V^{(N)}$. Its coordinate second moments
+are uniformly bounded, and its mean tends to $m_c\chi$.
+For $\lambda=A\log N/N$, the elementary exponential Taylor bound gives
+\[
+ \log\E_{Q_*}e^{\lambda(V_x^{(N)}-\E V_x^{(N)})}
+ \le C\lambda^2\exp(2\lambda C_r\varepsilon^2N)
+\]
+for large $N$; the harmless factor two also covers centering.
+Choose $\varepsilon$ so small that $2AC_r\varepsilon^2<1/2$.
+Multiplying the log moment by $N$ makes its upper bound $o(1)$.
+The same estimate for $-V_x^{(N)}$ and Markov's inequality imply,
+for any fixed $u>0$,
+\[
+ Q_*^N\left\{
+ \left\|N^{-1}\sum_jV_j^{(N)}-m_c\chi\right\|_\infty>u
+ \right\}\le 2M N^{-Au/2+o(1)}.                           \tag{8}
+\]
+For any desired polynomial power first choose $A$ large and then
+$\varepsilon$ small. In particular this probability is $o(N^{-D_r})$,
+so the same truncated output is within $u$ of $m_c\chi$ in posterior
+probability. No exponential output moment under $Q_*$ was assumed.
+
+\section{The parity geometry forces exponentially many large neurons}
+A finite collection on the critical rays contributes
+\[
+ \sum_{z\in X} m_z\sigma_z h_z(x),\qquad
+ h_z(x)=\relu(z\cdot x/\sqrt r),\quad m_z\ge0.
+\]
+The repository's nonvanishing even-Fourier-coefficient calculation
+implies that equality to $\delta\chi$ forces
+\[
+ m_z+m_{-z}=\frac{\delta}{K\rho}>0
+                          \quad\text{for every antipodal pair}. \tag{9}
+\]
+Every pair must therefore contain a nonzero neuron. In particular
+fewer than $K$ critical-ray neurons cannot supply $\delta\chi$.
+
+For a quantitative separation sufficient here, restrict the normalized
+parameter energy to the fixed bound $B$. The output images of all
+collections of at most $K-1$ critical-ray parameters in this bounded
+set form a compact set: there are finitely many ray choices, and zero
+parameters may pad the collection. By (9) this compact set excludes
+$\delta\chi$, so their sup-norm distance from it is some $g_r>0$.
+Choose $u<g_r/4$, and then choose $\varepsilon_r$ small enough for
+(8) to beat the domination power $D_r$.
+
+With posterior probability tending to one, total output is within $u$
+of $s\chi$, the truncated small-neuron output is within $u$ of
+$m_c\chi$, total energy is at most $B$, and all parameters above
+the cutoff are arbitrarily close to critical rays. If there were
+fewer than $K$ such parameters, their summed output would be within
+$2u+o(1)<g_r$ of $\delta\chi$, contradicting the compact separation.
+This proves the lower count in (2); the earlier fourth-moment argument
+proves its upper count.
+
+\section{Energy accounting and the learned feature kernel}
+The same truncation argument applies to any finite collection of
+functions bounded by a constant times $\|\theta\|^2$, since fourth
+parameter moments are finite. In particular it applies to $a^2$, to
+$\|U\|^2$, and to each product
+$\relu(U\cdot\bar x)\relu(U\cdot\bar y)$.
+For parameters on the critical rays,
+\[
+ a^2=\|U\|^2=Z/\rho.
+\]
+The angular convergence and the total-energy bound make the combined
+error in these identities tend to zero for all parameters above any
+fixed cutoff. The small parameters contribute arbitrarily close to
+their $Q_*$ expectations by (8). Since the total parity coefficient
+tends to $s$, it follows that the readout and incoming energy limits
+are their respective critical expectations plus $(s-m_c)/\rho$.
+
+Conditional Gaussian readouts give
+$\E_{Q_*}a^2=1+m_c/\rho$. The incoming tilted density is proportional
+to $\exp[-(\|U\|^2-G(U)^2/\rho^2)/2]$.
+Its exponent is homogeneous of degree two; scaling its normalizing
+integral, or polar integration, gives
+$\E_{Q_*}[\|U\|^2-G(U)^2/\rho^2]=r+1$.
+Since $\E_{Q_*}G(U)^2/\rho^2=m_c/\rho$, this proves (3).
+
+There is also a deterministic statement about the even Fourier block
+of the learned feature kernel. Define
+\[
+ \mathcal K_N(x,y)=N^{-1}\sum_j
+       \relu(U_j\cdot\bar x)\relu(U_j\cdot\bar y),\qquad
+ \mathcal K_*(x,y)=\E_{Q_*}
+       [\relu(U\cdot\bar x)\relu(U\cdot\bar y)].
+\]
+Let $h(x)=\relu(\sum_i x_i/\sqrt r)$ and let $T,V\subseteq[r]$
+have even cardinality, including zero. Then in posterior probability,
+\[
+ \E_{x,y}\chi_T(x)[\mathcal K_N-\mathcal K_*](x,y)\chi_V(y)
+ \longrightarrow
+ \frac{s-m_c}{\rho}\widehat h(T)^2\one_{T=V}.              \tag{10}
+\]
+Indeed the small neurons give $\mathcal K_*$ by the same truncated
+moment argument. For the large critical-ray parameters, the output
+increment determines their antipodal-pair masses by (9), up to errors
+that vanish as the truncation tolerance vanishes. On even characters,
+opposite orientations have identical feature coefficients. Summing
+the fixed pair masses and using character orthogonality on the
+antipodal quotient gives (10). Every even coefficient of $h$ is
+nonzero by the existing repository lemma, so the extra even kernel
+block has rank $K=2^{r-1}$.
+
+Equation (10) is a rank statement, not an effective-rank or numerical-
+conditioning claim. Some eigenvalues can be very small. It shows that
+weak convergence of ordinary-neuron laws alone misses part of both
+the fitted function and its feature kernel.
+
+\section{An exponential increase in the target kernel eigenvalue}
+The kernel calculation has a stronger interpretation than its rank alone.
+For any kernel $\mathcal K$ define its parity eigenvalue by
+\[
+ \lambda_\chi(\mathcal K)=\E_{x,y}\chi(x)\mathcal K(x,y)\chi(y).
+\]
+For the invariant kernels $\mathcal K_0$ and $\mathcal K_*$ this is
+the eigenvalue of the parity character, with uniform measure in the
+kernel operator. For a finite empirical kernel it denotes its quadratic
+form in that direction; the limiting even Fourier block is diagonal.
+
+\begin{theorem}[Target feature amplification]
+For the ordinary unit-Gaussian ReLU prior kernel $\mathcal K_0$,
+\[
+ 0<\lambda_\chi(\mathcal K_0)\le3\,2^{-r},\qquad r\ge6\text{ even}.
+\]
+In the actual posterior of the first theorem,
+\[
+ \mathcal K_N\chi\longrightarrow s\rho\,\chi,\qquad
+ \lambda_\chi(\mathcal K_N)\longrightarrow s\rho
+ \ge \frac{s}{2\sqrt2\,r}.
+\]
+In particular the target feature eigenvalue grows by a factor at least
+$s2^r/(6\sqrt2\,r)$. The exceptional neurons alone supply
+$(s-m_c)\rho>\rho/8$ at $s=1/2$.
+\end{theorem}
+\begin{proof}
+The critical ordinary law has
+\[
+ \lambda_\chi(\mathcal K_*)=\E_{Q_*}G(U)^2=\rho m_c,
+\]
+because the conditional readout mean is $G(U)/\rho$. Taking $T=V=[r]$
+in (10) adds $(s-m_c)\rho$, proving the quadratic-form formula.
+For the full eigenvector assertion, on a critical ray
+$G(U)\relu(U\cdot\bar x)=\rho\Phi_x(\theta)$.
+The truncated quadratic-moment argument therefore makes the large-neuron
+part of $\mathcal K_N\chi$ tend to $\rho(s-m_c)\chi$; the small
+part tends to $\mathcal K_*\chi=\rho m_c\chi$.
+The elementary
+central-binomial estimate in the existing parity calculation gives
+$\rho\ge1/(2\sqrt2\,r)$.
+
+For the prior bound use the classical Gaussian ReLU kernel formula
+(\href{https://proceedings.neurips.cc/paper/2009/file/5751ec3e9a4feab575962e78e006250d-Paper.pdf}{Cho and Saul, 2009}). Its two preactivations
+have variance $r+1$ and correlation $c=(1+x\cdot y)/(r+1)$, and
+\[
+ \mathcal K_0(x,y)=(r+1)\left\{\frac c4+
+ \frac1{2\pi}\left[1+\sum_{l\ge1}a_lc^{2l}\right]\right\},\qquad
+ a_l=\frac{\binom{2l}{l}}{4^l(2l-1)^2}\le l^{-5/2}.
+\]
+The series is absolutely convergent even at the endpoints. The last
+inequality follows from
+$\binom{2l}{l}/4^l\le(l+1)^{-1/2}$, proved by induction, and
+$2l-1\ge l$.
+For uniform independent $\varepsilon_i\in\{-1,1\}$ put
+\[
+ A_n=\E\left[\prod_i\varepsilon_i
+      \left(\frac{1+\sum_i\varepsilon_i}{r+1}\right)^n\right].
+\]
+Expanding the power identifies $A_n$ with the probability that, in $n$
+independent uniform draws from $\{0,1,\ldots,r\}$, every nonzero symbol
+has odd multiplicity. Thus $A_n=0$ for $n<r$ and $A_n\ge0$.
+Poissonize the counts: independent $P_i\sim\mathrm{Poisson}(n/(r+1))$
+conditioned on $\sum_{i=0}^rP_i=n$ have those multinomial counts. Hence
+\[
+ A_n\le\frac{\prod_{i=1}^r\Pp(P_i\text{ odd})}
+                    {\Pp(\mathrm{Poisson}(n)=n)}
+     \le e\sqrt n\,2^{-r}.
+\]
+For the denominator, the elementary factorial bound
+$n!\le e\sqrt n(n/e)^n$ follows by integrating the concave function
+$\log x$ over $[1,n]$ and comparing with its trapezoids.
+The constant and linear kernel terms have zero parity coefficient.
+Consequently
+\begin{align*}
+ \lambda_\chi(\mathcal K_0)
+ &\le\frac{e\sqrt2(r+1)}{2\pi}\,2^{-r}
+                \sum_{l\ge r/2}l^{-2}\\
+ &\le\frac{e\sqrt2(r+1)}{2\pi(r/2-1)}\,2^{-r}
+ <3\,2^{-r}.
+\end{align*}
+Positivity follows already from the $n=r$ term, where every nonzero
+symbol can occur exactly once. This proves the claim.
+\end{proof}
+
+This is feature adaptation in a directly measurable kernel direction:
+the initial parity eigenvalue is exponentially small, while its learned
+value is of order $1/r$. It does not supply a sample-complexity or OOD
+claim, since this experiment conditions on every input. Nor does the
+exponential exceptional-neuron count give a width lower bound at fixed
+relative energy accuracy: the separate Monte Carlo construction achieves
+$(1+\epsilon)$ of optimal margin energy using polynomial width.
+
+\section{Almost all ordinary neurons remain nearly Gaussian at large parity degree}
+The preceding prior-kernel bound also makes the critical mean exponentially
+small in the parity dimension, improving the earlier uniform bound $m_c<3/8$.
+Put $c=\sqrt{2/\pi}$ and $u_0=1+2c/3$. Then
+\[
+ m_c\le \frac3\rho\exp[-r(\log2-2/9)]
+       +\frac{\rho r^2}{c^2(r-4)}u_0^{-(r-4)}.            \tag{13}
+\]
+In particular $m_c=O(r e^{-c_0r})$, where $c_0=\log u_0>0.42$.
+Consequently
+\[
+ \operatorname{KL}(Q_*\|P_0)\le m_c/\rho
+       =O(r^2e^{-c_0r}),\qquad
+ \operatorname{TV}(Q_*,P_0)=O(r e^{-c_0r/2}).              \tag{14}
+\]
+These statements compare one-neuron probability laws. They do not imply
+small distance between the full conditioned network and its prior.
+
+To prove (13), write $T=\min_i|w_i|$, and integrate out the readout:
+\[
+ m_c=\frac1{\rho M_*}\E_0[G(U)^2e^{G(U)^2/(2\rho^2)}].
+\]
+On $T\le a$, use $|G(U)|\le\rho\sqrt r\,T$ and
+$\E_0G(U)^2\le3\,2^{-r}$ to bound this contribution by
+$(3/\rho)e^{-r(\log2-a^2/2)}$.
+On $T>a$, the same sharp inequality and the density of the minimum of
+$r$ independent half normals give the upper bound
+\[
+ \rho r^2c\int_a^\infty t^2
+       [e^{t^2/2}2\overline\Phi(t)]^{r-1}\,dt
+ \le \frac{\rho r^2}{c^2(r-4)}(1+ca)^{-(r-4)}.
+\]
+The last step uses the Mills-ratio bound already proved above and
+$t^2\le(1+ct)^2/c^2$. Taking $a=2/3$ proves (13).
+The central-binomial estimates give $\rho=\Theta(1/r)$, and
+$\log2-2/9>\log u_0$, proving the stated exponential rate.
+Finally, $\operatorname{KL}(Q_*\|P_0)=m_c/\rho-\log M_*$,
+$M_*\ge1$, and Pinsker's inequality give (14).
+
+In the iterated limit (first width, then even parity dimension), the
+ordinary-neuron law therefore approaches the original Gaussian law.
+Nonetheless the exceptional neurons carry asymptotically all of the
+parity output and parity-kernel eigenvalue. This is a precise sense in
+which weak or bounded-observable descriptions of the typical neuron
+can miss essentially the entire learned feature.
+
+\section{The same transition under square or logistic likelihood}
+The effect does not require a hard margin indicator. Keep the same
+prior and put a width-scaled likelihood on all parity examples:
+\[
+ \frac{d\Pi_{N,\lambda}}{dP_0^N}
+ \ \propto\ \exp\left[-\frac{N\lambda}{M}
+                \sum_{x\in X}\ell(\chi(x)F_N(x))\right],
+ \qquad \lambda>0.
+\]
+We consider either square loss $\ell(s)=(1-s)^2/2$ or logistic loss
+$\ell(s)=\log(1+e^{-s})$. The factor $N$ is part of the model: this
+is the mean-field, width-scaled likelihood, not a fixed-noise likelihood
+on a fixed dataset as width diverges.
+Let $\Lambda(t)=\log\E_0e^{tZ}$, $Q_t=e^{tZ-\Lambda(t)}P_0$,
+and $m(t)=\Lambda'(t)$ for $0\le t\le t_*$.
+
+\begin{theorem}[A finite likelihood-strength transition]
+Define
+\[
+ \lambda_c=
+ \begin{cases}
+ t_*/(1-m_c),&\text{square loss},\\
+ t_*(1+e^{m_c}),&\text{logistic loss}.
+ \end{cases}
+\]
+For $0<\lambda<\lambda_c$, there is a unique $t\in(0,t_*)$
+solving $t=-\lambda\ell'(m(t))$. The posterior empirical law tends
+to $Q_t$, the network output tends to $m(t)\chi$, and the largest
+parameter norm divided by $\sqrt N$ tends to zero.
+
+At $\lambda=\lambda_c$, the same statements hold with $t=t_*$
+and $m(t)=m_c$, still with no macroscopic parameters.
+
+For $\lambda>\lambda_c$, the ordinary-neuron law remains $Q_*$,
+but the output tends to $s_\lambda\chi$, where
+\[
+ s_\lambda=
+ \begin{cases}
+ 1-t_*/\lambda,&\text{square loss},\\
+ \log(\lambda/t_*-1),&\text{logistic loss}.
+ \end{cases}
+\]
+There is an $\varepsilon_{r,\lambda}>0$ for which the exceptional-
+neuron count is between $K$ and $D_r$, with probability tending to
+one. The energy limits (3) and the even-kernel formula (10) hold with
+$s=s_\lambda$. If $\mathcal Z_{N,\lambda}$ is the likelihood evidence,
+\[
+ -\log\mathcal Z_{N,\lambda}
+   =N[I(s_\lambda)+\lambda\ell(s_\lambda)]+O_{r,\lambda}(\log N).
+\]
+In particular the entirely explicit choice $\lambda=2/\rho$ under
+square loss gives $s_\lambda=1/2$ and the exponential-neuron conclusion.
+\end{theorem}
+\begin{proof}
+The function $m(t)$ is continuous and strictly increasing, starts at
+zero, and tends to $m_c<1$ at $t_*$. For either loss,
+$t+\lambda\ell'(m(t))$ is strictly increasing in $t$, is negative
+at zero, and is positive at $t_*$ precisely when
+$\lambda<\lambda_c$. This proves the unique subcritical solution.
+
+Write $y_x=\chi(x)F_N(x)$. Changing measure to $Q_t^N$ leaves the
+potential
+\[
+ V_t(y)=\frac1M\sum_x[t y_x+\lambda\ell(y_x)].
+\]
+For the selected $t$ this strictly convex, coercive function has its
+unique minimum at $m(t)\one$. Under $Q_t^N$ the empirical outputs
+are within $C/\sqrt N$ of that point with probability bounded below,
+by their finite second moments and Chebyshev's inequality. A local
+quadratic upper bound on $V_t-\min V_t$ therefore bounds the
+normalizing expectation of $e^{-N(V_t-\min V_t)}$ below by a fixed
+positive constant. The posterior is dominated by a constant times
+$Q_t^N$. This proves output and empirical-law convergence and absence
+of macroscopic parameters, using Gaussian tails for $t<t_*$ and the
+finite fourth parameter moment at $t=t_*$. It also proves that the
+critical case has no macroscopic neurons.
+
+Above the transition, change measure to $Q_*^N$. Now $V_{t_*}$ has
+its unique minimum at $s_\lambda\one$, as the displayed formulas
+show, and $s_\lambda>m_c$. The polynomial local construction used
+for (1), with centers supplying $(s_\lambda-m_c)\chi$, places the
+output within $O(1/N)$ of this minimum at $Q_*^N$ probability
+at least $cN^{-D_r}$. Its likelihood factor is bounded below there.
+The factor is at most one everywhere after subtracting the minimum,
+so the posterior is dominated by $CN^{D_r}Q_*^N$ and the evidence
+has the stated asymptotics. Coercivity gives output concentration.
+The original-prior Gaussian energy bound still applies because both
+losses are nonnegative. All truncation, ray, count, energy, and kernel
+arguments above consequently apply without change.
+\end{proof}
+
+\section{Two exact finite-width identities}
+The asymptotic energy and kernel formulas have useful finite-width
+checks. Let $L(F)$ be any bounded nonnegative likelihood with positive
+evidence, including the hard margin indicator, under the unit-Gaussian
+prior. Positive homogeneity makes each neuron's output invariant under
+$a_j\mapsto e^ta_j$, $U_j\mapsto e^{-t}U_j$. Changing variables in the
+Gaussian integral and differentiating at zero gives, exactly,
+\[
+ \E_{\Pi}[\|U_j\|^2-a_j^2]=r,\qquad
+ \E_{\Pi}\left[N^{-1}\sum_j(\|U_j\|^2-a_j^2)\right]=r.       \tag{11}
+\]
+Indeed the forward change-of-variable Jacobian is $e^{-rt}$,
+whereas the derivative of the Gaussian exponent after the substitution
+is $\|U_j\|^2-a_j^2$. Their sum has expectation zero.
+Gaussian domination justifies differentiation,
+without differentiating the possibly discontinuous likelihood.
+For unequal layer variances replace the squares by their standardized
+squares. This identity does not require large width or parity labels.
+
+For the square likelihood $L(F)=\exp[-N\lambda\|F-f\|_2^2/2]$,
+with the uniform input norm, Gaussian integration by parts in each
+readout gives another exact identity:
+\[
+ \E_\Pi F=\lambda\,\E_\Pi[\mathcal K_N(f-F)].               \tag{12}
+\]
+Here $\mathcal K_N$ acts by uniform averaging over its second argument.
+The features do not depend on the readouts, so no derivative of an
+activation is needed. In a concentrating parity phase $F\to s\chi$,
+this is consistent with the target kernel eigenvalue $s/t$, where
+$t=\lambda(1-s)$. The critical value $t=t_*$ gives $s\rho$ as above.
+These are checks on the posterior, not convergence guarantees for a
+particular sampler or optimizer.
+
+\section{An independent sampler for the critical ordinary law}
+The critical-law predictions can be checked without a neural posterior
+Markov chain. Here is an exact rejection envelope, in real arithmetic,
+for the incoming marginal of $Q_*$ at even $r>2$.
+Put $c=\sqrt{2/\pi}$ and
+\[
+ A(t)=\int_0^\infty e^{-tv-v^2/2}dv
+     =\sqrt{2\pi}e^{t^2/2}\overline\Phi(t).
+\]
+The earlier Mills-ratio inequality gives
+$A(t)\le c^{-1}(1+ct)^{-1}$. Generate:
+\begin{enumerate}
+\item $t\ge0$ with density $(r-2)c(1+ct)^{-(r-1)}$;
+      accept this first stage with probability
+      $[cA(t)(1+ct)]^{r-1}$.
+\item Pick a minimum coordinate uniformly. Give it magnitude $t$.
+      Independently sample the other excess magnitudes $v_i\ge0$ with
+      density $e^{-tv_i-v_i^2/2}/A(t)$, and set their magnitudes to
+      $t+v_i$. Give the weights independent uniform signs and take
+      $b\sim N(0,1)$.
+\item Accept with probability
+      $\exp[-(rt^2-G(b,w)^2/\rho^2)/2]\le1$.
+      The inequality follows from $|G|\le\rho\sqrt r\,t$.
+\end{enumerate}
+After acceptance take $a\sim N(G(b,w)/\rho,1)$ independently
+conditional on the incoming parameters. The resulting whole neuron has
+law $Q_*$. In permutation- and sign-invariant observables such as $G^2$
+and incoming energy, one may fix the minimum coordinate and all weight
+signs to save computation.
+
+To verify the algorithm, fix the positive orthant and its unique minimum
+coordinate, and write $w_i=t+v_i$ with one $v_i=0$. Multiplying the
+proposal density by both acceptance probabilities cancels every $A(t)$
+and $1+ct$ factor, and gives
+\[
+ (r-2)c^r\phi(b)
+ \exp\left[-\frac12\sum_{i\ne\min}v_i^2-t\sum_{i\ne\min}v_i
+             -\frac{rt^2}{2}+\frac{G(b,w)^2}{2\rho^2}\right].
+\]
+The unnormalized tilted Gaussian incoming density in these coordinates,
+after summing its $r$ possible minimum positions, is the same expression
+with leading coefficient $rc^r$. Thus the total acceptance probability is
+\[
+ p_{\rm acc}=\frac{r-2}{r}M_*,\qquad
+ 1\le M_*\le\frac r{r-2}.
+\]
+The acceptance probability is at least $(r-2)/r$, hence at least $2/3$
+for the posterior theorem's dimensions. This is a sampler for the
+\emph{limiting ordinary neuron}, not for the full finite-width conditioned
+network or its exceptional-neuron orientations. The coordinate signs
+and readout draw must be restored when sampling noninvariant observables.
+The implementation uses floating-point arithmetic and is not an interval
+certificate. For $r\ge6$ the finite fourth parameter moment gives finite
+variance to the Rao--Blackwell estimator $G(U)^2/\rho$ of $m_c$.
+
+\section{Small teacher, scaling variants, and scope}
+On the grid $S(x)=\sum_i x_i\in\{-r,-r+2,\ldots,r\}$,
+\[
+ \chi(x)=1-\relu(S+r)
+       +2\sum_{j=1}^{r-1}(-1)^{j+1}\relu(S+r-2j).
+\]
+Implement the constant one by $\relu(1)$. This is a width-$r+1$
+teacher with exact signed output one, rational weights, and magnitudes
+at most $r$ in the sum convention. Multiplying all readouts by $r+1$
+implements the averaged convention with weight bound $2r+2$.
+
+The sharper companion proves exactly $K$ ReLU exceptional neurons,
+one per antipodal pair with equal limiting masses, using local polynomial
+volume estimates; the orientation-law companion identifies their limiting
+pattern probabilities. The softplus companion obtains the same count using a
+second exponential order of speed $\sqrt N$; ReLU instead has
+polynomial critical tails. No positive or negative
+prediction claim follows from either representation theorem by itself.
+The present argument is conventional, not Lean verified or independently
+reviewed.
+\section{Gaussian normalization does not remove the mechanism}
+For independent Gaussian layer scales $a=\tau_a\widetilde a$ and
+$U=\tau_u\widetilde U$, positive homogeneity identifies the
+physical-margin-$s$ posterior exactly with the unit-scale posterior at
+$\widetilde s=s/(\tau_a\tau_u)$. The critical margin is therefore
+$\tau_a\tau_u m_c$, and the exceptional count is still $K$ whenever
+$s$ exceeds this value. The learned incoming-kernel parity eigenvalue
+becomes $s\rho\tau_u/\tau_a$, because that kernel scales by
+$\tau_u^2$. The total layer energies become
+\[
+ \frac1N\sum_j a_j^2\longrightarrow
+       \tau_a^2+\frac{s\tau_a}{\rho\tau_u},\qquad
+ \frac1N\sum_j\|U_j\|^2\longrightarrow
+       (r+1)\tau_u^2+\frac{s\tau_u}{\rho\tau_a}.
+\]
+For fan-in scaling $\tau_u=r^{-1/2}$, $\tau_a=1$, the learned
+eigenvalue is of order $r^{-3/2}$ rather than $r^{-1}$, still
+exponentially larger than its initial parity eigenvalue. These exact
+rescaling statements fix the dimension and positive layer scales before
+taking width to infinity; they add no uniform bound on the required
+width or a cold-prior interchange of limits.
+\end{document}

@@ -1,0 +1,271 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{lemma}[theorem]{Lemma}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}
+\newcommand{\relu}{\operatorname{ReLU}}
+\title{Controlled shifts for observed-margin Gaussian ReLU Bayes}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author. Verification scope and provenance are stated in the accompanying research collection.}}\date{18 November 2026; independent research draft}
+\emergencystretch=3em
+\hypersetup{pdftitle={Controlled shifts for observed-margin Gaussian ReLU Bayes},pdfauthor={ChatGPT-6 Astra}}
+\begin{document}\maketitle
+
+This strengthens the positive comparison in the adaptive-shift companion.
+It removes initial global-margin conditioning, permits every width that
+can represent the teacher, and keeps a fixed positive Gaussian prior scale.
+The proof combines the IID note's uniform posterior energy bound with a
+finite cover of the ReLU variation ball and a bad-region survival argument.
+It does not prove an adversarial online guarantee when the input law has
+no positive lower density bound. No novelty or independent-verification
+claim is made.
+
+\section{A concrete neural posterior theorem}
+Use the shallow mean-field Gaussian ReLU model from the IID companion,
+with input cube $X=\{-1,1\}^d$, $D=d+1$, $M=2^d$, and iid parameter
+coordinates $N(0,\tau^2)$. The target has a width-$C$ teacher with signed
+margin greater than $1/2$, readout bound $V$, and maximum incoming
+Euclidean norm $W$. The learner conditions only on signed margin greater
+than $1/2$ at previously observed inputs. Prediction is a fresh posterior
+draw, or a posterior-confidence rule.
+
+Let $\mu$ be a reference probability on $X$. Let
+$\gamma=\min\{\mu(x):\mu(x)>0\}>0$. At round $t$, the input law
+$P_t$, conditional on all past inputs and learner randomness, may vary
+adaptively but must satisfy
+\[
+                  a\mu\le P_t\le b\mu,
+              \qquad 0<a\le1\le b<\infty.                \tag{1}
+\]
+The posterior sampling at the current query uses the prior conditioned
+on the previously revealed labels; conditional on that history its law
+is the same at every possible query input.
+
+Define
+\[
+ A=4CV,\qquad h=[8\sqrt D\{W+(A+1)\sqrt D\}]^{-1},
+\]
+\[
+ J=(D+1)\log^+\frac{\sqrt{2\pi}\tau}{2h}
+       +\frac{(A+h)^2+(W+\sqrt D h)^2}{2\tau^2},
+ \quad
+ B=2\tau^2\left[J+\frac{D+1}{2}\log2+\log M\right].        \tag{2}
+\]
+Finally put
+\[
+ L=\left\lceil512B^2D\log(4M)\right\rceil,\qquad
+ q=\max\{1,\lceil16BD\rceil\},\qquad
+ H=L\log\bigl(1+2(2q+1)^D\bigr).                         \tag{3}
+\]
+
+\begin{theorem}[All-width lifetime mistakes under two-sided density control]
+For every $N\ge C$, the expected total number of posterior-sampling
+mistakes over the infinite input stream is at most
+\[
+ \boxed{\quad
+ b\left[1+\frac{H+1}{a}\left(1+\log\frac1\gamma\right)\right]+1.
+ \quad}                                                  \tag{4}
+\]
+The expected number of queries with posterior correct-sign probability
+at most $\theta<1$ is at most (4) divided by $1-\theta$.
+Repeated observed inputs have zero error probability automatically;
+no additional memorization rule is needed.
+
+For uniform $\mu$, the bound is polynomial in $d,C,V,W$, $b$, and
+$a^{-1}$, uniformly over all widths $N\ge C$ and over every bounded
+positive common prior scale $0<\tau\le\tau_{\max}$. In particular it
+gives a polynomial expected lifetime mistake bound for IID uniform
+sampling. For full even parity with its explicit width-$(d+1)$ teacher,
+at fixed $\tau_{\max},a,b$ a sufficient bound is $O(d^8\log(d+1))$.
+\end{theorem}
+The bound is an expectation over the controlled input process and, for
+sampling errors, the learner's fresh posterior draws. It is not a
+pathwise guarantee for each deterministic input sequence.
+
+\section{Uniform posterior energy: the only Bayesian ingredient}
+For completeness recall the short argument rather than assuming a
+function-space prior with bounded energy. At width $N\ge C$, partition
+neurons into groups of sizes $n_i\ge N/(2C)$ and center group $i$ at
+$a=2Nv_i/n_i$, $U=U_i^T$. The mean-field output is $2F_T$ and
+$|a|\le A$. A coordinate box of radius $h$ changes the output uniformly
+by at most
+$hW\sqrt D+(A+h)Dh\le1/8$. It therefore lies inside the full-cube
+teacher-margin event and has Gaussian probability at least $e^{-NJ}$.
+Every actual observed-history evidence is at least this large; the
+learner itself makes no global-margin restriction.
+
+For the physical energy
+$E_N=(2N)^{-1}\sum_j(a_j^2+\|U_j\|^2)$, Gaussian exponential moments
+and division by that evidence give, at every history,
+\[
+ \Pi_{N,S}(E_N>B)
+ \le\exp\left[-N\left\{\frac B{2\tau^2}
+                  -\frac{D+1}{2}\log2-J\right\}\right]
+ =M^{-N}.                                                \tag{5}
+\]
+Every energy-$B$ network has ReLU variation cost at most $B$, by
+$|a|\|U\|\le(a^2+\|U\|^2)/2$.
+
+\section{A finite uniform cover with polynomial log cardinality}
+Let $\mathcal F_B$ contain all finite ReLU sums of variation cost at
+most $B$. Write any $F\in\mathcal F_B$ as
+$F=B\E Z$, where $Z$ is a random signed atom
+$\pm\relu(u\cdot\bar x)$ with $\|u\|_2=1$, or the zero atom for
+unused mass. At each input, $Z(x)\in[-\sqrt D,\sqrt D]$.
+Take $L$ independent atoms. Hoeffding and a union over $M$ inputs give
+\[
+ \Pr\left(\left\|F-\frac BL\sum_{j=1}^LZ_j\right\|_\infty
+                                      >1/16\right)
+ \le2M\exp[-L/(512B^2D)]\le1/2.                          \tag{6}
+\]
+Thus some such average is within $1/16$ of $F$.
+Round each incoming coordinate to the grid
+$\{-q,-q+1,\ldots,q\}/q$. Its coordinate error is at most $1/q$;
+ReLU's Lipschitz property bounds the output change of the entire average
+by $BD/q\le1/16$.
+
+Consequently the finite set $\mathcal G$ of all such signed grid-atom
+averages, allowing zero atoms, is a uniform $1/8$ cover of
+$\mathcal F_B$. Its cardinality is at most
+$[1+2(2q+1)^D]^L=e^H$. This cover is chosen before the data and works
+for every width. Its functions need not be networks in the learner's
+prior; they are only a finite collection used in the proof.
+
+For each $G\in\mathcal G$, define a fixed bad region
+\[
+                    B_G=\{x:f(x)G(x)\le1/4\}.
+\]
+If an energy-$B$ posterior network $F$ has approximant $G$, then every
+observed point has $fG>3/8$ and hence lies outside $B_G$. Any query
+where $fF\le0$ has $fG\le1/8$ and therefore lies inside $B_G$.
+This use of separated thresholds is why no margin assumption on
+unobserved inputs is needed.
+
+\section{Survival of finitely many bad regions}
+After $n$ observations let
+\[
+ U_n=\max\{\mu(B_G):G\in\mathcal G,\ B_G
+                     \text{ contains none of the first }n\text{ inputs}\},
+\]
+with maximum zero if the set is empty. For a fixed region of mass $u$,
+its conditional probability of avoiding the next input is at most
+$1-au$, whatever the previous history. Iteration and a union bound give
+\[
+                  \Pr(U_n>u)\le\min\{1,e^{H-anu}\}.       \tag{7}
+\]
+Every positive value of $U_n$ is at least $\gamma$. For $v>0$,
+comparison of a decreasing sum with its integral gives
+\[
+ \sum_{n\ge0}\min\{1,e^{H-anv}\}
+                      \le1+\frac{H+1}{av}.
+\]
+Using $U_n=\int_0^1\mathbf1_{U_n>u}\,du$ and handling $u<\gamma$
+by $\Pr(U_n>0)\le\min\{1,e^{H-an\gamma}\}$ yields
+\[
+ \sum_{n\ge0}\E U_n
+ \le\gamma\left[1+\frac{H+1}{a\gamma}\right]
+       +\int_\gamma^1\left[1+\frac{H+1}{au}\right]du
+ =1+\frac{H+1}{a}\left(1+\log\frac1\gamma\right).         \tag{8}
+\]
+All bounds allow input laws predictable from the full past, including
+past learner randomness.
+
+For a fixed history, every good-energy posterior network has error
+set inside a surviving $B_G$, hence reference error at most $U_n$.
+The upper density bound gives current-query error at most $bU_n$ for
+that part of the posterior. By (5), the remaining contribution is at
+most $M^{-N}$ times the conditional probability that the current input
+has not already been observed: at observed inputs every posterior
+network has the correct sign. Summing these conditional probabilities
+counts distinct inputs, at most $M$. Thus the bad-energy contribution
+to expected lifetime mistakes is at most $M^{1-N}\le1$.
+Equation (8) proves (4). The confidence version follows because its
+indicator is at most current posterior error probability divided by
+$1-\theta$, before averaging over the query process.
+
+\section{A high-probability lifetime version}
+The expected bound has a version polynomial in $\log(1/\eta)$, rather
+than the $1/\eta$ dependence that Markov's inequality alone would give.
+Fix $\eta\in(0,1)$ and replace the $\log M$ term in (2) by
+$\log(3M/\eta)$. Define $L,q,H$ from this new energy bound as before,
+and put
+\[
+ c=\frac{H+\log(3/\eta)}a,\qquad
+ V_\eta=3+c\left(1+\log\frac1\gamma\right).
+\]
+Then, with probability at least $1-\eta$, the total number of posterior-
+sampling mistakes over the infinite stream is at most
+\[
+                 (e-1)bV_\eta+\log(3/\eta).             \tag{9}
+\]
+Here $e$ is Euler's number. The bound holds for every $N\ge C$ with
+the same constants and retains uniformity over bounded positive common
+prior scales. It is a guarantee at each width, not a joint coupling of
+the random streams for infinitely many widths.
+
+To prove it, for a fixed bad region of positive reference mass $u$, let
+$T_G$ be the first observation index that hits it. The lower density
+bound gives
+$\Pr\{T_G>\lceil c/u\rceil\}\le e^{-ac}$.
+A union over at most $e^H$ regions shows, with probability at least
+$1-\eta/3$, that all these hitting-time bounds hold. On this event, a
+region surviving $n\ge2$ rounds has mass less than $c/(n-1)$, and no
+positive-mass region survives beyond $c/\gamma+1$. Comparison with
+the integral of $\min(1,c/x)$ gives
+\[
+                        \sum_{n\ge0}U_n\le V_\eta.      \tag{10}
+\]
+The harmless constant three includes the initial rounds and integer
+rounding.
+
+Let $I_t$ indicate a prediction error made by an energy-at-most-$B$
+posterior draw. Conditional on the past its probability is at most
+$bU_{t-1}$. The process
+\[
+ \exp\left\{\sum_{t\le n}I_t
+                       -(e-1)b\sum_{t\le n}U_{t-1}\right\}
+\]
+is a nonnegative supermartingale starting at one, since
+$\E e^{I_t}\le e^{(e-1)bU_{t-1}}$. The maximal inequality therefore
+adds at most $\log(3/\eta)$ to its compensator with probability at
+least $1-\eta/3$, simultaneously at all times. Combine with (10).
+Finally the modified energy estimate gives tail probability at most
+$(\eta/(3M))^N$ at every history. The expected number of bad-energy
+errors is at most $M(\eta/(3M))^N\le\eta/3$, by the same distinct-
+input counting argument as before. Hence there are no such errors with
+probability at least $1-\eta/3$. The union of these three exceptional
+events proves (9). No independence of successive input laws is needed.
+
+\section{Dimension, temperature, and the unresolved adversarial case}
+For uniform $\mu$, $\log(1/\gamma)=d\log2$. Equations (2)--(3) give
+$H=O((1+B^2)D^3\log(2+BD))$, with a harmless adjustment for small $B$.
+Expanding $B$ as in the IID companion shows that it stays bounded under
+$0<\tau\le\tau_{\max}$, at fixed teacher parameters. The parity teacher
+has $C=d+1$, $V\le2$, $W=O(d)$, whence $B=O(d^2)$ and
+$H=O(d^7\log(d+1))$. This gives the displayed $O(d^8\log(d+1))$
+lifetime bound. The constants are deliberately loose.
+The IID companion's critical-mixture certificate sharpens this for parity
+at sufficiently large polynomial width. For $N\ge N_0=O(d^3)$ it gives
+$B=O(d\log(d+1))$, uniformly over bounded positive common prior scales.
+Substituting that $B$ in the identical covering and survival proof improves
+the expected lifetime bound to $O(d^6\log^3(d+1))$ at fixed $a,b$.
+This refinement does not assume the exponentially large exact-count
+posterior regime; the mixture is only a finite-dimensional entropy
+certificate for the evidence.
+
+Different layer variances, including fan-in scaling, are handled by the
+IID companion's weighted Gaussian evidence estimate; the result remains
+polynomial, with a potentially different dimension power.
+
+A deterministic adversarial sequence typically has no positive lower
+comparison $a\mu\le P_t$, so (7) need not hold. An adaptive scheduler
+can keep all the surviving bad regions unqueried until it wishes to use
+them. This proof therefore does not close the ordinary-ReLU
+superpolynomial OOD mistake question. The negative example in the other
+adaptive-shift note additionally retains its original global-margin
+restriction; it is not asserted to be a counterexample to the precise
+observed-margin learner studied here.
+
+These are unreviewed conventional derivations. The finite cover and
+survival estimate are elementary, but the result should be checked
+independently; repository inclusion does not constitute independent review.
+\end{document}

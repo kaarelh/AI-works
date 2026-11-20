@@ -1,0 +1,334 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{lemma}[theorem]{Lemma}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}
+\newcommand{\relu}{\operatorname{ReLU}}
+\newcommand{\one}{\boldsymbol1}
+\title{Independent large-width constructions for Gaussian ReLU posteriors}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author. Verification scope and provenance are stated in the accompanying research collection.}}
+\date{19 November 2026; independent research draft}
+\emergencystretch=3em
+\hypersetup{pdftitle={Independent large-width constructions for Gaussian ReLU posteriors},pdfauthor={ChatGPT-6 Astra}}
+\begin{document}\maketitle
+\begin{abstract}
+For a shallow Gaussian ReLU network conditioned on all labels of an
+even parity, through hard positive margins or a width-scaled square or
+logistic likelihood, we give
+an independent sampling construction whose total-variation error tends
+to zero as width grows. The constructions use the critical one-neuron
+law, a bounded rejection weight on the ordinary neurons, Gaussian
+amplitude corrections, and the limiting transverse marks of the
+exceptional neurons. They require no unknown evidence, critical mean,
+or critical covariance. At each fixed even dimension at least six and
+fixed conditioning strength in the condensed phase, their expected number
+of elementary proposals and arithmetic operations is linear in width.
+The dimension-dependent constant may be very large. This is an
+asymptotic real-arithmetic result, with no finite-width error rate or
+bit-complexity bound. The proof uses the exact-count and orientation-law
+companions; those inputs and this result are not Lean verified.
+\end{abstract}
+
+\section{Model and scope}
+Fix even $r\ge6$, put $X=\{-1,1\}^r$, $M=2^r$, $K=M/2$, and
+$\chi(x)=\prod_i x_i$. Let $\theta_j=(a_j,U_j)$ be independent standard
+Gaussian vectors in $\R^{r+2}$ under $P_0^N$, with
+\[
+ \Phi_x(\theta)=a\relu(U\cdot(1,x)),\qquad
+ F_N(x)=N^{-1}\sum_{j=1}^N\Phi_x(\theta_j).
+\]
+The posterior studied here has density proportional to
+\[
+ \exp\left[-\frac{N\lambda}{M}\sum_{x\in X}
+                                  \ell(\chi(x)F_N(x))\right]
+ \quad\text{with respect to }P_0^N,                       \tag{1}
+\]
+where $\ell(y)=(1-y)^2/2$ or $\ell(y)=\log(1+e^{-y})$.
+Every cube label appears in (1); this is not scalar-statistic conditioning.
+
+Write $Z=\E_x\chi(x)\Phi_x$, and set
+\[
+ \rho=\frac{\binom{r-2}{(r-2)/2}}{2^{r-1}\sqrt r},\quad
+ t_*=\rho^{-1},\quad Q_*=M_*^{-1}e^{t_*Z}P_0,\quad
+ m_c=\E_{Q_*}Z,\quad \Sigma=\operatorname{Cov}_{Q_*}(\Phi).
+\]
+The preceding companions prove $M_*<\infty$, $m_c<3/8$, finite
+fourth parameter moments, and positive definite $\Sigma$.
+Let $s$ minimize $g(y)=t_*y+\lambda\ell(y)$, and suppose $s>m_c$.
+Explicitly,
+\[
+ s=1-t_*/\lambda\quad\text{(square)},\qquad
+ s=\log(\lambda/t_*-1)\quad\text{(logistic)}.
+\]
+For the logistic case the formula requires $\lambda>t_*$; the stronger
+assumption $s>m_c$ implies it. Put
+\[
+                    \gamma=\lambda\ell''(s)/M>0.
+\]
+The values $s,\gamma,\rho$ are known from the model. Neither $m_c$ nor
+$\Sigma$ is needed in the algorithm. The sufficient condition $s>3/8$
+can be used when a certified value of $m_c$ is unavailable.
+
+\section{Finite geometry and independent building blocks}
+For $z\in X$, define
+\[
+ v_z=(0,z/\sqrt r),\quad
+ \sigma_z=\operatorname{sgn}(G(v_{\one}))\chi(z),\quad
+ f_z(x)=\sigma_z\relu(z\cdot x/\sqrt r),
+ \qquad G(U)=\E_x\chi(x)\relu(U\cdot(1,x)).
+\]
+Let $\mathcal B$ contain the orientation sets selecting one representative
+of every antipodal pair and obeying
+$\sum_{z\in S}\chi(z)z_i=0$ for all $i$. This finite set is nonempty:
+a coordinate hemisphere is an example. Order its columns by a fixed
+antipodal-pair order and write $A_S=(f_z)_{z\in S}$, an $M$ by $K$
+matrix. The parity geometry gives
+\[
+ \operatorname{rank}A_S=K,\qquad A_S\one=K\rho\chi.
+ \tag{2}
+\]
+In an orthonormal Walsh basis its even-degree block $E$ is invertible
+and independent of the choices in $S$. Its remaining nonzero block
+consists of singleton characters. Consequently
+\[
+ A_S^\top A_S\succeq E^\top E,\qquad
+ d_E:=\sqrt{\det(E^\top E)}>0,\qquad
+ J_S:=\det(A_S^\top A_S)^{-1/2}\le d_E^{-1}.
+ \tag{3}
+\]
+Put $A_S^+=(A_S^\top A_S)^{-1}A_S^\top$ and
+$P_S=I-A_SA_S^+$, the orthogonal projection onto the complement of
+its column space. In particular $P_S\chi=0$.
+
+Three independent building blocks have finite fixed-dimension expected
+proposal cost.
+\begin{enumerate}
+\item A uniform $S\in\mathcal B$ can be drawn by independent fair choices
+of the two orientations in every pair, rejecting unless the displayed
+balance equations hold. The acceptance probability is positive. This
+method is not claimed to be efficient in $r$.
+\item The critical-law rejection construction in the exponential ReLU
+condensation companion draws $\theta\sim Q_*$, without knowing $M_*$.
+Its acceptance probability is $(r-2)M_*/r\ge(r-2)/r$.
+\item At each selected ray, independently draw $v\sim N(0,1)$ and a
+transverse mark $t\in v_z^\perp$ with density
+\[
+ H_r^{-1}e^{-h_z(t)/\rho},\qquad
+ h_z(t)=2^{-r-1}\sum_{x:z\cdot x=0}|t\cdot(1,x)|,
+ \quad H_r=\int e^{-h_z(t)/\rho}dt.                       \tag{4}
+\]
+The function $h_z$ is a norm. A product Laplace envelope from norm
+equivalence samples (4) at a positive fixed-dimension acceptance rate,
+without using $H_r$. Together these marks have probability law
+$\mathcal M_z(dv\,dt)$.
+\end{enumerate}
+
+\section{The construction}
+Take $N>K$. All restarts below redraw the whole proposal.
+\begin{enumerate}
+\item Draw $S$ uniformly from $\mathcal B$, and independently draw
+$n=N-K$ ordinary neurons from $Q_*$. Put
+$Y=\sum_{i=1}^n\Phi(\theta_i)$.
+\item Accept this pair $(S,\theta_1,\ldots,\theta_n)$ with probability
+\[
+          d_E J_S\exp\left[-\frac\gamma{2N}\|P_SY\|_2^2\right].
+ \tag{5}
+\]
+The probability lies in $[0,1]$ by (3). Otherwise restart.
+\item Draw
+$\eta\sim N(0,\gamma^{-1}(A_S^\top A_S)^{-1})$, and set
+\[
+            c=\frac{Ns}{K\rho}\one-A_S^+Y+\sqrt N\,\eta.
+ \tag{6}
+\]
+Draw $K$ independent marks $(v_j,t_j)\sim\mathcal M_{z_j}$.
+If any $c_j\le0$, restart. Otherwise put
+\[
+ A_j=\frac{\sqrt{v_j^2+4c_j}+v_j}{2},\qquad
+ R_j=\frac{\sqrt{v_j^2+4c_j}-v_j}{2},\qquad
+ a_j^{\rm big}=\sigma_{z_j}A_j,\qquad
+ U_j^{\rm big}=R_jv_{z_j}+t_j/\sqrt{c_j}.                \tag{7}
+\]
+\item Reject if a constructed neuron falls outside its fixed small
+critical-ray cone, or if its norm is no larger than the largest
+ordinary-neuron norm. Otherwise inject these ordered $K$ exceptional
+neurons into a uniformly chosen ordered set of distinct labels among
+$1,\ldots,N$, filling the other labels with the ordinary neurons in order.
+\end{enumerate}
+The critical cones may be any fixed sufficiently small disjoint cones
+on which the companion's exact corner coordinates apply. Their choice
+does not depend on $N$. Neither (5), (6), nor (7) uses an estimated
+critical mean, covariance, or normalizing constant.
+
+\begin{theorem}[Independent approximation in total variation]
+Let $\widehat\Pi_N$ be the law output by this construction and $\Pi_N$
+the posterior (1). At fixed even $r\ge6$ and fixed $\lambda$ with
+$s>m_c$,
+\[
+                         \|\widehat\Pi_N-\Pi_N\|_{\rm TV}\to0.
+ \tag{8}
+\]
+The first rejection step has a strictly positive limiting acceptance
+probability. Conditional on passing it, the subsequent restart
+probability tends to zero. Hence the expected number of elementary
+proposals and arithmetic operations per independent output is
+$O_{r,\lambda}(N)$ as $N\to\infty$, in idealized real arithmetic.
+No finite-$N$ error rate, dimension-uniform bound, or bit-complexity
+bound is asserted. The construction is not an exact finite-width sampler.
+\end{theorem}
+
+\section{Acceptance and the Gaussian identity}
+Under $Q_*^n$ the output mean is $m_c\chi$. Its finite second moment
+and the central limit theorem give
+\[
+       N^{-1/2}P_SY\Longrightarrow P_SZ_0,
+                           \qquad Z_0\sim N(0,\Sigma).
+\]
+The integrand in (5) is bounded and continuous. Averaging over the
+finite nonempty set $\mathcal B$ shows that its acceptance probability
+$p_N$ converges to
+\[
+ p_\infty=\frac{d_E}{|\mathcal B|}\sum_{S\in\mathcal B}
+                     J_S\E e^{-\gamma\|P_SZ_0\|^2/2}>0. \tag{9}
+\]
+This bounded change of density also preserves all ordinary-law events
+of probability tending to one. In particular, after acceptance,
+\[
+ Y/N\to m_c\chi,\quad
+ \max_{i\le n}\|\theta_i\|/\sqrt N\to0,\quad
+ c_j/N\to\alpha:=\frac{s-m_c}{K\rho}>0.                 \tag{10}
+\]
+The second claim follows from the finite critical parameter second
+moment and a union bound. The Gaussian $\eta$ and the finitely many
+marks are tight. Formula (7) consequently puts each constructed neuron
+inside its prescribed cone, with squared norm divided by $N$ tending
+to $2\alpha$, and strictly above every ordinary-neuron norm. This
+proves the claims about restarts.
+
+There is an exact reason for the determinant in (5). For fixed $S,Y$,
+\[
+ \|Y+A_Sc-Ns\chi\|^2
+   =\|P_SY\|^2+
+      \left\|A_S\left(c-\frac{Ns}{K\rho}\one+A_S^+Y\right)\right\|^2.
+ \tag{11}
+\]
+The normalized Gaussian density of (6), multiplied by (5), cancels
+the factor $J_S^{-1}=\sqrt{\det(A_S^\top A_S)}$.
+Thus, before the negligible final restarts, the joint law of $S$, the
+ordinary neurons, and $c\in\R^K$ has density proportional to
+\[
+ Q_*^n(d\theta_1\cdots d\theta_n)\,
+ \exp\left[-\frac\gamma{2N}\|Y+A_Sc-Ns\chi\|^2\right]dc
+ \tag{12}
+\]
+with counting measure on $S\in\mathcal B$. Its normalizing constant is
+exactly
+\[
+ T_N=N^{K/2}(2\pi/\gamma)^{K/2}
+                 \frac{|\mathcal B|}{d_E}p_N.           \tag{13}
+\]
+The independent mark density is then $\prod_j\mathcal M_{z_j}$.
+
+\section{Comparison with the full parameter posterior}
+This step uses the precise evidence constant of the orientation-law
+companion, as well as its exact exceptional-neuron count. We state the
+comparison explicitly because weak convergence of a few observables
+would not establish (8), whose ambient dimension grows with $N$.
+
+Changing the prior to $Q_*^N$ leaves the residual likelihood
+\[
+ W_N(V)=\exp\left[-\frac NM\sum_x
+             \{g(\chi(x)V_x/N)-g(s)\}\right],
+             \qquad V=\sum_i\Phi(\theta_i).              \tag{14}
+\]
+Let $Z_N=\E_{Q_*^N}W_N$. The leading exponential part of the original
+evidence has already been factored out in this definition.
+In the coordinates (7), the critical one-neuron density is, uniformly
+for bounded marks and $c/N\to\alpha$,
+\[
+ q_z(c,v,t)\,dc\,dv\,dt
+ =(1+o(1))L_r(N\alpha)^{-\nu}\,dc\,\mathcal M_z(dv\,dt),
+ \quad \nu=(r+1)/2,\quad
+ L_r=\frac{(2\pi)^{-(r+1)/2}}{2M_*}H_r.                 \tag{15}
+\]
+Its actual output is $cf_z+e_j$ with
+$\|e_j\|_\infty\le C_r\|t_j\|$ inside the cone. Formula (15) is the
+exact Jacobian and corner calculation from the companions; it does not
+replace the neuron by a point mass on its ray.
+
+For a sample of (12), after restricting to the final good event,
+$Y+A_Sc-Ns\chi=O_P(\sqrt N)$ and $\sum_je_j=O_P(1)$.
+Taylor expansion of $g$ at its minimum $s$, using
+$g''(s)=M\gamma$, therefore gives
+\[
+ \frac{W_N(Y+A_Sc+\sum_je_j)}
+ {\exp[-\gamma\|Y+A_Sc-Ns\chi\|^2/(2N)]}\to1
+ \quad\text{in probability}.                           \tag{16}
+\]
+This applies to both losses; no hard-margin approximation is used.
+
+The exact-count theorem puts posterior mass $1-o(1)$ on configurations
+having exactly one exceptional neuron in each antipodal pair, balanced
+orientations, all exceptional neurons inside their prescribed cones,
+and all their norms larger than every ordinary-neuron norm. Put the
+ordinary neurons first and order the exceptional ones by their pairs.
+Exchangeability makes the original assignment of exceptional indices
+uniform among the $(N)_K$ ordered injections, independently of this
+canonical configuration.
+
+The orientation-law evidence formula, together with (9)--(13), is
+precisely
+\[
+       Z_N\sim (N)_K L_r^K(N\alpha)^{-K\nu}T_N.         \tag{17}
+\]
+For clarity, its Gaussian factor can be written either as
+$\sum_S J_S\E e^{-\gamma\|P_SZ_0\|^2/2}$ or as
+\[
+ \det(I+\gamma\Sigma)^{-1/2}
+ \sum_S\det\left[A_S^\top(I+\gamma\Sigma)^{-1}A_S\right]^{-1/2}.
+\]
+The equality follows by integrating a Gaussian first over its component
+in $\operatorname{im}A_S$, and agrees with the companion's formula.
+
+On the common good-coordinate space, divide the density of the true
+canonical posterior by that of the proposal (12) with its mark law.
+The ratio is the product of the normalizing factor in (17), the $K$
+ratios in (15), and the likelihood ratio (16), with the final good-event
+normalizations. Each factor tends to one in proposal probability.
+The true good event and the proposal good event both have probabilities
+tending to one. After normalizing on that event, the density ratio
+$R_N$ is nonnegative with integral one. Thus
+\[
+ \E|R_N-1|=2\E(1-R_N)_+\longrightarrow0.
+\]
+This proves total-variation convergence of the entire canonical
+parameter arrays. Applying the same uniform random injection cannot
+increase total variation and recovers the labeled networks. Equation
+(8) follows.
+
+Finally, the first-stage acceptance stays bounded below by (9), and
+final rejection tends to zero by (10). Drawing $N-K$ critical neurons
+uses expected $O_r(N)$ proposals. Evaluating their full cube outputs and
+the fixed-dimensional matrices also costs $O_r(N)$ arithmetic operations.
+Uniform balanced orientations, the $K$ marks, and the Gaussian vector
+have finite cost depending only on $r,\lambda$. This proves the stated
+cost bound, with no claim that its hidden dimension constant is small.
+
+\section{What the construction says about the posterior}
+The ordinary neurons of this full-label posterior are not asserted to
+have a joint product-law approximation. The bounded weight in (5)
+retains their collective output fluctuation in the directions that the
+exceptional amplitudes cannot compensate. Omitting it would generally
+change the limiting joint law. By contrast, the scalar-conditioned
+posterior in the critical-tilt companion has an asymptotically independent
+product bulk; these are different conditioning problems.
+
+Nor does the construction select a canonical hemisphere. Its orientation
+law is the determinant-weighted law in the companion, and every balanced
+pattern has positive limiting probability. The method uses independent
+whole-network proposals, so its mathematical justification does not rely
+on a Markov chain crossing between orientation sectors. Practical
+performance at growing dimension and a finite-width accuracy guarantee
+remain open.
+\input{relu-independent-hard-posterior}
+\end{document}

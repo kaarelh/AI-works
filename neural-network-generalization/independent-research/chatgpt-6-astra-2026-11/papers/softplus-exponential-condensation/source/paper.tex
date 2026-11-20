@@ -1,0 +1,464 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}\newcommand{\Pp}{\mathbb P}
+\newcommand{\one}{\mathbf1}\newcommand{\relu}{\operatorname{ReLU}}
+\title{Exponentially many posterior condensates for a small parity teacher}
+\date{18 November 2026; independent research draft}
+\emergencystretch=3em
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author. Verification scope and provenance are stated in the accompanying research collection.}}
+\hypersetup{pdftitle={Exponentially many posterior condensates for a small parity teacher},pdfauthor={ChatGPT-6 Astra}}
+\begin{document}\maketitle
+
+This note combines the repository's exact ReLU parity-energy geometry
+with the critical-tilt mechanism developed in this research round.
+The energy-width theorem is an existing repository result, not a new
+claim of this note. The additional claim concerns the actual Gaussian
+softplus posterior: its ordinary-neuron empirical limit misses a signal
+carried by exponentially many exceptional neurons. All limits first fix
+the input dimension and then send learner width to infinity.
+This is not an online mistake or computational lower bound.
+
+\section{A concrete family with fixed activation and fixed margin}
+Let $r\ge6$ be even, $X=\{-1,1\}^r$, and
+$\chi(x)=\prod_{i=1}^r x_i$. Use standard softplus
+$\phi(t)=\log(1+e^t)$ and independent parameters
+\[
+ a_j,b_j,w_{j1},\ldots,w_{jr}\sim N(0,1),\qquad
+ F_N(x)=\frac1N\sum_{j=1}^Na_j\phi(b_j+w_j\cdot x).
+\]
+Every parameter coordinate has the same variance. Condition the actual
+prior on all $2^r$ observed margins
+\[
+ H_N=\{\chi(x)F_N(x)>1/2\text{ for every }x\in X\}.
+\]
+There is no restriction at unobserved inputs; in this experiment every
+input has been observed.
+
+\begin{theorem}[Exponential condensation with a linear-width teacher]
+There is a probability law $Q_*$ on one neuron's parameters and a number
+$m_c<3/8$ such that, under the posterior $P_0^N(\cdot\mid H_N)$,
+the empirical parameter law converges weakly to $Q_*$ and
+$\E_{Q_*}\Phi=m_c\chi$, whereas $F_N\to\chi/2$.
+
+Exactly $K=2^{r-1}$ neurons occur at parameter scale $\sqrt N$.
+More precisely, there is a nonempty finite set of allowed collections
+of $K$ nonzero parameter vectors such that the $K$ exceptional scaled
+parameters approach one of these collections in probability, and
+the largest norm of every remaining parameter, divided by $\sqrt N$,
+tends to zero. Each allowed collection has one orientation from every
+antipodal pair of balanced parity directions, with equal nonzero radii.
+The orientation choices obey the linear-cancellation constraints below.
+
+Nevertheless, the same Boolean parity has a standard-softplus teacher
+of width $r+1$, with every weight bounded by $8r^2$, whose signed
+output margin exceeds $1/2$ everywhere. All its parameters can be
+chosen rational with $O(\log r)$ bits each.
+\end{theorem}
+
+Thus a function with a polynomial description and a linear-width teacher
+can induce exponentially many macroscopic posterior neurons. The word
+``exactly'' refers to the $\sqrt N$ scale, not the total number of
+nonzero finite-network weights. The width threshold is not uniform in
+$r$ and is not quantified by this theorem.
+
+\section{Standardized parameters and the general supercritical theorem}
+It is convenient first to use standard normal parameters
+$\theta=(a,b,w)\sim N(0,I_{r+2})$ and
+$\phi_\beta(t)=\beta^{-1}\log(1+e^{\beta t})$, with any fixed $\beta>0$.
+Put
+\[
+ \Phi_x=a\phi_\beta(b+w\cdot x),\quad
+ G_\beta=2^{-r}\sum_x\chi(x)\phi_\beta(b+w\cdot x),\quad Z=aG_\beta,
+\]
+\[
+ \rho=\frac{\binom{r-2}{(r-2)/2}}{2^{r-1}\sqrt r},\quad
+ p_0=\frac{\binom r{r/2}}{2^r},\quad t_*=1/\rho,
+ \quad M=\E e^{t_*Z},\quad Q_*=M^{-1}e^{t_*Z}P_0.
+\]
+We prove below that $M$ and all critical moments are finite.
+Write $m_c=\E_{Q_*}Z$ and fix a standardized margin $s>m_c$.
+Set $\delta=s-m_c$, $K=2^{r-1}$, and
+\[
+ c_r=\frac{p_0\log2}{\beta\rho}
+       =\frac{2(r-1)\log2}{\beta\sqrt r},\qquad
+ A=\frac{\delta}{\rho K},\qquad
+ J_*=Kc_r\sqrt A=c_r\sqrt{\frac{K\delta}{\rho}}.             \tag{1}
+\]
+For $s_0\in\{-1,1\}^r$ define
+$v_{s_0}=(0,s_0/\sqrt r)$ and
+$h_{s_0}(x)=\relu(s_0\cdot x/\sqrt r)$.
+Let $\kappa=\E_x\chi(x)h_{\one}(x)$, so $|\kappa|=\rho$, and
+$\sigma_{s_0}=\operatorname{sgn}(\kappa)\chi(s_0)$.
+
+\begin{theorem}[Standardized posterior and evidence]\label{thm:standard}
+Condition the $N$-neuron prior on $\chi(x)F_N(x)>s$ at every input.
+Then
+\[
+ -\log P_0^N(H_N)
+  =N(t_*s-\log M)+J_*\sqrt N+o(\sqrt N).                    \tag{2}
+\]
+The ordinary-neuron empirical limit is $Q_*$, with mean output
+$m_c\chi$, while $F_N\to s\chi$.
+There are exactly $K$ macroscopic neurons. Their scaled parameters
+approach a collection
+\[
+ \left\{\sqrt A\,(\sigma_{s_0},v_{s_0}):s_0\in\mathcal S\right\},
+                                                               \tag{3}
+\]
+where $\mathcal S$ contains one member of every antipodal pair and
+\[
+ \sum_{s_0\in\mathcal S}\chi(s_0)(s_0)_i=0
+                   \qquad(1\le i\le r).                    \tag{4}
+\]
+Distance to the finite set of such configurations tends to zero; no
+particular distribution over the configurations is asserted.
+The choice $\mathcal S=\{s_0:(s_0)_1=1\}$ satisfies (4), so the
+set is nonempty. Every other neuron's norm is $o_{\Pp}(\sqrt N)$,
+uniformly over those remaining neurons.
+\end{theorem}
+
+\section{Critical integrability and the cost of a large neuron}
+The repository's sharp atom inequality, obtained by integrating a
+monotone threshold coefficient, states
+\[
+ |G_0(b,w)|\le\rho\sqrt r\min_i|w_i|\le\rho\|(b,w)\|.
+\]
+The first inequality applies also to softplus: its derivative is a
+nondecreasing $[0,1]$-valued sigmoid, and the same monotone Fourier
+coefficient bound applies inside the integral. Hence
+\[
+ |G_\beta(b,w)|\le\rho\sqrt r\min_i|w_i|.                   \tag{5}
+\]
+For ReLU, equality in the augmented-norm bound occurs precisely at
+the rays $v_{s_0}$.
+
+We need the local smoothing correction, not merely a bounded
+softplus--ReLU difference. Write $(b,w)=Rv_{s_0}+z$ with
+$z\perp v_{s_0}$. In a sufficiently small fixed cone $\|z\|\le\eta R$,
+all nonzero central preactivations keep their signs, with magnitude
+at least $cR$. The affine part of softplus has zero parity coefficient.
+The same symmetry calculation as for the sharp ReLU corner therefore
+gives, for all sufficiently large $R$ in this cone,
+\[
+ |G_\beta(Rv_{s_0}+z)|=\rho R-H_\beta(z)+O(e^{-c\beta R}),
+ \quad
+ H_\beta(z)=2^{-r}\sum_{x:s_0\cdot x=0}
+       \frac1\beta\log\left(2\cosh\frac{\beta z\cdot(1,x)}2\right).
+                                                               \tag{6}
+\]
+The error and its needed first derivatives are uniform after reducing
+the cone. In particular
+\[
+ H_\beta(z)\ge\frac{p_0\log2}{\beta},\qquad
+ H_\beta(z)\ge2^{-r-1}\sum_{s_0\cdot x=0}|z\cdot(1,x)|.
+\]
+The last expression is a norm on $v_{s_0}^{\perp}$: the balanced
+augmented cube vectors span that hyperplane. Its minimum smoothing
+correction is attained uniquely at $z=0$.
+
+Integrating the readout at $t=t_*$ and using (6), the incoming tilted
+density in the cone is bounded by a constant times
+$\exp[-cR-cR\|z\|]$ for large $R$, with an additional Gaussian
+bound where needed. Outside these finitely many cones, the sharp
+ReLU quadratic gap and the bounded softplus correction give Gaussian
+tails. Consequently $M<\infty$ and
+$\E_{Q_*}e^{c\|\theta\|}<\infty$ for some $c>0$.
+The cumulant domain is exactly $[-t_*,t_*]$: outside it, a small cone
+around a maximizing ray gives a positive quadratic exponent.
+Every one-sided critical derivative is finite.
+
+The critical parameter density is proportional to
+\[
+ e^{-D(\theta)},\qquad
+ D(\theta)=\tfrac12\|\theta\|^2-t_*aG_\beta(b,w).
+\]
+The same density argument as in the two-bit note yields an LDP for
+$\theta/\sqrt N$, at speed $\sqrt N$, with good rate
+\[
+ k(\eta)=
+ \begin{cases}
+ c_r R,&\eta=R(\sigma_{s_0},v_{s_0}),\ R\ge0,\\
+ +\infty,&\text{otherwise}.
+ \end{cases}                                                \tag{7}
+\]
+Indeed off these rays the ReLU energy gap costs order $N$. On a ray,
+(6) gives $D=c_rR\sqrt N+o(\sqrt N)$; nearby points have no smaller
+liminf because $H_\beta$ is minimized at zero and the readout balance
+penalty is nonnegative. Shrinking parameter balls give the matching
+lower bound, and the exponential norm moment gives exponential
+tightness. The signed-output map is exponentially equivalent to its
+homogeneous ReLU map at this speed.
+
+\section{The finite configuration that minimizes the second-order cost}
+The finite-dimensional few-big-jumps proof in the two-bit companion
+extends verbatim to this finite family of output rays. Truncate
+parameters at norm $\varepsilon\sqrt N$, use the exponential norm
+moment to make small-summand output deviations cost
+$\exp[-cu\sqrt N/\varepsilon]$, and retain finitely many large
+parameters in a compact annulus. Independence and finite covers then
+give the marked configuration cost $\sum_j k(\eta_j)$.
+Equal-direction summands may be merged because
+$\sqrt a+\sqrt b\ge\sqrt{a+b}$.
+
+To supply exactly the missing parity output $\delta\chi$, write
+the nonzero ReLU contributions as
+\[
+ \sum_{s_0} m_{s_0}\sigma_{s_0}h_{s_0}=\delta\chi,
+ \qquad m_{s_0}\ge0.                                      \tag{8}
+\]
+Taking the parity coefficient gives $\sum m_{s_0}=\delta/\rho$.
+The existing parity-energy argument uses the nonvanishing of every
+even Fourier coefficient of $h_{\one}$ to show
+\[
+ m_{s_0}+m_{-s_0}=\frac{\delta}{\rho K}=A
+                    \quad\text{for each pair}.             \tag{9}
+\]
+The remaining degree-one coefficients impose
+$\sum m_{s_0}\chi(s_0)(s_0)_i=0$; all higher odd coefficients of
+ReLU vanish. These conditions are also sufficient for (8).
+
+By (7), a contribution of amplitude $m$ costs $c_r\sqrt m$.
+Thus every pair in (9) has cost at least $c_r\sqrt A$, with equality
+only when all its mass is assigned to one orientation. It follows that
+the minimum total cost is $J_*$ in (1), with precisely the configurations
+(3)--(4). Splitting a direction into multiple macroscopic neurons also
+strictly increases the cost. The minimizing set is finite and nonempty.
+
+\section{A full-rank local adjustment around a canonical minimizer}
+For the evidence lower bound, the bulk's output fluctuations must be
+corrected in all $2^r$ coordinates. The $K$ amplitudes alone do not
+provide enough degrees of freedom. The $K$ biases supply the rest.
+The following calculation is the reason this adjustment is possible.
+
+\begin{lemma}[Amplitude and bias derivatives span the output space]
+For $\mathcal S=\{s_0:(s_0)_1=1\}$, the $2K$ functions
+\[
+ h_{s_0}(x)=\relu(s_0\cdot x/\sqrt r),\qquad
+ H_{s_0}(x)=\one_{s_0\cdot x>0}+\tfrac12\one_{s_0\cdot x=0}
+ \quad(s_0\in\mathcal S)
+\]
+are linearly independent on $X$.
+\end{lemma}
+\begin{proof}
+Write $h=h_{\one}$, $H=H_{\one}$. The ridge $h$ has nonzero Fourier
+coefficients at every even degree, coefficient $1/(2\sqrt r)$ at
+degree one, and zero at every other odd degree. The function $H$ has
+constant coefficient $1/2$, zero at positive even degrees, and nonzero
+coefficients at every odd degree. Specifically, at degree $2t+1$,
+\[
+ \widehat H(T)=\frac{p_0}{2}(-1)^t
+       \frac{\binom{(r-2)/2}{t}}{\binom{r-1}{2t}}.           \tag{10}
+\]
+To derive (10), average first over one coordinate in $T$. The resulting
+discrete derivative is $\frac14\one_{|S|=1}$ for the sum $S$ of
+the other $r-1$ coordinates. On either slice $S=\pm1$, its even
+Fourier moments follow by expanding
+$(1\pm z)(1-z^2)^{(r-2)/2}$. The probability of the two slices is
+$2p_0$, giving (10).
+
+Suppose $\sum_{s_0\in\mathcal S}(\alpha_{s_0}h_{s_0}
++\beta_{s_0}H_{s_0})=0$. Characters restricted to $\mathcal S$
+satisfy $\chi_U=\chi_{U\mathbin\triangle\{1\}}$; either all even
+characters or all odd characters form a Fourier basis there.
+The positive even output coefficients force $\alpha_{s_0}=c$ constant.
+The odd coefficients of degrees at least three force
+$\beta_{s_0}=b_1+\sum_{i>1}b_i(s_0)_i$.
+The singleton coefficients for $i>1$ give $b_i=0$.
+The constant and first-coordinate equations are then
+\[
+ \widehat h(\varnothing)c+\tfrac12b_1=0,
+ \qquad \frac{c}{2\sqrt r}+\frac{p_0}{2}b_1=0.
+\]
+Since $\widehat h(\varnothing)=\sqrt r p_0/2$, they give
+$(1-rp_0^2)c=0$. Strict Cauchy--Schwarz applied to
+$\E|\sum_i x_i|=rp_0<\sqrt r$ gives $rp_0^2<1$.
+Thus $c=b_1=0$, proving independence.
+\end{proof}
+
+\section{Evidence lower bound}
+Reserve $K$ neurons indexed by the canonical hemisphere $\mathcal S$.
+Initially center them at
+\[
+ \theta_{s_0}(R)=(\sigma_{s_0}R,0,R s_0/\sqrt r).
+\]
+Their summed softplus output is exactly a multiple of $\chi$.
+Indeed softplus has only degree-one odd Fourier coefficients, and the
+hemisphere orientation law has only its empty and first-coordinate
+Fourier moments. Since $r\ge4$, the unwanted character at degree
+$r-1$ vanishes. Their parity coefficient is
+\[
+ K R|G_\beta(Rv_{\one})|
+  =K\rho R^2-K\frac{p_0\log2}{\beta}R+O(Re^{-cR}).
+\]
+Choose $R_N$ to make this coefficient $N\delta+Km_c+2$.
+Then
+\[
+ R_N=\sqrt{\frac{N\delta}{K\rho}}+
+                \frac{p_0\log2}{2\beta\rho}+O(N^{-1/2}).    \tag{11}
+\]
+The other $N-K$ neurons form the critical bulk. For every fixed small
+$\varepsilon>0$, the multivariate CLT gives probability bounded below
+by a positive constant that their total output differs from
+$(N-K)m_c\chi$ by at most $\varepsilon\sqrt N$ in every coordinate.
+All required moments are finite; even a singular limiting covariance
+would suffice for this centered-ball statement.
+
+Allow independent changes in each reserved radius and bias. Dividing
+the output Jacobian by $R_N$, its columns converge to nonzero signed
+multiples of the $h_{s_0},H_{s_0}$ in the lemma. It is therefore
+invertible. Its normalized derivative remains uniformly continuous
+in a fixed small neighborhood: the only nontrivial limiting softplus
+derivatives occur at the zero preactivations and are smooth functions
+of the small biases. The inverse function theorem, or a contraction
+argument using the limiting inverse, now adjusts all radii and biases
+by $O(\varepsilon)$ to cancel the bulk fluctuation. The resulting
+center has every signed total output $Ns+2$.
+
+Constrain each reserved parameter to a ball of radius $c/\sqrt N$,
+with fixed small $c>0$, so all signed totals lie in $(Ns+1,Ns+3)$.
+At the adjusted centers, (6) and the even Taylor expansion of
+$\log\cosh$ give total critical log-density cost at most
+\[
+ J_*\sqrt N+C_r\varepsilon^2\sqrt N+O_r(1).
+\]
+Radius adjustments of size $O(\varepsilon)$ affect the linear ray
+cost only by $O_r(\varepsilon)$; bias adjustments affect $H_\beta$
+quadratically. The shrinking balls add only $O_r(\log N)$ to the
+negative log probability. Changing from $Q_*^N$ to $P_0^N$ costs
+$N(t_*s-\log M)+O(1)$ because the overshoot is bounded.
+Letting $N\to\infty$ and then $\varepsilon\downarrow0$ gives
+the lower bound in (2).
+
+\section{Evidence upper bound and posterior selection}
+The exact change of measure is
+\[
+ P_0^N(H_N)=e^{-N(t_*s-\log M)}
+ \E_{Q_*^N}\left[e^{-t_*(\sum_jZ_j-Ns)}\one_{H_N}\right].   \tag{12}
+\]
+For any fixed $u>0$, the part with average signed output at least
+$s+u$ contributes at most $e^{-Nt_*u}$ inside the expectation.
+On the remaining part, every signed coordinate lies between $s$ and
+$s+2^ru$. The marked few-big-jumps upper bound therefore approaches
+the minimum configuration cost for the exact increment $\delta\chi$
+as $u\downarrow0$. Compactness of cost sublevels and (8)--(9) identify
+that minimum as $J_*$. This proves the upper bound in (2).
+
+Equation (12) and the evidence lower bound give posterior domination
+by $e^{J_*\sqrt N+o(\sqrt N)}Q_*^N$. Bounded-test concentration proves
+the empirical limit. The same critical Chernoff bound as before proves
+$F_N\to s\chi$. For a fixed tolerance away from the finite set (3)--(4),
+the marked configuration cost has a strictly positive gap above $J_*$.
+To justify the gap while allowing many small parameters, note that
+a bounded cost bounds the sum of their radii; parameters below radius
+$\varepsilon$ therefore contribute only $O(\varepsilon)$ total
+homogeneous output. Remove them and use compactness above each fixed
+cutoff. Strict concavity of square root then excludes splitting,
+unequal pair masses, or an extra macroscopic neuron at minimum cost.
+This gap beats the domination factor and proves the posterior selection
+claims in Theorem~\ref{thm:standard}.
+
+\section{A uniform critical-mean bound and common prior scalings}
+For $r\ge6$ the sharp minimum-coordinate bound (5) gives a simple
+bound independent of $\beta$. Let $T=\min_{i\le r}|w_i|$ and
+$c=\sqrt{2/\pi}$. Since $M\ge1$,
+\[
+ m_c\le M'(t_*)
+ \le\rho r\E[T^2e^{rT^2/2}]
+ =\rho r^2c\int_0^\infty t^2
+       [e^{t^2/2}2\overline\Phi(t)]^{r-1}\,dt.
+\]
+We use the elementary Gaussian-tail inequality
+\[
+ B(t):=e^{t^2/2}2\overline\Phi(t)\le\frac1{1+ct}
+                  \qquad(t\ge0).                          \tag{13}
+\]
+Here is a direct proof to make the bound self-contained. Set
+$U(t)=(1+ct)^{-1}$ and $D=U-B$. Since $B'=tB-c$,
+\[
+ (e^{-t^2/2}D)'=
+ e^{-t^2/2}\frac{t[(2c^2-1)-c(1-c^2)t]}{(1+ct)^2}.
+\]
+The derivative changes sign exactly once, from positive to negative;
+$D(0)=0$, and $e^{-t^2/2}D(t)\to0$ at infinity. It follows that
+$D(t)\ge0$. Integrating (13), with $r>4$, gives
+\[
+ m_c\le U_r:=\frac{\pi\rho r^2}{(r-2)(r-3)(r-4)}.           \tag{14}
+\]
+The beta integral used here is
+$\int_0^\infty t^2(1+ct)^{-(r-1)}dt
+=2/[c^3(r-2)(r-3)(r-4)]$.
+At $r=6$, $U_6=9\pi/(32\sqrt6)<3/8$.
+For subsequent even dimensions,
+\[
+ \frac{U_{r+2}}{U_r}
+ =\left(1+\frac2r\right)^{3/2}
+   \left(1-\frac3r\right)\left(1-\frac4r\right)<1.
+\]
+For the last inequality replace the exponent $3/2$ by $2$ and pair
+each factor $1+2/r$ with one of the two smaller factors.
+Thus $m_c<3/8<1/2$ for every even $r\ge6$ and every $\beta>0$.
+In particular, the concrete unit-variance, standard-softplus theorem
+uses no numerical certificate and no dimension-dependent prior variance.
+
+The same conclusion also applies to common dimension-normalized
+priors. Let the readout have standard deviation $\sigma_a$ and every
+incoming coordinate, including the bias, have standard deviation
+$\sigma_u$. Writing $a=\sigma_a\zeta_a$ and
+$(b,w)=\sigma_u(\zeta_b,\zeta_w)$ gives
+\[
+ a\phi(b+w\cdot x)=\sigma_a\sigma_u\zeta_a
+                       \phi_{\sigma_u}(\zeta_b+\zeta_w\cdot x).
+\]
+The physical critical mean is therefore
+\[
+ m_c^{\rm physical}=\sigma_a\sigma_u m_c(\sigma_u)
+                   \le\sigma_a\sigma_u U_r.
+\]
+Consequently the fixed margin $1/2$ is supercritical whenever
+$\sigma_a\sigma_u\le1$. This includes both the usual fan-in scaling
+$\sigma_a=1,\sigma_u=1/\sqrt r$ and the isotropic small-variance
+choice $\sigma_a=\sigma_u=1/\sqrt r$. Apply
+Theorem~\ref{thm:standard} at standardized margin
+$s=1/(2\sigma_a\sigma_u)$ and rescale its parameter vectors coordinatewise.
+The number of macroscopic neurons remains exactly $2^{r-1}$.
+
+\section{A rational linear-width standard-softplus teacher}
+Put $S(x)=\sum_i x_i$. On its allowed grid
+$S=-r,-r+2,\ldots,r$, the exact piecewise-linear interpolation of
+parity is
+\[
+ \chi(x)=1-\relu(S+r)
+       +2\sum_{k=1}^{r-1}(-1)^{k+1}\relu(S+r-2k).            \tag{15}
+\]
+The successive slopes alternate between $-1$ and $1$, proving (15)
+directly from its value at $S=-r$.
+Take $A_0=8r$ and replace each hinge $\relu(t)$ by
+$\phi(A_0t)/A_0$. Replace the constant one by the constant softplus
+neuron with readout $3/2$ and all incoming weights zero, giving
+$(3/2)\log2$. The uniform error is at most
+\[
+ |(3/2)\log2-1|+\frac{(2r-1)\log2}{8r}<\frac14.
+\]
+For example $2/3<\log2<7/10$ bounds the two terms by $1/20$ and
+$7/40$, respectively. Thus the signed teacher margin exceeds $3/4$.
+There are $r$ hinge neurons and one constant neuron. The largest
+incoming bias is $A_0r=8r^2$, all incoming nonconstant weights are
+$A_0$, and readouts are rational numbers of magnitude at most $3/2$.
+Each parameter has $O(\log r)$ bits. This construction uses the sum
+convention for the teacher. If the teacher also uses the average
+convention, multiply every readout by $r+1$; the same $8r^2$ bound and
+bit-complexity statement still hold. This completes the theorem.
+
+\section{Limitations}
+All data points have been observed in the posterior experiment, so
+the theorem makes no adverse prediction claim. It isolates a mismatch
+between teacher description size and the number of macroscopic neurons
+selected by this prior and normalization. Both unit-variance and the
+explicit dimension-normalized Gaussian priors above exhibit it. The limit takes width
+after fixing $r$; simultaneous dimension-width asymptotics and a
+computable width threshold remain open. The proof is conventional and
+has not been checked in Lean or by an independent reviewer.
+\end{document}

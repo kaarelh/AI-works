@@ -1,0 +1,469 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{lemma}[theorem]{Lemma}
+\newcommand{\E}{\mathbb E}\newcommand{\Pp}{\mathbb P}
+\newcommand{\R}{\mathbb R}\newcommand{\relu}{\operatorname{ReLU}}
+\newcommand{\one}{\mathbf1}
+\title{Ordinary feature adaptation under faster-than-Gaussian ReLU priors}
+\date{18 November 2026; independent research draft}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author. Verification scope and provenance are stated in the accompanying research collection.}}\emergencystretch=3em
+\hypersetup{pdftitle={Ordinary feature adaptation under faster-than-Gaussian ReLU priors},pdfauthor={ChatGPT-6 Astra}}
+\begin{document}\maketitle
+
+This note compares the same shallow ReLU architecture, mean-field output
+normalization, parity data, and observed-margin likelihood under Gaussian
+and parameter tails $e^{-|u|^p}$ with fixed $p>2$. The Gaussian companion has a critical ordinary
+law plus exactly exponentially many exceptional neurons. The faster-than-Gaussian
+prior below instead has an ordinary entropy-minimizing neuron law that
+carries the full fitted signal. This is a posterior-structure comparison,
+not a computational or OOD lower bound.
+
+\section{Statement}
+Let $r\ge1$, $X=\{-1,1\}^r$, $M=2^r$, $\chi(x)=\prod_i x_i$, and
+$\theta=(a,U)=(a,b,w)\in\R^{r+2}$. Put
+\[
+ \Phi_x(\theta)=a\relu(U\cdot(1,x)),\quad
+ Z(\theta)=\E_x\chi(x)\Phi_x(\theta),\quad
+ F_N=N^{-1}\sum_{j=1}^N\Phi(\theta_j).
+\]
+Take independent coordinates with density proportional to
+$\exp[-|u/\ell|^p]$, where $p>2$ and $\ell>0$ are fixed. Choosing
+$\ell^2=\Gamma(1/p)/\Gamma(3/p)$ gives unit coordinate variance,
+matching the Gaussian companion's variance. Let $P_p$ be this neuron
+law, $s>0$, and condition on
+$H_N=\{\chi(x)F_N(x)>s\ \forall x\}$.
+
+\begin{theorem}[The full mean is carried by an ordinary neuron law]
+There is a unique $t_s>0$ with
+\[
+ Q_s=e^{t_sZ-\Lambda(t_s)}P_p,\qquad
+ \Lambda(t)=\log\E_{P_p}e^{tZ},\qquad \E_{Q_s}Z=s.
+\]
+Its mean output is $s\chi$. Under the actual conditioned neural prior:
+\begin{enumerate}
+\item The empirical neuron law converges weakly in probability to $Q_s$,
+      the output tends to $s\chi$, and every fixed empirical observable
+      bounded by a constant times $1+\|\theta\|^2$ converges to its $Q_s$ mean.
+\item The maximum parameter norm is
+      $O_{r,s,p,\ell}((\log N)^{1/p})$ in posterior probability. In
+      particular there are no neurons of order $\sqrt N$.
+\item With $I_p(s)=t_ss-\Lambda(t_s)$, the evidence satisfies
+\[
+ -\log P_p^N(H_N)=NI_p(s)+\frac M2\log N+O_{r,s,p,\ell}(1).  \tag{1}
+\]
+\item If a law $Q_T$ has entropy at most $K$ relative to $P_p$ and
+      correct mean output at least $s$ on every input, then the learned
+      feature kernel has parity eigenvalue at least
+\[
+ \lambda_\chi(\mathcal K_s)=\E_{Q_s}G(U)^2
+ \ge\frac{s^2}{\ell^2\{2[K+(r+2)\log2/p]\}^{2/p}},          \tag{2}
+\]
+      where $G(U)=\E_x\chi(x)\relu(U\cdot(1,x))$.
+\end{enumerate}
+For fixed $s,p,\ell$, the explicit polynomial-size parity teacher supplies
+$K=\operatorname{poly}(r)$ by the teacher-law construction for these tails in
+\emph{Quantitative width and online Bayesian mistakes}. Thus (2) is an
+inverse-polynomial lower bound on the learned parity eigenvalue.
+\end{theorem}
+This does not assert an exponential upper bound for this prior's
+initial parity eigenvalue. The Gaussian prior bound in the companion
+must not be silently transferred to a different incoming distribution.
+
+\section{The scalar tilt exists and is the full entropy projection}
+The neuron output grows at most quadratically in its parameters. These
+prior tails therefore give every exponential moment of $Z$, of each
+output coordinate, and of $\|\theta\|^2$. The cumulant is smooth and
+strictly convex. Readout symmetry gives $\Lambda'(0)=0$; unbounded
+positive support of $Z$ gives $\Lambda'(t)\to\infty$ as $t\to\infty$.
+For the latter claim, $\Lambda(t)/t$ has liminf at least any $A$ for
+which $P_p(Z>A)>0$, and convexity then forces an unbounded derivative.
+Such positive support follows from any ReLU realization with positive
+parity correlation and positive homogeneity. Thus $t_s$ exists uniquely.
+
+Relevant-bit sign changes, compensated by the parity sign in the readout,
+preserve $P_p$ and $Z$. They force $\E_{Q_s}\Phi=s\chi$.
+For any competing mean-feasible law $Q$, Gibbs' inequality gives
+\[
+ \operatorname{KL}(Q\|P_p)
+ \ge t_s\E_QZ-\Lambda(t_s)\ge t_ss-\Lambda(t_s),
+\]
+with equality only for $Q_s$. Hence $Q_s$ is the unique full
+mean-margin entropy projection. In particular its entropy is at most $K$
+when the stated teacher law exists.
+
+\section{A bounded density component supplies the local bounds}
+We record the elementary replacement for the Gaussian-component lemma
+used in the ReLU condensation proof.
+
+\begin{lemma}[Uniform-cube convolution component]
+Let $V\in\R^m$ have finite second moment and mean $\mu$. Suppose a fixed
+convolution power of its law contains $p\operatorname{Unif}([-a,a]^m)$
+as a component, for some $p,a>0$. Then the law of $S_n=\sum_{j=1}^nV_j$
+is a sum of a measure with density at most $Cn^{-m/2}$ everywhere and a
+measure of mass at most $Ce^{-cn}$. Moreover every fixed-size box
+centered within $C_0\sqrt n$ of $n\mu$ has probability at least
+$c_{C_0}n^{-m/2}$ for sufficiently large $n$.
+\end{lemma}
+\begin{proof}
+Group variables into independent blocks and select the uniform component
+by independent Bernoulli choices. Except with exponentially small
+probability, the number $J$ of uniform blocks lies between $c n$ and $C n$.
+Conditional on the other blocks, their sum is a translate of a sum of
+$J$ independent uniform cubes. Its coordinates are independent.
+The one-dimensional $J$-fold uniform density is globally at most
+$C J^{-1/2}$ and at least $c_A J^{-1/2}$ on $[-A\sqrt J,A\sqrt J]$.
+
+For completeness these one-dimensional assertions follow directly by
+Fourier inversion. After scaling to $a=1$, the normalized characteristic
+function is $[\sin(t/\sqrt J)/(t/\sqrt J)]^J$ and converges to
+$e^{-t^2/6}$. On $|t|\le\eta\sqrt J$ it is bounded by $e^{-c t^2}$.
+On the complementary region, change variables to $u=t/\sqrt J$;
+on a fixed compact set away from zero $|\sin u/u|<1$, and for large
+$|u|$ use $|\sin u/u|\le1/|u|$. The resulting tail integral vanishes
+exponentially. Hence the Fourier transforms converge in $L^1$ and the
+scaled densities converge uniformly to a positive Gaussian density.
+This proves both density bounds and their $m$-dimensional products.
+Finally the non-uniform residual sum has second moment $O(n)$ about
+its mean. Chebyshev, jointly with the binomial event, gives a fixed
+positive probability of a residual shift of size $O(\sqrt n)$.
+The uniform lower density then proves the local lower bound. A bounded
+number of leftover variables can be restricted to a fixed bounded set.
+\end{proof}
+
+The lemma applies to $V=\Phi$ under $Q_s$. Choose $M$ incoming vectors
+near the point-isolating ridges
+$U_z=(-(r-1),z)$, $z\in X$. Their feature matrix is the identity at
+the centers and remains uniformly invertible in sufficiently small
+compact neighborhoods. The joint incoming event has positive probability.
+Conditional readout densities under $Q_s$ are continuous and strictly
+positive. On a fixed bounded output cube, the invertible feature map
+therefore gives a uniformly positive output density. Averaging over
+those incoming neighborhoods yields the required uniform-cube component.
+The full output covariance is also positive definite by the same argument.
+
+\section{Conditioning and quadratic observables}
+Changing measure gives
+\[
+ P_p^N(H_N)=e^{-NI_p(s)}\E_{Q_s^N}W_N,\qquad
+ W_N=\exp\left[-\frac{t_s}{M}\sum_x(\chi(x)S_{N,x}-Ns)\right]
+       \prod_x\one_{\{\chi(x)S_{N,x}>Ns\}}.
+\]
+Here $0\le W_N\le1$ and its Lebesgue integral is $(M/t_s)^M$.
+The lemma's global upper density, plus its exponentially small remainder,
+gives $\E W_N\le C N^{-M/2}$. Its local lower estimate on
+$Ns\chi+\chi[1,2]^M$ gives $\E W_N\ge cN^{-M/2}$, since the weight
+is bounded below there. This proves (1) and the posterior domination
+\[
+ P_p^N(A\mid H_N)\le C N^{M/2}Q_s^N(A).                  \tag{3}
+\]
+Bounded-test concentration under $Q_s^N$ proves weak empirical-law
+convergence as in the Gaussian companion. Any observable dominated by
+$C(1+\|\theta\|^2)$ has an exponential moment under $Q_s$; ordinary
+Chernoff bounds and (3) prove its empirical convergence too.
+On $H_N$, one signed output exceeding $s+u$ makes $W_N\le e^{-Nt_su/M}$,
+so (3)'s normalizer lower bound also gives $F_N\to s\chi$.
+
+For large parameter norm the tilted density is bounded above by
+$C\exp(-c\|\theta\|^p)$. A radial tail estimate and a union bound show
+\[
+ Q_s^N\{\max_j\|\theta_j\|>A(\log N)^{1/p}\}
+       \le C N^{1-c'A^p}
+\]
+for large $N$, after absorbing the radial polynomial in a smaller $c'$.
+Choosing $A$ large enough to beat $M/2$ in (3) proves the maximum-norm
+claim. All constants here may depend on fixed $r$; no simultaneous
+large-dimension threshold is asserted.
+
+\section{The learned parity feature cannot be exponentially weak}
+The incoming marginal of $Q_s$ is invariant under all coordinate sign
+changes, so its feature kernel is diagonal in the Boolean characters.
+Its parity eigenvalue is $\E_{Q_s}G(U)^2$. Since
+$\E_{Q_s}aG(U)=s$, Cauchy--Schwarz gives
+$\E_{Q_s}G(U)^2\ge s^2/\E_{Q_s}a^2$.
+Put $E_p=\sum_{i=1}^{r+2}|\theta_i/\ell|^p$.
+The prior identity $\E_{P_p}e^{E_p/2}=2^{(r+2)/p}$ and the entropy
+inequality yield
+\[
+ \E_{Q_s}E_p\le2[K+(r+2)\log2/p].
+\]
+Thus $\E_{Q_s}a^2\le\ell^2(\E_{Q_s}E_p)^{2/p}$, proving (2).
+The posterior empirical feature kernel converges to this ordinary-law
+kernel, by the quadratic-observable conclusion. No exceptional neurons
+are needed to account for its parity direction.
+
+\section{Sharp dimension exponents for the tilted law}
+For fixed $s,p,\ell$, the preceding entropy and moment bounds can be
+matched in their dependence on even parity dimension. The sharp
+correlation inequality from the repository is
+$|G(U)|\le\rho\sqrt r\min_i|w_i|$, with $\rho=\Theta(1/r)$.
+As even $r\to\infty$,
+\begin{align}
+ I_p(s)&=\Theta_{s,p,\ell}(r^{(p+2)/4}),                  \tag{4}\\
+ \E_{Q_s}a^2&=\Theta_{s,p,\ell}(r^{1/2+1/p}),             \tag{5}\\
+ \E_{Q_s}\|U\|^2&=\Theta_{s,p,\ell}(r^{3/2-1/p}),         \tag{6}\\
+ \lambda_\chi(\mathcal K_s)&=
+       \Theta_{s,p,\ell}(r^{-1/2-1/p}).                  \tag{7}
+\end{align}
+These are dimension asymptotics of the ordinary limiting neuron law.
+For the actual neural posterior the order of limits remains width first,
+then dimension. At $p=4$ the respective exponents are
+$3/2,3/4,5/4,-3/4$.
+
+Here is a matching entropy certificate. Use the balanced parity directions
+$v_z=(0,z/\sqrt r)$ and readout signs $\sigma_z$ from the Gaussian
+companion, uniformly over all $2^r$ orientations. Choose positive $A,R$
+with
+\[
+ AR=2s/\rho,\qquad A=Rr^{1/p-1/2}.
+\]
+Conditional on an orientation, let $a$ be uniform on
+$\sigma_zA+[-1,1]$ and the incoming coordinates independently uniform
+on $Rv_z+[-h,h]^{r+1}$, where
+$h=\min\{1,s/(2A\sqrt{r+1})\}$.
+The unsmoothed mean is $2s\chi$. Centered incoming noise changes each
+mean output by at most $Ah\sqrt{r+1}\le s/2$, using its second moment
+and ReLU's Lipschitz property. Thus this law is mean feasible.
+Convexity of entropy and the uniform-box densities give a cost at most
+\[
+ C_{p,\ell}\left[A^p+R^p r^{1-p/2}+r+r\log(1/h)+1\right]
+ =O_{s,p,\ell}(r^{(p+2)/4}+r\log(r+1)).
+\]
+The two leading power terms are equal by the choice of $A,R$.
+Since fixed $p>2$ makes $(p+2)/4>1$, this is
+$O_{s,p,\ell}(r^{(p+2)/4})$. A mixture over exponentially many
+orientations is a valid probability-law certificate; its relative
+entropy is bounded by the average component entropy. It is not a claim
+that a finite polynomial-width exact energy minimizer has those atoms.
+
+For the lower bound let $T=\min_i|w_i|$ and
+$E_p^{\rm phys}=|a|^p+\sum_i|U_i|^p$. Pointwise,
+\[
+ E_p^{\rm phys}\ge |a|^p+rT^p\ge2\sqrt r\,|aT|^{p/2},
+ \qquad
+ |Z|^{p/2}\le\frac{\rho^{p/2}r^{(p-2)/4}}2 E_p^{\rm phys}.
+\]
+The entropy inequality with $E_p^{\rm phys}/(2\ell^p)$ and Jensen's
+inequality, using $\E_{Q_s}Z=s$, give
+\[
+ I_p(s)\ge
+ \frac{s^{p/2}}{\ell^p\rho^{p/2}r^{(p-2)/4}}
+       -\frac{r+2}{p}\log2
+ =\Omega_{s,p,\ell}(r^{(p+2)/4}).
+\]
+This proves (4). Entropy also bounds
+$\E_{Q_s}E_p^{\rm phys}=O(r^{(p+2)/4})$.
+By Lyapunov, $\E a^2=O(r^{1/2+1/p})$, so Cauchy--Schwarz gives
+the lower bound in (7). Conversely,
+\[
+ \E G(U)^2\le\rho^2 r\,\E T^2
+ \le\rho^2 r^{1-2/p}
+       (\E\textstyle\sum_i|w_i|^p)^{2/p}
+ =O(r^{-1/2-1/p}),
+\]
+proving (7) and, by $s^2\le\E a^2\E G^2$, the lower bound in (5).
+Finally $G(U)^2\le\rho^2\|U\|^2$ gives the lower bound in (6),
+while the $\ell_p$--$\ell_2$ inequality and the same moment estimate
+give its matching upper bound. This proves all four dimension exponents.
+
+\section{Leading constants and the shape of a typical neuron}
+The preceding estimates can be sharpened without an additional limit in
+margin or prior scale. Keep $s,p,\ell$ fixed, with $p>2$, and let even
+$r\to\infty$. Define the unique positive numbers
+\[
+ a_r^2=\frac{s}{\rho}r^{1/p-1/2},\qquad
+ T_r^2=\frac{s}{\rho}r^{-1/2-1/p},\qquad
+ R_r^2=rT_r^2,\qquad C_r=\frac{2a_r^p}{\ell^p}.
+\]
+Thus $a_r=r^{1/p}T_r$, $a_r\rho\sqrt r\,T_r=s$, and
+$C_r=2s^{p/2}/(\ell^p\rho^{p/2}r^{(p-2)/4})$.
+Since $r\rho\to1/\sqrt{2\pi}$, these constants are explicit.
+
+\begin{theorem}[Sharp ordinary-law asymptotics]
+For the limiting ordinary neuron $\theta\sim Q_s$,
+\begin{align*}
+ I_p(s)&\sim C_r, &
+ t_s&\sim \frac{pC_r}{2s},\\
+ \E a^2&\sim a_r^2, &
+ \E\|U\|^2&\sim R_r^2, &
+ \E G(U)^2&\sim \frac{s^2}{a_r^2}
+                       =s\rho r^{1/2-1/p}.
+\end{align*}
+Moreover, with $T=\min_i|w_i|$,
+\[
+ \frac{|a|}{a_r}\longrightarrow1\text{ in }L^p,\qquad
+ \frac{T}{T_r}\longrightarrow1\text{ in }L^p,\qquad
+ \frac{aG(U)}s\longrightarrow1\text{ in }L^{p/2},
+\]
+and
+\[
+ \E\left[\frac1r\sum_i\left(\frac{|w_i|}{T_r}\right)^p
+                  -\left(\frac T{T_r}\right)^p\right]\to0.
+\]
+Thus a typical learned neuron has almost equal incoming coordinate
+magnitudes in this averaged sense and nearly saturates the sharp parity
+correlation bound. The signs of $w$ are exactly uniform by symmetry;
+this is a statement about neuron laws, not an efficient way to find them.
+The conclusions concern the width-first, dimension-second limit.
+\end{theorem}
+\begin{proof}
+Use the entropy inequality with
+$(1-\varepsilon)E_p^{\rm phys}/\ell^p$, rather than the earlier fixed
+coefficient $1/2$. Since
+$\E_{P_p}\exp((1-\varepsilon)E_p^{\rm phys}/\ell^p)
+=\varepsilon^{-(r+2)/p}$,
+\[
+ I_p(s)\ge (1-\varepsilon)C_r
+                  -\frac{r+2}{p}\log(1/\varepsilon).       \tag{8}
+\]
+Here we used $\E E_p^{\rm phys}\ge2a_r^p$, proved by the same
+sharp correlation inequality and Jensen as before. Taking, for example,
+$\varepsilon=r^{-(p-2)/16}$ makes the error $o(C_r)$.
+
+For the matching upper bound repeat the uniform-box teacher certificate,
+but center its readout and incoming magnitudes at the minimizers for
+margin $(1+\varepsilon)s$, rather than $2s$. Keep the centered readout
+noise in $[-1,1]$, and take incoming noise radius
+$h=\min\{1,\varepsilon s/(2A\sqrt{r+1})\}$.
+The mean output stays above $s\chi$. Its mean physical $p$-energy is
+$2a_r^p(1+o(1))$: both $A$ and each nonzero incoming coordinate grow
+as positive powers of $r$, whereas the noises are bounded and $h$
+shrinks polynomially. Explicitly
+$|v+u|^p\le |v|^p[1+O_p(|u|/|v|+|u/v|^p)]$ for $v\ne0$,
+and the bias contributes only $O(h^p)$.
+The density and prior-normalization terms in relative entropy are
+$O_{s,p,\ell}(r\log r)=o(C_r)$. Convexity of entropy bounds the
+mixture cost by the average component cost. This proves
+$I_p(s)\le C_r(1+o(1))$, and hence $I_p(s)\sim C_r$.
+
+Applying the same entropy inequality again gives
+\[
+ 2a_r^p\le\E E_p^{\rm phys}\le2a_r^p(1+o(1)).             \tag{9}
+\]
+Put $X=|a|/a_r$, $Y=T/T_r$, and $z=aG(U)/s$. Then
+$|z|\le XY$, $\E z=1$, and
+\[
+ \E(X^p+Y^p)\le2+o(1),\qquad
+ 1\le\E|z|^{p/2}\le\E(XY)^{p/2}\le1+o(1).
+\]
+For any fixed $q>1$, $\E V=1$ and $\E|V|^q\to1$ imply
+$V\to1$ in $L^q$. One elementary justification integrates the
+nonnegative strictly convex deficit
+$|v|^q-1-q(v-1)$: away from $v=1$ it is positive and, at large $|v|$,
+comparable to $|v|^q$. This first gives convergence in probability,
+then uniform integrability of the $q$th power of $V-1$.
+Apply it to $z$; apply the same argument after normalization by its
+mean to $XY$, whose mean lies between $1$ and $1+o(1)$ by H\"older.
+Furthermore
+\[
+ \E(X^{p/2}-Y^{p/2})^2
+  =\E(X^p+Y^p)-2\E(XY)^{p/2}\to0.
+\]
+Consequently $X,Y\to1$ in probability. Fatou and the displayed sum
+bound show separately $\E X^p,\E Y^p\to1$. For nonnegative
+variables, convergence in probability to one and convergence of their
+means imply convergence in $L^1$. Applied to $X^p,Y^p$, and using
+$|x-1|^p\le|x^p-1|$ for $x\ge0$, this gives the claimed $L^p$
+convergence.
+
+It follows that $\E a^2/a_r^2\to1$. Also
+$|G(U)|/(s/a_r)\le Y$ and $|z|=X|G(U)|/(s/a_r)$, so this
+normalized $|G|$ tends to one in probability and in second moment:
+$p>2$ and the preceding $L^p$ convergence ensure uniform integrability.
+This proves the sharp kernel constant. From (9) and the readout
+$p$-moment conclusion,
+\[
+ \E\sum_i|w_i|^p\le a_r^p(1+o(1)),\qquad
+ r\E T^p=a_r^p(1+o(1)).
+\]
+Their difference is nonnegative, which proves the averaged-coordinate
+statement. The lower bound
+$\E\|U\|^2\ge r\E T^2\sim R_r^2$ matches the upper bound
+\[
+ \E\|U\|^2\le
+ r^{1-2/p}(\E\sum_i|w_i|^p)^{2/p}
+                 +(\E|b|^p)^{2/p}
+ \le R_r^2(1+o(1))+O(a_r^2).
+\]
+Since $a_r^2/R_r^2=r^{2/p-1}\to0$, this proves the incoming energy
+constant. Finally $I_p'(s)=t_s$ by the scalar Legendre formula.
+The proved pointwise asymptotics hold at every fixed positive margin.
+Convexity sandwiches $I_p'(s)$ between the difference quotients at
+$s\pm h$. Divide by $C_r/s^{p/2}$, take $r\to\infty$, and then
+$h\downarrow0$ to obtain $t_s\sim pC_r/(2s)$.
+\end{proof}
+
+The ordinary tilted law also obeys useful exact identities, at every
+fixed dimension:
+\[
+ \E_{Q_s}|a|^p=\frac{\ell^p}{p}(1+t_ss),\qquad
+ \E_{Q_s}\sum_i|U_i|^p=\frac{\ell^p}{p}(r+1+t_ss).
+                                                               \tag{10}
+\]
+These follow by integration by parts in the readout and by scaling all
+incoming coordinates; $Z=aG(U)$ is separately homogeneous of degree
+one. The faster-than-Gaussian tails justify the integrations. They
+provide an independent consistency check of the preceding constants.
+For any bounded likelihood depending only on the network output, the
+finite-width posterior similarly satisfies the exact gauge identity
+\[
+ \E_{\Pi}\left[\sum_i|U_{j,i}|^p-|a_j|^p\right]
+                       =\frac{r\ell^p}{p}.
+\]
+It follows by the output-preserving rescaling
+$a_j\mapsto e^ta_j$, $U_j\mapsto e^{-t}U_j$ and its Jacobian $e^{-rt}$.
+None of these estimates is uniform as $p\downarrow2$; that singular
+boundary is precisely where the Gaussian condensation mechanism enters.
+
+\section{Square and logistic likelihoods stay in the ordinary phase}
+For either $\ell_0(s)=(1-s)^2/2$ or
+$\ell_0(s)=\log(1+e^{-s})$, consider the width-scaled likelihood
+\[
+ \exp\left[-\frac{N\lambda}{M}\sum_x
+                   \ell_0(\chi(x)F_N(x))\right],\quad\lambda>0.
+\]
+Let $m(t)=\Lambda'(t)$ under the faster-than-Gaussian prior. There is
+a unique $t>0$ satisfying
+\[
+ t=-\lambda\ell_0'(m(t)).
+\]
+Indeed $m$ is strictly increasing from zero to infinity. For square
+loss the left-minus-right expression is $t+\lambda(m(t)-1)$;
+for logistic it is $t-\lambda/(1+e^{m(t)})$. Each is strictly
+increasing, negative at zero, and eventually positive.
+Put $s_\lambda=m(t)$. The posterior empirical law tends to $Q_t$,
+its output tends to $s_\lambda\chi$, and its empirical quadratic
+observables tend to their $Q_t$ means. The largest norm is
+$O((\log N)^{1/p})$ in posterior probability. Its evidence is
+\[
+ -\log\mathcal Z_{N,\lambda}
+ =N[I_p(s_\lambda)+\lambda\ell_0(s_\lambda)]+O(1).
+\]
+
+To prove these statements, change measure to $Q_t^N$. The remaining
+weight is $e^{-N(V(F_N)-\min V)}$, where
+\[
+ V(z)=M^{-1}\sum_x[t\chi(x)z_x+\lambda\ell_0(\chi(x)z_x)].
+\]
+This strictly convex coercive function has unique minimum at
+$s_\lambda\chi$. Under $Q_t^N$, finite second moments and Chebyshev
+place $F_N$ within $C/\sqrt N$ of that minimum with fixed positive
+probability. A local quadratic upper bound on $V-\min V$ therefore
+bounds the residual normalizer below by a positive constant and above
+by one. The posterior is dominated by a constant times $Q_t^N$.
+The concentration and maximum-norm conclusions follow as in the hard
+case, now without its polynomial domination factor. There is no finite
+likelihood strength at which $\sqrt N$ exceptional neurons appear.
+
+For a prescribed nonzero fitted margin $s<1$ under square loss, the
+required strength is exactly $\lambda=t_s/(1-s)$. The sharp dimension
+asymptotics above make it polynomial, of order $r^{(p+2)/4}$ for fixed
+$s,p,\ell$. This conclusion fixes dimension before width and is not a
+claim that a dimension-independent likelihood strength fits parity.
+
+The comparison identifies a precise role of parameter tails. Gaussian
+ReLU lies at the boundary where an output exponential moment can end
+at finite slope. Every fixed $p>2$ has no such boundary. The online-learning
+companion proves polynomial mistake guarantees for every fixed $p>2$;
+this structural result alone would not imply them.
+\end{document}

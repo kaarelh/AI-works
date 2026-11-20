@@ -1,0 +1,333 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}
+\newcommand{\R}{\mathbb R}
+\newcommand{\relu}{\operatorname{ReLU}}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\title{Observed-margin ReLU mistakes on four and five bits}
+\date{18 November 2026; independent research draft}
+\emergencystretch=3em
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author. Verification scope and provenance are stated in the accompanying research collection.}}
+\hypersetup{pdftitle={Observed-margin ReLU mistakes on four and five bits},pdfauthor={ChatGPT-6 Astra}}
+\begin{document}
+\maketitle
+
+\section{The finite example}
+This uses the repository's existing four-bit target and its complete
+activation-cone enumeration. The new facts are a revised query order,
+integer certificates requiring margins only on observed examples, and
+a fixed-positive-temperature mean-field consequence. It is not an
+asymptotic superpolynomial lower bound.
+
+Index the cube by $i\in\{0,\ldots,15\}$ using its four binary digits,
+with bit zero mapped to $-1$ and bit one to $+1$, most significant first.
+Let
+\[
+ f(x)=x_1x_2h(x_3,x_4),\qquad
+ h=\begin{cases}+1,&x_3=x_4=1,\\-1,&\text{otherwise.}\end{cases}
+\]
+The query order is
+\[
+ (15,14,13,11,10,9,7,6,3,5,2,8,1,12,4,0).
+\]
+After each label, impose $f(x)F(x)>1/2$ at that observed point. There is
+no initial conditioning and no constraint at other unobserved inputs.
+
+\begin{theorem}[Cold and mean-field versions]
+For every fixed width $N\ge16$, a one-hidden-layer ReLU network
+$F=c\sum_{j=1}^Na_j\relu(u_j\cdot\bar x)$ with independent
+$a_j,u_j\sim N(0,\sigma^2)$ and any fixed $c>0$ predicts the wrong
+sign with posterior probability tending to one at each of the last
+fifteen queries as $\sigma\downarrow0$.
+
+For the mean-field network $F_N=N^{-1}\sum_ja_j\relu(u_j\cdot\bar x)$,
+with all six neuron coordinates independent $N(0,\tau^2)$ and
+$\tau=1/50$ fixed, the same fifteen posterior error probabilities tend
+to one as $N\to\infty$.
+
+With fair random tie-breaking at zero, the first-query error probability
+is $1/2$. Thus fresh posterior sampling has limiting expected total
+errors $15.5$ in both regimes. In the mean-field regime the same limit
+holds for any fixed tie rule, because the initial zero-output mass
+vanishes with $N$.
+\end{theorem}
+
+The cold result also applies after the usual whitening of the canonical
+Gaussian shallow prior: at $d=4$ its output multiplier is $c=1/2$.
+The mean-field theorem takes a different limit, with fixed $\tau$ and
+varying $N$, and is stated separately for that reason.
+
+\section{What the integer certificates prove}
+For an output table $z$ on the cube, let its augmented Euclidean ReLU
+variation norm be
+\[
+ V(z)=\inf\left\{\sum_j|c_j|\|v_j\|_2:
+                   z_x=\sum_jc_j\relu(v_j\cdot\bar x)\right\}.
+\]
+For every nonempty prefix $S$ before its next query $q$, the certificate
+contains a primal history witness of variation cost at most $U_S$ and
+a dual lower bound $L_S$ on every output satisfying
+\[
+ f(x)z_x\ge1/2\ (x\in S),\qquad f(q)z_q\ge0.
+\]
+The test constraint is only correct sign, not an additional margin.
+Every certificate proves the strict rational inequality $L_S>U_S$.
+The smallest of the fifteen gaps is
+\[
+ \frac{72922030296221891}{5000000000999999996}>0.01458.
+\]
+Every history witness uses at most thirteen neurons. The conservative
+width $N\ge16$ also accommodates the existing exact teacher.
+
+Here is the checker logic. Let $X$ be the augmented input matrix on
+the history plus query, $D$ a realizable zero-one activation pattern,
+and $A_D=\operatorname{diag}(2D-1)X$. It checks nonnegative integers
+$\alpha,q_D^+,q_D^-$ and an integer radius $R$ satisfying
+\[
+ \left\|\pm X^T\operatorname{diag}(D)\operatorname{diag}(f)\alpha
+                     +A_D^Tq_D^\pm\right\|_2^2\le R^2
+\]
+for every restricted activation cone. On that cone $A_Dv\ge0$, so
+these inequalities bound the signed dual functional on either sign of
+a ReLU atom by $R\|v\|$. Consequently
+$L_S=(\sum_{x\in S}\alpha_x)/(2R)$ is a valid global lower bound.
+The query multiplier contributes zero to the objective.
+
+The primal has integer incoming rows $W_j$, signs $s_j\in\{-1,1\}$,
+and a common positive integer denominator $H$. It checks the history
+margins by integer arithmetic and uses
+$U_S=H^{-1}\sum_j\lceil\sqrt{\sum_kW_{jk}^2}\rceil$. Thus both bounds
+and their strict comparison are checked with integers and rational
+numbers; optimizer tolerances are not part of the conclusion.
+
+The complete enumeration of 1882 affine activation chambers is inherited
+from, and rechecked using, the baseline repository's exact foundation
+checker. The accompanying checker also verifies that every restricted pattern
+list is exactly the restriction of that complete list. The machine-readable
+report records the source hash and all fifteen rational inequalities.
+
+\section{Cold Gaussian conditioning}
+For $F=c\sum a_j\relu(u_j\cdot\bar x)$, balancing each neuron gives
+\[
+ \frac12\sum_j(a_j^2+\|u_j\|^2)\ge V(F)/c,
+\]
+and every finite variation decomposition attains equality after balancing.
+Thus the correct-sign event at the query has Gaussian energy at least
+$L_S/c$, while the history has a witness of energy at most $U_S/c$.
+Slightly amplifying its readouts makes the history margins strict, at an
+arbitrarily small additional cost. An open parameter ball around that
+witness lower-bounds the history probability, and the Gaussian
+large-deviation upper bound applies to the closed correct-sign event.
+The strict energy gap makes its posterior probability tend to zero.
+
+\section{A finite-temperature rate comparison}
+For the mean-field model let $\Phi_x=a\relu(u\cdot\bar x)$ and
+$I_\tau$ be the Cram\'er rate of its empirical mean. The cumulant is
+finite in a neighborhood of zero. If $V^*$ is the dual variation norm,
+its domain has closure
+\[
+ \{\xi:V^*(\xi)\le1/\tau^2\}.
+\]
+To verify this, integrate the Gaussian readout and use homogeneity in
+$u$. Strictly inside the ball, Gaussian integrability follows from
+$|\xi\cdot\Phi|\le V^*(\xi)|a|\|u\|$; outside it, an open cone
+around an atom exceeding the bound causes divergence. Prior readout
+symmetry gives a nonnegative cumulant. Therefore
+\[
+ I_\tau(z)\le V(z)/\tau^2.
+\]
+Conversely take a supporting dual vector for $V(z)$ and shrink it by
+$1-\epsilon$. The inequality
+$2|a|\|u\|\le a^2+\|u\|^2$ in six Gaussian coordinates gives
+\[
+ I_\tau(z)\ge(1-\epsilon)V(z)/\tau^2-3\log(1/\epsilon).
+\]
+For every one of the fifteen certified pairs the checker verifies
+\[
+ 2500\left(\frac{999}{1000}L_S-U_S\right)-21>0.
+\]
+Since $\log1000<7$, this is a strict rate gap at
+$\tau=1/50$, $\epsilon=1/1000$. The correct-sign numerator is a closed
+output event whose rate is at least the lower expression. The strict
+history denominator is open and contains a slightly amplified primal
+output, whose rate is at most its variation cost divided by $\tau^2$.
+Cram\'er's upper and lower bounds then make the conditional correct-sign
+probability exponentially small in $N$.
+
+\section{Tie convention}
+Before seeing data, all $N$ hidden neurons are inactive at a fixed input
+with probability $2^{-N}$. Conditional on any active feature the
+Gaussian readout makes the output continuous and symmetric. Hence a
+fixed deterministic zero tie rule need not give exactly one-half initial
+error at fixed $N$. Fair random ties do. The later certificates include
+zero in the correct-sign event, so they already exclude this issue on
+the fifteen designated wrong predictions.
+\section{Why plain parity does not give an all-but-first cold mistake ladder}
+There is a useful analytic obstruction to simply replacing the four-bit
+target above by full parity. Let $r\ge4$ be even, let
+$f(x)=\chi_r(x)$, and write
+\[
+ \rho_r=\frac{\binom{r-2}{(r-2)/2}}{2^{r-1}\sqrt r},
+ \quad C=\{x:x_1=x_2=1\},\quad
+ \nu(x)=f(x)\left(1-\frac{x_1+x_2}{2}\right).
+\]
+For a finite ReLU representation define its variation cost as
+$\sum_j|a_j|\sqrt{b_j^2+\|w_j\|^2}$. The following concerns the
+minimum variation problem, equivalently the balanced Gaussian energy
+problem at sufficient width.
+
+\paragraph{Completion statement.}
+At margin $s>0$, observing all inputs outside $C$ already raises the
+minimum variation cost to $s/\rho_r$, its value for full parity.
+Every minimizing output has the form
+\[
+                  F(x)=sf(x)+c\,\mathbf1_C(x)               \tag{6}
+\]
+for some real $c$. Observing any two points of $C$ with opposite target
+labels forces $c=0$. Thus at every fixed width $N\ge2^{r-1}$, the cold
+Gaussian posterior with observed margins only correctly predicts every
+remaining input after those $3\cdot2^{r-2}+2$ observations, with
+probability tending to one as the prior variance tends to zero.
+This is still an exponential-size calibration set. It rules out an
+all-but-first parity ladder in the lexicographic order, not an
+exponential lower bound with a smaller constant fraction of mistakes.
+
+Here is the dual certificate and its rigidity argument. For odd
+$m=r-1$, the monotone Fourier-coefficient bound used in the repository's
+sharp atom inequality gives
+\[
+ \left|\E_{\{-1,1\}^m}\chi_m(x)\relu(b+w\cdot x)\right|
+       \le c_r\min_i|w_i|,\qquad c_r=\rho_r\sqrt r.        \tag{7}
+\]
+To see the constant, integrate the threshold derivative along any one
+weight. The remaining even $r-2$ coordinates have monotone parity
+coefficient at most
+$\binom{r-3}{(r-4)/2}/2^{r-2}=c_r$.
+The monotone bound can be obtained from a symmetric-chain decomposition
+of the even-dimensional Boolean lattice: each chain has odd length,
+its alternating monotone sum lies between zero and its endpoint sign,
+and the two endpoint signs occur equally often, each in
+$\tfrac12\binom{r-2}{(r-2)/2}$ chains. Layer-cake integration extends
+the statement from monotone indicators to $[0,1]$-valued functions.
+Flipping negative weight coordinates only changes the parity sign.
+
+Conditioning on $x_i=-1$ expresses the dual atom functional as
+\[
+ \E_x\nu(x)\relu(b+w\cdot x)
+  =-\frac12\sum_{i=1}^2
+       \E_{x_{-i}}\chi_{r-1}(x_{-i})
+                \relu(b-w_i+w_{-i}\cdot x_{-i}).
+\]
+For nonnegative numbers $u_1,\ldots,u_r$,
+\[
+ \frac12\left(\min_{j\ne1}u_j+\min_{j\ne2}u_j\right)
+                         \le\frac{\|u\|_2}{\sqrt r}.      \tag{8}
+\]
+If a smallest coordinate is outside $\{1,2\}$, both minima equal
+that coordinate, and (8) is immediate. Otherwise, let $a$ be the
+smallest coordinate and $b$ the smallest of the remaining coordinates.
+The left side is $(a+b)/2$ and $\|u\|_2^2\ge a^2+(r-1)b^2$.
+For $0\le t=a/b\le1$, the ratio
+$(t+1)/\sqrt{t^2+r-1}$ increases to $2/\sqrt r$ when $r\ge4$.
+Equality in (8), apart from the zero vector, requires all coordinates
+equal. Combining (7)--(8) gives
+\[
+ |\E\nu\relu(b+w\cdot x)|\le\rho_r\|w\|_2
+                         \le\rho_r\sqrt{b^2+\|w\|^2}.     \tag{9}
+\]
+
+The nonnegative multiplier $1-(x_1+x_2)/2$ vanishes exactly on $C$
+and has uniform mean one. Every output satisfying the observed margins
+outside $C$ therefore has $\E\nu F\ge s$, proving the cost lower
+bound. The canonical critical-ray representation of $sf$ attains it
+with $2^{r-1}$ neurons. Equality in (9) forces every nonzero minimizing
+atom to have zero bias and equal incoming weight magnitudes, with its
+readout aligned to parity. Equality in the label lower bound forces
+$F=sf$ at every input outside $C$.
+
+Every bias-zero ReLU network has only even Fourier degrees and degree
+one among its odd terms, because $F(x)-F(-x)$ is linear. Consequently
+$D=F-sf$ is supported on $C$ and $D(x)-D(-x)$ is linear. It vanishes
+whenever $x_1=-x_2$, which forces that linear form to be a multiple of
+$x_1+x_2$, with zero coefficients on all other coordinates. On $C$,
+$D(-x)=0$, so $D$ is constant there. This proves (6). The two extra
+labels respectively require $c\ge0$ and $c\le0$, hence $c=0$.
+
+For a finite width at least the canonical representation size, balancing
+the layers identifies the Gaussian energy minimizers with the displayed
+variation minimizers. Compactness of energy sublevels and the elementary
+Gaussian small-noise upper and lower bounds then concentrate the actual
+posterior near their unique output table $sf$. Strict training margins
+have the same infimum, by arbitrarily small output amplification.
+The positive test margin $s$ makes their limiting predictions correct.
+An arbitrary fixed positive bias variance gives the same conclusion:
+the weighted incoming norm still dominates $\|w\|_2$, with equality
+only at bias zero. This includes the effective bias variance obtained
+by restricting additional fixed input coordinates.
+
+Numerical four-bit cone optimizations agree with this certificate: after
+the first twelve lexicographic labels the optimum already equals the
+full-parity cost, while after fourteen labels the last two signs are
+forced correct. The proof above, not the numerical optimization, gives
+the general even-dimensional completion statement.
+
+\section{A separately certified five-bit extension}
+The five-bit target
+\[
+ f_5(x)=x_1x_2x_3h(x_4,x_5)
+\]
+also admits an exact finite mistake certificate. Here cube indices use
+least-significant-bit-first coordinates, with zero mapped to $-1$.
+Let $q_1,\ldots,q_{16}$ be the four-bit query list at the start of this
+paper, and let $\operatorname{rev}_4$ reverse its four bits. Use the
+32-query order
+\[
+ (1+2\operatorname{rev}_4(q_i))_{i=1}^{16},\quad
+ (2\operatorname{rev}_4(q_i))_{i=1}^{16}.
+\]
+The exact certificates prove strict correct-sign cost gaps after
+prefixes
+\[
+                  1,2,\ldots,15,\quad20,\quad26.
+\]
+The smallest gap exceeds $0.003002$, and every primal history witness
+uses at most 22 neurons. Hence at every fixed width $N\ge32$, the
+cold Gaussian posterior predicts incorrectly with probability tending
+to one at these 17 specified queries. The liminf of its expected total
+mistakes is at least $17.5$ with fair initial ties. This is a lower
+bound, not an assertion that the other query errors have been determined.
+
+The same rate argument gives a width-first result with all seven neuron
+coordinates of variance $\tau^2$, at $\tau=1/1000$ fixed. The checker
+verifies the rational inequalities
+\[
+ 10^6\left(\frac{99999}{100000}L_S-U_S\right)-42>0.
+\]
+They dominate the cumulant penalty because
+$(7/2)\log(10^5)<42$. Thus each of the 17 error probabilities again
+tends to one as width grows.
+
+The activation enumeration is complete, rather than a sampled feature
+dictionary. Every affine threshold table becomes monotone after flipping
+coordinates according to its weight signs. Enumerating monotone tables
+by the recursion $f_0\le f_1$ gives counts
+$2,3,6,20,168,7581$ through five variables. Coordinate permutations
+and monotone duality reduce the five-variable list to 112 orbits.
+Every representative has an exact rational strict-separation witness
+or an exact nonnegative Farkas certificate. There are 3287 monotone
+threshold tables; coordinate sign flips produce all 94572 affine
+activation patterns. Boundary parameters lie in closures of these
+chambers, so the list suffices for global atom bounds.
+
+The independent enumeration checker reconstructs the orbits and verifies
+the primal and Farkas identities without an optimizer. The independent
+mistake checker restricts that complete list to each history plus query,
+and verifies the integer primal and polar inequalities described earlier.
+Both reports and all certificate arrays accompany this collection.
+The five-bit result still does not establish an asymptotic
+superpolynomial family. In particular the recursive order has not been
+shown to reproduce an all-but-first mistake pattern in higher dimensions.
+
+\end{document}

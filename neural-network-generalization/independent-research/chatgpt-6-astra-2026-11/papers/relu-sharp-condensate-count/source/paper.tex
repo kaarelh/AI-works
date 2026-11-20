@@ -1,0 +1,317 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{lemma}[theorem]{Lemma}
+\newcommand{\E}{\mathbb E}\newcommand{\Pp}{\mathbb P}
+\newcommand{\R}{\mathbb R}\newcommand{\relu}{\operatorname{ReLU}}
+\newcommand{\one}{\mathbf1}
+\title{The exact ReLU condensate count and its polynomial evidence cost}
+\date{18 November 2026; independent research draft}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author. Verification scope and provenance are stated in the accompanying research collection.}}\emergencystretch=3em
+\hypersetup{pdftitle={The exact ReLU condensate count and its polynomial evidence cost},pdfauthor={ChatGPT-6 Astra}}
+\begin{document}\maketitle
+
+This note sharpens the companion \emph{Exponentially many exceptional
+neurons in a Gaussian ReLU posterior}. It uses its critical-law,
+finite-moment, coarse-conditioning, and parity-geometry conclusions.
+The new step is a local volume calculation, with an explicit Gaussian
+component supplying both the lower and upper convolution estimates.
+The resulting selection mechanism is polynomial in width, unlike the
+$\sqrt N$ exponential selection in the softplus companion.
+All limits fix even dimension $r\ge6$ before sending width $N$ to infinity.
+
+\section{The sharpened statement}
+Retain the companion notation
+\[
+ M=2^r,\quad K=M/2,\quad
+ \rho=\frac{\binom{r-2}{(r-2)/2}}{2^{r-1}\sqrt r},\quad
+ t_*=1/\rho,\quad Q_*=e^{t_*Z}P_0/M_*,\quad m_c=\E_{Q_*}Z.
+\]
+Here $P_0$ is the standard Gaussian law of one neuron
+$\theta=(a,U)\in\R^{r+2}$, $U=(b,w)$,
+$\Phi_x=a\relu(U\cdot(1,x))$, and $Z=\E_x\chi(x)\Phi_x$.
+For $s>m_c$, put $I(s)=s/\rho-\log M_*$ and $\delta=s-m_c$.
+The earlier analytic estimate gives $m_c<3/8$, so $s=1/2$ is allowed.
+
+\begin{theorem}[Exactly one exceptional neuron per antipodal pair]
+For the hard observed-margin posterior
+$H_N=\{\chi(x)F_N(x)>s\ \forall x\}$, there is $\varepsilon_0>0$
+such that, for every fixed $0<\varepsilon\le\varepsilon_0$,
+\[
+ \Pp\{\#\{j:\|\theta_j\|>\varepsilon\sqrt N\}=K\mid H_N\}
+       \longrightarrow1.
+\]
+The exceptional neurons represent exactly one orientation of each
+antipodal pair. Their normalized squared norms all converge to
+$2\delta/(K\rho)$, and their ray orientations $z$ satisfy
+$\sum_z\chi(z)z_i=0$ for every $i$ with probability tending to one.
+The evidence has the sharp logarithmic correction
+\[
+ -\log P_0^N(H_N)=NI(s)+\frac{Kr}{2}\log N+O_{r,s}(1).       \tag{1}
+\]
+For the square or logistic width-scaled likelihood from the companion,
+above its critical strength and with fitted margin $s=s_\lambda>m_c$,
+the same exact count, pair allocation, and norm limits hold. Its evidence
+instead satisfies
+\[
+ -\log\mathcal Z_{N,\lambda}
+ =N[I(s)+\lambda\ell(s)]+\frac{K(r-2)}2\log N+O_{r,\lambda}(1). \tag{2}
+\]
+\end{theorem}
+The statement about the discrete orientation equation means that the
+orientations obtained by assigning each exceptional neuron to its nearest
+critical ray obey the equation eventually with probability tending to one.
+It does not identify probabilities of the different balanced orientation
+patterns. Neither assertion is an OOD or sample-complexity theorem.
+
+\section{Coordinates and density near a critical ray}
+Let $v_z=(0,z/\sqrt r)$ and
+$\sigma_z=\operatorname{sgn}(G(v_{\one}))\chi(z)$, where
+$G(U)=\E_x\chi(x)\relu(U\cdot(1,x))$.
+Write $f_z(x)=\sigma_z\relu(v_z\cdot(1,x))$.
+In a sufficiently small fixed cone about the ray
+$(\sigma_z,v_z)$ write
+\[
+ a=\sigma_z A,\quad U=Rv_z+u,\quad u\perp v_z,\quad
+ A,R>0,\quad c=AR,\quad v=A-R,\quad t=\sqrt c\,u.
+\]
+The sharp-corner lemma gives
+$\sigma_zG(U)=\rho R-h_z(u)$, where $h_z$ is a norm on the
+$r$-dimensional transverse space. Consequently the critical density
+exponent is exactly
+\[
+ D_0=\frac12v^2+\frac{\|u\|^2}{2}+\frac A\rho h_z(u).
+\]
+Since $A/R$ stays between positive constants in this cone,
+\[
+ D_0\ge c_1(v^2+\|t\|),\qquad
+ da\,dU=\frac{c^{-r/2}}{A+R}\,dc\,dv\,dt.
+\]
+The sign change in $a$ has absolute Jacobian one, and
+$|\partial(A,R)/\partial(c,v)|=(A+R)^{-1}$.
+Thus the density in these coordinates is bounded above by
+\[
+ C c^{-(r+1)/2}e^{-c_1(v^2+\|t\|)}\,dc\,dv\,dt.          \tag{3}
+\]
+On any fixed bounded set of $(v,t)$ it is also bounded below by
+$c'c^{-(r+1)/2}$ for all sufficiently large $c$.
+ReLU's Lipschitz property supplies the exact decomposition
+\[
+ \Phi(\theta)=c f_z+e(c,v,t),\qquad
+ \|e(c,v,t)\|_\infty\le C_r\|t\|.                       \tag{4}
+\]
+Here the error estimate uses $A/\sqrt c=\sqrt{A/R}$ bounded in the
+cone; it does not require the error to be independent of $c$.
+All constants may depend on the fixed cone and dimension.
+
+\section{Local convolution estimates from the Gaussian component}
+The companion proves that some fixed convolution power of the
+one-neuron output under $Q_*$ has a nonzero centered isotropic Gaussian
+component. The output also has finite second moment. Two consequences
+will be used.
+
+First, for every fixed $C,a>0$, uniformly over $\|w\|\le C\sqrt n$,
+\[
+ Q_*^n\{\|\textstyle\sum_j\Phi_j-nm_c\chi-w\|_\infty<a\}
+       \ge c_{C,a}n^{-M/2}.                              \tag{5}
+\]
+This is the companion's small-box lemma with a moving center. In its
+proof the non-Gaussian residual sum is within $C'\sqrt n$ of its mean
+with fixed positive probability, and the Gaussian component covariance
+is between $c n I$ and $C n I$. Adding $w=O(\sqrt n)$ preserves the
+uniform Gaussian lower density. A bounded number of leftover neurons
+can be restricted to a fixed-probability bounded set.
+
+Second, outside a subprobability measure of mass at most $Ce^{-cn}$,
+the law of $\sum_{j=1}^n\Phi_j$ is a mixture of translates of isotropic
+Gaussians with covariance $vI$, $cn\le v\le Cn$. Indeed group neurons
+into blocks admitting the component, represent each by its independent
+Bernoulli choice, and exclude fewer than half the expected Gaussian
+choices. The binomial lower-tail estimate gives the exceptional mass.
+The non-Gaussian blocks and leftovers only translate the Gaussian.
+This representation requires no density or concentration bound on their
+residual sum for the upper estimate.
+
+\section{The two residual weights}
+Put $Y=\sum_j\Phi_j$. Changing measure to $Q_*^N$ leaves, after
+factoring out the leading exponential evidence, the hard-margin weight
+\[
+ W_N^{\rm hard}(Y)=
+ \exp\left[-\frac{t_*}{M}\sum_x(\chi(x)Y_x-Ns)\right]
+ \prod_x\one_{\{\chi(x)Y_x>Ns\}}.                       \tag{6}
+\]
+It is bounded by one. The residual normalizer $Z_N=\E_{Q_*^N}W_N$
+multiplies $e^{-NI(s)}$ in the original evidence.
+For the soft likelihood, define
+$g(y)=t_*y+\lambda\ell(y)$, with its unique minimizer $s=s_\lambda$.
+The residual weight is
+\[
+ W_N^{\rm soft}(Y)=
+ \exp\left[-\frac NM\sum_x(g(\chi(x)Y_x/N)-g(s))\right]. \tag{7}
+\]
+Its leading exponential factor is
+$e^{-N[I(s)+\lambda\ell(s)]}$. The function $g$ is strictly convex,
+coercive, and has $g''(s)>0$ for both losses above the transition.
+
+For either weight let
+$\overline W_{N,q}(y)=\sup_{\|e\|_\infty\le q}W_N(y+e)$.
+Separability and one-dimensional integration give
+\[
+ \|\overline W_{N,q}\|_{L^1(\R^M)}\le
+ \begin{cases}
+ C(1+q)^M,&\text{hard},\\
+ C N^{M/2}(1+q)^M,&\text{soft}.
+ \end{cases}                                            \tag{8}
+\]
+For the hard weight each coordinate integral is exactly
+$2q+M/t_*$. For the soft weight it is at most $2q+C\sqrt N$:
+use a positive quadratic lower bound for $g-g(s)$ near $s$ and its
+positive linear growth outside a fixed neighborhood. This calculation
+avoids an artificial exponential factor in the transverse error $q$.
+
+\section{The volume upper bound for a specified set of large neurons}
+Fix $L$ selected neurons, their critical ray choices, and a compact
+macroscopic energy range with $c_j\in[c_-N,c_+N]$, $c_->0$.
+Let $A$ have columns $f_{z_j}$, and let $R_A$ be its rank.
+Apply (3)--(4) to these neurons, and use the Gaussian mixture from the
+preceding section for the other $N-L$ neurons.
+For fixed $(v_j,t_j)$, the error in their output sum is at most
+$q=C\sum_j\|t_j\|$. The coarea formula for the fixed linear map
+$c\mapsto Ac$ bounds the volume of every fiber inside this box by
+$C N^{L-R_A}$. Integrating the good Gaussian component along
+$\operatorname{im}A$ gives its orthogonal marginal density, bounded
+by $C N^{-(M-R_A)/2}$. Thus (8) bounds the selected-event weighted
+probability by
+\[
+ C N^{-L(r+1)/2}\,N^{L-R_A}\,N^{-(M-R_A)/2}\,N^\nu,
+ \qquad \nu=\begin{cases}0&\text{hard},\\ M/2&\text{soft}.
+ \end{cases}                                             \tag{9}
+\]
+The polynomial $(1+q)^M$ integrates to a finite constant against
+$\prod_j e^{-c_1(v_j^2+\|t_j\|)}$.
+The bad Gaussian-mixture component contributes only an exponentially
+small term after this integration. Its contribution is bounded using
+$W_N\le1$ and the finite selected-neuron probabilities.
+
+There are at most $N^L$ index choices and finitely many ray choices.
+Hence their union contributes at most
+\[
+ C N^{-\{L(r-3)+M+R_A\}/2+\nu}.                         \tag{10}
+\]
+The coarea estimate is valid also with repeated columns; rank, rather
+than the number of distinct ray labels, is what enters it.
+
+\section{A matching lower bound including the combinatorial multiplicity}
+Choose the $K$ critical orientations with $z_1=1$. Their feature vectors
+satisfy
+\[
+ \sum_{z:z_1=1}f_z=K\rho\chi.
+\]
+For each ordered-by-index $K$-element subset $J\subset[N]$, assign
+these orientations to its neurons. For them restrict $(v_j,t_j)$ to
+fixed bounded boxes with nonempty interior, and restrict
+\[
+ c_j\in[c_N-\sqrt N,c_N+\sqrt N],\qquad
+ c_N=\frac{N(s-m_c)+Km_c}{K\rho}.
+\]
+For large $N$ these restrictions lie in the chosen cones and every
+selected norm exceeds a fixed positive multiple of $\sqrt N$.
+By (3)'s lower bound their joint probability is at least
+$cN^{-Kr/2}$. Their output is
+$(Ns-(N-K)m_c)\chi+O(\sqrt N)$.
+
+For the hard weight, use (5) to place the bulk output so that all
+signed total outputs lie between $Ns+1$ and $Ns+2$. This gives an
+additional factor $cN^{-M/2}=cN^{-K}$, uniformly over the selected
+parameters, and the residual weight is bounded below by a positive
+constant. For the soft weight, Chebyshev gives a fixed positive
+probability to bulk fluctuations of size $C\sqrt N$; the selected
+parameters then give $Y=Ns\chi+O(\sqrt N)$ and again a positive
+lower bound on the residual weight. Thus the weighted probability of
+each event $E_J$ is at least
+\[
+ cN^{-Kr/2-K}\quad\text{(hard)},\qquad
+ cN^{-Kr/2}\quad\text{(soft)}.                            \tag{11}
+\]
+
+It is essential to count the $\binom NK$ possible locations. To justify
+this without assuming disjoint events, fix a cutoff below the norm of
+all selected neurons and let $L_N$ count parameters above that cutoff.
+The finite fourth moment gives $Q_*(\|\theta\|>\varepsilon\sqrt N)
+\le CN^{-2}$. Independence therefore gives
+\[
+ Q_*^N(L_N>D_r)\le C N^{-D_r-1},\qquad D_r=K(r+4)/2.
+\]
+On $L_N\le D_r$ the events $E_J$ overlap at most $\binom{D_r}K$
+times. On its complement, their total weighted contribution is at
+most $N^K Q_*^N(L_N>D_r)\le C N^{K-D_r-1}$, negligible compared
+with either sum of (11). We obtain
+\[
+ Z_N\ge
+ \begin{cases}
+ cN^{-Kr/2},&\text{hard},\\
+ cN^{-K(r-2)/2},&\text{soft}.
+ \end{cases}                                             \tag{12}
+\]
+
+\section{Completion using the coarse posterior geometry}
+The companion's coarse proof supplies, with posterior probability
+tending to one: a fixed total-energy bound, an upper count $D_r$ above
+any sufficiently small fixed cutoff, and angular approach of those
+parameters to the critical rays. Its truncated-moment argument makes
+the output from smaller parameters as close as desired to $m_c\chi$
+by choosing the cutoff sufficiently small. The full output tends to
+$s\chi$.
+
+Here is the needed strengthening of its lower-count conclusion.
+The even Fourier coefficients of the critical features are nonzero,
+and their matrix on the antipodal quotient is invertible. Therefore
+an approximate representation of $\delta\chi$ determines every
+antipodal-pair mass within a fixed constant times its output error.
+The exact mass is $\delta/(K\rho)>0$. Choose the truncation tolerance
+smaller than half this mass divided by that constant. With probability
+tending to one, \emph{every} antipodal pair is then represented above
+the cutoff. In particular the rank $R_A$ in (10) is at least $K$,
+because its even-feature block already has rank $K$.
+
+Call this high-posterior-probability event $G_N$. It also restricts
+$K\le L_N\le D_r$, all selected parameters to the fixed critical
+cones, and all their $c_j$ to $[c_-N,c_+N]$ by the cutoff and energy
+bound. Formula (10), summed over these finitely many counts, shows
+\[
+ \E_{Q_*^N}[W_N\one_{G_N}]\le
+ \begin{cases}
+ CN^{-Kr/2},&\text{hard},\\
+ CN^{-K(r-2)/2},&\text{soft}.
+ \end{cases}
+\]
+Since this expectation is $(1-o(1))Z_N$, it is an upper bound for
+$Z_N$ up to a factor tending to one. Together with (12), it proves
+(1)--(2).
+
+On $G_N$, configurations with $L_N\ge K+1$ have, by (10), an extra
+factor at most $N^{-(r-3)/2}$ relative to (12). Their posterior mass
+therefore vanishes. The complement of $G_N$ already has vanishing
+posterior mass, proving the exact count.
+
+The argument works for every smaller fixed cutoff. Applying it at an
+arbitrarily smaller cutoff makes the small-neuron output converge to
+$m_c\chi$ in the required iterated-tolerance sense, while the same
+$K$ neurons remain the only macroscopic ones. The invertible even
+Fourier equations then give $c_j/N\to\delta/(K\rho)$ for every
+pair. Angular balance gives $\|\theta_j\|^2/N\to2\delta/(K\rho)$.
+The odd, linear Fourier equations give
+$\sum_z\chi(z)z_i=0$ in the limit. Since there are finitely many
+orientation choices and the pair masses have a common positive limit,
+every unbalanced choice has a fixed positive output gap. Its posterior
+probability vanishes. This completes the theorem.
+
+\section{What remains open}
+The orientation-law companion identifies leading evidence constants and
+balanced-pattern probabilities. A simultaneous $r,N$ limit, a practical
+width threshold, and a posterior sampling-time bound remain open.
+The argument relies on observing every cube input
+and on mean-field output normalization. It is a conventional research
+proof draft, not a Lean-verified result or an independently reviewed
+manuscript.
+\end{document}

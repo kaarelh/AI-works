@@ -1,0 +1,412 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\KL}{\operatorname{KL}}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\newcommand{\R}{\mathbb R}
+\title{Quantitative width and online Bayesian mistakes}
+\date{18 November 2026; independent research draft}
+\emergencystretch=3em
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author. Verification scope and provenance are stated in the accompanying research collection.}}
+\hypersetup{pdftitle={Quantitative width and online Bayesian mistakes},pdfauthor={ChatGPT-6 Astra}}
+\begin{document}
+\maketitle
+
+This note strengthens the repository's observed-margin, shallow mean-field
+tanh argument. It does not change its prior or likelihood. The intended
+new points are a polynomial sufficient width, a bound uniform over all
+representational widths by combining two regimes, and a ReLU extension
+under faster-than-Gaussian parameter tails. No assertion of literature
+novelty is made here. All constants below are deliberately conservative.
+
+\section{A finite-domain theorem}
+Let $X$ be a finite set, $M=|X|$, $f:X\to\{-1,1\}$, and
+$\Phi:\Theta\to\R^X$ a measurable neuron output vector. Under a probability
+law $P_0$, assume its cumulant $\Lambda(\xi)=\log\E_0e^{\xi\cdot\Phi}$ is
+finite on all of $\R^X$, and the closed convex hull of the support of
+$\Phi$ is $\R^X$. We assume $\E_0\Phi=0$. Let $I=\Lambda^*$.
+For a history $S\subseteq X$, set
+\[
+ C_S=\{z:f(x)z_x\ge m\ (x\in S)\},\qquad m>0.
+\]
+The learner averages $N$ independent neurons and conditions on the
+\emph{strict} observed margins $f(x)F_N(x)>m$. No condition is imposed
+at unobserved inputs.
+
+We use the following standard finite-dimensional convex facts, also
+justifiable directly for the two priors below. The rate $I$ is finite,
+strictly convex, smooth, and coercive; every prescribed mean has a unique
+exponential tilt; each $C_S$ has a unique rate minimizer $z_S$; and its
+tilt $Q_S$ is the entropy projection. One sufficient route is to note
+that full convex support and an everywhere finite cumulant make
+$\Lambda(\xi)-\xi\cdot z$ coercive for every $z$: for any radius $R$,
+finitely many support neighborhoods have convex hull containing the
+ball of radius $R$, and their positive probabilities give
+$\Lambda(\xi)\ge R\|\xi\|-c_R$. Positive definite covariance and the
+inverse function theorem then give the assertions. Coercivity of $I$
+follows by restricting its defining supremum to a fixed dual sphere.
+
+Assume there is a teacher law $Q_T$ satisfying
+\[
+ \KL(Q_T\|P_0)\le K,\qquad
+ f(x)\E_T\Phi_x\ge m+\gamma\quad(x\in X),\qquad\gamma>0.
+\]
+Assume also, for some $1<q\le2$, $B>0$, and $\Psi\ge1$,
+\begin{align}
+ \KL(Q\|P_0)\le K+1&\implies \E_Q|\Phi_x|^q\le B,\label{eq:moment}\\
+ \E_{Q_S}e^{|\Phi_x|/\Psi}&\le2,\qquad
+ \E_{Q_T}e^{|\Phi_x|/\Psi}\le2.\label{eq:psi}
+\end{align}
+These hold uniformly over $x$ and $S$. We may decrease $\gamma$ to
+$\min(\gamma,1)$, and do so henceforth. This ensures the small-deviation
+range used below.
+
+Fix a test margin $0\le t<m$. Put
+\[
+ h=\frac{m+t}{2},\quad\Delta=\frac{m-t}{2},\quad
+ \kappa=\min\left\{1,
+ \frac{\Delta^{q/(q-1)}}{2(2B)^{1/(q-1)}}\right\},\qquad
+ \beta=\frac{\kappa}{16(K+1)}.
+\]
+\begin{theorem}[Explicit width]
+If
+\begin{align}
+ N&\ge\frac{64\Psi^2}{\beta^2\gamma^2}
+          \log\frac M\beta,\label{eq:width1}\\
+ N&\ge\frac{16\log2}{\kappa},\label{eq:width2}
+\end{align}
+then at every history and every query with $f(x)(z_S)_x>h$,
+\[
+ \Pp\{f(x)F_N(x)\le t\mid f(y)F_N(y)>m\ (y\in S)\}
+ \le e^{-N\kappa/2}.
+\]
+Along every adaptive input order, at most $\lfloor K/\kappa\rfloor$
+queries have $f(x)(z_S)_x\le h$. In particular, if
+$N\ge(2/\kappa)\log(M/\eta)$, fresh posterior predictions have expected
+total failures of the test margin at most $K/\kappa+\eta$, and at most
+$\lfloor K/\kappa\rfloor$ failures with probability at least $1-\eta$.
+If additionally $e^{-N\kappa/2}<1-\theta$, the total number of queries
+whose posterior test-margin success probability is at most $\theta$
+is at most $\lfloor K/\kappa\rfloor$ deterministically.
+\end{theorem}
+
+\begin{lemma}[Moment--entropy continuity]
+If $1<q\le2$, $\E_P|Z|^q,\E_Q|Z|^q\le B$, then
+\[
+ |\E_PZ-\E_QZ|\le(2B)^{1/q}
+             (2\KL(Q\|P))^{(q-1)/q}.
+\]
+\end{lemma}
+\begin{proof}
+Use a common dominating measure, densities $p,q_1$, and
+$\nu=p+q_1$, $r=|p-q_1|/(p+q_1)$. H\"older gives a first factor at
+most $(2B)^{1/q}$. Its conjugate exponent $q/(q-1)$ is at least two,
+and $r\le1$, so the other integral is bounded by
+\[
+ \int\frac{(p-q_1)^2}{p+q_1}
+ \le2\int(\sqrt p-\sqrt {q_1})^2\le2\KL(Q\|P).
+\]
+The last inequality follows, for example, from Jensen applied to
+$-\log\sqrt{p/q_1}$ and $-\log x\ge1-x$.
+\end{proof}
+
+\begin{proof}[Proof of the theorem]
+Write $I_S=I(z_S)=\KL(Q_S\|P_0)\le K$. For any law $Q$ with mean in
+$C_S$, the exponential-family identity and first-order optimality imply
+\[
+ \KL(Q\|P_0)-I_S\ge\KL(Q\|Q_S).\tag{P}
+\]
+If $f(x)(z_S)_x\le h$, adding the observed margin moves this mean
+coordinate by at least $\Delta$. Both successive projections have
+entropy at most $K$, so (P) and the lemma charge at least $\kappa$ to
+the entropy potential. The potential starts at zero and never exceeds
+$K$, proving the bound on bad-mean queries.
+
+For a good-mean query let
+$C^-=C_S\cap\{z:f(x)z_x\le t\}$, and let $I^- =\min_{C^-}I$.
+If $I^->K+1$, then $I^--I_S\ge1\ge\kappa$. Otherwise its minimizing
+tilt and $Q_S$ both satisfy \eqref{eq:moment}; their indicated means
+differ by more than $\Delta$. Again (P) gives
+$I^-\ge I_S+\kappa$. At an unobserved query the inequalities defining
+$C^-$ are strictly feasible, because $I$ is finite everywhere. Convex
+duality for this polyhedron gives nonnegative constraint multipliers
+with dual value $I^-$. Markov's inequality with those multipliers yields
+the exact, finite-$N$ Chernoff estimate
+\[
+ P_0^N\{F_N\in C^-\}\le e^{-NI^-}
+                        \le e^{-N(I_S+\kappa)}.\tag{U}
+\]
+There is no dimension-dependent prefactor. Equivalently, minimizing
+$I$ over the polyhedron and maximizing the affine-constraint Chernoff
+dual have the same value by Slater's condition.
+
+For the denominator use $Q_\beta=(1-\beta)Q_S+\beta Q_T$. Its training
+means have slack at least $\beta\gamma$, its entropy is at most
+$I_S+\beta K$, and \eqref{eq:psi} is preserved under mixing. For a
+random variable with $\E e^{|Z|/\Psi}\le2$,
+$\E|Z-\E Z|^k\le2^{k+1}\Psi^k k!$. Summing the centered moment
+series gives
+\[
+ \log\E e^{s(Z-\E Z)}\le16\Psi^2s^2
+ \quad (|s|\le1/(4\Psi)).
+\]
+Thus a downward deviation $u\le8\Psi$ of an $N$-sample mean has
+probability at most $\exp[-Nu^2/(64\Psi^2)]$. Union over at most $M$
+training coordinates and \eqref{eq:width1} give $Q_\beta^N(H)\ge1-\beta$,
+where $H$ is the strict training event. In particular $P_0^N(H)>0$.
+Binary relative entropy, with $p=P_0^N(H)$ and $v=Q_\beta^N(H)$, gives
+\[
+ N\KL(Q_\beta\|P_0)\ge v\log(1/p)-\log2.
+\]
+Consequently
+\begin{align*}
+ -N^{-1}\log p-I_S
+ &\le\frac{\beta(K+I_S)+\log2/N}{1-\beta}\\
+ &\le\frac{\kappa/8+\kappa/16}{15/16}
+ =\kappa/5<\kappa/2.
+\end{align*}
+Combining with (U) proves the conditional bound, even with a better
+exponent than the stated one. The argument holds for every history
+separately with the same constants, so no union over histories is
+required. There are at most $M$ distinct queries; repeated observed
+inputs have zero failure probability at test margin $t<m$.
+Conditional expectations and the union bound apply to fresh posterior
+draws under arbitrary adaptive input selection.
+\end{proof}
+
+\section{The dual multipliers are uniformly bounded}
+The history tilt has the form
+\[
+ \frac{dQ_S}{dP_0}=
+ \exp\left(\sum_{x\in S}\lambda_x f(x)\Phi_x-\Lambda(\xi_S)\right),
+ \qquad \lambda_x\ge0,
+\]
+with complementary slackness. Gibbs' inequality with $Q_T$ gives
+\[
+ K\ge\E_T\log(dQ_S/dP_0)
+ \ge I_S+\gamma\sum_x\lambda_x.
+\]
+Hence $\|\lambda\|_1\le K/\gamma$, without a factor $|S|$ or $M$.
+This is the key to a polynomial uniform bound in \eqref{eq:psi}.
+
+\section{Gaussian tanh, with the original normalization}
+Take $D=d+1$, $\bar x=(1,x)$, $u\sim N(0,\tau^2I_D/d)$,
+$a\sim N(0,\tau^2)$ independently, and $\Phi_x=a\tanh(u\cdot\bar x)$.
+Assume a width-$C$ teacher $F_T=\sum_i v_i\tanh(u_i\cdot\bar x)$ has
+signed margin greater than $1/2$, and every parameter is bounded by
+$B_0>0$. The repository's Gaussian-mixture certificate uses
+\[
+ s=\min\{\tau/\sqrt d,1/(8CB_0\sqrt D)\},\quad q_0=ds^2/\tau^2,
+\]
+and has
+\[
+ K=\frac{dDB_0^2+4C^2B_0^2}{2\tau^2}
+       +\frac D2(q_0-1-\log q_0),\qquad\gamma=1/4.
+\]
+Its mixture components have $u\sim N(u_i,s^2I_D)$ and
+$a\sim N(2Cv_i,\tau^2)$ independently. Lipschitz continuity of tanh
+makes its mean uniformly within $1/4$ of $2F_T$, hence the slack.
+
+The Gaussian entropy inequality gives \eqref{eq:moment} with $q=2$ and
+\[
+ B=4\tau^2(K+1+\tfrac12\log2).
+\]
+Under $Q_S$, conditional on $u$, the readout is Gaussian with variance
+$\tau^2$ and mean
+\[
+ \tau^2\sum_{x\in S}\lambda_x f(x)\tanh(u\cdot\bar x),
+\]
+whose magnitude is
+at most $\tau^2K/\gamma$. The teacher's conditional readout mean, when
+the mixture index is retained, has magnitude at most $2CB_0$. Put
+\[
+ A_0=\max\{\tau^2K/\gamma,2CB_0\},\qquad
+ \Psi=4(1+A_0+\tau).
+\]
+For $a=\mu+\tau G$, $|\mu|\le A_0$, Young's inequality gives
+\[
+ \E e^{|a|/\Psi}
+ \le e^{A_0/\Psi+\tau^2/\Psi^2}\E e^{G^2/4}
+ \le e^{1/4+1/16}\sqrt2<2.
+\]
+As $|\Phi_x|\le|a|$, \eqref{eq:psi} follows. The tanh ridge vectors span the finite input set: choose a linear score
+with distinct input values, a nonzero constant feature, and tanh thresholds
+between consecutive scores. As their common gain grows, their evaluation
+matrix tends to an invertible triangular step matrix. It is therefore
+invertible at some finite gain. Gaussian incoming support contains
+neighborhoods of those vectors, and arbitrarily large readouts of either
+sign make the closed convex output support all of $\R^X$.
+All hypotheses therefore
+hold with polynomial constants. At fixed $B_0,\tau$, write
+$K=O(d^2+C^2)$. With fixed margins and confidence levels the displayed
+sufficient width is $O((1+K)^6[d+\log(2+K)+\log(1/\eta)])$, and the
+mistake bound is $O(K^2)$. The first width exponent can be improved to
+five using the following refined Bernstein estimate.
+
+For either $Q_S,Q_T$, or their mixture, $\E a^2\le B_1=4\tau^2(K+\tfrac12\log2)$ and $a$ is a mixture of
+$N(\mu,\tau^2)$ with $|\mu|\le A_0$. Set $L=\max(A_0,\tau)$.
+For $k\ge2$, the Gaussian moment bound $\E|G|^k\le k!$ gives
+\[
+ \E|\Phi_x-\E\Phi_x|^k
+ \le 8k!B_1(4L)^{k-2}.
+\]
+Therefore one may replace \eqref{eq:width1} by
+\[
+ N\ge\frac{32B_1+8L\beta\gamma}{\beta^2\gamma^2}
+             \log\frac M\beta.
+\]
+Indeed the moment condition gives Bernstein variance proxy $16B_1$
+and scale $4L$. This yields $O((1+K)^5[d+\log(2+K)])$ at fixed
+$B_0,\tau$, in addition to the confidence/sampling width conditions.
+
+\section{An elementary bound for the remaining widths}
+This section is independent of entropy projections. If a prior gives
+probability at least $e^{-J_N}$ to networks satisfying the correct
+training margin at \emph{all} inputs, then any history has evidence
+at least $e^{-J_N}$. Write $q_t$ for the conditional probability that
+the next revealed example satisfies its training margin. Each round
+adds $-\log q_t$ to minus log evidence, and their total is at most
+$J_N$. A sign-error probability $e_t$ is at most $1-q_t$, so
+\[
+ \sum_t e_t\le\sum_t-\log q_t\le J_N.
+\]
+This holds pathwise for adaptive histories. Confidence mistakes with
+success probability at most $\theta$ number at most
+$J_N/(-\log\theta)$, since training success implies test success.
+Fresh posterior sampling therefore has expected total sign errors
+at most $J_N$. A high-probability bound follows from the usual
+exponential supermartingale, for example
+\[
+ \Pp\{\text{errors}>(e-1)J_N+\log(1/\eta)\}\le\eta.
+\]
+Here $e$ is Euler's number: conditional on the past,
+$\E e^{\mathbf1_{\rm error}}=1+(e-1)e_t\le e^{(e-1)e_t}$.
+
+For the Gaussian tanh prior and every $N\ge C$, use centers
+$a_i^*=2Nv_i$ for $i\le C$ and zero for other readouts. Constrain
+all readouts within $r=1/8$ of these centers, and the first $C$ incoming
+vectors coordinatewise within
+$\delta=\min\{1,1/(16CB_0D)\}$ of their teacher vectors. Leave the
+remaining incoming weights unrestricted. The output differs from
+$2F_T$ by at most $r+2CB_0D\delta\le1/4$, so the full teacher margin
+event holds. A valid entropy cost bound for this rectangular event is
+\begin{align*}
+ J_N={}&N\log^+\frac{\sqrt{2\pi}\tau}{2r}
+  +\frac{C(2NB_0+r)^2+(N-C)r^2}{2\tau^2}\\
+ &+CD\left[\log^+\frac{\sqrt{2\pi}\tau}{2\delta\sqrt d}
+                 +\frac{d(B_0+\delta)^2}{2\tau^2}\right].
+\end{align*}
+This follows by lower-bounding the Gaussian density on each interval.
+It is polynomial in $N,d,C,B_0,\tau,\tau^{-1}$, up to harmless
+logarithms. Taking this bound for $C\le N<N_*$ and the preceding
+width-independent bound for $N\ge N_*$ proves a polynomial total
+mistake bound uniform over \emph{every} $N\ge C$. For a uniform
+high-probability bound, choose $N_*$ using the requested $\eta$;
+its polynomial dependence on $\log(1/\eta)$ is retained.
+
+There is a better bound for the intermediate widths than the rectangular
+event. Let $\Psi_T=4(1+2CB_0+\tau)$ and
+\[
+ N_T=\left\lceil\frac{64\Psi_T^2}{\gamma^2}\log(2M)\right\rceil.
+\]
+The teacher law's own concentration bound shows that for every
+$N\ge N_T$, its product law assigns probability at least $1/2$ to
+the full strict-margin event. Binary entropy therefore gives
+\[
+ J_N\le2NK+2\log2\qquad(N\ge N_T).
+\]
+Use the explicit box only for $C\le N<N_T$, this product-teacher
+bound for $N_T\le N<N_*$, and the width-independent bound above $N_*$.
+At fixed $B_0,\tau$ and fixed confidence/margin thresholds, with
+$S=1+d^2+C^2$, the refined Bernstein estimate has
+$N_*=O(S^5[d+\log S])$, while $N_T=O((1+C^2)d)$. Consequently
+\begin{corollary}[A uniform bound over all representational widths]
+For the unchanged observed-margin Gaussian tanh learner, every width
+$N\ge C$ has total expected sampling mistakes and total fixed-confidence
+mistakes bounded by
+\[
+ O_{B_0,\tau,\theta}\bigl(S^6[d+\log S]\bigr),
+ \qquad S=1+d^2+C^2.
+\]
+The sharper $O(S^2)$ mistake bound holds at every
+$N\ge O(S^5[d+\log S])$. High-probability versions retain polynomial
+dependence on $\log(1/\eta)$.
+\end{corollary}
+The uniform polynomial is deliberately loose; its purpose is to remove
+width as an uncontrolled asymptotic qualification. It does not give an
+efficient algorithm for sampling the Bayesian posterior.
+
+\section{ReLU with quartic and more general parameter tails}
+Let all $D+1$ neuron coordinates independently have density
+$Z_p^{-1}e^{-|w|^p}$, where fixed $p>2$ and
+$Z_p=2\Gamma(1+1/p)<2$. Take $\Phi_x=a(u\cdot\bar x)_+$ and write
+$E_\theta=|a|^p+\sum_i|u_i|^p$, $q_0=p/2$. H\"older and AM--GM give
+\[
+ |\Phi_x|^{q_0}\le\tfrac12D^{(p-1)/2}E_\theta,
+ \qquad \E_0e^{E_\theta/2}=2^{(D+1)/p}.
+\]
+Consequently every entropy-$K+1$ law has
+$q_0$-moment at most
+$B_0'=D^{(p-1)/2}[K+1+(D+1)\log2/p]$. Use $q=\min(q_0,2)$ and
+$B=(B_0')^{q/q_0}$. All linear output exponential moments exist,
+and the ReLU ridge vectors span the finite cube (thresholds in a
+strictly ordered linear score produce an invertible hinge matrix).
+Arbitrarily large positive and negative readouts make the closed convex
+support all of $\R^X$.
+
+For a bounded teacher, use the uniform mixture over its $C$ neurons,
+incoming coordinates uniform on $u_i+[-s,s]^D$, and readout uniform
+on $2Cv_i+[-1,1]$, independently within each component, with
+\[
+ s=\min\{1,1/(16CB_0D)\}.
+\]
+Its mean differs from $2F_T$ by at most $1/8$, so take $\gamma=3/8$.
+The explicit certificate
+\[
+ K=2^{p-1}\{D(B_0^p+s^p)+(2CB_0)^p+1\}+D\log(1/s)
+\]
+follows from $(x+y)^p\le2^{p-1}(x^p+y^p)$, the uniform densities,
+and $Z_p<2$. Its support also gives the deterministic output bound
+$T=(2CB_0+1)D(B_0+s)$.
+
+Put $\alpha=2/p<1$ and $C_D=D^{1-1/p}/2^{2/p}$. Then
+$|\Phi_x|\le C_D E_\theta^\alpha$. For every $b\ge0$,
+\[
+ b C_D E^\alpha\le E/2+c_p(bC_D)^{1/(1-\alpha)},\qquad
+ c_p=(1-\alpha)(2\alpha)^{\alpha/(1-\alpha)}.
+\]
+This is obtained by maximizing the left side minus $E/2$ over $E\ge0$.
+Prior readout symmetry gives $\Lambda(\xi_S)\ge0$. The multiplier
+bound therefore implies
+\[
+ \log\E_{Q_S}e^{|\Phi_x|}
+ \le H:=\frac{D+1}{p}\log2+
+ c_p\left[C_D(K/\gamma+1)\right]^{p/(p-2)}.
+\]
+By Jensen, \eqref{eq:psi} holds with
+$\Psi=\max\{1,H/\log2,T/\log2\}$, also for $Q_T$. For every fixed
+$p>2$ the theorem thus has polynomial width and mistake bounds in
+$d,C,B_0$, and the prescribed confidence parameters. The clearest
+example is $p=4$, for which $q=2$, $c_p=1/2$, and all powers are integers
+apart from harmless dimension factors.
+
+The all-width extension follows as before from a product box around
+a padded teacher. One valid formula is obtained with
+$\delta=[16D((2C+1)B_0+1)]^{-1}$, centers $a_i=2Nv_i,u_i=u_i^T$
+for $i\le C$, and zero centers otherwise, constraining every coordinate
+within $\delta$. The output error from $2F_T$ is at most
+$\delta D[(2C+1)B_0+\delta]\le1/16$. Since $Z_p<2$, its negative
+log probability is bounded by
+\[
+ N(D+1)\log(1/\delta)+C(2NB_0+\delta)^p
+ +CD(B_0+\delta)^p+(N-C)(D+1)\delta^p.
+\]
+This makes the all-width polynomial claim explicit. As in the tanh case,
+the product teacher law gives a better $O(NK)$ evidence bound once its
+bounded-output concentration threshold is reached. No sharp polynomial
+degree is claimed for this ReLU extension.
+\end{document}

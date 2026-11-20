@@ -1,0 +1,276 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}
+\newcommand{\relu}{\operatorname{ReLU}}
+\emergencystretch=3em
+\title{Kernel fluctuations within a ReLU orientation sector}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author. Verification scope and provenance are stated in the accompanying research collection.}}\date{18 November 2026; independent research draft}
+\hypersetup{pdftitle={Kernel fluctuations within a ReLU orientation sector},pdfauthor={ChatGPT-6 Astra}}
+\begin{document}\maketitle
+
+This note refines the hard-margin Gaussian ReLU orientation calculation.
+It gives a conditional distributional limit, not a finite-width error
+bound or a full-chain mixing guarantee. It depends on the critical-law,
+exact-count, and orientation-law companion drafts and requires independent
+scrutiny. In particular, a distributional central limit theorem alone
+does not prove convergence of finite-width second moments or an expansion
+of the expected kernel at order $1/N$.
+
+\section{The conditional Gaussian formula}
+Fix even $r\ge6$, a margin $s>m_c$, and the unit Gaussian mean-field
+ReLU model of the companion notes. Put $M=2^r$, $K=M/2$,
+$\alpha=(s-m_c)/(K\rho)$, and fix a balanced orientation set $S$.
+Write $h_z(x)=\relu(z\cdot x/\sqrt r)$ and let $A$ be the $M\times K$
+matrix whose columns are the signed critical outputs $\sigma_zh_z$.
+Use the same fixed pair order as in the orientation-law note.
+
+Let $\mathcal L$ be any fixed linear map from symmetric $M\times M$
+matrices to $\R^b$. For an incoming vector $U$, put
+\[
+ H(U)=\mathcal L(h_Uh_U^\top),\quad
+ h_U(x)=\relu(U\cdot(1,x)),\quad
+ B_z=\mathcal L(h_zh_z^\top),\quad B=(B_z)_{z\in S}.
+\]
+Under the critical one-neuron law $Q_*$, define
+\[
+ \mu=m_c\chi,\quad k_* =\E H(U),\quad
+ \Sigma=\operatorname{Cov}(\Phi),\quad
+ C=\operatorname{Cov}(H(U),\Phi),\quad
+ \Gamma=\operatorname{Cov}(H(U)).
+\]
+These covariances are finite because $Q_*$ has a fourth parameter moment.
+$\Sigma$ is positive definite. Put
+\[
+ Q=(A^\top\Sigma^{-1}A)^{-1},\qquad
+ D=B-C\Sigma^{-1}A.
+\]
+The limiting projected feature kernel in sector $S$ is
+$k_S=k_*+\alpha B\boldsymbol1$.
+
+\begin{theorem}[Within-sector kernel central limit]
+Conditional on the hard-margin event and on the exceptional orientation
+set being $S$, one has
+\[
+ \sqrt N\,[\mathcal L(\mathcal K_N)-k_S]
+                  \ \Longrightarrow\ N(0,\Omega_S),
+\]
+where
+\[
+ \boxed{\quad
+ \Omega_S=\Gamma-C\Sigma^{-1}C^\top
+            +D Q D^\top+\alpha BB^\top.\quad}             \tag{1}
+\]
+Singular limiting covariance is allowed. Width tends to infinity after
+fixing the dimension, margin, and orientation set. Each such sector has
+positive limiting posterior probability by the orientation-law formula.
+\end{theorem}
+
+The three terms have different sources. The first is the ordinary
+kernel fluctuation left after conditioning on its output. The second
+is the joint adjustment of ordinary output and exceptional amplitudes.
+The last comes from fluctuations of the relative scale of the readout
+and incoming weights of each exceptional neuron. Ignoring that scale
+fluctuation omits the final positive semidefinite term.
+
+\section{A joint local limit with an incoming-only observable}
+Let $(V_j,T_j)=(\Phi(\theta_j),H(U_j))$ be iid under $Q_*$.
+The ordinary multivariate CLT gives a joint Gaussian limit for
+\[
+ n^{-1/2}\left(\sum V_j-n\mu,\ \sum T_j-nk_*\right)
+\]
+with covariance blocks $(\Sigma,C,\Gamma)$. For conditioning we need
+a local limit in the $V$ coordinates, retaining characteristic functions
+in the $T$ coordinates.
+
+Here is why it holds in this model. Conditional on incoming vectors,
+the readouts are independent Gaussians with means $G(U_j)/\rho$ and
+variance one. Therefore $\sum V_j$ is conditionally Gaussian, with
+covariance $\sum h_{U_j}h_{U_j}^\top$, while $\sum T_j$ is fixed.
+Choose a block of $M$ incoming vectors in small compact neighborhoods
+of a feature basis. Such a block has fixed positive probability and
+contributes at least $cI$ to this conditional covariance. In $n$ neurons,
+except on an event of probability $O(e^{-cn})$, a positive fraction of
+the independent blocks have this property. Call the complementary event
+good; it depends only on incoming vectors. On it the conditional output
+covariance is at least $cnI$.
+
+For any fixed $v\in\R^b$, the joint characteristic function of the
+centered and rescaled sums, restricted to this good event, is bounded
+in absolute value by $e^{-c\|u\|^2}$ as a function of the output Fourier
+variable $u\in\R^M$. The bound follows by conditioning on incoming
+vectors; the $T$ characteristic factor has modulus one. Pointwise
+convergence to the joint Gaussian characteristic function follows from
+the CLT, since the discarded mass is exponentially small. Dominated
+Fourier inversion in $u$ now gives the required uniform local limit:
+\[
+ n^{M/2}\frac{\E[e^{iv\cdot(\sum T_j-nk_*)/\sqrt n};\,
+                    \sum V_j\in dy,\ \mathrm{good}]}{dy}
+ \bigg|_{y=n\mu+\sqrt n\,z}
+ \longrightarrow
+ \varphi_\Sigma(z)
+ e^{iv\cdot C\Sigma^{-1}z-\frac12v^\top
+                  (\Gamma-C\Sigma^{-1}C^\top)v}.          \tag{2}
+\]
+Uniformity holds in $z$, for each fixed $v$. No density in the
+kernel-observable coordinates is assumed. The good event construction
+also leaves an exponentially small remainder, negligible compared with
+the polynomial residual evidence.
+
+\section{Exceptional amplitudes and the kernel expansion}
+For each selected ray use the exact-count coordinates
+\[
+ c_j=A_jR_j,\quad v_j=A_j-R_j,\quad t_j=\sqrt{c_j}\,u_j,
+ \quad U_j=R_jv_{z_j}+u_j.
+\]
+The symbol $v_j$ here is a scalar layer imbalance; it is distinct from
+the Fourier test variable in (2). Put $n=N-K$ and
+\[
+ c_N=\frac{Ns-nm_c}{K\rho},\qquad c_j=c_N+\sqrt N\,q_j.
+\]
+The one-neuron ray density, on bounded windows, is proportional to
+\[
+ c_j^{-(r+1)/2}\exp[-v_j^2/2-h_{z_j}(t_j)/\rho]
+                         \,dc_j\,dv_j\,dt_j\,(1+o(1)).
+\]
+Its leading term separates the scalar $v_j$, transverse $t_j$, and
+amplitude $q_j$ variables. The ordinary output must be
+$n\mu-\sqrt N A q+O(1)$, because the final hard-margin slack and the
+transverse exceptional-output errors are order one.
+
+Insert (2) in the orientation proof's amplitude integral. On bounded
+windows it shows that $q$ has limiting density proportional to
+$\varphi_\Sigma(Aq)$, hence $q\sim N(0,Q)$. Conditional on $q$, the
+ordinary kernel fluctuation has mean $-C\Sigma^{-1}Aq$ and covariance
+$\Gamma-C\Sigma^{-1}C^\top$. The scalar layer imbalances are independent
+standard normals, independent of those Gaussian fluctuations.
+
+The passage from bounded windows to the full conditional law uses the
+same domination as the orientation proof. The absolute value of the
+characteristic-function-weighted measure is bounded by the ordinary
+output measure. Its integrated amplitude tails are tight by the
+Gaussian-component subspace estimate; its $v_j,t_j$ tails are controlled
+by an integrable polynomial times $e^{-c\sum(v_j^2+\|t_j\|)}$.
+The exact-count theorem removes extra macroscopic neurons, and its
+assignment-counting argument prevents multiplicity from changing the
+normalization. Thus the normalized characteristic functions converge.
+The limiting function is continuous at zero, so this also establishes
+tightness of the kernel fluctuation under the conditional law.
+
+The exact identity
+\[
+ R_j^2=c_j-v_j\sqrt{c_j}+\frac{v_j^2}{2}+O(c_j^{-1/2})
+\]
+holds uniformly on bounded $v_j$ windows. ReLU's Lipschitz property gives
+\[
+ H(R_jv_{z_j}+u_j)=R_j^2B_{z_j}+O(1)
+\]
+on bounded transverse windows: $\|u_j\|=O(c_j^{-1/2})$ and
+$R_j=O(\sqrt N)$. Consequently the exceptional contribution to the
+kernel, at fluctuation scale, is
+\[
+ \sqrt N\left[\frac1N\sum_{j\in\mathrm{exceptional}}H(U_j)
+                  -\alpha B\boldsymbol1\right]
+                 =Bq-\sqrt\alpha\,Bv+o_{\Pr}(1).
+\]
+The replacement of $c_N$ by $N\alpha$ and the difference between
+$n k_*/N$ and $k_*$ contribute only $O(N^{-1/2})$ here.
+Combining with the ordinary fluctuation gives
+\[
+ Dq+\xi-\sqrt\alpha\,Bv,
+\]
+where $q\sim N(0,Q)$, $v\sim N(0,I_K)$, and
+$\xi\sim N(0,\Gamma-C\Sigma^{-1}C^\top)$ are independent. This
+proves (1).
+
+\begin{corollary}[Hard-margin slack law]
+Jointly with the conditional kernel limit, the $M$ final signed slacks
+\[
+              Y_x=N[f(x)F_N(x)-s],\qquad x\in X,
+\]
+converge in distribution to independent exponential variables of mean
+$M\rho$. They are independent of the limiting orientation pattern and
+of the within-sector Gaussian kernel fluctuation.
+\end{corollary}
+\begin{proof}
+Retain a bounded continuous test function of the final slack in the
+orientation proof's integral. On bounded slack windows the local limit
+is independent of that order-one slack, and the residual hard weight
+is exactly $\exp[-\sum_xY_x/(M\rho)]$ on the positive orthant.
+Its integrable exponential tail allows the windows to grow. The
+normalization is $(M\rho)^M$, yielding the product exponential law.
+The same factor separates in the joint characteristic-function argument
+above and in the finite orientation mixture.
+\end{proof}
+This is a distributional statement. It does not by itself assert a
+finite-$N$ expansion of expected slack, or uniformity as $r$ grows.
+
+\section{The even--singleton block is a convenient diagnostic}
+For numerical work take $\mathcal L$ to list the entries of the kernel
+between all even Walsh characters and the singleton characters, using
+the uniform Boolean inner product. Its ordinary mean $k_*$ is zero.
+The formulas above are invariant under changing the output coordinates
+from Euclidean cube values to Walsh coefficients; when using normalized
+Walsh coefficients, the covariance eigenvalues are those in the
+orientation note divided by $M$.
+
+If $E$ is even and $i$ is a singleton, let
+$T=[r]\mathbin\triangle E\mathbin\triangle\{i\}$. Signed-cube
+symmetry makes the mixed covariance with every other output character
+zero, and its sole possible entry is
+\[
+ C_{(E,i),T}=\E_{Q_*}
+  \left[\frac{G(U)}\rho\widehat h_U(E)
+                      \widehat h_U(\{i\})\widehat h_U(T)\right].
+\]
+Permutation symmetry reduces these entries to the classes
+$(|E|,\mathbf1_{i\in E})$. Also
+\[
+ \operatorname{tr}\Gamma=
+ \E_{Q_*}\left[
+       \left(\sum_{E\ \mathrm{even}}\widehat h_U(E)^2\right)
+       \left(\sum_i\widehat h_U(\{i\})^2\right)\right].
+\]
+These are fourth-order incoming observables. They can be integrated by
+the independent heavy-tail importance proposal from the sampling note.
+Thus the trace of (1) can be checked without estimating a large dense
+joint covariance matrix.
+
+At six-bit parity, the squared norm of the limiting cross block also
+depends only on the degree spectrum of the orientation sign function
+$\varepsilon$ on five bits. If $p_j$ is its squared Walsh mass at
+degree $j$, and $a_j=\widehat h(2\lceil j/2\rceil)^2$, then
+\[
+ \|k_S\|^2=\frac{(s-m_c)^2}{24\rho^2}
+       \sum_{j=0}^5p_j[a_j+j a_{j-1}+(5-j)a_{j+1}],
+\]
+with absent endpoint terms omitted. Balanced patterns have $p_4=p_5=0$.
+Subtracting this value pattern by pattern greatly reduces numerical
+noise from switching orientation sectors.
+
+The empirical observation that
+$\E\|\mathcal L(\mathcal K_N)\|^2-\E\|k_{S_N}\|^2$
+is about $18/N$ includes both a fluctuation variance and a possible
+second-order mean shift. Formula (1) alone predicts neither that complete
+coefficient nor its sign. The implementation therefore separately records
+$\|\mathcal L(\mathcal K_N)-k_{S_N}\|^2$ and its projection onto $k_{S_N}$.
+Convergence of their expectations requires uniform-integrability and
+second-order arguments beyond the distributional theorem stated here.
+
+An independent 200-million-proposal integration of the mixed moments,
+combined with a numerical sample of balanced orientation sets, estimates
+the orientation-averaged trace of (1) at about $6.048$. Its components
+are approximately $5.297$ from the residual ordinary covariance,
+$0.353$ from amplitude adjustment, and $0.398$ from layer imbalance.
+These are floating-point estimates, not interval bounds. The final
+finite-network estimates of the scaled residual second moment are
+$6.527\pm0.068$ at width 512, $5.882\pm0.059$ at width 2048, and
+$6.133\pm0.093$ at width 8192, where the displayed quantities are
+twenty-block Monte Carlo standard errors, not confidence guarantees.
+The finite-width differences are not monotone. They are diagnostics of
+the limiting fluctuation scale, not exact finite-width agreement.
+The comparison is described as a diagnostic because
+the chain has no mixing certificate and the distributional theorem does
+not alone establish convergence of the sampled second moments.
+\end{document}

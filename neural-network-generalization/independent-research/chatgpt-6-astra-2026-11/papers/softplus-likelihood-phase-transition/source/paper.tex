@@ -1,0 +1,228 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{proposition}[theorem]{Proposition}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}\newcommand{\one}{\mathbf 1}\newcommand{\Pp}{\mathbb P}
+\title{A likelihood-driven condensation transition}
+\date{18 November 2026; independent research draft}
+\emergencystretch=3em
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author. Verification scope and provenance are stated in the accompanying research collection.}}
+\hypersetup{pdftitle={A likelihood-driven condensation transition},pdfauthor={ChatGPT-6 Astra}}
+\begin{document}\maketitle
+
+This is a smooth-likelihood extension of the four-softplus-condensate
+result. The likelihood is tempered proportionally to width. That scaling
+is explicit and essential: with the $N^{-1}$ network normalization and
+a fixed untempered likelihood, the prior output tends to zero and a
+finite data set does not have the same large-deviation-scale effect.
+The general large-deviation treatment of tempered neural likelihoods is
+not new; see, for example,
+\href{https://arxiv.org/abs/2602.22925}{Papagiannouli, Trevisan and Zito (2026)}.
+The calculation here concerns the explicit change in the neuron-level
+posterior at a nonsteep Gaussian-softplus critical tilt.
+
+\section{Model}
+Use the Gaussian two-bit softplus model from the companion notes.
+Write $F_N=N^{-1}\sum_j\Phi(\theta_j)$,
+$\overline Y_x=\chi(x)F_N(x)$, $Z=\frac14\sum_x\chi(x)\Phi_x$,
+$\Lambda(t)=\log\E_0e^{tZ}$, $t_*=2\sqrt2$,
+$m_c=\Lambda'(t_*-)<\infty$, and
+$Q_t=e^{tZ-\Lambda(t)}P_0$ for $0\le t\le t_*$.
+Then $\E_{Q_t}\Phi=\Lambda'(t)\chi$.
+
+For $\lambda>0$ define a posterior by
+\[
+ \frac{d\Pi_{N,\lambda}}{dP_0^N}
+  =\mathcal Z_{N,\lambda}^{-1}
+     \exp\left[-\frac{N\lambda}{4}\sum_x\ell(\overline Y_x)\right].
+                                                               \tag{1}
+\]
+We consider either square regression loss
+$\ell(s)=(1-s)^2/2$ or logistic loss $\ell(s)=\log(1+e^{-s})$.
+Set $c_0=2^{1/4}(\log2)/\beta$.
+
+\begin{theorem}[Explicit transition]
+For square loss suppose $m_c<1$, as holds for standard softplus by
+the certified bound $m_c<0.488$. Define
+\[
+ \lambda_c=\frac{t_*}{1-m_c}\quad\text{(square)},\qquad
+ \lambda_c=t_*(1+e^{m_c})\quad\text{(logistic)}.                 \tag{2}
+\]
+For $0<\lambda<\lambda_c$ there is a unique $t_\lambda\in(0,t_*)$
+solving
+\[
+ t_\lambda=-\lambda\ell'(\Lambda'(t_\lambda)),\qquad
+ s_\lambda=\Lambda'(t_\lambda).
+\]
+The posterior empirical parameter law converges to $Q_{t_\lambda}$,
+$F_N\to s_\lambda\chi$, and
+$\max_j\|\theta_j\|/\sqrt N\to0$ in probability.
+At $\lambda=\lambda_c$ these same statements hold with $Q_*$ and
+$s_\lambda=m_c$.
+
+For $\lambda>\lambda_c$, put
+\[
+ s_\lambda=1-\frac{t_*}{\lambda}\quad\text{(square)},\qquad
+ s_\lambda=\log\left(\frac\lambda{t_*}-1\right)
+                   \quad\text{(logistic)},\quad
+ \delta_\lambda=s_\lambda-m_c>0.                             \tag{3}
+\]
+The empirical parameter law converges to $Q_*$, independent of
+$\lambda$ within this supercritical phase, but
+$F_N\to s_\lambda\chi$. Exactly four neurons occur at parameter
+scale $\sqrt N$: after relabeling, their scaled parameters converge to
+\[
+ \eta_x(\delta_\lambda)=
+ \left(\chi(x)2^{-1/4}\sqrt{\delta_\lambda},0,
+       x_1 2^{-3/4}\sqrt{\delta_\lambda},
+       x_2 2^{-3/4}\sqrt{\delta_\lambda}\right),               \tag{4}
+\]
+and the largest norm of every remaining neuron, divided by $\sqrt N$,
+tends to zero. Moreover
+\[
+ -\log\mathcal Z_{N,\lambda}
+  =N\left[t_*s_\lambda-\Lambda(t_*)+
+                          \lambda\ell(s_\lambda)\right]
+    +4c_0\sqrt{\delta_\lambda N}+o(\sqrt N).                  \tag{5}
+\]
+All convergences are in probability under the indicated posterior.
+No efficient-sampling or optimization conclusion is asserted.
+\end{theorem}
+
+\section{Scalar minimization and exact change of measure}
+Let $I$ be the scalar Legendre transform of $\Lambda$.
+Its derivative increases from zero to $t_*$ on $[0,m_c]$, and
+$I(s)=t_*s-\Lambda(t_*)$ for $s\ge m_c$.
+For either loss the unique minimizer of $I(s)+\lambda\ell(s)$ is
+nonnegative and is precisely the value given above. Below $m_c$
+the first-order condition is the stated equation for $t_\lambda$;
+above $m_c$ it is $t_*+\lambda\ell'(s)=0$.
+
+One can avoid invoking a full output LDP to identify the posterior.
+For any $t\in[0,t_*]$, changing to $Q_t^N$ gives exactly
+\[
+ \mathcal Z_{N,\lambda}
+ = e^{N\Lambda(t)}
+    \E_{Q_t^N}\exp\left[-N V_t(\overline Y)\right],\qquad
+ V_t(y)=\frac14\sum_x\{t y_x+\lambda\ell(y_x)\}.             \tag{6}
+\]
+Choose $t=t_\lambda$ in the subcritical phase and $t=t_*$
+in the other phases. In every case each summand in $V_t$ is strictly
+convex and has its unique minimum at $s_\lambda$.
+It is coercive: this is immediate for square loss; for logistic loss,
+its slopes at the two infinities are $t>0$ and $t-\lambda<0$.
+Thus $V_t$ has the unique global minimizer $s_\lambda\one$.
+
+\section{Subcritical and critical phases}
+In these phases $\E_{Q_t}Y=s_\lambda\one$ and $Q_t$ has finite
+second moments. Chebyshev gives probability at least $1/2$ that
+$\|\overline Y-s_\lambda\one\|\le B/\sqrt N$ for a fixed $B$.
+The Hessian of $V_t$ is bounded locally, and its gradient vanishes
+at the minimizer. Hence
+\[
+ \E_{Q_t^N}e^{-N[V_t(\overline Y)-V_t(s_\lambda\one)]}
+       \ge\tfrac12e^{-CB^2}>0.                              \tag{7}
+\]
+The posterior density relative to $Q_t^N$ is therefore bounded by
+a fixed constant. Product-law concentration proves the empirical
+limit, and coercivity plus strict minimization of $V_t$ prove the
+output limit. For $t<t_*$, $Q_t$ has Gaussian parameter tails;
+for $t=t_*$ it has an exponential parameter moment. In either case
+a union bound gives $\max_j\|\theta_j\|/\sqrt N\to0$ under $Q_t^N$,
+and then under the posterior by the bounded density. This includes
+the critical point, whose finite second moments are guaranteed by
+softplus smoothing.
+
+\section{Supercritical evidence}
+Use $t=t_*$, $s=s_\lambda$, $\delta=\delta_\lambda$, and write
+$V=V_{t_*}$. The centered $Q_*$ sample-average LDP from the companion
+note has speed $\sqrt N$ and rate
+\[
+ \mathcal J(z)=c_0\sum_x\sqrt{z_x}\quad(z\ge0),
+ \qquad\mathcal J(z)=\infty\text{ otherwise}.
+\]
+For a fixed small neighborhood of $s\one$, its probability has
+upper exponent approaching $-4c_0\sqrt\delta$ as the neighborhood
+shrinks. Outside the neighborhood, $V-V(s\one)$ has a strictly
+positive infimum, so its contribution to (6), after factoring out
+$e^{-NV(s\one)}$, is at most $e^{-cN}$.
+This gives the upper bound with second-order exponent
+$-4c_0\sqrt\delta$.
+
+For the lower bound use the bulk-adapted four-ball construction in
+the companion exact-condensate proof. For a bulk event of probability
+at least $1/2$, four ray-centered neurons with radii
+$(N\delta/\sqrt2)^{1/2}+O(1)$ and balls of radius $c/\sqrt N$
+make every total signed output $Ns+O(1)$. Their $Q_*^4$ probability
+is at least
+\[
+ \exp[-4c_0\sqrt{\delta N}-O(\log N)].
+\]
+On this event $N[V(\overline Y)-V(s\one)]=O(N^{-1})$.
+Equation (6) therefore gives the matching lower bound, proving (5).
+
+\section{Posterior bulk and the four selected neurons}
+The preceding lower bound yields domination by
+$\exp[4c_0\sqrt{\delta N}+o(\sqrt N)]Q_*^N$.
+Bounded-test product concentration proves the empirical limit $Q_*$.
+Strict minimization of $V$ gives output concentration at $s\one$,
+since a fixed output deviation costs $e^{-cN}$ after this domination.
+
+For exceptional neurons, combine the marked few-big-jumps upper
+bound with output concentration. Among configurations contributing
+total increment $\delta\one$, the unique minimum-cost nonzero
+configuration consists of the four vectors (4). The strict gap away
+from that configuration, proved in the companion note, survives a
+sufficiently small tolerance in the output increment. The cost gap
+beats the displayed domination factor. This proves both the four
+convergences and the absence of other $\sqrt N$-scale neurons.
+
+\section{Super-Gaussian priors remove this transition}
+Replace the independent Gaussian parameter coordinates by densities
+proportional to $e^{-|\theta_i|^p}$ for fixed $p>2$, retaining softplus
+and the same likelihood. The neuron output has at most quadratic
+parameter growth. Young's inequality therefore makes its cumulant
+finite for every dual vector. In particular the scalar XOR cumulant
+is finite everywhere and its derivative ranges over all of $\R$.
+Symmetry still gives $\E_{Q_t}\Phi=\Lambda'(t)\chi$.
+
+For every finite $\lambda>0$ and either loss, the scalar equation
+$t=-\lambda\ell'(\Lambda'(t))$ has a unique finite positive solution
+(less than $\lambda$ for the losses used here). Equation (6) and the
+Chebyshev argument (7) apply at that interior tilt. Its parameter
+tails obey $Q_t(\|\theta\|>R)\le C e^{-cR^p}$, because the
+quadratic tilt is dominated by the degree-$p$ prior energy.
+Consequently the posterior empirical law converges to $Q_t$, its
+mean produces the full limiting output, and
+\[
+ \max_j\|\theta_j\|=O_{\Pp}((\log N)^{1/p}).
+\]
+There is no $\sqrt N$-scale condensate at any fixed finite likelihood
+strength in this modified prior. This is a statement about the stated
+family, not a claim that all possible forms of posterior concentration
+are eliminated by a quartic prior.
+
+\section{Interpretation and an unproved finite-size refinement}
+In the subcritical phase the limiting ordinary-neuron distribution
+changes with the likelihood strength. In the supercritical phase
+that distribution stops changing, and four exceptional neurons carry
+all additional mean signal. The empirical measure alone therefore
+ceases to determine the learned function through integration of the
+unbounded neuron output.
+
+The macroscopic parameter amplitude is proportional to
+$\sqrt{\delta_\lambda}$ and hence to
+$\sqrt{\lambda-\lambda_c}$ just above the transition.
+This square-root onset follows directly from (3)--(4), with no claim
+about a joint finite-$N$ critical window.
+
+A further conjecture is a finite-size shift of the symmetric output
+by
+\[
+ -\frac{2c_0}{\lambda\ell''(s_\lambda)
+                    \sqrt{\delta_\lambda N}}.
+\]
+It follows formally by differentiating the two exponential orders in
+(5). A local density estimate is needed before this becomes a theorem;
+the logarithmic LDP alone is insufficient to justify that step.
+\end{document}

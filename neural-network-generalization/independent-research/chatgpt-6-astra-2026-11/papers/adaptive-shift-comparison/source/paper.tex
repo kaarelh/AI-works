@@ -1,0 +1,256 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\newcommand{\R}{\mathbb R}
+\newcommand{\TV}{\operatorname{TV}}
+\title{Tiny adaptive shifts and the importance of a density lower bound}
+\date{18 November 2026; independent research draft}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author. Verification scope and provenance are stated in the accompanying research collection.}}\emergencystretch=3em
+\hypersetup{pdftitle={Tiny adaptive shifts and the importance of a density lower bound},pdfauthor={ChatGPT-6 Astra}}
+\begin{document}\maketitle
+
+This note transfers two existing repository mechanisms to a common
+neural setting. It does not give a new neural star construction. The
+positive result extends the finite-source posterior argument to arbitrary
+predictable input distributions with two-sided comparison to one fixed
+reference. The negative result transports the existing globally
+margin-conditioned ordinary ReLU construction to input laws whose total
+variation distance, density upper excess, and cumulative changes are all
+exponentially small. It retains the original large calibration and width
+thresholds. No result here removes global absolute-margin conditioning.
+
+\section{Two-sided comparison for an actual consistency posterior}
+Let $X$ be finite, $|X|=m$, with fixed target $f$. At round $t$, before
+its private predictor draw, an arbitrary predictable scheduler selects
+an input law $P_t$. For a fixed reference probability $\mu$ assume
+\[
+ a\mu\le P_t\le b\mu,\qquad 0<a\le1\le b<\infty.
+\]
+The scheduler may use the entire observed past. Let $\Pi_{t-1}$ be any
+history-measurable distribution on functions consistent with all labels
+seen so far. Assume a fixed finite class $A$ contains $f$ and satisfies
+\[
+ \log|A|\le h,\quad \Pi_{t-1}(A^c)\le\beta
+ \text{ after every realizable history},\quad
+ \mu(g\ne f)\in\{0\}\cup[\gamma,1]\ (g\in A).
+\]
+An exact Bayesian posterior with prior $\pi$ has the required tail if
+$\pi(A^c)\le\beta\pi(f)$ and $\pi(f)>0$.
+Let $M_\infty$ count mistakes from fresh posterior draws, and write
+$q_t=\Pi_{t-1}\{g:g(X_t)\ne f(X_t)\}$.
+
+\begin{theorem}[No finite source list is required]
+Under these assumptions,
+\[
+ \E M_\infty=\E\sum_{t\ge1}q_t
+ \le b\left[1+\frac{h+1}{a}\left(1+\log\frac1\gamma\right)\right]
+       +\beta m.                                             \tag{1}
+\]
+The expected number of posterior-majority mistakes is at most twice
+this bound. Failures to give the correct label probability strictly
+larger than $2/3$ have at most three times this bound.
+\end{theorem}
+\begin{proof}
+Let $R_n$ be the largest $\mu$-risk of a function in $A$ consistent
+with the first $n$ actual samples. A fixed function of risk $u$ has,
+conditional on any history in which it survives, probability at least
+$au$ of being eliminated by the next draw. Consequently its survival
+probability is at most $(1-au)^n\le e^{-anu}$, even for adaptive input
+laws. Union bounding gives
+\[
+ \Pp(R_n>u)\le\min\{1,e^{h-anu}\}.
+\]
+For $0<u<\gamma$ use the same bound with $u$ replaced by $\gamma$,
+since every positive-risk member has risk at least $\gamma$.
+As $\sum_{n\ge1}\min\{1,e^{h-anu}\}\le(h+1)/(au)$, integrating
+the tail and using Tonelli gives
+\[
+ \sum_{n\ge1}\E R_n\le\frac{h+1}{a}(1+\log(1/\gamma)).
+\]
+Before drawing $X_{n+1}$, the inside-$A$ error probability is at most
+$bR_n$. Sum this bound and include the initial round $R_0\le1$.
+For the outside-$A$ component, consistency makes its realized-query
+error probability at most
+$\beta\mathbf1_{\{X_t\text{ not previously observed}\}}$.
+Its total is therefore at most $\beta m$ pathwise, including on an
+infinite stream. This proves (1); the majority and confidence claims
+follow from the pointwise bounds $\mathbf1_{\{q_t\ge1/2\}}\le2q_t$
+and $\mathbf1_{\{q_t\ge1/3\}}\le3q_t$.
+\end{proof}
+
+The same stopped-supermartingale argument as in the repository's
+finite-source theorem gives high-probability versions. The expectation
+statement suffices for the comparison here. In particular, on the
+uniform $d$-cube one may take $\gamma=2^{-d}$ and $\beta=2^{-d}$;
+then the bound is polynomial whenever $h$ and $b/a$ are polynomial.
+The globally margin-conditioned tanh learners in the repository supply
+such a class in their stated strong-prior, above-mean-field, and
+mean-field regimes, or a direct polynomial target-log-mass bound at
+smaller widths. No equal-weight assumption is imposed within $A$.
+
+\section{The same positive conclusion for strong-prior shallow ReLU}
+We record an elementary compression argument to avoid silently importing
+a tanh-specific hypothesis into a ReLU conclusion. Use input dimension
+$d\ge1$, $D=d+1$, output $F=\sum_{j=1}^Nv_j\operatorname{ReLU}
+(u_j\cdot(1,x))$, and Gaussian energy
+\[
+ \kappa_N(\theta)=\frac dN\sum_j\|u_j\|^2+N\sum_jv_j^2.
+\]
+The prior has incoming coordinate variance $N\sigma^2/d$ and readout
+variance $\sigma^2/N$. It is conditioned initially on
+$|F(x)|>1/2$ at every cube input, and thereafter on exact labels.
+For a Boolean function $g$, let $\kappa_N(g)$ be the infimum energy
+of its strict global-margin realizations.
+
+\begin{lemma}[A width-independent finite function count]
+For $J\ge1$, put
+\[
+ V=\max\{1,(J+1)/(2\sqrt d)\},\quad
+ T=\left\lceil128V^2D\log(4\,2^d)\right\rceil.
+\]
+Then the number of functions with $\kappa_N(g)\le J$ has logarithm at most
+\[
+ H(d,J)=\log(2+64DV)+T[\log2+D\log(3+128DV)].              \tag{2}
+\]
+In particular it has a polynomial majorant in $d,J$, independent of $N$.
+\end{lemma}
+\begin{proof}
+Choose a realization of energy less than $J+1$. Its variation sum
+$W=\sum_j|v_j|\|u_j\|$ is at most $(J+1)/(2\sqrt d)\le V$ by AM--GM.
+Ignore zero atoms and write $F=W\E A$, where an atom is a signed ReLU
+ridge with unit incoming norm. At every input $|A(x)|\le\sqrt D$.
+For $T$ iid atoms, Hoeffding and a union bound on the $2^d$ inputs show
+that with positive probability
+\[
+ \left\|\frac WT\sum_{j=1}^TA_j-F\right\|_\infty\le1/8.
+\]
+Indeed the failure probability is at most
+$2\,2^d\exp[-T/(128V^2D)]\le1/2$.
+
+Quantize every coordinate of the unit incoming vectors to a grid of
+mesh $1/(64DV)$ within $[-1,1]$, including endpoints, with coordinate
+error at most that mesh. Quantize $W\in[0,V]$ to mesh $1/(64D)$.
+The incoming perturbation changes the output by at most $1/64$.
+Quantized incoming coordinates remain in $[-1,1]$, so each quantized
+feature has magnitude at most $D$, and amplitude quantization adds
+at most $1/64$. The final error is less than $1/4$, preserving all
+signs of the original strict-margin realization. The amplitude has
+at most $2+64DV$ choices; each ordered atom has at most
+$2(3+128DV)^D$ choices. Counting their descriptions proves (2).
+\end{proof}
+
+Suppose a target has a width-$C$ ReLU teacher, margin greater than
+$1/2$, and all incoming and readout coordinates bounded by $B$.
+Balancing each teacher neuron and padding zeros gives, at every $N\ge C$,
+\[
+ \kappa_N(f)\le J_T:=2\sqrt{dD}\,CB^2.
+\]
+For fixed finite $N$, the finite collection of realizable Boolean
+functions satisfies the Gaussian small-noise formula
+$2\sigma^2\log\mu_\sigma(U_{N,g})\to-\kappa_N(g)$.
+This follows from an open ball about a near-minimizer for the lower
+bound and the quadratic Gaussian tail for the upper bound. Therefore
+for every $\beta>0$, all sufficiently small $\sigma>0$ satisfy
+\[
+ \pi(A^c)\le\beta\pi(f),\qquad
+ A=\{g:\kappa_N(g)\le\kappa_N(f)\}.
+\]
+All ties are retained in $A$. Its log cardinality is bounded by
+$H(d,\max\{1,J_T\})$. Equations (1)--(2) prove polynomial expected
+lifetime mistakes for the actual strong-prior ReLU posterior under
+two-sided comparison to uniform input, uniformly in the width budget.
+The sufficient variance threshold may depend on each fixed $N$;
+no width-uniform temperature threshold is asserted.
+
+\section{Exponential mistakes with exponentially small upper-only shifts}
+Now use the existing repository theorem
+\emph{Superpolynomial online mistakes for isotropic Bayesian ReLU and softplus networks}
+(the folder \texttt{isotropic-relu-allwidth}). For its parameter $k$, the
+logical dimension is $m=6k+4$, the number of designated logical fibers is
+$K=2^{k-1}$, and every physical fiber has size $F=2^{d-m}$.
+Its target has a width-$\Theta(m^2)$ bounded-weight shallow ReLU teacher
+and a size-$O(m)$ Boolean circuit. At each eligible fixed learner width,
+the cold posterior prefers the wrong cheapest remaining star whenever
+the entire calibration region and preceding fibers have been observed.
+This statement concerns the original global absolute-margin support.
+
+Let $C$ be the physical complement of all $K$ designated fibers.
+Its size is $(2^m-K)F$. First draw uniformly from $C$ until every point
+there has appeared. Then, in increasing star-cost order, draw uniformly
+from $C\cup F_i$ until every point of fiber $F_i$ has appeared. Continue
+with the next fiber; after the last phase retain its input law forever.
+Repeated observations do not change a noiseless posterior.
+
+\begin{theorem}[Tiny total variation does not replace a density lower bound]
+For the above neural family there is a predictable input process with
+$K=2^{k-1}$ designated first-arrival rounds for which, at every eligible
+fixed width and all sufficiently small positive variance, posterior
+majority is wrong on every designated round. Fresh posterior sampling
+is wrong on all of them with probability at least $1-\eta$, for any
+prescribed $\eta>0$ after choosing the variance threshold.
+
+Writing $\mu$ for uniform physical input and $p=K/2^m=2^{-5k-5}$,
+every conditional input law and every realized path satisfy
+\[
+ P_t\le\frac1{1-p}\mu,\qquad
+ \TV(P_t,\mu)\le p,\qquad
+ \sum_t\TV(P_{t+1},P_t)\le\frac p{1-p}.                  \tag{3}
+\]
+There is a deterministic horizon with $\log T=O(d)$ by which the
+expected number of mistakes is $\Omega(K)$. Calibration and the horizon
+are still enormous. The input laws have zeros, so they violate every
+strictly positive density lower bound.
+\end{theorem}
+\begin{proof}
+Every calibration and fiber-covering phase finishes almost surely.
+Just before the first draw from $F_i$, the observed set is precisely
+$C$ and all preceding whole fibers. Every minimum-energy completion
+therefore mislabels every point of $F_i$, by the existing star theorem.
+There are only finitely many stages and possible first points. Its
+small-noise argument thus supplies one variance threshold for which
+correct posterior probability is below $\eta/K$ at every such query.
+Choose it also below $1/2$. This proves the majority statement and,
+by conditional union bounds, the fresh-sampling statement.
+
+The calibration law has density $2^m/(2^m-K)$ on $C$ and TV distance
+$p$ from uniform. Every subsequent law is uniform on a set of size
+$(2^m-K+1)F$, so its density upper bound is smaller and its TV distance
+is $(K-1)/2^m$. The calibration-to-first-fiber change has TV
+$1/(2^m-K+1)$, as does each subsequent change between disjoint new
+fibers. There are $K$ changes. Thus their sum is
+$K/(2^m-K+1)\le p/(1-p)$, proving (3) pathwise.
+
+The mean completion time of the final phase is
+\[
+ T_0=|C|H_{|C|}+K(|C|+F)H_F,
+\]
+by the coupon-collector identity, including the replay delays from $C$.
+Markov's inequality gives completion by $\lceil2T_0\rceil$ with
+probability at least $1/2$. Taking, for example, $\eta=1/10$, the sampled
+mistakes by that time have expectation at least $2K/5$; majority has
+expectation at least $K/2$. Since $\log T_0=O(d)$, the asserted horizon
+bound follows.
+\end{proof}
+
+\section{Interpretation and limits}
+Both the positive shallow-ReLU result and the negative construction use
+the same kind of independent Gaussian prior, exact label conditioning,
+and global absolute-margin support. The positive density lower bound
+forces continuing opportunities to eliminate every surviving wrong
+function. Small TV distance and a near-unit upper density bound alone
+can suppress a tiny set of those opportunities while exposing them in
+an adversarial order. Their scarcity makes the instantaneous shift tiny,
+without limiting the lifetime number of distinct mistakes.
+
+The upper bound is a direct extension of existing finite-class and
+neural-posterior arguments. The lower bound reuses the repository's
+existing calibrated star geometry and its huge constants, rather than
+providing a more practical example. The important open problem of
+superpolynomial ordinary-ReLU mistakes with only observed margins is
+untouched by this transfer.
+\end{document}

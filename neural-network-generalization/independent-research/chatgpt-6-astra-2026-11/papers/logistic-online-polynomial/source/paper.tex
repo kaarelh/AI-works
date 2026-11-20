@@ -1,0 +1,444 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\KL}{\operatorname{KL}}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\newcommand{\R}{\mathbb R}
+\newcommand{\ellg}{\ell}
+\emergencystretch=3em
+\title{A smooth-likelihood all-width mistake bound}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author. Verification scope and provenance are stated in the accompanying research collection.}}
+\date{18 November 2026; independent research draft}
+\hypersetup{pdftitle={A smooth-likelihood all-width mistake bound},pdfauthor={ChatGPT-6 Astra}}
+\begin{document}\maketitle
+
+This extends the hard observed-margin argument to a logistic likelihood.
+The likelihood scaling and treatment of repeated inputs are essential:
+there is a factor $N\lambda$ \emph{per distinct observed example}, and
+the learner memorizes labels at previously queried inputs. No claim is
+made for an ordinary unscaled Bernoulli likelihood, or for repeated
+sampling errors at memorized inputs. This draft has not been independently
+reviewed or formalized.
+
+\section{Model and theorem}
+Let $X$ be finite, $M=|X|\ge1$, $f:X\to\{-1,1\}$, and
+$F_N=N^{-1}\sum_{j=1}^N\Phi(\theta_j)$, with independent prior $P_0$.
+Write $\Lambda(\xi)=\log\E_0 e^{\xi\cdot\Phi}$ and $I=\Lambda^*$.
+Assume $\E_0\Phi=0$, the cumulant is finite everywhere, and the closed
+convex support of $\Phi$ is $\R^X$. These assumptions imply that every
+mean has a unique exponential tilt and that $I$ is smooth, strictly
+convex, and coercive, by the finite-dimensional argument in the
+companion hard-margin note.
+
+Put $\ellg(u)=\log(1+e^{-u})$ and fix $\lambda>0$.
+For the set $S$ of distinct revealed inputs, define
+\[
+ W_S(z)=\lambda\sum_{x\in S}\ellg(f(x)z_x),\qquad
+ \Pi_{N,S}(d\theta)=Z_{N,S}^{-1}e^{-N W_S(F_N)}P_0^N(d\theta).
+\]
+Prediction at a new input uses a fresh posterior draw or a fixed
+posterior-confidence rule. Repeated inputs return their stored label.
+
+Let $B=2\log(e+\lambda M)$, and suppose a teacher law $Q_T$ has
+\[
+ \KL(Q_T\|P_0)\le K,\qquad \min_x f(x)\E_T\Phi_x\ge B,
+ \qquad K\ge1.
+\]
+Suppose for some $q\in(1,2]$ and $D_q>0$ that
+\[
+ \KL(Q\|P_0)\le K+2\quad\Longrightarrow\quad
+              \E_Q|\Phi_x|^q\le D_q.                         \tag{1}
+\]
+Let $z_S$ minimize $I+W_S$, and $Q_S$ be its exponential tilt.
+Assume for all $S,x$ that
+\[
+                  \E_{Q_S}e^{|\Phi_x|/\Psi}\le2,\qquad\Psi\ge1. \tag{2}
+\]
+All constants will be polynomial for the Gaussian tanh prior below.
+
+Set
+\begin{align*}
+ \kappa&=\min\left\{1,\lambda\ellg(1/2),
+       \frac{(1/4)^{q/(q-1)}}{2(2D_q)^{1/(q-1)}}\right\},\\
+ L&=\max\{1,2(K+1)/B\},\qquad
+ \varepsilon=\min\{1,\sqrt{\kappa/(4eL)}\}.
+\end{align*}
+
+\begin{theorem}[Explicit large-width bound]
+If
+\[
+ N\ge64\Psi^2\varepsilon^{-2}\log(4M),\qquad
+ N\kappa\ge8\log2,
+\]
+then at every history and every new input with $f(x)(z_S)_x>1/4$,
+\[
+       \Pi_{N,S}\{f(x)F_N(x)\le0\}\le e^{-N\kappa/2}.          \tag{3}
+\]
+Along every adaptive sequence of distinct queries, at most
+$\lfloor(K+1)/\kappa\rfloor$ queries have $f(x)(z_S)_x\le1/4$.
+Consequently, if also $N\ge(2/\kappa)\log(M/\eta)$, total expected
+sampling mistakes are at most $(K+1)/\kappa+\eta$, and with probability
+at least $1-\eta$ the realized number is at most
+$\lfloor(K+1)/\kappa\rfloor$. For any fixed success-confidence
+threshold $\theta<1$, once $e^{-N\kappa/2}<1-\theta$, only the latter
+number of queries can have posterior success probability at most $\theta$.
+\end{theorem}
+
+\section{The dual budget and the entropy potential}
+Write $V_S=I(z_S)+W_S(z_S)$. Since $\ellg(B)\le e^{-B}$,
+\[
+                  0\le V_S\le K+\lambda M e^{-B}\le K+1.      \tag{4}
+\]
+First-order optimality identifies the tilt parameter:
+\[
+ \xi_{S,x}=\lambda f(x)\sigma(-f(x)(z_S)_x)\mathbf1_{x\in S},
+ \qquad \sigma(v)=(1+e^{-v})^{-1}.
+\]
+Put $u_x=f(x)(z_S)_x$. The Gibbs inequality with $Q_T$ yields
+\[
+ K\ge I(z_S)+\sum_{x\in S}\lambda\sigma(-u_x)(B-u_x).
+\]
+For every real $u$,
+\[
+ (B-u)\sigma(-u)\ge (B/2)\sigma(-u)-e^{-B/2-1}.
+\]
+Indeed the possible negative term is bounded by
+$(u-B/2)e^{-u}$ for $u>B/2$, whose maximum is $e^{-B/2-1}$.
+Since $\lambda M e^{-B/2-1}<1$, it follows that
+\[
+                         \|\xi_S\|_1\le2(K+1)/B\le L.        \tag{5}
+\]
+This bound has no factor $M$.
+
+For a tilt $Q_z$ of mean $z$, the exponential-family identity gives
+\[
+ I(z)+W_S(z)-V_S
+ =\KL(Q_z\|Q_S)+\mathcal B_{W_S}(z,z_S)
+ \ge\KL(Q_z\|Q_S),                                        \tag{6}
+\]
+where $\mathcal B$ is the Bregman remainder. We use the elementary
+moment--entropy inequality
+\[
+ |\E_P Y-\E_Q Y|\le (2D_q)^{1/q}
+                    (2\KL(Q\|P))^{(q-1)/q}                 \tag{7}
+\]
+whenever both $q$-moments are at most $D_q$.
+For completeness, with densities $p,q_1$, H\"older applied against
+$p+q_1$ bounds the left side by
+$(2D_q)^{1/q}[\int (p-q_1)^2/(p+q_1)]^{(q-1)/q}$;
+the last integral is at most twice the squared Hellinger distance and
+then at most $2\KL(Q\|P)$.
+
+Suppose the next query satisfies $u_x\le1/4$, and let $z'$ be the new
+minimizer after adding it. If $f(x)z'_x\le1/2$, the new loss term is at
+least $\lambda\ellg(1/2)$; (6) shows $V_{S\cup\{x\}}-V_S\ge\kappa$.
+Otherwise the mean moves by at least $1/4$, and (1), (6), (7) give the
+same conclusion. Both endpoint entropies are at most $K+1$ by (4).
+The monotone potential $V_S$ starts at zero and is bounded by $K+1$,
+proving the count of bad-mean queries.
+
+\section{Finite-width numerator and denominator}
+At a good-mean query minimize $I+W_S$ over $f(x)z_x\le0$, obtaining
+$z^-$ and value $V^-$. If $V^->K+2$, then $V^--V_S\ge1$.
+Otherwise both endpoint entropies meet (1), and (6), (7) show again
+\[
+                              V^-\ge V_S+\kappa.             \tag{8}
+\]
+The following Chernoff bound is exact at finite $N$:
+\[
+ \E_0^N[e^{-NW_S(F_N)}\mathbf1_{\{f(x)F_N(x)\le0\}}]
+                                      \le e^{-NV^-}.         \tag{9}
+\]
+To see it without invoking an asymptotic principle, the constrained
+minimizer has multiplier $\alpha\ge0$ and
+$\xi^-=-\nabla W_S(z^-)-\alpha f(x)e_x=\nabla I(z^-)$,
+with $\alpha f(x)z^-_x=0$. Convexity gives
+$W_S(z)\ge W_S(z^-)+\nabla W_S(z^-)\cdot(z-z^-)$.
+On the halfspace,
+$e^{N\alpha f(x)z_x}\le1$. The resulting prior exponential moment is
+$e^{N\Lambda(\xi^-)}$, and Fenchel equality yields (9).
+Strict feasibility is automatic because $I$ is finite on $\R^X$.
+
+For the denominator, an exact change of measure gives
+\[
+ Z_{N,S}=e^{-NV_S}\E_{Q_S}^N
+                  e^{-N\mathcal B_{W_S}(F_N,z_S)}.           \tag{10}
+\]
+When $\|F_N-z_S\|_\infty\le\varepsilon\le1$, use
+$\ellg''(u+v)\le e\sigma(-u)$ for $|v|\le1$ to obtain
+\[
+ \mathcal B_{W_S}(F_N,z_S)
+           \le(e/2)\|\xi_S\|_1\varepsilon^2\le\kappa/8.
+\]
+Assumption (2), by expanding centered moments, implies
+\[
+ \Pp_{Q_S}^N\{|F_N(x)-(z_S)_x|>u\}
+       \le2e^{-Nu^2/(64\Psi^2)},\qquad 0<u\le8\Psi.
+\]
+The stated width bound and a union over $M$ coordinates give probability
+at least $1/2$ to the required neighborhood. Thus
+$Z_{N,S}\ge\tfrac12 e^{-N(V_S+\kappa/8)}$. Equations (8)--(10) bound
+the error probability by $2e^{-7N\kappa/8}\le e^{-N\kappa/2}$.
+All estimates are uniform over histories; only actual queried inputs,
+at most $M$, need a union bound. This proves the theorem.
+
+\section{Gaussian tanh: polynomial constants}
+Let $X=\{-1,1\}^d$, $D=d+1$, $a\sim N(0,\tau^2)$,
+$u\sim N(0,\tau^2I_D/d)$, and
+$\Phi_x=a\tanh(u\cdot(1,x))$. Let
+$F_T=\sum_{i=1}^C v_i\tanh(u_i\cdot(1,x))$ have signed margin
+greater than $1/2$ with all its parameters bounded in magnitude by $B_0$.
+Here $d,C\ge1$, $\tau,B_0>0$.
+
+Take the uniform mixture of $C$ components with
+\[
+ a\sim N(2C(B+1)v_i,\tau^2),\quad
+ u\sim N(u_i,s^2I_D),\quad
+ s=\min\{\tau/\sqrt d,[4C(B+1)B_0\sqrt D]^{-1}\}.
+\]
+The mean differs from $2(B+1)F_T$ by at most $1/2$, using tanh's
+Lipschitz constant and $\E|(u-u_i)\cdot(1,x)|\le s\sqrt D$.
+It therefore has signed margin at least $B$. A valid entropy bound is
+\[
+ K=1+\frac{dDB_0^2+4C^2(B+1)^2B_0^2}{2\tau^2}
+       +\frac D2(q_0-1-\log q_0),\qquad q_0=ds^2/\tau^2.
+\]
+Entropy convexity controls the mixture. The Gaussian entropy inequality
+with exponential moment $\E_0e^{a^2/(4\tau^2)}=\sqrt2$ gives (1) with
+\[
+                     q=2,\qquad
+ D_2=4\tau^2(K+2+\tfrac12\log2).
+\]
+Under $Q_S$, conditional on $u$, the readout is Gaussian of variance
+$\tau^2$ and mean at most $\tau^2 L$ in magnitude, by (5). Thus (2)
+holds with $\Psi=4(1+\tau^2 L+\tau)$: if $a=\mu+\tau G$, then
+\[
+ \E e^{|a|/\Psi}
+ \le e^{|\mu|/\Psi+\tau^2/\Psi^2}\E e^{G^2/4}
+ \le e^{1/4+1/16}\sqrt2<2.
+\]
+The full convex support follows from tanh thresholds in a linear score
+that strictly orders the finite cube: a constant feature and successive
+thresholds approach an invertible step matrix, and Gaussian readouts
+have arbitrary signs and magnitudes. The cumulant is everywhere finite
+because $|\Phi_x|\le|a|$.
+
+All sufficient widths and mistake bounds above are polynomial in
+$d,C,B_0,\tau,\tau^{-1},\lambda^{-1},\log(1+\lambda)$ and
+$\log(1/\eta)$, allowing the usual harmless logarithms and using
+$\log M=d\log2$. No sharp polynomial degree is asserted.
+
+\section{Closing the small-width range}
+For every $N\ge C$, a prior box gives $f(x)F_N(x)\ge B$ on every input.
+Center the first $C$ readouts at $2N(B+1)v_i$ and all remaining readouts
+at zero; constrain readouts within $r_0=1/8$. Constrain the first $C$
+incoming vectors within coordinatewise distance
+\[
+       \delta=\min\{1,[16C(B+1)B_0D]^{-1}\}
+\]
+of their teacher values, and leave other incoming vectors unrestricted.
+The output differs from $2(B+1)F_T$ by at most
+$r_0+2C(B+1)B_0D\delta\le1/4$, proving the margin claim.
+The negative log prior mass of this box is at most
+\begin{align*}
+ J_N={}&N\log^+\frac{\sqrt{2\pi}\tau}{2r_0}
+ +\frac{C(2N(B+1)B_0+r_0)^2+(N-C)r_0^2}{2\tau^2}\\
+ &+CD\left[\log^+\frac{\sqrt{2\pi}\tau}{2\delta\sqrt d}
+                   +\frac{d(B_0+\delta)^2}{2\tau^2}\right].
+\end{align*}
+Hence the evidence at any history is at least $e^{-J_N-N}$.
+At a new query, let $e_t$ be its posterior probability of nonpositive
+signed output. The exact evidence ratio satisfies
+\[
+ \frac{Z_{N,S\cup\{x\}}}{Z_{N,S}}
+ =\E_{\Pi_{N,S}}\sigma(f(x)F_N(x))^{N\lambda}
+ \le1-(1-2^{-N\lambda})e_t.
+\]
+Telescoping minus log evidence along the realized adaptive history gives
+\[
+             \sum_t e_t\le\frac{J_N+N}{1-2^{-N\lambda}}
+                         \le\frac{J_N+N}{1-2^{-\lambda}}.     \tag{11}
+\]
+This bounds expected sampling mistakes, and confidence mistakes by a
+further factor $1/(1-\theta)$. The conditional Bernoulli exponential
+supermartingale gives, with probability at least $1-\eta$, at most
+$(e-1)$ times the bound (11), plus $\log(1/\eta)$, sampling mistakes.
+
+Combining (11) below the theorem's polynomial width threshold with its
+width-independent bound above that threshold proves the promised
+\textbf{polynomial bound uniform over every $N\ge C$}, including the
+high-probability version. Indeed $J_N$ is polynomial in the listed
+parameters and $N$, and $(1-2^{-\lambda})^{-1}=O(1+\lambda^{-1})$.
+The likelihood scaling and memorized-repeat assumptions remain essential;
+no computational-efficiency or cold-prior uniformity claim follows.
+
+\section{Why an unscaled likelihood cannot have this uniform guarantee}
+The factor $N$ is substantive even for a constant target. Consider the
+same Gaussian tanh mean-field prior, with readout variance $\tau^2$, but
+use the ordinary likelihood
+$L=\prod_{i=1}^m(1+e^{-y_iF_N(x_i)})^{-1}$.
+For every fixed dataset, let $\Pi^{\rm unscaled}_{N,S}$ be its posterior.
+Then
+\[
+ \operatorname{TV}(\Pi^{\rm unscaled}_{N,S},P_0^N)
+ \le\frac12\sqrt{
+       \exp\left[\frac{\tau^2(m^2/2+m/4)}N\right]-1}.       \tag{12}
+\]
+The estimate is uniform over all input points and labels, including
+repetitions. In particular $m=o(\sqrt N)$ leaves the posterior close
+to the prior. For a posterior-drawn classifier its correct-sign
+probability at any query is then $1/2+o(1)$.
+
+Here is a direct proof. Set $R=2^mL$, $T_i=y_iF_N(x_i)$, and
+$S_0=\sum_iT_i$. Conditional on incoming weights, $S_0$ is centered
+Gaussian with variance at most $\tau^2m^2/N$, since tanh is bounded
+by one. Also $\E T_i^2\le\tau^2/N$. The identity
+\[
+ \log R=\sum_i\{T_i/2-\log\cosh(T_i/2)\}
+\]
+and $0\le\log\cosh u\le u^2/2$ imply
+$\E R\ge e^{-\tau^2m/(8N)}$ by Jensen, and
+$\E R^2\le\E e^{S_0}\le e^{\tau^2m^2/(2N)}$.
+Cauchy--Schwarz applied to the density $R/\E R$ proves (12).
+Prior sign symmetry and nondegeneracy give exact correct-sign
+probability $1/2$ before conditioning, proving the last assertion.
+
+For an explicit lifetime consequence, let $M=2^d$ and take
+\[
+ N\ge\frac{\tau^2(M^2/2+M/4)}{\log(5/4)}.
+\]
+Equation (12) is at most $1/4$ for every history of length at most
+$M$. Present the cube without repetitions. Even for the constant target
+$f\equiv1$, which has a one-neuron bounded-weight teacher, the expected
+number of posterior-sampling mistakes is at least $M/4$.
+Every query also fails any correct-sign confidence threshold greater
+than $3/4$. This does not prove majority-prediction errors: an arbitrarily
+small posterior preference can still point in the correct direction.
+
+This obstruction reflects the shrinking prior output scale under the
+$1/N$ parameterization. It is not a general claim about ordinary Bayesian
+classification with other network normalizations. More generally, for
+any centered finite-variance neuron prior and any fixed dataset,
+$F_N\to0$ in probability and the bounded ordinary likelihood converges
+to $2^{-m}$. Dominated convergence alone then gives posterior--prior
+total variation tending to zero. The explicit rate (12) uses bounded
+activation and Gaussian readouts.
+
+There is a precise intermediate kernel regime. Fix the finite input set
+and dataset, and raise the ordinary likelihood to the power
+$\lambda\sqrt N$, with fixed $\lambda>0$. Let $v_x$ be the sum of
+observed labels at input $x$, and let
+$K_{xy}=\E_0\Phi_x\Phi_y$ be the prior neuron-output covariance.
+Then under this posterior
+\[
+ \sqrt N F_N\ \Longrightarrow\
+       N\left(\frac\lambda2Kv,\ K\right).                 \tag{13}
+\]
+The ordinary neuron empirical law still tends to its prior, so this is
+a kernel response without a change in the limiting feature distribution.
+Indeed the prior multivariate CLT gives $G_N=\sqrt N F_N\Rightarrow
+N(0,K)$. The likelihood, with its constant factor removed, is
+\[
+ R_N=\exp\left[\frac\lambda2v\cdot G_N
+     -\lambda\sqrt N\sum_{i=1}^m
+                  \log\cosh\left(\frac{G_N(x_i)}{2\sqrt N}\right)
+       \right].
+\]
+The second exponent tends to zero in probability and is nonpositive.
+Conditional Gaussianity of the readouts bounds every fixed exponential
+moment of $v\cdot G_N$ uniformly in $N$. Thus $R_N$ is uniformly
+integrable, as is its square, and its normalized weighted limit is the
+Gaussian's linear exponential tilt, which proves (13). The same
+bounded-density-second-moment argument transfers any prior law of large
+numbers for a bounded one-neuron observable to the posterior. In
+particular the tanh incoming-feature kernel tends to its prior kernel.
+This statement fixes dimension and data before taking width; it is not
+a sample-complexity theorem and makes no novelty claim about Gaussian
+exponential tilting.
+
+Here ``mean-field'' denotes the network's $1/N$ parameterization, not
+a factorized variational approximation. The distinction matters when
+comparing with \href{https://proceedings.mlr.press/v151/coker22a.html}
+{Coker and collaborators (2022)}, who prove a prior-reversion phenomenon
+for mean-field variational inference in wide networks with odd
+activations. Equations (12)--(13) concern the exact posterior and the
+specified output and likelihood scales.
+
+\section{ReLU with any fixed faster-than-Gaussian coordinate tail}
+The same theorem applies to $\Phi_x=a(U\cdot(1,x))_+$ when all
+$D+1$ coordinates have density $Z_p^{-1}e^{-|w|^p}$ for fixed $p>2$.
+Here $Z_p=2\Gamma(1+1/p)<2$. This connects the online bound to the
+ordinary-feature-learning side of the prior-tail comparison.
+Let $E_p=|a|^p+\sum_i|U_i|^p$ and $q_0=p/2$.
+The pointwise estimate and prior exponential moment are
+\[
+ |\Phi_x|^{q_0}\le\tfrac12D^{(p-1)/2}E_p,
+       \qquad \E_0e^{E_p/2}=2^{(D+1)/p}.
+\]
+If $\KL(Q\|P_0)\le K+2$, take
+\[
+ D'_q=D^{(p-1)/2}[K+2+(D+1)\log2/p],\quad
+ q=\min(q_0,2),\quad D_q=(D'_q)^{q/q_0}
+\]
+to obtain (1). The cumulant is everywhere finite because output is
+quadratic and the coordinate exponent exceeds two. ReLU hinges in a
+strictly ordered linear score, together with a constant feature, give
+full convex output support as in the hard-margin companion.
+
+For a width-$C$ teacher with parameter bound $B_0$ and signed margin
+greater than $1/2$, let $Q_T$ mix uniformly over its neurons. In component
+$i$, independently take incoming coordinates uniform on
+$U_i+[-h,h]^D$ and readout uniform on
+$2C(B+1)v_i+[-1,1]$, with
+\[
+ h=\min\{1,[16C(B+1)B_0D]^{-1}\}.
+\]
+The mean differs from $2(B+1)F_T$ by at most $1/8$, so its signed
+margin exceeds $B$. A valid entropy bound is
+\[
+ K=1+2^{p-1}\{D(B_0^p+h^p)+[2C(B+1)B_0]^p+1\}
+                         +D\log(1/h).
+\]
+This follows directly from the box densities, $Z_p<2$, and
+$|v+w|^p\le2^{p-1}(|v|^p+|w|^p)$.
+
+It remains to check (2) uniformly over histories. Set
+$\zeta=2/p<1$ and $C_D=D^{1-1/p}/2^{2/p}$, so
+$|\Phi_x|\le C_DE_p^\zeta$. For every $b\ge0$,
+\[
+ bC_DE^\zeta\le E/2+
+ c_p(bC_D)^{1/(1-\zeta)},\qquad
+ c_p=(1-\zeta)(2\zeta)^{\zeta/(1-\zeta)}.
+\]
+Readout sign symmetry gives $\Lambda(\xi_S)\ge0$. The dual budget
+$\|\xi_S\|_1\le L$ therefore yields
+\[
+ \log\E_{Q_S}e^{|\Phi_x|}
+ \le H=\frac{D+1}{p}\log2+c_p[C_D(L+1)]^{p/(p-2)}.
+\]
+By Jensen, (2) holds for $\Psi=\max\{1,H/\log2\}$.
+For fixed $p>2$, every theorem constant is polynomial in the teacher
+size, dimension, and the listed likelihood/confidence parameters.
+
+To cover smaller widths, center the first $C$ neurons at
+$a_i=2N(B+1)v_i$, $U_i=U_i^T$, and all other parameters at zero.
+Constrain every coordinate within
+\[
+ \delta=[16D((2C(B+1)+1)B_0+1)]^{-1}.
+\]
+The uniform output error from $2(B+1)F_T$ is at most
+$\delta D[(2C(B+1)+1)B_0+\delta]\le1/16$.
+The negative log prior box mass is at most
+\[
+ N(D+1)\log(1/\delta)+C[2N(B+1)B_0+\delta]^p
+       +CD(B_0+\delta)^p+(N-C)(D+1)\delta^p.
+\]
+It is polynomial for fixed $p$, and replaces $J_N$ in (11).
+Thus the all-width logistic mistake bound extends to these ReLU priors.
+The exponent and constants need not stay bounded as $p\downarrow2$;
+the Gaussian endpoint is not covered by this argument.
+\end{document}

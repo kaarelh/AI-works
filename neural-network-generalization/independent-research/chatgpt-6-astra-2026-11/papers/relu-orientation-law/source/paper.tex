@@ -1,0 +1,478 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{lemma}[theorem]{Lemma}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}
+\newcommand{\relu}{\operatorname{ReLU}}
+\title{The orientation law of Gaussian ReLU condensates}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author. Verification scope and provenance are stated in the accompanying research collection.}}\date{18 November 2026; independent research draft}
+\emergencystretch=3em
+\hypersetup{pdftitle={The orientation law of Gaussian ReLU condensates},pdfauthor={ChatGPT-6 Astra}}
+\begin{document}\maketitle
+
+This is a refinement of the exact-count companion, and uses that result
+as an input. The additional ingredients are a local central limit
+argument with a Gaussian component and a tightness estimate along the
+macroscopic-amplitude directions. It identifies a finite orientation
+mixture, rather than claiming that the posterior selects a unique
+hemisphere. This late-stage derivation has not received independent
+review or Lean verification.
+
+\section{Notation and proposed refinement}
+Fix even $r\ge6$ and use the same unit Gaussian, mean-field ReLU model.
+Write $M=2^r$, $K=M/2$, $\rho$ for the sharp parity correlation,
+$Q_*=e^{Z/\rho}P_0/M_*$, $m_c=\E_{Q_*}Z$, and
+\[
+ \Sigma=\operatorname{Cov}_{Q_*}(\Phi)\in\R^{M\times M}.
+\]
+This covariance uses the ordinary Euclidean coordinates indexed by cube
+inputs, not a covariance matrix divided by $M$. It is positive definite:
+the Gaussian component in the companion proof implies positive variance
+in every nonzero output direction. It is finite by the fourth parameter
+moment established there.
+
+For each $z\in\{-1,1\}^r$ put
+\[
+ v_z=(0,z/\sqrt r),\quad
+ \sigma_z=\operatorname{sgn}(G(v_{\boldsymbol1}))\chi(z),\quad
+ f_z(x)=\sigma_z\relu(z\cdot x/\sqrt r).
+\]
+Let $\mathcal B$ be the finite set of orientation sets $S$ selecting
+one representative from every antipodal pair and satisfying
+\[
+ \sum_{z\in S}\chi(z)z_i=0\quad(1\le i\le r).
+\]
+Each $S$ has $K$ elements. Order its columns by a fixed ordering of
+antipodal pairs and let $A_S$ have columns $f_z$ in that order.
+Its rank is $K$, by the invertible even Fourier block. Furthermore
+$A_S\boldsymbol1=K\rho\chi$.
+
+For hard margins $s>m_c$, set
+$\alpha=(s-m_c)/(K\rho)$ and $\nu=(r+1)/2$.
+In critical-ray coordinates from the companion,
+$U=Rv_z+u$, $a=\sigma_z A$, $u\perp v_z$, the corner formula is
+$\sigma_zG(U)=\rho R-h_z(u)$, with $h_z$ a transverse norm.
+Define the ray-volume constant
+\[
+ L_r=\frac{(2\pi)^{-(r+1)/2}}{2M_*}
+              \int_{v_z^\perp}e^{-h_z(t)/\rho}\,dt.
+\]
+The integral is finite and its value does not depend on $z$, by the
+coordinate-sign symmetries and orthogonal changes of transverse basis.
+
+\begin{theorem}[Orientation probabilities and leading evidence constants]
+In the hard-margin posterior, assign each of its $K$ exceptional
+neurons to the nearest critical ray and let $S_N$ be its orientation
+set. Then
+\[
+ \Pr(S_N=S\mid H_N)\longrightarrow
+ \frac{w_H(S)}{\sum_{T\in\mathcal B}w_H(T)},\qquad
+ w_H(S)=\det(A_S^\top\Sigma^{-1}A_S)^{-1/2}.
+ \tag{1}
+\]
+Every balanced pattern has a strictly positive limiting probability.
+More precisely,
+\[
+ P_0^N(H_N)\sim e^{-NI(s)}N^{-Kr/2}
+ L_r^K\alpha^{-K\nu}(M\rho)^M
+ (2\pi)^{-(M-K)/2}(\det\Sigma)^{-1/2}
+ \sum_{S\in\mathcal B}w_H(S).\tag{2}
+\]
+For the above-critical square or logistic likelihood, put
+$s=s_\lambda$, $\alpha=(s-m_c)/(K\rho)$, and
+$\gamma=\lambda\ell''(s)/M>0$. Then the orientation weights are
+\[
+ w_L(S)=\det\left[A_S^\top(I+\gamma\Sigma)^{-1}A_S\right]^{-1/2},
+ \tag{3}
+\]
+and the likelihood evidence satisfies
+\begin{align*}
+ \mathcal Z_{N,\lambda}\sim{}&
+ e^{-N[I(s)+\lambda\ell(s)]}N^{-K(r-2)/2}
+ L_r^K\alpha^{-K\nu}(2\pi/\gamma)^{K/2}\\
+ &\qquad\cdot\det(I+\gamma\Sigma)^{-1/2}
+                  \sum_{S\in\mathcal B}w_L(S).\tag{4}
+\end{align*}
+No simultaneous dimension--width limit or effective sampling theorem is
+asserted in this paper. The separate independent-construction companion
+uses these constants to prove fixed-dimension sampling limits. The covariance and determinant expressions are exact finite-
+dimension formulas, not numerically certified evaluations.
+\end{theorem}
+
+\section{The local central limit estimate actually needed}
+Let $V=\Phi(\theta)$ under $Q_*$, with mean $\mu=m_c\chi$.
+The companion constructs a fixed convolution block with a nonzero
+centered isotropic Gaussian component. For $n$ neurons, separate the
+block Bernoulli choices and discard the event with fewer than half their
+expected Gaussian choices. Its probability is $O(e^{-cn})$.
+The remaining subprobability law of $Y_n=\sum_{j=1}^nV_j$ has density
+$p_n$ and is a mixture of
+\[
+ T+N(0,J\sigma^2 I),\qquad cn\le J\sigma^2\le Cn,
+\]
+where $T$ is the sum of the nongenuine-Gaussian block contributions and
+leftovers. Its unconditional centered second moment is $O(n)$:
+$\E T=n\mu$ and $\E\|T-n\mu\|^2\le Cn$.
+
+The centered and rescaled good subprobability characteristic function
+is bounded in absolute value by $e^{-c\|t\|^2}$. It converges pointwise
+to $e^{-t^\top\Sigma t/2}$: the full law has the ordinary finite-variance
+multivariate central limit theorem, and the discarded mass is
+exponentially small. The CLT follows, for example, by expanding each
+centered characteristic function to second order and taking its $n$th
+power. Dominated Fourier inversion therefore proves
+\[
+ \sup_{z\in\R^M}
+ \left|n^{M/2}p_n(n\mu+\sqrt n\,z)-\varphi_\Sigma(z)\right|
+                 \longrightarrow0.\tag{5}
+\]
+Only the good density is used in (5). No assertion that the entire
+finite convolution has a density is necessary.
+
+A second consequence is tightness after integrating along any fixed
+rank-$K$ subspace $E\subset\R^M$. The Gaussian component's density
+integrated over $E$ is bounded by $Cn^{-(M-K)/2}$. If the residual
+translation has centered norm above $B\sqrt n$, its contribution is
+at most $Cn^{-(M-K)/2}/B^2$, by Chebyshev. On the complementary
+residual event, Gaussian tails bound the part of the $E$ integral whose
+coordinate has norm above $CB\sqrt n$ by
+$Cn^{-(M-K)/2}e^{-cB^2}$, provided the remaining offset is bounded by
+a smaller multiple of $B\sqrt n$.
+These estimates are uniform in the mixture's translations and variances
+on the stated events. They will justify extending bounded amplitude
+windows to all of $\R^K$.
+
+\section{One prescribed assignment of exceptional indices}
+Fix $S\in\mathcal B$ and assign its ordered rays to $K$ distinct
+neuron indices. Use the companion's coordinates
+\[
+ c=AR,\quad v=A-R,\quad t=\sqrt c\,u.
+\]
+Uniformly for bounded $v,t$ as $c\to\infty$, the one-neuron density is
+\[
+ \frac{(2\pi)^{-(r+2)/2}}{2M_*}
+ c^{-\nu}\exp[-v^2/2-h_z(t)/\rho]\,(1+o(1))\,dc\,dv\,dt.
+ \tag{6}
+\]
+This follows directly from the exact Jacobian
+$c^{-r/2}/(A+R)$ and
+$D_0=v^2/2+\|u\|^2/2+(A/\rho)h_z(u)$.
+The output is $cf_z+e$ with $\|e\|_\infty\le C\|t\|$.
+The uniform upper envelope is
+$Cc^{-\nu}e^{-c_0(v^2+\|t\|)}$ in the fixed ray cone.
+
+Put $n=N-K$ and
+\[
+ c_N=\frac{Ns-nm_c}{K\rho}=N\alpha+m_c/\rho,
+ \qquad c_j=c_N+\sqrt N\,q_j.
+\]
+After summing the exceptional outputs, the remaining ordinary sum must
+be close to $n\mu-\sqrt N A_Sq$ for hard margins. For bounded $q,v,t$
+and bounded final slack, (5) applies uniformly; the bounded transverse
+output error vanishes on the $\sqrt N$ scale.
+Integrating (6) in $v,t$ gives the factor $L_r$ per ray. Its amplitude
+scaling gives $N^{-r/2}\alpha^{-\nu}$ per ray.
+
+For hard margins, the integral of the residual weight over the final
+slack coordinates is exactly
+\[
+ \int_{(0,\infty)^M}
+       \exp[-(M\rho)^{-1}\textstyle\sum_x y_x],dy=(M\rho)^M.
+\]
+Thus one assignment contributes asymptotically
+\[
+ N^{-Kr/2-M/2}L_r^K\alpha^{-K\nu}(M\rho)^M
+                  \int_{\R^K}\varphi_\Sigma(A_Sq)\,dq.
+ \tag{7}
+\]
+The Gaussian integral is
+\[
+ (2\pi)^{-(M-K)/2}(\det\Sigma)^{-1/2}
+                     \det(A_S^\top\Sigma^{-1}A_S)^{-1/2}.
+ \tag{8}
+\]
+For the soft likelihood, its centered residual weight at fluctuation
+$z\sqrt N$ tends to $e^{-\gamma\|z\|^2/2}$. The analogous contribution
+of one assignment is
+\[
+ N^{-Kr/2}L_r^K\alpha^{-K\nu}
+       \int_{\R^K}\E_{Z\sim N(0,\Sigma)}
+                  e^{-\gamma\|A_Sq+Z\|^2/2}\,dq.
+ \tag{9}
+\]
+First integrating $Z$, then $q$, evaluates this integral as
+\[
+ (2\pi/\gamma)^{K/2}\det(I+\gamma\Sigma)^{-1/2}
+       \det[A_S^\top(I+\gamma\Sigma)^{-1}A_S]^{-1/2}.\tag{10}
+\]
+
+Here are the domination details for the unbounded integrations in
+(7)--(9). Restrict initially all $c_j$ to
+$[N\alpha/2,2N\alpha]$, so $c_j^{-\nu}\le CN^{-\nu}$.
+The exact-count volume bound, with the error-enlarged residual weight,
+controls the $v,t$ tails by an integrable polynomial times
+$\exp[-c_0\sum(v_j^2+\|t_j\|)]$ at the same power of $N$ as (7) or
+(9). After fixing a large transverse box, use the subspace tightness
+following (5) to control $q$ outside a large bounded set. For hard
+margins first discard large final slack using its exponential tail.
+For the soft likelihood put final slack equal to $\sqrt N z$;
+its residual weights have an integrable bound
+$C\exp[-c\min(\|z\|^2,\|z\|)]$ uniformly in $N$.
+This follows from the quadratic minimum and positive linear growth of
+$t_*y+\lambda\ell(y)$; square loss has the stronger global quadratic
+bound. Split this $z$ integral into a bounded set and its uniformly
+small tail, and apply the same subspace tightness on the bounded set.
+Consequently the amplitude tails are $O(B^{-2})+O(e^{-cB})$ after
+normalization, uniformly in $N$. The bad Gaussian-component mass is
+exponentially small and hence negligible even after every polynomial
+volume factor. These observations justify taking all bounding boxes
+to infinity after the $N$ limit.
+
+\section{Counting without hidden overcounting}
+For each fixed $S$, there are $(N)_K=N(N-1)\cdots(N-K+1)$ assignments
+of its ordered antipodal pairs to distinct indices. There is no extra
+$K!$ divisor: the pair order is fixed, and the same network with exactly
+one exceptional neuron in each pair has exactly one such assignment.
+
+The exact-count theorem says that, with posterior probability tending
+to one, precisely these $K$ neurons occur, their amplitudes divided by
+$N$ approach $\alpha$, their angles approach their rays, and their
+orientation set lies in $\mathcal B$. Hence the above assignment
+events cover posterior mass $1-o(1)$. It remains to check that rare
+overlap cannot change the constant. Above a fixed norm cutoff,
+fourth-moment Markov and independence give
+$Q_*^N(L_N>D)\le C_DN^{-D-1}$. Choose a fixed integer $D$ so large
+that $N^K$ times this bound is negligible relative to both residual
+normalizers from the exact-count theorem. On $L_N\le D$, assignment
+events overlap at most a fixed number $(D)_K$, independently of $N$.
+Their contribution with $L_N\ne K$ is therefore $o(1)$ of the residual
+normalizer by the exact-count theorem. The contribution with $L_N>D$
+is negligible by the preceding bound and $W_N\le1$.
+Thus summing the one-assignment asymptotics gives the actual normalizer,
+with relative error $o(1)$. Multiplication by $(N)_K\sim N^K$, using
+$M=2K$, proves (2) and (4); the ratio for a fixed $S$ proves (1) and (3).
+
+\section{Only a low-dimensional determinant distinguishes orientations}
+The law of $\Phi$ under $Q_*$ is invariant under signed cube translations:
+a coordinate sign change of the input is accompanied by the parity sign
+change of the readout. Its covariance is therefore diagonal in the
+orthonormal Walsh basis, and coordinate permutation symmetry makes its
+eigenvalues depend only on Fourier degree. Let $D_E$ be its restriction
+to the even Fourier subspace and let $\lambda_1>0$ be its common
+singleton eigenvalue.
+
+In that orthonormal basis write the columns of $A_S$ as an even block
+$E$, a singleton block $L_S$, and zeros on all other odd degrees.
+The even block is invertible and independent of the orientation choices
+once a canonical representative of each antipodal pair is fixed. Put
+$B=E^\top D_E^{-1}E$. The matrix determinant lemma gives
+\[
+ w_H(S)\ \propto\
+ \det\left(I_r+\lambda_1^{-1}L_SB^{-1}L_S^\top\right)^{-1/2}.
+\]
+Thus the pattern-dependent part of a $K$-dimensional determinant reduces
+to an $r$-dimensional one. For the soft case replace $D_E^{-1}$ by
+$(I+\gamma D_E)^{-1}$ and $\lambda_1^{-1}$ by
+$(1+\gamma\lambda_1)^{-1}$. This does not imply that all balanced
+patterns have equal probabilities.
+
+\section{Balanced orientations are resilient Boolean functions}
+Choose canonical pair representatives $z=(1,b)$ with
+$b\in\{-1,1\}^{r-1}$, and describe a selected orientation by
+$\varepsilon(b)(1,b)$, where $\varepsilon$ is Boolean-valued.
+Since $r$ is even, the balancing equations are exactly
+\[
+ \E_b g(b)=0,\qquad \E_b b_i g(b)=0\quad(1\le i\le r-1),
+ \qquad g(b)=\chi_{r-1}(b)\varepsilon(b).
+\]
+Thus $g$ is a balanced first-order correlation-immune Boolean function,
+also called a 1-resilient function. Equivalently, the real Fourier degree
+of $\varepsilon$ is at most $r-3$; this is a statement about real Walsh
+coefficients, not its algebraic degree over $\mathbb F_2$.
+The combinatorial objects and their enumeration are established in the
+cryptographic literature. For example,
+\href{https://research.cs.wisc.edu/techreports/2007/TR1616.pdf}{the 2007
+primary manuscript on counting correlation-immune Boolean functions}
+records 807980 first-order resilient functions on five variables.
+Our independent exact enumeration reproduces that count for $r=6$.
+It splits the five-variable cube into two halves, enumerates their
+$\binom{16}{8}$ balanced sign vectors, and pairs opposite four-coordinate
+moment vectors. No floating-point test is needed for those conditions.
+
+There is also an elementary lower bound at all dimensions. Every function
+$g(b)=b_1h(b_2,\ldots,b_{r-1})$, with $h$ any balanced Boolean function,
+is 1-resilient. Therefore
+\[
+ |\mathcal B|\ge\binom{K/2}{K/4}
+                 \ge\frac{2^{K/2}}{K/2+1}.\tag{11}
+\]
+This weaker bound suffices to show that a fixed simple orientation family
+has extremely small posterior probability.
+
+\begin{theorem}[Simple hemisphere starts have negligible limiting mass]
+In the hard-margin orientation law (1), uniformly over orientation
+families $\mathcal A_r\subseteq\mathcal B$,
+\[
+ \Pr(S\in\mathcal A_r)\le |\mathcal A_r|\,
+                        2^{-K/2+O(r^2)}.
+\]
+In particular the $2r$ coordinate hemispheres have probability at most
+$2^{-2^{r-2}+O(r^2)}$ as even $r\to\infty$, after the width limit.
+\end{theorem}
+\begin{proof}
+We bound the distortion introduced by the determinant weights. For
+$r\ge8$ the critical law has $\E\|\theta\|^4=O(r^2)$.
+Here are explicit sufficient estimates. Write $c=\sqrt{2/\pi}$ and
+$T=\min_i|w_i|$. The minimum-half-normal calculation and Mills bound
+from the critical-law companion give
+\[
+ \E_{Q_*}(G/\rho)^4
+ \le \frac{24r^3}{c^4\prod_{j=2}^6(r-j)}=O(r^{-2}).
+\]
+Conditional Gaussian readouts give
+$\E a^4=3+6\E(G/\rho)^2+\E(G/\rho)^4=O(1)$.
+The incoming density is homogeneous with
+$D=\|U\|^2-G^2/\rho^2$ in its exponent. Scaling its integral gives
+$\E D^2=(r+1)(r+3)$, and hence $\E\|U\|^4=O(r^2)$.
+Consequently
+\[
+ \|\Sigma\|\le\E\|\Phi\|^2
+ \le M(r+1)\sqrt{\E a^4\E\|U\|^4}=O(Mr^2).
+\]
+For the singleton eigenvalue, conditional readout variance one and the
+incoming density ratio $e^{G^2/(2\rho^2)}/M_*\ge1/M_*$ imply
+$\lambda_1\ge M\E_0\widehat h_U(\{i\})^2/M_*$.
+Gaussian integration by parts gives
+$\E_0[w_i\widehat h_U(\{i\})]=1/2$; Cauchy--Schwarz therefore
+bounds that square moment below by $1/4$. The rejection envelope in
+the companion gives $M_*\le r/(r-2)$, so $\lambda_1\ge M(r-2)/(4r)$.
+
+Every nonzero even coefficient of the critical feature has magnitude
+at least $1/(M\sqrt r)$: its Fourier numerator is a nonzero integer
+sum of positive parts of integer cube scores. In the reduced determinant
+formula let $d_{\max}=\max_T\lambda_T/\widehat h(T)^2$, over even $T$.
+Then $d_{\max}=O(M^3r^3)$. The singleton rows on the antipodal quotient
+are orthogonal, and the even Walsh matrix is orthogonal up to its
+normalization. These two facts give
+\[
+ 0\preceq\lambda_1^{-1}L_SB^{-1}L_S^\top
+       \preceq\frac{d_{\max}}{4r\lambda_1}I_r
+       \preceq C M^2r^2I_r.
+\]
+Thus, after canceling the common factor $(\det B)^{-1/2}$, every
+orientation weight lies between
+$(1+CM^2r^2)^{-r/2}=2^{-O(r^2)}$ and one. Combine this with (11) to
+obtain the claimed probability bound.
+\end{proof}
+This is a statement about posterior mass, not a lower bound on a specified
+Markov chain's mixing time. It does show why remaining in a canonical
+hemisphere sector cannot validate sampling of the full orientation law.
+
+\paragraph{Six-bit numerical evaluation.}
+Using an independently sampled critical covariance, the determinant
+formula assigns approximately $1.073\times10^{-5}$ total probability
+to the 12 coordinate hemispheres, compared with $12/807980\approx
+1.485\times10^{-5}$ under the uniform orientation law. The minimum and
+maximum reduced weights are approximately $0.163$ and $0.253$; the
+large difference in family mass is primarily combinatorial.
+These determinant values use floating-point Monte Carlo covariance
+estimates and are not interval certificates. The enumeration count is
+exact. The covariance sampler uses independent importance proposals
+with a heavier tail than the earlier rejection sampler; its proposal
+and numerical checks are recorded with the reproduction scripts.
+
+\section{The remaining random part of the learned kernel}
+The even-even block of the limiting feature kernel was already identified
+in the companion. The singleton-singleton exceptional block is also
+independent of $S$:
+\[
+ \E_{x,y}x_i[\mathcal K-\mathcal K_*](x,y)y_j
+       =\frac{s-m_c}{4r\rho}\,1_{i=j}.
+\]
+Indeed the singleton coefficient of $h_z$ is $z_i/(2\sqrt r)$,
+and summing $z_i z_j$ over one representative of each antipodal pair
+gives $K1_{i=j}$. No exceptional feature has another odd Fourier degree.
+Only the even-singleton cross block depends on the random orientation
+pattern. For even $T$ its entry is
+\[
+ \frac{s-m_c}{K\rho}\frac{\widehat h(T)}{2\sqrt r}
+       \sum_{z\in S}\chi_T(z)z_i.
+\]
+The parity row is zero by the balancing equations, which explains why
+the target remains a deterministic kernel eigenvector. Differences
+between two orientation-conditioned limiting kernels have rank at most
+$2r$. Thus exponentially many exceptional directions coexist with only
+a low-rank residual ambiguity in their feature kernel.
+
+\section{Typical orientations have a small cross block}
+A sharper existing enumeration theorem upgrades the preceding count into
+a concentration result. This is useful because individual balanced
+patterns can have very bad raw-feature transfer, as the finite-energy
+transfer companion shows.
+
+Let $n=r-1$ and $K=2^n$. Corollary 1.1 of Canfield, Gao, Greenhill,
+McKay, and Robinson, \emph{Asymptotic enumeration of correlation-immune
+boolean functions} (2010), gives, at order one,
+\[
+ |\mathcal B|\sim 2^{K+n}(\pi 2^{n-1})^{-r/2}.
+ \tag{12}
+\]
+See the \href{https://web.maths.unsw.edu.au/~csg/papers/immune.pdf}{authors'
+primary manuscript}. In particular, independent uniform orientation
+signs satisfy the balancing equations with probability at least
+$e^{-C_1r^2}$ for all sufficiently large even $r$. This counting theorem
+is an external input; the exact enumeration of five-variable functions
+is not its proof.
+
+For an odd set $B\subseteq[r]$ define
+\[
+ m_B(S)=\frac1K\sum_{z\in S}\chi_B(z).
+\]
+In the canonical description $z=\varepsilon(b)(1,b)$, this is a Walsh
+coefficient of the independent signs $\varepsilon(b)$ before balancing.
+The $K$ odd characters give exactly the $K$ distinct characters of $b$.
+Hoeffding and a union bound therefore give
+\[
+ \Pr_{\rm independent}\{\max_{|B|\text{ odd}}|m_B|>t\}
+                              \le2K e^{-Kt^2/2}.
+\]
+The determinant distortion bound already proved above is $e^{O(r^2)}$.
+Dividing by the balancing probability from (12) thus proves the following.
+
+\begin{theorem}[Orientation Fourier concentration]
+There are absolute constants $C,c>0$ such that the hard-margin limiting
+orientation law satisfies, for all sufficiently large even $r$,
+\[
+ \Pr\left\{\max_{|B|\text{ odd}}|m_B(S)|>
+                           \frac{Cr}{\sqrt K}\right\}
+                                                    \le e^{-cr^2}.
+ \tag{13}
+\]
+More explicitly its tail is bounded by
+$2K\exp(C_2r^2-Kt^2/2)$ for a fixed constant $C_2$.
+\end{theorem}
+\begin{proof}
+For any event of orientation signs, its posterior probability is at most
+its independent-sign probability multiplied by the reciprocal balancing
+probability and the ratio of the largest and smallest determinant
+weights. The preceding two bounds give $\exp(C_2r^2)$ for that multiplier.
+Take $t=Cr/\sqrt K$ with $C$ sufficiently large. The factor $2K$ has
+logarithm $O(r)$ and is absorbed in the negative quadratic exponent.
+\end{proof}
+
+This does not assert that the orientation law is close to uniform in
+total variation. It bounds its Walsh coefficients despite its
+nonuniform determinant weights. The raw-feature transfer companion uses
+(13) to show that a typical exceptional-neuron representation has only
+an exponentially small linear error on every nearby parity task.
+
+\section{Scope and open work}
+This note provides formulas and an analytic asymptotic argument. It does
+not prove that a practical chain mixes over the orientation sets, supply
+interval-certified covariance values, or classify the most probable sets
+as $r$ grows. The six-bit evaluation is exploratory. The $r=6$ critical law has finite output
+covariance but need not have a finite variance for naive covariance
+estimators; ordinary iid error bars for those entries would require
+additional care. The earlier independent sampler estimates $m_c$ with
+finite variance, which is a different observable.
+\end{document}

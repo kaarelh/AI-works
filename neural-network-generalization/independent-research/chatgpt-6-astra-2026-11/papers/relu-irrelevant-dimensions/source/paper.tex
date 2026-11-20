@@ -1,0 +1,378 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{lemma}[theorem]{Lemma}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}
+\newcommand{\relu}{\operatorname{ReLU}}
+\title{Bayesian feature selection among irrelevant inputs}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author. Verification scope and provenance are stated in the accompanying research collection.}}\date{18 November 2026; independent research draft}
+\emergencystretch=3em
+\hypersetup{pdftitle={Bayesian feature selection among irrelevant inputs},pdfauthor={ChatGPT-6 Astra}}
+\begin{document}\maketitle
+
+This extension keeps the target's intrinsic parity dimension fixed while
+increasing the number of irrelevant Boolean coordinates. It shows that
+the exceptional-neuron mechanism also describes a small learned feature,
+rather than only a full-dimensional parity representation. Every cube
+label is still observed; this is not a sample-complexity or OOD theorem.
+
+\section{Fixed intrinsic parity, variable ambient dimension}
+Let $r\ge2$ be even and $d\ge\max(r,6)$. On $X=\{-1,1\}^d$ let
+$\chi(x)=\prod_{i=1}^r x_i$ and $M=2^d$. Use unit independent Gaussian
+parameters and $F_N=N^{-1}\sum_j a_j\relu(b_j+w_j\cdot x)$.
+Put
+\[
+ \rho_r=\frac{\binom{r-2}{(r-2)/2}}{2^{r-1}\sqrt r},\quad
+ Z=\E_x\chi(x)a\relu(b+w\cdot x),\quad
+ Q_{*,d}=e^{Z/\rho_r}P_{0,d}/M_{*,d},\quad m_{c,d}=\E_{Q_{*,d}}Z.
+\]
+The critical-tilt companion already proves that the endpoint law has
+finite fourth parameter moment whenever the \emph{ambient} dimension
+$d>5$. Its critical rays use only the $r$ relevant weights: bias and
+irrelevant weights are zero.
+Define
+\[
+ L_r=\begin{cases}4,&r=2,\\2^{r-1},&r\ge4.\end{cases}
+\]
+The notation $L_r$ here is a neuron count, unrelated to the ray-volume
+constant in the orientation-law companion.
+
+\begin{theorem}[Posterior specialization to the relevant coordinates]
+Fix $d,r$ and $s>m_{c,d}$. Condition on $\chi(x)F_N(x)>s$ at every
+cube input. As $N\to\infty$:
+\begin{enumerate}
+\item The ordinary empirical law tends to $Q_{*,d}$ with mean output
+$m_{c,d}\chi$, while the whole output tends to $s\chi$.
+\item Exactly $L_r$ neurons have norm above $\varepsilon\sqrt N$,
+for every sufficiently small fixed $\varepsilon>0$. Each has squared
+norm divided by $N$ tending to $2(s-m_{c,d})/(L_r\rho_r)$.
+For $r\ge4$, one orientation per antipodal pair occurs, with the same
+balancing equations as in the full-parity theorem. For $r=2$, all four
+critical rays occur.
+\item Their hidden biases and irrelevant incoming weights are
+$O_{\Pr}(N^{-1/2})$. The relevant incoming vector differs from its
+projection onto the selected equal-magnitude sign ray by
+$O_{\Pr}(N^{-1/2})$. The difference between absolute readout and
+incoming radial magnitude is $O_{\Pr}(1)$.
+\item The learned feature kernel satisfies
+$\mathcal K_N\chi\to s\rho_r\chi$.
+The energy limits are $N^{-1}\sum a_j^2\to1+s/\rho_r$ and
+$N^{-1}\sum\|(b_j,w_j)\|^2\to d+1+s/\rho_r$.
+\item With $I_d(s)=s/\rho_r-\log M_{*,d}$, the evidence obeys
+\[
+ -\log P_{0,d}^N(H_N)=NI_d(s)+
+ \left[\frac M2+\frac{L_r(d-2)}2\right]\log N+O_{d,r,s}(1).
+\]
+\end{enumerate}
+The analogous above-critical square or logistic likelihood has the same
+structure, and its logarithmic correction is $L_r(d-2)\log N/2$.
+All constants and width thresholds may depend on fixed $d,r$.
+\end{theorem}
+
+\section{Why the earlier proof extends}
+The coarse conditioning and truncated-moment arguments use only finite
+fourth parameter moments, the full finite-domain output span, and finitely
+many critical rays. All three hold here. The critical rays are
+$(\sigma_z,v_z)$, with
+$v_z=(0,z/\sqrt r,0_{d-r})$ and
+$\sigma_z=\operatorname{sgn}(G(v_{\boldsymbol1}))\chi(z)$.
+Their output vectors are constant on every irrelevant-coordinate fiber.
+
+For $r\ge4$, the invertible even Fourier matrix on the relevant
+antipodal quotient fixes the positive mass in every pair exactly as
+before. The canonical hemisphere provides a representation using
+$L_r=2^{r-1}$ independent feature columns and equal amplitudes.
+For $r=2$, a critical feature is nonzero on exactly one of the four
+relevant input patterns, with magnitude $\sqrt2$ and the correct
+parity sign. Thus all four rays are necessary, their four feature
+columns are independent, and each amplitude is
+$(s-m_{c,d})/(4\rho_r)$. This is why merely substituting
+$2^{r-1}$ into the two-bit case would be wrong.
+
+Near a critical ray, the transverse incoming space has dimension $d$.
+The coordinates $c=AR$, $v=A-R$, $t=\sqrt c\,u$ therefore have density
+bounded by
+$Cc^{-(d+1)/2}e^{-c_0(v^2+\|t\|)}$.
+For $L$ selected macroscopic neurons whose feature columns have rank $R$,
+the exact-count companion's coarea and Gaussian-component estimates give
+weighted union mass at most
+\[
+ C N^{-\{L(d-3)+M+R\}/2+\nu},\qquad
+ \nu=0\ \text{for hard margins},\quad \nu=M/2\ \text{for soft likelihoods}.
+\]
+The coarse geometry requires $L\ge L_r$ and $R\ge L_r$.
+The matching lower construction selects $L_r$ independent rays, allows
+$O(\sqrt N)$ amplitude fluctuations, and counts the $(N)_{L_r}$ index
+assignments. It has exactly the asserted power. Every extra macroscopic
+neuron loses at least $N^{-(d-3)/2}$, proving the exact count.
+The same invertible core equations give the equal limiting masses.
+
+The exponential envelope in $(v,t)$, with the same normalized upper
+bound, makes those variables tight under the posterior. Since
+$c/N\to(s-m_{c,d})/(L_r\rho_r)>0$, this proves
+$u=t/\sqrt c=O_{\Pr}(N^{-1/2})$ and $A-R=O_{\Pr}(1)$.
+The learned-kernel and energy arguments use
+$G(U)\relu(U\cdot\bar x)=\rho_r\Phi_x$ and
+$a^2=\|U\|^2=Z/\rho_r$ on each critical ray, and the same quadratic
+truncation argument for the ordinary population. These prove the
+remaining assertions. No new assumption about irrelevant coordinates
+is hidden in the conditioning step: all $2^d$ output constraints enter
+the full-dimensional Gaussian-component calculation.
+
+\section{The two-bit result also holds in ambient dimensions four and five}
+For $r=2$, every conclusion of the first theorem extends to $d=4,5$
+whenever $s>m_{c,d}$, despite the infinite full output covariance at
+those critical laws. The same extension holds above the soft-likelihood
+transition. The distinction is that the four critical feature columns
+span the \emph{entire} space of critical-ray outputs. Their amplitudes
+can absorb the non-Gaussian bulk fluctuations in that space.
+
+Here are the modifications needed in the proof. Let $E$ be that
+four-dimensional feature span and let $P_\perp$ project onto $E^\perp$.
+Near a critical ray the output is $cf_z+e$, with
+$\|e\|\le C\|t\|$ and density bounded by
+$Cc^{-(d+1)/2}e^{-c_0(v^2+\|t\|)}$. Thus $P_\perp\Phi$ has all
+moments, and indeed a small exponential moment. Outside the ray cones
+the critical density has a Gaussian quadratic gap. The projected output
+has positive definite covariance on $E^\perp$ and a convolution block
+with an isotropic Gaussian component there. Its sum therefore has the
+same centered local lower and upper density bounds
+$N^{-(M-4)/2}$ as in the earlier Gaussian-component lemma.
+The full output still has a finite $q$th moment for some $q>1$:
+choose $1<q<(d-1)/2$.
+
+For a direct polynomial evidence lower bound, reserve one neuron on each
+of the four rays. Let the other neurons' projected output fall in a fixed
+small box about zero. Their parallel output differs from its mean by
+$o(N)$ while retaining a fixed fraction of this projected-box probability.
+To justify the latter assertion, use the Gaussian-component decomposition:
+the residual projected sum is $O(\sqrt N)$ on an event of fixed positive
+probability, by Chebyshev; its parallel sum is $o(N)$ in probability by
+the finite first moment and the law of large numbers. These events
+intersect with fixed positive probability. Conditional on the residuals,
+the Gaussian part supplies the projected box with probability
+$\Omega(N^{-(M-4)/2})$, and its parallel fluctuation is $O(\sqrt N)$.
+
+Given such a bulk realization, integrate the four reserved amplitudes
+near the unique values that cancel its parallel fluctuation and produce
+signed total outputs between $Ns+1$ and $Ns+3$. Each amplitude is
+$N(s-m_{c,d})/(4\rho_r)+o(N)>0$. A fixed-size four-dimensional amplitude
+box has density at least $cN^{-4(d+1)/2}$; restrict the other local
+coordinates to small fixed boxes. Counting the $N^4$ assignments, with
+the bounded-overlap argument below, gives
+\[
+ Z_N^{\rm hard}\ge cN^{-[M/2+2d-4]}.
+\]
+For the soft likelihood allow projected and final output fluctuations
+of order $\sqrt N$, and integrate an amplitude box of side $\sqrt N$.
+This gives $Z_N^{\rm soft}\ge cN^{-(2d-4)}$.
+
+The lower-bound overlap argument and the posterior coarse geometry need
+only a parameter moment of some order $p>2$. Such a moment exists since
+$p<d-1$ is allowed. Markov and the index-set union bound give
+\[
+ Q_*^N\{L_N>D\}\le C_DN^{-(p/2-1)(D+1)}.
+\]
+Choose the fixed count cutoff $D$ large enough to beat the evidence
+power plus the four index factors. On $L_N\le D$, the assignment
+events overlap at most $(D)_4$ times. This proves the stated lower bound
+without assuming disjoint assignments. It also bounds the posterior
+macroscopic count by a fixed constant after polynomial domination.
+
+For the collective contribution of small neurons, replace the second-
+moment Taylor estimate by
+\[
+ |e^x-1-x|\le C_q|x|^q e^{|x|},\qquad 1<q\le2.
+\]
+With truncation $\|\theta\|\le\varepsilon\sqrt N$ and
+$\lambda=A\log N/N$, the log moment of the centered sum is at most
+$C N\lambda^q e^{C\lambda\varepsilon^2N}=o(1)$ after taking
+$\varepsilon$ sufficiently small. This gives any prescribed polynomial
+concentration power as before. The same argument applies to quadratic
+parameter and kernel observables, using $2q<d-1$.
+Angular concentration and the original-prior energy bound are unchanged.
+
+All four critical rays must then be present with their positive masses.
+For $L\ge4$ selected large neurons, the feature-column rank is exactly
+four. The coarea upper bound, using the good Gaussian component of the
+remaining output sum, is the same as before, with
+$N^{-\{L(d-3)+M+4\}/2+\nu}$. It uses no moment bound for the residual
+translation. Every extra neuron loses $N^{-(d-3)/2}$, a positive power
+for both $d=4$ and $d=5$. This proves exact count four and matching
+evidence powers. The remaining specialization and kernel conclusions
+follow from the $q$-moment truncation argument. No full-covariance central
+limit theorem has been invoked where it is false.
+
+This extension does not settle full four-bit parity in ambient dimension
+four. There the critical-ray span is larger than a minimal orientation
+set, and non-Gaussian fluctuations remain transverse to its amplitudes.
+The Gaussian covariance determinant formula in the orientation note
+must not be applied in that case.
+
+\section{The ordinary law approaches the untrained prior}
+\begin{theorem}[Irrelevant dimensions suppress the critical ordinary signal]
+For every fixed even $r\ge2$, as $d\to\infty$,
+\[
+ M_{*,d}-1=O_r(d^{-1/2}),\qquad m_{c,d}=O_r(d^{-1/2}),\qquad
+ \operatorname{TV}(Q_{*,d},P_{0,d})=O_r(d^{-1/4}).
+\]
+Thus every fixed $s>0$ is above the critical mean for all sufficiently
+large ambient dimensions. These rates are convenient upper bounds,
+not claims of sharp dimension exponents.
+\end{theorem}
+\begin{proof}
+Fix $d_0=\max(r,4)$ relevant-plus-base coordinates. Let
+$G_{d_0}(b,w)$ denote their parity feature and set
+\[
+ \psi_0(g)=e^{g^2/(2\rho_r^2)}-1,\qquad
+ \psi_1(g)=g^2e^{g^2/(2\rho_r^2)}.
+\]
+Both functions are convex. We first note that
+\[
+ J_i=\int_{\R}\E_{w\sim N(0,I_{d_0})}
+                  \psi_i(G_{d_0}(b,w))\,db<\infty,
+ \qquad i=0,1.\tag{1}
+\]
+Here the bias is integrated against Lebesgue measure, not a Gaussian.
+The integrand is zero if $|b|>\sum_j|w_j|$, because the ReLU becomes
+affine or zero on the entire cube. The sharp minimum-weight inequality
+gives $|G|\le\rho_r\sqrt r\min_{j\le r}|w_j|\le\rho_r\|w\|$.
+Equality forces equal relevant magnitudes and zero irrelevant weights;
+for these weights the one-dimensional parity hinge sum has its unique
+absolute maximum at bias zero. The latter follows from its successive
+binomial coefficients: for even $r$ the central coefficient is strictly
+larger than its neighbors. Consequently the Gaussian-weight exponent
+$\|w\|^2-G^2/\rho_r^2$ has a strictly positive quadratic gap away
+from the same finitely many critical rays, on the compact normalized
+region $|b|\le\sqrt{d_0}\|w\|$.
+
+Near a ray, deleting the bias-square term from the earlier corner
+calculation still leaves a quantity comparable to $R\|u\|$ after
+shrinking the fixed cone. The first-moment integral is bounded by
+$C\int_1^\infty R^{2-d_0}dR$, which is finite since $d_0>3$;
+the zeroth-moment integral is easier. Away from the cones the quadratic
+gap gives integrability, and bounded parameter regions cause no issue.
+This proves (1).
+
+Average over the remaining Boolean inputs before applying $\psi_i$.
+Jensen's inequality gives
+\[
+ \E_{U\sim N(0,I_{d+1})}\psi_i(G_d(U))
+ \le \E_{B\sim N(0,d-d_0+1),\,w\sim N(0,I_{d_0})}
+                       \psi_i(G_{d_0}(B,w))
+ \le\frac{J_i}{\sqrt{2\pi(d-d_0+1)}}.
+\]
+The first line uses only that, for every fixed irrelevant sign pattern,
+the shifted bias has the displayed Gaussian variance and is independent
+of the base weights. The bound for $i=0$ is the assertion about $M_*-1$.
+Since $\rho_rM_{*,d}m_{c,d}=\E\psi_1(G_d)$ and $M_{*,d}\ge1$,
+it also proves the mean bound. Finally,
+$\operatorname{KL}(Q_{*,d}\|P_{0,d})=m_{c,d}/\rho_r-\log M_{*,d}
+\le m_{c,d}/\rho_r$, and Pinsker gives the total-variation estimate.
+\end{proof}
+
+\section{The initial kernel loses the same fixed target feature}
+For fixed even $r$, the unit-Gaussian initial ReLU kernel has target
+parity eigenvalue
+\[
+ \lambda_r(d)\sim C_r d^{1-r},\qquad
+ C_r=\frac{(r-2)!\binom{r-2}{(r-2)/2}}{2\pi\,2^{r-2}}>0.
+\]
+To see this, write its covariance as
+$(d+1)g((1+x\cdot y)/(d+1))$, where
+\[
+ g(c)=\frac{\sqrt{1-c^2}+(\pi-\arccos c)c}{2\pi}.
+\]
+Taking $r$ finite differences yields exactly
+\[
+ \lambda_r(d)=(d+1)^{1-r}\E\,g^{(r)}
+ \left(\frac{1+\sum_{i=r+1}^d\varepsilon_i+
+                         \sum_{i=1}^r T_i}{d+1}\right),
+\]
+where the $\varepsilon_i$ are independent uniform signs and
+$T_i$ independent uniform variables on $[-1,1]$.
+On $|\sum\varepsilon_i|\le d/2$, the derivative is bounded and its
+argument tends to zero in probability, so the expectation tends to
+$g^{(r)}(0)$. The complementary sign event has exponentially small
+probability. Its worst conditional $T$ integral is only
+$O_r(d^{r-3/2})$: the endpoint singularity is
+$(1-|c|)^{3/2-r}$, and integration over the $r$ continuous coordinates
+makes it integrable. Thus that part vanishes. Finally expanding
+$g''(c)=(2\pi\sqrt{1-c^2})^{-1}$ gives the displayed constant.
+
+For the especially simple target $x_1x_2$, the initial eigenvalue is
+asymptotic to $1/(2\pi d)$, while the learned value is
+$s/(2\sqrt2)$. Exactly four exceptional neurons carry the missing
+signal. Their irrelevant weights tend to zero as $N^{-1/2}$, even as
+the typical neuron law approaches its original Gaussian prior in the
+subsequent large-$d$ limit. This is explicit specialization to the
+relevant coordinates. The target's four-neuron representation is fixed
+throughout; the experiment still observes all cube labels and gives no
+claim about discovering those coordinates from a small sample.
+\section{Numerical check of the dimension crossover}
+Independent importance integration for the fixed two-bit target gives:
+\[
+\begin{array}{c|rrrrrr}
+ d&4&5&6&8&10&12\\\hline
+ \widehat m_{c,d}&1.5471&0.6682&0.3870&0.1807&0.1072&0.0735
+\end{array}
+\]
+The first two entries use 50 million proposals each; the next three use
+10 million each, and the last uses five million. Their empirical Monte
+Carlo standard errors are respectively about
+$0.00090,0.00044,0.00068,0.00046,0.00042,0.00048$.
+These are exploratory floating-point estimates, not deterministic
+integration certificates. They suggest that margin $s=1/2$ crosses the
+critical value between $d=5$ and $d=6$. The analytic result is the eventual
+transition as $d$ increases, not a certified sharp transition dimension.
+
+For this two-bit sampler the finite cube average has a stable closed
+form. If the relevant weight magnitudes are $t,t+v$, $v\ge0$, and
+$B=b+\sum_{i>2}w_ix_i$, then
+\[
+ G=\frac t2-\frac14\E_{x_{>2}}
+                 \min\{\max(|B|-v,0),2t\}.
+\]
+This follows by pairing the two positive and two negative parity inputs
+and using $\relu(B+A)+\relu(B-A)=B+\max(|B|,A)$.
+It avoids cancellation at large critical weights and reduces the
+numerical cube sum by a factor of four. The sampler also checks the exact
+incoming-minus-readout energy identity $d$.
+\section{Changing the Gaussian layer scales}
+The preceding results are not tied to unit incoming variance. Let
+$a=\tau_a\widetilde a$, $U=\tau_u\widetilde U$, with independent
+standard Gaussian standardized parameters and fixed $\tau_a,\tau_u>0$.
+Positive homogeneity gives $\Phi=\tau_a\tau_u\widetilde\Phi$ exactly.
+Consequently the physical-margin posterior at $s$ is precisely the
+standardized posterior at $\widetilde s=s/(\tau_a\tau_u)$. Its critical
+ordinary margin is $\tau_a\tau_u m_{c,d}$ and its critical dual parameter
+is $(\tau_a\tau_u\rho_r)^{-1}$. All exact-count, orientation, and
+localization assertions transfer by this invertible linear map.
+
+Since the incoming-feature kernel scales by $\tau_u^2$, its learned
+target eigenvalue is
+\[
+            \lambda_\chi(\mathcal K)\longrightarrow
+                        s\rho_r\frac{\tau_u}{\tau_a}.
+\]
+In the above-critical regime write
+$\delta=s-\tau_a\tau_u m_{c,d}>0$. Each of the $L_r$ exceptional
+neurons has
+\[
+ \frac{a_j^2}{N}\longrightarrow
+       \frac{\delta\tau_a}{L_r\rho_r\tau_u},\qquad
+ \frac{\|U_j\|^2}{N}\longrightarrow
+       \frac{\delta\tau_u}{L_r\rho_r\tau_a}.
+\]
+These formulas concern fixed dimension and fixed layer scales before
+the width limit.
+
+For the usual incoming scaling $\tau_u=d^{-1/2}$ and $\tau_a=1$,
+two-bit parity therefore has prior target-kernel eigenvalue asymptotic
+to $1/(2\pi d^2)$ and learned eigenvalue $s/(2\sqrt{2d})$.
+Their ratio is asymptotic to $(\pi s/\sqrt2)d^{3/2}$.
+The four exceptional incoming vectors still discard the irrelevant
+coordinates, and the physical critical margin tends to zero at least
+as fast as $d^{-1}$. This is an iterated dimension--width corollary;
+it does not give a sufficient finite width uniform in $d$.
+\end{document}

@@ -1,0 +1,172 @@
+\section{An exact obstruction for the unmodified raw features}
+The downstream transformation cannot be dropped from a deterministic
+near-minimum-energy theorem. The following example attains the sharp
+source energy, yet its raw frozen feature space has almost unit error
+on a parity only two coordinates away. It also has polynomial-width,
+arbitrarily near-minimum-energy versions.
+
+\begin{theorem}[Raw-feature obstruction at optimal source energy]
+Let $T\subset[r]$ have even cardinality $2\le j\le r-2$, with $1\in T$.
+There is a width-$2^{r-1}$ network with $F=s\chi$, $E=s/\rho$, and
+raw frozen feature space $\mathcal V$ satisfying
+\[
+ \inf_{g\in\mathcal V}\|g-\chi_T\|_2^2
+                  =\frac1{1+4r b_j^2}.                 \tag{24}
+\]
+For $j=r-2k$ with fixed $k\ge1$, the right side tends to one and is
+$1-O_k(r^{-2k-1})$.
+
+For every $0<\varepsilon\le1$ and $0<\zeta<1$, there is also a
+random construction with exactly $E=(1+\varepsilon)s/\rho$ and any width
+\[
+ N\ge\frac{4(1+\varepsilon)^2}{\rho^2\varepsilon^2}
+                                  \log(2^r/\zeta),      \tag{25}
+\]
+such that, with probability at least $1-\zeta$, $\chi F\ge s$ on the
+entire cube. Every realization of its raw feature space satisfies the
+lower bound in (24). Thus a polynomial width and an inverse-polynomial
+energy excess do not remove this obstruction.
+\end{theorem}
+\begin{proof}
+Set $B=T\setminus\{1\}$, an odd set of size at most $r-3$, and choose
+one orientation from each antipodal pair by
+\[
+             \mathcal Z=\{z\in\{-1,1\}^r:\chi_B(z)=1\}.
+\]
+Its uniform law has density $1+\chi_B$ relative to the uniform cube.
+Put $h_z(x)=\relu(z\cdot x/\sqrt r)$.
+For every such orientation,
+\[
+ \langle h_z,\chi_T\rangle=b_j\chi_T(z)=b_jz_1,
+ \qquad \langle h_z,x_1\rangle=z_1/(2\sqrt r).
+\]
+Consequently every linear combination $g$ obeys
+$\langle g,x_1\rangle=\alpha\langle g,\chi_T\rangle$,
+where $\alpha=(2\sqrt r\,b_j)^{-1}$.
+Orthogonality of $x_1$ and $\chi_T$ gives
+\[
+ \|g-\chi_T\|_2^2\ge
+ (\langle g,\chi_T\rangle-1)^2+
+                   \alpha^2\langle g,\chi_T\rangle^2
+ \ge\alpha^2/(1+\alpha^2).
+\]
+The even coefficients of
+$q=b_j^{-1}\E_{z\in\mathcal Z}\chi_T(z)h_z$ are exactly those
+of $\chi_T$, and its only odd coefficient is $\alpha x_1$.
+Indeed even characters have unchanged expectations under $1+\chi_B$;
+the degree-one coefficient at $l$ is nonzero only if
+$T\mathbin\triangle\{l\}=B$, equivalently $l=1$.
+Thus $q=\chi_T+\alpha x_1$, and $q/(1+\alpha^2)$ attains (24).
+
+Similarly
+$\E_{z\in\mathcal Z}\chi(z)h_z=b_r\chi$: all even coefficients
+except full parity vanish, and an odd coefficient would require
+$[r]\mathbin\triangle\{l\}=B$, impossible because $|B|\le r-3$.
+Choose $C=\sqrt{s/\rho}$, $U_z=C(0,z/\sqrt r)$, and
+$a_z=C\operatorname{sgn}(b_r)\chi(z)$.
+The resulting mean-field network is exactly $s\chi$, has energy $s/\rho$,
+and has the same raw feature span as the $h_z$. Formula (3) gives
+the asserted fixed-codimension order.
+
+For the finite random version draw the $z_i$ independently from
+$\mathcal Z$ and replace $C$ by $\sqrt{(1+\varepsilon)s/\rho}$.
+Energy is deterministic, and the mean output is $(1+\varepsilon)s\chi$.
+For each input the neuron output has second moment at most
+$[(1+\varepsilon)s/\rho]^2$, since
+$\E_{\mathcal Z}(z\cdot x)^2=r$: the conditioning character is odd
+and all degree-two expectations remain zero.
+Its absolute value is at most $(1+\varepsilon)s\sqrt r/\rho$.
+Bernstein's inequality and a union over $2^r$ inputs show that (25)
+bounds every one-sided deviation by $\varepsilon s$ with failure at
+most $\zeta$. Here one uses $\rho\sqrt r\le1/2$ and
+$\varepsilon\le1$ to absorb the bounded-summand term in the displayed
+constant. Each sampled feature still obeys the exact linear relation,
+so the obstruction holds for every realization, independently of the
+margin event.
+\end{proof}
+
+The same construction also separates raw transfer from regularized
+square-risk optimality. With $C^2=1/(2\rho)$ and independent orientations
+from $\mathcal Z$, its energy is $1/(2\rho)$, its expected output is
+$\chi/2$, and
+\[
+ \E_z\{\rho E+\E_x(1-\chi F)^2-3/4\}
+                         \le\frac1{4\rho^2N}.
+\]
+Thus, for every $\eta>0$ and $N\ge1/(4\rho^2\eta)$, a realization
+has population objective at most $3/4+\eta$ while retaining the same
+raw-feature obstruction. This conclusion concerns the objective used in
+the square-likelihood companion, without a posterior-probability claim.
+
+This is a statement about a possible learned representation, not its
+probability under the Gaussian posterior. In particular it does not
+contradict the full-data, width-first raw-feature transfer theorem,
+where the ordinary posterior background supplies additional features.
+It shows that source interpolation, polynomial width, and almost optimal
+energy alone cannot justify unmodified frozen-feature transfer.
+Even projection or the linear input skip removes the explicit offending
+linear component.
+
+There is also a qualitative classification obstruction. Formula (3)
+gives $|2\sqrt r\,b_j|<1$ for $r\ge6$ and the indicated $j$.
+Thus the annihilating vector
+$v(x)=\chi_T(x)-2\sqrt r\,b_jx_1$ has the same sign as $\chi_T$ at
+every input. No function in the raw span, even with an added constant
+readout bias, can classify $\chi_T$ correctly on the whole cube: such a
+function would have strictly positive inner product with $v$. This
+argument also covers a fixed constant tie convention. An adversary can
+therefore force a mistake at every step from any deterministic learner
+whose classifier is always a raw linear readout, by choosing a currently
+misclassified input. This is a frozen-representation statement, not an
+end-to-end Bayesian mistake lower bound.
+
+For the full-orientation construction, the uniform population square-loss
+fit has an even stronger classification failure. In the orthonormal basis
+$(\chi_T,x_1)$ the raw kernel's relevant block, before its common positive
+scale factor $C^2$, is
+\[
+ \begin{pmatrix}b_j^2&b_j/(2\sqrt r)\\
+                 b_j/(2\sqrt r)&1/(4r)\end{pmatrix}.
+\]
+This two-dimensional subspace is invariant under the kernel operator:
+the orientation law $1+\chi_B$ pairs each degree-one character with only
+one even character. Consequently population ridge regression, at every
+finite nonnegative regularization parameter $\gamma$, predicts a positive
+multiple of
+$b_j^2\chi_T+[b_j/(2\sqrt r)]x_1$.
+For $\gamma=0$ this denotes the minimum-square-loss predictor in the raw
+feature space. Since $|b_j|<1/(2\sqrt r)$, its classifier is exactly
+$\operatorname{sgn}(b_j)x_1$, with uniform error $1/2$.
+The same formula holds for a fresh Gaussian readout posterior mean after
+any positive equal number of observations of every cube input, with the
+corresponding positive ridge parameter. This classification conclusion
+uses the explicit invariant block, not a deduction from an $L^2$ norm
+lower bound alone.
+
+Equivalently, define the full-support input law
+\[
+ P_T(x)=2^{-r}\{1-2\sqrt r\,b_j\chi_T(x)x_1\}.
+\]
+Then $\E_{P_T}\chi_Tg=0$ for every raw linear readout $g$, including
+an intercept. Its population square-loss minimizer is the zero function;
+its logistic loss is at least $\log2$ by Jensen. The total variation
+distance between $P_T$ and uniform is $\sqrt r\,|b_j|$, which is
+$\Theta_k(r^{-k-1/2})$ at fixed codimension. This is an explicit small
+change of input law under which the frozen representation has no linear
+target correlation.
+
+The obstruction is stable under perturbations. Put
+$v=\chi_T-2\sqrt r\,b_jx_1$, so that
+$\langle h_z,v\rangle=0$ and $\|v\|_2^2=1+4r b_j^2$.
+If perturbed features $\widetilde h_i$ satisfy
+$N^{-1}\sum_i\|\widetilde h_i-C h_{z_i}\|_2^2\le e^2$, then
+Cauchy--Schwarz gives, for every $g$ in their normalized feature RKHS,
+\[
+ \|g-\chi_T\|_2\le a<\|v\|_2^{-1}
+ \quad\Longrightarrow\quad
+ \|g\|_{\mathcal H}^2\ge
+        \frac{(1-a\|v\|_2)^2}{e^2\|v\|_2^2}.           \tag{26}
+\]
+At $e=0$ this means that no such approximation exists.
+Thus arbitrarily small perturbations restore neither a uniform bounded
+readout norm nor a deterministic raw-feature analogue of (4)--(5).

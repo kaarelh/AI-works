@@ -1,0 +1,385 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}
+\newcommand{\relu}{\operatorname{ReLU}}
+\title{Polynomial-data parity transfer under Gaussian and lighter tails}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author. Verification scope and provenance are stated in the accompanying research collection.}}
+\date{18 November 2026; independent research draft}
+\hypersetup{pdftitle={Polynomial-data parity transfer under Gaussian and lighter tails},pdfauthor={ChatGPT-6 Astra}}
+\emergencystretch=3em
+\begin{document}\maketitle
+\begin{abstract}
+We extend the cold-prior finite-width transfer argument to every fixed
+exponential-power parameter density $\exp(-|u/\tau|^p)$ with $p\ge2$.
+Near-minimum $p$-power parameter cost forces the incoming directions
+relevant to source parity to be close to equal-magnitude critical ridges.
+A Fourier modulation then constructs polynomial-norm predictors for
+neighboring parity targets. A finite parameter-box evidence bound verifies
+these conditions for the actual observed-margin posterior from polynomially
+many IID samples, at every sufficiently large polynomial width and a
+specified inverse-polynomial prior scale. The downstream sample exponent
+is independent of $p$, although pretraining accuracy and width depend on
+$p$. We also give a direct exponential initial-feature bound for independent
+continuous weights, without Gaussian rotation invariance. No efficient
+posterior sampler or end-to-end optimization guarantee is asserted.
+\end{abstract}
+
+\section{Model and the sharp cost}
+Fix even $r\ge6$, a constant $p\ge2$, and margin $s>0$.
+Set $D=r+1$, $d=r+2$, $q=p/2$, and
+\[
+ \rho=\frac{\binom{r-2}{(r-2)/2}}{2^{r-1}\sqrt r},\quad
+ c=\rho\sqrt r,\quad \chi(x)=\prod_{i=1}^r x_i.
+\]
+All input expectations are uniform on $X=\{-1,1\}^r$.
+For $F=N^{-1}\sum_i a_i\relu(b_i+w_i\cdot x)$, define
+\[
+ V=\frac1N\sum_i\bigl(|a_i|^p+|b_i|^p+\sum_l|w_{i,l}|^p\bigr),
+ \qquad V_*=2\sqrt r\,(s/c)^q.                         \tag{1}
+\]
+The inherited sharp parity inequality is
+$|\E\chi\relu(b+w\cdot x)|\le c\min_l|w_l|$.
+Writing $m_i=\min_l|w_{i,l}|$, $t_i=|a_i|m_i$, and
+$W_i=|b_i|^p+\sum_l|w_{i,l}|^p$, one has
+\[
+ |a_i|^p+W_i\ge |a_i|^p+r m_i^p\ge2\sqrt r\,t_i^q.
+\]
+Jensen's inequality, valid because $q\ge1$, gives
+\[
+ \E\chi F\le c\E_i t_i\le c(V/(2\sqrt r))^{1/q}.
+ \tag{2}
+\]
+Here $\E_i$ denotes averaging over neurons. Thus parity correlation
+at least $s$ requires $V\ge V_*$. Uniformly distributed critical
+orientations attain this cost as a neuron law, and finite networks
+approximate that law. Notice $V_*=\Theta_{p,s}(r^{(p+2)/4})$.
+
+\section{A finite-network stability and transfer certificate}
+Suppose
+\[
+ V\le(1+\epsilon)V_*,\quad 0\le\epsilon\le1,
+ \qquad \E(s-\chi F)_+\le h\le s.
+ \tag{3}
+\]
+Put $\eta=\epsilon+q h/s$ and define
+\begin{align*}
+ P&=D^{1/2-1/p}(V/2)^{2/p},\\
+ v_0&=D^{1/2-1/p}(V\eta V_*)^{1/p},\\
+ u_0&=\left[(s+P\sqrt D)
+            \{s((1+\epsilon)^{1/q}-1)+2h\}\right]^{1/2}.
+\end{align*}
+The quantity $P$ bounds $\E_i|a_i|\|U_i\|_2$, by H\"older and
+arithmetic--geometric mean, with $U_i=(b_i,w_i)$.
+In particular $|F|\le P\sqrt D$.
+
+For a deleted set $A$ of $2k$ coordinates, put $j=r-2k\ge2$.
+Let $b_j$ denote the critical-ridge coefficient
+\[
+ b_j=\rho(-1)^{(j-2)/2}
+       \frac{\binom{(r-2)/2}{(j-2)/2}}{\binom{r-2}{j-2}},
+ \qquad C_k=(r-1)^k.
+\]
+Freeze the even features
+$\psi_i(x)=[h_{U_i}(x)+h_{U_i}(-x)]/2$ and let
+$K_e=\E_i\psi_i\otimes\psi_i$.
+
+\begin{theorem}[Power-cost transfer]\label{thm:det}
+Under (3), there is $g_A\in\mathcal H(K_e)$ with
+\[
+ \|g_A-\chi_{[r]\setminus A}\|_2
+ \le\frac{\rho}{s|b_j|}\{(1+C_k)v_0+C_k u_0\},        \tag{4}
+\]
+\[
+ \|g_A\|_{\mathcal H(K_e)}^2
+       \le\left(\frac{\rho}{s b_j}\right)^2 V^{2/p},
+ \qquad \sup_xK_e(x,x)\le D^{2-2/p}V^{2/p}.            \tag{5}
+\]
+For fixed $p,k,s$, these have orders
+\[
+ \text{error}=O_{p,k,s}(r^{2k+1}(\epsilon+h/s)^{1/p}),
+ \quad \text{norm}^2=O_{p,k,s}(r^{2k+1/2+1/p}),
+ \quad \text{radius}^2=O_{p,s}(r^{5/2-1/p}).           \tag{6}
+\]
+All statements hold at every finite width.
+\end{theorem}
+\begin{proof}
+Let $z_i=\operatorname{sgn}w_i$ with fixed choices at zero, and project
+$U_i$ to $U_i'=(0,m_i z_i)$. The nonnegative incoming excess obeys
+\begin{align*}
+ \E_i(W_i-rm_i^p)
+ &\le V-2\sqrt r\,\E_i t_i^q\\
+ &\le V_\ast\{1+\epsilon-(1-h/s)^q\}\le\eta V_*.
+\end{align*}
+The middle step uses $\E_i t_i\ge(s-h)/c$, and the last step is
+Bernoulli's inequality for $q\ge1$.
+For $p\ge2$,
+\[
+ \|U_i-U_i'\|_2
+ \le D^{1/2-1/p}(W_i-rm_i^p)^{1/p}.
+\]
+Indeed $(u-m)^p\le u^p-m^p$ for $u\ge m\ge0$, followed by the
+finite-dimensional $\ell_p$--$\ell_2$ inequality.
+ReLU is one-Lipschitz from incoming Euclidean norm to $L^2(X)$.
+H\"older on the neuron probability space therefore bounds the output
+change by
+$D^{1/2-1/p}(\E_i|a_i|^p)^{1/p}
+(\E_i(W_i-rm_i^p))^{1/p}\le v_0$.
+The same bound holds after any readout sign modulation.
+
+By (2), $\E|F-s\chi|\le s((1+\epsilon)^{1/q}-1)+2h$.
+The uniform envelope then gives $\|F-s\chi\|_2\le u_0$.
+The projected network uses only critical ridges. Multiplying readout
+$i$ by $\chi_A(z_i)$ permutes its even Walsh coefficients via
+$\widehat F(S)\mapsto
+[b_{|S|}/b_{|S\triangle A|}]\widehat F(S\triangle A)$.
+The operator norm is at most $C_k$, including the constant coefficient
+$b_0=(r-1)\rho$. This is the Fourier identity proved in the Gaussian
+transfer companion. Apply it before and after the projection and multiply
+by $b_r/(s b_j)$ to get (4).
+Finally $\E_i a_i^2\le V^{2/p}$ and
+$\E_i\|U_i\|^2\le D^{1-2/p}V^{2/p}$ give (5).
+The orders follow from $|b_{r-2k}|=\Theta_k(r^{-k-1})$.
+\end{proof}
+
+\section{A finite-width evidence witness}
+Take independent scalar priors
+\[
+ p_\tau(u)=c_p\tau^{-1}e^{-|u/\tau|^p},\qquad
+                     c_p=p/(2\Gamma(1/p)).             \tag{7}
+\]
+At $p=2$ the coordinate variance is $\tau^2/2$; this scale convention
+must be distinguished from Gaussian standard deviation.
+Condition only on the observed strict margins $\chi(x_t)F(x_t)>s$.
+
+For $0<\epsilon\le1$, let
+\[
+ \gamma=(1+\epsilon/4)^{1/q},\quad \delta_0=\epsilon/(20q),
+ \quad P_0=\gamma s/\rho,
+ \quad N_0=\left\lceil\frac{2P_0^2}{\delta_0^2s^2}
+                                      \log(4\cdot2^r)\right\rceil.
+ \tag{8}
+\]
+For every $N\ge N_0$, there is a full-cube witness of cost
+$V_0=(1+\epsilon/4)V_*$ and all margins at least
+$(1+2\delta_0)s$.
+To construct it, independently sample $z_i$ uniformly on the cube and
+use $U_i=(0,m_0z_i)$, $a_i=A_0\operatorname{sgn}(b_r)\chi(z_i)$,
+where
+\[
+ t_0=\gamma s/c,\quad
+ m_0=\sqrt{t_0}\,r^{-1/(2p)},\quad
+ A_0=\sqrt{t_0}\,r^{1/(2p)},\quad R_0=\sqrt r\,m_0.
+\]
+Each neuron has the stated cost and mean output $\gamma s\chi$.
+Its second moment is $P_0^2/2$ and its absolute output is at most
+$P_0\sqrt r$. The mean-value theorem gives
+$\gamma-1\ge\epsilon/(5q)=4\delta_0$.
+Bernstein's inequality and a union bound over $2^r$ inputs show that
+(8) gives positive probability of a deviation at most $2\delta_0s$
+everywhere. The constants are conservative: $\rho\sqrt r\le1/2$
+bounds the linear term in Bernstein's denominator.
+
+Let $M_0=\max(A_0,m_0)$ and choose the coordinate-box radius
+\[
+ a_0=\min\left\{1,\
+ \frac{\epsilon V_*}{4pd(M_0+1)^{p-1}},\
+ \frac{\delta_0s}{\sqrt D\{R_0+(A_0+1)\sqrt D\}}\right\}.
+ \tag{9}
+\]
+The mean-value theorem bounds the cost increase throughout this box
+by $pd a_0(M_0+1)^{p-1}\le\epsilon V_*/4$.
+ReLU's Lipschitz property bounds the output change by $\delta_0s$.
+Thus the whole box has $V\le(1+\epsilon/2)V_*$ and satisfies every
+possible observed-margin history.
+
+\section{Actual posterior concentration and polynomial samples}
+Put $L_0=\log^+(1/(2a_0c_p))$ and fix $0<\beta<1$.
+For $0<\tau\le1$, integration of the preceding box bounds every
+history's evidence below by
+\[
+ \exp\left[-N\{(1+\epsilon/2)V_*/\tau^p+dL_0\}\right].
+ \tag{10}
+\]
+Under the prior, $NV/\tau^p$ has gamma shape $Nd/p$, so
+$\E\exp(tNV/\tau^p)=(1-t)^{-Nd/p}$.
+Use $t=1-\epsilon/8$ and the gap
+$t(1+\epsilon)-(1+\epsilon/2)\ge\epsilon/4$.
+Dividing the resulting tail bound by (10) proves that
+\[
+ \tau^p\le\tau_0^p:=
+ \min\left\{1,\
+ \frac{\epsilon V_*}
+ {4\{dL_0+(d/p)\log(8/\epsilon)+\log(1/\beta)\}}\right\}
+ \tag{11}
+\]
+implies posterior mass at least $1-\beta^N$ on
+$V\le(1+\epsilon)V_*$, for every history and all $N\ge N_0$.
+
+This cost ball lies in the common ReLU variation ball of radius
+$B=D^{1/2-1/p}((1+\epsilon)V_*/2)^{2/p}=O_{p,s}(r)$.
+Its Rademacher complexity is at most $2B\sqrt{D/m}$.
+The usual bounded hinge-loss argument gives, on one uniform-IID sample
+event of probability at least $1-\zeta$, simultaneously on this ball,
+\[
+ \E(s-\chi F)_+\le\frac{8B\sqrt D}{\sqrt m}
+                +(s+B\sqrt D)\sqrt{\frac{\log(2/\zeta)}{2m}}.
+ \tag{12}
+\]
+The empirical hinge loss is zero under the hard observed-margin
+posterior. Choose $m$ so that the right side is at most $s\epsilon$.
+
+\begin{theorem}[Finite posterior transfer for every fixed $p\ge2$]
+Under (8), (11), and (12), Theorem~\ref{thm:det} applies to one
+posterior feature draw with joint probability at least
+$1-\zeta-\beta^N$. For each fixed number $2k$ of deleted coordinates,
+choosing $\epsilon$ of order
+$\delta^p r^{-p(2k+1)}$ gives comparator error $O(\delta)$.
+Sufficient width and pretraining orders are
+\[
+ N_0=O_{p,k,s}(r^{4pk+2p+3}\delta^{-2p}),\qquad
+ m=O_{p,k,s}(r^{4pk+2p+3}\delta^{-2p}\log(2/\zeta)).     \tag{13}
+\]
+The prior-scale ceiling in (11) is bounded below by a positive
+inverse polynomial in $r,\delta^{-1}$ for fixed $p,k,s$ and confidence.
+A subsequent bounded-norm hinge fit learns the neighboring target
+with $O_{p,k,s}(r^{2k+3}\delta^{-2}\log(2/\zeta'))$ labels.
+\end{theorem}
+\begin{proof}
+The deterministic error follows from (6). Equation (8) has order
+$r^3\epsilon^{-2}$, and so does the sample threshold (12).
+Every expression in the box radius (9) is a power of the displayed
+parameters, giving $L_0=O_{p,s}(\log(r/\epsilon))$ and the claimed
+prior-scale order. In fact (11) is of order at least
+\[
+ \min\left\{1,\
+ \frac{\epsilon r^{(p-2)/4}}
+ {C_{p,s}\{\log(r/\epsilon)+r^{-1}\log(1/\beta)\}}\right\}.
+\]
+Finally the product of squared comparator norm and squared feature
+radius in (6) is $O_{p,k,s}(r^{2k+3})$. The ordinary RKHS hinge
+argument gives the downstream bound and an additional failure
+probability $\zeta'$.
+\end{proof}
+
+\input{power-prior-bias-refinement}
+
+\section{Exponential initial-feature weakness beyond Gaussian priors}
+The following direct argument applies more widely than (7).
+Let the incoming weights on the coordinates in a set $T$ be independent
+copies of a real variable $W$ with second moment $\sigma^2>0$, and
+independent of all other incoming coordinates and the bias. Assume
+\[
+              \kappa:=\sup_{t\in\R}\E\sin^2(tW)<1.
+ \tag{14}
+\]
+Other coordinates and the bias may have any independent distribution
+with finite second moment. If $j=|T|\ge2$ and
+$G_T(U)=\E_x\chi_T(x)\relu(b+w\cdot x)$, then
+\[
+ \E G_T(U)^2\le
+       \frac{\sigma^2}{\pi^2}\left(\frac j{j-1}\right)^2
+                                    \kappa^{j-1}.      \tag{15}
+\]
+Indeed the linear part of ReLU has zero coefficient at degree $j\ge2$.
+The identity $|z|=(2/\pi)\int_0^\infty(1-\cos(tz))t^{-2}\,dt$
+expresses $G_T$ as $-1/\pi$ times the integral of the corresponding
+cosine coefficient. Cube averaging makes that coefficient a product
+of $j$ sine factors, with a sine or cosine bias factor and cosine
+factors for the other coordinates. Minkowski's integral inequality
+and independence bound its $L^2$ norm by
+\[
+ \frac1\pi\int_0^\infty
+          \min(\sigma t,\sqrt\kappa)^j t^{-2}\,dt
+       =\frac\sigma\pi\frac j{j-1}\kappa^{(j-1)/2}.
+\]
+The integral is finite at both endpoints for $j\ge2$, also justifying
+passage from truncated integrals to the full representation in $L^2$.
+This proves (15).
+
+Every absolutely continuous nondegenerate $W$ satisfies (14).
+Writing its characteristic function as $\varphi$ gives
+$\E\sin^2(tW)=(1-\Re\varphi(2t))/2$.
+Continuity and the Riemann--Lebesgue lemma give convergence to $1/2$
+at infinity; at each finite $t$ the expectation is strictly below one,
+since a density cannot be supported on the discrete set where
+$\sin^2(tw)=1$. Compactness then gives a strict global gap.
+This includes each fixed exponential-power law (7), with
+$\kappa=\kappa_p<1$ independent of scale. For Gaussian weights,
+$\kappa=1/2$; the same is true for their centered scale mixtures.
+For discrete Rademacher weights $\kappa=1$, so this argument deliberately
+does not assert an exponential bound in that case.
+
+For an IID initial feature kernel, its expected target quadratic form
+is exactly $\E G_T^2$, at every width. Markov's inequality and (15)
+therefore imply exponential approximate-RKHS-norm lower bounds for a
+fixed high-degree target, or simultaneously for polynomially many such
+targets. Combined with (6), this gives an exponential-to-polynomial
+initial-versus-pretrained feature separation for every fixed $p\ge2$.
+The distributions and prior scale are matched in that comparison.
+
+\section{Statistical feature learning and a specified optimization obstruction}
+The initialization companion, \emph{Continuous smoothing of parity
+features: a quantitative initialization threshold}, gives a useful
+comparison with the finite Bayesian theorem above. Fix $p\ge2$ and
+use the same coordinate prior (7), including its scale $\tau$.
+There are polynomial width and pretraining-sample choices and an
+inverse-polynomial prior scale for which the exact observed-margin
+posterior has the transferable features proved here, with the stated
+joint high probability.
+
+In contrast, start the mean-field ReLU network from that same product
+prior and run population gradient descent for correlation loss
+$-\E\chi F_N$, adding independent coordinate increments with that
+same density after every step. For any polynomial number of steps and
+polynomially bounded learning rate, its expected uniform classification
+accuracy remains at most $1/2+\operatorname{poly}(r)e^{-c_pr}$,
+where $c_p>0$ is fixed.
+This follows from the product-initialization and product-perturbation
+theorem in the companion. To see why the cold scale causes no loss in
+its constants, write $\theta_t=\tau\zeta_t$. ReLU homogeneity gives
+$F_N(\tau\zeta)=\tau^2F_N(\zeta)$ and
+$\nabla\mathcal L(\tau\zeta)=\tau\nabla\mathcal L(\zeta)$.
+The rescaled update therefore has unit-scale initialization and
+unit-scale increments. Its learning rate is unchanged; replacing the
+mean-field network by the unnormalized sum divides that rate by $N$.
+The sine gap is independent of scale, and every remaining factor in
+the path comparison is polynomial.
+
+The two procedures use different objectives: a hard-margin Bayesian
+posterior in the positive result, and noisy population correlation
+optimization in the negative one. This is not a computational lower
+bound for all posterior samplers, for noiseless gradient descent, or for
+the Gaussian likelihood's own gradient dynamics. It shows concretely
+that statistically useful representations exist in this posterior
+family while this particular training dynamics fails to find even a
+useful classifier from the same prior initialization.
+
+\section*{Relation to earlier work and limits}
+Exponential weakness of random features on parity and separations between
+learned and fixed representations are established themes.
+Daniely and Malach, \emph{Learning Parities with Neural Networks}
+(NeurIPS 2020), give a gradient-learning separation under specified input
+distributions. Shoshani and Shamir, \emph{Hardness of Learning Fixed
+Parities with Neural Networks} (2025), use Gaussian threshold-Fourier
+decay to prove perturbed-gradient hardness. Our integral calculation
+concerns ReLU feature coefficients under independent continuous weights;
+the positive theorem instead concerns an exact Bayesian posterior and
+does not supply an efficient learning algorithm.
+\href{https://proceedings.neurips.cc/paper/2020/file/eaae5e04a259d09af85c108fe4d7dd0c-Paper.pdf}{Daniely--Malach};
+\href{https://arxiv.org/abs/2501.00817}{Shoshani--Shamir}.
+
+The condition $p\ge2$ is used at Jensen's inequality for the cost and
+in the moment bounds. It is not cosmetic. The heavy-tail companion
+shows a different sparse large-jump regime below two, and a specified
+near-task obstruction when the tail exponent changes with dimension.
+Constants here are not uniform as $p$ varies. The prior scale is chosen
+for the desired accuracy, exact posterior sampling is assumed, and
+even feature evaluation is part of the downstream architecture.
+These are conventional same-session proofs, without independent review
+or Lean verification. The sharp minimum-coordinate inequality is inherited
+from the repository; the present addition is its finite-data transfer
+consequence for the whole fixed-$p\ge2$ family.
+\end{document}

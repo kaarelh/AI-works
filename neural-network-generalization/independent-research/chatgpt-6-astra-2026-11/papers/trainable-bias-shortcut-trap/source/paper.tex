@@ -1,0 +1,231 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{lemma}[theorem]{Lemma}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}
+\title{A shortcut trap with trainable hidden biases}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author. Verification scope and provenance are stated in the accompanying research collection.}}\date{18 November 2026; independent research draft}
+\emergencystretch=3em
+\hypersetup{pdftitle={A shortcut trap with trainable hidden biases},pdfauthor={ChatGPT-6 Astra}}
+\begin{document}\maketitle
+
+The original seven-bit shortcut distribution does not have the claimed
+interior stationary trap when hidden biases train. This note constructs
+\emph{a different full-support distribution} with a compatible affine
+conditional mean. It proves a small-initialization trap for an explicit
+open conical initialization class, not for almost every random
+initialization. The input coordinates have a fixed scale factor of two;
+this is part of the Euclidean gradient-flow model. General early-alignment
+and spurious-convergence mechanisms are established in the literature;
+this note supplies an explicit finite Boolean construction.
+
+\section{The covariance-aligned distribution}
+Let $q=5$, $L=2$, $\epsilon=10^{-3}$, and $\rho=9/10$.
+For $s\in\{-1,1\}^q$ put $S=\sum_i s_i$. Draw the shortcut vector
+from
+\[
+ P_s=(1-\epsilon)\tfrac12(\delta_{\boldsymbol 1}
+                         +\delta_{-\boldsymbol 1})
+                       +\epsilon\operatorname{Unif}(\{-1,1\}^q).
+\]
+Let $c=\E|S|=(1-\epsilon)5+\epsilon15/8$ and
+$d=\E S^2=(1-\epsilon)25+5\epsilon$.
+Define $\beta$ to be the positive root of
+\[
+ \frac{L^2c}{q}\beta^2+
+       \left(\frac{L^2d}{q}-1\right)\beta-c=0,\qquad
+ \kappa=\frac{\rho}{q+\beta},\quad
+ m(s)=\kappa(S+\beta\operatorname{sgn}S).
+ \tag{1}
+\]
+Here $1/4<\beta<1/2$: the polynomial is negative at $1/4$ and
+positive at $1/2$, its leading coefficient is positive, and its
+constant term is negative. In particular $|m(s)|\le\rho<1$.
+The full input distribution and target are
+\[
+ P(s,z_1,z_2)=\frac{P_s(s)}4[1+m(s)z_1z_2],\quad
+ y=z_1z_2,\quad X=(Ls_1,\ldots,Ls_q,z_1,z_2).
+ \tag{2}
+\]
+Every Boolean input has probability at least
+$\epsilon(1-\rho)/2^{q+2}>0$. The OOD test law is uniform on the same
+Boolean inputs, with the same deterministic coordinate scaling.
+The target still has the four-neuron bias-zero ReLU representation
+\[
+ y=\tfrac12[\operatorname{ReLU}(z_1+z_2)
+ +\operatorname{ReLU}(-z_1-z_2)-\operatorname{ReLU}(z_1-z_2)
+ -\operatorname{ReLU}(-z_1+z_2)].
+\]
+
+Let $\bar X=(1,X)$ be the augmented input, so the first incoming
+parameter is a trainable hidden bias. Put
+\[
+ h_+=(\beta,L^{-1},\ldots,L^{-1},0,0),\quad
+ h_-=(\beta,-L^{-1},\ldots,-L^{-1},0,0),\quad
+ u_\pm=h_\pm/\|h_\pm\|.
+\]
+The two vectors have strict gates $H_\pm=\{\pm S>0\}$ because
+$0<\beta<1$ and $S$ is odd. Their smallest unit-direction activation
+margin is $(1-\beta)/\|h_+\|>0$.
+
+\begin{lemma}[The affine regression direction is an eigenvector]
+Set $\Sigma_+=\E[\bar X\bar X^\top 1_{H_+}]$. Then $h_+$ is an
+eigenvector of $\Sigma_+$ with positive eigenvalue
+\[
+ \lambda=\frac{L^2}{2q}(\beta c+d),
+\]
+and $\E[y\bar X1_{H_+}]=\kappa\Sigma_+h_+$.
+The analogous statement holds for the negative branch after reversing
+all shortcut bits and one relevant bit and reversing the target sign.
+Both branch covariance matrices are positive definite.
+\end{lemma}
+\begin{proof}
+Conditional on $s$, the relevant coordinates have zero first moments
+and $\E[y\mid s]=m(s)$. Thus their covariance block is orthogonal
+to the bias and shortcut block. Conditional on $H_+$, symmetry gives
+$\E S=c$, $\E S^2=d$, $\E s_i=c/q$, and $\E s_i S=d/q$.
+The bias coordinate of $\Sigma_+h_+$ is $(\beta+c)/2$ and each
+shortcut coordinate is $L(\beta c+d)/(2q)$. Equation (1) is exactly
+the assertion that these equal $\lambda\beta$ and $\lambda/L$.
+On $H_+$, $m(s)=\kappa h_+\cdot\bar X$, giving the response identity.
+Full support reduces positive definiteness to affine spanning of the
+majority half. Its all-plus shortcut point and the five points with
+one flipped shortcut coordinate span the bias/shortcut coordinates;
+varying the two relevant bits spans the other two coordinates.
+\end{proof}
+
+\section{Small initialization stays in a biased shortcut basin}
+Train the full network
+$F=\sum_{j=1}^N a_j\operatorname{ReLU}(W_j\cdot\bar X)$ by
+population gradient flow of $\E(F-y)^2/2$, with every coordinate of
+$W_j$, including its bias, trainable. Let $\mathcal C_\sigma$ be the
+open cone of vectors having exactly the strict gates $H_\sigma$.
+
+\begin{theorem}[A bias-compatible shortcut trap]
+Fix finitely many nonzero incoming vectors $W_j^0\in\mathcal C_{\sigma_j}$
+and readouts with $\operatorname{sgn}(a_j^0)=\sigma_j$,
+$|a_j^0|\ge\|W_j^0\|>0$, and both signs present.
+Initialize $(a_j,W_j)=\alpha(a_j^0,W_j^0)$.
+For every sufficiently small $\alpha>0$, population gradient flow
+keeps every neuron in its initial majority gate and converges in output
+to
+\[
+ F_*(s,z)=m(s)=\kappa[S+\beta\operatorname{sgn}S].
+\]
+Its uniform OOD classification error is $1/2$, its training error is
+$(1-\E_{P_s}|m(s)|)/2$, and its square risk is
+$(1-\E_{P_s}m(s)^2)/2>0$.
+At least two neurons of each sign allow the same architecture to
+represent the four-neuron target. The initialization class with strict
+readout dominance has nonempty interior in parameter space, but its
+probability under iid Gaussian initialization need not be large.
+\end{theorem}
+\begin{proof}
+Consider the positive branch; the other follows from the target-reversing
+symmetry. Write $W_j=p_j u_++b_j$, $b_j\perp u_+$ and $a_j>0$.
+Every $W_j\in\mathcal C_+$ has $p_j>0$. To see this, write its bias
+as $b$ and its shortcut weights as $v_i$. Averaging its strict gate
+inequalities on the shortcut layers $S=\pm1$ and averaging over the
+relevant bits gives $L\sum_i v_i/q>|b|$. Therefore
+\[
+ h_+\cdot W_j=\beta b+L^{-1}\sum_i v_i
+ >\left(L^{-1}-\beta L/q\right)\sum_i v_i>0,
+\]
+since $\beta L^2<q$.
+
+Within the gates put $A=\sum_j a_jp_j$, $v=\sum_j a_jb_j$, and
+$A_*=\kappa\|h_+\|$. The branch risk, up to its optimum value, is
+exactly
+\[
+ R-R_* = \tfrac12\lambda(A-A_*)^2+\tfrac12v^\top\Sigma_+v.
+ \tag{3}
+\]
+In particular $R_A=\lambda(A-A_*)$ and $R_v=\Sigma_+v$ in the
+orthogonal complement. The exact parameter equations are
+\[
+ a_j'=-p_jR_A-b_j\cdot R_v,\quad p_j'=-a_jR_A,
+ \quad b_j'=-a_jR_v.\tag{4}
+\]
+Positive homogeneity preserves
+$d_j=a_j^2-\|W_j\|^2=\alpha^2d_j^0\ge0$ and the readout signs.
+Consequently, as long as $p_j>0$,
+\[
+ B^2:=\sum_j\|b_j\|^2\text{ is nonincreasing},\quad
+ A\le Q:=\sum_j a_j^2\le A+B^2+D,\quad
+ \|v\|\le\sqrt Q B,\qquad D=\sum_jd_j.\tag{5}
+\]
+The first claim follows from $(B^2)'=-2v^\top\Sigma_+v\le0$.
+
+For clarity, finite-time alignment can be shown without a global
+angular inequality. At zero network output the exact frozen equations
+in the gate are
+$a_j'=\lambda A_*p_j$, $p_j'=\lambda A_*a_j$, and $b_j'=0$.
+They preserve the initial cone: $p_j$ increases, and adding a positive
+multiple of $u_+$ preserves every strict gate inequality. Moreover
+$p_j$ grows exponentially, so after a fixed finite time $T$ the ratio
+$B/\min_jp_j$ is as small as desired. Divide actual parameters by
+$\alpha$. On every fixed bounded time interval their equations are the
+frozen equations plus an $O(\alpha^2)$ smooth perturbation. The frozen
+trajectory has a strictly positive normalized gate margin on $[0,T]$.
+Continuous dependence and a first-exit argument therefore keep the
+actual trajectory in the same cones through $T$ and give the desired
+small ratio. At $T$, all parameters are still $O(\alpha)$ and $A<A_*$.
+
+Thereafter, while $A<A_*$, every $p_j$ increases by (4), while $B$
+decreases. With $R_X=\max\|\bar X\|=\sqrt{23}$ and
+$g=(1-\beta)/\|h_+\|$, each gate margin is at least
+$g p_j-R_X\|b_j\|$. Taking the earlier ratio sufficiently small
+prevents any gate exit during this phase. Equations (3) and (5)
+bound all parameters on the decreasing risk sublevel.
+
+If $A$ never reaches $A_*$, equations (4), the positive definite
+output Hessian, and $Q\ge\min_jp_j(T)^2>0$ give
+$\|\nabla_\theta R\|^2\ge cQ(R-R_*)$ and hence convergence to
+the output optimum. If $A=A_*$ first occurs at time $T_*$, then
+(3)--(5) give $R(T_*)-R_*\le C B(T)^2$. For sufficiently small
+$\alpha$, subsequent decreasing risk keeps $A\ge A_*/2$, so the
+same PL inequality has a positive constant independent of $\alpha$.
+The remaining parameter path length is at most $C'B(T)$.
+Choose $B(T)/\min_jp_j(T)$ small enough that this is less than
+$(g\min_jp_j(T)-R_X B(T))/R_X$, a lower bound for the distance to
+any gate boundary. Another first-exit argument proves the gates stay
+strict forever and establishes convergence. The constant $D=O(\alpha^2)$
+in (5) does not affect the risk-gap or path-length estimates.
+
+The two branch limits combine to $F_*=m(s)$. Its sign is
+$\operatorname{sgn}S$ and $\E[y\mid s]=m(s)$, giving the stated
+training error and risk. Under the uniform test law, $y$ is independent
+of $s$ and balanced, giving error $1/2$.
+\end{proof}
+
+The proof is entirely smooth because the conical hypothesis and the
+first-exit arguments keep all preactivations away from zero. It makes
+no claim for logistic loss, arbitrary initialization directions,
+stochastic gradients, or a width-uniform threshold on $\alpha$.
+Although the four-neuron teacher has zero error, the limiting two-branch
+predictor is also a local parameter minimum: all nearby outputs have
+these fixed gates, and (3) is minimized there.
+
+\section{Renewal still opens a descent direction}
+Let $v$ have zero bias and shortcut entries and relevant entries
+$(1,1)/\sqrt2$, and put $h(X)=\operatorname{ReLU}(v\cdot\bar X)$.
+Conditional averaging over the relevant bits yields
+\[
+ U_*:=\E[(y-F_*)h]
+      =\frac{1-\E_{P_s}m(s)^2}{2\sqrt2}>0,\qquad \E h^2=\tfrac12.
+\]
+Adding the fresh neuron $(a,W)=(t,tv)$ changes risk by exactly
+$-U_*t^2+t^4/4$, so every sufficiently small nonzero $t$ gives descent.
+This is a descent statement in the enlarged architecture, not a
+probability-one random-renewal recovery theorem.
+
+\section{Verification status}
+The construction and covariance identity are checked by the exhaustive
+128-input script \texttt{biased\_eigen\_shortcut.py}. Population-flow
+experiments and step-size comparisons are reported separately. They
+serve as diagnostics of the formulas; the conical initialization theorem
+above rests on the analytic argument, not a finite training horizon.
+The construction received a further same-session proof audit in the second
+research round. It has not been checked by an independent reviewer or
+formalized in Lean.
+\end{document}

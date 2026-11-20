@@ -1,0 +1,367 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}
+\newcommand{\relu}{\operatorname{ReLU}}
+\title{Heavy-tail sparsity can obstruct frozen-feature transfer}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author. Verification scope and provenance are stated in the accompanying research collection.}}
+\date{18 November 2026; independent research draft}
+\hypersetup{pdftitle={Heavy-tail sparsity can obstruct frozen-feature transfer},pdfauthor={ChatGPT-6 Astra}}
+\emergencystretch=3em
+\begin{document}\maketitle
+\begin{abstract}
+We exhibit a family of unit-variance neural priors for which even complete
+pretraining on full parity leaves poor frozen features for a parity missing
+two coordinates. Each coordinate has an exponential-power density with
+exponent $p_r=1/\log r$. In the width-first posterior, heavy-tail
+large deviations favor a compressible collection of exceptional neurons,
+while the ordinary neurons retain their prior law. The exceptional kernel
+has a small-rank approximation with superpolynomially small remainder on
+the family of nearby parities; the ordinary kernel is exponentially weak
+there. Consequently, with probability tending to one in the stated
+iterated limit, approximating a specified nearby parity in $L^2$ requires
+RKHS squared norm at least $\exp(c(\log r)^2)$. A fresh Gaussian linear
+readout with fixed positive likelihood variance therefore needs a
+superpolynomial number of downstream labels for small squared prediction
+error. The tail exponent changes with dimension. This is a frozen-feature
+regression obstruction, not a classification-mistake lower bound for the
+original end-to-end Gaussian learner.
+\end{abstract}
+
+\section{Model and result}
+Let $r$ be even, $X=\{-1,1\}^r$ with uniform probability, and
+$\chi(x)=\prod_{i=1}^r x_i$. Write $\bar x=(1,x)$.
+Pretraining uses the one-hidden-layer network
+\[
+ F_N(x)=N^{-1}\sum_{i=1}^N a_i\relu(U_i\cdot\bar x).
+\]
+All scalar coordinates are independent with density
+\[
+ \frac{p_r}{2\ell_r\Gamma(1/p_r)}
+        \exp[-|u/\ell_r|^{p_r}],\qquad
+ p_r=\frac1{\log r},\qquad
+ \ell_r^2=\frac{\Gamma(1/p_r)}{\Gamma(3/p_r)}.
+ \tag{1}
+\]
+Thus each coordinate has variance one. Condition only on the observed
+margins, observing every cube input in this experiment:
+\[
+ H_N=\{\chi(x)F_N(x)>1/2\text{ for all }x\in X\}.
+\]
+There is no initial output-support restriction. Freeze the incoming
+weights of a posterior draw and set
+\[
+ K_N(x,y)=N^{-1}\sum_i\relu(U_i\cdot\bar x)\relu(U_i\cdot\bar y).
+ \tag{2}
+\]
+For a positive semidefinite kernel $K$, define
+\[
+ \mathfrak n_T(K)=
+ \inf\{\|g\|_{\mathcal H(K)}^2:\|g-\chi_T\|_{L^2(X)}\le1/4\},
+ \tag{3}
+\]
+with infimum $+\infty$ when the set is empty.
+
+\begin{theorem}[A specified neighboring parity is expensive]
+There is $r_0$ such that for every even $r\ge r_0$ and every fixed
+$T\subseteq[r]$ of size $r-2$,
+\[
+ \liminf_{N\to\infty}
+ \Pr\left\{\mathfrak n_T(K_N)\ge
+                  \exp\left[\tfrac14(\log r)^2\right]\ \middle|\ H_N\right\}
+                       \ge1-\frac4{\log r}.              \tag{4}
+\]
+More strongly, with posterior probability tending to one at fixed $r$,
+at least a fraction $1-4/\log r$ of the $\binom r2$ neighboring parities
+satisfy the same lower bound.
+The width threshold is not quantified. The target in (4) is fixed
+before drawing the pretrained network.
+\end{theorem}
+
+The pretraining target and each downstream target have shallow ReLU
+teachers of width $O(r)$ with polynomially bounded weights. The lower
+bound concerns reuse of the sampled incoming features. It does not
+prevent an algorithm from using the input coordinates to learn parity
+by another method, or from changing the hidden weights during fine-tuning.
+
+\begin{corollary}[Downstream Gaussian regression sample obstruction]
+Given the frozen features (2), put an independent standard Gaussian prior
+on their normalized linear coefficients and use a Gaussian likelihood
+with fixed variance $v>0$. For every dataset of $n$ downstream labels in
+$\{-1,1\}$, the posterior mean has squared RKHS norm at most $n/v$.
+On the event in (4), its uniform squared error for target $\chi_T$ is
+therefore greater than $1/16$ whenever
+\[
+                   n<v\exp[\tfrac14(\log r)^2].
+ \tag{5}
+\]
+This holds for arbitrarily chosen or adaptive input locations. Expected
+squared error of a posterior prediction draw is at least that of its
+posterior mean, so the same obstruction applies to that criterion.
+\end{corollary}
+\begin{proof}
+The mean is the ridge minimizer of
+$\sum_{i=1}^n(y_i-g(x_i))^2+v\|g\|_{\mathcal H(K_N)}^2$.
+Its value is at most the value $n$ at zero. Apply (3)--(4).
+\end{proof}
+
+\section{Kernel limits under stretched-exponential parameter tails}
+We record the extension of the large-jump argument to every fixed
+$0<p<2$, including $p<1$. All limits in this section fix $r,p,\ell$.
+Put $q=p/2$, and use physical parameter cost
+$V(\theta)=|a|^p+\sum_l|U_l|^p$.
+Let
+\[
+ J_*=\inf\left\{\sum_i V(\vartheta_i):
+ \chi(x)\sum_i\Phi_x(\vartheta_i)\ge1/2\ \forall x\right\},
+ \qquad \Phi_x(a,U)=a\relu(U\cdot\bar x).
+ \tag{6}
+\]
+The infimum ranges over finite collections. It is attained with at
+most $M=2^r$ nonzero neurons. Indeed normalization gives a compact,
+symmetric atom set and an atomic cost $\sum c_i^q$; a linear dependence
+among more than $M$ atoms allows one to lower this strictly concave cost
+until an atom disappears. Compactness after this reduction gives
+attainment. The same dependence argument excludes more than $M$
+nonzero atoms in any countable minimizing representation of finite cost.
+
+Let $K_p^0=\E_{P_p}h_U\otimes h_U$, where
+$h_U(x)=\relu(U\cdot\bar x)$ and $P_p$ is the one-neuron prior.
+The relevant posterior kernel conclusion is
+\[
+ \operatorname{dist}\left(K_N,\
+ \left\{K_p^0+\sum_i h_{U_i}\otimes h_{U_i}:
+       (\vartheta_i)_i\text{ minimizes (6)}\right\}\right)
+                              \longrightarrow0
+ \tag{7}
+\]
+in posterior probability. Any matrix norm on this fixed finite input
+space can be used. The set on the right is compact.
+
+Here are details of the large-deviation steps supporting (7).
+They are also the reason the conclusion continues to hold below $p=1$.
+The variable $V/\ell^p$ has a gamma distribution, of shape $(r+2)/p$.
+For some fixed $C$, $|\Phi_x|$ and $|h_U(x)h_U(y)|$ are at most
+$CV^{2/p}$; this uses only equivalence of norms in fixed dimension,
+not convexity of the $p$-power cost. Truncate at
+$V^{1/p}\le\varepsilon\sqrt N$. For
+$\lambda=A N^{q-1}$, the truncated exponent satisfies
+$\lambda C V^{2/p}\le AC\varepsilon^{2-p}V$.
+Choosing $\varepsilon$ small makes this at most $V/(2\ell^p)$.
+The centered exponential Taylor bound is then $O(\lambda^2)$, since
+the exponentially weighted second moments are finite. Chernoff gives
+\[
+ \limsup_N N^{-q}\log
+ \Pr\{|\text{truncated empirical observable}
+                  -\text{its mean}|>u\}\le-Au.
+ \tag{8}
+\]
+The truncated output mean is zero by readout symmetry; the truncated
+kernel mean tends to $K_p^0$. Taking $\varepsilon$ sufficiently small
+makes (8) arbitrarily expensive on the $N^q$ scale.
+
+A specified collection of normalized large neurons
+$\vartheta_i=\theta_i/\sqrt N$ has density, up to polynomial factors,
+$\exp[-N^q\ell^{-p}\sum_iV(\vartheta_i)]$.
+The gamma tail bounds the number above any fixed cutoff and their
+largest cost exponentially at this scale. There are only polynomially
+many index assignments for every fixed count. The resulting finite-atom
+Laplace upper and lower bounds give
+$-\log P_p^N(H_N)=N^q\ell^{-p}J_*+o(N^q)$.
+The closed and strict margin infima agree by positive output rescaling.
+For a direct cost tightness bound, exponential Markov applied to the
+cost above the cutoff gives, for any $\eta>0$,
+\[
+ \limsup_N N^{-q}\log
+ \Pr\{\text{large normalized cost}>C\}
+                         \le-(1-\eta)\ell^{-p}C.
+\]
+After division by the evidence, every subsequential limiting
+configuration has total cost at most $J_*$; (8) makes its output
+margin feasible, so it is a minimizing configuration.
+
+There is no hidden contribution to (7) from the intervening scales.
+For a cost-bounded configuration, the kernel trace from atoms with
+$V\le\varepsilon^p$ is bounded by
+$C\varepsilon^{2-p}\sum_iV_i$. Equation (8) separately controls
+the truncated empirical kernel around its prior mean. Passing first
+$N\to\infty$ and then $\varepsilon\downarrow0$ identifies the kernel
+limit with the prior kernel plus the finite minimizing configuration.
+This proves (7), including compactness and concentration near its
+entire minimizing set; no uniqueness is required.
+
+\section{A polynomial physical-cost certificate}
+For $0<p\le1$ one has the dimension-uniform estimate
+\[
+                              J_*\le8r^{3/2}.           \tag{9}
+\]
+To see it, put $t=\sum_i x_i$ and use the exact piecewise-linear parity
+identity on $t=-r,-r+2,\ldots,r$:
+\[
+ \chi(x)=1-(t+r)_+
+           +2\sum_{j=1}^{r-1}(-1)^{j+1}(t+r-2j)_+.
+ \tag{10}
+\]
+The constant is a bias-only ReLU. Multiply the readouts by $1/2$.
+The other readout magnitudes are at most one, and each incoming
+$p$-cost is at most $r+r^p\le2r$.
+For a term $c\relu(U\cdot\bar x)$, output-preserving layer balancing
+makes its least physical cost
+$2|c|^{p/2}(\sum_l|U_l|^p)^{1/2}$.
+Summing over the $r+1$ terms gives (9), with room in the constant.
+The prior normalization $\ell$ has no effect on which physical-cost
+representations minimize (6).
+
+\section{Compressibility of the exceptional kernel}
+Order the costs $v_i=V(\vartheta_i)$ of any minimizer decreasingly.
+Then $\sum_i v_i=J_*\le J:=8r^{3/2}$ and $v_i\le J/i$.
+Because $p\le2$,
+\[
+ \|U_i\|_2^2\le v_i^{2/p}=v_i^{1/q}.
+ \qquad
+ \E_x h_{U_i}(x)^2\le\|U_i\|_2^2.
+\]
+Keeping the first $L$ exceptional features gives a kernel of rank at
+most $L$; the omitted positive semidefinite kernel has trace at most
+\[
+ T_L\le\sum_{i>L}v_i^{1/q}
+       \le\frac{q}{1-q}J^{1/q}L^{-(1-q)/q}.             \tag{11}
+\]
+All traces here use the uniform-probability $L^2(X)$ convention.
+This is an upper bound uniform over every minimizing configuration.
+
+\section{The ordinary background is weak on high-degree parities}
+For every $0<p\le2$, the exponential-power distribution is a Gaussian
+scale mixture. A direct way to see this, also covering $p<1$, is to
+let $S>0$ have Laplace transform $\E e^{-tS}=e^{-t^{p/2}}$.
+Such a positive stable law exists for $0<p<2$; equivalently its
+Laplace exponent follows from the Poisson integral
+$t^\alpha=\alpha\Gamma(1-\alpha)^{-1}
+\int_0^\infty(1-e^{-tu})u^{-1-\alpha}\,du$,
+with $\alpha=p/2$. Then
+$e^{-|w/\ell|^p}=\E e^{-Sw^2/\ell^2}$.
+Weighting the mixing law by $S^{-1/2}$ and normalizing gives Gaussian
+components with variances $\ell^2/(2S)$.
+The negative half-moment is finite by integrating this identity in $w$.
+The classical scale-mixture construction is not a new result.
+
+Condition on the independent mixing variances of all incoming
+coordinates. If their sum is $A$, the ReLU kernel is the arc-cosine
+kernel with covariance ratio
+$c=(v_0+\sum_i v_i x_i y_i)/A$.
+Its positive power-series coefficients satisfy
+$a_l=\binom{2l}{l}/[4^l(2l-1)^2]\le l^{-5/2}$.
+For a character of degree $j$, the coefficient of $c^n$ is a
+multinomial odd/even occupancy probability, now with possibly unequal
+symbol probabilities $v_i/A$. Poissonization still bounds it by
+$e\sqrt n\,2^{-j}$: every specified independent Poisson count has odd
+probability at most $1/2$, regardless of its mean.
+Thus for even $j\ge4$,
+\[
+ \lambda_j(K_p^0)\le
+ \frac{e\sqrt2\,\E A}{2\pi(j/2-1)}\,2^{-j}
+ =\frac{e\sqrt2(r+1)}{2\pi(j/2-1)}\,2^{-j}.             \tag{12}
+\]
+The final equality uses unit coordinate variance. Independent sign
+symmetry and permutation symmetry make the ordinary kernel diagonal
+in Walsh characters, with a common eigenvalue at each degree.
+The occupancy bound follows by conditioning independent Poisson counts
+of means $nv_i/A$ on their total being $n$; that conditioning event
+has probability at least $1/(e\sqrt n)$. Summing the arc-cosine series
+from $l\ge j/2$ gives (12).
+
+\section{A rank argument and the superpolynomial bound}
+Let $\mathcal V$ be the span of the $D=\binom r2$ degree-$(r-2)$
+characters. Put $L=\lfloor D/\log r\rfloor$ and project the first
+$L$ exceptional features onto $\mathcal V$. Their span $W$ has
+dimension at most $L$. For the orthonormal character basis,
+\[
+ \sum_{|T|=r-2}\|P_W\chi_T\|_2^2\le L.
+\]
+Consequently at least $D-4L$ characters have
+$\|P_{W^\perp}\chi_T\|_2\ge\sqrt3/2$, where the orthogonal complement
+is taken inside $\mathcal V$.
+For the limiting kernel $K$, (11)--(12) give
+\[
+ \|P_{W^\perp}KP_{W^\perp}\|_{\rm op}
+                         \le a_r:=\lambda_{r-2}(K_p^0)+T_L.
+\]
+Every $g\in\mathcal H(K)$ therefore satisfies
+$\|P_{W^\perp}g\|_2\le\sqrt{a_r}\|g\|_{\mathcal H(K)}$.
+For those $D-4L$ targets, approximation error at most $1/4$ implies
+\[
+ \|g\|_{\mathcal H(K)}^2
+          \ge\frac{(\sqrt3/2-1/4)^2}{a_r}.              \tag{13}
+\]
+This argument also holds for a kernel within operator-norm distance
+$b$ of $K$, with denominator $a_r+b$. It thus transfers to the actual
+posterior through (7).
+
+For (1), $q=1/(2\log r)$. For sufficiently large $r$,
+$q/(1-q)\le1$ and $L\ge r^2/(8\log r)$, while $L\le r^2$.
+Equation (11) gives
+\[
+ \log T_L
+ \le-(\log r)^2+2\log r\log\log r+O(\log r)
+ \le-\tfrac12(\log r)^2.
+\]
+The ordinary contribution (12) is $O(2^{-r})$.
+Allowing an operator-norm error $b\le e^{-(\log r)^2/2}$, (13) is
+at least $\exp[(\log r)^2/4]$ for all sufficiently large $r$.
+Equation (7) gives the claimed high-posterior-probability fraction
+$1-4L/D\ge1-4/\log r$.
+Finally the full-parity posterior is invariant under coordinate
+permutations, which act transitively on these $D$ targets.
+Their bad-feature probabilities are equal; averaging the fraction proves
+(4) for each target fixed in advance.
+
+\section{Fixed tails, comparison, and limits}
+For a fixed exponent $0<p<1$, the same argument yields a polynomial
+hierarchy instead of the dimension-dependent superpolynomial example.
+For a family of degree-$(r-2k)$ characters, (9)--(13), with
+$L$ a fixed small fraction of $\binom r{2k}$, give a norm lower scale
+of order
+\[
+ r^{\,2k(1-q)/q-3/(2q)}
+\]
+whenever the exponent is positive, apart from constants depending on
+$p,k$ and the chosen fraction. The exponentially small ordinary
+background does not change this order.
+
+The separate cold-Gaussian transfer paper gives polynomial norm
+$O_k(r^{2k+1})$ and polynomial IID pretraining for the even-symmetrized
+features of its specified posterior. For fixed $q<1/2$, the present
+lower exponent exceeds $2k+1$ when
+$2k(1-2q)>3/2+q$. This compares feature quality under two different
+priors, with their respective stated scale conventions.
+For $p_r=1/\log r$, the stronger statement (4) already applies at $k=1$.
+
+Complete pretraining is intentionally favorable to the negative
+example. Its failure is in the downstream frozen representation and
+Gaussian linear readout, not in fitting the source labels.
+The changing tail exponent and the width-first order of limits are
+essential qualifications. No effective width, chain-mixing, or
+end-to-end classification mistake theorem is asserted.
+The same lower bound holds after even feature symmetrization: projection
+onto the even target space $\mathcal V$ leaves that kernel block unchanged.
+
+\section*{Sources and verification}
+The large-jump truncation proof extends the accompanying
+\emph{Sparse posterior condensation under heavier-than-Gaussian ReLU
+priors} to $0<p<1$ and to kernel observables.
+For the established exponential-power scale-mixture construction see
+Mike West, \emph{On scale mixtures of normal distributions},
+Biometrika 74 (1987), 646--648,
+\url{https://www2.stat.duke.edu/~mwest/MWextrapubs/West1987a.pdf};
+the positive-stable argument above explicitly covers the smaller
+exponents needed here. For an all-$0<p<2$ treatment see
+S.~R.~Jammalamadaka and T.~J.~Kozubowski,
+\emph{A General Approach for Obtaining Wrapped Circular Distributions
+via Mixtures} (2017), Section 4.1.5,
+\href{https://jammalam.faculty.pstat.ucsb.edu/html/Some\%20Publications/2017_Wrapped\%20CDs\%20via\%20Mixtures_Sankhya.pdf}{author-hosted article}.
+These are conventional same-session proofs, without independent review
+or Lean verification. The new conclusion is the application of
+compressibility and the ordinary-kernel bound to downstream transfer.
+\end{document}

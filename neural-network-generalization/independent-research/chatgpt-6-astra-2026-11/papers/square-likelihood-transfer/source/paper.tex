@@ -1,0 +1,301 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}
+\newcommand{\relu}{\operatorname{ReLU}}
+\title{Gaussian square likelihoods can learn transferable parity features}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author. Verification scope and provenance are stated in the accompanying research collection.}}
+\date{18 November 2026; independent research draft}
+\hypersetup{pdftitle={Gaussian square likelihoods can learn transferable parity features},pdfauthor={ChatGPT-6 Astra}}
+\emergencystretch=3em
+\begin{document}\maketitle
+\begin{abstract}
+We extend the finite-width parity-transfer argument from hard observed
+margins to a smooth Gaussian likelihood. A population identity expresses
+regularized square-risk excess as the sum of a sharp parity-correlation
+deficit and an $L^2$ prediction error. Both quantities control transfer
+through the frozen incoming features. Gaussian density bounds and a
+polynomial-width random-feature witness make the actual posterior
+concentrate near this objective; a common variation-class event transfers
+the empirical bound to population risk. The likelihood's width and sample
+scaling is explicit. An ordinary fixed-variance Gaussian likelihood is
+covered along a stated polynomial relation between width, sample size,
+and prior variance. Exact posterior sampling is assumed.
+\end{abstract}
+
+\section{Model and the population identity}
+Fix even $r\ge6$, let $X=\{-1,1\}^r$ be uniform, and put
+$\chi(x)=\prod_i x_i$, $\bar x=(1,x)$, $D=r+1$, $p=r+2$, and
+\[
+ \rho=\frac{\binom{r-2}{(r-2)/2}}{2^{r-1}\sqrt r}.
+\]
+Consider the mean-field network and physical energy
+\[
+ F=N^{-1}\sum_i a_i\relu(U_i\cdot\bar x),\qquad
+ E=(2N)^{-1}\sum_i(a_i^2+\|U_i\|^2).
+\]
+All scalar parameters have independent $N(0,\tau^2)$ priors.
+For a sample $S=(x_1,\ldots,x_m)$ labeled by full parity, let
+\[
+ L_S(F)=\frac1m\sum_{t=1}^m(1-\chi(x_t)F(x_t))^2,\qquad
+ J_S(F,\theta)=\rho E+L_S(F).
+\]
+Use likelihood $\exp[-N L_S(F)/(\rho\tau^2)]$.
+Thus the total parameter density is proportional to
+$\exp[-NJ_S/(\rho\tau^2)]$. Repeated observations are counted with
+their multiplicities; no memorization rule or hard support is imposed.
+
+For the population functional $J=\rho E+\E(1-\chi F)^2$ the sharp
+single-neuron bound gives the exact decomposition
+\[
+ J-\frac34=
+ \underbrace{\rho E-\E\chi F}_{d(F,\theta)\ge0}
+                      +\|F-\tfrac12\chi\|_2^2.          \tag{1}
+\]
+The infimum $3/4$ is approached by critical-direction representations
+of $\chi/2$. The identity, not a limit theorem, is the main bridge
+between square-risk optimization and feature transfer.
+
+\section{A deterministic transfer lemma}
+For $A\subseteq[r]$ with $|A|=2k$, $j=r-2k\ge2$, put
+$T=[r]\setminus A$. Let $b_j$ be the degree-$j$ coefficient of
+$h(x)=\relu(\sum_i x_i/\sqrt r)$:
+\[
+ b_j=\rho(-1)^{(j-2)/2}
+ \frac{\binom{(r-2)/2}{(j-2)/2}}{\binom{r-2}{j-2}},
+ \qquad |b_r|=\rho,\qquad C_k=(r-1)^k.
+\]
+Use frozen even features
+$\psi_i(x)=[\relu(U_i\cdot(1,x))+\relu(U_i\cdot(1,-x))]/2$
+and kernel $K_e=N^{-1}\sum_i\psi_i\otimes\psi_i$.
+
+\begin{lemma}[Correlation deficit and source error control transfer]
+For any network, any $s>0$, and $d=\rho E-\E\chi F\ge0$, the
+kernel $K_e$ has a predictor $q_A$ satisfying
+\[
+ \|q_A-\chi_T\|_2
+ \le\frac{\rho}{s|b_j|}
+ \left\{(1+C_k)\sqrt{\frac{2Ed}{\rho}}
+                         +C_k\|F-s\chi\|_2\right\},     \tag{2}
+\]
+\[
+ \|q_A\|_{\mathcal H(K_e)}^2
+       \le2E\left(\frac{\rho}{s b_j}\right)^2,
+ \qquad \sup_xK_e(x,x)\le2ED.                           \tag{3}
+\]
+\end{lemma}
+\begin{proof}
+For each nonzero incoming vector write $U_i=R_i u_i$ and replace its
+unit direction by $v_i=(0,\operatorname{sgn}(w_i)/\sqrt r)$.
+The inherited minimum-coordinate parity inequality implies
+$\|u_i-v_i\|^2\le2(1-|G(u_i)|/\rho)$, with
+$G(u)=\E\chi\relu(u\cdot\bar x)$.
+Since $N^{-1}\sum|a_i|R_i\le E$, the total product-weighted deficit
+is at most $d$, and the resulting projected output differs from $F$
+in $L^2$ by at most $\sqrt{2Ed/\rho}$.
+The same estimate holds after multiplying readout $i$ by
+$\chi_A(\operatorname{sgn}w_i)$.
+
+For critical directions, this modulation acts on the even Walsh
+coefficients by
+$\widehat F(S)\mapsto
+[b_{|S|}/b_{|S\triangle A|}]\widehat F(S\triangle A)$.
+Its $L^2$ operator norm is at most $(r-1)^k$, since consecutive
+even coefficient ratios and their reciprocals are at most $r-1$,
+including $b_0=(r-1)\rho$.
+It maps $s\chi$ to $(s b_j/b_r)\chi_T$.
+Apply the triangle inequality before and after projection, and multiply
+the modulated even output by $b_r/(s b_j)$ to obtain (2).
+The resulting coefficient vector gives (3) by
+$N^{-1}\sum a_i^2\le2E$ and
+$\psi_i(x)^2\le D\|U_i\|^2$.
+This is the same deterministic Fourier calculation as in the hard-margin
+transfer companion, stated here without its hinge-loss assumption.
+\end{proof}
+
+If $E\le1/\rho$ and $J\le3/4+2\epsilon$, (1)--(3) with $s=1/2$
+give the explicit bounds
+\[
+ \Delta_k=
+ \frac{2\rho}{|b_j|}
+ \left\{\frac{2(1+C_k)\sqrt\epsilon}{\rho}
+                                  +C_k\sqrt{2\epsilon}\right\},
+ \qquad B_k^2=\frac{8\rho}{b_j^2},\qquad R^2=\frac{2D}{\rho}.
+ \tag{4}
+\]
+For fixed $k$, these are respectively
+$O_k(r^{2k+1}\sqrt\epsilon)$, $O_k(r^{2k+1})$, and $O(r^2)$.
+
+\section{A polynomial-width objective witness}
+Let $0<\epsilon\le1/4$ and put
+\[
+ E_0=\frac1{2\rho},\qquad
+                 N_0=\left\lceil4E_0^2/\epsilon\right\rceil. \tag{5}
+\]
+For every deterministic training sample and $N\ge N_0$, there is a
+parameter center with energy exactly $E_0$ and
+$J_S\le3/4+\epsilon/8$.
+Use independent uniform critical orientations $z_i\in X$,
+$U_i=\sqrt{E_0}(0,z_i/\sqrt r)$, and
+$a_i=\sqrt{E_0}\operatorname{sgn}(b_r)\chi(z_i)$.
+The mean output at every input is $\chi/2$, and the single-neuron second
+moment is $E_0^2/2$. Therefore
+\[
+ \E_zJ_S=\frac34+\frac{E_0^2/2-1/4}{N}
+                    \le\frac34+\frac{\epsilon}{8}.
+\]
+At least one realization is no larger than this expectation.
+No full-cube union bound is needed for this empirical objective witness.
+
+Set $H_0=1+E_0\sqrt r$ and
+\[
+ t_0=\frac{\epsilon}{64(H_0+1)},\qquad
+ a_0=\min\left\{1,\
+ \frac{\epsilon}{64\rho\sqrt p(\sqrt{2E_0}+\sqrt p)},\
+ \frac{t_0}{\sqrt D\{\sqrt{E_0}+(\sqrt{E_0}+1)\sqrt D\}}\right\}.
+ \tag{6}
+\]
+Throughout the coordinate box of radius $a_0$ about that center,
+the energy increases by at most $\epsilon/(64\rho)$ and the
+output at each input changes by at most $t_0$.
+The squared loss changes by at most
+$2H_0t_0+t_0^2\le\epsilon/32$.
+Consequently $J_S\le3/4+\epsilon/4$ throughout the box.
+These bounds follow directly from
+$\|\theta-\theta^*\|\le\sqrt p\,a_0$ and ReLU's Lipschitz property.
+
+\section{Finite-temperature posterior objective concentration}
+Put $L_0=\log^+(\sqrt{2\pi}/(2a_0))$ and fix $\beta\in(0,1)$.
+For $0<\tau\le1$, Gaussian box integration gives the evidence bound
+\[
+ Z_{N,S}\ge
+ \exp\left[-N\left\{\frac{3/4+\epsilon/4}{\rho\tau^2}
+                                                  +pL_0\right\}\right].
+ \tag{7}
+\]
+For the numerator on $J_S>3/4+\epsilon$, split the total density
+exponent using $t=1-\epsilon/4$. Since $J_S\ge\rho E$,
+integration of the remaining Gaussian factor gives
+\[
+ \E_0\left[e^{-N L_S/(\rho\tau^2)}
+             \mathbf1_{\{J_S>3/4+\epsilon\}}\right]
+ \le e^{-Nt(3/4+\epsilon)/(\rho\tau^2)}
+                                      (1-t)^{-Np/2}.   \tag{8}
+\]
+For $0<\epsilon\le1/4$,
+$t(3/4+\epsilon)-(3/4+\epsilon/4)\ge\epsilon/2$.
+Thus the sufficient scale condition
+\[
+ 0<\tau^2\le\tau_0^2:=
+ \min\left\{1,\
+ \frac{\epsilon}
+ {2\rho\{pL_0+(p/2)\log(4/\epsilon)+\log(1/\beta)\}}\right\}
+ \tag{9}
+\]
+implies, for every training sample and every $N\ge N_0$,
+\[
+                  \Pi_{N,S}\{J_S>3/4+\epsilon\}\le\beta^N.
+ \tag{10}
+\]
+On the complementary event, $E\le1/\rho$.
+The constants and the prior-scale ceiling are independent of width
+and of the sample locations.
+
+\section{A common sample event and actual-posterior transfer}
+Put $B=1/\rho$ and $H=1+B\sqrt D$.
+Every network with energy at most $B$ belongs to the common variation
+ball of radius $B$, whose Rademacher complexity is at most
+$2B\sqrt{D/m}$. On this ball the squared loss is bounded by $H^2$
+and is $2H$-Lipschitz in the prediction.
+Symmetrization, contraction, and bounded differences therefore give,
+with probability at least $1-\zeta$ over the uniform IID pretraining
+sample, the simultaneous one-sided bound
+\[
+ \E(1-\chi F)^2-L_S(F)
+ \le g_m:=\frac{16HB\sqrt D}{\sqrt m}
+                 +H^2\sqrt{\frac{\log(2/\zeta)}{2m}}.    \tag{11}
+\]
+The displayed constants are conservative.
+
+\begin{theorem}[Smooth-likelihood feature transfer]
+Suppose $N\ge N_0$, $0<\tau\le\tau_0$, and $g_m\le\epsilon$.
+On the sample event (11), the actual Gaussian posterior gives mass at
+least $1-\beta^N$ to networks whose frozen even features satisfy (4)
+for every deleted set of $2k$ coordinates.
+The sample event is common to all these widths and prior scales.
+
+For fixed $k$, downstream approximation error $O(\delta)$ is obtained
+by choosing $\epsilon$ a sufficiently small constant times
+$\delta^2r^{-4k-2}$. Sufficient orders are
+\[
+ N_0=O_k(r^{4k+4}\delta^{-2}),\qquad
+ m=O_k(r^{8k+10}\delta^{-4}\log(2/\zeta)),\qquad
+ \tau_0^2=\Omega_k\left(
+ \frac{\delta^2r^{-4k-2}}
+ {\log(r/\delta)+r^{-1}\log(1/\beta)}\right).
+ \tag{12}
+\]
+A fresh downstream hinge-loss fit in the RKHS ball of radius $B_k$
+then learns using the standard bounded-feature margin argument with
+\[
+                 O_k(r^{2k+3}\delta^{-2}\log(2/\zeta'))
+\]
+labels.
+The joint failure probability for one posterior feature draw and one
+downstream sample is at most $\zeta+\beta^N+\zeta'$.
+\end{theorem}
+\begin{proof}
+Equations (10)--(11) imply $E\le1/\rho$ and $J\le3/4+2\epsilon$.
+Apply (1)--(4). The threshold orders follow from
+$\rho=\Theta(r^{-1})$, $H=O(r^{3/2})$,
+$L_0=O(\log(r/\epsilon))$, and the explicit formulas.
+For downstream learning, the comparator has $L^2$ error at most
+$\Delta_k$ and norm at most $B_k$, while the feature radius is $R$.
+Empirical hinge minimization over that ball has sign risk at most
+$\Delta_k+8B_kR/\sqrt n+
+2(1+B_kR)\sqrt{\log(2/\zeta')/(2n)}$.
+\end{proof}
+
+\section{An ordinary fixed-variance Gaussian likelihood}
+The likelihood used above equals the ordinary Gaussian likelihood with
+noise variance $v>0$ precisely when
+\[
+                    \tau^2=\frac{2vN}{\rho m}.           \tag{13}
+\]
+This supplies a finite polynomial-width regime with an ordinary,
+unpowered likelihood. For example, fix $\epsilon,\beta,\zeta,r$ and
+choose $m$ large enough that $g_m\le\epsilon$ and
+\[
+                 m\ge\frac{8vN_0}{\rho\tau_0^2}.
+\]
+Choose any integer
+$N\in[N_0,\rho m\tau_0^2/(4v)]$ and set the prior variance by (13).
+Then $\tau^2\le\tau_0^2/2$, and every preceding conclusion applies.
+All required quantities are polynomial in $r,\delta^{-1}$ at fixed $k,v$
+and confidence parameters. Choosing $N$ near the upper endpoint also
+keeps the prior variance of the stated inverse-polynomial order.
+
+This corollary deliberately relates sample size and width. The
+width-independent sample statement uses the explicitly scaled likelihood;
+it must not be read as a guarantee for an arbitrary ordinary Gaussian
+likelihood at every width. In particular, sending width to infinity while
+holding an unscaled dataset and prior fixed is a different regime.
+
+\section{Verification and relation to the other results}
+The argument uses only a Gaussian parameter integral, a finite
+random-atom witness, a classical norm-class generalization bound, and
+the deterministic Fourier transfer lemma. It does not depend on the
+Gaussian condensation, orientation, or conditional-CLT drafts.
+The sharp parity-correlation inequality and its critical directions
+come from the repository's existing parity-energy paper.
+The hard-margin transfer companion proves the Fourier lemma in detail.
+These are conventional same-session proofs, not independently reviewed.
+The accompanying Lean files check the square-objective algebra and
+selected deterministic projection and transfer lemmas, not the posterior
+theorem as a whole. The companion also supplies a linear input skip as an alternative to even
+feature evaluation, with the same polynomial orders. Efficient Bayesian
+pretraining, useful practical constants, and transfer through the
+unaugmented, unsymmetrized kernel remain open.
+\end{document}

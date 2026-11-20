@@ -1,0 +1,225 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{proposition}[theorem]{Proposition}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}
+\title{Imbalance and one-neuron renewal at the shortcut trap}
+\date{18 November 2026; independent research draft}
+\emergencystretch=3em
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author. Verification scope and provenance are stated in the accompanying research collection.}}
+\hypersetup{pdftitle={Imbalance and one-neuron renewal at the shortcut trap},pdfauthor={ChatGPT-6 Astra}}
+\begin{document}\maketitle
+Use the full-support seven-bit distribution and notation of
+\emph{A full-support Boolean shortcut trap}: $q=5$, $\rho=9/10$,
+$\epsilon=1/1000$, $u=(1,1,1,1,1,0,0)/\sqrt5$, $y=z_1z_2$,
+and $P=(1-\epsilon)P_{\rm dup}+\epsilon\operatorname{Unif}$.
+The statements below concern population squared loss except where
+logistic loss is explicitly included.
+
+\section{The trap also covers readout-dominant initialization}
+\begin{theorem}
+Fix a finite initialization pattern
+$(a_j^0,w_j^0)$ with $|a_j^0|\ge\|w_j^0\|>0$, both readout signs,
+and $w_j^0/\|w_j^0\|\ne-\operatorname{sgn}(a_j^0)u$.
+For every sufficiently small common scale $\alpha>0$, initialize at
+$(\alpha a_j^0,\alpha w_j^0)$. The same shortcut convergence and
+errors as in the balanced theorem hold, for square or logistic loss.
+The threshold may depend on the finite initialization pattern.
+\end{theorem}
+\begin{proof}
+Positive homogeneity preserves
+$d_j=a_j^2-\|w_j\|^2=\alpha^2d_j^0\ge0$.
+Readout signs are preserved. In signed coordinates the angular speed
+is multiplied by $|a_j|/\|w_j\|\ge1$, so the frozen alignment
+inequality still applies. To compare with the actual field, factor
+this positive speed out: the angular derivative is at least
+\[
+ \frac{|a_j|}{\|w_j\|}
+ [c(1-t_j^2)-C Q\sqrt{1-t_j^2}],\qquad Q=\sum_j a_j^2.
+\]
+For any fixed target alignment strictly short of one and the finite
+initial directions, sufficiently small $Q$ makes the bracket positive
+with the same fixed positive lower bound as before. This supplies a
+finite alignment time. Radial growth is bounded on this time interval,
+and $Q=O(\alpha^2)$. A neuron cannot reach $w=0$ during this comparison:
+if $d_j=0$, bounded logarithmic radial growth already prevents this.
+If $d_j>0$ and a first zero occurred at time $T$, then $|a_j|$ would
+stay bounded below near $T$, while bounded incoming velocity gives
+$\|w_j(t)\|\le C(T-t)$. Thus
+$\int^T|a_j|/\|w_j\|\,dt=\infty$. The angular inequality forces
+the direction to enter a fixed sufficiently small cap about its signed
+shortcut ray before $T$. In that cap the actual radial velocity is
+strictly positive while $Q$ is small, a contradiction.
+
+After strict majority gates form, write $w_j=p_j u+b_j$, $a_j>0$ in
+each signed branch. The exact branch equations and the monotonicity of
+$B^2=\sum\|b_j\|^2$ are unchanged. Instead of the balanced bound use
+\[
+ A\le Q_b\le A+B^2+D_b,\qquad
+ D_b=\sum_jd_j=O(\alpha^2),\qquad
+ \|v\|\le\sqrt{Q_b}B.
+\]
+Indeed $a_j\ge p_j$ and
+$a_j(a_j-p_j)=a_j(\|b_j\|^2+d_j)/(a_j+p_j)
+\le\|b_j\|^2+d_j$.
+While $R_A<0$, all $p_j$ increase, and $p_j'=-a_jR_A\ge-p_jR_A$.
+Thus the same preliminary growth makes $B/p_{\min}$ as small as
+needed. The compact-sublevel, PL, and first-exit arguments from the
+balanced proof now use the displayed bound, with the harmless
+$D_b=O(\alpha^2)$ term. At a first $R_A=0$, the risk gap is still
+$O(B^2)$, not $O(B^2+D_b)$, because it is controlled by $\|v\|^2$.
+The remaining path length is $O(B)$, so the gates remain strict and
+the branch output converges to its same unique optimum.
+\end{proof}
+
+\section{A local minimum in a fixed architecture}
+For squared loss put
+\[
+ D=5(1-\epsilon)+\epsilon,\quad
+ b_*=(1-\epsilon)\rho\sqrt5/D,\quad F_*=b_*u\cdot X.
+\]
+Consider any finite network realizing $F_*$ with all neurons in strict
+majority gates. In a neighborhood preserving those gates, all attainable
+outputs are linear functions on each majority half. The companion proof
+shows that $F_*$ uniquely minimizes the risk in that larger linear
+function space. Thus the network is a local minimum of its parameter
+loss, with possible flat parameter directions. This observation does
+not require balance.
+
+\section{Adding a fresh zero neuron opens a descent direction}
+Let $v=(0,0,0,0,0,1,1)/\sqrt2$ and $h(X)=\operatorname{ReLU}(v\cdot X)$.
+Define
+\[
+ q_* =1-\frac{5(1-\epsilon)^2\rho^2}{D}>0,
+ \qquad U_* =\frac{q_*}{2\sqrt2}.
+\]
+Direct averaging gives
+\[
+ \E_P[yh]=\frac1{2\sqrt2},\qquad
+ \E_P[(u\cdot X)h]=\frac{(1-\epsilon)\rho\sqrt5}{2\sqrt2},
+ \qquad \E_Ph^2=\frac12.
+\]
+For the middle identity use
+$\E[S\mid z_1,z_2]=\rho z_1z_2$ on the duplicate component;
+the uniform component has zero shortcut mean. Consequently
+\[
+ \mathcal L(F_*+t^2h)-\mathcal L(F_*)=-U_*t^2+\frac14t^4.   \tag{1}
+\]
+This perturbation is realized by one extra neuron $(a,w)=(t,tv)$.
+Every sufficiently small nonzero $t$ lowers the loss. The assertion
+is an explicit descent direction in an expanded architecture, not a
+claim that arbitrary random replacement guarantees full recovery.
+
+\begin{proposition}[A replacement of vanishing size lowers the loss]
+Suppose a width-$N$ network realizing $F_*$ has strict majority gates
+and $\sum_j(a_j^2+\|w_j\|^2)\le E$, where $E$ is fixed independently
+of $N$. For all sufficiently large $N$, one can replace a single
+neuron, moving the full parameter vector by at most $C_E/\sqrt N$,
+and decrease population square loss by at least $U_*/(2N)$.
+\end{proposition}
+\begin{proof}
+Choose a neuron with $a_j^2+\|w_j\|^2\le E/N$, and let its output
+be $g_j$. Since $\|X\|=\sqrt7$,
+$|g_j(X)|\le\sqrt7 E/(2N)$.
+The residual $r=y-F_*$ is orthogonal to every linear function on
+either majority half, so $\E[r g_j]=0$.
+Replace that neuron by $(a,w)=(N^{-1/2},N^{-1/2}v)$, whose output is
+$h/N$. The risk change is exactly
+\[
+ -\frac{U_*}{N}+\frac12\E\left(\frac hN-g_j\right)^2
+ \le -\frac{U_*}{N}
+ +\frac{(\sqrt2+\sqrt7 E/2)^2}{2N^2}.
+\]
+For sufficiently large $N$ this is at most $-U_*/(2N)$.
+The old parameter norm is at most $\sqrt{E/N}$ and the replacement
+norm is $\sqrt{2/N}$, giving the stated distance bound.
+\end{proof}
+The balanced trapping trajectories have a uniform energy bound at their
+limit: in the two branches $\sum a_j^2\le2b_*+B^2$, and $B$ never
+increases after alignment. Thus this proposition applies with bounded
+$E$ to their large-width families. It identifies shrinking escape
+distances, not a stochastic-gradient escape-time theorem.
+
+\section{Trainable biases remove the interior majority stationary point}
+This limitation is structural, not merely a missing step in the trapping
+proof. Suppose biases are trainable and every positive-readout neuron
+has exactly the strict majority gate $H=\{S>0\}$, where
+$S=s_1+\cdots+s_5$. Suppose all negative-readout neurons have gate
+$-H$. Such a network cannot be an interior stationary point of
+population squared loss if the positive branch contains a nonzero
+readout.
+
+To prove this, the output on $H$ is an affine function of the inputs.
+The first-order equations of any neuron with nonzero readout force
+that affine function to be the unrestricted least-squares regression
+of $y$ on $(1,s,z)$ conditional on $H$. The conditional input law is
+the mixture of mass $1-\epsilon$ at $s=(1,\ldots,1)$ and mass
+$\epsilon$ uniform on the majority half. Relevant-bit symmetries
+make the $z$ coefficients zero, and permutation symmetry makes the
+five shortcut coefficients equal. Write the regression as $b+tS$.
+For the uniform-majority component,
+\[
+ c=\E[S\mid H]=15/8,\qquad \E[S^2\mid H]=5,
+ \qquad M_0=\begin{pmatrix}1&c\\c&5\end{pmatrix}.
+\]
+The response moment is $(1-\epsilon)\rho(1,5)^\top$, and the
+design matrix is
+$\epsilon M_0+(1-\epsilon)(1,5)^\top(1,5)$.
+The Sherman--Morrison formula shows that $(b,t)^\top$ is a positive
+multiple of $M_0^{-1}(1,5)^\top$. In particular,
+\[
+ t>0,\qquad \frac bt=\frac{5(1-c)}{5-c}=-\frac75.
+\]
+Thus this regression is negative when $S=1$. But a sum of
+positive-readout neurons whose gates are $H$ is strictly positive
+there. This contradiction proves the assertion. Full support gives
+positive definite design covariance and makes these inputs relevant
+to stationarity.
+
+This rules out this particular interior trap with trainable biases.
+It does not establish global convergence, and does not exclude other
+bad stationary points or long transients. In exploratory biased runs,
+15 of 16 balanced width-16 initializations at scale $10^{-4}$ achieved
+zero uniform-test error by time 5000 for each of $q=4,5,6$ shortcut
+bits. The $q=5$ remaining run had error $1/256$ (a zero-score tie
+counts as half an error); the $q=4,6$
+remaining runs retained error $1/2$. These are finite-step numerical
+observations, not an extension of the biasless theorem.
+
+\section{Random feature renewal: a controlled numerical intervention}
+Start exactly at the shortcut minimizer with 16 old neurons. Append
+random direction pairs with opposite readouts and identical incoming
+weights, so the initial added output is exactly zero. Continue training
+all neurons by population square loss. With eight new neurons, all 64
+seeds reached zero uniform-test error by time 2000 at each of scales
+$10^{-4},10^{-2},10^{-1}$. With four new neurons the corresponding
+counts were $56,59,58$ out of 64; with two they were $32,32,33$.
+The unmodified control stayed exactly at error $1/2$.
+
+These experiments used step size $0.02$. Repeating the first 16
+four-neuron seeds to time 3000 with step sizes $0.01$ and $0.005$
+gave zero test error in every run at all three scales, with closely
+agreeing final losses. One planted parity feature gave test error
+$1/8$, whereas four planted parity features gave zero error. The
+experiment supports renewal as a way to escape this trap; equation
+(1) supplies only a descent theorem, not a random-renewal recovery
+guarantee. Full population gradients and the deliberately chosen
+starting local minimum are part of the experiment.
+
+\section{Independent Gaussian initialization: evidence, not a theorem}
+At width 16, 64 independent-Gaussian seeds, and squared population
+loss, all runs at scale $10^{-4}$ reached the 50\% uniform-test-error
+shortcut by time 2000. At scales $0.01,0.1,0.5$, respectively
+54, 12, and 0 of 64 runs had exactly 50\% uniform-test error.
+The dynamics use a midpoint Lorentz update that preserves each
+$a_j^2-\|w_j\|^2$; the Gaussian runs do not enforce balance.
+Step-size and longer-time checks are separate numerical requirements.
+
+A route toward an almost-sure frozen-field result is to write
+$a'=U(w)$, $w'=a\nabla U(w)$, whence
+$a''=a\|\nabla U(w)\|^2$ almost everywhere. Here the shortcut component
+of every frozen gradient has a uniform strictly positive lower bound.
+Incoming-dominant neurons may change readout sign. Excluding their
+stable set and then transferring their dynamics to the actual finite
+network needs a careful nonsmooth-flow argument. It is not claimed here.
+\end{document}

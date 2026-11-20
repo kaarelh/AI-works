@@ -1,0 +1,366 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{lemma}[theorem]{Lemma}
+\newcommand{\E}{\mathbb E}\newcommand{\Pp}{\mathbb P}
+\newcommand{\R}{\mathbb R}\newcommand{\one}{\mathbf 1}
+\title{Exactly four softplus condensates}
+\date{18 November 2026; independent research draft}
+\emergencystretch=3em
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author. Verification scope and provenance are stated in the accompanying research collection.}}
+\hypersetup{pdftitle={Exactly four softplus condensates},pdfauthor={ChatGPT-6 Astra}}
+\begin{document}\maketitle
+
+This sharpens the companion note on sparse condensation. All statements
+concern the mean-field normalization $N^{-1}\sum_j a_j\phi(b_j+w_j\cdot x)$,
+Gaussian parameter priors, and conditioning on positive observed margins.
+The result describes a neural posterior, not an online mistake lower bound.
+The proof uses an elementary finite-dimensional version of the
+few-big-jumps argument. This general probabilistic mechanism is established
+in the literature; for recent multivariate results see
+\href{https://arxiv.org/abs/2602.01168}{Tuchel, Gantert and Prochno (2026)}.
+Their stated finite-valued joint-upper-tail assumption does not directly
+cover the axis-supported rate below, so the needed special argument is
+included. No claim of literature novelty is made.
+
+\section{Statement}
+Use the companion notation:
+\[
+ X=\{-1,1\}^2,\quad \chi(x)=x_1x_2,\quad
+ \phi_\beta(t)=\beta^{-1}\log(1+e^{\beta t}),\quad
+ P_0=N(0,I_4),\quad \theta=(a,b,w_1,w_2).
+\]
+Write $\Phi_x=a\phi_\beta(b+w\cdot x)$,
+$Y_x=\chi(x)\Phi_x$, $Z=\frac14\sum_xY_x$, $t_*=2\sqrt2$,
+$M=\E_0e^{t_*Z}$, and $dQ_*=M^{-1}e^{t_*Z}dP_0$.
+The companion calculation proves $M<\infty$,
+$\E_{Q_*}Y=m_c\one$, and $\E_{Q_*}e^{c\|\theta\|}<\infty$ for some $c>0$.
+Fix $s>m_c$, $\delta=s-m_c$, and condition on
+\[
+ H_N=\left\{N^{-1}\sum_jY_{x,j}>s\text{ for all }x\right\},
+ \qquad \Pi_N=P_0^N(\cdot\mid H_N).
+\]
+Set
+\[
+ c_\beta=\frac{\sqrt2\log2}{\beta},\quad
+ c_0=\frac{2^{1/4}\log2}{\beta},\quad
+ I(s)=t_*s-\log M,\quad J_0=4c_0\sqrt\delta,
+\]
+and define the four parameter vectors
+\[
+ \eta_x=\left(\chi(x)2^{-1/4}\sqrt\delta,\ 0,\
+        x_1 2^{-3/4}\sqrt\delta,\ x_2 2^{-3/4}\sqrt\delta\right).
+\]
+
+\begin{theorem}
+The evidence has the sharp second exponential order
+\[
+ -\log P_0^N(H_N)=NI(s)+J_0\sqrt N+o(\sqrt N).                 \tag{1}
+\]
+Under $\Pi_N$, there are four distinct random indices $j_x$ such that
+\[
+ \max_x\left\|\theta_{j_x}/\sqrt N-\eta_x\right\|
+       \longrightarrow0,
+ \qquad
+ \max_{j\notin\{j_x:x\in X\}}\|\theta_j\|/\sqrt N
+       \longrightarrow0                                    \tag{2}
+\]
+in probability. Thus ``exactly four'' means exactly four neurons at
+the $\sqrt N$ parameter scale; it does not exclude smaller mesoscopic
+neurons. The empirical parameter law still converges weakly to $Q_*$,
+whose mean output is $m_c\chi$, and the network output converges to
+$s\chi$. Each exceptional neuron supplies $\delta$ at its corresponding
+signed output and zero at the other three, in the limit.
+The total parameter energy also converges in probability:
+\[
+ \frac1N\sum_j\|\theta_j\|^2
+   \longrightarrow \E_{Q_*}\|\theta\|^2+4\sqrt2\delta.
+\]
+This follows from the same truncated-square-root-tail estimate applied
+to $\|\theta\|^2$, followed by (2). Each of the four limiting exceptional
+vectors has squared norm $\sqrt2\delta$.
+
+For standard softplus ($\beta=1$), the interval certificate in the
+companion note gives $m_c<0.488<1/2$, so the theorem applies to $s=1/2$.
+The all-analytic alternative $\beta=1/64$, $s=1/2$ also applies.
+\end{theorem}
+
+\section{A one-neuron large-deviation principle}
+Let $G_\beta=\frac14\sum_x\chi(x)\phi_\beta(b+w\cdot x)$ and
+let $G_0$ denote its ReLU version. Apart from a fixed normalizing
+constant, the density of $Q_*$ is $e^{-D(\theta)}$, where
+\[
+ D(\theta)=\tfrac12\|\theta\|^2-t_*aG_\beta(b,w).
+\]
+Let $e_x=(\chi(x)/\sqrt2,0,x_1/2,x_2/2)$, and define
+\[
+ k(\eta)=
+ \begin{cases}
+  c_\beta|\eta_a|,&\eta\in\bigcup_x\{t e_x:t\ge0\},\\
+  +\infty,&\text{otherwise}.
+ \end{cases}                                                \tag{3}
+\]
+In particular $k(0)=0$.
+
+\begin{lemma}
+Under $Q_*$, $\theta/\sqrt N$ satisfies an LDP with speed $\sqrt N$
+and good rate $k$. The signed output $Y/N$ satisfies an LDP at the
+same speed with good rate
+\[
+ j(y)=
+ \begin{cases}
+ c_0\sqrt u,& y=u\mathbf e_x,\ u\ge0,\ x\in X,\\
+ +\infty,&\text{otherwise}.
+ \end{cases}                                                \tag{4}
+\]
+Here $\mathbf e_x$ is a coordinate vector in output space.
+\end{lemma}
+\begin{proof}
+Write $R=\sqrt{w_1^2+w_2^2}$. The sharp envelope from the companion
+note is
+\[
+ t_*|G_\beta|\le\frac{\sqrt2}{\beta}\log\cosh(\beta R/\sqrt2)
+       =R-c_\beta+\epsilon(R),\qquad \epsilon(R)\to0.
+\]
+Consequently
+\[
+ D(\theta)\ge\tfrac12(|a|-R)^2+\tfrac12b^2
+                        +(c_\beta-\epsilon(R))|a|.           \tag{5}
+\]
+Also $D(\theta)=J(\theta)+O(\|\theta\|)$, where
+$J(\theta)=\frac12\|\theta\|^2-t_*aG_0(b,w)$ is nonnegative,
+homogeneous of degree two, and vanishes exactly on the four positive
+rays $\{te_x:t\ge0\}$.
+
+Put $r=\sqrt N$. If $\theta_r/r\to\eta\ne0$ lies off those rays,
+$D(\theta_r)/r\to\infty$. If $\eta$ lies on a ray, its incoming norm
+is nonzero and (5) gives
+$\liminf D(\theta_r)/r\ge c_\beta|\eta_a|$.
+At $\eta=0$ the required lower bound is zero: $D$ is globally bounded
+below. Indeed (5) gives this when $R$ is large, and bounded $R$ gives
+a quadratic lower bound in $a,b$ directly. Along each exact ray,
+the envelope is attained and
+$D(r\eta)=r c_\beta|\eta_a|+o(1)$.
+
+These facts give the compact-set LDP upper bound by a finite covering
+and the density formula: the scaled volume contributes only $O(\log r)$.
+For a local lower bound at a nonzero ray, integrate over a ball of
+radius $r^{-1}$ about $r\eta$. The gradient of $D$ is $O(r)$ there,
+so $D$ differs from its central value by $O(1)$; the ball volume is a
+power of $r^{-1}$. At zero a fixed parameter ball suffices.
+The exponential moment of $\|\theta\|$ gives exponential tightness
+at speed $r$, extending the upper bound to all closed sets.
+
+Define the continuous homogeneous map
+$T_x(\eta)=\chi(x)\eta_a\operatorname{ReLU}(\eta_b+\eta_w\cdot x)$.
+The bounded softplus--ReLU difference gives
+\[
+ \|Y/N-T(\theta/\sqrt N)\|\le C_\beta|a|/N.
+\]
+The probability that this exceeds a fixed positive tolerance is
+at most $Ce^{-cN}$, hence is negligible at speed $\sqrt N$.
+Contraction applies. At $\eta=t e_x$, $T(\eta)=t^2\mathbf e_x/\sqrt2$
+and $k(\eta)=(\log2/\beta)t$, giving (4).
+\end{proof}
+
+\section{The finite-dimensional few-big-jumps calculation}
+\begin{lemma}
+Under $Q_*^N$, the centered average
+$N^{-1}\sum_{j=1}^NY_j-m_c\one$ satisfies an LDP with speed $\sqrt N$
+and good rate
+\[
+ \mathcal J(z)=
+ \begin{cases}
+ c_0\sum_x\sqrt{z_x},&z\in[0,\infty)^4,\\
+ +\infty,&\text{otherwise}.
+ \end{cases}                                                \tag{6}
+\]
+Moreover, in computing a closed-event upper bound one may retain the
+individual parameters of the large summands. A finite configuration
+$\eta_1,\ldots,\eta_q$ has cost $\sum_i k(\eta_i)$ and total
+output increment $\sum_iT(\eta_i)$.
+\end{lemma}
+\begin{proof}
+Details of the truncation argument are recorded to handle the infinite
+rate away from the coordinate axes. Every coordinate of $Y$ has an
+exponential square-root moment. For fixed $u>0$, truncation at
+$\|Y\|\le\varepsilon N$ and the elementary exponential Taylor bound
+give
+\[
+ Q_*^N\left(\left\|N^{-1}\sum_j
+ Y_j\one_{\|Y_j\|\le\varepsilon N}-m_c\one\right\|>u\right)
+ \le C\exp[-c u\sqrt N/\sqrt\varepsilon+C/\varepsilon].       \tag{7}
+\]
+For example take each signed coordinate and
+$\lambda=c/(C\sqrt{\varepsilon N})$; on the truncated set,
+$|\lambda Y_x|\le(c'/2)\sqrt{\|Y\|}$.
+The second-order Taylor term is uniformly integrable. The truncated
+mean differs from $m_c\one$ by $O(e^{-c\sqrt{\varepsilon N}})$
+times a polynomial. Centering in (7) is therefore legitimate.
+
+The chance of more than $K$ summands with $\|Y_j\|>\varepsilon N$
+is at most $N^{K+1}C^{K+1}e^{-c(K+1)\sqrt{\varepsilon N}}$.
+The chance of one with $\|Y_j\|>RN$ is at most
+$CN e^{-c\sqrt{RN}}$. Hence, for fixed $\varepsilon$, a finite
+number of summands in a compact scaled set suffice, with errors of
+arbitrarily large exponential rate after increasing $K,R$.
+For each such number and set of indices, cover the possible scaled
+summands by finitely many small boxes and use the one-neuron LDP
+and independence. The $N^K$ possible index choices do not change
+the speed-$\sqrt N$ exponent. With (7), this bounds the event by
+the infimum of $\sum_i j(y_i)$ over finite configurations whose
+sum is within $u$ of the required increment. Send the box diameter
+and $u$ to zero, and then $\varepsilon$ to zero, choosing the
+truncation parameters in that order so that (7)'s exponent diverges.
+
+Every finite-cost summand is a nonnegative coordinate vector.
+For a given total $z\ge0$, concavity of square root gives
+\[
+ \sum_i j(y_i)\ge c_0\sum_x\sqrt{z_x}.
+\]
+Equality is attained by one nonzero summand per positive coordinate.
+Negative coordinates cannot be supplied at finite rate. The rate
+in (6) is continuous on the positive orthant, lower semicontinuous
+on all of $\R^4$, and coercive. These facts give the claimed
+closed-set upper bound, including unbounded sets; exponential tightness
+also follows from the same large-summand and truncated-sum estimates.
+For the lower bound at $z\ge0$, reserve one summand in a small
+neighborhood of $z_x\mathbf e_x$ for each positive coordinate,
+use the one-neuron LDP lower bound, and apply the law of large numbers
+to the rest. The lower bound at zero is the law of large numbers.
+
+The marked version is the identical proof with the cutoff
+$\|\theta_j\|>r\sqrt N$ and the one-neuron parameter LDP (3).
+For the remaining outputs, the analog of (7) has rate $cu/r$.
+Exponential parameter tails bound the number and maximum of the
+retained parameters. The deterministic limiting output map is $T$.
+Thus the same finite-cover argument retains their individual costs
+$k(\eta_i)$ as asserted.
+\end{proof}
+
+\section{Sharp evidence: upper bound}
+Changing measure gives
+\[
+ P_0^N(H_N)=e^{-NI(s)}
+ \E_{Q_*^N}\left[
+ e^{-t_*(\sum_jZ_j-Ns)}\one_{H_N}\right].                    \tag{8}
+\]
+The exponential inside is at most one. The preceding LDP on
+the closed set $[\delta,\infty)^4$ gives
+\[
+ \limsup_N\frac{\log P_0^N(H_N)+NI(s)}{\sqrt N}\le-J_0.       \tag{9}
+\]
+
+\section{Sharp evidence: a lower bound with bounded overshoot}
+A fixed-radius construction would leave an $O(\sqrt N)$ margin
+overshoot, which is too costly in (8). Instead adjust the four large
+neurons to the realized bulk and use shrinking parameter balls.
+
+For $x\in X$ and $R>0$, set
+\[
+ \theta_x(R)=(\chi(x)R,0,x_1R/\sqrt2,x_2R/\sqrt2),\quad
+ V_y(R_1,\ldots,R_4)=\sum_x\chi(y)\Phi_y(\theta_x(R_x)).
+\]
+Let $R_N=(N\delta/\sqrt2)^{1/2}$. Uniformly for bounded
+$u_x$, direct differentiation of softplus gives
+\[
+ V_y(R_N\one+u)=N\delta+O(\sqrt N),\qquad
+ \frac{\partial V_y}{\partial R_x}
+   =2\sqrt2 R_N\one_{x=y}+O(1).                             \tag{10}
+\]
+The first estimate is uniform on each fixed bounded box; at $u=0$
+its error has a fixed bound $C\sqrt N$. The off-diagonal entries in
+the Jacobian come from inputs whose preactivation is zero (constant
+softplus value) or negative of order $\sqrt N$; they are bounded.
+The own-input derivative is $2\sqrt2 R_x+o(1)$.
+
+With probability at least $1/2$, the signed outputs $B_y$ of the
+other $N-4$ iid $Q_*$ neurons satisfy
+\[
+ |B_y-(N-4)m_c|\le B\sqrt N\quad\text{for every }y.          \tag{11}
+\]
+For every bulk realization in (11), there is a choice
+$R_x=R_N+O(1)$, uniformly in that realization, such that
+\[
+ V_y(R)+B_y=Ns+2\quad\text{for every }y.                    \tag{12}
+\]
+For completeness, divide (10) by $\sqrt N$, put $R=R_N\one+u$,
+and solve for $u$ by the diagonal linear part. On a sufficiently
+large fixed box the residual has bounded value at zero and derivative
+$O(N^{-1/2})$. The resulting map sends the box into itself and is
+a contraction. Its unique fixed point is measurable in $B$.
+
+Restrict each reserved parameter to a Euclidean ball of radius
+$c/\sqrt N$ about $\theta_x(R_x)$, where $c>0$ is fixed small.
+The output gradients have norm $O(\sqrt N)$ uniformly over (11),
+so $c$ can be chosen to keep every total signed output in
+$(Ns+1,Ns+3)$. In particular the event lies in $H_N$ and
+$0<\sum_j Z_j-Ns<3$.
+
+On these four balls the critical density has logarithm
+\[
+ -D(\theta_x(R_x))=-c_\beta R_N+O(1),                       \tag{13}
+\]
+uniformly over the bulk in (11); the same holds throughout the balls
+by the $O(\sqrt N)$ gradient bound. The product volume is a constant
+times $N^{-8}$. Conditional on any allowed bulk, their $Q_*^4$
+probability is therefore at least
+\[
+ \exp[-4c_\beta R_N-O(\log N)]
+       =\exp[-J_0\sqrt N-O(\log N)].                       \tag{14}
+\]
+Integrate over (11) and use (8) with bounded overshoot. This proves
+the matching lower bound and hence (1).
+
+\section{Selection of the four macroscopic neurons}
+For any event $A$, (1) and (8) imply
+\[
+ \Pi_N(A)\le
+ \exp[J_0\sqrt N+o(\sqrt N)]Q_*^N(A\cap H_N).              \tag{15}
+\]
+Use the marked large-summand upper bound. Its minimization problem is
+\[
+ \inf\left\{\sum_i k(\eta_i):
+                \sum_iT(\eta_i)\ge\delta\one\right\}.     \tag{16}
+\]
+Every finite-cost $\eta_i$ lies on a positive XOR ray. Write its
+own-coordinate output as $u_i\ge0$. Its cost is $c_0\sqrt{u_i}$.
+The four coordinate constraints and strict square-root concavity show
+that (16) has value $J_0$, and its only minimizing nonzero configuration,
+up to permutation, is the four vectors $(\eta_x)_{x\in X}$.
+Splitting a positive mass between two positive summands strictly raises
+the cost, as does increasing any coordinate total above $\delta$.
+
+Here is the needed compactness detail. Fix a positive tolerance in (2).
+Choose a small parameter cutoff $r$ so that the truncated bulk differs
+from $m_c\one$ by less than $u$ with failure exponent greater than
+$J_0+1$. Choose a bound $R$ and number $K$ so that exceeding either
+also has exponent greater than $J_0+1$. On the resulting compact
+space of at most $K$ parameters in the annulus $[r,R]$, any configuration
+violating (2) at the fixed tolerance and having output sum at least
+$(\delta-u)\one$ has cost strictly above $J_0$, once $u,r$ are
+sufficiently small. To see uniformity as $r\downarrow0$, its cost
+bound gives $\sum_i\sqrt{u_i}\le C$, so the total output of summands
+with norm at most $r$ is $O(r)$; remove those summands and pass to
+a finite configuration at any fixed positive cutoff. A sequence of
+bad configurations with costs tending to $J_0$ would therefore
+converge, above every fixed cutoff, to a minimizer of (16), contradicting
+its uniqueness and the fixed tolerance.
+
+The marked upper bound gives $Q_*^N(A\cap H_N)$ an exponent strictly
+larger than $J_0$ for the event $A$ that (2) fails at that tolerance.
+Equation (15) proves its posterior probability tends to zero.
+The earlier bulk and output arguments are unchanged; their domination
+constant can now be replaced by $J_0+o(1)$ at speed $\sqrt N$.
+This completes the proof.
+
+\section{Scope and next questions}
+The theorem does not prove an algorithmic sampling result, a statement
+about gradient descent, or adverse generalization. It does show that
+a Gaussian prior and a smooth standard activation can select a posterior
+whose prediction is not the mean of its limiting ordinary-neuron law.
+The next-order cost chooses a sparse macroscopic representation even
+though the first-order output rate alone does not expose those neurons.
+Fluctuation laws, training subsets, larger input sets, and the effect
+of a quartic parameter prior remain separate questions.
+\end{document}

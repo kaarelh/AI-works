@@ -1,0 +1,198 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{proposition}{Proposition}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}\newcommand{\relu}{\operatorname{ReLU}}
+\title{Checking and moving between posterior sectors}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author. Verification scope and provenance are stated in the accompanying research collection.}}\date{18 November 2026; independent research draft}
+\emergencystretch=3em
+\hypersetup{pdftitle={Checking and moving between posterior sectors},pdfauthor={ChatGPT-6 Astra}}
+\begin{document}\maketitle
+
+The large-width theorems concern an actual posterior. Matching its energy
+and parity output is insufficient to validate a numerical sampler: those
+quantities can agree even when the discrete orientation sector is wrong.
+This note records the independent moment integrations and an exact
+posterior-preserving global move used as diagnostics. Gaussian
+conditioning and Metropolis correction are standard methods; the
+specific application here is the balanced ReLU orientation proposal.
+No full-chain mixing-time guarantee is claimed.
+
+\section{Independent critical-law integration}
+The Gaussian posterior companion gives an exact rejection sampler for the
+ordinary critical law, with acceptance at least $(r-2)/r$ for full even
+parity dimension $r>2$. It estimates $m_c$ with finite variance for
+$r\ge6$. Naively estimating the output covariance under that accepted
+law can have infinite estimator variance at $r=6$: the relevant squared
+observable can require an eighth parameter moment.
+
+A separate importance proposal addresses this tail. Let
+$c=\sqrt{2/\pi}$ and
+$A(t)=\int_0^\infty e^{-tv-v^2/2}dv$.
+By sign and permutation symmetry, invariant observables can be integrated
+with all relevant weights positive and the first coordinate the minimum.
+Propose
+\[
+ t\sim q_t(t)=c(1+ct)^{-2},\quad w_1=t,\quad w_i=t+v_i,
+ \qquad v_i\sim e^{-tv-v^2/2}/A(t),\ v\ge0.
+\]
+Propose the bias from a Cauchy law of scale $(1+t)^{-1}$:
+\[
+ q_b(b\mid t)=\frac{1+t}{\pi[1+(1+t)^2b^2]}.
+\]
+The unnormalized incoming critical density, after accounting for the
+$r$ possible minimum coordinates and all weight signs, has importance
+weight
+\[
+ W=\frac{r c^r A(t)^{r-1}}{q_t(t)}
+       \frac{\phi(b)}{q_b(b\mid t)}
+       \exp\left[-\frac{rt^2-G(b,w)^2/\rho^2}{2}\right].\tag{1}
+\]
+Thus $\E_q W=M_*$ and
+$\E_{Q_*}f=\E_q(Wf)/\E_qW$ for invariant incoming observables.
+For output moments integrate the readout analytically:
+$a\mid U\sim N(G(U)/\rho,1)$.
+In particular the degree-$k$ covariance eigenvalue in Euclidean output
+coordinates is
+\[
+ 2^r\left\{\E_{Q_*}[(1+G^2/\rho^2)\widehat h_U(T)^2]
+                  -m_c^2 1_{T=[r]}\right\},\qquad |T|=k.
+\]
+Coordinate permutation symmetry allows averaging the square over all
+characters of the same degree before estimating it.
+
+The proposal deliberately has polynomial rather than Gaussian bias tails.
+Narrowing a Gaussian bias proposal to scale $1/t$ would give unbounded
+likelihood ratios in its far tail and can create infinite variance.
+The Cauchy proposal avoids that defect. On the critical scale
+$v_i,|b|=O(1/t)$, (1) is of order $t^{2-r}$; a fourth-order observable
+therefore has second-moment tail of order
+$t^{-2}t^{2(2-r)}t^8=t^{10-2r}$, integrable for $r\ge6$.
+This calculation explains the proposal choice. Uniform tail domination
+also uses the corner norm away from the ray; the implemented standard
+errors are numerical Monte Carlo diagnostics, not interval certificates.
+
+The implementation evaluates the critical exponent without subtracting
+two nearly equal large squares. With $S_x=\sum_i x_i$ and
+$u_x=b+\sum_i v_ix_i$, write
+\[
+ G=G(\boldsymbol1)t+\Delta G,\quad
+ \Delta G=\E_x\chi(x)
+ [\relu(tS_x+u_x)-t\relu(S_x)].
+\]
+Each bracket is evaluated directly as a bounded correction in its
+activation region. Then, after orienting $G(\boldsymbol1)$ positively,
+\[
+ rt^2-G^2/\rho^2=-\Delta G\,[2\rho\sqrt r\,t+\Delta G]/\rho^2.
+\]
+The truncated-normal excess sampler uses exponential rejection for large
+$t$, and $A(t)=\sqrt{\pi/2}\operatorname{erfcx}(t/\sqrt2)$ avoids
+cancellation in the normal-tail expression.
+
+At six-bit parity, 600 million independent importance proposals over four
+seeds estimate $m_c=0.0122229$ with empirical standard error approximately
+$1.5\times10^{-6}$. The independent rejection sampler gave $0.0122232$
+with standard error $6.8\times10^{-6}$. The incoming-minus-readout energy
+check is approximately $5.99991$, compared with its exact value six.
+The two samplers use different proposals and agree on their shared
+observables. The covariance estimates are additionally compared across
+independent seeds before using the orientation determinant formula.
+
+\section{A global incoming-weight move with readouts integrated out}
+Let a finite dataset have $m$ input vectors, and let $H(U)\in\R^{m\times N}$
+be its hidden-feature matrix. The network's unnormalized output is
+$Y=H(U)a$, and the prior on readouts is $a\sim N(0,\sigma_a^2I_N)$,
+independent of incoming parameters $U$. The likelihood may be any
+nonnegative function of $Y/N$, including the observed-margin indicator.
+Assume $K=HH^\top$ is positive definite at the current and proposed
+states. Singular states can be left unchanged by this move.
+
+\begin{proposition}[Collapsed Metropolis move at fixed output]
+Suppose an incoming-parameter proposal is reversible with respect to its
+prior, or has its ordinary prior/proposal density ratio included.
+At fixed $Y$, propose $U'$ and write $K'=H(U')H(U')^\top$.
+For a prior-preserving symmetric proposal, accept with probability
+\[
+ \min\left\{1,\sqrt{\frac{\det K}{\det K'}}
+ \exp\left[-\frac{Y^\top K'^{-1}Y-Y^\top K^{-1}Y}
+                         {2\sigma_a^2}\right]\right\}.\tag{2}
+\]
+After the decision, refresh readouts at the selected incoming state by
+\[
+ a=\xi+H^\top K^{-1}(Y-H\xi),\qquad
+ \xi\sim N(0,\sigma_a^2I_N).\tag{3}
+\]
+The combined transition preserves the exact neural posterior and leaves
+every dataset output unchanged, in real arithmetic.
+\end{proposition}
+\begin{proof}
+Conditional on $U$, $Y$ is Gaussian with covariance $\sigma_a^2K$.
+At fixed $Y$, the incoming density is therefore its prior times this
+Gaussian output density; the likelihood is constant. The ratio of those
+Gaussian densities is exactly (2). Ordinary Metropolis detailed balance
+proves invariance of the $(U,Y)$ marginal on the full-rank stratum.
+Equation (3) has mean $H^\top K^{-1}Y$, covariance
+$\sigma_a^2(I-H^\top K^{-1}H)$, and output exactly $Y$.
+It is the conditional Gaussian law of $a$ given $U,Y$. Restoring that
+conditional law proves invariance of the full parameter posterior.
+The transition may be the identity on singular states, preserving the
+remaining posterior component as well.
+\end{proof}
+This is a general finite-data Gaussian-conditioning identity. The useful
+choice of incoming proposal in this project is described next.
+
+\section{Balanced orientation jumps for the parity posterior}
+For the six-bit Gaussian ReLU experiment, choose the 32 largest incoming
+parameter norms. Proceed only when their nearest sign rays include one
+representative of each antipodal pair and form a balanced orientation
+set. Choose uniformly from the exactly enumerated 807980 balanced sets.
+For each pair whose orientation changes, replace its full incoming vector
+$U_j=(b_j,w_j)$ by $-U_j$. This transformation preserves the Gaussian
+incoming prior and all incoming norms. Hence the selected index set and
+antipodal-pair labels are the same in the reverse proposal. On each
+sign chamber the map is an orthogonal sign flip with absolute Jacobian
+one. The reverse orientation choice has exactly the same probability.
+Thus (2) applies without an additional proposal factor.
+
+The identity
+$\relu(-U\cdot\bar x)=\relu(U\cdot\bar x)-U\cdot\bar x$
+shows that these flips change features only by affine functions.
+At the limiting equal-mass critical rays, a balanced set cancels their
+combined affine output change. At finite width the readout refresh in
+(3) absorbs the residual change while preserving all observed outputs.
+The determinant and quadratic-form correction accounts for the different
+prior volume of those readouts. Simply flipping rays and omitting that
+correction would not sample the posterior.
+
+The implementation composes this move with coordinate Gaussian updates,
+exact-output layer-gauge slice moves, and the earlier Metropolis-corrected
+pair rotations. Every 20 coordinate sweeps it attempts an orientation
+jump. It uses Cholesky solves rather than explicit inverses, then a single
+numerical projection refinement to restore $Ha=Y$; an output discrepancy
+above the stated tolerance stops the run. No posterior likelihood is
+replaced by an asymptotic approximation.
+
+In 2000-sweep pilot runs, the move accepted 41 of 99 eligible proposals
+at width 512 and 32 of 73 at width 2048. The learned parity feature,
+parameter energies, and exact finite-width gauge identity remain separate
+checks. Longer runs compare the orientation Fourier spectrum and the
+kernel's even-singleton cross block with the limiting formulas.
+The proposal table is currently supplied only at six-bit parity.
+It is not an efficient general-dimensional enumeration algorithm, and
+nonzero acceptance is not a full-chain mixing certificate.
+
+\section{Ordinary quartic-tail comparison}
+A separate one-neuron parallel-tempering sampler targets
+$Q_t\propto e^{t aG}P_4$. Reweighting its samples near $t=29$ to enforce
+$\E aG=1/2$ gives $t_s\approx29.205$ and target kernel eigenvalue
+approximately $0.05036$ at six-bit parity. Four independent ten-million-
+sweep runs agree to their block variation and satisfy the exact
+$p$-energy identities
+\[
+ \E|a/\ell|^4=(1+t_ss)/4,\qquad
+ \E\bigl[\textstyle\sum|U_i/\ell|^4-|a/\ell|^4\bigr]=6/4.
+\]
+Finite-network quartic chains give approximately $0.05051$ at width 2048
+and $0.05040$ at width 8192, approaching the ordinary-law estimate.
+These are chain diagnostics, with no certified mixing-time bound.
+\end{document}
