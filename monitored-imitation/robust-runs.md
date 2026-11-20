@@ -36,7 +36,7 @@ The second note's condition (C_r) asks, relative to the learner, whether the hum
    * *It depends on the learner.* Any condition of this kind is relative to the learner, like (C_r), because it is about the decoder's guesses. I know of none I would be sure of for real research.
 
 5. **E4.** The rule-based human of E2, with 40 humans × 5 query seeds per n.
-   * *Theorem 1's own quantity.* The expected number of rounds whose run loses the property grows with n for the fragile property "every step right" (E4_FRAGILE_BAD). For "at most 20% of steps wrong" it stays flat (E4_ROBUST_BAD).
+   * *Theorem 1's own quantity.* The expected number of rounds whose run loses the property grows with n for the fragile property "every step right" (121, 287, 575 at n = 16, 64, 256). For "at most 20% of steps wrong" it stays flat (13.2, 13.2, 13.0).
    * *The fragile cost.* The number of task queries until the fragile failure probability reaches 2% does not grow with n here: the target requires every rule at every n tested, and the queried contents are uniform at every n.
    * *Caveat.* E2 is the favourable case of item 4: its mistakes never change the run and are placed by the content sequence, not by the decoder.
 
@@ -147,7 +147,16 @@ Code: [`code/robust_runs.py`](code/robust_runs.py); outputs: [`results/robust_ru
   * the number of task queries until the failure probability first reaches 2%, an oracle stopping rule.
 * *Errors* are standard errors over the 200 runs.
 
-E4_TABLE
+| property | quantity | n = 16 | n = 64 | n = 256 |
+|---|---|---|---|---|
+| every step right (Ψ₀) | expected bad rounds | 120.8 ± 2.5 | 287.3 ± 7.5 | 575.3 ± 20.8 |
+| | task queries to 2% (median) | 807 ± 31 (688) | 833 ± 35 (704) | 891 ± 38 (804) |
+| at most 5% of steps wrong (Ψ_0.05) | expected bad rounds | 120.8 ± 2.5 | 54.5 ± 1.5 | 56.5 ± 1.5 |
+| | task queries to 2% (median) | 807 ± 31 (688) | 141 ± 5 (130) | 91 ± 3 (80) |
+| at most 20% of steps wrong (Ψ_0.2) | expected bad rounds | 13.2 ± 0.3 | 13.2 ± 0.4 | 13.0 ± 0.5 |
+| | task queries to 2% (median) | 36 ± 1 (34) | 24 ± 1 (22) | 18 ± 1 (15) |
+
+At n = 16, ⌊0.05·16⌋ = 0, so Ψ_0.05 is the fragile property there.
 
 **What the numbers show.**
 * *The fragile property gets worse with n.* Its expected number of bad rounds grows with n: the rarest rules fire in about one step of a run in which they fire at all, so such a run has a single mistake.

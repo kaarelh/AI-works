@@ -138,7 +138,7 @@ python3 property_rules.py ../results > ../results/property_rules.out
 python3 make_figures.py ../results
 ```
 
-For the third note (about 15 minutes):
+For the third note (about 10 minutes):
 
 ```bash
 python3 robust_runs.py ../results > ../results/robust_runs.out
