@@ -4,24 +4,31 @@
 
 ## Answers in brief
 
-1. **The protocols need detection, not repair.** Theorem 3 of the second note uses (C_r) only to get (L_r): *every failed run has a mistake in its last r steps*. (C_r) asks the human to *finish* repairing the imitator's draft in r steps. Over all decoders the two coincide (Proposition 1), so a weaker condition has to use the run's own failure.
-2. **The condition, X = persistence:** "the human uses what it knows whenever it becomes relevant". On append-only drafts: what the human would add to a draft, it would add to any later, larger draft that still lacks it. It is about the human alone, on a domain of drafts not defined by the learner (its own incomplete work, or all non-bizarre drafts).
-3. **Theorem A.** Under persistence, a failed run is caught at its last step whenever something it lacks *fell due* at some draft of the run (a *ripe* failure). And the steps where it is due form an interval ending at n−1, so bisection with task queries finds where it first fell due.
-4. **Theorem C (the protocol Z).** Check the final draft for anything bizarre. If it fails, bisect with checks and ask for the step where junk entered. Otherwise ask for the last step. Then bizarre runs plus ripe failures are at most K(P), on every path, with one task query per run.
-5. **What X handles:** omissions of anything the human would contribute, insight or work, however long the dependent work takes; commissions the human would notice and correct; and, through the check, junk.
-6. **What it does not handle:**
-   * *unripe* failures, where the run never reaches a draft on which the human would produce what is missing: *lateness* (the imitator writes a key idea too late for the work that depends on it) and detours;
-   * *accepted* commissions, plausible guesses the human builds on instead of its own contribution ("fooled"). Persistence fails exactly there.
-7. **Lateness** (Theorem B). Under persistence each mistake delays the run by at most one step. So a run with |M| mistakes still contains the human's draft from |M| steps before the end. With slack σ (the result is in hand σ steps before the end), half-last, half-uniform queries give at most 2·max(1, n/(σ+1))·K failed runs. In experiment CHAIN, without slack, lateness costs chained imitation and end-weighting a factor n, like silence, and the last-step query stalls at about 25% failure. Bisection at the first detection (BIS) needs 480–680 task queries, growing only like log n.
-8. **When the imitator commits.** The majority decoder writes an unconfirmed item only if Pr[due]·p_max > 1 − Pr[due], where p_max is the largest posterior mass of one of its values (Proposition 2). Rare content of unpredictable value is only omitted; predictable, "obvious" content is written, and is a plausible commission when the human's own value differs. In experiment COMMIT the last-step query reaches 2% failure with 100–125 queries if the human corrects the wrong obvious idea, and stalls near 8% if it is fooled.
-9. **Best X/Y/Z found.**
-   * *X:* persistence on own-work drafts, with latency r. If the imitator also makes plausible guesses: on non-bizarre drafts, which adds "not fooled by a plausible substitute".
-   * *Y:* hypotheses append-only. For the own-work version, the decoder only omits (Proposition 2 gives a regime).
-   * *Z:* the last step, or the last r steps; plus BIS; plus the "nothing bizarre" check with bisection. Add uniform queries when relying on slack.
-10. **How believable.** Persistence is much easier to believe than (C_r) for knowledge-type contributions: ideas, facts, methods, corrections of errors the human recognizes. It does not cover:
-    * stage-specific choices, such as a direction that is not taken up again once the draft has gone another way;
-    * being fooled by plausible substitutes;
-    * lateness, which a persistent human can still suffer.
+1. **Detection, not repair.** Theorem 3 of the second note uses (C_r) only to get (L_r): *every failed run has a mistake in its last r steps*. (C_r) asks the human to *finish* repairing the imitator's draft within r steps. Over all decoders the two coincide (Proposition 1), so asking less has to use the failed run itself.
+2. **X = persistence**, "the human uses what it knows whenever it becomes relevant". On append-only drafts: whatever the human would add to a draft, it would also add to any later, larger draft that still lacks it. It is a property of the human alone, on a domain of drafts that does not mention the learner: its own incomplete work, or all non-bizarre drafts.
+3. **Theorem A.** Under persistence, a failed run has a mistake at its last step whenever something it lacks *fell due* at some draft of the run (a *ripe* failure). The steps where that item is due form an interval ending at n−1, so bisection with task queries finds where it first fell due (BIS).
+4. **Theorem C: X/Y/Z.**
+   * *X:* persistence on non-bizarre drafts, and the "nothing bizarre" check of note.md, preserved by the human.
+   * *Y:* all hypotheses are append-only.
+   * *Z:* check the final draft. If it fails, bisect with checks and ask for the step where junk entered; otherwise ask for the last step.
+   * *Guarantee:* bizarre runs plus ripe failures ≤ K(P) on every path, with one task query per run.
+   * *The own-work version* needs no check. Persistence is then assumed only on drafts made of the human's own work, and Y adds that the decoder only omits.
+5. **What it covers:**
+   * omissions of anything the human would contribute, insight or work, however long the work that depends on it;
+   * commissions the human would notice and correct;
+   * junk, through the check.
+6. **What it misses:**
+   * *Unripe* failures. The run never reaches a draft on which the human would produce what is missing: *lateness*, an idea written too late for the work that depends on it, or detours.
+   * *Accepted* commissions. The human builds on the imitator's plausible guess instead of its own contribution; it is "fooled", and persistence fails there.
+7. **Lateness** (Theorem B). Under persistence each mistake delays the run by at most one step.
+   * With slack σ (the result is in hand σ steps before the end), half-last, half-uniform queries give at most 2·max(1, n/(σ+1))·K failed runs in expectation.
+   * In experiment CHAIN, without slack, chained imitation and end-weighting pay a factor n, as for silent humans, and the last step alone stalls at 25% failure.
+   * BIS needs 480–680 task queries at n = 16–256.
+8. **When the imitator commits** (Proposition 2). The majority decoder writes an unconfirmed item only if Pr[due]·p_max > 1 − Pr[due].
+   * Rare content of unpredictable value is only ever omitted.
+   * "Obvious" content is written, and is a plausible commission whenever the human's own value differs.
+   * In experiment COMMIT the last step needs 100–125 task queries if the human corrects a wrong obvious idea, and stalls at 8% failure if it is fooled.
+9. **Believability.** I would vouch for persistence, with a small latency r, for knowledge-type contributions on drafts of the human's own work: ideas, facts, methods, corrections of errors it recognizes. It fails for stage-specific choices, such as a direction not taken up again once the draft has gone another way. It is doubtful against plausible substitutes. And it does not prevent lateness.
 
 ## 1. Detection, not repair
 
@@ -88,6 +95,8 @@ So persistence is a repair condition only for the one-step repair "write the mis
 * *A non-bizarre run.* By (M3) every draft of the run is in 𝒩, so Theorem A applies. A ripe failure has a mistake at n−1, and the last-step query lands on it. Under BIS the searched item stays missing, so by Theorem A its due steps form an interval and ⌈log₂ n⌉ queries find its start.
 * *The count.* Lemma 1 of note.md bounds, on every path, the number of task queries that land on a mistake of the current decoder by ⌊K⌋. The BIS answers are added after the round's main query. The mixed version is Theorem 1 of the second note. ∎
 
+*With latency r,* ask at a uniform step among the last r: then E[#bizarre] + E[#ripe]/r ≤ ⌊K⌋, by Theorem A and the same count.
+
 **The own-work version.** Suppose the decoder only omits, g ⊆ d(y). Then its drafts stay in 𝒪 by induction. (P₁) is then needed only on 𝒪, and no check is needed. On i.i.d. problems with no unripe failures, the last step alone gives failure ε after K/ε task queries, as in Theorem 3(b) of the second note.
 
 **Proposition 2 (when the majority decoder only omits).** Consider an item at draft y that is due with posterior probability π, and whose value, given that it is due, has largest posterior mass p_max. The majority decoder writes a value for it only if π·p_max > 1 − π. If the posterior is a product over items, the decoder decides item by item, because the mode of a product is the product of the modes.
@@ -110,7 +119,7 @@ So persistence is a repair condition only for the one-step repair "write the mis
 
 *Proof.* x′_{k+1} ⊇ x′_k ⊇ c_{k−δ_k}. After a correct step, x′_{k+1} = E(x′_k) ⊇ E(c_{k−δ_k}) = c_{k−δ_k+1}, by monotonicity, since c_{k−δ_k} ⪯ x′_k. ∎
 
-**Corollary (slack).** Suppose S(x₀) ⊆ c_{n−σ}. Then every failed non-bizarre run has at least σ+1 mistakes.
+**Corollary (slack).** Assume (P₁) for all items on 𝒩, (M1)–(M3), and S(x₀) ⊆ c_{n−σ}. Then every failed non-bizarre run has at least σ+1 mistakes.
 * With the mixed query of Theorem C: E[#failed runs] ≤ 2·max{1, n/(σ+1)}·K.
 * With chained imitation and the check: E[#bizarre] + (σ+1)/n · E[#failed non-bizarre] ≤ K.
 
@@ -127,11 +136,11 @@ For σ = ⌊ρn⌋ this is an *outcome* property that chained imitation loses in
 | 64 | 8 | 1,301 | 1,647 | stalls at 19% | 548 | 2,440 |
 | 256 | 32 | 1,444 | 2,019 | stalls at 19% | 668 | 2,747 |
 
-* *Without slack,* lateness is as expensive as silence for CI and EW. Their cost grows in proportion to n: the last failures have one or two mistakes, w = t_p + 1.
-* *The last step alone* stalls: it learns k_p and never t_p.
-* *BIS* needs 480–680 task queries, growing like log₂ n: about one bisection per insight. At the first detection the fixed run lacks k_p at every step, and "the human writes k_p here" is a threshold in the step (Theorem A). So bisection finds t_p exactly, and the decoder then writes k_p on time.
-* *With slack n/8,* the cost hardly grows with n: from 1,000 to 1,400 for CI and from 1,100 to 2,000 for EW over a 16-fold increase in n. The Corollary charges each failure at most n/(σ+1) ≈ 8.
-* *Mixing* in the last step costs about twice CI here, since all failures are unripe once k_p is known. It costs much less where failures are ripe: E3's catch-up class has LAST at about 300 against CI at 1,300–2,500.
+* *Without slack,* CI and EW pay in proportion to n, as for silent humans. The last failures have a single mistake, w = t_p + 1.
+* *LAST* learns k_p and never t_p, so it stalls.
+* *BIS* grows like log₂ n. At the first detection the fixed run lacks k_p at every step, and "the human writes k_p here" is a threshold in the step (Theorem A). So bisection finds t_p exactly, and the decoder writes k_p on time from then on.
+* *With slack n/8,* CI grows only from 1,000 to 1,400 over a 16-fold increase in n. The Corollary charges each failure at most n/(σ+1) ≈ 8.
+* *MIX* costs about twice CI here, where all failures are unripe once k_p is known. Where failures are ripe it is far cheaper: in E3's catch-up class, LAST needs about 300 and CI 1,300–2,500.
 
 **BIS in general.** BIS records the human's step at the first draft where the item fell due. Whether the posterior carries that to later runs, whose earlier drafts may differ, is not shown beyond classes like CHAIN.
 
@@ -154,11 +163,16 @@ For σ = ⌊ρn⌋ this is an *outcome* property that chained imitation loses in
 
 * *Fooled humans.* The run on a problem with k_p = 2 ends with no mistake at the last step. The last-step query never learns, and failure stays at the fraction of such problems.
 * *Noticing humans.* The last step makes 100–125 task queries.
-* *The other protocols.* CI and EW reach 2% for both humans. Both are cheaper when the human notices: EW 280–410 against 880–1,240, and CI 1,300–2,500 against 1,900–3,500. For the fooled human a problem with t_p after the decoder's write has a single mistake, so those problems cost CI about n visits each, as for silent humans. At m = 100 only about three problems are of this kind, and the stopping rule tolerates two failures.
+* *CI and EW* reach 2% for both humans, and are cheaper when the human notices.
+* *Single mistakes.* For the fooled human, a problem with t_p after the decoder's write has a single mistake, as with silent humans. With m = 100 there are only about three such problems.
+* *No check helps.* A "nothing bizarre" check cannot catch the obvious idea. Uniform queries bound accepted commissions at chained imitation's rate.
 
-What a check of "nothing bizarre" cannot do here is catch the obvious idea, which is not bizarre. A "looks right" check could, if the human would see the obvious idea as wrong. Uniform queries bound accepted commissions at chained imitation's rate.
+## 6. The candidate conditions, and where the imitator's drafts drift
 
-## 6. The candidate conditions
+* **Out of 𝒪,** at any commission. Proposition 2 says when that happens: for predictable content.
+* **Out of 𝒩,** at junk. The check finds every such run, and each costs one task query on a mistake, so at most K runs.
+* **Into fooled drafts within 𝒩,** at accepted substitutes. No "nothing bizarre" check sees these; only a "looks right" check could.
+
 
 | condition | as a statement | catches | misses; where the decoder's drafts leave its scope |
 |---|---|---|---|
@@ -172,24 +186,19 @@ On (a): drafts of the form "own draft minus items" are not closed under the huma
 * *(a) holds with r = 1.* From c_k ∖ {A} the human re-adds A at once.
 * *The decoder that knows B but not A* writes B and omits A. From then on its drafts contain B, so A is never due again.
 * *The failure goes unseen.* The run fails with no mistake at the end, so (C₁) and (L₁) both fail.
-* *(P₁) on 𝒪 fails here,* since A is due at c_k ∖ {A} but not at the own-work draft c_k ∖ {A} ∪ {B}.
+* *(P₁) on 𝒪 fails here.* A is due at c_k ∖ {A} but not at the decoder's next draft, which is an own-work draft containing B.
 
 So persistence has to be stated on all of 𝒪, which is what (c) does.
 
-The brute-force check (`threadC_checks.out`) covers Theorems A and B.
-* *Persistent humans:* 1,500 random monotone rule systems × 20 arbitrary append-only decoders.
-  * The search found no ripe failure without a last-step mistake, no due set that is not an interval, and no delay or slack violation.
-  * 178 of the 1,703 failures are unripe.
-* *Rule systems with inhibitors (substitutes):* 157 ripe failures with no last-step mistake, and 846 delay violations. All of them come from the humans that are not persistent.
+**Brute-force check** (`threadC_checks.out`) of Theorems A and B.
+* *Persistent humans:* 1,500 random monotone rule systems, each with 20 arbitrary append-only decoders.
+  * There were no violations.
+  * 178 of the 1,703 failures were unripe.
+* *Rule systems with inhibitors (substitutes):* 157 ripe failures had no last-step mistake, and there were 846 delay violations. All come from the humans that are not persistent.
 
 ## 7. How believable is persistence?
 
-* **Where I would vouch for it.** On drafts made of the human's own work, with latency r for its capacity, for contributions of knowledge:
-  * an idea it has;
-  * a fact, a reference or a method;
-  * a case it knows must be handled;
-  * a correction of something it recognizes as wrong.
-  Such things stay relevant as a draft grows towards its result. Near the deadline the human may only *mention* the missing idea, but any difference from the decoder's step is enough for detection.
+* **Where I would vouch for it.** On drafts of the human's own work, with a latency r for its capacity, for contributions of knowledge: an idea it has, a fact, a method, a case it knows must be handled, a correction of something it recognizes as wrong. These stay relevant as a draft grows towards its result. Near the deadline the human may only *mention* a missing idea, but any difference from the decoder's step is enough for detection.
 * **Where it fails even on own-work drafts.**
   * *Stage-specific contributions,* such as the choice of a direction. Once the draft has gone another way, a careful researcher does not restart: sunk cost. Unless S is the result alone and the other way also reaches it, this is a violation.
   * *Large backlogs,* which raise r.
