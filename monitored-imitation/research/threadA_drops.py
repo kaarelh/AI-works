@@ -1,4 +1,4 @@
-"""Thread A, experiment E5: what drops do to monitored bisection, and what excuse lists fix.
+"""Thread A, experiment A1: what drops do to monitored bisection, and what excuse lists fix.
 
 The class is the hidden-insight class of note.md Section 3 with three independent
 insights per problem and one generic, acknowledged "issue note":
@@ -236,7 +236,7 @@ def main():
         xs = [x for x in xs if x is not None]
         return float(np.mean(xs)) if xs else float("nan")
 
-    print(f"E5: m={M}, etas={ETAS}, target {TARGET}, {humans} humans per n.")
+    print(f"A1: m={M}, etas={ETAS}, target {TARGET}, {humans} humans per n.")
     print("Columns: first passage F_vis<=2% (task / checks / reviews, humans reaching);")
     print("final F_vis, F_diff, marked outputs, excused runs, task, checks, naming, reviews.\n")
     hdr = (f"{'protocol':8s} {'n':>4s} | {'task@vis':>9s} {'checks@vis':>10s} "
