@@ -1,7 +1,9 @@
 # Slack imitation: the scheme I am most sure of
 
 *Research note by Claude (Anthropic), the fourth in this folder, version 2. It synthesizes the three earlier notes and five research threads ([`research/`](research/), working branch only).*
-* *The changes from version 1* come from referee 4 ([`verification/referee-report-slack-imitation.md`](verification/referee-report-slack-imitation.md)) and from the red team of thread E ([`research/threadE-redteam.md`](research/threadE-redteam.md)). The response, item by item, is [`verification/response-slack-imitation.md`](verification/response-slack-imitation.md).
+* *The changes from version 1* come from referee 4 ([`verification/referee-report-slack-imitation.md`](verification/referee-report-slack-imitation.md)) and from the red team of thread E ([`research/threadE-redteam.md`](research/threadE-redteam.md)).
+* *Referee 5* ([`verification/referee-report-slack-imitation-v2.md`](verification/referee-report-slack-imitation-v2.md)) then checked version 2, including Proposition 5, and its corrections are included.
+* *The response to all three,* item by item, is [`verification/response-slack-imitation.md`](verification/response-slack-imitation.md).
 * *Code:* [`code/slack_imitation.py`](code/slack_imitation.py), experiment E6. *Tables:* [`results/slack_imitation_table.md`](results/slack_imitation_table.md).
 
 ## The question
@@ -19,17 +21,19 @@ The request: *try lots of threads and report back with the scheme you are most s
    * **ask before committing:** during a run, wherever the imitator's top output has posterior mass below 1 − α, ask the human for that step instead of guessing. This is the first optimization in the original question, made safe by slack;
    * **after the run,** one task query at a uniformly random step.
 
-   An optional "nothing bizarre" check catches junk. **Where results can be verified** (a proof checker, a test suite), rerun each problem until its result is verified.
+   An optional "nothing bizarre" check catches junk. **Where results can be verified** (a proof checker, a test suite), rerun each problem until its result is verified. With a verifier, asking only changes the cost: add it only if confident wrong content that the human builds on is expected to be common; otherwise the verifier alone is cheaper.
+
+   *What is proved for which use.* Ask-before-committing has an online guarantee (Proposition 5(b)). For a frozen imitator deployed on i.i.d. problems, what is proved is Corollary 3, for plain slack imitation.
 2. **The theorems** (Section 3). The assumption is **bounded setback D** at the imitator's confident mistakes: an entry the human would not have written costs it at most D extra steps to finish, and part of its own next step costs it none.
    * *Slack imitation* (Theorem 2): the expected number of failed runs, over any sequence of problems, is at most min{n, (D+1)n/(σ+1)}·K ≤ (D+1)K/ρ, where K = K(human).
-   * *With ask-before-committing* (Proposition 5): the asks number at most K/log₂(1/(1−α)) ≈ 0.69K/α on every path. Failed runs are at most (D+1)K/(ρ·log₂(1/α)), and bounded setback is needed only at confident steps.
-   * *With a verifier* (Propositions 4 and 5): no failed run is ever output. At most K runs are rejected, and the expected number of task queries is at most min{n, (D+1)n/(σ+1)}·K.
-   * *On i.i.d. problems* (Corollary 3): O((D+1)·K·log(K/δ)/(ρε)) task queries for failure probability ε. Chained imitation needs n·K/ε.
+   * *With ask-before-committing* (Proposition 5): the asks number at most K/log₂(1/(1−α)) ≤ (ln 2)·K/α ≈ 0.69K/α on every path. The expected number of failed runs is at most (D+1)K/(ρ·log₂(1/α)), and bounded setback is needed only at confident steps.
+   * *With a verifier* (Propositions 4 and 5): no failed run is ever output. At most K runs are rejected, and the expected number of search queries is at most min{n, (D+1)n/(σ+1)}·K, plus at most 0.69K/α asks if ask-before-committing is used.
+   * *On i.i.d. problems* (Corollary 3): O((D+1)·K·log(K/δ)/(ρε)) task queries for failure probability ε. Chained imitation needs n₀·K/ε.
 
-   So this is "O(K) reasonable queries" for fixed ε, δ, D and ρ, and truly O(K) task queries with a verifier.
+   So, for fixed ε, δ, D and ρ, this is O(K log K) task queries on i.i.d. problems, and O(K) failed runs online. With a verifier it is truly O(K) task queries.
 3. **Why it works.** Slack turns a single wrong step into many: a run fails only if it has at least (σ+1)/(D+1) wrong steps, so a uniform query finds one with probability at least ρ/(D+1), not 1/n. Asking before committing removes the mistakes the imitator itself is unsure of. Each mistake found, and each ask, costs the posterior at least a fixed number of bits, and there are K bits in all.
 4. **What it needs from the human** (Section 4). The useful distinction is between *confident* and *unconfident* steps, not between omissions and commissions.
-   * *Unconfident steps* need nothing: the human answers them. Thread E showed that these include most of the imitator's commissions: guesses in slots the human would certainly fill, such as results, verdicts and plans.
+   * *Unconfident steps* need nothing: the human answers them. Thread E argued that these include most of the imitator's commissions: guesses in slots the human would certainly fill, such as results, verdicts and plans.
    * *Confident omissions*, typically a rare insight left out, need the human to recover the insight later. Slack then absorbs the delay. This fails for insights that arise only while doing a piece of work the imitator did instead, and for ideas pre-empted by a hedge.
    * *Confident commissions* need the human not to be fooled for long. The worst case is a confident negative result, "tried A; it fails", where A is what would have worked, since researchers rarely redo their own recorded dead ends.
 
@@ -41,17 +45,22 @@ The request: *try lots of threads and report back with the scheme you are most s
 
    **With a verifier** none of this affects correctness, only cost. That is the version I am most sure of.
 6. **Some assumption of this kind is necessary** for unpredictable, problem-specific insights. The first note's lower bound (Theorem 3) is proved on *silent* humans, who never recover a missed insight, which is unbounded setback.
-7. **When the assumption fails,** the guarantee is chained imitation's on a run of n = n₀/(1−ρ) steps: n₀K/(1−ρ), twice chained imitation's for ρ = ½. E6 shows this factor 2 on silent humans. The asks are bounded by 0.69K/α whatever the human.
+7. **When the assumption fails,** the guarantee is chained imitation's on a run of n = n₀/(1−ρ) steps: n₀K/(1−ρ), twice chained imitation's for ρ = ½. E6 shows this factor 2 on silent humans. The asks are bounded by (ln 2)·K/α whatever the human.
 8. **Experiment E6** (exact Bayes, 40 humans per cell, the same humans in every row; Section 6). Task queries until at most 2% of runs fail, for horizons n₀ = 8 → 32 → 128:
    * *chained imitation without slack:* 2,900 → 12,700 → 51,300 for the bounded-setback humans;
-   * *slack imitation* (n = 2n₀): 160–490 → 200–230 → about 205 for the same humans;
+   * *slack imitation* (n = 2n₀, oracle stopping): 160–490 → 200–230 → about 205 for the same humans;
    * *fooled humans:* 1,600 → 2,800 → 4,300 with slack;
    * *silent humans:* slack doubles the cost, 2,200 → 4,500 at n₀ = 8.
 
-   With a verifier, bounded-setback humans need 13–16 task queries for all 100 problems (38 for misled-8 at n₀ = 8), and every output is correct. Adding ask-before-committing (α = 0.3) makes fooled humans flat, 240 → 320 → 360 queries. Bounded-setback humans then cost 220–320 instead of 14, the price of asking at every uncertain step.
+   With a verifier, bounded-setback humans need 13–16 task queries for all 100 problems (38 for misled-8 at n₀ = 8), and every output is correct.
+
+   Adding ask-before-committing (α = 0.3):
+   * *Fooled humans grow much more slowly:* 240 → 320 → 360 queries, against 180 → 750 → 2,600 with the verifier alone. Part of this flattening is an artifact of E6's prior (Section 6).
+   * *Bounded-setback humans cost more:* 220–320 instead of 14, the price of asking at every uncertain step.
+   * *Without a verifier,* in referee 5's online test, asking cuts failed runs 3–18× for about 3–8 asks per problem.
 9. **What is new here, and what is not.**
    * The case D = 0 is thread C's Corollary (slack), for persistent humans.
-   * The counting is the third note's Theorem 1, applied to robustness against the imitator's *actual* replacements. The third note (answer 4) said a usable outcome condition would have to be restricted in exactly this way.
+   * The counting is the third note's Theorem 1 ([`robust-runs.md`](robust-runs.md)), applied to robustness against the imitator's *actual* replacements. The third note (answer 4) said a usable outcome condition would have to be restricted in exactly this way.
    * Ask-before-committing and its proof are from thread E.
    * New here: setback measured by the human's remaining time, which covers commissions and makes success an outcome rather than containment of the human's own result; the verifier version; and the combination.
 
@@ -185,7 +194,7 @@ Notes on Proposition 4.
   * "later entries do not mislead" is (B-commit).
 * *Fine print.* V is an oracle whose calls are not counted as queries. The guarantee covers the verified problems only, not an imitator deployed without V. Sampling steps without replacement gives at most (n+1)/(|M|+1) queries per search.
 
-**Proposition 5 (ask before committing; thread E).** Let α ≤ ½, τ(x₀ᵗ) ≤ n₀, and (M1), (M2), (M-prefix). Assume (B_D) only at the *committed* mistakes of non-bizarre runs. Then:
+**Proposition 5 (ask before committing; thread E).** Let 0 < α < 1, τ(x₀ᵗ) ≤ n₀, and (M1), (M2), (M-prefix). Here M_t is the set of committed steps k whose label differs from P(x′_k). The decoder that matters at step k is the one in use there, the majority decoder of D_t ∪ A_{<k}. Assume (B_D) only at the *committed* mistakes of non-bizarre runs. Then:
 * (a) on every path, SI-ABC and SI-V-ABC make at most K/log₂(1/(1−α)) asks;
 * (b) under SI-ABC, E[#runs that fail the check] + (max{1, (σ+1)/(D+1)}/n)·E[#failed runs that pass the check] ≤ K/log₂(1/α);
 * (c) under SI-V-ABC, with (B_D) at committed mistakes for all entries: almost surely at most K/log₂(1/α) runs are rejected, and the expected number of search queries is at most (K/log₂(1/α))·min{n, (D+1)n/(σ+1)}.
@@ -197,27 +206,33 @@ Notes on Proposition 4.
   * List A_{<k}, then h, then the rest. The imitator committed at step k using exactly the data D_t ∪ A_{<k}, because asks are added at once. Its label had mass μ_k ≥ 1 − α there.
   * So if k is a mistake, ξ(P(x′_k)) ≤ 1 − μ_k ≤ α, and h alone lowers Φ by at least log₂(1/α). Every other term is ≥ 0.
   * Hence Σ_rounds 1[hit] ≤ K/log₂(1/α) on every path.
-* *(b).* The run, asks included, is fixed before the query's coin, so Pr[hit | past, run] = q_t(M_t). Taking expectations, E Σ_t q_t(M_t) ≤ K/log₂(1/α).
+* *(b).* By the argument of Theorem 1 of without-a-check.md: the run, asks included, is fixed before the query's coin, so Pr[hit | past, run] = q_t(M_t). Taking expectations, E Σ_t q_t(M_t) ≤ K/log₂(1/α).
   * The flip of a run that fails the check is a committed step, since an asked step appends the human's own entries, which keep the notebook passing by (M2). So the flip is a mistake.
   * For a failed run that passes the check, asked steps are correct steps in Lemma S, which therefore gives |M_t| ≥ max{1, (σ+1)/(D+1)}.
 * *(c).* Each rejection ends with a hit, so the per-round bound gives the number of rejections. Each search is geometric with success probability |M|/n, as in Proposition 4. ∎
 
 Notes on Proposition 5.
-* *Cost.* The asks are a lifetime budget of about 0.69K/α queries (for small α), not a per-run cost.
-* *Deployment.* A frozen imitator deployed after a PAC phase must either keep asking, which stays within that budget, or abstain at unconfident steps. Abstaining costs the factor of about 1/α in Lemma 1 of note.md that Section 9 mentions.
+* *The range of α.* For α > ½, Lemma 1 of note.md gives the better count, so the hit bound is really K/max{1, log₂(1/α)}. Referee 5 checked every step for α > ½ too.
+* *Cost.* The asks are a lifetime budget of at most (ln 2)·K/α queries, not a per-run cost. How cheap that is in practice depends on how much of K is problem-specific. In E6 almost all of it is, so the asks come to about 2–9 per problem and never amortize.
+* *Deployment.* A frozen imitator does not add answers to its data, so it would ask again at the same uncertain states on every run, outside the budget. It must abstain at unconfident steps instead, which costs the factor of about 1/α in Lemma 1 of note.md that Section 9 mentions. An imitator that keeps asking and learns from the answers stays within the budget, but no PAC theorem for that version is proved here.
+* *Search.* In SI-V-ABC, the search may sample only committed steps, since asked steps are never mistakes.
 * *What it needs in practice.* μ must measure confidence about content, not wording. Otherwise SI-ABC asks at every step until the human's style is learned. In the theory that cost is part of K.
 
 **Remarks.**
-1. *Comparison.* Chained imitation is the case σ = 0. Slack replaces its factor n₀ by (D+1)/ρ when D < σ. K is unchanged; thread B's knowledge-base and probe results reduce K but not n (its Theorems 3 and 4), and compose with this.
+1. *Comparison.* Chained imitation is the case σ = 0. Slack replaces its factor n₀ by min{n, (D+1)n/(σ+1)} ≈ (D+1)/ρ. That is a gain over chained imitation only when D + 1 < (1−ρ)(σ+1), about D < σ/2 for ρ = ½. K is unchanged; thread B's knowledge-base and probe results reduce K but not n (its Theorems 3 and 4), and compose with this.
 2. *Without (B_D).* Every failed run still has at least one mistake, so E[#failed] ≤ n·K = n₀K/(1−ρ): chained imitation's guarantee on the longer run, twice chained imitation's for ρ = ½.
    * *More finely,* a run fails only if Σ_{k∈M}(1 + D_k) ≥ σ+1, where D_k is the actual setback at mistake k.
    * So failures from many small setbacks are charged at the good rate, and only failures from a few huge setbacks at the 1/n rate.
 3. *Read-out.* If the answer is read out by one more step of the human ("which entry is the solution?"), that step needs its own assumption:
    * **(R)** on every final notebook of the imitator's runs that satisfies S, the human's read-out is correct.
 
-   *Why it is needed.* Without (R), a notebook that holds the correct design and a plausible wrong one can be read out wrongly with no mistake anywhere: the imitator copies the human's read-out. Slack makes (R) harder, since the σ steps after success are extra chances for a "v2 supersedes v1".
+   *Why it is needed.* Suppose a notebook holds the correct design and a plausible wrong one, and the human's read-out picks the wrong one. The imitator copies that read-out, so the read-out step is not a mistake.
+   * *If the imitator wrote the wrong design,* that commission is the only mistake. S still holds, so Lemma S does not multiply it, and the failure is charged at the 1/n rate.
+   * *If the human's own chain writes it,* for example its own "v2" during the slack, the reference chain itself fails.
 
-   *With (R),* query the read-out step with probability ½ and a uniform step otherwise; all failures together are then at most 2(D+1)K/ρ in expectation. A read-out that verifies its candidate makes (R) plausible for mathematics and software, and a machine verifier (Proposition 4) removes the issue.
+   Slack makes (R) harder, since the σ steps after success are extra chances for a "v2 supersedes v1".
+
+   *With (R),* query the read-out step with probability ½ and a uniform step otherwise (runs that fail the check get the flip query instead). All failures together are then at most 2(D+1)K/ρ in expectation. A read-out that verifies its candidate makes (R) plausible for mathematics and software, and a machine verifier (Proposition 4) removes the issue.
 4. *The hidden clock is not used in the proofs.* With a visible step, make the step part of the state and define τ(y, k). (T1), (T2) and Lemma S hold verbatim, with (B_D) read as τ(y ∪ g, k+1) ≤ τ(y, k) + D.
    * But (B-omit) for g = ∅ is then a real assumption, τ(y, k+1) ≤ τ(y, k): the human is not deadline-driven.
    * With a hidden clock it holds by definition, because the human is a function of the notebook.
@@ -279,10 +294,12 @@ The valid variants:
 | (B-commit), D ≤ 2, software | 70% | 40% / 60% | 40% / 60% |
 | (B-commit), D ≤ 2, empirical or judgment work | 40% | 15% / 30% | 15% / 30% |
 | beats chained imitation by ≥ 2× (real human, n₀ ≈ 20–40, with ask-before-committing) | – | 70% | 70% |
-| by ≥ 5× | 75% | 50% | 50% |
+| by ≥ 5× (version 1: without ask-before-committing; the others: with it) | 75% | 50% | 50% |
 
 * *Why I moved.* Version 1 assumed that most of the imitator's mistakes are omissions and its commissions are "the obvious idea". Thread E's reading of Proposition 2 (guesses in certainly-due slots, base-rate negative results), and the by-product construction under a hidden clock, persuaded me otherwise.
-* *What does not move.* The theorems, which two independent checks found correct, and the verifier version. There, correctness depends only on determinism, exact Bayes and V's soundness, and the cost is at most n₀K/(1−ρ) task queries plus 0.69K/α asks, whatever the human.
+* *What does not move.*
+  * *The theorems.* Lemma S, Theorem 2, Corollary 3 and Proposition 4 were found correct by two independent checks (referee 4 and thread E). Proposition 5 was checked by referee 5, including on 116,612 runs of E6.
+  * *The verifier version.* Correctness depends only on determinism, exact Bayes and V's soundness. The cost is at most n₀K/(1−ρ) search queries, plus (ln 2)·K/α asks if asking is used, whatever the human.
 
 **How to test it** on real researchers, with no learner, by planting entries in their *own* notebooks and presenting them as their own:
 * *Omissions.* Remove part of the last step's work, and part of a computation's raw record.
@@ -367,21 +384,21 @@ The valid variants:
 
 | protocol | human | n = 16 | n = 64 | n = 256 |
 |---|---|---|---|---|
-| SI-V | noticing | 13 ± 1 (9.9 rejected; 1 per rejection) | 14 ± 1 (10.4 rejected; 1 per rejection) | 14 ± 1 (10.1 rejected; 1 per rejection) |
-| SI-V | misled-2 | 14 ± 1 (9.9 rejected; 1 per rejection) | 14 ± 1 (10.4 rejected; 1 per rejection) | 14 ± 1 (10.1 rejected; 1 per rejection) |
-| SI-V | misled-8 | 38 ± 3 (10.8 rejected; 4 per rejection) | 16 ± 1 (10.4 rejected; 1 per rejection) | 14 ± 1 (10.1 rejected; 1 per rejection) |
-| SI-V | fooled | 181 ± 13 (14.6 rejected; 12 per rejection) | 750 ± 76 (19.2 rejected; 39 per rejection) | 2,636 ± 238 (18.5 rejected; 142 per rejection) |
-| SI-V | silent | 1,610 ± 24 (100.0 rejected; 16 per rejection) | 6,450 ± 111 (100.0 rejected; 65 per rejection) | 26,091 ± 385 (100.0 rejected; 261 per rejection) |
-| SI-V-ABC, α = 0.3 | noticing | 223 ± 2 (221 asked; 1.1 rejected) | 285 ± 2 (284 asked; 0.5 rejected) | 319 ± 4 (318 asked; 0.1 rejected) |
-| SI-V-ABC, α = 0.3 | misled-2 | 223 ± 2 (221 asked; 1.1 rejected) | 285 ± 2 (284 asked; 0.5 rejected) | 319 ± 4 (318 asked; 0.1 rejected) |
-| SI-V-ABC, α = 0.3 | misled-8 | 236 ± 3 (221 asked; 1.1 rejected) | 285 ± 2 (284 asked; 0.5 rejected) | 319 ± 4 (318 asked; 0.1 rejected) |
-| SI-V-ABC, α = 0.3 | fooled | 236 ± 3 (221 asked; 1.1 rejected) | 318 ± 13 (284 asked; 0.5 rejected) | 360 ± 19 (318 asked; 0.1 rejected) |
-| SI-V-ABC, α = 0.3 | silent | 1,602 ± 22 (0 asked; 100.0 rejected) | 6,375 ± 79 (0 asked; 100.0 rejected) | 25,864 ± 441 (0 asked; 100.0 rejected) |
-| SI-V-ABC, α = 0.1 | noticing | 434 ± 4 (432 asked; 1.1 rejected) | 708 ± 6 (707 asked; 0.5 rejected) | 874 ± 11 (874 asked; 0.1 rejected) |
-| SI-V-ABC, α = 0.1 | misled-2 | 434 ± 4 (432 asked; 1.1 rejected) | 708 ± 6 (707 asked; 0.5 rejected) | 874 ± 11 (874 asked; 0.1 rejected) |
-| SI-V-ABC, α = 0.1 | misled-8 | 447 ± 4 (432 asked; 1.1 rejected) | 708 ± 6 (707 asked; 0.5 rejected) | 874 ± 11 (874 asked; 0.1 rejected) |
-| SI-V-ABC, α = 0.1 | fooled | 447 ± 4 (432 asked; 1.1 rejected) | 741 ± 15 (707 asked; 0.5 rejected) | 916 ± 21 (874 asked; 0.1 rejected) |
-| SI-V-ABC, α = 0.1 | silent | 447 ± 4 (432 asked; 1.1 rejected) | 6,375 ± 79 (0 asked; 100.0 rejected) | 25,864 ± 441 (0 asked; 100.0 rejected) |
+| SI-V | noticing | 13 ± 1 (9.95 rejected; 1 per rejection) | 14 ± 1 (10.45 rejected; 1 per rejection) | 14 ± 1 (10.12 rejected; 1 per rejection) |
+| SI-V | misled-2 | 14 ± 1 (9.95 rejected; 1 per rejection) | 14 ± 1 (10.45 rejected; 1 per rejection) | 14 ± 1 (10.12 rejected; 1 per rejection) |
+| SI-V | misled-8 | 38 ± 3 (10.75 rejected; 4 per rejection) | 16 ± 1 (10.45 rejected; 1 per rejection) | 14 ± 1 (10.12 rejected; 1 per rejection) |
+| SI-V | fooled | 181 ± 13 (14.60 rejected; 12 per rejection) | 750 ± 76 (19.20 rejected; 39 per rejection) | 2,636 ± 238 (18.50 rejected; 142 per rejection) |
+| SI-V | silent | 1,610 ± 24 (100.00 rejected; 16 per rejection) | 6,450 ± 111 (100.00 rejected; 65 per rejection) | 26,091 ± 385 (100.00 rejected; 261 per rejection) |
+| SI-V-ABC, α = 0.3 | noticing | 223 ± 2 (221 asked; 1.10 rejected) | 285 ± 2 (284 asked; 0.47 rejected) | 319 ± 4 (318 asked; 0.15 rejected) |
+| SI-V-ABC, α = 0.3 | misled-2 | 223 ± 2 (221 asked; 1.10 rejected) | 285 ± 2 (284 asked; 0.47 rejected) | 319 ± 4 (318 asked; 0.15 rejected) |
+| SI-V-ABC, α = 0.3 | misled-8 | 236 ± 3 (221 asked; 1.10 rejected) | 285 ± 2 (284 asked; 0.47 rejected) | 319 ± 4 (318 asked; 0.15 rejected) |
+| SI-V-ABC, α = 0.3 | fooled | 236 ± 3 (221 asked; 1.10 rejected) | 318 ± 13 (284 asked; 0.47 rejected) | 360 ± 19 (318 asked; 0.15 rejected) |
+| SI-V-ABC, α = 0.3 | silent | 1,602 ± 22 (0 asked; 100.00 rejected) | 6,375 ± 79 (0 asked; 100.00 rejected) | 25,864 ± 441 (0 asked; 100.00 rejected) |
+| SI-V-ABC, α = 0.1 | noticing | 434 ± 4 (432 asked; 1.10 rejected) | 708 ± 6 (707 asked; 0.47 rejected) | 874 ± 11 (874 asked; 0.15 rejected) |
+| SI-V-ABC, α = 0.1 | misled-2 | 434 ± 4 (432 asked; 1.10 rejected) | 708 ± 6 (707 asked; 0.47 rejected) | 874 ± 11 (874 asked; 0.15 rejected) |
+| SI-V-ABC, α = 0.1 | misled-8 | 447 ± 4 (432 asked; 1.10 rejected) | 708 ± 6 (707 asked; 0.47 rejected) | 874 ± 11 (874 asked; 0.15 rejected) |
+| SI-V-ABC, α = 0.1 | fooled | 447 ± 4 (432 asked; 1.10 rejected) | 741 ± 15 (707 asked; 0.47 rejected) | 916 ± 21 (874 asked; 0.15 rejected) |
+| SI-V-ABC, α = 0.1 | silent | 447 ± 4 (432 asked; 1.10 rejected) | 6,375 ± 79 (0 asked; 100.00 rejected) | 25,864 ± 441 (0 asked; 100.00 rejected) |
 
 The tables are [`results/slack_imitation_table.md`](results/slack_imitation_table.md), written by `slack_imitation.py ../results --table`.
 
@@ -391,7 +408,26 @@ The tables are [`results/slack_imitation_table.md`](results/slack_imitation_tabl
 * *Silent humans cost twice as much with slack* (2,249 → 4,467 at n₀ = 8), as Remark 2 predicts: the uniform query is spread over 2n₀ steps, and a missed idea is never recovered.
 * *LAST* is the cheapest protocol for bounded-setback humans. Their failed runs end with a mistake, since at the last step the human would still write or correct the idea. But it has no guarantee: it stalls at 10% failure for fooled humans and 100% for silent ones. MIX gets most of its advantage, at about twice SI's cost on the others.
 * *With a verifier,* bounded-setback humans need 13–16 task queries for all 100 problems (38 for misled-8 at n₀ = 8), and every output is correct. Only problems with k_p = 2 are ever rejected. A rejected run costs about n queries for silent humans (one mistake per run), and 0.56n–0.77n for fooled ones.
-* *Ask-before-committing* removes the fooled humans' growth: 236 → 318 → 360 at α = 0.3, with almost no rejections. The price is asking at every uncertain step. Bounded-setback humans then cost 220–320 instead of 14, and α = 0.1 asks more (430–870). Silent humans' omissions are confident at n₀ ≥ 32, so asking does not help them, as Section 5 predicts. At n₀ = 8 with α = 0.1, every step is uncertain enough to ask.
+* *Ask-before-committing with a verifier.*
+  * *Fooled humans grow much more slowly:* 236 → 318 → 360 at α = 0.3, against 181 → 750 → 2,636 with the verifier alone, though at n₀ = 8 it costs them more.
+  * *Part of the flattening is an artifact of E6's prior* (referee 5, [`verification/referee5_abc_mechanism.out`](verification/referee5_abc_mechanism.out)). In this class every confident wrong commitment comes at t_p = n₀ − 1, the last possible idea time, after asks have ruled out every other. So rejections fall like 1/n₀, while each costs a search of about 2n₀. Nothing in Proposition 5 gives this. A class with confident problem-specific deviations away from the end of the horizon would show the growth that Section 5 predicts.
+  * *The price.* Bounded-setback humans cost 220–320 instead of 14, and α = 0.1 asks more (430–870). The asks are 2–9 per problem here, because almost all of E6's K is problem-specific.
+  * *Silent humans.* Their omissions are confident at n₀ ≥ 32, so asking does not help them, as Section 5 predicts. At n₀ = 8 with α = 0.1, every step is uncertain enough to ask.
+  * *Ties.* The α = 0.1 results for fooled, misled-8 and silent humans rest on a tie: the one confident wrong commitment has mass exactly 0.9 = 1 − α, and the protocol's strict "<" commits.
+* *Ask-before-committing without a verifier* (referee 5, [`verification/referee5_si_abc_online.out`](verification/referee5_si_abc_online.out)). E6's oracle stopping rule is not meaningful for SI-ABC, since a run that asks the human passes for free. So referee 5 ran SI and SI-ABC online for 3,000 rounds on the same humans. The table shows failed runs during learning, the quantity Proposition 5(b) bounds, and asks.
+
+  | n | human | SI: failed runs | SI-ABC, α = 0.3: failed runs / asks | SI-ABC, α = 0.1: failed runs / asks |
+  |---|---|---|---|---|
+  | 16 | noticing | 12.5 | 1.7 / 304 | 1.7 / 432 |
+  | 16 | misled-2 | 14.4 | 2.3 / 304 | 2.3 / 432 |
+  | 16 | misled-8 | 42.8 | 14.4 / 304 | 14.4 / 432 |
+  | 16 | fooled | 104.0 | 14.4 / 304 | 14.4 / 432 |
+  | 16 | silent | 1,319.7 | 1,017.5 / 61 | 14.4 / 432 |
+  | 64 | noticing | 14.8 | 0.8 / 517 | 0.8 / 800 |
+  | 64 | misled-8 | 16.5 | 0.9 / 517 | 0.9 / 800 |
+  | 64 | fooled | 136.2 | 8.8 / 517 | 8.8 / 800 |
+
+  Asking cuts failed runs 3–18× (7–16× for fooled humans) for about 3–8 asks per problem.
 * *Bookkeeping.* [`code/setback_check.py`](code/setback_check.py) is only an arithmetic sanity check of Lemma S's bookkeeping on random humans. It cannot test (B_D). The substantive run-level check is referee 4's.
 
 **What E6 does not show.** The class is tiny, so K is small and the posterior exact. The point is how cost depends on n and on the kind of human. E6 does not test whether real humans have bounded setback; only tests like those of Section 4 can.
@@ -411,8 +447,8 @@ The tables are [`results/slack_imitation_table.md`](results/slack_imitation_tabl
 | the human as equivalence oracle (thread D, Scheme C) | finds a mistake of the imitator whenever it fails often | ≤ K+1 requests; human effort (K+1)(c+1) | only for knowledge the human knows it has; c can be a whole run |
 | probes and knowledge base (thread B) | answers to questions about what it knows | reduces K, not n; *located* probes remove n (Theorem 5(b)) | composes with all the above |
 | **slack imitation (Theorem 2)** | **bounded setback on the imitator's notebooks: learner-relative, but local and measurable** | **min{n, (D+1)n/(σ+1)}·K failed runs** | **beats chained imitation where setbacks are mostly bounded** |
-| **+ ask-before-committing (Proposition 5)** | **bounded setback at confident steps only** | **0.69K/α asks in total; (D+1)K/(ρ log₂(1/α)) failed runs** | **my recommended scheme without a verifier** |
-| **+ a verifier (Propositions 4 and 5)** | **bounded setback, for the cost only** | **no failed output; ≤ K rejections; ≤ n·K task queries in the worst case** | **the version I am most sure of, where results are verifiable** |
+| **+ ask-before-committing (Proposition 5)** | **bounded setback at confident steps only** | **(ln 2)K/α asks in total; (D+1)K/(ρ log₂(1/α)) expected failed runs, online** | **my recommended scheme without a verifier; no deployment theorem for a frozen asker** |
+| **+ a verifier (Propositions 4 and 5)** | **bounded setback, for the cost only** | **no failed output; ≤ K rejections; ≤ n·K search queries in the worst case, plus (ln 2)K/α asks if asking** | **the version I am most sure of, where results are verifiable; add asks only if fooled commissions are expected to be common** |
 
 ## 8. Limits
 

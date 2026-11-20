@@ -356,10 +356,10 @@ def table(outdir):
                     cells.append("–")
                 elif "asked_mean" in e:
                     cells.append(f"{e['task_mean']:,.0f} ± {e['task_sem']:,.0f} "
-                                 f"({e['asked_mean']:,.0f} asked; {e['rejected_mean']:.1f} rejected)")
+                                 f"({e['asked_mean']:,.0f} asked; {e['rejected_mean']:.2f} rejected)")
                 else:
                     cells.append(f"{e['task_mean']:,.0f} ± {e['task_sem']:,.0f} "
-                                 f"({e['rejected_mean']:.1f} rejected; "
+                                 f"({e['rejected_mean']:.2f} rejected; "
                                  f"{e['queries_per_rejection']:.0f} per rejection)")
             lines.append(f"| {label} | {kind} | " + " | ".join(cells) + " |")
     text = "\n".join(lines) + "\n"

@@ -28,18 +28,18 @@
 
 | protocol | human | n = 16 | n = 64 | n = 256 |
 |---|---|---|---|---|
-| SI-V | noticing | 13 ± 1 (9.9 rejected; 1 per rejection) | 14 ± 1 (10.4 rejected; 1 per rejection) | 14 ± 1 (10.1 rejected; 1 per rejection) |
-| SI-V | misled-2 | 14 ± 1 (9.9 rejected; 1 per rejection) | 14 ± 1 (10.4 rejected; 1 per rejection) | 14 ± 1 (10.1 rejected; 1 per rejection) |
-| SI-V | misled-8 | 38 ± 3 (10.8 rejected; 4 per rejection) | 16 ± 1 (10.4 rejected; 1 per rejection) | 14 ± 1 (10.1 rejected; 1 per rejection) |
-| SI-V | fooled | 181 ± 13 (14.6 rejected; 12 per rejection) | 750 ± 76 (19.2 rejected; 39 per rejection) | 2,636 ± 238 (18.5 rejected; 142 per rejection) |
-| SI-V | silent | 1,610 ± 24 (100.0 rejected; 16 per rejection) | 6,450 ± 111 (100.0 rejected; 65 per rejection) | 26,091 ± 385 (100.0 rejected; 261 per rejection) |
-| SI-V-ABC, α = 0.3 | noticing | 223 ± 2 (221 asked; 1.1 rejected) | 285 ± 2 (284 asked; 0.5 rejected) | 319 ± 4 (318 asked; 0.1 rejected) |
-| SI-V-ABC, α = 0.3 | misled-2 | 223 ± 2 (221 asked; 1.1 rejected) | 285 ± 2 (284 asked; 0.5 rejected) | 319 ± 4 (318 asked; 0.1 rejected) |
-| SI-V-ABC, α = 0.3 | misled-8 | 236 ± 3 (221 asked; 1.1 rejected) | 285 ± 2 (284 asked; 0.5 rejected) | 319 ± 4 (318 asked; 0.1 rejected) |
-| SI-V-ABC, α = 0.3 | fooled | 236 ± 3 (221 asked; 1.1 rejected) | 318 ± 13 (284 asked; 0.5 rejected) | 360 ± 19 (318 asked; 0.1 rejected) |
-| SI-V-ABC, α = 0.3 | silent | 1,602 ± 22 (0 asked; 100.0 rejected) | 6,375 ± 79 (0 asked; 100.0 rejected) | 25,864 ± 441 (0 asked; 100.0 rejected) |
-| SI-V-ABC, α = 0.1 | noticing | 434 ± 4 (432 asked; 1.1 rejected) | 708 ± 6 (707 asked; 0.5 rejected) | 874 ± 11 (874 asked; 0.1 rejected) |
-| SI-V-ABC, α = 0.1 | misled-2 | 434 ± 4 (432 asked; 1.1 rejected) | 708 ± 6 (707 asked; 0.5 rejected) | 874 ± 11 (874 asked; 0.1 rejected) |
-| SI-V-ABC, α = 0.1 | misled-8 | 447 ± 4 (432 asked; 1.1 rejected) | 708 ± 6 (707 asked; 0.5 rejected) | 874 ± 11 (874 asked; 0.1 rejected) |
-| SI-V-ABC, α = 0.1 | fooled | 447 ± 4 (432 asked; 1.1 rejected) | 741 ± 15 (707 asked; 0.5 rejected) | 916 ± 21 (874 asked; 0.1 rejected) |
-| SI-V-ABC, α = 0.1 | silent | 447 ± 4 (432 asked; 1.1 rejected) | 6,375 ± 79 (0 asked; 100.0 rejected) | 25,864 ± 441 (0 asked; 100.0 rejected) |
+| SI-V | noticing | 13 ± 1 (9.95 rejected; 1 per rejection) | 14 ± 1 (10.45 rejected; 1 per rejection) | 14 ± 1 (10.12 rejected; 1 per rejection) |
+| SI-V | misled-2 | 14 ± 1 (9.95 rejected; 1 per rejection) | 14 ± 1 (10.45 rejected; 1 per rejection) | 14 ± 1 (10.12 rejected; 1 per rejection) |
+| SI-V | misled-8 | 38 ± 3 (10.75 rejected; 4 per rejection) | 16 ± 1 (10.45 rejected; 1 per rejection) | 14 ± 1 (10.12 rejected; 1 per rejection) |
+| SI-V | fooled | 181 ± 13 (14.60 rejected; 12 per rejection) | 750 ± 76 (19.20 rejected; 39 per rejection) | 2,636 ± 238 (18.50 rejected; 142 per rejection) |
+| SI-V | silent | 1,610 ± 24 (100.00 rejected; 16 per rejection) | 6,450 ± 111 (100.00 rejected; 65 per rejection) | 26,091 ± 385 (100.00 rejected; 261 per rejection) |
+| SI-V-ABC, α = 0.3 | noticing | 223 ± 2 (221 asked; 1.10 rejected) | 285 ± 2 (284 asked; 0.47 rejected) | 319 ± 4 (318 asked; 0.15 rejected) |
+| SI-V-ABC, α = 0.3 | misled-2 | 223 ± 2 (221 asked; 1.10 rejected) | 285 ± 2 (284 asked; 0.47 rejected) | 319 ± 4 (318 asked; 0.15 rejected) |
+| SI-V-ABC, α = 0.3 | misled-8 | 236 ± 3 (221 asked; 1.10 rejected) | 285 ± 2 (284 asked; 0.47 rejected) | 319 ± 4 (318 asked; 0.15 rejected) |
+| SI-V-ABC, α = 0.3 | fooled | 236 ± 3 (221 asked; 1.10 rejected) | 318 ± 13 (284 asked; 0.47 rejected) | 360 ± 19 (318 asked; 0.15 rejected) |
+| SI-V-ABC, α = 0.3 | silent | 1,602 ± 22 (0 asked; 100.00 rejected) | 6,375 ± 79 (0 asked; 100.00 rejected) | 25,864 ± 441 (0 asked; 100.00 rejected) |
+| SI-V-ABC, α = 0.1 | noticing | 434 ± 4 (432 asked; 1.10 rejected) | 708 ± 6 (707 asked; 0.47 rejected) | 874 ± 11 (874 asked; 0.15 rejected) |
+| SI-V-ABC, α = 0.1 | misled-2 | 434 ± 4 (432 asked; 1.10 rejected) | 708 ± 6 (707 asked; 0.47 rejected) | 874 ± 11 (874 asked; 0.15 rejected) |
+| SI-V-ABC, α = 0.1 | misled-8 | 447 ± 4 (432 asked; 1.10 rejected) | 708 ± 6 (707 asked; 0.47 rejected) | 874 ± 11 (874 asked; 0.15 rejected) |
+| SI-V-ABC, α = 0.1 | fooled | 447 ± 4 (432 asked; 1.10 rejected) | 741 ± 15 (707 asked; 0.47 rejected) | 916 ± 21 (874 asked; 0.15 rejected) |
+| SI-V-ABC, α = 0.1 | silent | 447 ± 4 (432 asked; 1.10 rejected) | 6,375 ± 79 (0 asked; 100.00 rejected) | 25,864 ± 441 (0 asked; 100.00 rejected) |

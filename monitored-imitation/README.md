@@ -10,6 +10,12 @@ A research note on a question from Kaarel Hänni about **principled human imitat
   * overclaims.
 
   The red team found a misreading of the decoder's behaviour, which lowered my confidence numbers, and proposed ask-before-committing, now part of the scheme. All have been addressed.
+* **Referee 5, on the fourth note's version 2** ([`verification/referee-report-slack-imitation-v2.md`](verification/referee-report-slack-imitation-v2.md)), found Proposition 5 (ask-before-committing) correct, checking it on 116,612 runs, and the new E6 cells reproduced exactly. It found:
+  * two errors: "O(K)" should be O(K log K) on i.i.d. problems, and a frozen imitator that keeps asking is not within the ask budget;
+  * overclaims about E6's fooled humans under asking, whose flattening is partly an artifact of the class;
+  * the missing trade-off for asking when a verifier is available.
+
+  All have been corrected, and its online test of ask-before-committing without a verifier is quoted.
 * **The first note:** [`note.md`](note.md): definitions, theorems, proofs and two experiments. Its protocol needs the human to *check* states.
 * **The third note:** [`robust-runs.md`](robust-runs.md): which properties of the human's runs chained imitation keeps.
   * Its runs are the human's process with the wrong steps replaced, so they keep every property that survives the replacements.
@@ -48,7 +54,7 @@ A research note on a question from Kaarel Hänni about **principled human imitat
 2. **The theorems.** The assumption is *bounded setback D* at the imitator's confident mistakes: an entry the human would not have written costs it at most D extra steps, and part of its own next step costs it nothing. Then:
    * the expected number of failed runs is at most min{n, (D+1)n/(σ+1)}·K ≤ (D+1)K/ρ, over any sequence of problems;
    * asking costs at most about 0.69K/α queries over the whole lifetime;
-   * on i.i.d. problems, O((D+1)·K·log(K/δ)/(ρε)) task queries suffice;
+   * on i.i.d. problems, O((D+1)·K·log(K/δ)/(ρε)) task queries suffice: O(K log K) for fixed ε, δ, D and ρ;
    * with a verifier, no failed run is ever output, and at most K runs are rejected.
 3. **Why.** With slack, a run fails only if it has at least (σ+1)/(D+1) wrong steps, so a uniform query finds one with probability at least ρ/(D+1). Asking removes the steps the imitator is unsure of.
 4. **The case for humans, after a red team (thread E).** The axis that matters is confidence:
@@ -63,7 +69,7 @@ A research note on a question from Kaarel Hänni about **principled human imitat
    * fooled humans: 1,600 → 4,300;
    * silent humans: slack doubles the cost.
 
-   With a verifier, bounded-setback humans need about 14 task queries for all 100 problems. Asking (α = 0.3) makes fooled humans flat, at 240–360.
+   With a verifier, bounded-setback humans need about 14 task queries for all 100 problems. Asking (α = 0.3) makes fooled humans grow much more slowly (240 → 360, against 180 → 2,600), partly because of how the class is built. Without a verifier, asking cut failed runs 3–18× in referee 5's online test.
 
 ## Answers in brief: the first note
 
@@ -152,6 +158,8 @@ A research note on a question from Kaarel Hänni about **principled human imitat
 | `results/setback_check.out` | Output of the arithmetic check. |
 | `verification/referee-report-slack-imitation.md`, `verification/response-slack-imitation.md` | Referee 4's report on the fourth note, and the response to it and to the red team. |
 | `verification/referee4_*.py`, `verification/referee4_*.out`, `verification/referee4_rerun/` | Referee 4's re-run of E6, its run-level setback check, and its same-humans comparison. |
+| `verification/referee-report-slack-imitation-v2.md` | Referee 5's report on the fourth note's version 2. |
+| `verification/referee5_*.py`, `verification/referee5_*.out` | Referee 5's re-run of the new E6 cells, its run-level check of Proposition 5, the mechanism behind the fooled humans' costs under asking, and its online test of ask-before-committing without a verifier. |
 | `results/hidden_insights_summary.json`, `results/hidden_insights_curves.json`, `results/hidden_insights.png` | E1 outputs. |
 | `results/property_rules.out`, `results/property_rules_summary.json`, `results/property_rules_curves.json`, `results/property_rules.png`, `results/property_rules.time` | E2 outputs. |
 | `results/tables.md` | The tables quoted in the first note. |

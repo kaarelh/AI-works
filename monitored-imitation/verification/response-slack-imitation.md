@@ -118,3 +118,52 @@
 * **The classification** (§5). Adopted, as B1.
 * **Probabilities** (§6). Adopted. My version 2 numbers equal thread E's; the table in Section 4 shows all three columns.
 * **Premises outside (B_D)** (§3.1–3.4). Section 8 now mentions cold-start chains, heavy-tailed research times, drift, familiarity with the imitator, fatigue and many humans.
+
+## Referee 5 (version 2)
+
+The report is [`referee-report-slack-imitation-v2.md`](referee-report-slack-imitation-v2.md).
+* *What held.* Proposition 5 is correct: every step of its proof checks on 116,612 instrumented runs of E6, and on random classes with a check. The other numbered statements are correct after their edits, and the new E6 cells reproduce exactly.
+* *Changes in response,* item by item:
+
+### A. Errors
+
+* **A1.** Accepted. Answer 2 now says O(K log K) task queries on i.i.d. problems for fixed ε, δ, D and ρ, O(K) failed runs online, and truly O(K) task queries with a verifier. (My earlier fix to referee 4's B8 was itself wrong.)
+* **A2.** Accepted.
+  * The deployment note now says a frozen imitator must abstain, since a frozen asker is outside the budget, and that no PAC theorem is proved for an asker that learns.
+  * Answer 1 and the Section 7 row say what is proved for which use.
+
+### B. Overclaims
+
+* **B1.** Accepted.
+  * "Flat" and "removes the growth" are replaced by "grows much more slowly", with the comparison against SI-V.
+  * The reading explains the class artifact (every confident wrong commitment at t_p = n₀ − 1), citing `referee5_abc_mechanism.out`, and notes that at n₀ = 8 asking costs fooled humans more.
+* **B2.** Accepted. The asks are added to the verifier version's cost in Answer 2 and in the Section 7 row.
+* **B3.** Accepted. Answer 1 and the Section 7 row state the trade-off: with a verifier, add asks only if fooled commissions are expected to be common.
+* **B4.** Accepted. Remark 1 states the gain condition D + 1 < (1−ρ)(σ+1).
+* **B5.** Accepted: "argued".
+* **B6.** Accepted. "What does not move" separates the statements checked by referee 4 and thread E from Proposition 5, which referee 5 checked.
+* **B7.** Accepted. The Cost note and the E6 reading say that in E6 the asks are 2–9 per problem, because K is almost all problem-specific.
+
+### C. Experiment
+
+* **C1, C3, C4.** Noted.
+* **C2.**
+  * The search-on-committed-steps option is noted after Proposition 5.
+  * The α = 0.1 tie is stated in the reading.
+  * The table now prints rejections with two decimals.
+* **C5.** Accepted, as B1.
+* **C6.** Accepted. Referee 5's online test of SI-ABC without a verifier is quoted in Section 6, with its reason for not using oracle stopping, and is mentioned in Answer 8.
+
+### D. Minor
+
+* **D1.** Accepted. M_t and the decoder in use are defined in Proposition 5.
+* **D2.** Accepted. Proposition 5 takes 0 < α < 1, with a note that the hit bound is K/max{1, log₂(1/α)}.
+* **D3.** Accepted: "≤ (ln 2)·K/α ≈ 0.69K/α", and "(ln 2)·K/α" where a bound is meant.
+* **D4.** Accepted.
+* **D5.** Accepted.
+* **D6.** Accepted: "by the argument of Theorem 1".
+* **D7.** Accepted. Remark 3 now separates a wrong design written by the imitator (one commission, charged at the 1/n rate) from one written by the human's own chain. It also says that runs failing the check get the flip query.
+* **D8.** Accepted. `robust-runs.md` is linked in Answer 9.
+* **D9.** Accepted. Answer 8's slack line says "oracle stopping".
+* **D10.** Accepted (as C2).
+* **D11.** Accepted. The ≥ 5× row says which columns assume ask-before-committing.
