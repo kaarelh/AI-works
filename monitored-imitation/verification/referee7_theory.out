@@ -1,0 +1,213 @@
+
+====================================================================================================
+Part 1. Lemma 3 with weights; Theorem 5(d) with the default weights (1/2, 1/4, 1/4)
+====================================================================================================
+
+(a) The scan bound '2 n0, surely'. One committed mistake at scan position j_S = n0 (the worst
+    case allowed by Lemma 1); H is a list of non-mistakes (it uses its quarter and never hits).
+    n0   sched   max queries   mean queries   Pr[queries > 2 n0]   (2 n0)
+      8  SUSH           15          13.34             0.0000       (16)
+      8  UHSS           16          13.85             0.0000       (16)
+      8  rand           36          13.96             0.2914       (16)
+      9  SUSH           17          15.09             0.0000       (18)
+      9  UHSS           19          16.37             0.7539       (18)
+      9  rand           44          15.70             0.2958       (18)
+     32  SUSH           63          56.00             0.0000       (64)
+     32  UHSS           64          56.46             0.0000       (64)
+     32  rand          107          56.37             0.3367       (64)
+    128  SUSH          255         225.45             0.0000       (256)
+    128  UHSS          256         225.96             0.0000       (256)
+    128  rand          323         226.40             0.3651       (256)
+    -> S,U,S,H meets 2 n0 surely; the random schedule meets it only in expectation;
+       the deterministic order U,H,S,S (same frequencies) gives 2 n0 + 1 when n0 is odd.
+
+(b) The uniform bound 4 n/|M| (= 4 Lambda when |M| = (sigma+1)/(D+1)): mistakes placed at the end of
+    the run so that the scan cannot help; H empty. Mean queries against 4 n/|M|.
+    n     |M|   sched   mean queries   4n/|M|
+     16     1  SUSH          18.94      64.00
+     16     1  rand          18.63      64.00
+     16     4  SUSH           9.28      16.00
+     16     4  rand           9.42      16.00
+     64     1  SUSH          75.29     256.00
+     64     1  rand          75.56     256.00
+     64     4  SUSH          40.09      64.00
+     64     4  rand          40.54      64.00
+     64    16  SUSH          10.91      16.00
+     64    16  rand          11.93      16.00
+    256     1  SUSH         302.49    1024.00
+    256     1  rand         302.98    1024.00
+    256     4  SUSH         164.69     256.00
+    256     4  rand         165.68     256.00
+    256    64  SUSH          11.01      16.00
+    256    64  rand          12.00      16.00
+    (With H empty its weight goes to S and U, so U's share rises from 1/4 to 1/3 and the mean is below 4n/|M|.)
+    With H a list of non-mistakes, U keeps exactly 1/4:
+     16     1  SUSH          24.35      64.00   (scan alone would need 32)
+     16     1  rand          24.78      64.00   (scan alone would need 32)
+     16     4  SUSH          11.68      16.00   (scan alone would need 26)
+     16     4  rand          12.55      16.00   (scan alone would need 26)
+     64     1  SUSH          99.91     256.00   (scan alone would need 128)
+     64     1  rand         100.84     256.00   (scan alone would need 128)
+     64     4  SUSH          52.81      64.00   (scan alone would need 122)
+     64     4  rand          53.92      64.00   (scan alone would need 122)
+     64    16  SUSH          13.94      16.00   (scan alone would need 98)
+     64    16  rand          15.75      16.00   (scan alone would need 98)
+    256     1  SUSH         401.03    1024.00   (scan alone would need 512)
+    256     1  rand         401.03    1024.00   (scan alone would need 512)
+    256     4  SUSH         218.90     256.00   (scan alone would need 506)
+    256     4  rand         219.90     256.00   (scan alone would need 506)
+    256    64  SUSH          14.01      16.00   (scan alone would need 386)
+    256    64  rand          15.87      16.00   (scan alone would need 386)
+
+(c) The list bounds 4 j_H: ripe (j_H = 1), hedge with d decisions (j_H = 1 + d), i-th post-mortem
+    entry (j_H = 1 + d + i). Single mistake late in the run, so S and U rarely help.
+    j_H   sched   max queries   mean   Pr[queries > 4 j_H]   (4 j_H)
+     1  SUSH            4     3.97       0.0000          (4)
+     1  rand           41     3.92       0.3084          (4)
+     4  SUSH           16    15.55       0.0000          (16)
+     4  rand           60    15.45       0.3826          (16)
+     9  SUSH           36    33.59       0.0000          (36)
+     9  rand           91    33.30       0.3744          (36)
+
+(d) Lemma 3's proof: 'stream i is served at least once in every ceil(1/w_i) queries, up to rounding,
+    so a list stream reaches its first mistake within about j_i/w_i queries.' For weights that are not
+    reciprocals of integers, 'once in every ceil(1/w_i)' gives j*ceil(1/w_i), not j/w_i + O(1).
+    A proportional (largest-deficit) schedule for w = (0.4, 0.3, 0.3):
+    stream S: w = 0.4, max over j of (position of j-th service - j/w) = 2.50  (<= 1/w = 2.50); largest gap 3 vs ceil(1/w) = 3
+    stream U: w = 0.3, max over j of (position of j-th service - j/w) = 2.00  (<= 1/w = 3.33); largest gap 4 vs ceil(1/w) = 4
+    stream H: w = 0.3, max over j of (position of j-th service - j/w) = 3.00  (<= 1/w = 3.33); largest gap 4 vs ceil(1/w) = 4
+    -> here the gaps stay within ceil(1/w_i), but that premise only yields j*ceil(1/w_i) (3j for w = 0.4,
+       not 2.5j), so the proof's inference does not follow. The conclusion is still true: a proportional
+       schedule has bounded discrepancy, and the j-th service comes by position (j+1)/w_i (excess <= 1/w_i).
+       For the default weights (1/2, 1/4, 1/4) the schedule S,U,S,H has gaps exactly 2, 4, 4 and no rounding.
+
+====================================================================================================
+Part 2(a). Theorem 5(b) with final-answer asks only: a two-step product class
+====================================================================================================
+Problems p = 1..m. Step 0 writes a choice in {a, b}; step 1 writes the claimed solution 'claim'
+(the final-answer slot). The human writes a; hypotheses write a or b at step 0 independently per
+problem with prior Pr[a] = 0.4; all write 'claim' at step 1. V accepts iff step 0 is a (S_V is
+preserved by appending; (A2), (A3') hold). Exact Bayes by enumeration over the 2^m hypotheses.
+  m =  1, final-answer asks only      : K =   1.32, rejections =  1, asks =  0, K/b_alpha =  0.40, K/log2(1/(1-alpha)) =   8.70, min hit value = 1.32 bits vs b_alpha = 3.32   <-- VIOLATES 5(b)
+  m =  1, asks at every step (SI-ABC) : K =   1.32, rejections =  0, asks =  1, K/b_alpha =  0.40, K/log2(1/(1-alpha)) =   8.70, min hit value = inf bits vs b_alpha = 3.32
+  m =  4, final-answer asks only      : K =   5.29, rejections =  4, asks =  0, K/b_alpha =  1.59, K/log2(1/(1-alpha)) =  34.79, min hit value = 1.32 bits vs b_alpha = 3.32   <-- VIOLATES 5(b)
+  m =  4, asks at every step (SI-ABC) : K =   5.29, rejections =  0, asks =  4, K/b_alpha =  1.59, K/log2(1/(1-alpha)) =  34.79, min hit value = inf bits vs b_alpha = 3.32
+  m = 10, final-answer asks only      : K =  13.22, rejections = 10, asks =  0, K/b_alpha =  3.98, K/log2(1/(1-alpha)) =  86.97, min hit value = 1.32 bits vs b_alpha = 3.32   <-- VIOLATES 5(b)
+  m = 10, asks at every step (SI-ABC) : K =  13.22, rejections =  0, asks = 10, K/b_alpha =  3.98, K/log2(1/(1-alpha)) =  86.97, min hit value = inf bits vs b_alpha = 3.32
+  -> With asks restricted to the final-answer slot, a hit at a committed step elsewhere is worth only
+     log2(1/0.4) = 1.32 bits, not log2(1/alpha) = 3.32. The count K/b_alpha of Theorem 5(b) and the
+     K/b_alpha factors of 5(e) and 5(f) are false; K (one bit per hit, Lemma 1 of note.md) is right.
+
+====================================================================================================
+Part 2(b). Exact-Bayes toy VSI (referee 6's class, SUBSEQ humans, D = 0), default weights
+====================================================================================================
+n0 = 4, sigma = 3, 4 problems, 30 rounds per path, H = adversarial list, 100 paths per row.
+Asks either at every step (SI-ABC) or only at the claim-writing slot (section 2.2's option).
+Columns: worst over paths of (rejections + audit hits)/(K/b_alpha); share of hits worth < b_alpha;
+smallest hit value / b_alpha; worst search length vs 2 n0; searches over 2 n0; rejected runs with
+no committed mistake below n0 (Lemma 1).
+  asks        alpha  sched  max (rej+audit)/(K/b)  low-value hits  min bits/b  max search  >2n0  L1-fail
+  every step   0.50  SUSH                   0.34      0/197          1.00          7      0      0
+  every step   0.50  rand                   0.34      0/200          1.00         11      2      0
+  every step   0.30  SUSH                   0.35      0/70           1.46          5      0      0
+  every step   0.30  rand                   0.35      0/72           1.46          6      0      0
+  every step   0.15  SUSH                   0.00      0/0             inf          0      0      0
+  every step   0.15  rand                   0.00      0/0             inf          0      0      0
+  final slot   0.50  SUSH                   0.34      0/203          1.00          7      0      0
+  final slot   0.50  rand                   0.34      0/208          1.00         11      2      0
+  final slot   0.30  SUSH                   0.58     33/92           0.58          7      0      0
+  final slot   0.30  rand                   0.58     35/94           0.58          6      0      0
+  final slot   0.15  SUSH                   0.74     75/92           0.37          3      0      0
+  final slot   0.15  rand                   0.74     75/91           0.37          4      0      0
+  total rejected runs over all rows: 919 (Lemma 1 checked on each)
+  -> with asks at every step every hit is worth >= b_alpha. With asks at the claim slot only, 36-82%
+     of hits are worth less than b_alpha (down to 0.37 b_alpha, i.e. about 1 bit), so the per-hit step
+     of Theorem 5(b)'s proof fails; in this small class the total stays below K/b_alpha because K is
+     loose here (Part 2(a) shows the total itself exceeding K/b_alpha).
+     S,U,S,H never exceeds 2 n0 = 8 queries; the random schedule does (11).
+
+====================================================================================================
+Part 3. Theorem 5(b)-(c) use (M1), (M2) for the 'nothing bizarre' check; without (M2) VSI loops
+====================================================================================================
+Class {P} (K = 0). P writes x0 -> 'u' -> 'v' -> 'z' -> ... ; V accepts (S_V holds). The bizarre check
+flags any notebook containing 'z', which P itself writes at step 2: (M2) fails.
+  after 1000 reruns: 1000 task queries, no hit, no output, no abstention -> does not terminate.
+  Fix: assume (M1), (M2) (as slack-imitation.md does for its check), or, as note.md Proposition 9
+  does, output the verified artifact marked 'flagged where the human would be' when the flip query
+  shows no mistake.
+
+====================================================================================================
+Part 4. Theorem 5(f) needs S* to be reached by the human's own chain (tau*), not only S_V
+====================================================================================================
+Class {P} (K = 0). V accepts P's chain (S_V holds, (A2), (A3') hold) but the chain fails S*:
+(A4') fails on the human's own notebook. Every run is P's chain, has no mistake, and is output.
+  T =    10: failed outputs =    10;  claimed bound K/(b_alpha beta gamma) = 0
+  T =   100: failed outputs =   100;  claimed bound K/(b_alpha beta gamma) = 0
+  T =  1000: failed outputs =  1000;  claimed bound K/(b_alpha beta gamma) = 0
+  -> Lemma S must be applied to tau* (remaining time to S*): (f) needs S* preserved by appending,
+     tau*(x0) <= n0, and (B_D) measured in tau*. None of these is assumed.
+
+====================================================================================================
+Part 5. Section 6: '(A2) for every problem ... with n0 at the 75th percentile, 6-11% are not finished'
+====================================================================================================
+Thread S Part E computes phi = Pr[tau > n] with n = 2 n0. With n0 at the q-quantile, (A2)
+(tau <= n0) fails on 1 - q of problems; only those with tau > n make VSI abstain.
+   q     law                Pr[tau > n0] (A2 fails)   Pr[n0 < tau <= 2n0]   Pr[tau > 2n0] (abstain)
+  0.75   lognormal s=0.75        0.250                    0.195                0.055
+  0.75   lognormal s=1.00        0.250                    0.164                0.086
+  0.75   lognormal s=1.25        0.250                    0.140                0.110
+  0.75   Pareto a=1.2             0.250                    0.141                0.109
+  0.75   Pareto a=1.5             0.250                    0.162                0.088
+  0.75   Pareto a=2.0             0.250                    0.188                0.062
+  -> the 6-11% are abstentions; (A2) itself fails on 25%. On the 14-19% with n0 < tau <= 2n0, Lemma 1
+     fails (the first mistake may lie anywhere before n), so each of their rejections may cost up to
+     2n = 4 n0 under S,U,S,H, not 2 n0, and Lemma S guarantees fewer mistakes.
+
+====================================================================================================
+Part 6. Section 7 'worst-case effort': a factor 2 margin, before audits and abstentions
+====================================================================================================
+Budget: a fifth of chained imitation's guarantee at eps = 5%, 4 n0 K. VSI: 2 iota n0 K (search, default
+weights) + beta T (audits; beta = 1 recommended with human verifiers) + c_V (T + K) (verifications,
+c_V task steps each) + phi T 2n (abstentions, n = 2 iota n0). Largest T/K meeting the budget, n0 = 30:
+  iota  c_V  beta |  phi=0    phi=0.05  phi=0.10
+   1.0  0.0   0.0 |      inf      10.0       5.0
+   1.0  0.0   1.0 |     60.0       8.6       4.6
+   1.0  0.1   0.0 |    599.0       9.8       5.0
+   1.0  0.1   1.0 |     54.5       8.4       4.6
+   1.0  0.5   0.0 |    119.0       9.2       4.8
+   1.0  0.5   1.0 |     39.7       7.9       4.4
+   1.3  0.0   0.0 |      inf       5.4       2.7
+   1.3  0.0   1.0 |     42.0       4.8       2.5
+   1.3  0.1   0.0 |    419.0       5.3       2.7
+   1.3  0.1   1.0 |     38.1       4.7       2.5
+   1.3  0.5   0.0 |     83.0       5.0       2.6
+   1.3  0.5   1.0 |     27.7       4.5       2.4
+   1.6  0.0   0.0 |      inf       2.5       1.2
+   1.6  0.0   1.0 |     24.0       2.3       1.2
+   1.6  0.1   0.0 |    239.0       2.5       1.2
+   1.6  0.1   1.0 |     21.7       2.2       1.2
+   1.6  0.5   0.0 |     47.0       2.3       1.2
+   1.6  0.5   1.0 |     15.7       2.1       1.1
+  -> under the conditioning (phi = 0) with a machine verifier (c_V = 0, beta = 0) there is no limit;
+     with a human verifier and beta = 1 the bar holds only for T up to about 30-55 K; with heavy tails
+     (phi = 5-10%, outside the conditioning) only up to about 2-8 K. The human-does-it baseline needs T > 2K.
+
+====================================================================================================
+Part 7. Proposition 7: the 'other' runs are hit at rate c_r/(3n), c_r = min{(sigma+1)/(D+1), r}
+====================================================================================================
+  n     D   r   c = (sigma+1)/(D+1)   c_r   per-bit charge 3n/c_r   SI-ABC's charge n/c   chained n0
+    32   0   2           17.0           2.0             48.0              1.88            16
+    32   0   3           17.0           3.0             32.0              1.88            16
+    32   2   2            5.7           2.0             48.0              5.65            16
+    32   2   3            5.7           3.0             32.0              5.65            16
+    64   0   2           33.0           2.0             96.0              1.94            32
+    64   0   3           33.0           3.0             64.0              1.94            32
+    64   2   2           11.0           2.0             96.0              5.82            32
+    64   2   3           11.0           3.0             64.0              5.82            32
+   128   0   2           65.0           2.0            192.0              1.97            64
+   128   0   3           65.0           3.0            128.0              1.97            64
+   128   2   2           21.7           2.0            192.0              5.91            64
+   128   2   3           21.7           3.0            128.0              5.91            64
+  -> with r = 2-3 the guarantee for 'other' failures is about n per bit, chained imitation's order,
+     not (D+1)/rho. Thread F's F1 shows it: W-trusting failures with r = 3 grow as 77 -> 161 -> 315.
+     The section 7 table's Theorem-H1 guarantee for the Proposition 7 row does not apply with c_r = r.

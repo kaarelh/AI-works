@@ -117,3 +117,66 @@ Item by item:
   * verification by use, in §5;
   * the final "nothing bizarre" check, in the core (§2.1).
 * **Probabilities** (§7). Adopted: the §7 table shows the draft, thread S and the final figures, which are thread S's.
+
+## Referee 7 (the revised version)
+
+The report is [`referee-report-verified-slack-v2.md`](referee-report-verified-slack-v2.md).
+* *What held.* The headline holds: correctness of outputs rests on (A4′) alone, and the 2n₀K worst case stands once the schedule is fixed.
+* *What did not.* The revision introduced four errors in Theorem 5, and left one gap in Proposition 7. All are fixed, item by item:
+
+### A. Errors
+
+* **A1 (b_α with final-answer asks).** Accepted. Theorem 5 now uses b = 1 when asks are limited to the final-answer slot or absent, and b = b_α only with asks at every unconfident step. The proof of (b) says why.
+* **A2 ((M1), (M2) for the check).** Accepted. (M1), (M2) and (M-prefix) are assumed when the check is used, and Theorem 5(c) says termination needs (M2).
+* **A3 (Theorem 5(f) and S\*).** Accepted. (f) now assumes S\* preserved by appending, τ\*(x₀) ≤ n₀, and (B_D) in τ\*. Without the check it also assumes (B_D) for bizarre entries.
+* **A4 (the schedule).** Accepted.
+  * §2.3 fixes the order S, U, S, H; an empty or exhausted list's turn goes to S.
+  * Lemma 3 is stated for periodic schedules, with exact constants for the default.
+  * A random schedule is said to give the bounds in expectation only.
+* **A5 (Proposition 7, bizarre entries).** Accepted.
+
+### B. Overclaims
+
+* **B1 (contamination through verification and checks).** Accepted. §2.2 asks that every reader of a run before it is searched or audited be someone other than the imitated human: a verifier, a referee, the checker. Otherwise the cost theory assumes the answers are unchanged. §10 item 4 and §11 are extended.
+* **B2.** Accepted. §2.1 marks the check as optional, a human judgment on which correctness does not rest. §6 is reworded.
+* **B3 (heavy tails).** Accepted. (A2) fails on a quarter of problems, of which 6–11% of all problems go unfinished even within 2n₀. Searches on the rest may cost up to 2n, and a higher quantile for n₀ is suggested. Theorem 5(d) and (e) include the 2n cost.
+* **B4 (the effort margin).** Accepted. §7 states that the factor 2 is for search queries with V-machine and β = 0. With a human verifier, the bar holds only for T up to about 40–55K. The formalization cost is a condition of the 70% row.
+* **B5 (Proposition 7's guarantee).** Accepted. The table now gives about max{d_max, n/c_r}·K/b_α, which is about n per bit with a small retry r.
+* **B6 (which claim).** Accepted. V accepts if some claimed solution passes, and the first passing one is output; §5 notes multiple claims.
+* **B7.** Accepted. Theorem 5(a) says that for V-human and a human referee, (A4′) is itself an assumption about a human judgment.
+* **B8 (f_eff).** Accepted. Answer 5 uses p·w·f_eff with f_eff ≈ 1 − (1−f)^r.
+* **B9 (which τ).** Accepted. τ_V and τ\* are defined in (A2). Proposition 7 uses τ\* and its own form of (A2).
+* **B10 (V-cone's (A4′)).** Accepted. §6 lists L's soundness, the statement being the goal, and correct records.
+* **B11.** Accepted: "does not reach a verifiable solution within n steps".
+
+### C. Numbers
+
+* **C1.** Accepted. §8 gives both the equal-weight and the default-schedule EQ figures, from referee 7's re-run, and states the price of the sure 2n₀ (up to 2.3× for bounded-setback humans).
+* **C2.** Accepted: 204–227.
+* **C3.** Accepted: "(ρ = ½, equal weights)".
+* **C4.** Accepted: f_aimed = 0.9.
+* **C5.** Accepted: "at most log₂ k".
+* **C6.** As B3.
+* **C7.** Accepted: 260–300 → 1,200.
+* **C8.** Accepted. §7 notes that the V-human figure is for an imitated verifier, and that verifying every output should be at least as sure.
+
+### D. Minor
+
+* **D1.** Accepted: Lemma 3's proof uses bounded discrepancy.
+* **D2.** Accepted: Lemma 1 assumes (A1) and (A3′).
+* **D3.** Accepted: flagged steps are queried in turn, and excused ones cost one query each.
+* **D4.** Accepted.
+* **D5.** Accepted: the check is cited from slack-imitation.md §2.
+* **D6.** Accepted (as A3).
+* **D7.** Accepted.
+* **D8.** Accepted: the final-answer slot is defined.
+* **D9.** Accepted: Answer 6 says n₀, or the routine work.
+* **D10.** Accepted: 2n₀.
+* **D11.** Accepted: the tree bounds are in expectation, need bounded setback within a call, and b(D+1) ≥ 2ρ.
+* **D12.** Accepted.
+* **D13.** Accepted: f₁f₂ + Cov.
+* **D14.** Accepted: n distinct steps with caching.
+* **D15.** Accepted: the exact conditioning formula.
+* **D16.** Accepted (Theorem 5(c)).
+* **D17.** Accepted: located probes and the confession state are listed.
+* **D18.** Accepted: §11 mentions heavy tails.
