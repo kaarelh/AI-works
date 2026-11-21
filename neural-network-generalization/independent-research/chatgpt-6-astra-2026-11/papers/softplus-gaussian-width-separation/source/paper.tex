@@ -1,0 +1,582 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{lemma}[theorem]{Lemma}
+\newcommand{\E}{\mathbb E}\newcommand{\Pp}{\mathbb P}
+\newcommand{\R}{\mathbb R}\newcommand{\one}{\mathbf1}
+\title{Exponential online mistakes from widening Gaussian softplus and tanh learners}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author.}}
+\date{21 November 2026; working proof draft}
+\hypersetup{hidelinks,pdftitle={Exponential online mistakes from widening Gaussian softplus and tanh learners},pdfauthor={ChatGPT-6 Astra}}
+\emergencystretch=3em
+\begin{document}\maketitle
+\begin{abstract}
+We give a finite-parameter exponential mistake separation between narrow
+and wide Bayesian learners with standard softplus or tanh activation and
+a common isotropic Gaussian parameter scale. For softplus in odd dimension
+and tanh in even dimension, the
+parity target has a width-$d+1$ rational-coefficient teacher with polynomial
+weights and margin greater than $0.9$. At prior variance of order $d^{-3}$,
+a sufficiently wide shallow learner makes $2^{d-1}$ confident online
+mistakes, conditioning only on positive margins at previously observed
+inputs. A sufficient finite width is $\exp(O(d\log(d+1)))$ at any fixed
+confidence level. In contrast, width $d+1$ has a polynomial lifetime
+mistake bound under the same prior scale; among widths at least $d+1$,
+exponential width is necessary for this exponential failure. The construction uses one initial
+label and a fixed, mean-selected input order. The key is dominance of full
+parity in the inverse Gaussian-limit spectrum, proved by positive Fourier
+integrals and elementary moment bounds. Rare conditioning events are
+included in the finite-width comparison. Central-limit normalization and
+exponential learner width are material; this is not a polynomial-width
+ReLU lower bound or a fixed-width strong-prior theorem. The proofs are
+conventional and have not been independently reviewed.
+\end{abstract}
+
+\section{Statement and model}
+We first prove the softplus statement in odd dimension; the bounded tanh
+companion in even dimension is proved in Section~\ref{sec:tanh}.
+Let $d\ge3$ be odd, $q=d+1$, $X=\{-1,1\}^d$, $M=2^d$, and
+$\chi(x)=\prod_i x_i$. Write $\phi(t)=\log(1+e^t)$ for standard
+softplus. At neural width $N$ consider
+\[
+ F_{N,\sigma}(x)=N^{-1/2}\sum_{j=1}^N a_j\phi(b_j+w_j\cdot x),
+ \qquad a_j,b_j,w_{j,i}\ \text{independent }N(0,\sigma^2).       \tag{1}
+\]
+For a history $H$ condition the full parameter prior only on
+\[
+                  \chi(x)F_{N,\sigma}(x)>a\quad(x\in H),
+                         \qquad a=1/2.                       \tag{2}
+\]
+In particular no constraint is imposed on unseen inputs, and incoming
+features are not fixed during conditioning.
+
+\begin{theorem}[Finite wide-versus-narrow mistake separation]
+\label{thm:main}
+There is an absolute constant $C$ such that the following holds for
+all odd $d\ge3$ and $0<\eta<1/2$. Set
+\[
+ \sigma^2=\frac{a^2}{16q^3[1+\log(1/\eta)]},\qquad
+ N\ge\left\lceil\exp\left\{Cq\log\frac q\eta\right\}\right\rceil.
+                                                               \tag{3}
+\]
+There is a deterministic permutation of $X$, depending on $d,\sigma$
+but not on $N$ or the learner's prediction randomness, with one initial
+labeled input, such that all final $2^{d-1}$ posterior-label majorities
+are wrong. Independent fresh posterior draws give wrong signs at every
+one of those rounds with probability at least $1-\eta$.
+
+The target has a shallow softplus teacher of width $d+1$, rational
+coefficients of magnitude $O(d^2)$, $O(\log(d+1))$ bits per coefficient,
+and margin greater than $0.9$. A learner of width $d+1$ under (1)--(2),
+with the same $\sigma$, has lifetime expected posterior-sampling mistakes
+and lifetime posterior-label majority mistakes bounded by
+\[
+                        Cq^8[1+\log(1/\eta)]                 \tag{4}
+\]
+on every input order labeled by parity.
+\end{theorem}
+At fixed confidence, the sufficient wide width is $\exp(O(d\log d))$,
+the variance is $\Theta(d^{-3})$, and the narrow bound is $O(d^8)$.
+The exponent eight is deliberately crude. The target itself has an
+$O(d)$-gate Boolean circuit. Neither its rational description nor the
+chosen prior scale has exponential bit complexity.
+
+The $N^{-1/2}$ normalization is part of the model. Changing width changes
+the induced function prior. The theorem concerns exact Bayesian
+conditioning; it makes no assertion about gradient descent, computationally
+efficient posterior sampling, or a fixed-width limit as $\sigma\downarrow0$.
+The input permutation can be specified by the Gaussian posterior means
+below; its efficient computation is not claimed.
+
+\section{A polynomial-size rational teacher}
+Let $s=\sum_i x_i$ and $A=32d$. The piecewise-linear identity
+\[
+ P(s)=-1+(s+d)_+
+            +2\sum_{j=1}^{d-1}(-1)^j(s+d-2j)_+
+\]
+satisfies $P(-d+2j)=(-1)^{d-j}=\chi(x)$ on the cube.
+Replace each hinge $u_+$ by $A^{-1}\phi(Au)$ and the constant $-1$
+by $-\tfrac32\phi(0)$. This uses $d$ nonconstant neurons and one
+constant neuron. All incoming weights are $A$, biases have magnitude
+at most $Ad$, and readouts are $1/A$, $2(-1)^j/A$, and $-3/2$.
+The uniform error on the cube is at most
+\[
+ |1-\tfrac32\log2|+(2d-1)\frac{\log2}{32d}<\frac1{10},
+\]
+using $2/3<\log2<7/10$. Thus the teacher has the stated margin and
+rational encoding bounds. When embedded in architecture (1), multiply
+its readouts by $\sqrt N$ and set unused readouts to zero. The rational
+teacher statement refers to the usual unnormalized finite neural sum;
+this explicit normalization conversion does not change the function.
+
+\section{Positive Fourier integrals and a dominant inverse eigenvalue}
+Define $\phi_\beta(t)=\beta^{-1}\log(1+e^{\beta t})$. Let
+$U=(b,w_1,\ldots,w_d)$ have independent standard Gaussian coordinates,
+and consider the kernel
+\[
+             K_\beta(x,y)=\E\phi_\beta(U\cdot\bar x)
+                                    \phi_\beta(U\cdot\bar y),
+                         \quad \bar x=(1,x).
+\]
+Coordinate flips diagonalize its normalized counting-measure operator
+in the Walsh basis. Let $\lambda_p(\beta)$ denote a degree-$p$
+eigenvalue, including degree zero. For $t,s>0$ put
+\[
+ \psi_\beta(t)=\frac{\pi t/\beta}{\sinh(\pi t/\beta)},\qquad
+ L_j=\frac1{\pi^2}\int_0^\infty\!\int_0^\infty
+ \frac{\psi_\beta(t)\psi_\beta(s)}{t^2s^2}
+ e^{-q(t^2+s^2)/2}\sinh(ts)^{2j}\cosh(ts)^{q-2j}\,dt\,ds.
+                                                               \tag{5}
+\]
+Here $1\le j\le q/2$. The identities are
+\[
+ \lambda_1=\tfrac14+L_1,\qquad
+ \lambda_p=L_{\lceil p/2\rceil}\ (2\le p\le d),\qquad
+ \lambda_0\ge(\log2)^2/\beta^2.                         \tag{6}
+\]
+For clarity, these formulas need no asymptotic expansion. Softplus is
+ReLU convolved in its bias with a centered logistic density, whose
+Fourier multiplier is $\psi_\beta$. The cosine integral for the
+nonlinear ReLU part gives sine factors for coordinates in the Walsh
+character and cosine factors for the others. A Gaussian coordinate
+averages two sine factors to $e^{-(t^2+s^2)/2}\sinh(ts)$ and two cosine
+factors to $e^{-(t^2+s^2)/2}\cosh(ts)$. The bias supplies the additional
+sine in odd degree. This gives (5)--(6); the degree-one affine part is
+$w_i/2$ and its cross term vanishes by oddness in the bias.
+At finite $\beta$ the exponential Fourier decay justifies Fubini,
+and the sine factors remove the singularity at zero. Finally the
+constant eigenvalue is the second moment of the input-average feature;
+Jensen twice bounds it below by $\phi_\beta(0)^2$.
+These are also the Fourier identities in the smoothing companion
+\cite{smoothing}, reproduced here to fix the normalization.
+
+\begin{lemma}[Uniform adjacent-degree bound]\label{lem:ratio}
+For $2\le j\le q/2$, if $0<\beta^2\le q^{-3}$, then
+\[
+ \frac{L_j}{L_{j-1}}\le\epsilon,
+ \qquad \epsilon=e^{1/\pi^2}\frac{d^4\beta^4}{\pi^4},
+ \qquad d\sqrt\epsilon<\frac18.                         \tag{7}
+\]
+Also $0<L_j\le L_{j-1}$ and $L_1\le\beta^2/16$.
+\end{lemma}
+\begin{proof}
+Set $m_n=\int_0^\infty t^n\psi_\beta(t)dt$ for integers $n\ge0$.
+Expanding $1/\sinh$ as a positive geometric series gives
+\[
+ m_n=2\Gamma(n+2)(\beta/\pi)^{n+1}
+                \sum_{k\ge0}(2k+1)^{-n-2},\qquad
+ \frac{m_{n+2}}{m_n}\le(n+3)(n+2)(\beta/\pi)^2.          \tag{8}
+\]
+Use $\sinh u\le ue^u$, $\cosh u\le e^u$, and
+$e^{-q(t^2+s^2)/2}e^{qts}\le1$ to bound
+$L_j\le\pi^{-2}m_{2j-2}^2$.
+In the denominator use $\sinh u\ge u$, $\cosh u\ge1$ and Jensen
+under the density $t^n\psi_\beta(t)/m_n$:
+\[
+ \int_0^\infty t^n\psi_\beta(t)e^{-qt^2/2}dt
+       \ge m_n\exp\{-q m_{n+2}/(2m_n)\}.
+\]
+With $n=2j-4$, (8) bounds its moment ratio by $d^2\beta^2/\pi^2$.
+Squaring and dividing proves
+\[
+ \frac{L_j}{L_{j-1}}
+ \le e^{qd^2\beta^2/\pi^2}(d^2\beta^2/\pi^2)^2\le\epsilon.
+\]
+Moreover $d\sqrt\epsilon<e^{1/(2\pi^2)}/\pi^2<1/8$;
+for example $\pi^2>9$ and $e^{1/18}\le18/17$ suffice.
+The pointwise ratio of consecutive integrands in (5) is
+$\tanh(ts)^2<1$. Finally $m_0=\pi\beta/4$ in (8), giving the
+claimed bound for $L_1$.
+\end{proof}
+
+\begin{lemma}[Full parity dominates the inverse spectrum]\label{lem:dominance}
+For odd $d\ge3$ and $0<\beta^2\le q^{-3}$,
+\[
+ \Delta:=\sum_{p=0}^{d-1}\binom dp\frac{\lambda_d}{\lambda_p}
+                                   <\frac14.                 \tag{9}
+\]
+Thus $\lambda_d$ is the least eigenvalue. If $\Sigma$ is any positive
+scalar multiple of the matrix $K_\beta$ and
+$D=\operatorname{diag}(\chi(x))$, then every entry of
+$Q=D\Sigma^{-1}D$ is positive and
+\[
+                   \frac{\min Q}{\max Q}>\frac35.             \tag{10}
+\]
+\end{lemma}
+\begin{proof}
+Put $J=q/2$. For $2\le p<d$, (7) gives
+$\lambda_d/\lambda_p\le\epsilon^{J-\lceil p/2\rceil}$.
+For $p=1$, (6) gives the bound
+$(\beta^2/4)\epsilon^{J-1}\le\epsilon^{J-1}$.
+For $p=0$ it gives
+$\beta^4\epsilon^{J-1}/[16(\log2)^2]\le\epsilon^J$:
+the last inequality follows already from $d\ge3$, $\pi^2<10$,
+and $\log2>2/3$. Each term is consequently bounded by
+$\epsilon^{\lceil(d-p)/2\rceil}\le(\sqrt\epsilon)^{d-p}$.
+Therefore
+\[
+ \Delta\le(1+\sqrt\epsilon)^d-1
+                    <e^{1/8}-1\le1/7<1/4.
+\]
+The least-eigenvalue assertion also follows from the pointwise integral
+ordering, the extra $1/4$ at degree one, and the constant lower bound.
+
+Expand the matrix inverse in normalized Walsh eigenvectors. After
+conjugation by $D$, its full-parity term is a positive constant matrix.
+At every entry the absolute value of all other terms together is at
+most $\Delta$ times that constant. Thus its entries lie between
+$(1-\Delta)c$ and $(1+\Delta)c$ for a common $c>0$.
+Their ratio exceeds $(1-1/4)/(1+1/4)=3/5$.
+\end{proof}
+
+\section{The Gaussian posterior chooses exponentially many wrong labels}
+At fixed $d,\sigma$, the finite-dimensional central limit theorem
+applied to (1) gives a centered Gaussian output vector $G$.
+Since $\phi(\sigma t)=\sigma\phi_\sigma(t)$, its covariance is
+\[
+                       \Sigma=\sigma^4 K_\sigma.              \tag{11}
+\]
+All eigenvalues are positive by (5)--(6). For the scale in (3),
+Lemma~\ref{lem:dominance} applies with $\beta=\sigma$.
+Furthermore every diagonal entry satisfies
+\[
+ \Sigma_{xx}=\sigma^2\E\phi(\sigma Z)^2\le2\sigma^2,
+                          \qquad Z\sim N(0,q).                \tag{12}
+\]
+Indeed $\phi(t)\le\log2+|t|$ and
+$2(\log2)^2+2q\sigma^2<2$ when $q\ge4$ and $\sigma^2\le q^{-3}$.
+
+We recall the needed convex Gaussian fact with its short proof.
+If a centered Gaussian of covariance $\Sigma$ is conditioned on any
+convex set $C$ of positive probability, then
+\[
+ \E[e^{t(v^TG-\E[v^TG\mid C])}\mid C]
+                               \le e^{t^2v^T\Sigma v/2}.       \tag{13}
+\]
+Completing the square expresses the logarithm before centering as
+$t^2v^T\Sigma v/2+\ell(t)-\ell(0)$, where
+$\ell(t)=\log\Pp(G+t\Sigma v\in C)$ is concave by Pr\'ekopa's
+theorem \cite{prekopa}. Its derivative at zero is the conditional
+mean. The tangent-line bound for $\ell$ proves (13).
+
+Write $g=DG$, and $\mu=\E[g\mid g_H>a]$.
+Integrating a Gaussian derivative in each unobserved coordinate gives
+$(Q\mu)_i=0$ for $i\in U=X\setminus H$.
+On $H$ every mean exceeds $a$. Positivity of $Q$ consequently implies
+\[
+ \min_{i\in U}\mu_i
+       \le-a\frac{|H|}{|U|}\frac{\min Q}{\max Q}.              \tag{14}
+\]
+For example, bound each observed contribution to one unseen stationary
+row below by $a\min Q$ and each unseen mean below by their common
+minimum, then divide by the positive unseen row sum.
+Start with any one input. At each later stage choose an unseen input
+with smallest Gaussian posterior mean, breaking ties lexicographically,
+and reveal its true label. This specifies a deterministic permutation.
+On every final $M/2$ round, $|H|\ge|U|$; by (10) the selected mean
+is less than $-a/2$. Equations (12)--(13) give
+\[
+ p_{\rm GP}(\mathrm{correct}\mid H)
+    \le\exp\{-a^2/(16\sigma^2)\}
+    =\exp\{-q^3[1+\log(1/\eta)]\}\le\frac\eta{4M}.             \tag{15}
+\]
+The last inequality holds for every $q\ge4$, $M=2^{q-1}$,
+and $0<\eta<1/2$. This bounds the actual truncated-Gaussian posterior,
+not just its mode or its regression at the margin boundary.
+
+\section{A finite-width comparison for rare histories}
+We give details because unconditional kernel convergence does not alone
+control conditioning on an exponentially unlikely history. All constants
+in this section are absolute.
+
+From (5), integrate $t,s\in[\sigma,2\sigma]$ for $j=J=q/2$.
+The multiplier is bounded below by $2\pi/\sinh(2\pi)$, the Gaussian
+factor is at least $e^{-4}$, and $\sinh(ts)\ge ts$. Hence
+$L_J\ge c_0\sigma^{2d}$ with a fixed $c_0>0$.
+The covariance matrix, whose eigenvalues are $M\sigma^4\lambda_p$,
+therefore has the bounds
+\[
+ A I\preceq\Sigma\preceq B I,\qquad
+ A=c_0\sigma^{2d+4},\quad B=2M\sigma^2.                        \tag{16}
+\]
+Reduce $c_0$ if necessary so $A\le\sigma^2$. The upper bound is
+its trace and (12).
+Integrating the signed Gaussian density on $[a,a+\sqrt A]^M$
+bounds every positive-margin history probability below by
+\[
+ p_*=(A/(2\pi B))^{M/2}
+                 \exp\{-M(a+\sqrt A)^2/(2A)\}.                \tag{17}
+\]
+
+Conditional on all incoming features, (1) is Gaussian with covariance
+\[
+ (\Sigma_N)_{xy}=\frac{\sigma^2}{N}
+     \sum_{j=1}^N\phi(\sigma U_j\cdot\bar x)
+                    \phi(\sigma U_j\cdot\bar y).
+\]
+Its summands are unbounded, so the bounded-cosine argument cannot be
+used unchanged. They nevertheless have a uniform exponential moment
+at scale $C\sigma^2$. Indeed
+$|\phi(s)\phi(t)|\le C(1+s^2+t^2)$, and the two Gaussian
+preactivations have variance $q\sigma^2\le1$.
+Cauchy--Schwarz and the elementary Gaussian-square moment generating
+function give this exponential moment even when the two are correlated.
+Consequently a centered summand $V$ satisfies
+$\E|V|^k\le k!(C\sigma^2)^k$ for all $k\ge2$.
+Expanding $\E e^{tV}$ and summing the geometric series, followed by
+exponential Markov with $t$ proportional to the desired deviation,
+gives the Bernstein bound
+\[
+ \Pp\{\|\Sigma_N-\Sigma\|_{\rm op}>\varepsilon A\}
+  \le2M^2\exp\left\{-\frac{cN\varepsilon^2 A^2}
+                                      {M^2\sigma^4}\right\},  \tag{18}
+\]
+for $0<\varepsilon<1/2$. We used the entrywise union bound and
+$\|E\|_{\rm op}\le M\max_{xy}|E_{xy}|$; the relevant entry deviation
+$\varepsilon A/M$ is at most $\sigma^2$, the quadratic Bernstein regime.
+
+Set $\delta=\eta/(1024M)$ and
+\[
+ R=3[(M/2)\log2+\log(1/(\delta p_*))],\qquad
+ \varepsilon=\frac\delta{4(M+R)}.
+\]
+For
+\[
+ N\ge\frac{CM^2\sigma^4}{\varepsilon^2 A^2}
+                              \log\frac{2M^2}{\delta p_*},     \tag{19}
+\]
+the bad-covariance probability is at most $\delta p_*$.
+On its complement,
+$(1-\varepsilon)\Sigma\preceq\Sigma_N
+\preceq(1+\varepsilon)\Sigma$.
+On $x^T\Sigma^{-1}x/2\le R$, determinant and quadratic-form comparison
+bound the density ratio by $e^{\pm\delta}$. Each law has outside mass
+at most $2^{M/2}e^{-R/3}=\delta p_*$, by the Gaussian-square exponential
+moment. For every history of probability at least $p_*$, splitting the
+numerator and denominator into these events therefore gives
+\[
+ p_N(\mathrm{correct}\mid H)
+ \le\frac{e^\delta p_{\rm GP}(\mathrm{correct}\mid H)+2\delta}
+                         {(1-\delta)e^{-\delta}(1-\delta)}
+                         <\frac\eta{2M}.                     \tag{20}
+\]
+The last inequality uses (15). This is a comparison of the full
+parameter posterior, including the reweighting of incoming features.
+The same elementary density calculation is recorded for bounded cosine
+features in \cite{cosine}; (18) is its needed unbounded-softplus extension.
+
+Finally
+\[
+ \log(1/A)=O(q[\log q+\log(1+\log(1/\eta))]),\qquad
+ -\log p_*\le CM[1+A^{-1}+\log(B/A)].
+\]
+Taking logarithms in (19), including the $\delta$ factors, bounds its
+threshold by $\exp\{Cq\log(q/\eta)\}$. This proves the finite width
+in (3). Each probability in (20) is below one half, and a union bound
+over the final $M/2$ rounds proves their simultaneous sampling errors.
+The histories always contain the true labels, so the predetermined order
+is unaffected by the learner's random predictions.
+
+\section{Polynomial lifetime mistakes at the teacher width}
+Put $n=d+1$ and embed the rational teacher in architecture (1) by
+multiplying its readouts by $\sqrt n$. Its full parameter vector has
+squared norm at most $Cq^5$: the $d$ nonconstant incoming vectors have
+$O(d)$ weights of size $O(d)$ and biases of size $O(d^2)$.
+There are at most $Cq^2$ parameters.
+
+Softplus is one-Lipschitz, and on this cube each teacher preactivation
+has magnitude at most $Cq^2$. Thus a sufficiently small universal $c>0$
+gives the following parameter box: changing each coordinate by at most
+$cq^{-3}$ changes every output by less than $1/4$.
+For detail, the teacher's sum of absolute unnormalized readouts is
+bounded by two, so incoming perturbations contribute at most
+$2q\,cq^{-3}$. The readout perturbations contribute at most
+$\sqrt n\,cq^{-3}Cq^2$; include the incoming perturbations in this
+last feature bound and reduce $c$. The whole box has the correct margin
+strictly greater than $1/2$ at every cube input.
+
+Integrate the isotropic Gaussian density over the smaller coordinate
+box of radius $\min\{cq^{-3},\sigma\}$. The squared norm and number
+of parameters above give, for $0<\sigma\le1$,
+\[
+ -\log P_\sigma(\text{global correct-margin box})
+                  \le C[q^5/\sigma^2+q^2\log q].              \tag{21}
+\]
+One can obtain (21) directly by using the minimum density on the box:
+its exponent costs at most $Cq^5/\sigma^2+Cq^2$, while its volume
+relative to Gaussian scale costs at most $Cq^2\log q$.
+
+Let $p_t$ be the current posterior probability of satisfying the next
+true margin observation, and let $r_t$ be its wrong-sign probability.
+Then $r_t\le1-p_t\le-\log p_t$. The sum of the latter terms is minus
+the logarithm of the probability of the accumulated history, which is
+bounded by (21) on every input order. This holds pathwise for orders
+chosen before each fresh prediction draw. Taking expectation bounds
+sampling mistakes. Every majority mistake has $r_t\ge1/2$, so its
+count is at most twice (21). Substituting (3) proves (4) and completes
+Theorem~\ref{thm:main}.
+
+
+\begin{theorem}[Width is necessarily exponential at this prior scale]
+For every $N\ge d+1$ and $0<\sigma\le1$, on every parity-labeled input
+order the expected sampling mistake count is at most
+\[
+ C\left[\frac{q^5+N}{\sigma^2}+q^2\log q
+                                  +Nq+N\log(Nq)\right].       \tag{22}
+\]
+The majority mistake count is at most twice this quantity.
+Consequently, at the scale (3) with fixed $\eta$, any such width
+exhibiting $2^{d-1}$ majority mistakes must satisfy
+$N=\Omega_\eta(2^d/d^3)$ as odd $d\to\infty$.
+\end{theorem}
+\begin{proof}
+Embed the same $d+1$ active teacher neurons with readouts multiplied by
+$\sqrt N$. Their squared parameter norm is at most $C(q^5+N)$.
+A coordinate box of radius $cq^{-3}$, decreased if necessary, changes
+the active output by less than $1/8$ uniformly for $N\ge d+1$.
+For every other neuron require its incoming coordinates to have absolute
+value at most one and its readout to have absolute value at most
+$1/(16\sqrt N q)$. Its feature is at most $2q$, so the entire inactive
+bank contributes at most $1/8$ in absolute value. The resulting event
+has the correct margin everywhere.
+The active box costs at most $C[(q^5+N)/\sigma^2+q^2\log q]$ in
+negative log probability, by the preceding argument. Each inactive
+incoming-coordinate box costs at most $Cq$ for $\sigma\le1$, and its
+readout interval costs at most $C+\log_+(\sigma\sqrt N q)$.
+Summing gives the bracket in (22). The same evidence potential proves
+both mistake bounds.
+At fixed $\eta$, if $N<2^d$, the bracket is
+$O_\eta(q^8+Nq^3)$; forcing $2^{d-1}$ majority mistakes gives the
+claimed lower bound for large $d$. If $N\ge2^d$, it is immediate.
+\end{proof}
+
+
+\section{A bounded companion: tanh in even dimension}\label{sec:tanh}
+\begin{theorem}[The same separation for tanh]
+For even $d\ge2$, replace standard softplus in (1) by $\tanh$.
+With $q=d+1$, the same prior variance and sufficient width in (3)
+give a deterministic input order with one initial label and $2^{d-1}$
+final confident majority mistakes, with simultaneous fresh-sampling
+mistake probability at least $1-\eta$.
+The parity target has a width-$d+1$ integer-coefficient tanh teacher
+of polynomial magnitude and margin greater than $0.9$. At width
+$d+1$, the same prior scale has the polynomial lifetime bounds (4).
+Among widths $N\ge d+1$, this exponential majority mistake count
+requires $N=\Omega_\eta(2^d/d^4)$ for fixed $\eta$.
+\end{theorem}
+\begin{proof}
+We give the spectral argument explicitly; its degree pairing differs
+from softplus and is the reason for using even dimension.
+Since $\tanh(\sigma t)$ is the sign function smoothed by a logistic
+bias of scale $1/(2\sigma)$, it has the absolutely convergent integral
+\[
+ \tanh(\sigma t)=\frac2\pi\int_0^\infty
+                           \psi_{2\sigma}(u)\frac{\sin(tu)}u\,du.
+\]
+For a Walsh coefficient of degree $p$, the bias factor is cosine if
+$p$ is odd and sine if $p$ is even. Its Gaussian squared coefficient
+therefore has $2\lfloor p/2\rfloor+1$ sine-pair factors. Put
+$b=2\sigma$ and define, for $0\le j\le d/2$,
+\[
+ J_j=\frac4{\pi^2}\int_0^\infty\!\int_0^\infty
+ \frac{\psi_b(t)\psi_b(s)}{ts}
+ e^{-q(t^2+s^2)/2}\sinh(ts)^{2j+1}
+                         \cosh(ts)^{q-2j-1}\,dt\,ds.          \tag{23}
+\]
+The eigenvalue of the normalized kernel
+$\E\tanh(\sigma U\cdot\bar x)\tanh(\sigma U\cdot\bar y)$
+is exactly $\lambda_p=J_{\lfloor p/2\rfloor}$, including $p=0$.
+In particular degree $d$ is unpaired and uniquely least.
+
+Use (8) with smoothing parameter $b$. The upper bound is now
+$J_j\le4\pi^{-2}m_{2j}^2$, and the lower bound for $J_{j-1}$ uses
+$m_{2j-2}$ and its Gaussian Jensen factor. Its moment ratio is at most
+$(2j+1)(2j)b^2/\pi^2\le q^2b^2/\pi^2$.
+Thus, when $b^2\le q^{-3}$,
+\[
+ \frac{J_j}{J_{j-1}}\le\epsilon_T
+       :=e^{1/\pi^2}\frac{q^4b^4}{\pi^4},\qquad
+ d\sqrt{\epsilon_T}<1/8.                                \tag{24}
+\]
+The scale in (3) satisfies this hypothesis, since
+$4\sigma^2\le1/(16q^3)$.
+For every $p<d$ the inverse eigenvalue ratio is at most
+$\epsilon_T^{\lceil(d-p)/2\rceil}$.
+The same binomial summation as in (9) bounds the entire inverse
+non-parity remainder by $e^{1/8}-1<1/4$.
+The parity-conjugated precision is positive and has minimum-to-maximum
+ratio greater than $3/5$.
+
+The raw Gaussian-limit covariance is now $\sigma^2$ times this tanh
+kernel. Its diagonal is at most $\sigma^2$, since $|\tanh|\le1$.
+The stationary-mean selection and (13) therefore give an even stronger
+version of (15), hence the same claimed mistake probabilities.
+For finite width, integrating (23) on $t,s\in[b,2b]$ gives
+$J_{d/2}\ge c b^{2d+2}$. Thus the covariance again has a least
+eigenvalue at least $c\sigma^{2d+4}$ and largest at most $M\sigma^2$.
+Each empirical covariance summand is bounded by $\sigma^2$.
+Hoeffding directly supplies (18), so the complete rare-history
+comparison (17)--(20) and width bound (3) apply.
+
+For the teacher write $s=\sum_i x_i$, $A=2d$, and
+$t_j=-d+2j-1$, $1\le j\le d$. On the even-dimensional cube,
+\[
+ 1+\sum_{j=1}^d(-1)^j\operatorname{sign}(s-t_j)=\chi(x).
+\]
+Each $|s-t_j|\ge1$. Replace the constant by $\tanh(A)$ and each sign
+by $\tanh(A(s-t_j))$. The uniform error is at most
+$2(d+1)e^{-4d}<1/10$. This is a width-$d+1$ integer-coefficient teacher
+with incoming coefficients of size $O(d^2)$ and readouts $\pm1$.
+Its normalized width-$d+1$ embedding has squared parameter norm
+$O(q^5)$. Since tanh is bounded and one-Lipschitz, a coordinate box
+of radius $cq^{-3}$ again preserves the correct margin. Equation (21)
+and the evidence potential give (4).
+
+At general width $N\ge d+1$, the active teacher's amplified readouts
+have squared norm $Nq$. The incoming squared norm is still $O(q^5)$.
+Restrict each inactive readout to $|a_j|\le1/(8\sqrt N)$ and leave its
+incoming parameters unrestricted. Bounded tanh keeps total inactive
+output below $1/8$. The resulting global-margin box gives the lifetime
+sampling bound
+\[
+ C[(q^5+Nq)/\sigma^2+q^2\log q+N\log(N+1)].              \tag{25}
+\]
+Twice this bounds majority mistakes. At (3) and fixed $\eta$, if
+$N<2^d$ this is $O_\eta(q^8+Nq^4)$; the necessary width follows.
+\end{proof}
+
+\section*{Scope and next question}
+The new ingredient is the uniform positive Fourier-moment bound that
+makes the inverse full-parity coefficient dominate the entire remaining
+spectrum. It turns the positive-precision Gaussian mechanism into
+standard-softplus and tanh results with compact rational teachers. The Gaussian
+limit and convex concentration tools are classical; no general novelty
+claim about those tools is intended.
+
+The same proof does not apply to unsmoothed ReLU: its high-degree
+spectral ratios do not satisfy (7) at a polynomially small smoothing
+parameter, because there is no such parameter in the homogeneous ReLU
+kernel. Numerical inverse-kernel checks already find negative
+parity-conjugated precision entries in dimension five. The fixed-width
+strong-prior ReLU lower bound in the separate control-rail paper uses
+a different finite-parameter optimization construction and has a long
+calibration prefix. Whether a short-calibration polynomial-width ReLU
+learner has an exponential strong-prior mistake example remains open.
+
+Selected finite precision inequalities are Lean checked, but the
+Fourier integrals, Gaussian conditioning, concentration, and finite-width
+comparison are not fully formalized. Numerical quadrature checks are
+not certified interval enclosures or independent proof review.
+
+\begin{thebibliography}{9}
+\bibitem{prekopa} A. Pr\'ekopa, \emph{On logarithmic concave measures and
+functions}, Acta Scientiarum Mathematicarum 34 (1973), 335--343.
+\url{https://acta.bibl.u-szeged.hu/14411/1/math_034_335-343.pdf}.
+\bibitem{smoothing} ChatGPT-6 Astra, \emph{A logarithmic separation between
+local smoothing and rare neural features}, independent research draft,
+21 November 2026. This collection, paper \texttt{logarithmic-smoothing-threshold}.
+\bibitem{cosine} ChatGPT-6 Astra, \emph{Maximal confident mistakes for a
+Gaussian cosine-network limit}, independent research draft, 21 November
+2026. This collection, paper \texttt{gaussian-cosine-mistake-path}.
+\end{thebibliography}
+\end{document}

@@ -2,9 +2,9 @@
 
 **Sole author of these papers: ChatGPT-6 Astra. Independent AI research.**
 
-This collection contains 33 manuscripts developed during November 17–20, 2026. Execution was interrupted between active research sessions; elapsed calendar time is not presented as uninterrupted work. It is separate from the repository's jointly authored papers. Existing results, imported formalizations, and inherited certificates retain their original credit; their use here does not change their author lists.
+This collection contains 45 manuscripts developed during November 17–21, 2026. Execution was interrupted between active research sessions; elapsed calendar time is not presented as uninterrupted work. It is separate from the repository's jointly authored papers. Existing results, imported formalizations, and inherited certificates retain their original credit; their use here does not change their author lists.
 
-The manuscripts are research drafts with conventional proofs and same-session checks. They have not received independent review. 53 selected deterministic statements have Lean proofs; this is not a claim of complete formalization of the papers. The [verification inventory](verification/README.md) separates exact certificates, Lean proofs, numerical checks, and experiments.
+The manuscripts are research drafts with conventional proofs and same-session checks. They have not received independent review. 120 selected deterministic statements have Lean proofs; this is not a claim of complete formalization of the papers. The [verification inventory](verification/README.md) separates exact certificates, Lean proofs, numerical checks, and experiments.
 
 ## Research questions and reading map
 
@@ -30,11 +30,32 @@ The manuscripts are research drafts with conventional proofs and same-session ch
 
 ## Further transfer refinements
 
-The finite-energy transfer paper gives an exact obstruction for raw features, including polynomial-width source networks with arbitrarily near-minimal energy. The full-data transfer and orientation papers prove a complementary typical-sector result: raw exceptional features transfer to nearby parities with high probability as dimension grows, uniformly down to arbitrarily cold positive priors in the stated width-first limit. The latter uses a cited asymptotic enumeration theorem for resilient Boolean functions. The new low-rank paper separately gives finite-polynomial-data raw transfer for each fixed nearby task, with a weaker confidence bound and an explicit dimension condition. It does not establish simultaneous raw transfer for every task in every finite representation.
+The finite-energy transfer paper gives an exact obstruction for raw features, including polynomial-width source networks with arbitrarily near-minimal energy. The full-data transfer and orientation papers prove a complementary typical-sector result: raw exceptional features transfer to nearby parities with high probability as dimension grows, uniformly down to arbitrarily cold positive priors in the stated width-first limit. The latter uses a cited asymptotic enumeration theorem for resilient Boolean functions. The new low-rank paper separately gives finite-polynomial-data raw transfer for each fixed nearby task, with a weaker confidence bound and an explicit dimension condition. It does not establish simultaneous raw transfer for every task in every finite representation. The 21 November ensemble and antithetic paper supplies separate simultaneous protocols under its stated hypotheses.
 
-## Remaining question: margins only on observed inputs
+## Observed-margin-only lower bounds and remaining questions
 
-The shared repository already proves a [superpolynomial strong-prior ReLU/softplus mistake lower bound](../../works-in-progress/online-mistakes/isotropic-relu-allwidth/README.md) with an initial absolute-margin restriction on the whole cube. The question left open here removes that restriction: this collection does **not** prove a superpolynomial classification-mistake lower bound for the isotropic Gaussian, one-hidden-layer ReLU learner conditioned only on observed positive margins in the strong-prior limit. Exact certificates give fifteen designated wrong predictions in four bits and seventeen in five bits; neither is a scalable family. The new superpolynomial transfer bounds concern frozen-feature regression under their stated priors and readouts. These statements must not be substituted for the unresolved adversarial theorem.
+The [softplus/tanh width separation](papers/softplus-gaussian-width-separation/README.md) gives a short-calibration result with the usual softplus and tanh activations. In odd dimension for softplus or even dimension for tanh, parity has a rational width-(d+1) teacher with polynomial coefficients. A sufficiently wide Gaussian learner makes 2^(d-1) confident mistakes at prior variance of order d^-3; width d+1 has an O(d^8) lifetime mistake bound at that same scale. The sufficient wide width is exp(O(d log(d+1))) for fixed confidence. Only one initial label is supplied, and all subsequent labels arrive along a deterministic mean-selected online order. Central-limit normalization is part of the model.
+
+The new [control-rail paper](papers/observed-margin-control-lower-bound/README.md) proves a superpolynomial strong-prior mistake lower bound for shallow isotropic-Gaussian ReLU learning conditioned **only on observed positive margins**. Its target has input dimension O(k), a Boolean circuit of size O(k), and an integer-weight shallow teacher of width O(k²), yet 2^(k−1) designated predictions become confidently wrong. It uses the shared rail geometry and path construction, with a new observed-label dual and physical-network rigidity argument. The initial full-cube absolute-margin restriction from the [shared predecessor](../../works-in-progress/online-mistakes/isotropic-relu-allwidth/README.md) is removed.
+
+The limitations matter: the calibration prefix is large, and the explicit sufficient learner width is 2^(550k+342). These exact unique minimum-cost completions intrinsically need exponentially many active neurons and prior observations. The theorem does not establish the same behavior at polynomial learner width or under gradient descent. It includes a separate width-first ReLU limit, standard-softplus extension, a quantitative prior-scale bound, and an exact finite hinge-penalty consequence. A finite prior over small integer teachers has a polynomial mistake bound on the same labels.
+
+The [Gaussian cosine paper](papers/gaussian-cosine-mistake-path/README.md) gives a complementary width-one target and only one initial calibration label: all remaining 2^d−1 predictions in ordinary lexicographic order become confidently wrong in odd dimension, taking width to infinity before the common prior scale tends to zero. A finite family already makes the final 2^(d-1) predictions confidently wrong at prior variance of order 1/d and sufficient width exp(O(d log(d+1))), for fixed confidence; width one has O(d^2) lifetime mistakes at that scale. At every fixed positive scale, sufficiently wide sampling has exponential expected mistakes throughout the mean-selected order and an exponential final tail of confident majority errors, of order (1+exp(-2 sigma^2))^d/sqrt(d); width one has a polynomial lifetime bound. The sufficient and necessary widths are exponential in dimension; cosine activation and central-limit normalization are part of this theorem.
+
+The [degree-kernel paper](papers/lexicographic-degree-kernel-mistakes/README.md) proves all-but-first lexicographic parity mistakes for exact minimum-norm interpolation whenever radial kernel eigenvalues decrease with degree and have a strict final drop. This includes Gaussian ReLU random-feature and both-layer initialization tangent kernels in odd dimension, with finite random-feature and zero-output frozen-Jacobian versions. For each fixed activation temperature, width exp(C d) log(2/zeta) suffices with probability at least 1-zeta. A positive-power-series criterion also gives all-but-first mistakes for the explicitly normalized fixed ReLU NNGP and NTK recursions at every depth at least two and every dimension at least two. It is an equality-observation result; the proposed positive-margin KKT bridge is explicitly left as a conjecture.
+
+Together, the spectral-ordering and interpolation results give a useful comparison in odd dimension: sharpening softplus lowers the full-parity RKHS cost after normalization by total nonconstant feature variance, while the same lexicographic order still produces all 2^d-1 interpolation mistakes. Kernel rescaling leaves those predictions unchanged. The normalized representation cost can therefore improve while this online mistake count stays maximal.
+
+The most useful remaining questions are a polynomial-width ReLU lower bound, a substantially shorter ReLU calibration prefix, and an optimization trajectory that demonstrably reaches the wrong minimum-norm completions. The particular geometric objective in the [signed-Fourier path paper](papers/geometric-fourier-mistake-path/README.md) also still lacks an economical neural realization.
+
+## Additions from the 21 November ten-hour round
+
+The [round payload](rounds/2026-11-21/README.md) contains the twelve new papers' exact finite checks, 67 additional selected Lean lemmas, independent-proposal implementations, numerical diagnostics, and proof-scope audit.
+
+- **Sampling:** sharp count-and-rank probabilities, exact finite-sector ReLU sampling, and Metropolis corrections with a half-power improvement for ReLU and a quarter-power for softplus. Expected linear width cost fixes dimension and uses ideal real arithmetic; dimension constants may be enormous.
+- **Smoothing:** two different activation-temperature scales govern local marks and rare features. Positive Fourier integrals order all even parity-correlation moments and the input-centered random-feature and initialization tangent kernels, including a strict shift of normalized variance toward higher Fourier degrees. The critical normalizer has a negative second-order and positive third-order boundary response and is completely monotone in squared smoothing scale. These do not imply trained-kernel monotonicity.
+- **Transfer:** independent raw posterior banks provide simultaneous nearby-parity transfer. A deliberately coupled antithetic reflected bank gives a separate one-trained-bank construction with no comparator-norm increase.
+- **Online mistakes:** the Bayesian lower bounds above separate compact teachers from the wide representations favored by the specified priors. The separate kernel result identifies every interpolation prediction along a fixed order.
 
 ## Manuscripts
 
@@ -44,6 +65,11 @@ The shared repository already proves a [superpolynomial strong-prior ReLU/softpl
 - [A smooth-likelihood all-width mistake bound](papers/logistic-online-polynomial/README.md).
 - [A one-neuron target that defeats wide sign-only Bayes](papers/sign-only-fourier-counterexample/README.md).
 - [Observed-margin ReLU mistakes on four and five bits](papers/observed-margin-relu-fifteen-errors/README.md).
+- [An explicit exponential mistake path in signed Fourier completion](papers/geometric-fourier-mistake-path/README.md).
+- [Superpolynomial strong-prior ReLU mistakes with margins only on observed inputs](papers/observed-margin-control-lower-bound/README.md).
+- [Maximal confident mistakes for a Gaussian cosine-network limit](papers/gaussian-cosine-mistake-path/README.md).
+- [Exponential online mistakes from widening Gaussian softplus and tanh learners](papers/softplus-gaussian-width-separation/README.md).
+- [Maximal lexicographic parity mistakes for degree-ordered kernels](papers/lexicographic-degree-kernel-mistakes/README.md).
 
 ### 2. Bayesian feature learning and prior tails
 
@@ -69,6 +95,13 @@ The shared repository already proves a [superpolynomial strong-prior ReLU/softpl
 - [Locality of parity transfer in a learned neural representation](papers/transfer-locality/README.md).
 - [Polynomial-data parity transfer under Gaussian and lighter tails](papers/power-prior-transfer/README.md).
 - [Finite-data raw-feature transfer by removing a low-rank component](papers/raw-finite-data-transfer/README.md).
+- [Raw-feature transfer from ensembles of pretrained networks](papers/raw-posterior-ensembles/README.md).
+- [Polynomial probabilities of extra exceptional neurons](papers/quantitative-condensate-count/README.md).
+- [Finite Metropolis corrections for a condensed ReLU posterior](papers/metropolis-corrected-posterior/README.md).
+- [Exact sector sampling for condensed ReLU posteriors](papers/exact-hard-sector-sampler/README.md).
+- [Smoothing changes the fluctuations of Bayesian neural condensates](papers/softplus-sector-asymptotics/README.md).
+- [Arbitrary polynomial accuracy for softplus posterior sampling](papers/softplus-polynomial-sampling/README.md).
+- [A logarithmic separation between local smoothing and rare neural features](papers/logarithmic-smoothing-threshold/README.md).
 
 ### 3. Alignment, trapping, and feature renewal
 

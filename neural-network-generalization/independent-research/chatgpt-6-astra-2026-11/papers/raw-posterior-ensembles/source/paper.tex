@@ -1,0 +1,376 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}
+\newcommand{\relu}{\operatorname{ReLU}}
+\title{Raw-feature transfer from ensembles of pretrained networks}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author.}}
+\date{21 November 2026; working proof draft}
+\hypersetup{hidelinks,pdftitle={Raw-feature transfer from ensembles of pretrained networks},pdfauthor={ChatGPT-6 Astra}}
+\begin{document}\maketitle
+\begin{abstract}
+A near-minimum-energy representation of parity can transfer poorly to a
+particular nearby task when its original raw ReLU features are frozen.
+We show how an ensemble of independent pretrained networks removes this
+obstruction. The general mechanism is cancellation of a centrally
+symmetric, finite-dimensional contamination by convex weights bounded
+by four times the uniform weight. With order $d+\log(T/\zeta)$ independent
+feature banks, contamination of dimension $d$ can be cancelled for all
+$T$ tasks at once, with failure probability at most $\zeta$, while
+increasing squared feature norm by at most four. For cold Gaussian
+parity pretraining, antipodally paired source data make the symmetry
+hold conditionally on one common data set. The resulting raw ensemble
+has simultaneous transfer guarantees for every nearby parity, without
+the confidence--dimension restriction of the single-representation
+bound. If deliberate coupling is allowed, an antithetic reflected pair
+removes the same contamination exactly, using only one trained network
+and without increasing comparator norm. Its two marginal networks are
+posterior distributed, but their joint law is not a product posterior.
+Exact posterior sampling remains an assumption in the Bayesian applications;
+no efficient pretraining algorithm is supplied.
+\end{abstract}
+
+\section{A bounded convex balancing lemma}
+For integers $L\ge d\ge1$, write
+\[
+ R(L,d)=2\sum_{j=0}^{d-1}\binom{L-1}{j}.
+\]
+This is an upper bound on the number of open regions cut out by $L$
+homogeneous hyperplanes in $\R^d$. Degeneracies can only decrease the
+count. The usual recurrence follows by adding the last hyperplane:
+new regions correspond to regions of the previous arrangement restricted
+to that hyperplane. Induction gives the displayed bound.
+
+\begin{lemma}[Symmetric vectors admit nearly uniform balancing]
+Let $Z_1,\ldots,Z_L\in\R^d$ be independent centrally symmetric random
+vectors. They need not be identically distributed or in general position.
+Suppose $L\ge d$ is a positive multiple of four. Except on an event of
+probability at most
+\[
+                       R(L,d)e^{-L/8},                 \tag{1}
+\]
+there are weights $\beta_i$ such that
+\[
+ 0\le\beta_i\le\frac4L,\qquad \sum_i\beta_i=1,
+                  \qquad\sum_i\beta_iZ_i=0.           \tag{2}
+\]
+\end{lemma}
+\begin{proof}
+Introduce independent fair signs $\epsilon_i$. The vectors
+$(\epsilon_iZ_i)_i$ have the same joint law as $(Z_i)_i$. Condition on
+arbitrary realizations $z_i$. For any fixed open region of the central
+hyperplane arrangement $\{y:y\cdot z_i=0\}$, the number of strictly
+positive values among $y\cdot\epsilon_i z_i$ is bounded stochastically
+by $\operatorname{Binomial}(L,1/2)$. Hoeffding's bound makes the probability
+that more than $3L/4$ are positive at most $e^{-L/8}$.
+If a direction on an arrangement boundary has more than $3L/4$ positive
+values, a sufficiently small generic perturbation preserves all of
+these positive values; zero vectors cause no difficulty. A union bound
+over the at most $R(L,d)$ open regions therefore shows that, outside
+the event (1), every direction $y$ has at least $L/4$ nonpositive
+projections.
+
+Put $m=L/4$ and let $C$ be the convex hull of all means of $m$ distinct
+sample vectors. The minimum of $y\cdot x$ over $x\in C$ is the mean of
+the $m$ smallest numbers $y\cdot z_i$, and is therefore nonpositive
+for every $y$. Strict separation implies $0\in C$. Each such subset
+mean uses weights zero or $1/m$, and a convex combination of them gives
+(2). This argument explains why a bound on the weights is available,
+not just membership in the ordinary convex hull.
+\end{proof}
+
+This is a bounded-weight variant of the geometric mechanism behind
+\href{https://journals.msp.org/mscand/article/view/2688}{Wendel's 1962
+convex-hull theorem}. Wendel's general-position equality and the
+hyperplane-arrangement count are established results, not claims of
+novelty here. The proof above includes the degeneracies and coefficient
+bound needed for feature transfer.
+
+For $L\ge128d$, the elementary binomial-sum bound gives
+$R(L,d)\le2\exp\{d\log(eL/d)\}\le2e^{L/16}$.
+Consequently, if there are $T$ contamination vectors per feature bank,
+with the required independence and central symmetry for each fixed task,
+a sufficient simultaneous choice is a multiple of four satisfying
+\[
+              L\ge128d+16\log(2T/\zeta).              \tag{3}
+\]
+No independence between different tasks is needed. Union bounding (1)
+then bounds the probability of any task's failure by $\zeta$.
+
+\section{Transfer from raw feature banks}
+Let $K_1,\ldots,K_L$ be kernels on a common input probability space, with
+$K_i(x,x)\le R_0^2$. Let $f_1,\ldots,f_T$ be target functions. Suppose
+that, for every bank $i$ and task $t$, there is a comparator
+\[
+ q_{i,t}=f_t+\ell_{i,t}+e_{i,t},\quad
+ \|q_{i,t}\|_{\mathcal H(K_i)}\le B,\quad
+ \|e_{i,t}\|_2\le\Delta,                               \tag{4}
+\]
+where each $\ell_{i,t}$ lies in a fixed $d$-dimensional function space.
+Suppose its coordinate vectors are independent and centrally symmetric
+across $i$, for each fixed $t$. Define the concatenated raw kernel
+\[
+                         \overline K=L^{-1}\sum_iK_i.
+\]
+
+\begin{theorem}[Simultaneous transfer after independent pretraining]
+With $L$ as in (3), with probability at least $1-\zeta$, every task has
+a predictor $g_t\in\mathcal H(\overline K)$ satisfying
+\[
+             \|g_t-f_t\|_2\le\Delta,\qquad
+             \|g_t\|_{\mathcal H(\overline K)}^2\le4B^2.
+ \tag{5}
+\]
+Also $\overline K(x,x)\le R_0^2$. The common representation is the
+concatenation of the original feature banks; the weights in the proof
+may depend on the downstream task, as ordinary readout coefficients do.
+\end{theorem}
+\begin{proof}
+For each task apply (2), and take $g_t=\sum_i\beta_iq_{i,t}$.
+The contamination cancels, and convexity gives error at most $\Delta$.
+The direct-sum feature representation of $\overline K$ gives
+\[
+ \|g_t\|_{\mathcal H(\overline K)}^2
+ \le L\sum_i\beta_i^2\|q_{i,t}\|_{\mathcal H(K_i)}^2
+ \le LB^2\frac4L\sum_i\beta_i=4B^2.
+\]
+The diagonal bound follows by averaging. No algorithm needs access to
+the contamination vectors: (5) provides comparators for a convex
+downstream readout fit on the concatenated features.
+\end{proof}
+
+\section{A deliberate antithetic pair needs only one trained bank}
+The independent-bank theorem is useful when the banks must arise from
+independent training runs. A simpler construction is available when one
+may deliberately reflect a trained bank.
+
+\begin{theorem}[Antithetic raw-feature transfer]\label{thm:antithetic}
+Let $J$ be a measure-preserving involution of the input probability
+space. Suppose $q=f+\ell+e\in\mathcal H(K)$ has norm at most $B$,
+$\|e\|_2\le\Delta$, $f\circ J=f$, and $\ell\circ J=-\ell$.
+Define
+\[
+ K^J(x,y)=K(Jx,Jy),\qquad K^{\rm anti}=\tfrac12(K+K^J).
+\]
+Then $g=\tfrac12(q+q\circ J)$ satisfies
+\[
+       \|g-f\|_2\le\Delta,\qquad
+       \|g\|_{\mathcal H(K^{\rm anti})}\le B.           \tag{A}
+\]
+If $K(x,x)\le R_0^2$ everywhere, the same diagonal bound holds for
+$K^{\rm anti}$. The assertion holds simultaneously for any collection
+of comparators with the stated symmetries, without a task-count factor.
+\end{theorem}
+\begin{proof}
+Precomposition by the involution identifies $\mathcal H(K)$ with
+$\mathcal H(K^J)$ isometrically. The direct-sum representation gives
+$\|g\|^2\le\tfrac12\|q\|^2+\tfrac12\|q\circ J\|^2\le B^2$.
+The odd terms cancel exactly, so $g-f=\tfrac12(e+e\circ J)$.
+Measure preservation and the triangle inequality give the error bound.
+The diagonal bound follows by averaging.
+\end{proof}
+
+For $Jx=-x$, a raw ReLU bank with parameters $(a_i,b_i,w_i)$ has
+reflected bank $(a_i,b_i,-w_i)$. Concatenating their raw features realizes
+$K^{\rm anti}$. This requires no second optimization or posterior draw.
+It is an engineered representation: the reflected copy is part of its
+construction. More generally, averaging a bank over a finite
+measure-preserving group contracts comparator error and norm and removes
+all components whose group average is zero, by the same direct-sum and
+triangle-inequality argument. The two-element group already removes the
+linear contamination relevant here. Group averaging is an established
+mechanism, not a new claim of this paper; see, for example, Chen, Dobriban,
+and Lee, \emph{A Group-Theoretic Framework for Data Augmentation},
+JMLR 21(245), 1--71 (2020),
+\url{https://jmlr.org/papers/v21/20-163.html}. Its role here is to turn
+the existing deterministic transfer certificate into a two-bank raw-feature
+guarantee with one trained draw.
+
+\section{Conditional symmetry from antipodal source data}
+Fix even $r\ge6$, source $\chi(x)=\prod_{j=1}^r x_j$, and delete $2k$
+coordinates for a downstream target, with $r-2k\ge2$. Draw $m$ IID
+uniform inputs $x_a$, and query both $x_a$ and $-x_a$ with their source
+labels. Let $D^\pm$ be this data set of at most $2m$ labeled inputs.
+Under an isotropic Gaussian parameter prior, condition on signed source margins
+$\chi(x)F_N(x)>s$ at these observed inputs, for a fixed $s>0$. For every fixed $D^\pm$, the
+posterior is invariant under
+\[
+          (a_i,b_i,w_i)_{i\le N}\mapsto(a_i,b_i,-w_i)_{i\le N}.
+ \tag{6}
+\]
+Indeed the transformed network at $x$ is the original network at $-x$,
+the source is even, the data set is antipodally invariant, and the prior
+is invariant. Draw $L$ independent networks from this one posterior.
+Their ordinary raw features are then concatenated, with no even
+projection, added input skip, or deterministic reflected feature copy.
+
+The deterministic near-minimum-energy transfer certificate gives
+comparators (4) for all $T=\binom r{2k}$ tasks. Their contamination is
+linear in the input, so $d=r$. More explicitly, for deleted set $A$,
+\[
+ q_A(x)=\frac{\alpha}{N}\sum_i a_i\chi_A(z_i)
+                               \relu(b_i+w_i\cdot x),
+ \qquad
+ \ell_A(x)=\frac{\alpha}{2N\sqrt r}
+                       \sum_i a_i\|U_i\|\chi_A(z_i)z_i\cdot x.
+ \tag{7}
+\]
+Here $z_i$ is the coordinate sign vector of $w_i$ and $\alpha$ is the
+coefficient
+\[
+ \rho=\frac{\binom{r-2}{(r-2)/2}}{2^{r-1}\sqrt r},\qquad
+ b_j=\rho(-1)^{(j-2)/2}
+       \frac{\binom{(r-2)/2}{(j-2)/2}}{\binom{r-2}{j-2}},\qquad
+ \alpha=\frac{b_r}{s b_{r-2k}}.
+\]
+Since $|A|$ is
+even, (6) sends $\ell_A$ to $-\ell_A$. Zero weight coordinates have
+posterior probability zero; an equivariant choice there is unnecessary.
+Conditioning further on a common energy and population-hinge bound
+preserves (6). Thus the balancing theorem applies conditionally on the
+data and on every draw satisfying those bounds.
+
+\section{Finite data and finite prior scale}
+The earlier Gaussian transfer theorem supplies the following two facts.
+First, at every data history, its stated width threshold and cold scale
+give posterior energy failure probability at most $\beta^N$.
+Second, with probability at least $1-\zeta_0$ over the $m$ original IID
+inputs, every bounded-energy network fitting them has population hinge
+loss at most $h_m$. The paired posterior fits those original inputs, so
+the same uniform-convergence event applies without modification. Its
+evidence lower bound used a full-margin witness and therefore applies
+to the larger paired history as well.
+
+For precision, its sufficient constants are as follows. Set
+$D=r+1$, $p=r+2$, $E_*=s/\rho$, $E_0=(1+\varepsilon/4)E_*$,
+and $E_{\max}=(1+\varepsilon)E_*$, with $0<\varepsilon\le1$. One may take
+\[
+ N_0=\left\lceil\frac{128E_0^2}{\varepsilon^2s^2}
+                                    \log(4\cdot2^r)\right\rceil,
+\]
+\[
+ a_{\rm box}=\min\left\{1,\frac{\varepsilon\sqrt{E_*}}{32\sqrt p},
+ \frac{\varepsilon s}{32\sqrt D\{\sqrt{E_0}+(\sqrt{E_0}+1)\sqrt D\}}\right\},
+ \qquad L_0=\log^+\frac{\sqrt{2\pi}}{2a_{\rm box}},
+\]
+\[
+ \tau_0^2=\min\left\{1,
+ \frac{\varepsilon E_*}
+ {4\{pL_0+(p/2)\log(8/\varepsilon)+\log(1/\beta)\}}\right\}.
+\]
+\[
+ h_m=\frac{8E_{\max}\sqrt D}{\sqrt m}
+ +(s+E_{\max}\sqrt D)\sqrt{\frac{\log(1/\zeta_0)}{2m}}.
+\]
+Every $N\ge N_0$ and Gaussian standard deviation $0<\tau\le\tau_0$
+obey the stated uniform posterior energy estimate. The deterministic
+comparator constants in (4) can then be chosen as
+\[
+ \begin{split}
+ u&=\sqrt{(s+E_{\max}\sqrt D)(\varepsilon s+2h_m)},\qquad
+ v=\sqrt{2E_{\max}(\varepsilon s+h_m)/\rho},\\
+ \Delta&=|\alpha|\{[1+(r-1)^k]v+(r-1)^ku\},\qquad
+ B^2=2E_{\max}\alpha^2,\qquad R_0^2=2E_{\max}D.
+ \end{split}
+\]
+These are the explicit inequalities behind the orders below, rather
+than an unspecified limiting exchange of width and prior scale.
+
+Consequently the ensemble good event has failure probability at most
+\[
+                         \zeta_0+L\beta^N+\zeta_1,     \tag{8}
+\]
+where $\zeta_1$ is the balancing failure in (3). On its complement,
+(5) holds simultaneously for every nearby target. In particular there
+is no condition $r/\binom r{2k}\le c\zeta\delta^2$.
+
+For fixed $k,s$ and downstream accuracy $\delta$, choose the source
+energy deficit $\varepsilon=c_{k,s}\delta^2r^{-4k-2}$ and
+$h_m\le s\varepsilon$, with a sufficiently small constant. The
+deterministic scales give
+\[
+ B^2=O_{k,s}(r^{2k+1}),\quad R_0^2=O_s(r^2),\quad
+ \Delta\le\delta/8.
+\]
+Sufficient orders for the width of each bank and number of original
+source inputs remain
+\[
+ N_0=O_{k,s}(r^{8k+7}\delta^{-4}),\qquad
+ m=O_{k,s}(r^{8k+7}\delta^{-4}\log(2/\zeta_0)),        \tag{9}
+\]
+with $L=O(r+\log(T/\zeta_1))$. The total hidden width is $LN$.
+Empirical hinge minimization over the radius-$2B$ ball of
+$\mathcal H(\overline K)$, using
+\[
+ n=O_{k,s}(r^{2k+3}\delta^{-2}\log(2/\zeta_2)),        \tag{10}
+\]
+independent downstream examples, gives classification error at most
+$\delta$ with probability at least
+$1-\zeta_0-L\beta^N-\zeta_1-\zeta_2$, after adjusting the absolute
+constants. Indeed the comparator's hinge loss is at most its $L^2$
+error $\Delta$, because the target takes values in $\{-1,1\}$.
+For separate downstream samples for all $T$ targets replace
+$\zeta_2$ by $\zeta_2/T$.
+If desired, choose $\beta$ so that $L\beta^{N_0}\le\zeta_0$;
+the explicit prior-scale ceiling above then handles arbitrarily small
+confidence levels without an additional width condition.
+
+\begin{corollary}[Two raw banks and one posterior draw]\label{cor:antithetic}
+On the paired source data above, draw one posterior network and append
+its deterministic reflected bank. With the same $N_0,m,\tau_0$ and
+comparator constants, all $T$ nearby tasks simultaneously have error
+at most $\Delta$ and squared comparator norm at most $B^2$ in the
+averaged two-bank kernel, except with probability
+$\zeta_0+\beta^N$. Each of the two networks has the correct posterior
+marginal. Their total hidden width is $2N$.
+Hinge fitting in the radius-$B$ ball has the downstream sample order
+(10), with total failure at most $\zeta_0+\beta^N+\zeta_2$ for a fixed
+task; use $\zeta_2/T$ for separate samples on every task.
+\end{corollary}
+\begin{proof}
+One good network supplies all decompositions (7). The targets are even,
+the contamination is linear and odd, and the uniform cube measure is
+invariant under $x\mapsto-x$. Apply Theorem~\ref{thm:antithetic}
+without any additional random event. Reflection preserves the source
+margin, energy, and population-hinge bounds. Equation (6) of the source
+symmetry section gives the posterior marginal of the reflected network.
+Only the one-draw energy failure and common data failure are needed.
+The downstream argument is the preceding hinge comparator bound with
+radius $B$ in place of $2B$.
+\end{proof}
+
+The antithetic corollary does not identify the concatenated pair with a
+single width-$2N$ posterior draw: its components are deliberately
+correlated. Its deterministic transfer conclusion also holds for a
+non-Bayesian trained network satisfying the same energy and loss
+hypotheses. In that application, reflection supplies the second bank
+without requiring an invariant optimization distribution.
+
+\paragraph{Equivariant optimization also supplies the symmetry.}
+The balancing theorem is not specific to Bayesian training. On paired
+even-source data, the empirical loss and Euclidean parameter penalty
+are invariant under (6). Full-batch gradient descent with a fixed step
+schedule therefore commutes with that transformation wherever the
+gradient exists. The same is true with a fixed derivative convention
+at ReLU zero and minibatches containing complete antipodal pairs.
+Independent invariant initializations then produce independent,
+conditionally symmetric contamination vectors. If such an optimization
+procedure also attains the energy and population-loss hypotheses of
+the deterministic comparator, the same ensemble conclusion follows.
+This is a conditional implication; convergence to the required energy
+level is not established here.
+
+\paragraph{Scope.}
+The independent-bank protocol uses a collection of independent
+posterior draws and antipodally paired source observations to obtain
+conditional symmetry. The separate antithetic protocol appends a
+deterministic reflected bank to one draw. It does not establish the same simultaneous
+guarantee for one unmodified posterior draw. The ordinary IID alternative
+is to train each bank on an independent IID source data set; symmetry
+then holds for the joint data--posterior law, at the cost of separate
+source data. Exact independent posterior sampling remains an assumption.
+The geometric and statistical arguments are conventional proofs, not
+complete Lean formalizations.
+\end{document}

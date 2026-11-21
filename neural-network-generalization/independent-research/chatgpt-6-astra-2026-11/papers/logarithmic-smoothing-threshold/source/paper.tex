@@ -1,0 +1,1436 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}
+\newcommand{\one}{\mathbf1}
+\title{A logarithmic separation between local smoothing and rare neural features}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author.}}
+\date{21 November 2026; working proof draft}
+\hypersetup{hidelinks,pdftitle={A logarithmic separation between local smoothing and rare neural features},pdfauthor={ChatGPT-6 Astra}}
+\emergencystretch=3em
+\begin{document}\maketitle
+\begin{abstract}
+In a full-label Gaussian neural posterior, softplus smoothing changes the
+rarity of additional macroscopic neurons before it changes their local
+fluctuation law to the ReLU law. We prove a joint width--temperature limit:
+when the inverse temperature is of order $\sqrt N/\log N$, the posterior
+probability of each fixed extra-neuron count has a continuously shifted
+polynomial exponent. The shift is an explicit square-root splitting cost.
+The local critical-neuron marks at this scale remain Gaussian, with
+transverse size $\sqrt{\log N/N}$; their ReLU crossover instead occurs
+at inverse temperature of order $\sqrt N$. In six input dimensions, we
+also identify an inverse-temperature covariance correction of rank 38,
+caused by the critical large-neuron tail; in even dimensions at least eight,
+the covariance instead has a regular second-order response. A boundary integral identifies
+the regular second-order normalizer change, which produces an explicit
+negative logarithm-squared evidence correction in the joint limit.
+A positive Fourier integral shows more generally that removing softplus
+smoothing increases every even moment of the Gaussian neuron's parity
+correlation and strictly increases its critical normalizer. For the
+input-centered random-feature and initialization tangent kernels,
+sharpening also shifts normalized variance toward higher Boolean Fourier
+degrees, strictly reducing the normalized RKHS cost of full parity.
+The proof combines a uniform
+corner estimate, a separate fine cutoff for bulk localization, and the
+count-and-rank volume calculation. These are fixed-dimension, full-cube
+posterior results, not a growing-dimension learning or sampling guarantee.
+\end{abstract}
+
+\section{Model and joint limit}
+Fix even $r\ge6$, $X=\{-1,1\}^r$, $M=2^r$, $K=M/2$, and
+$\chi(x)=\prod_i x_i$. Write $\bar x=(1,x)$ and
+$\phi_\beta(t)=\beta^{-1}\log(1+e^{\beta t})$.
+A neuron $\theta=(a,U)\in\R^{r+2}$ has standard Gaussian law $P_0$ and
+output $\Phi_{\beta,x}=a\phi_\beta(U\cdot\bar x)$.
+The width-$N$ output is $F_N=N^{-1}\sum_i\Phi_{\beta_N,i}$.
+Set
+\[
+ \rho=\frac{\binom{r-2}{(r-2)/2}}{2^{r-1}\sqrt r},\quad
+ p_0=\frac{\binom r{r/2}}{2^r},\quad
+ \kappa_0=\frac{p_0\log2}{\rho},\quad
+ Z_\beta=M^{-1}\chi^\top\Phi_\beta,
+ \qquad Q_\beta=\mathcal M_\beta^{-1}e^{Z_\beta/\rho}P_0.
+\]
+Let $m_\beta=\E_{Q_\beta}Z_\beta$. Subscript $\infty$ denotes the ReLU
+critical law and its normalizer and moments. The earlier critical-law
+companions establish their finiteness and the critical-ray geometry.
+The uniformity in temperature required here is proved below.
+Assume
+\[
+        a_N=\frac{\sqrt N}{\beta_N\log N}\longrightarrow
+                       a\in[0,\infty).                 \tag{1}
+\]
+In particular $\beta_N\to\infty$. Condition either on the hard event
+$H_N=\{\chi(x)F_N(x)>s\text{ for all }x\}$, with $s>m_\infty$,
+or use a likelihood proportional to
+$\exp\{-N\lambda M^{-1}\sum_x\ell(\chi(x)F_N(x))\}$.
+Here $\ell(y)=(1-y)^2/2$ or $\log(1+e^{-y})$, and in the soft case
+$s$ is the minimizer of $g(y)=y/\rho+\lambda\ell(y)$, assumed larger
+than $m_\infty$. Denote the posterior by $\Pi_N$ and put
+\[
+ \alpha=\frac{s-m_\infty}{K\rho},\quad
+ \nu=\frac{r+1}{2},\quad b=\nu-2=\frac{r-3}{2},\quad
+ C_H=\frac{Kr}{2},\quad C_L=\frac{K(r-2)}{2}.
+\]
+These exponents use the ReLU corner power, not the fixed-temperature
+softplus power. Let $L_N(d)=\#\{i:\|\theta_i\|^2>dN\}$.
+
+\begin{theorem}[Polynomial exponents at logarithmic smoothing]\label{thm:main}
+Under (1), the hard evidence satisfies
+\[
+ P_0^N(H_N)=
+ e^{-N(s/\rho-\log\mathcal M_{\beta_N})}
+ N^{-C_H-a\kappa_0K\sqrt\alpha+o(1)}.                  \tag{2}
+\]
+The soft evidence, namely the prior expectation of the likelihood, is
+\[
+ e^{-N(g(s)-\log\mathcal M_{\beta_N})}
+ N^{-C_L-a\kappa_0K\sqrt\alpha+o(1)}.                  \tag{3}
+\]
+Fix $J\ge1$ and $d>0$ with $\delta=d/2<\alpha/(J+2)$. For $1\le j\le J$,
+\begin{align}
+ \Pi_N\{L_N(d)\ge K+j\}
+   &=N^{-jb-a\kappa_0\Delta_j+o(1)},\notag\\
+ \Pi_N\{L_N(d)=K+j\}
+   &=N^{-jb-a\kappa_0\Delta_j+o(1)},\qquad
+ \Delta_j=j\sqrt\delta+\sqrt{\alpha-j\delta}-\sqrt\alpha>0.
+                                                               \tag{4}
+\end{align}
+The dimension, conditioning strength, $J$, and $d$ are fixed. Equations
+(2)--(4) identify logarithmic exponents, not asymptotic prefactors.
+\end{theorem}
+
+The exact normalizer $\mathcal M_{\beta_N}$ must be retained in
+(2)--(3). Its convergence to $\mathcal M_\infty$ alone does not justify
+replacing it inside a term multiplied by $N$. When $a=0$, (4) recovers
+the ReLU logarithmic count exponents. This does not assert convergence
+of the whole posterior to the ReLU posterior.
+
+\section{A corner estimate uniform in inverse temperature}
+For $z\in X$ define $v_z=(0,z/\sqrt r)$,
+$\sigma_z=(-1)^{r/2+1}\chi(z)$, and
+$f_z(x)=\sigma_z\max\{z\cdot x/\sqrt r,0\}$.
+In fixed small disjoint cones about $(\sigma_z,v_z)$ use coordinates
+\[
+ a=\sigma_z A,\quad U=Rv_z+t/\sqrt c,\quad
+ c=AR>0,\quad v=A-R,\quad t\perp v_z.
+\]
+The cone keeps $q=A/\sqrt c$ between positive fixed constants.
+Let $q_{\beta,z}(c)$ be the $Q_\beta$ density of $c$ in this cone,
+with the other coordinates integrated out.
+
+\begin{lemma}[Uniform radial estimate]\label{lem:corner}
+There are constants $c_0,C_1,C_2>0$, independent of $\beta\ge1$, such
+that, for $c\ge c_0$,
+\[
+ C_1 c^{-\nu}\left[1+\left(\frac{\sqrt c}{\beta}\right)^{r/2}\right]
+ e^{-\kappa_0\sqrt c/\beta}
+ \le q_{\beta,z}(c)\le
+ C_2 c^{-\nu}\left[1+\left(\frac{\sqrt c}{\beta}\right)^{r/2}\right]
+ e^{-\kappa_0\sqrt c/\beta}.                          \tag{5}
+\]
+All ray cones have the same constants. The critical parameter laws have
+uniform tails
+\[
+ \sup_{\beta\ge1}Q_\beta\{\|\theta\|^2>u\}
+                       \le Cu^{-(\nu-1)},\qquad u\ge1. \tag{6}
+\]
+Their normalizers, output means, and output covariances converge to the
+ReLU values as $\beta\to\infty$.
+\end{lemma}
+\begin{proof}
+Write $\zeta=\beta/\sqrt c$ and
+\[
+ V_\zeta(t)=\frac1{\zeta\rho M}
+       \sum_{x:z\cdot x=0}\log\left(2\cosh\frac{\zeta t\cdot\bar x}{2}\right),
+ \qquad H_\zeta(t)=V_\zeta(t)-\frac{\kappa_0}{\zeta}.
+ \tag{7}
+\]
+The exact corner calculation gives, for the negative log of the
+unnormalized Gaussian tilted density,
+\[
+ D_\beta=\frac{v^2}{2}+\frac{\|t\|^2}{2c}
+                    +qV_\zeta(t)+O(A\beta^{-1}e^{-c_1\beta R}). \tag{8}
+\]
+The error is uniformly bounded and tends to zero uniformly for large
+$c$ and $\beta\ge1$. The zero-layer vectors span the transverse space.
+The scalar bounds for $\log\cosh u$ at zero and infinity therefore give
+\[
+ c_2\min\{\zeta\|t\|^2,\|t\|\}
+ \le H_\zeta(t)\le
+ C_3\min\{\zeta\|t\|^2,\|t\|\}.                    \tag{9}
+\]
+Since $A\ge\sqrt c+v/2$,
+\[
+       \frac{v^2}{2}+q\frac{\kappa_0}{\zeta}
+       \ge\frac{v^2}{4}+\frac{\kappa_0}{\zeta}
+                                      -\frac{C}{\beta^2}.
+\]
+The Jacobian is $c^{-r/2}/\sqrt{v^2+4c}\le c^{-\nu}/2$.
+Integration of (9) yields at most $C(1+\zeta^{-r/2})$.
+For the lower bound restrict $v$ to a fixed interval and $t$ to a
+fixed ball when $\zeta\ge1$, or to a ball of radius
+$c_3\zeta^{-1/2}$ when $\zeta<1$. These sets lie in the cone for
+large $c$, and their exponent beyond $\kappa_0/\zeta$ is uniformly
+bounded. Their transverse volume is comparable to
+$1+\zeta^{-r/2}$.
+
+For clarity, normalizer bounds do not require the conclusion being
+proved. On these cones, $\beta^{-1}\log(2\cosh(\beta u/2))\ge|u|/2$
+shows that the soft critical density is at most a constant times the
+ReLU critical density. Off the cones the ReLU exponent has a fixed
+positive quadratic gap. The uniform approximation
+$|\phi_\beta(t)-\max(t,0)|\le\log2/\beta$ changes that exponent by at
+most $C\|\theta\|/\beta$, which is absorbed by half the gap and a
+constant. On a bounded parameter region the density is uniformly
+bounded. Thus all unnormalized densities have a common integrable
+majorant, while $\mathcal M_\beta\ge1$ by integrating the Gaussian
+readout. This supplies uniform upper and lower normalizer bounds.
+
+In (5), $(1+w^{r/2})e^{-\kappa_0 w}$ is bounded for $w\ge0$.
+Integrating $c^{-\nu}$ on the cones and adding the off-cone Gaussian
+tail proves (6). It also gives uniform parameter moments of each order
+strictly below $r-1$. In particular, a moment of order $4+\epsilon$
+exists for some $\epsilon>0$, since $r\ge6$. Pointwise convergence of
+the densities, uniform integrability, and
+$\|\Phi_\beta\|\le C(1+\|\theta\|^2)$ prove convergence of the
+normalizers and the first two output moments.
+\end{proof}
+
+Along (1), for $\eta$ in a fixed compact subset of $(0,\infty)$,
+(5) implies uniformly
+\[
+ q_{\beta_N,z}(N\eta)
+ =N^{-\nu}\exp\{-\kappa_0\sqrt{N\eta}/\beta_N\}\,N^{o(1)}
+ =N^{-\nu-a\kappa_0\sqrt\eta+o(1)}.                 \tag{10}
+\]
+The extra mark volume is at most a fixed power of $\log N$.
+On such macro amplitudes, (8)--(9) also show that marks outside
+$|v|^2+\|t\|\le B\log N$ have arbitrarily small polynomial weighted
+mass by increasing the fixed $B$. On the retained marks,
+\[
+        \Phi_{\beta_N}=cf_z+O(\log N),\qquad
+        \|\theta\|^2=2c+O(\log N).                  \tag{11}
+\]
+The smoothing contribution to the first error is bounded by
+$CA/\beta_N=O(\log N)$.
+
+\section{Uniform bulk estimates and a separate fine cutoff}
+There is a fixed convolution block of the $Q_\beta$ output laws, for
+all sufficiently large $\beta$, that minorizes the same centered
+isotropic Gaussian law with a common positive mass. To see this, choose
+bounded incoming neighborhoods whose ReLU output columns isolate the
+cube points. They remain full rank for large $\beta$. Conditional
+readouts are independent Gaussians with means $G_\beta(U)/\rho$ and
+unit variance. On those neighborhoods their output covariances are
+uniformly positive definite and bounded, and their means are bounded.
+Their densities consequently dominate a smaller centered isotropic
+Gaussian density. The incoming-neighborhood probabilities are bounded
+below by the uniform critical-density estimates.
+
+Independent block mixtures now give two uniform consequences. Apart
+from a subprobability of mass $Ce^{-c n}$, a sum of $n$ outputs is a
+mixture of translates of isotropic Gaussians with covariance between
+$cnI$ and $CnI$. Moreover, for fixed $A,h>0$,
+\[
+ \inf_{\|w\|\le A\sqrt n}
+ Q_{\beta_N}^{n}\left\{
+ \left\|\sum_i\Phi_i-nm_{\beta_N}\chi-w\right\|_\infty<h
+ \right\}\ge c_{A,h}n^{-M/2}.                       \tag{12}
+\]
+Uniform second moments keep the mixture centers within $O(\sqrt n)$
+with positive probability; the Gaussian component then gives (12).
+These statements use no quantitative central limit theorem.
+
+Changing the prior to $Q_{\beta_N}^N$ leaves a residual $0\le W_N\le1$.
+With $Y=\sum_i\Phi_i$, it is
+\[
+ e^{-\sum_x(\chi(x)Y_x-Ns)/(M\rho)}\prod_x\one_{\{\chi(x)Y_x>Ns\}}
+ \quad\hbox{or}\quad
+ e^{-N M^{-1}\sum_x[g(\chi(x)Y_x/N)-g(s)]}.            \tag{13}
+\]
+Its weighted mass outside $\|Y-Ns\chi\|\le\eta N$ is exponentially
+small for each fixed $\eta>0$.
+
+The target cutoff $d$ in (4) stays fixed. Introduce a different,
+smaller cutoff $eN$ solely for the proof. Uniform tails and variances,
+and Bennett's inequality applied coordinatewise to
+$\Phi_i\one_{\{\|\theta_i\|^2\le eN\}}$, show that for every
+$\eta,A_0>0$ one can choose fixed $e>0$ sufficiently small so that
+\[
+ Q_{\beta_N}^N\left\{
+ \left\|\sum_i\Phi_i\one_{\{\|\theta_i\|^2\le eN\}}
+            -Nm_{\beta_N}\chi\right\|>\eta N\right\}
+                                         \le C N^{-A_0}. \tag{14}
+\]
+Indeed the truncation bias is $o(N)$ uniformly, the coordinate bound
+is $CeN$, and the total variance is $O(N)$. The Bennett exponent is
+at most $-(c\eta/e)\log N+O_{e,\eta}(1)$.
+Also
+\[
+             Q_{\beta_N}^N\{L_N(e)>D\}
+                             \le C_{e,D}N^{-(D+1)b}.    \tag{15}
+\]
+Thus $D$ may be chosen large enough to make this error arbitrarily
+small polynomially. This separation of cutoffs matters: driving the
+localization tolerance to zero at the fixed target cutoff $d$ would
+not justify an arbitrarily accurate Bennett bound.
+
+On the resulting coarse event, (11), (13), and (14) imply that every
+fine-large neuron is in a critical cone, with amplitude between fixed
+positive multiples of $N$, and that its pair totals satisfy
+\[
+       \sum_{j:z_j\in\{z,-z\}}\frac{c_j}{N}
+                            =\alpha+O(\eta)+o(1).       \tag{16}
+\]
+Here the even Walsh block of the ray columns is invertible and sends
+$(s-m_\infty)\chi$ to $\alpha\one$; parity also bounds the sum of all
+amplitudes. Every antipodal pair occurs. Off-cone errors are exponentially
+small. The mark cutoff in (11) makes the remaining errors arbitrarily
+small polynomially. The number of fine-large neurons is between $K$
+and $D$, and each associated output matrix has rank at least $K$.
+
+\section{Count, rank, and square-root cost}
+For a specified list of $L$ fine-large rays let $A$ be its output matrix
+and $R_A$ its rank. Coarea in the amplitude box, the Gaussian component
+of the ordinary sum, and the at most $N^L$ choices of labels give the
+same volume power as for ReLU:
+\[
+ N^{-L\nu}\,N^{L-R_A}\,N^{-(M-R_A)/2}\,N^\xi\,N^L
+       =N^{-Lb-(M+R_A)/2+\xi},\qquad
+ \xi=\begin{cases}0&\text{hard},\\M/2&\text{soft}.\end{cases} \tag{17}
+\]
+The fiber in the macro box has volume $O(N^{L-R_A})$. Integration of
+the ordinary Gaussian density along the range of $A$ leaves a marginal
+bounded by $CN^{-(M-R_A)/2}$. The integral of the residual in (13) is
+$O(N^\xi)$. Replacing it by its supremum over the $O(\log N)$ error
+box from (11) changes this only by a power of $\log N$. The exponentially
+small bad Gaussian component is negligible. The mark integrations in
+(10) likewise contribute only $N^{o(1)}$.
+
+The additional factor from the radial density is
+\[
+       N^{-a\kappa_0\sum_{i=1}^L\sqrt{c_i/N}+o(1)}.    \tag{18}
+\]
+At exact pair totals $\alpha$, its sum is at least $K\sqrt\alpha$.
+If at least $K+j$ amplitudes exceed $\delta$, it is at least
+$K\sqrt\alpha+\Delta_j$. Here is the elementary optimization, including
+possible uncounted pairs. If a pair has $n\ge1$ counted pieces, merging
+all other pieces into the largest one and moving mass to the boundary
+shows that its least square-root sum is
+$(n-1)\sqrt\delta+\sqrt{\alpha-(n-1)\delta}$.
+A pair with no counted piece costs at least $\sqrt\alpha$.
+If $h$ pairs are uncounted, there are at least $j+h$ excess counted
+pieces among the occupied pairs. Retain any $j$ of these excess pieces.
+The increments $\Delta_l$ are increasing and concave on $0\le l\le j$,
+and $\Delta_0=0$, so splitting those $j$ pieces between pairs cannot
+reduce their total cost below $\Delta_j$.
+For (16) the same lower bound has an error tending to zero as
+$\eta\downarrow0$, by continuity on the finite compact amplitude boxes.
+The strict norm cutoff agrees with the amplitude cutoff up to $o(1)$
+by (11).
+
+Since $L\ge K$, $R_A\ge K$, (17)--(18) prove the upper logarithmic
+evidence bound. Under the extra-count event $L\ge K+j$, they prove
+an upper exponent $C_H+jb+a\kappa_0(K\sqrt\alpha+\Delta_j)$ or its
+soft analogue. Choose the remainder order $A_0$ larger than these
+fixed exponents before choosing $e,D,B$. There are finitely many fine
+ray lists. First let $N\to\infty$, then $\eta\downarrow0$.
+
+For the matching lower bound choose a balanced set of $K$ rays, with
+one ray per pair. For evidence alone, give each amplitude a $\sqrt N$
+interval about $[Ns-(N-K)m_{\beta_N}]/(K\rho)$ and restrict marks to
+fixed bounded boxes. For the count event, duplicate one ray $j$ times.
+Its $j$ small amplitudes are just above $N\delta$, the remaining
+amplitude is near $N(\alpha-j\delta)$, and all other pair totals are
+unchanged. The amplitude region has $K$ directions of length
+$\sqrt N$ and $j$ free directions of length proportional to $N$.
+Choose its fixed split neighborhood so that the square-root sum is
+within an arbitrarily small constant of $K\sqrt\alpha+\Delta_j$.
+This is possible because $\delta<\alpha/(j+1)$.
+
+The selected output differs from the desired mean by $O(\sqrt N)$;
+the smoothing error $O(\log N)$ is smaller. Equation (12) gives the
+hard lower small-box factor $N^{-M/2}$ with residual bounded below.
+For soft loss, uniform second moments give a positive probability
+of bulk fluctuations $O(\sqrt N)$, again with residual bounded below.
+Summing the order $N^{K+j}$ label assignments yields the matching
+powers in (17). On $L_N(e)\le D$ their overlap is bounded by a constant;
+the discarded sum is at most $N^{K+j}Q_{\beta_N}^N\{L_N(e)>D\}$,
+which is negligible after increasing $D$. Let the split neighborhood
+approach its boundary to obtain the claimed logarithmic lower bound.
+The case $j=0$ gives the lower evidence bound. Restoring the prior
+factor proves (2)--(3), and dividing gives the first formula in (4).
+The same tail argument for $j+1$ has strictly larger exponent, since
+$b>0$ and $\Delta_{j+1}>\Delta_j$. Subtraction proves the exact-count
+formula. The hypothesis $\delta<\alpha/(J+2)$ permits that final tail.
+
+\section{Local marks at the logarithmic threshold}
+Define, on $v_z^\perp$,
+\[
+                 Q_z=M^{-1}\sum_{x:z\cdot x=0}\bar x\bar x^\top.
+\]
+Its eigenvalues are $p_0$ in the bias direction and $p_0r/(r-1)$ in
+the other $r-1$ directions.
+
+\begin{theorem}[One-neuron Gaussian marks]\label{thm:marks}
+Suppose $a\in(0,\infty)$ in (1), and fix $\eta>0$. Conditional on
+$c=N\eta$ and a critical cone, write the physical transverse parameter
+as $u=\sqrt{\log N/N}\,t$. Then $(v,t)$ converges in total variation to
+independent Gaussians
+\[
+            v\sim N(0,1),\qquad
+            t\sim N\left(0,\frac{4a\rho}{\sqrt\eta}Q_z^{-1}\right).
+                                                               \tag{19}
+\]
+The radial density has the more precise equivalent
+\[
+ q_{\beta_N,z}(N\eta)\sim
+ C_0 a^{r/2}\eta^{-(r+2)/4}N^{-(r+1)/2}(\log N)^{r/2}
+                 e^{-\kappa_0\sqrt{N\eta}/\beta_N},      \tag{20}
+\]
+where
+\[
+ C_0=\frac{(2\pi)^{-(r+2)/2}}{2\mathcal M_\infty}
+                  \sqrt{2\pi}\frac{(8\pi\rho)^{r/2}}{\sqrt{\det Q_z}}.
+\]
+This theorem is a critical one-neuron conditional limit; it does not
+state a full-posterior fluctuation limit in the joint regime.
+\end{theorem}
+\begin{proof}
+Substitute $u=\sqrt{\log N/N}\,t$ in the exact exponent (8).
+On bounded marks, $\beta_N u\cdot\bar x=O((\log N)^{-1/2})$, and
+Taylor expansion of $\log\cosh$ gives
+\[
+ D_{\beta_N}-\frac{\kappa_0\sqrt{N\eta}}{\beta_N}
+        \longrightarrow \frac{v^2}{2}
+                      +\frac{\sqrt\eta}{8a\rho}t^\top Q_z t.
+\]
+The imbalance correction to the subtracted constant is
+$O(|v|/\beta_N+v^2/(\beta_N\sqrt N))$ and vanishes.
+The Jacobian is asymptotic to
+$\tfrac12 N^{-(r+1)/2}\eta^{-1/2}(\log N)^{r/2}$.
+After this rescaling, (9) bounds the transverse exponent below by a
+constant times $\min(\|t\|^2,\sqrt{\log N}\|t\|)$; the completed-square
+bound controls $v$. These give integrable domination, including the
+expanding cone boundary. Dominated convergence proves (19) and (20).
+The exact exponential in (20) cannot in general be replaced by
+$N^{-a\kappa_0\sqrt\eta}$ in an asymptotic equivalent: the assumption
+$a_N\to a$ does not imply $(a_N-a)\log N\to0$.
+\end{proof}
+
+The one-neuron crossover companion identifies $\beta\asymp\sqrt c$
+as the scale at which the transverse mark law changes from its smooth
+Gaussian form to the ReLU corner law. At $c\asymp N$, Theorem~\ref{thm:main}
+shows that the polynomial rare-count exponent already changes at
+$\beta\asymp\sqrt N/\log N$. The logarithmic separation concerns two
+different observables. It does not identify an additional thermodynamic
+phase or assert uniformity in increasing input dimension.
+
+\section{The first Gaussian-mark correction is logarithmic}
+The one-neuron limit can be sharpened when the temperature is specified
+exactly. This also distinguishes a local Gaussian approximation error
+from the polynomial posterior count probabilities.
+
+\begin{corollary}[A nonzero logarithmic mark error]\label{cor:mark-rate}
+Fix $a,\eta>0$ and set $\beta_N=\sqrt N/(a\log N)$ exactly. Let $G$
+be the Gaussian law in (19), and let $P_N^{\rm mark}$ be the conditional
+mark law there. Define
+\[
+ Q_4(t)=\frac{\sqrt\eta}{192a^3\rho M}
+                         \sum_{x:z\cdot x=0}(t\cdot\bar x)^4,
+ \qquad \mu_4=\E_G Q_4=\frac{r^2\rho}{4a\sqrt\eta\,p_0}.
+                                                               \tag{21}
+\]
+Then, extending its density by zero outside the cone,
+\[
+ \left\|\log N\left(\frac{dP_N^{\rm mark}}{dG}-1\right)
+                           -(Q_4-\mu_4)\right\|_{L^1(G)}\to0.
+                                                               \tag{22}
+\]
+In particular
+\[
+ \|P_N^{\rm mark}-G\|_{\rm TV}
+       \sim\frac{\E_G|Q_4-\mu_4|}{2\log N}>0.
+                                                               \tag{23}
+\]
+The ratio of the radial density to the right side of (20) equals
+$1+\mu_4/\log N+o(1/\log N)$.
+\end{corollary}
+\begin{proof}
+The next term of $\log\cosh u=u^2/2-u^4/12+O(u^6)$ gives the
+unnormalized mark density relative to $G$ as
+$1+Q_4(t)/\log N+o_{L^1(G)}(1/\log N)$.
+For a detailed domination argument, first restrict
+$|v|+\|t\|\le(\log N)^\epsilon$ with a sufficiently small fixed
+$\epsilon>0$. The sixth-order remainder is bounded by
+$C(\log N)^{-2}\|t\|^6$, and exponentiating the fourth-order term
+costs $C(\log N)^{-2}(1+\|t\|^8)$ under a slightly weaker Gaussian
+density. Balance, Jacobian, and nonzero-layer errors are smaller than
+every fixed inverse power of $\log N$. On the complement, the
+min-quadratic/linear bound used in Theorem~\ref{thm:marks} gives
+$Ce^{-c(\log N)^{2\epsilon}}$ integrated mass for both the exact
+unnormalized marks and the Gaussian polynomial terms. This proves
+the claimed $L^1$ expansion. Normalization subtracts $\mu_4$.
+
+For every zero-layer $x$,
+$\bar x^\top Q_z^{-1}\bar x=r/p_0$ on the transverse space.
+The fourth Gaussian moment is therefore
+$3[4a\rho r/(\sqrt\eta p_0)]^2$. There are $Mp_0$ such rows, giving
+(21). The nonconstant quartic polynomial has positive variance under
+the nondegenerate Gaussian, proving strict positivity in (23).
+Finally $\mathcal M_\beta-\mathcal M_\infty=o(1/\beta)$, as shown
+in the next proof. At the present temperature this is
+$o(1/\log N)$, so replacing the normalizer by $\mathcal M_\infty$
+in the radial prefactor does not affect its displayed correction.
+\end{proof}
+
+\section{A singular covariance correction in six input dimensions}
+Pointwise softplus approximation also hides a distinct sensitivity of
+the critical second moments. The following statement concerns one
+critical neuron, with inverse temperature tending to infinity; it is
+separate from the joint posterior limit in Theorem~\ref{thm:main}.
+
+\begin{theorem}[The critical covariance remembers the large-neuron tail]
+\label{thm:covariance}
+Fix $r=6$, and write
+$\Sigma_\beta=\operatorname{Cov}_{Q_\beta}(\Phi_\beta)$.
+On the transverse space let
+\[
+ I_\zeta=\int_{\R^6}e^{-V_\zeta(t)}\,dt,\qquad
+ I_\infty=\int_{\R^6}e^{-V_\infty(t)}\,dt,
+ \quad V_\infty(t)=\frac1{2\rho M}\sum_{z\cdot x=0}|t\cdot\bar x|.
+\]
+Then
+\[
+ \beta(\Sigma_\infty-\Sigma_\beta)
+        \longrightarrow C_*\sum_{z\in X} f_zf_z^\top,
+ \qquad
+ C_* =\frac{(2\pi)^{-7/2}}{\mathcal M_\infty}
+                         \int_0^\infty(I_\infty-I_\zeta)\,d\zeta
+                         \in(0,\infty).                \tag{24}
+\]
+The limiting matrix has rank $38$. Its Walsh eigenvalues, by degree
+$0,1,\ldots,6$, are $C_*$ times
+\[
+                     (600,\ 512/3,\ 24,\ 0,\ 8/3,\ 0,\ 24).
+                                                               \tag{25}
+\]
+Thus the leading covariance change is positive on the critical-ray
+span and zero on its orthogonal complement. No finite-$\beta$ matrix
+ordering is asserted.
+\end{theorem}
+\begin{proof}
+For fixed $\zeta>0$, write
+\[
+ \Delta V_\zeta(t)=V_\zeta(t)-V_\infty(t)
+   =\frac1{\zeta\rho M}\sum_{z\cdot x=0}
+                        \log(1+e^{-\zeta|t\cdot\bar x|})\ge0.
+                                                               \tag{26}
+\]
+For any $q$ in a fixed compact positive interval, coarea on each
+nonzero linear functional $t\mapsto t\cdot\bar x$ gives
+\[
+ \int e^{-qV_\infty(t)}(1-e^{-q\Delta V_\zeta(t)})\,dt
+                              \le C\min\{1,\zeta^{-2}\}.
+                                                               \tag{27}
+\]
+For $\zeta\ge1$ use $1-e^{-u}\le u$: the explicit $\zeta^{-1}$
+in (26) and the one-dimensional integral of
+$\log(1+e^{-\zeta|s|})$ each contribute a factor $\zeta^{-1}$.
+The transverse hyperplane integral is uniformly bounded because
+$V_\infty$ is a norm. For $\zeta<1$ the untilted integral bounds it.
+The same estimate holds with any fixed polynomial in $\|t\|$ inserted.
+In particular $0<I_\infty-I_\zeta\le C\min(1,\zeta^{-2})$;
+the constant in (24) is finite and positive.
+
+We first remove lower-order differences. Almost everywhere in parameter
+space,
+$\beta(\phi_\beta(U\cdot\bar x)-\phi_\infty(U\cdot\bar x))\to0$,
+and the absolute value is at most $\log2$. Also
+\[
+ |e^u-e^v|\le |u-v|(e^u+e^v).
+\]
+The common cone/ReLU and off-cone Gaussian majorants in
+Lemma~\ref{lem:corner}, with finite first and third parameter moments,
+therefore imply
+\[
+ \beta(\mathcal M_\beta-\mathcal M_\infty)\to0,
+ \qquad
+ \beta(m_\beta-m_\infty)\to0.                         \tag{28}
+\]
+For the second-moment integrand, changing $\Phi_\beta\Phi_\beta^\top$
+to $\Phi_\infty\Phi_\infty^\top$ under the soft critical density
+also gives $o(\beta^{-1})$: its $\beta$-scaled difference is bounded
+by $C(1+\|\theta\|^3)$ and tends to zero almost everywhere.
+Off fixed critical cones, all remaining density differences have a
+Gaussian majorant after multiplication by the required polynomials,
+so their $\beta$-scaled contribution tends to zero as well.
+
+On one large-$c$ critical cone, the exact ReLU output is
+$cf_z+e$ with $\|e\|\le C\|t\|$. Replacing its tensor square by
+$c^2f_zf_z^\top$ leaves $O(c\|t\|+\|t\|^2)$.
+The mean-value density bound just used supplies one factor
+$|a|\le C\sqrt c$ after multiplication by $\beta$. Against the
+critical density $c^{-7/2}e^{-c_1(v^2+\|t\|)}$, this remainder is
+integrable: its largest radial power is $c^{-2}$. Dominated convergence
+makes this replacement another $o(\beta^{-1})$ error.
+
+The exact exponent difference on the cone is
+$q\Delta V_{\beta/\sqrt c}(t)$ plus an error bounded by
+$C\sqrt c\,\beta^{-1}e^{-c_2\beta\sqrt c}$. The latter contributes
+$o(\beta^{-1})$ even with the factor $c^2$. We are left with the
+radial difference controlled, by (27), by
+\[
+                         Cc^{2-7/2}\min(1,c/\beta^2).   \tag{29}
+\]
+Put $c=\beta^2 y$. After multiplication by $\beta$, its integrable
+majorant is $Cy^{-3/2}\min(1,y)$ on $(0,\infty)$.
+At each fixed $y>0$, $q\to1$, the balance Jacobian tends to
+$\tfrac12c^{-7/2}$, the physical transverse Gaussian factor tends
+to one, and the expanding cone restrictions disappear. Integrating
+$v$ gives $\sqrt{2\pi}$. Dominated convergence yields, per ray,
+\[
+ \frac{(2\pi)^{-7/2}}2 f_zf_z^\top
+            \int_0^\infty y^{-3/2}(I_\infty-I_{1/\sqrt y})\,dy.
+\]
+The substitution $\zeta=1/\sqrt y$ changes the last integral to
+$2\int_0^\infty(I_\infty-I_\zeta)\,d\zeta$.
+Divide by $\mathcal M_\infty$, sum the finitely many rays, and use
+(28) to normalize and center the second moments. This proves (24).
+
+Finally the finite binomial sum gives the Walsh coefficients of the
+six-bit ReLU sum, by degree, as
+\[
+                 (15/16,1/2,3/16,0,-1/16,0,3/16).
+\]
+Coordinate-flip symmetry diagonalizes $\sum_zf_zf_z^\top$; its
+degree-$j$ eigenvalue is $M^2/6$ times the square of that coefficient.
+This gives (25). The positive eigenspaces have total dimension
+$1+6+15+15+1=38$.
+\end{proof}
+
+For numerical evaluation, a second positive-integral formula provides
+an independent check. Homogeneity and Tonelli's theorem give
+\[
+ \int_0^\infty(I_\infty-I_\zeta)\,d\zeta
+ =\Gamma(5)\int_{\R^6}
+       [V_\infty(t)^{-5}-V_1(t)^{-5}]\,dt.             \tag{30}
+\]
+Indeed set $s=\zeta t$ inside $I_\zeta$ and then integrate
+$\zeta^{-6}(e^{-V_\infty(s)/\zeta}-e^{-V_1(s)/\zeta})$.
+Both integrands are nonnegative. Numerical values from these formulas
+and paired critical-law integrations are Monte Carlo diagnostics, not
+certified enclosures. The dimension-six conclusion is not asserted in
+higher dimensions: the integrability balance in (29) changes with $r$.
+
+\begin{corollary}[The highest finite integer output moment is singular]
+Fix even $r\ge6$ and put $k=(r-2)/2$. Define $V_\zeta$ on the
+$r$-dimensional transverse space as in (7), and let
+$I_{\zeta,r}=\int_{\R^r}e^{-V_\zeta(t)}dt$.
+Then the raw moment tensors obey
+\[
+ \beta\left(\E_{Q_\infty}\Phi_\infty^{\otimes k}
+             -\E_{Q_\beta}\Phi_\beta^{\otimes k}\right)
+ \longrightarrow C_r\sum_{z\in X}f_z^{\otimes k},\qquad
+ C_r=\frac{(2\pi)^{-(r+1)/2}}{\mathcal M_\infty}
+                 \int_0^\infty(I_{\infty,r}-I_{\zeta,r})d\zeta>0.
+                                                               \tag{30a}
+\]
+The same limit holds for centered $k$th moment tensors. The limiting
+tensor is nonzero: contracting each index against $\chi/M$ gives
+$MC_r\rho^k>0$. The order $k$ is the largest integer for which the
+absolute output moment is finite under $Q_\infty$.
+\end{corollary}
+\begin{proof}
+The radial exponent is $\nu=(r+1)/2=k+3/2$, so the leading moment
+density is $c^{k-\nu}=c^{-3/2}$. The argument for (27) works in every
+fixed transverse dimension. The exact same substitution $c=\beta^2y$
+therefore gives the integrable dominating function in (29) and the
+constant in (30a). Replacing $\Phi_\infty^{\otimes k}$ by
+$c^kf_z^{\otimes k}$ leaves at most a polynomial in the marks times
+$c^{k-1}$; after the mean-value density bound, the largest radial power
+is again $c^{k-1+1/2-\nu}=c^{-2}$. Changing the output itself has a
+$\beta$-scaled bound of parameter degree $2k-1<r-1$. Both errors are
+$o(1)$ after multiplication by $\beta$, by the same dominated-convergence
+argument. Lower raw moment differences and mean differences are also
+$o(\beta^{-1})$, because the corresponding density derivative needs
+at most $2k-1$ parameter powers. Expanding a centered tensor proves the
+centered statement. Finally the cone density is comparable to
+$c^{-\nu}$ on bounded marks and the output norm is comparable to $c$;
+its absolute moment is finite exactly for orders below
+$\nu-1=k+1/2$. This proves the integer-order assertion.
+\end{proof}
+
+\section{The critical normalizer has a regular second-order expansion}
+The normalizer in (2)--(3) contributes a larger correction than the
+polynomial count cost at the logarithmic smoothing scale. It can be
+expanded explicitly, provided its second-order term is retained.
+Write $\varphi_j$ for the standard Gaussian density in $j$ dimensions,
+and $G(U)=M^{-1}\sum_x\chi(x)\max(U\cdot\bar x,0)$.
+
+\begin{theorem}[A boundary formula for the normalizer]\label{thm:normalizer}
+For every fixed even $r\ge6$, there is a finite constant $A_r<0$
+such that
+\[
+          \mathcal M_\beta=\mathcal M_\infty
+                                  +\frac{A_r}{\beta^2}+O(\beta^{-3}).
+                                                               \tag{31}
+\]
+One formula, with $b=-\sum_iw_i$, is
+\[
+ A_r=\frac{\pi^2}{6\rho^2}\int_{\R^r}
+       \varphi_r(w)\varphi_1(b)G(w,b)
+                 e^{G(w,b)^2/(2\rho^2)}\,dw.             \tag{32}
+\]
+The ordering of $(w,b)$ in this formula is only notational: the
+preactivation is $b+w\cdot x$. The strict sign is proved after the
+boundary expansion using a positive Fourier representation.
+\end{theorem}
+\begin{proof}
+The softplus increment is
+$d_\beta(s)=\phi_\beta(s)-\phi_\infty(s)
+=\beta^{-1}\log(1+e^{-\beta|s|})$.
+Its two elementary integrals are
+\[
+ \int_\R d_\beta(s)\,ds=\frac{\pi^2}{6\beta^2},\qquad
+ \int_\R |s|d_\beta(s)\,ds=O(\beta^{-3}),\qquad
+ \int_\R d_\beta(s)^2\,ds=O(\beta^{-3}).               \tag{33}
+\]
+The first follows by integrating the alternating exponential series for
+$\log(1+e^{-u})$; the other two follow by scaling and exponential decay.
+
+We record a uniform slice bound to justify the expansions at the
+critical tilt. The sharp biased ReLU coefficient inequality gives
+\[
+             |G(U)|/\rho\le\sqrt r\min_i|w_i|.
+\]
+The same bound holds for $G_\beta$: softplus is ReLU averaged over a
+centered logistic bias perturbation, and the inequality is uniform in
+bias. It also holds for every convex combination of $G$ and $G_\beta$.
+On a slice $b+w\cdot x=s$, integrate in $b$ and bound its Gaussian
+density, or its first derivative, by a constant. Partition the incoming
+weights by their signs and their minimum absolute coordinate $t$;
+write the other magnitudes as $t+e_i$, $e_i\ge0$. Completing the
+Gaussian readout square bounds its $p$th absolute moment by
+$C_p(1+t)^p$. Integration over the $r-1$ excesses is bounded by
+$C(1+t)^{-(r-1)}$. Consequently the slice integrals with readout moments
+$p=1,2$ are uniformly finite in $s$, because
+\[
+                  \int_0^\infty(1+t)^{p-(r-1)}\,dt<\infty.
+                                                               \tag{34}
+\]
+The same argument applies to the absolute derivative of the bias
+Gaussian density.
+
+Put $\delta G=M^{-1}\sum_x\chi(x)d_\beta(U\cdot\bar x)$.
+Taylor expansion of $e^{a(G+\delta G)/\rho}$ about $G$ has integrated
+remainder bounded by
+\[
+ C\sum_x\int a^2d_\beta(U\cdot\bar x)^2
+           [e^{aG/\rho}+e^{aG_\beta/\rho}]\,P_0(d\theta)
+                                                    =O(\beta^{-3}),
+\]
+using (33)--(34) and the convex-combination bound just established.
+For each $x$ the linear term is
+$\int d_\beta(s)F_x(s)\,ds$, where $F_x(s)$ is the Gaussian slice
+integral of $a\chi(x)e^{aG/\rho}/(M\rho)$ at $b=s-w\cdot x$.
+This function is uniformly Lipschitz. Differentiating almost everywhere
+uses the first derivative of the bias Gaussian and
+$|\partial_bG|\le1$; the resulting readout powers are at most two,
+so (34) bounds the derivative uniformly. Therefore (33) gives
+\[
+       \int d_\beta(s)F_x(s)\,ds
+                =\frac{\pi^2}{6\beta^2}F_x(0)+O(\beta^{-3}).
+\]
+Sum over the finite cube. Integrating the Gaussian readout in $F_x(0)$
+replaces $a e^{aG/\rho}$ by $(G/\rho)e^{G^2/(2\rho^2)}$.
+Finally coordinate flips send each $x$ slice to the all-positive input
+slice and cancel its factor $\chi(x)$. The $M$ equal contributions
+cancel the factor $1/M$, giving (32).
+\end{proof}
+
+\section{Fourier moments and normalized initialization spectra}
+\begin{theorem}[Smoothing orders all even parity-correlation moments]
+\label{thm:moment-order}
+Let $b,w_1,\ldots,w_r$ be independent standard Gaussians and put
+$G_\beta(b,w)=M^{-1}\sum_x\chi(x)\phi_\beta(b+w\cdot x)$.
+For every even $r\ge2$ and integer $j\ge1$,
+$\E G_\beta^{2j}$ is strictly increasing in
+$\beta\in(0,\infty]$. More generally the same weak ordering holds
+for any two centered ReLU bias smoothings with finite first moments whose characteristic
+multipliers satisfy $0\le\psi_1(t)\le\psi_2(t)$ for all $t>0$.
+Consequently, for even $r\ge6$,
+\[
+       1<\mathcal M_{\beta_1}<\mathcal M_{\beta_2}
+                         <\mathcal M_\infty
+            \qquad(0<\beta_1<\beta_2<\infty).          \tag{M1}
+\]
+Both endpoint limits are exact: $\mathcal M_\beta\to1$ as
+$\beta\downarrow0$, and $\mathcal M_\beta\to\mathcal M_\infty$
+as $\beta\to\infty$.
+\end{theorem}
+\begin{proof}
+Softplus is ReLU averaged over a centered logistic bias with scale
+$1/\beta$. Its characteristic function is
+\[
+        \psi_\beta(t)=\frac{\pi t/\beta}{\sinh(\pi t/\beta)},
+        \qquad \psi_\infty(t)=1.
+\]
+For completeness, substituting $u=e^{-z}$ in the logistic-density
+Fourier integral gives
+$\int_0^\infty u^{-it}(1+u)^{-2}du
+=\Gamma(1-it)\Gamma(1+it)=\pi t/\sinh(\pi t)$.
+The ReLU cosine integral, after the affine terms cancel against parity,
+therefore gives
+\[
+ G_\beta(b,w)=\frac{(-1)^{r/2+1}}\pi
+       \int_0^\infty \psi_\beta(t)\cos(bt)
+                    \prod_{i=1}^r\sin(w_it)\,\frac{dt}{t^2}.
+                                                               \tag{M2}
+\]
+For $\mathbf t=(t_1,\ldots,t_{2j})$, let
+\[
+ C_j(\mathbf t)=\E_Z\prod_{h=1}^{2j}\cos(Zt_h),\qquad
+ S_j(\mathbf t)=\E_Z\prod_{h=1}^{2j}\sin(Zt_h),
+                      \quad Z\sim N(0,1).
+\]
+Expanding the cosines shows
+$C_j=2^{-2j}\sum_{\varepsilon\in\{-1,1\}^{2j}}
+\exp[-(\sum_h\varepsilon_ht_h)^2/2]>0$.
+Independence of the incoming Gaussian coordinates gives
+\[
+ \E G_\beta^{2j}=\pi^{-2j}\int_{(0,\infty)^{2j}}
+       C_j(\mathbf t)S_j(\mathbf t)^r
+                    \prod_{h=1}^{2j}\frac{\psi_\beta(t_h)}{t_h^2}
+                         \,d\mathbf t.                 \tag{M3}
+\]
+Fubini is justified before averaging: for fixed weights the absolute
+integral in (M2) is bounded by a polynomial in $1+\|w\|$, using
+$|\sin(w_it)|\le\min(1,|w_i|t)$ near zero and $t^{-2}$ at infinity.
+Its $2j$th power has finite Gaussian expectation.
+Since $r$ is even, the entire integrand in (M3) is nonnegative.
+The multiplier increases strictly with $\beta$ at every $t>0$.
+Moreover $S_j$ is nonzero on an open set near positive equal small
+$t_h$, since its leading term is
+$\E Z^{2j}\prod_h t_h>0$. This proves strict moment ordering.
+
+Integrating the independent Gaussian readout gives
+$\mathcal M_\beta=\E\exp(G_\beta^2/(2\rho^2))$.
+Expand this exponential into its nonnegative moment series and use
+(M3). Finiteness of $\mathcal M_\infty$ gives domination for the
+series and the integrals. Pointwise multiplier convergence to zero
+or one proves both endpoint limits; the $j=1$ term proves strictness.
+\end{proof}
+
+\begin{corollary}[A centered random-feature kernel ordering]
+Let $d\ge1$ and initialize the bias and $d$ incoming weights as
+independent standard Gaussians. On $\{-1,1\}^d$ center each feature
+over the input cube:
+\[
+ h_\beta(U,x)=\phi_\beta(U\cdot\bar x)
+                         -\E_z\phi_\beta(U\cdot\bar z),\qquad
+ K_\beta^c(x,y)=\E_U h_\beta(U,x)h_\beta(U,y).
+\]
+If $0<\beta_1<\beta_2\le\infty$, then
+$K_{\beta_2}^c-K_{\beta_1}^c$ is positive definite on the mean-zero
+subspace and is zero on constants. Every nonconstant Walsh eigenvalue
+strictly increases as smoothing is removed.
+Consequently every nonzero mean-zero target has a strictly smaller
+RKHS norm under $K_{\beta_2}^c$ than under $K_{\beta_1}^c$.
+This is an initialization-kernel statement, with no assertion of
+trained-network or sample-complexity monotonicity.
+\end{corollary}
+\begin{proof}
+Coordinate-flip invariance makes the kernel diagonal in the Walsh
+basis. With the normalized counting measure, its eigenvalue for
+$S\ne\varnothing$ is $\E\widehat\phi_\beta(S)^2$.
+For degree $p=|S|\ge2$, the integral (M2) has sine factors on $S$
+and cosine factors off $S$. The bias factor is cosine when $p$ is
+even and sine when $p$ is odd. Thus its $2j$th moment has nonnegative
+integrand proportional to
+\[
+ \begin{cases}
+ S_j^p C_j^{d-p+1}\prod_h\psi_\beta(t_h)/t_h^2,&p\text{ even},\\
+ S_j^{p+1}C_j^{d-p}\prod_h\psi_\beta(t_h)/t_h^2,&p\text{ odd}.
+ \end{cases}
+\]
+Both sine exponents are even; the isotropic Gaussian bias is used
+in the odd case. This proves strict moment ordering for these
+coefficients, in particular their second moments.
+For degree one there is also the affine coefficient $w_i/2$.
+The nonlinear coefficient is odd in the bias and has zero covariance
+with $w_i/2$, so its eigenvalue is $1/4$ plus the same positive
+integral with factors $S_1^2C_1^{d-1}$. It too strictly increases.
+All nonconstant eigenvalues are positive. The finite-cube RKHS norm
+is $\sum_{S\ne\varnothing}|\widehat f(S)|^2/\lambda_S$,
+which proves the final assertion.
+\end{proof}
+
+
+Activation-dependent spectral regularization is studied, in a different
+Radon-transform kernel setting, by Sahs et al.~\cite{sahs}.
+Mehrpanah et al.~\cite{mehrpanah} study Gaussian activation smoothing
+and NTK spectral tails. The next result is an exact finite-cube,
+input-centered random-feature statement with Gaussian bias: it orders
+all degree ratios and all normalized degree tails for logistic ReLU
+smoothing. No general novelty claim about smoothing and spectral bias
+is intended.
+
+\begin{theorem}[Sharpening shifts normalized variance toward higher degrees]
+\label{thm:degree-order}
+In the preceding centered-kernel model, let $d\ge2$, and let
+$\lambda_p(\beta)$ be the eigenvalue of any degree-$p$ Walsh character.
+For $1\le p<q\le d$, the ratio
+$\lambda_q(\beta)/\lambda_p(\beta)$ is nondecreasing in
+$\beta\in(0,\infty]$. It is strictly increasing except for the
+identically equal pairs $p=2j-1$, $q=2j$, $j\ge2$.
+Define the average centered feature variance and its degree distribution by
+\[
+ T_\beta=\sum_{p=1}^d\binom dp\lambda_p(\beta),\qquad
+ \pi_p(\beta)=\frac{\binom dp\lambda_p(\beta)}{T_\beta}.
+                                                               \tag{K1}
+\]
+Every upper tail $\sum_{p=k}^d\pi_p(\beta)$, $2\le k\le d$,
+strictly increases with $\beta$. In particular, under the
+unit-average-variance kernel $K_\beta^c/T_\beta$, the squared RKHS
+norm of full parity, $T_\beta/\lambda_d(\beta)$, strictly decreases.
+These conclusions concern the initialization kernel only.
+\end{theorem}
+\begin{proof}
+Write, for $t,s>0$,
+\[
+ C=e^{-(t^2+s^2)/2}\cosh(ts),\qquad
+ S=e^{-(t^2+s^2)/2}\sinh(ts).
+\]
+\[
+ L_j(\beta)=\frac1{\pi^2}\int_0^\infty\!\int_0^\infty
+ \frac{\psi_\beta(t)\psi_\beta(s)}{t^2s^2}
+       S^{2j}C^{d+1-2j}\,dt\,ds.
+                                                               \tag{K2}
+\]
+Here $1\le j\le\lfloor(d+1)/2\rfloor$. The preceding proof gives
+$\lambda_1=1/4+L_1$ and
+$\lambda_p=L_{\lceil p/2\rceil}$ for $p\ge2$.
+All these integrals are finite and strictly positive, including at
+$\beta=\infty$.
+
+Fix $i<j$ and $0<\beta_1<\beta_2\le\infty$. Normalize the integrand
+of $L_i(\beta_1)$ to a probability density on $(0,\infty)^2$.
+Its log density has mixed derivative, with $u=ts$,
+\[
+ 2i\{\coth u-u\operatorname{csch}^2u\}
+ +(d+1-2i)\{\tanh u+u\operatorname{sech}^2u\}>0.       \tag{K3}
+\]
+The first brace is positive since $\sinh u\cosh u>u$.
+Consequently the conditional density of $s$ given $t$ is increasing
+in $t$ in likelihood-ratio order. We spell out the elementary
+association implication. For two coordinatewise increasing functions
+$f,g$, conditional one-dimensional Chebyshev gives
+$\operatorname{Cov}(f,g\mid t)\ge0$.
+The conditional expectations of $f$ and $g$ increase with $t$,
+because both their explicit dependence on $t$ and the conditional
+law of $s$ increase. Another one-dimensional Chebyshev inequality
+therefore gives $\operatorname{Cov}(f,g)\ge0$.
+Here Chebyshev follows from
+$2\operatorname{Cov}(v(X),w(X))
+=\E[(v(X)-v(X'))(w(X)-w(X'))]\ge0$ for an independent copy $X'$.
+Truncation extends the argument to the nonnegative integrable
+functions used below.
+
+Take
+\[
+ f(t,s)=\tanh(ts)^{2(j-i)},\qquad
+ g(t,s)=\frac{\psi_{\beta_2}(t)\psi_{\beta_2}(s)}
+                 {\psi_{\beta_1}(t)\psi_{\beta_1}(s)}.
+\]
+Both are strictly increasing in each coordinate. Indeed, with
+$a_h=\pi/\beta_h$ and $a_2=0$ at infinity,
+\[
+ \frac d{dt}\log\frac{\psi_{\beta_2}(t)}{\psi_{\beta_1}(t)}
+       =a_1\coth(a_1t)-a_2\coth(a_2t)>0,
+\]
+where the second term is interpreted as $1/t$ when $a_2=0$;
+$u\coth u$ has positive derivative. Their conditional covariance
+is strictly positive for every $t>0$, since the conditional density
+is positive on the entire positive axis. Thus $\operatorname{Cov}(f,g)>0$.
+The function $f$ is bounded, and $g$ is integrable because
+$L_i(\beta_2)<\infty$. Reweighting by $g$ now proves
+\[
+             \frac{L_j(\beta_2)}{L_i(\beta_2)}
+                >\frac{L_j(\beta_1)}{L_i(\beta_1)}.     \tag{K4}
+\]
+For comparisons with degree one, use the additional strictly
+increasing factor $L_1/(1/4+L_1)$, whose monotonicity follows from
+the preceding corollary. This proves all eigenvalue-ratio claims.
+
+Finally the ratios $\pi_p(\beta_2)/\pi_p(\beta_1)$ are
+nondecreasing in $p$. For each cut $2\le k\le d$, every cross term
+with $p<k\le q$ satisfies
+$\lambda_q(\beta_2)\lambda_p(\beta_1)
+\ge\lambda_q(\beta_1)\lambda_p(\beta_2)$, and the term
+$p=1$, $q=d$ is strict. Multiplying by the positive binomial
+multiplicities and summing proves the strict upper-tail claim.
+The case $k=d$ proves the normalized parity-norm statement.
+\end{proof}
+The same argument applies to two centered symmetric ReLU bias smoothings
+with finite first moments and strictly positive characteristic multipliers $\psi_1,\psi_2$,
+provided $\psi_2/\psi_1$ is strictly increasing on $(0,\infty)$ and
+the base two-variable density in (K2) is integrable. Its mixed log
+derivative is still (K3), since the multipliers are separate functions
+of $t$ and $s$. The affine degree-one comparison additionally uses
+$\psi_2\ge\psi_1$. In particular all conclusions hold when reducing
+the variance of independent Gaussian bias smoothing, whose multiplier
+is $e^{-vt^2/2}$.
+
+
+\begin{theorem}[The same degree ordering for the initialization tangent kernel]
+\label{thm:tangent-order}
+Keep the isotropic Gaussian incoming initialization above, and give the
+readout independent variance one. The centered two-layer initialization
+neural tangent kernel, when both layers are trainable, is
+\[
+ K_\beta^{\rm tan,c}(x,y)
+ =\E_U\{h_\beta(U,x)h_\beta(U,y)
+            +\nabla_Uh_\beta(U,x)\cdot\nabla_Uh_\beta(U,y)\}.
+                                                               \tag{K5}
+\]
+All conclusions of Theorem~\ref{thm:degree-order} hold for this kernel:
+higher-to-lower Walsh eigenvalue ratios increase with $\beta$, with
+exactly the stated paired-degree exceptions; every normalized upper
+degree tail strictly increases; and normalized full-parity RKHS cost
+strictly decreases. The same is true for Gaussian ReLU bias smoothing.
+The same ordering holds after multiplying the feature term and gradient
+term by any fixed nonnegative constants, not both zero.
+This concerns the initialization tangent kernel and its fixed-kernel
+linearization, not an evolving finite-network kernel.
+\end{theorem}
+\begin{proof}
+Put $q=d+1$, $u=ts$, and for $1\le j\le\lfloor q/2\rfloor$ define
+\[
+ H_j(u)=\sinh(u)^{2j}\cosh(u)^{q-2j},\qquad
+ F_j(u)=H_j(u)+uH_j'(u).
+\]
+Differentiating the Fourier coefficient under its integral shows that
+the tangent eigenvalue is
+\[
+ \nu_p(\beta)=\frac1{\pi^2}\int_0^\infty\!\int_0^\infty
+ \frac{\psi_\beta(t)\psi_\beta(s)}{t^2s^2}
+ e^{-q(t^2+s^2)/2}F_{\lceil p/2\rceil}(ts)\,dt\,ds
+                +\tfrac12\one_{\{p=1\}}.              \tag{K6}
+\]
+Indeed differentiation of each sine factor contributes $ts\cosh(ts)$
+in place of $\sinh(ts)$ in the squared-coefficient integral, and
+differentiation of each cosine factor contributes $ts\sinh(ts)$
+in place of $\cosh(ts)$. Summing gives $uH_j'$.
+The affine coefficient contributes $1/4$ to each of the feature and
+incoming-gradient variances at degree one; the cross terms vanish
+by oddness in the bias. At finite $\beta$, exponential multiplier decay
+justifies differentiation under the Fourier integral and Fubini; near
+zero the sine factors give an integrable bound with finite Gaussian
+weight moments. As $\beta\to\infty$, the activation derivatives
+converge almost surely and are bounded by one, while the centered
+features converge in Gaussian $L^2$. Thus the tangent variances converge
+by dominated convergence. The positive integrals increase to the
+ReLU expression by monotone convergence, proving (K6) at that endpoint
+as well. The Gaussian-smoothing case has the same justification.
+
+We need two positivity facts about $F_j$. First, it has a nonnegative
+power series. For any such series $F(u)=\sum_n a_nu^n>0$,
+\[
+ \frac{d}{du}\{u(\log F)'(u)\}
+     =\frac1u\operatorname{Var}_{\omega_u}(n)\ge0,
+ \qquad \omega_u(n)=a_nu^n/F(u).                       \tag{K7}
+\]
+Consequently the integrand in (K6), normalized at any fixed scale,
+has nonnegative mixed log derivative. Its conditional distributions
+are ordered in likelihood ratio, so the association argument above applies.
+
+Second, $F_j(u)/F_i(u)$ strictly increases in $u>0$ for $i<j$.
+Here is a finite-matrix proof. The adjacency matrix of the $q$-cube,
+restricted to normalized Hamming-level indicators, is the symmetric
+tridiagonal matrix $B$ with
+$B_{p,p+1}=\sqrt{(p+1)(q-p)}$. On the even levels let $T$ be the
+restriction of $B^2$. It is nonnegative, tridiagonal, and positive
+semidefinite. Every two-by-two minor of $T$ is nonnegative:
+the only potentially negative ones are adjacent principal minors,
+and these are nonnegative by positive semidefiniteness.
+Multiplication by such a matrix preserves likelihood-ratio order
+of nonnegative row vectors. Explicitly, for $j<k$,
+\[
+ (vT)_j(wT)_k-(vT)_k(wT)_j
+ =\sum_{a<b}(v_aw_b-v_bw_a)
+                      (T_{aj}T_{bk}-T_{ak}T_{bj})\ge0
+\]
+whenever $v_aw_b\ge v_bw_a$ for $a<b$.
+Since the row vector concentrated at level zero precedes its image
+under $T$ in this order, induction orders the rows $e_0T^n$ as $n$
+increases.
+
+The cube exponential identity gives
+\[
+ (e^{uB})_{0,2j}=\sqrt{\binom q{2j}}\,H_j(u),\qquad
+ [u^{2n}]H_j(u)=
+       \frac{(T^n)_{0,2j}}{(2n)!\sqrt{\binom q{2j}}}.     \tag{K8}
+\]
+Thus the ratio of the degree-$2n$ coefficients of $H_j$ and $H_i$
+is nondecreasing in $n$, interpreted by cross products when coefficients
+vanish. Passing from $H$ to $F=H+uH'$ multiplies both coefficients
+by the same positive factor $2n+1$, preserving the order.
+Pairwise expansion of the derivative of $F_j/F_i$ now gives
+nonnegative terms. It is strictly positive: the coefficient at $n=i$
+is positive for $H_i$ and zero for $H_j$, whereas at $n=j$ both
+are positive. This proves the second fact.
+
+The ratio $F_j(ts)/F_i(ts)$ is therefore strictly increasing in both
+coordinates. Reweight by the strictly increasing multiplier ratio
+$\psi_{\beta_2}(t)\psi_{\beta_2}(s)/
+ [\psi_{\beta_1}(t)\psi_{\beta_1}(s)]$ and apply conditional Chebyshev
+as in (K4). Integrability follows from the finite tangent variances;
+if the ratio is unbounded, truncate first and use monotone convergence.
+This proves strict ratios for the integral parts of (K6).
+Each integral also increases strictly with $\beta$. Handle the extra
+$1/2$ at degree one exactly as the earlier $1/4$, then sum cross
+products to obtain all normalized upper-tail assertions.
+For nonnegative term weights $c_0,c_1$, replace $F_j$ by
+$c_0H_j+c_1uH_j'$. Its coefficient multiplier is $c_0+2nc_1>0$
+on every nonzero coefficient under consideration. All arguments persist,
+and the affine variance becomes $(c_0+c_1)/4$.
+\end{proof}
+For example, full-cube squared-loss gradient flow with this
+\emph{fixed}, unit-average-variance kernel, zero initial prediction,
+and parity target has residual proportional to
+$\exp[-t\nu_d/\sum_p\binom dp\nu_p]$ (with the usual half-squared-loss
+normalization). The theorem strictly improves this rate as smoothing
+is removed. It does not assert the same comparison for finite-network
+gradient descent or partially observed training.
+
+\section{Complete monotonicity and higher-order boundary responses}
+\begin{corollary}[Complete monotonicity in the smoothing variance]
+For fixed even $r\ge6$, set $\mathfrak M(u)=\mathcal M_{1/\sqrt u}$
+for $u>0$ and $\mathfrak M(0)=\mathcal M_\infty$.
+There is a finite positive measure $\mu_r$ on $[0,\infty)$ with
+$\mu_r(\{0\})=1$ and total mass $\mathcal M_\infty$ such that
+\[
+             \mathfrak M(u)=\int_0^\infty e^{-u z}\,\mu_r(dz).
+                                                               \tag{M6}
+\]
+In particular $(-1)^n\mathfrak M^{(n)}(u)>0$ for every integer
+$n\ge1$ and $u>0$, and $\log\mathfrak M$ is convex.
+\end{corollary}
+\begin{proof}
+The product formula for $\sinh$ gives
+\[
+ \psi_{1/\sqrt u}(t)=\prod_{n\ge1}(1+ut^2/n^2)^{-1}
+       =\E\exp\left[-ut^2\sum_{n\ge1}E_n/n^2\right],
+\]
+where the $E_n$ are independent unit-rate exponentials.
+The sum is finite almost surely because its expectation is
+$\sum n^{-2}<\infty$, and is strictly positive.
+Insert independent copies into (M3) and then the exponential moment
+series for $\mathcal M$. All mixing weights are nonnegative and their
+total mass at $u=0$ is finite. Tonelli gives (M6); only the constant
+term of the series contributes an atom at zero. Differentiation at
+$u>0$ is dominated by $z^ne^{-uz}$, bounded after a smaller exponential
+factor, and gives strict alternating derivatives.
+Cauchy--Schwarz under the tilted measure gives log-convexity.
+\end{proof}
+
+\begin{corollary}[The normalizer response is strictly negative]
+The coefficient $A_r$ in (31)--(32) satisfies
+\[
+ -A_r\ge\frac{D_r}{2\rho^2}>0,\qquad
+ D_r=\frac16\int_0^\infty\!\int_0^\infty
+ \frac{t^2+s^2}{t^2s^2}
+ e^{-(r+1)(t^2+s^2)/2}\cosh(ts)\sinh(ts)^r\,dt\,ds.
+                                                               \tag{M4}
+\]
+\end{corollary}
+\begin{proof}
+For $j=1$,
+$C_1=e^{-(t^2+s^2)/2}\cosh(ts)$ and
+$S_1=e^{-(t^2+s^2)/2}\sinh(ts)$.
+The expansion $\psi_\beta(t)=1-\pi^2t^2/(6\beta^2)+O(\beta^{-4}t^4)$
+and dominated convergence in (M3) give
+$\beta^2(\E G_\infty^2-\E G_\beta^2)\to D_r$.
+One useful global domination is
+$\beta^2(1-\psi_\beta(t)\psi_\beta(s))\le C(t^2+s^2)$.
+The integral in (M4) is finite: near either axis the sine power
+removes the denominator; at infinity the possible large contribution
+lies near $t=s$, where it is bounded by
+$C(t^{-2}+s^{-2})e^{-(r+1)(t-s)^2/2}$ away from the axes.
+It is positive on the positive quadrant.
+Every term of the exponential moment series has a nonnegative
+ReLU-minus-softplus difference, so
+$\mathcal M_\infty-\mathcal M_\beta
+\ge(\E G_\infty^2-\E G_\beta^2)/(2\rho^2)$.
+Use (31) and pass to the limit to prove (M4), completing the strict-sign
+claim in Theorem~\ref{thm:normalizer}.
+\end{proof}
+
+The positive number in (M4) also has a finite radical formula,
+\[
+ D_r=-\frac{\pi}{6\,2^r}\sum_{j=0}^r(-1)^j\binom rj
+             \sqrt{1-\left(\frac{r+1-2j}{r+1}\right)^2}.
+                                                               \tag{M5}
+\]
+To verify it independently, replace logistic smoothing by centered
+Gaussian smoothing of variance $v=\pi^2/(3\beta^2)$.
+Its Fourier multiplier has the same second-order expansion and the
+same domination used for (M4), so its limiting second-moment response
+is $D_r$. The standard Gaussian ReLU covariance formula
+\cite{cho-saul}, for equal marginal variances $q$ and covariance $c$, is
+\[
+ K(q,c)=\frac1{2\pi}
+       [\sqrt{q^2-c^2}+c(\pi-\arccos(c/q))].
+\]
+After independent smoothing in the two factors, $q=r+1+v$ and
+$c=r+1-2j$. Thus the parity second moment is
+$2^{-r}\sum_j(-1)^j\binom rj K(r+1+v,r+1-2j)$.
+Its right derivative at $v=0$ uses
+$\partial_qK=\sqrt{1-(c/q)^2}/(2\pi)$, including the endpoint
+derivative zero at $c=q$, and gives (M5).
+For example $D_6/(2\rho^2)\approx0.2209004$, whereas the separate
+boundary-integral estimate gives $-A_6\approx0.3969$.
+These decimal evaluations are numerical, not interval enclosures.
+
+\begin{theorem}[A positive third-order boundary correction]
+For every fixed even $r\ge6$,
+\begin{gather}
+ \mathcal M_\beta=\mathcal M_\infty+
+             A_r\beta^{-2}+J_r\beta^{-3}+o(\beta^{-3}),\notag\\
+ J_r=\frac{\zeta(3)}{M\rho^2}\int_{\R^r}
+  \varphi_r(w)\varphi_1(b)
+  \left(1+\frac{G(w,b)^2}{\rho^2}\right)
+                 e^{G(w,b)^2/(2\rho^2)}dw>0,\notag\\
+ b=-\sum_iw_i.                                           \tag{M7}
+\end{gather}
+Thus the remainder order in (31) is sharp, with a positive leading
+coefficient. Equivalently the completely monotone function in (M6)
+has a finite first derivative but no finite second derivative at zero.
+\end{theorem}
+\begin{proof}
+Retain one further order in the readout-space Taylor argument for (31).
+The cubic remainder is $O(\beta^{-4})$: use
+$|\delta G|^3\le C\sum_x d_\beta(U\cdot\bar x)^3$,
+the single-slice bound (34) with readout power three, and
+$\int d_\beta(s)^3ds=O(\beta^{-4})$.
+Power three is integrable for $r\ge6$.
+
+In the linear term write $c_x=\chi(x)/M$, and let $F_x(s)$ be
+the slice function used above. Its derivative has one-sided limits
+at zero. Almost every point of that slice lies on no other activation
+hyperplane, so the only jump is the current ReLU kink:
+\[
+ F'_x(0+)-F'_x(0-)
+   =\int_{b=-w\cdot x}\frac{a^2c_x^2}{\rho^2}
+                         e^{aG/\rho}\,P_0(da,dw,db)/db.
+\]
+The notation on the right means evaluation of the Gaussian density
+at that value of $b$, followed by integration in $a,w$.
+Dominated convergence is justified by (34) with powers at most two.
+Therefore
+$F_x(s)=F_x(0)+\frac12[F'_x(0+)+F'_x(0-)]s
++\frac12[F'_x(0+)-F'_x(0-)]|s|+o(|s|)$.
+Since $d_\beta$ is even, its odd contribution integrates to zero,
+and
+\[
+ \int |s|d_\beta(s)ds=\frac{3\zeta(3)}{2\beta^3},\qquad
+ \int d_\beta(s)^2ds=\frac{\zeta(3)}{2\beta^3}.          \tag{M8}
+\]
+The first integral follows from the alternating series for the logarithm;
+the second from
+$\int_0^1\log^2(1+x)\,dx/x=\zeta(3)/4$.
+The linear term thus contributes $3\zeta(3)/4$ times each displayed
+jump, and the quadratic self term contributes $\zeta(3)/4$ times it.
+
+Quadratic terms from two distinct input hyperplanes are
+$O(\beta^{-4})$. To justify this even at the critical tilt, impose
+both slices, eliminate $b$, and use their nonzero difference to
+eliminate one incoming coordinate. In minimum-coordinate variables,
+if the eliminated coordinate is not the minimum, at most one excess
+integral is lost. The remaining bound is
+$C\int_0^\infty(1+t)^{2-(r-2)}dt<\infty$ for $r\ge6$.
+If the difference equation fixes only the minimum coordinate,
+its radial integral is replaced by a bounded evaluation of
+$(1+t)^{2-(r-1)}$. Nonzero coefficients in the difference equation
+are $\pm2$, so the coarea factors are uniformly bounded.
+These estimates are uniform in the two slice values.
+Multiply by the two integrals $\int d_\beta=O(\beta^{-2})$.
+
+The two self contributions sum to $\zeta(3)$ times the jump.
+Gaussian readout integration changes
+$a^2e^{aG/\rho}$ to $(1+G^2/\rho^2)e^{G^2/(2\rho^2)}$.
+Coordinate-flip symmetry makes all $M$ slices equal; their factors
+$c_x^2=M^{-2}$ leave $1/M$. This proves (M7), including finiteness
+and strict positivity. The positive $u^{3/2}$ term after the linear
+term rules out a finite second derivative at $u=0$.
+\end{proof}
+
+\begin{corollary}[An explicit logarithm-squared evidence correction]
+Under (1), the exact normalizer in Theorem~\ref{thm:main} can be replaced
+by
+\[
+ e^{N\log\mathcal M_{\beta_N}}
+ =\exp\left\{N\log\mathcal M_\infty+
+                    \frac{A_rN}{\mathcal M_\infty\beta_N^2}+o(1)\right\}.
+                                                               \tag{35}
+\]
+In particular, if $\beta_N=\sqrt N/(a\log N)$ exactly for fixed $a>0$,
+the hard evidence is
+\[
+ \exp\left\{-N(s/\rho-\log\mathcal M_\infty)
+           +\frac{A_ra^2}{\mathcal M_\infty}(\log N)^2\right\}
+          N^{-C_H-a\kappa_0K\sqrt\alpha+o(1)},           \tag{36}
+\]
+and the soft analogue replaces $s/\rho$ by $g(s)$ and $C_H$ by $C_L$.
+For merely convergent $a_N$, retain $N/\beta_N^2$ as in (35): substituting
+$a^2(\log N)^2$ can leave an error larger than $\log N$.
+\end{corollary}
+\begin{proof}
+Expand the logarithm in (31). Its remainder after multiplying by $N$
+is $O(N\beta_N^{-3}+N\beta_N^{-4})=o(1)$ under (1).
+Insert this in (2)--(3). The special exact temperature relation gives
+(36).
+\end{proof}
+
+\section{Regular means and the higher-dimensional covariance response}
+The singular covariance correction is dimension-sensitive. The first
+critical moment remains regular even in dimension six, while the second
+moment has a regular boundary response once the even dimension is at
+least eight. These statements concern critical single-neuron laws.
+
+\begin{theorem}[The critical mean has a second-order boundary response]
+For every even $r\ge6$, put
+\[
+ B_r=\frac{\pi^2}{6}\int_{\R^r}\varphi_r(w)\varphi_1(b)
+       \left(\frac{2G(w,b)}\rho+\frac{G(w,b)^3}{\rho^3}\right)
+          e^{G(w,b)^2/(2\rho^2)}\,dw,\qquad b=-\sum_iw_i.
+                                                               \tag{37}
+\]
+This integral is finite, and
+\[
+ m_\beta=m_\infty+
+           \frac{B_r-m_\infty A_r}{\mathcal M_\infty\beta^2}
+                         +o(\beta^{-2}).                \tag{38}
+\]
+No sign of the coefficient is asserted.
+\end{theorem}
+\begin{proof}
+Integrating the Gaussian readout gives
+$\mathcal M_\beta m_\beta=\E_U h(G_\beta(U))$, where
+$h(g)=g^2e^{g^2/(2\rho^2)}/\rho$.
+Use the fundamental theorem of calculus on the line from $G$ to
+$G_\beta$, and substitute
+$G_\beta-G=M^{-1}\sum_x\chi(x)d_\beta(U\cdot\bar x)$.
+For each slice, the resulting integrand is the average of $h'(G_t)$,
+$0\le t\le1$, times $\chi(x)/M$. The same critical minimum-coordinate
+bound used in (34) applies to $G_t$. Since
+\[
+ h'(g)=\left(\frac{2g}\rho+\frac{g^3}{\rho^3}\right)
+                                      e^{g^2/(2\rho^2)},
+\]
+the slice integrals are bounded by (34) with powers at most three;
+$p=3$ is integrable for every $r\ge6$.
+After $s=u/\beta$, the scaled increment measure is
+$\beta^2d_\beta(s)\,ds=\log(1+e^{-|u|})\,du$.
+The slice integrand tends pointwise to its unsmoothed value at $s=0$,
+and the uniform slice bound gives dominated convergence in $u$ and
+in the interpolation parameter. Thus the change in the unnormalized
+mean is $B_r/\beta^2+o(\beta^{-2})$. Coordinate flips reduce all
+slices to (37), since $h'$ is odd. Divide by (31) to obtain (38).
+\end{proof}
+
+Here is also an explicit, though less compact, formula for the
+higher-dimensional covariance coefficient. Write
+\[
+ q_x(U)=\max\{U\cdot\bar x,0\},\qquad
+ W(g)=(1+g^2/\rho^2)e^{g^2/(2\rho^2)},\qquad
+ T_{xy}=\E_U[W(G(U))q_x(U)q_y(U)].
+\]
+For a function $H(U)$, let
+\[
+ \mathcal S_z(H)=\int_{\R^r}\varphi_r(w)\varphi_1(-w\cdot z)
+                                      H(w,-w\cdot z)\,dw.
+\]
+This is the Gaussian slice integral with respect to the preactivation
+coordinate $s=b+w\cdot z$; no surface-Jacobian factor is missing.
+
+\begin{theorem}[Regular covariance response in even dimension at least eight]
+Fix even $r\ge8$, and define the finite matrix
+\[
+ D_{xy}=\frac{\pi^2}{6}\sum_{z\in X}\mathcal S_z\left(
+   \frac{\chi(z)}M W'(G)q_xq_y
+       +W(G)[\one_{z=x}q_y+\one_{z=y}q_x]\right).        \tag{39}
+\]
+With $b_r=(B_r-m_\infty A_r)/\mathcal M_\infty$, one has
+\[
+ \beta^2(\Sigma_\beta-\Sigma_\infty)
+ \longrightarrow \frac{D}{\mathcal M_\infty}
+          -\frac{A_r T}{\mathcal M_\infty^2}
+          -2m_\infty b_r\chi\chi^\top.                \tag{40}
+\]
+In particular the covariance change is $O(\beta^{-2})$ in these
+fixed dimensions. No sign or nonzero-rank assertion is made for (40).
+\end{theorem}
+\begin{proof}
+Gaussian integration in the readout shows that the unnormalized
+second moment is
+$T_{\beta,xy}=\E_U[W(G_\beta)\phi_\beta(U\cdot\bar x)
+                                      \phi_\beta(U\cdot\bar y)]$.
+Interpolate simultaneously between $G$ and $G_\beta$, and between
+each ReLU value and its softplus value. Differentiation along this
+finite line segment gives three terms: one with $W'(G_t)$ times
+$\delta G$, and one for each changed activation. Substitute the
+finite sum of increments for $\delta G$ and use the same scaled
+approximate-identity argument as in (38).
+
+For completeness, the domination now needs five incoming-weight
+powers. The largest term is $W'(G_t)q_{t,x}q_{t,y}$, where
+$W'(g)=(3g/\rho^2+g^3/\rho^4)e^{g^2/(2\rho^2)}$.
+On a Gaussian slice, the two activation factors are bounded by a
+quadratic polynomial in $|b|+\sum_i|w_i|+1$. Bias powers are absorbed
+by the bounded Gaussian density times those powers. In the
+minimum-coordinate parametrization, integration of polynomial excess
+powers is bounded by a constant times the same excess integral,
+with the remaining growth at most $(1+t)^5$. Thus the slice majorant
+is integrable when
+$\int_0^\infty(1+t)^{5-(r-1)}dt<\infty$, which holds for $r\ge8$.
+The terms differentiating an activation have at most three powers
+and are easier. The bound is uniform in the slice coordinate,
+interpolation parameter, and $\beta\ge1$.
+Consequently $\beta^2(T_\beta-T)\to D$ by dominated convergence.
+Normalize with (31) and subtract
+$m_\beta^2\chi\chi^\top$, using (38). This proves (40).
+The five-power slice bound fails in dimension six; Theorem~\ref{thm:covariance}
+identifies the larger contribution there directly from the critical tail.
+\end{proof}
+
+\section*{Dependencies and verification scope}
+The argument uses the critical rays and even Walsh block of the preceding
+independent parity-posterior papers. It extends the count-and-rank method
+of \emph{Polynomial probabilities of extra exceptional neurons} and the
+corner calculation of \emph{Smoothing changes the fluctuations of Bayesian
+neural condensates}. The uniform temperature estimates and the separate
+fine-cutoff argument are the additional steps here. The proofs are
+conventional and have not been fully formalized in Lean or independently
+reviewed. Conditional one-neuron importance integrations check (19)--(20)
+at several logarithmic widths; they do not certify the posterior count
+or evidence exponents.
+\begin{thebibliography}{9}
+\bibitem{cho-saul} Y. Cho and L. K. Saul,
+\emph{Kernel methods for deep learning}, Advances in Neural Information
+Processing Systems 22 (2009).
+\url{https://papers.nips.cc/paper_files/paper/2009/file/5751ec3e9a4feab575962e78e006250d-Paper.pdf}.
+\bibitem{sahs} J. Sahs, R. Pyle, F. Anselmi, and A. Patel,
+\emph{The spectral bias of shallow neural network learning is shaped
+by the choice of non-linearity}, arXiv:2503.10587 (2025).
+\url{https://arxiv.org/abs/2503.10587}.
+\bibitem{mehrpanah} A. Mehrpanah, M. Gamba, K. Smith, and H. Azizpour,
+\emph{On the complexity-faithfulness trade-off of gradient-based explanations},
+Proceedings of ICCV (2025), 3531--3541, especially supplement Section F.
+\url{https://arxiv.org/abs/2508.10490}.
+\end{thebibliography}
+\end{document}

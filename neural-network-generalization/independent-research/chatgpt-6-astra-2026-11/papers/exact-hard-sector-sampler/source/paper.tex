@@ -1,0 +1,575 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{lemma}[theorem]{Lemma}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}
+\newcommand{\TV}{\mathrm{TV}}\newcommand{\one}{\mathbf1}
+\title{Exact sector sampling for condensed ReLU posteriors}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author.}}
+\date{21 November 2026; working proof draft}
+\hypersetup{hidelinks,pdftitle={Exact sector sampling for condensed ReLU posteriors},pdfauthor={ChatGPT-6 Astra}}
+\emergencystretch=3em
+\begin{document}\maketitle
+\begin{abstract}
+We give exact rejection constructions for finite unions of macroscopic
+neuron-count sectors of a full-label Gaussian ReLU parity posterior, for
+hard margins, square loss, and logistic loss.
+The ordinary readouts are disintegrated against their full output vector,
+so the sampled network satisfies the actual margins, including the
+transverse output of its exceptional neurons. The soft-loss versions
+sample the full output from a Gaussian or a transformed Beta law.
+Broadening a Gaussian
+amplitude law and the transverse marks supplies a bounded rejection
+ratio. The construction has independent outputs and expected arithmetic
+cost linear in width at each fixed even input dimension at least six.
+Including counts from $K=2^{r-1}$ through $K+J$ gives distance to the
+full posterior of sharp order $N^{-(J+1)(r-3)/2}$ for each fixed $J$.
+An auxiliary-variable identity cancels unknown critical normalizers
+across sectors. Thus any fixed polynomial accuracy is available at
+linear expected width cost. Constants can be very large; the result
+is an asymptotic real-arithmetic construction, not a practical sampler
+with polynomial dependence on dimension.
+\end{abstract}
+
+\section{Model and known finite geometry}
+Fix even $r\ge6$, $M=2^r$, $K=M/2$, and full parity $\chi$ on the
+Boolean cube. The prior has independent standard Gaussian neurons
+$\theta_i=(a_i,U_i)$, and
+$F_N(x)=N^{-1}\sum_i a_i\max\{U_i\cdot(1,x),0\}$.
+Condition on $\chi(x)F_N(x)>s$ at every cube input, with $s>m_c$.
+Use the critical one-neuron law and constants from the preceding
+condensation companions:
+\[
+ Q_*=M_*^{-1}e^{Z/\rho}P_0,\quad
+ Z=\E_x\chi(x)\Phi_x,\quad
+ \rho=\frac{\binom{r-2}{(r-2)/2}}{2^{r-1}\sqrt r},\quad
+ m_c=\E_{Q_*}Z<3/8,\quad \nu=(r+1)/2.
+\]
+The $Q_*$ marginal of $U$ has density proportional to
+$e^{G(U)^2/(2\rho^2)}$ times its standard Gaussian density, and
+\[
+           a\mid U\sim N(G(U)/\rho,1).                  \tag{1}
+\]
+The critical-law rejection sampler draws this marginal without $M_*$.
+
+For every balanced orientation set $S$, one ray per antipodal pair,
+let $A=A_S$ be the $M$ by $K$ matrix of critical outputs $f_z$.
+Then $A\mathbf1=K\rho\chi$ and $\operatorname{rank}A=K$. Let
+$B$ have orthonormal columns spanning $(\operatorname{im}A)^\perp$,
+$J=\det(A^\top A)^{-1/2}$, and let $d_E>0$ satisfy $d_EJ\le1$ for
+every $S$, as supplied by the common invertible even block.
+
+At each critical ray use $c=AR>0$, $v=A-R$, $t\perp v_z$, with
+readout $\sigma_z A$ and incoming vector $Rv_z+t/\sqrt c$.
+To avoid confusing the scalar $A$ here with the output matrix, below
+write these scalar factors as $A_j,R_j$. Put $q_j=A_j/\sqrt{c_j}$.
+The exact critical density is, up to a common constant,
+\[
+ c_j^{-\nu}\frac{2\sqrt{c_j}}{\sqrt{v_j^2+4c_j}}
+ e^{-v_j^2/2-\|t_j\|^2/(2c_j)-q_jh_{z_j}(t_j)/\rho}\,dc_j\,dv_j\,dt_j.
+ \tag{2}
+\]
+Here $h_z$ is the positive homogeneous transverse norm from the corner
+lemma. The actual exceptional output is $Ac+e$, with
+\[
+ e=\sum_jq_j\psi_{z_j}(t_j),\qquad
+ \|\psi_z(t)\|\le\sqrt{M(r+1)}\|t\|.                  \tag{3}
+\]
+
+\section{A full Gaussian coarea identity}
+Draw $n=N-K$ ordinary incoming vectors $U_i$ from their critical marginal.
+Let $H$ be the $M$ by $n$ matrix with columns
+$\phi(U_i)=(\max\{U_i\cdot(1,x),0\})_x$ and let
+$m_i=G(U_i)/\rho$. Conditional on these incoming vectors the ordinary
+full output is Gaussian with mean $Hm$ and covariance $V=HH^\top$.
+We restrict to $V\succeq\epsilon NI_M$ for a fixed sufficiently small
+known $\epsilon>0$.
+
+Such an $\epsilon$ can be obtained from the positive definite Gaussian
+ReLU kernel matrix $K_0=\E_{P_{0,U}}\phi(U)\phi(U)^\top$.
+The critical rejection bound gives $M_*\le r/(r-2)$; hence
+$\E_{Q_{*,U}}\phi\phi^\top\succeq(r-2)K_0/r$.
+For example take $\epsilon=(r-2)\lambda_{\min}(K_0)/(4r)$.
+The matrix $K_0$ is strictly positive definite because an affine ReLU
+can isolate any cube point, and its incoming parameters have positive
+Gaussian density in a neighborhood of such an isolating vector.
+Using a sufficiently large fixed bounded truncation and a finite net
+of unit vectors, the probability of $V\not\succeq\epsilon NI_M$
+is at most $Ce^{-cN}$ for large $N$.
+
+Write $\varphi_V$ for the centered Gaussian density of covariance $V$.
+For any positive definite $V$, full-rank $A$, and $z\in\R^M$,
+\[
+ \int_{\R^K}\varphi_V(z-Ac)\,dc
+                =J\varphi_{B^\top VB}(B^\top z).        \tag{4}
+\]
+Indeed $dc=J$ times volume on $\operatorname{im}A$, and integrating
+there leaves the orthogonal Gaussian marginal. Conditional on this
+integral, $c$ has covariance $(A^\top V^{-1}A)^{-1}$ and mean
+$(A^\top V^{-1}A)^{-1}A^\top V^{-1}z$.
+
+\section{The rejection construction}
+Choose fixed constants $a>1$, $0<b<q_{\min}<1<q_{\max}<2$.
+Choose $0<a_0<\alpha<A_0$, where $\alpha=(s-m_c)/(K\rho)$,
+and sufficiently small fixed critical cones, ordinary cutoff $d>0$,
+and mark cutoff $\eta>0$. A sufficient condition for the mark cutoff is
+\[
+ \eta\le\frac{(q_{\min}-b)h_{\min}(a-1)\epsilon}
+                   {4\rho K M(r+1)},\qquad
+ h_z(t)\ge h_{\min}\|t\|.                              \tag{5}
+\]
+All constants are independent of $N$. If $s>3/8$, one may use
+$a_0=(s-3/8)/(2K\rho)$ and $A_0=2s/\rho$ without knowing $m_c$.
+For $s\le3/8$, a numerical specification may instead supply a known
+positive enclosure of $s-m_c$; recognizing supercriticality from an
+unspecified real input is not part of the algorithm.
+Take $N$ large enough that $n\ge M$.
+Every rejection below restarts the whole proposal.
+
+\begin{enumerate}
+\item Draw $S$ uniformly among balanced patterns and draw the $n$
+ordinary incoming vectors. Reject unless $V\succeq\epsilon NI_M$.
+Draw independent slacks $u_x\sim\operatorname{Exp}(1/(M\rho))$.
+Draw $v_j\sim N(0,1)$ and transverse marks with density proportional
+to $e^{-b h_{z_j}(t_j)/\rho}$; this is the original mark divided by $b$.
+\item Put $C=B^\top VB$ and $d_u=B^\top(D_\chi u-Hm)$, where
+$D_\chi=\operatorname{diag}(\chi)$. Accept with probability
+\[
+ d_EJ\frac{(\epsilon N)^{K/2}}{\sqrt{\det C}}
+                       e^{-d_u^\top C^{-1}d_u/(2a)}.    \tag{6}
+\]
+This is at most one. Set $z=Ns\chi+D_\chi u-Hm$ and draw $c$ Gaussian
+with mean $(A^\top V^{-1}A)^{-1}A^\top V^{-1}z$ and covariance
+$a(A^\top V^{-1}A)^{-1}$.
+\item Construct the $K$ exceptional neurons from $c,v,t$. Reject unless
+$a_0N\le c_j\le A_0N$, $q_{\min}\le q_j\le q_{\max}$, the fixed
+critical cone restrictions hold, and $\|t_j\|\le\eta N$.
+Compute their exact output $Ac+e$ and put $r_0=z-Ac$.
+Accept with probability
+\begin{align}
+ R_N={}&\prod_j\left[
+ \left(\frac{a_0N}{c_j}\right)^\nu
+ \frac{2\sqrt{c_j}}{\sqrt{v_j^2+4c_j}}
+ e^{-\|t_j\|^2/(2c_j)-(q_j-b)h_{z_j}(t_j)/\rho}\right] \notag\\
+ &\hspace{8mm}\times
+ e^{-(r_0-e)^\top V^{-1}(r_0-e)/2+r_0^\top V^{-1}r_0/(2a)}. \tag{7}
+\end{align}
+The next section proves $R_N\le1$.
+\item Draw $\xi\sim N(0,I_n)$ and set
+\[
+ y=Ns\chi+D_\chi u-Ac-e,\qquad
+ a^{\rm ord}=m+\xi+H^\top V^{-1}\{y-H(m+\xi)\}.         \tag{8}
+\]
+Reject unless every ordinary full parameter has squared norm at most
+$dN$ and every exceptional parameter has squared norm greater than
+$dN$. Inject the ordered exceptional neurons uniformly into $N$ labels.
+\end{enumerate}
+The output from (8) satisfies $Ha^{\rm ord}=y$ exactly in real
+arithmetic. Thus the complete network has actual positive slacks $u$.
+
+\section{Why the rejection ratio is bounded}
+Completing the square in $r_0$ gives
+\[
+ -\tfrac12\|r_0-e\|_{V^{-1}}^2
+            +\tfrac1{2a}\|r_0\|_{V^{-1}}^2
+ \le\frac{\|e\|_{V^{-1}}^2}{2(a-1)}
+ \le\frac{\|e\|^2}{2(a-1)\epsilon N}.                  \tag{9}
+\]
+By (3), $q_j<2$, and Cauchy--Schwarz,
+$\|e\|^2\le4KM(r+1)\sum_j\|t_j\|^2$.
+The mark cutoff and (5) make the right side of (9) at most
+\[
+               \frac{q_{\min}-b}{2\rho}\sum_jh_{z_j}(t_j).
+\]
+This is absorbed by half the negative mark exponent in (7). All other
+factors in (7) are at most one: $c_j\ge a_0N$,
+$2\sqrt{c_j}\le\sqrt{v_j^2+4c_j}$, and the transverse Gaussian
+factor is nonpositive in the exponent. Therefore $0<R_N\le1$.
+
+\section{Exactness on the sector}
+Let $G_N$ denote precisely the canonical restrictions used above,
+including the ordinary covariance cutoff. Conditional on $U$, the
+ordinary readout density disintegrates into its full-output Gaussian
+density and a conditional Gaussian law. Equation (8) is that conditional
+law at the required actual output $y$.
+
+By (4), the Gaussian draw of $c$ multiplied by (6) has joint density,
+up to an $S$-independent constant, proportional to
+\[
+ Q_{*,U}^n(dU)\,e^{-\sum_xu_x/(M\rho)}
+ \prod_j[e^{-v_j^2/2-bh_{z_j}(t_j)/\rho}dv_jdt_j]\,
+                        \varphi_{aV}(r_0)\,dc\,du.      \tag{10}
+\]
+Multiplying by (7) replaces the broadened marks and amplitude factors
+by the exact critical densities (2), up to common constants, and replaces
+$\varphi_{aV}(r_0)$ by $\varphi_V(r_0-e)$, again up to a common
+constant $a^{-M/2}$. Formula (8) completes the ordinary readout density.
+For fixed $U,c,v,t$, the change from ordinary full output to $u$ is a
+translation followed by $D_\chi$, whose absolute determinant is one.
+There is no Jacobian of the nonlinear function $e(c,v,t)$: these variables
+are held fixed in that change of coordinates.
+
+The resulting density is exactly $Q_*^N$ times its hard residual weight,
+restricted to $G_N$. Critical tilting converts this to the original
+hard-margin posterior on that sector. Canonical exceptional rays are
+ordered by their pairs, so each labeled array in the sector has a unique
+canonical description. Exchangeability makes its label injection uniform.
+
+\begin{theorem}[Exact conditional law and sharp full-posterior error]
+The construction outputs exactly $\Pi_N(\cdot\mid G_N)$. For all
+sufficiently small fixed cutoffs satisfying the preceding conditions,
+\[
+ \|\Pi_N(\cdot\mid G_N)-\Pi_N\|_{\TV}
+                  =\Pi_N(G_N^c)=\Theta(N^{-(r-3)/2}).    \tag{11}
+\]
+Its expected number of arithmetic operations per independent output is
+$O_{r,s}(N)$ as $N\to\infty$. No unknown normalizing constant is needed.
+\end{theorem}
+\begin{proof}
+Exactness was proved by (10). The count companion proves the sector
+error rate for all fixed cone, amplitude, and mark restrictions used
+here. The covariance restriction adds only exponentially small weighted
+mass: its incoming probability is $Ce^{-cN}$, the exceptional parameters
+are integrated over fixed macro cones using (2), and their polynomial
+volume and the $N^K$ label assignments cannot overcome that exponential.
+Dividing by the polynomial residual evidence leaves an exponentially
+small posterior error. The $K+1$-neuron event is excluded by $G_N$ and
+has probability at least $cN^{-(r-3)/2}$, giving the matching lower bound.
+
+For cost, $V/N$ converges to a positive definite constant matrix and
+$Hm/N\to m_c\chi$. The projected mean fluctuation has a central limit
+theorem because the critical incoming fourth moment is finite. The
+slacks are tight. Thus the first acceptance (6) has a strictly positive
+limiting expectation. After it, $c_j/N\to\alpha$, the Gaussian amplitude
+fluctuations are $O_P(\sqrt N)$, and the marks remain tight. Every fixed
+macro, cone, and mark restriction consequently has probability tending
+to one. In (7), the amplitude factor tends to $(a_0/\alpha)^{K\nu}>0$;
+the broadened Gaussian ratio and the marks have positive limiting
+values. Since $R_N\le1$, its limiting expected acceptance is positive.
+
+It remains to check the final ordinary norm restriction. Under the
+incoming law, $\max_i\|U_i\|/\sqrt N\to0$ and the conditional means
+$m_i$ have the same bound. In (8), the unconditioned Gaussian maximum
+is $O_P(\sqrt{\log N})$, while
+$V^{-1}\{y-H(m+\xi)\}=O_P(N^{-1/2})$. Its correction to readout $i$
+is at most $C\|U_i\|O_P(N^{-1/2})$. Hence every ordinary full norm
+divided by $\sqrt N$ tends uniformly to zero. The bounded rejection
+weights preserve these probability-one limits. Exceptional squared
+norms divided by $N$ tend to $2\alpha$, so the final restriction also
+has probability tending to one when $d<2\alpha$.
+
+At fixed $r$, the matrix sizes $M,K$ are fixed. Drawing and evaluating
+$N-K$ incoming vectors and Gaussian readouts, forming $V,Hm$, and making
+the correction in (8) each use $O(N)$ arithmetic operations. All other
+sampling and matrix steps have finite fixed-dimension expected cost.
+The positive limiting acceptance proves the claim.
+\end{proof}
+
+\section{Square and logistic likelihoods}
+The same construction also gives an exact sector sampler for the soft
+posteriors in the count companion. Their density relative to the original
+Gaussian prior is proportional to
+\[
+ \exp\{-N\lambda M^{-1}\sum_x\ell(\chi(x)F_N(x))\},
+ \qquad \ell(v)=(1-v)^2/2\quad\hbox{or}\quad\log(1+e^{-v}).
+\]
+Let $g(v)=v/\rho+\lambda\ell(v)$, let $s$ be its minimizer, and suppose
+$s>m_c$. After critical tilting, the residual density of a full output
+vector $y$ is
+\[
+ W_N(y)=\exp\{-N M^{-1}\sum_x[g(\chi(x)y_x/N)-g(s)]\}.  \tag{12}
+\]
+This is integrable, and its normalized version has a direct product
+sampler. For square loss, $s=1-(\lambda\rho)^{-1}$, and independent
+standard normals $G_x$ give
+\[
+                  Y_x=\chi(x)\{Ns+\sqrt{MN/\lambda}\,G_x\}. \tag{13}
+\]
+For logistic loss, $s=\log(\lambda\rho-1)$ and $\lambda\rho>1$.
+Draw independent
+\[
+ T_x\sim\operatorname{Beta}\left(\frac{N(\lambda-1/\rho)}M,
+                                \frac N{M\rho}\right),\qquad
+                  Y_x=\chi(x)N\log\frac{T_x}{1-T_x}.     \tag{14}
+\]
+To verify (14), set $t=(1+e^{-v})^{-1}$. The density
+$e^{-Ng(v)/M}dv$ becomes, up to a constant,
+$t^{A-1}(1-t)^{B-1}dt$, with exactly the two parameters in (14).
+Thus no soft residual normalizer is required by the sampler.
+
+Replace the hard target $Ns\chi+D_\chi u$ everywhere in the algorithm by
+this independent $Y$. In particular the projected vector in (6) becomes
+$B^\top(Y-Hm)$, the amplitude mean uses $z=Y-Hm$, and the final ordinary
+target is $y=Y-Ac-e$. Leave all other rejection factors and restrictions
+unchanged. Unlike the perturbative Metropolis construction, this version
+requires no additional window on the actual soft output.
+
+\begin{theorem}[Exact sampling for both soft losses]
+For square or logistic loss with $s>m_c$, the modified construction
+outputs exactly $\Pi_N(\cdot\mid G_N)$ and has
+\[
+ \|\Pi_N(\cdot\mid G_N)-\Pi_N\|_{\TV}
+             =\Theta(N^{-(r-3)/2}).                       \tag{15}
+\]
+Its expected arithmetic cost per independent output is
+$O_{r,\lambda}(N)$. Here $G_N$ is the same parameter and covariance
+sector used for the hard construction, interpreted under the soft
+posterior.
+\end{theorem}
+\begin{proof}
+The Gaussian coarea identity is unchanged. The joint density (10) now
+contains $W_N(Y)dY$ instead of the exponential hard slack density.
+Multiplication by (7) and the conditional ordinary Gaussian draw again
+produce the exact critical product law times its residual weight,
+restricted to $G_N$. For fixed exceptional variables, the ordinary
+output is translated to $Y$, so the Jacobian is one.
+
+The count theorem and the exponentially unlikely covariance failure
+give the same sharp sector error. For the acceptance calculation,
+both (13) and (14) have
+$(Y-Ns\chi)/\sqrt N\Rightarrow N(0,\gamma^{-1}I_M)$,
+where $\gamma=g''(s)/M$. For (14) this follows from the Beta central
+limit theorem and the delta method; its two parameters are positive
+fixed multiples of $N$. The incoming-output and amplitude arguments
+from the hard case therefore apply without change. In particular
+$c/N\to\alpha\mathbf1$, the projected fluctuation is tight, and both
+rejection probabilities have positive limiting expectations. The
+ordinary norm restriction still holds with probability tending to one.
+Sampling the fixed number of Gaussian or Beta variables adds only
+fixed-dimensional expected arithmetic cost.
+\end{proof}
+
+\section{Removing the sector floor by a finite mixture}\label{sec:multisector}
+The preceding sampler is exact within its sector, but omits all networks
+with more than $K$ macroscopic neurons. This omission can be reduced to
+any fixed polynomial order without changing the order of the width cost.
+The construction must account for rank-deficient amplitude maps and for
+normalizers that depend on the number of exceptional neurons.
+
+Fix $J\ge0$ and write $L_{\max}=K+J$, $b_*=\nu-2=(r-3)/2$.
+Use a sufficiently small norm cutoff $d>0$. Enumerate all ordered lists
+$\mathfrak z=(z_1,\ldots,z_L)$ of critical rays, for
+$K\le L\le L_{\max}$, that cover every antipodal pair. Repetitions and
+opposite orientations within a pair are allowed. For each list write
+$A=(f_{z_1},\ldots,f_{z_L})$, $R_A=\operatorname{rank}A\ge K$,
+and $m_A=M-R_A$. Choose orthonormal matrices $T,U_0$ spanning
+$(\ker A)^\perp,\ker A$, respectively, and put $\widetilde A=AT$.
+Let $B$ span $(\operatorname{im}A)^\perp$ and put
+\[
+ J_A=\det(\widetilde A^\top\widetilde A)^{-1/2},\qquad
+             d_{\rm all}J_A\le1                       \tag{16}
+\]
+with a single known positive $d_{\rm all}$ for this finite family.
+All empty determinants and zero-dimensional densities below equal one.
+
+Choose a common macro box $[c_-N,c_+N]^L$ that contains the coarse
+localization event for these counts. Here $c_-$ must be small enough
+relative to $d$; it need not be near $\alpha$ because extra neurons can
+split a pair's amplitude. More explicitly, fix cones on which
+$\|\theta\|^2\le C_{\rm cone}c$, then take
+$c_-<d/C_{\rm cone}$ and $c_+>2s/\rho$. The coarse localization lemma
+in the count companion applies after decreasing $d$. Fix
+$B_0\ge\sqrt{L_{\max}}c_+$, so the null coordinates of the whole macro
+box lie in $[-B_0N,B_0N]^{L-R_A}$.
+
+\subsection{A known mark density and an auxiliary cancellation}
+Use the same $a>1$ and $q_{\min},q_{\max}$ as above. In any fixed
+orthonormal basis of the transverse space draw $t$ from the known product
+Laplace density $(\ell/2)^r e^{-\ell\|t\|_1}$, where
+\[
+ 0<\ell\le\frac{q_{\min}h_{\min}}{2\rho\sqrt r}.
+                                                               \tag{17}
+\]
+Draw $v\sim N(0,1)$ as before. A fixed positive $h_{\min}$ is known
+from the finite transverse norm geometry. Thus
+$\ell\|t\|_1\le q_{\min}h_z(t)/(2\rho)$, uniformly over rays.
+
+Also draw $L$ auxiliary neurons independently from $Q_*$. They are not
+part of the output network. In the augmented target give each auxiliary
+neuron instead the law $P_0$ conditioned on
+\[
+ E=\{a\,\operatorname{sgn}_+(G(U))>0\},\qquad
+ \operatorname{sgn}_+(u)=\begin{cases}1&u\ge0,\\-1&u<0.\end{cases}
+                                                               \tag{18}
+\]
+Independence and symmetry of the Gaussian readout give $P_0(E)=1/2$
+exactly, including the possible event $G(U)=0$. Moreover $Z\ge0$ on
+$E$. The auxiliary target-to-proposal ratio is consequently
+$2M_*e^{-Z/\rho}\one_E$.
+
+The exact density constant suppressed in (2) is
+$(2\pi)^{-(r+2)/2}/(2M_*)$. It cancels its $2M_*$ factor against
+one auxiliary ratio. After division by the Gaussian $v$ and Laplace
+$t$ densities, the remaining known constant per exceptional neuron is
+\[
+                 C_{\rm mark}=(2\pi)^{-(r+1)/2}(2/\ell)^r.
+                                                               \tag{19}
+\]
+This device avoids evaluating $M_*$ even when mixing different counts.
+Using $\{Z\ge0\}$ in place of (18) would be incorrect: the ReLU
+parity coefficient can have an atom at zero, so that event need not have
+prior probability $1/2$.
+
+\subsection{One subprobability proposal for each list}
+For the chosen list draw $n=N-L$ ordinary incoming vectors and define
+$H,m,V$ as before. Reject unless $V\succeq\epsilon NI$. Draw $Y$ from
+the normalized residual density $W_N(Y)/Z_{W,N}$: the exponential slack,
+Gaussian, or transformed Beta law already described. Put
+$z=Y-Hm$ and $C=B^\top VB$. Use the profile acceptance
+\[
+ d_{\rm all}J_A\frac{(\epsilon N)^{m_A/2}}{\sqrt{\det C}}
+   \exp\{-\|B^\top z\|_{C^{-1}}^2/(2a)\}.              \tag{20}
+\]
+It is at most one. Draw row-space coordinates $d_A$ with Gaussian mean
+$(\widetilde A^\top V^{-1}\widetilde A)^{-1}
+ \widetilde A^\top V^{-1}z$ and covariance
+$a(\widetilde A^\top V^{-1}\widetilde A)^{-1}$.
+Draw $h_A$ uniformly in $[-B_0N,B_0N]^{L-R_A}$ and set
+$c=T d_A+U_0h_A$.
+
+Draw the marks and auxiliary neurons above. Reject unless the macro box,
+fixed cones, $q$ interval, and $\|t_j\|\le\eta N$ hold. Write the exact
+exceptional output as $Ac+e$ and $r_0=z-Ac$. Use the final acceptance
+\begin{align}
+ R_{N,\mathfrak z}={}&
+ \prod_{j=1}^L\left[
+  \left(\frac{c_-N}{c_j}\right)^\nu
+  \frac{2\sqrt{c_j}}{\sqrt{v_j^2+4c_j}}
+  \exp\left\{-\frac{\|t_j\|^2}{2c_j}
+           -\frac{q_jh_{z_j}(t_j)}\rho+\ell\|t_j\|_1
+           -\frac{Z_j^{\rm aux}}\rho\right\}
+  \one_{E}(\theta_j^{\rm aux})\right] \notag\\
+ &\quad\times
+ \exp\{-\|r_0-e\|_{V^{-1}}^2/2+\|r_0\|_{V^{-1}}^2/(2a)\}.
+                                                               \tag{21}
+\end{align}
+Choose, for example,
+\[
+ \eta\le\frac{q_{\min}h_{\min}(a-1)\epsilon}
+                  {8\rho L_{\max}M(r+1)}.              \tag{22}
+\]
+Equations (9), (17), and (22) show $0\le R_{N,\mathfrak z}\le1$:
+the positive Gaussian exponent is at most
+$q_{\min}\sum_jh_{z_j}(t_j)/(4\rho)$, whereas the mark exponent
+leaves at least $q_{\min}\sum_jh_{z_j}(t_j)/(2\rho)$ available.
+The auxiliary factors are at most one by (18).
+
+Finally draw the ordinary readouts by (8), with required output
+$Y-Ac-e$. Reject unless their squared norms are at most $dN$ and all
+selected exceptional squared norms are greater than $dN$. Inject the
+ordered exceptional neurons uniformly into the $N$ labels. Discard the
+auxiliary neurons and the arbitrary order after acceptance.
+
+\subsection{Mixture weights and exactness}
+Each list must be chosen anew after \emph{every} rejection. The weights
+are proportional to the following completely known numbers, apart from
+one common factor $Z_{W,N}$ that cancels:
+\[
+ B_{N,\mathfrak z}=
+ \frac{Z_{W,N}a^{M/2}}{d_{\rm all}}\binom NL
+ C_{\rm mark}^L(c_-N)^{-L\nu}
+ \frac{(2B_0N)^{L-R_A}}
+      {(2\pi a\epsilon N)^{(M-R_A)/2}}.                \tag{23}
+\]
+Select a list with probability $B_{N,\mathfrak z}/\sum_{\mathfrak w}
+ B_{N,\mathfrak w}$, run exactly one attempt above, and restart the
+whole mixture if it fails. In particular the profile step (20) is a
+subprobability proposal; it is not normalized separately for each list.
+
+To check (23), multiply (20) by its row-space Gaussian density. The
+full-rank coarea identity applied to $\widetilde A$ gives precisely
+\[
+ d_{\rm all}(2\pi a\epsilon N)^{(M-R_A)/2}
+                       \varphi_{aV}(z-Ac).             \tag{24}
+\]
+The orthogonal change $c=T d_A+U_0h_A$ has determinant of absolute value
+one. The null-space density contributes $(2B_0N)^{-(L-R_A)}$.
+The output proposal contributes $W_N(Y)/Z_{W,N}$.
+The Gaussian density ratio supplies $a^{M/2}$ times the last exponential
+in (21). Equations (2), (18), and (19) give all the remaining factors.
+
+For the labeling factor, augment the desired posterior with a uniform
+ordering of its $L$ exceptional neurons. Its density at each ordering
+contains $1/L!$, whereas the ordered label injection has probability
+$1/(N)_L$. Their ratio is $\binom NL$, exactly as in (23).
+Each ordered ray list is one mixture component; no further list-count
+factor is needed. It follows that target density equals
+$B_{N,\mathfrak z}R_{N,\mathfrak z}$ times this list's subprobability
+proposal density, including the final conditional Gaussian and the
+norm restrictions. After global restart, the accepted density is the
+augmented target divided by its total mass. Removing the auxiliary
+variables and ordering leaves the desired conditional posterior.
+
+\begin{theorem}[Arbitrary fixed polynomial accuracy]\label{thm:multisector}
+For each fixed integer $J\ge0$ there are fixed cutoffs for which this
+construction samples exactly $\Pi_N(\cdot\mid G_{N,J})$, where
+$G_{N,J}$ is the union of the stated restricted sectors with
+$K\le L_N(d)\le K+J$. For hard margins, square loss, or logistic loss
+in the supercritical regime,
+\[
+ \|\Pi_N(\cdot\mid G_{N,J})-\Pi_N\|_{\TV}
+                  =\Theta(N^{-(J+1)(r-3)/2}).           \tag{25}
+\]
+The expected arithmetic cost per independent output is
+$O_{r,s,J}(N)$, or $O_{r,\lambda,J}(N)$ for soft loss. All normalizers
+needed by the mixture cancel or are explicitly known.
+\end{theorem}
+\begin{proof}
+Exactness follows from the density calculation. Use the quantitative
+coarse localization lemma with a remainder smaller than the evidence
+power plus $(J+1)b_*$. After choosing $d$ sufficiently small, every
+count at most $K+J$ outside that remainder lies in the fixed cones and
+macro box and covers every antipodal pair. The added fixed $q$ and
+mark restrictions fail with exponentially small weighted probability
+by the corner density bound. The covariance restriction fails with
+probability $Ce^{-cN}$ for each prescribed ordinary subset, uniformly
+in the finitely many possible counts. Summing at most $N^{K+J}$ subset
+choices still gives exponentially small residual weighted mass, since
+$W_N\le1$. The null box contains the entire target macro box.
+Thus the upper bound in (25) follows from the count hierarchy. The event
+$L_N(d)=K+J+1$ is excluded and has probability at least
+$cN^{-(J+1)b_*}$, giving the lower bound. Conditioning on an event has
+TV distance exactly the omitted probability.
+
+For cost, (23) has order
+\[
+ Z_{W,N}N^{-L(\nu-2)-(M+R_A)/2}.                       \tag{26}
+\]
+There are finitely many lists, $L\ge K$, and $R_A\ge K$, with some
+balanced lists having $L=R_A=K$. Also $Z_{W,N}=(M\rho)^M$ for hard
+margins and $Z_{W,N}=\Theta(N^{M/2})$ for the two soft losses. Hence
+$\sum B_{N,\mathfrak z}$ has precisely the order of the residual
+evidence: $N^{-Kr/2}$ for hard margins and $N^{-K(r-2)/2}$ for soft
+loss. The restricted target mass has the same order, by the count
+hierarchy and the evidence lower bound. Their ratio is the probability
+of acceptance of a whole mixture attempt, so it stays bounded below by
+a fixed positive constant. Each attempt uses $O(N)$ arithmetic operations
+at fixed dimension and fixed $J$. Exact critical-law and elementary
+Gaussian, exponential, Laplace, and Beta draws have fixed expected cost
+in this real-arithmetic model. This proves the cost statement.
+\end{proof}
+
+Taking $J$ large enough gives $O(N^{-A})$ full-posterior error for any
+prescribed fixed $A>0$. Neither $J$ nor the dimension is allowed to grow
+with $N$ in this claim. The finite geometry enumeration, mixture, and
+rejection constants can be enormous.
+
+\paragraph{Scope.}
+The constructions are exact for their explicitly restricted sectors,
+and approximate for the full finite-width posterior by (11) or (25). It differs from
+the older hard-margin construction that used an approximate output slack:
+the full Gaussian disintegration here enforces the actual margin and
+includes its transverse correction. Independence of outputs follows by
+restarting the complete rejection procedure, without a Markov chain.
+The full covariance cutoff gives a simple global rejection envelope,
+but it may make the fixed-dimensional acceptance constant extremely
+small. The construction is a sampling-existence and width-complexity
+result. The finite Metropolis correction companion offers a different
+route that retains independently drawn ordinary neurons and avoids this
+full Gaussian regression; its observed proposal acceptance is much more
+favorable in the dimension-six experiments.
+The proof is conventional, not a full Lean formalization. An arbitrary
+fixed Gaussian prior variance can be reduced to this model by scaling
+the effective margin; no simultaneous width-and-prior-scale limit is
+asserted.
+\end{document}

@@ -1,0 +1,367 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\E}{\mathbb E}\newcommand{\Pp}{\mathbb P}
+\newcommand{\R}{\mathbb R}\newcommand{\one}{\mathbf1}
+\title{Polynomial probabilities of extra exceptional neurons}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author.}}
+\date{21 November 2026; working proof draft}
+\hypersetup{hidelinks,pdftitle={Polynomial probabilities of extra exceptional neurons},pdfauthor={ChatGPT-6 Astra}}
+\emergencystretch=3em
+\begin{document}\maketitle
+\begin{abstract}
+In the full-label Gaussian ReLU parity posterior, the typical number of
+macroscopic neurons is half the size of the input cube. We determine the
+polynomial probability of having additional macroscopic neurons. At fixed
+even input dimension $r\ge6$, each additional neuron costs a factor
+$N^{-(r-3)/2}$, provided that macroscopic means exceeding a sufficiently
+small fixed multiple of the width in squared parameter norm. Repeated
+copies of an existing critical ray attain this order. More generally,
+the local cost of a fixed ray pattern is governed by both its neuron
+count and the rank of its output matrix. The proof replaces the earlier
+qualitative localization step by a truncated Bennett bound; it uses no
+rate in a central limit theorem. This also gives a sharp error order
+for approximations supported on the canonical minimum-count sector.
+All constants depend on fixed dimension and conditioning strength.
+\end{abstract}
+
+\section{Model and statement}
+Fix even $r\ge6$, $M=2^r$, $K=M/2$, and the full parity
+$\chi(x)=\prod_{i=1}^r x_i$ on $X=\{-1,1\}^r$. A neuron is
+$\theta=(a,U)\in\R^{r+2}$ and its full output vector is
+$\Phi_x(\theta)=a\max\{U\cdot(1,x),0\}$. The network output is
+$F_N=N^{-1}\sum_{i=1}^N\Phi(\theta_i)$. The prior is a product of
+standard Gaussian laws $P_0$. Write
+\[
+ \rho=\frac{\binom{r-2}{(r-2)/2}}{2^{r-1}\sqrt r},\quad
+ Z=\E_x\chi(x)\Phi_x,\quad
+ Q_*=M_*^{-1}e^{Z/\rho}P_0,\quad m_c=\E_{Q_*}Z.
+\]
+The critical-law companions establish that $M_*<\infty$, $m_c<3/8$,
+$\E_{Q_*}\Phi=m_c\chi$, and $\Phi$ has finite second moment.
+We study either the hard posterior $\chi(x)F_N(x)>s$ for every $x$,
+where $s>m_c$, or the likelihood proportional to
+\[
+ \exp\{-N\lambda M^{-1}\sum_x\ell(\chi(x)F_N(x))\},
+ \qquad \ell(y)=(1-y)^2/2\ \hbox{or}\ \log(1+e^{-y}).
+\]
+In the soft case, $s$ denotes the unique minimizer of
+$g(y)=y/\rho+\lambda\ell(y)$ and we assume $s>m_c$.
+Let $\Pi_N$ denote the resulting posterior. Put
+\[
+ \nu=\frac{r+1}{2},\qquad b=\nu-2=\frac{r-3}{2},\qquad
+ C_H=K(\nu-1/2),\qquad C_L=K(\nu-3/2).
+\]
+For a fixed cutoff $d>0$ count
+$L_N(d)=\#\{i:\|\theta_i\|^2>dN\}$.
+
+\begin{theorem}[A hierarchy of extra-neuron probabilities]\label{thm:count}
+Fix an integer $J\ge1$. There is $d_0>0$ such that, for each fixed
+$0<d<d_0$ and each $1\le j\le J$,
+\[
+ \Pi_N\{L_N(d)\ge K+j\}=\Theta(N^{-jb}),\qquad
+ \Pi_N\{L_N(d)=K+j\}=\Theta(N^{-jb}).                 \tag{1}
+\]
+Moreover, $\Pi_N\{L_N(d)<K\}=O(N^{-A})$ for every prescribed $A$,
+if $d_0$ is decreased as necessary for that $A$. In particular
+\[
+                  \Pi_N\{L_N(d)\ne K\}=\Theta(N^{-b}). \tag{2}
+\]
+All orders fix $r,s$ (or $r,\lambda$), $J$, and $d$ before $N\to\infty$.
+The theorem is not uniform as the cutoff or dimension changes with $N$.
+\end{theorem}
+
+The exact minimum count and the evidence powers were proved in the
+earlier companion \emph{The exact ReLU condensate count and its polynomial
+evidence cost}. Its coarea estimate is retained below. The new quantitative
+step controls the complement of that estimate's geometric event to an
+arbitrarily prescribed polynomial order. Scalar conditional big-jump
+limits and their quantitative versions are established topics; see
+Armend\'ariz--Loulakis and Vogel in the references. Here the additional
+feature is the finite collection of rays required by all cube labels.
+Large-deviation principles for Gaussian ReLU networks are also available
+in Vogel's work \cite{VogelNN}. Our question here is the polynomial
+probability of specified neuron-count sectors beyond the leading
+exponential evidence rate.
+
+\section{Inputs from critical-ray geometry}
+For $z\in X$ let $v_z=(0,z/\sqrt r)$,
+$\sigma_z=\operatorname{sgn}(G(v_{\mathbf1}))\chi(z)$, where
+$G(U)=\E_x\chi(x)\max\{U\cdot(1,x),0\}$, and put
+$f_z(x)=\sigma_z\max\{z\cdot x/\sqrt r,0\}$. In fixed sufficiently
+small disjoint cones about $(\sigma_z,v_z)$ use coordinates
+\[
+ a=\sigma_z A,\quad U=Rv_z+t/\sqrt c,\quad
+ c=AR>0,\quad v=A-R,\quad t\perp v_z.
+\]
+Here $A/R$ is bounded above and below by positive constants. The
+corner calculation gives
+\[
+ q_z(c,v,t)\le Cc^{-\nu}e^{-c_1(v^2+\|t\|)},\qquad
+ \Phi=cf_z+e_z(c,v,t),\quad \|e_z\|\le C\|t\|.         \tag{3}
+\]
+On fixed bounded mark sets the density is also at least $c_2c^{-\nu}$
+for large $c$. In these cones $\|\theta\|^2$ and $c$ are comparable.
+Outside their union the critical density is bounded by
+$C\exp(-c_3\|\theta\|^2)$. Indeed its homogeneous quadratic exponent
+is nonnegative and vanishes on exactly the stated rays; compactness of
+the unit sphere away from their fixed neighborhoods gives a positive gap.
+These facts imply
+\[
+ Q_*\{\|\theta\|^2>u\}\le Cu^{-(\nu-1)},\qquad u\ge1. \tag{4}
+\]
+To see this, integrate (3) over $c\ge c_4u$ and over the marks, and add
+the exponentially small off-cone integral. Also $\|\Phi\|\le C\|\theta\|^2$.
+
+The even Walsh block of the columns $f_z$, with one column from each
+antipodal pair, is invertible and independent of orientation. Its inverse
+sends $(s-m_c)\chi$ to the constant vector
+\[
+                         \alpha\mathbf1,
+             \qquad \alpha=\frac{s-m_c}{K\rho}>0.        \tag{5}
+\]
+The parity correlation of every $f_z$ is $\rho$. With one ray per pair,
+$\sum_z f_z=K\rho\chi$ precisely when the orientation set is balanced:
+$\sum_z\chi(z)z=0$. At least one such set exists, for example $z_1=1$.
+There are only finitely many orientation choices.
+
+Finally some fixed convolution power of the $Q_*$ output law has a
+nonzero centered isotropic Gaussian component. This follows by choosing
+incoming vectors in bounded neighborhoods whose ReLU vectors span
+$\R^M$, then using the Gaussian conditional readouts. Its consequences
+are the following, proved by independent block mixtures. Except for a
+subprobability of mass $Ce^{-cn}$, the sum of $n$ ordinary outputs is a
+mixture of translates of isotropic Gaussians with covariance $vI$,
+$cn\le v\le Cn$. Also, for fixed $C_0,a>0$,
+\[
+ \inf_{\|w\|\le C_0\sqrt n}
+ Q_*^n\{\|\textstyle\sum_i\Phi_i-nm_c\chi-w\|_\infty<a\}
+                      \ge c_{C_0,a}n^{-M/2}.             \tag{6}
+\]
+For the latter statement the residual mixture has finite variance;
+Chebyshev keeps its center within $O(\sqrt n)$ with positive probability,
+and the Gaussian component gives a uniform lower density on the box.
+No rate of convergence in a central limit theorem is used.
+
+\section{Quantitative coarse localization}
+Changing from $P_0^N$ to $Q_*^N$ leaves a residual weight $0\le W_N\le1$.
+In the hard case, writing $Y=\sum_i\Phi_i$,
+\[
+ W_N(Y)=e^{-\sum_x(\chi(x)Y_x-Ns)/(M\rho)}
+                  \prod_x\one_{\{\chi(x)Y_x>Ns\}}.       \tag{7}
+\]
+In the soft case it is
+\[
+ W_N(Y)=e^{-N M^{-1}\sum_x[g(\chi(x)Y_x/N)-g(s)]}.        \tag{8}
+\]
+Set $Z_N=\E_{Q_*^N}W_N$. For either residual, the weighted mass of
+$\|Y-Ns\chi\|>\eta N$ is exponentially small for every fixed $\eta>0$.
+For (7), one positive slack is of order $N$; for (8), strict convexity,
+coercivity, and a finite number of coordinates give a positive rate gap.
+
+\begin{lemma}[Truncated bulk at any polynomial accuracy]\label{lem:bennett}
+Given $\eta>0$ and $A_0>0$, there is $d_0>0$ such that, for fixed
+$0<d<d_0$,
+\[
+ Q_*^N\left\{\left\|\sum_{i=1}^N\Phi_i
+       \one_{\{\|\theta_i\|^2\le dN\}}-Nm_c\chi\right\|>\eta N\right\}
+                         \le C N^{-A_0}.                \tag{9}
+\]
+\end{lemma}
+\begin{proof}
+By (4) the truncation bias per summand has norm at most
+$C(dN)^{2-\nu}$, so the total bias is $o(N)$. Every centered coordinate
+has variance bounded by a constant and absolute value at most $CdN$.
+Bennett's inequality for independent bounded centered variables, with
+total variance at most $CN$ and deviation $\eta N/2$, has exponent
+\[
+ -\frac{CN}{(CdN)^2}
+ h\left(\frac{(CdN)(\eta N/2)}{CN}\right),
+ \qquad h(u)=(1+u)\log(1+u)-u.
+\]
+For fixed $d,\eta$, this is at most
+$-[c\eta/d]\log N+O_{d,\eta}(1)$. Choosing $d$ sufficiently small
+and union bounding the fixed number of coordinates and both signs gives
+(9). This argument does not require a moment generating function of the
+untruncated output.
+\end{proof}
+
+\begin{lemma}[Coarse event with a polynomial remainder]\label{lem:coarse}
+For any prescribed $A_0>0$, one can choose $d>0$ small and an integer
+$D$ large so that, outside a set of residual weighted mass $O(N^{-A_0})$,
+the following hold: $K\le L_N(d)\le D$; every large neuron is in a fixed
+critical cone with $c\in[c_-N,c_+N]$; every antipodal pair occurs among
+the large neurons. If $L_N(d)=K$, there is one neuron per pair, its
+orientation set is balanced, and $c_j/N$ is in any prescribed fixed
+neighborhood of $\alpha$. The constants and $d$ may depend on that
+neighborhood.
+\end{lemma}
+\begin{proof}
+From (4) and independence,
+\[
+ Q_*^N\{L_N(d)>D\}\le C_{D,d}N^{-(D+1)(\nu-2)}.
+\]
+Choose $D$ to make this smaller than the required polynomial remainder.
+Use (9), with a tolerance to be chosen below, for the smaller neurons.
+Large off-cone neurons have exponentially small probability. From (3),
+the event that any large cone neuron has $v^2+\|t\|>B\log N$ has
+probability at most any prescribed inverse power by increasing $B$.
+There are at most $D$ such marks, so their total output error is
+$O(\log N)$. Intersect with $\|Y-Ns\chi\|\le\eta N$ using (7)--(8).
+
+The parity coefficient now gives
+$\rho\sum_jc_j=N(s-m_c)+O(\eta N+\log N)$, hence $\sum_jc_j\le CN$.
+The norm cutoff and cone comparability give $c_j\ge c_-N>0$.
+The even block determines the total amplitude in each antipodal pair:
+it is $N\alpha+O(\eta N+\log N)$. Choosing $\eta$ small makes every
+pair mass positive, so every pair occurs and $L_N(d)\ge K$.
+When the count is $K$, these are the individual amplitudes. They can
+be confined to any fixed neighborhood of $N\alpha$ by decreasing
+$\eta$. Every unbalanced orientation choice has a positive fixed
+odd-output gap at $\alpha\mathbf1$. Finiteness of the choices and
+continuity give a common positive gap, which excludes them for sufficiently
+small $\eta$. All excluded events had weighted mass at most $O(N^{-A_0})$.
+\end{proof}
+
+\section{Count and rank in the volume estimate}
+For a fixed list of $L$ critical rays let $A$ be its $M$ by $L$ output
+matrix and $R_A=\operatorname{rank}A$. On the macro box
+$c_j\in[c_-N,c_+N]$, the density bound (3), coarea for $c\mapsto Ac$,
+and the Gaussian mixture imply
+\begin{align}
+ &\E[W_N;\hbox{this specified set of $L$ large neurons}]
+ \le C N^{-L\nu}\,N^{L-R_A}\,N^{-(M-R_A)/2}\,N^\xi,\tag{10}\\
+ &\hspace{35mm}\xi=\begin{cases}0&\text{hard},\\M/2&\text{soft}.\end{cases}\notag
+\end{align}
+Here the fiber volume in the box is at most $CN^{L-R_A}$. Integrating
+the good Gaussian component along $\operatorname{im}A$ leaves a marginal
+density at most $CN^{-(M-R_A)/2}$. To justify the remaining integral,
+define $\overline W_{N,q}(y)=\sup_{\|e\|_\infty\le q}W_N(y+e)$.
+Separability gives
+\[
+ \|\overline W_{N,q}\|_1\le C N^\xi(1+q)^M.             \tag{11}
+\]
+For hard margins each one-dimensional integral is $2q+M\rho$.
+For soft loss it is at most $2q+C\sqrt N$, by a quadratic lower bound
+near $s$ and positive linear growth away from $s$. The error bound in
+(3) takes $q=C\sum\|t_j\|$; its polynomial factor integrates against
+the exponentially decaying marks. The bad Gaussian-mixture mass is
+exponentially small and is bounded using $W_N\le1$.
+
+After the at most $N^L$ index choices, (10) is
+\[
+                       C N^{-L(\nu-2)-(M+R_A)/2+\xi}.   \tag{12}
+\]
+On the coarse event every pair occurs, so the even block gives $R_A\ge K$.
+Consequently the term for $L=K+j$ is at most
+$CN^{-C_H-jb}$ or $CN^{-C_L-jb}$, respectively.
+
+For completeness, a lower evidence bound does not use qualitative
+posterior localization. Choose a balanced set of $K$ rays, bounded mark
+boxes, and $c_j$ in intervals of width $\sqrt N$ centered at
+$[Ns-(N-K)m_c]/(K\rho)$. The hard small-box bound (6) yields weighted
+mass at least $cN^{-K\nu+K/2-M/2}$ per specified index set. For soft
+loss, Chebyshev gives a fixed positive probability of bulk fluctuations
+$O(\sqrt N)$ and a positive residual weight, giving
+$cN^{-K\nu+K/2}$. Summing the $\binom NK$ index sets gives
+\[
+                     Z_N\ge cN^{-C_H}\quad\hbox{or}\quad cN^{-C_L}. \tag{13}
+\]
+The overlap is bounded on $L_N(d)\le D$ by a constant depending on $D,K$;
+the discarded sum is at most $N^K Q_*^N\{L_N(d)>D\}$ and is negligible
+when $D$ is chosen large. Combining (12), Lemma~\ref{lem:coarse}, and
+(13) also gives the matching upper evidence bound. More importantly,
+it gives the upper bound in (1), with an arbitrarily small polynomial
+remainder by prescribing $A_0$ before choosing $d$.
+
+\section{Duplicating a ray attains the exponent}
+Fix $j\ge1$. Start with a balanced $K$-ray pattern and replace one ray
+by $j+1$ copies of the same orientation. The resulting matrix has
+$L=K+j$ columns and still has rank $K$. Let
+\[
+                       c_N=\frac{Ns-(N-L)m_c}{K\rho}.
+\]
+For each unduplicated ray choose its amplitude in a $\sqrt N$ interval
+about $c_N$. The sum of the $j+1$ duplicated amplitudes is also in such
+an interval. Split this sum into positive fractions in a fixed small
+neighborhood of $1/(j+1)$ in the $j$-dimensional simplex. The resulting
+amplitude region has volume at least $cN^{K/2+j}$; every amplitude is
+at least a fixed positive multiple of $N$. For sufficiently small $d$,
+all these neurons therefore exceed the norm cutoff. Bounded mark boxes
+give density at least $cN^{-(K+j)\nu}$.
+
+The total selected output is $[Ns-(N-L)m_c]\chi+O(\sqrt N)$.
+For hard loss, (6) puts the remaining output into a fixed positive-slack
+box, absorbing the bounded mark errors, with probability at least
+$cN^{-M/2}$ and residual weight bounded below. For soft loss the
+remaining sum is within $C\sqrt N$ of its mean with positive probability,
+and the residual weight is again bounded below. There are order
+$N^{K+j}$ index assignments. The same bounded-overlap argument, choosing
+$D$ large enough that $N^{K+j}Q_*^N\{L_N(d)>D\}$ is negligible, gives
+\[
+ \E[W_N;L_N(d)\ge K+j]\ge
+ \begin{cases}cN^{-C_H-jb}&\text{hard},\\cN^{-C_L-jb}&\text{soft}.
+ \end{cases}                                             \tag{14}
+\]
+Divide by the upper evidence bound to obtain the lower tail order in
+(1). Establishing the upper bound also for $j+1$ makes that tail
+$o(N^{-jb})$, so subtracting it proves the exact-count order. Choose
+the cutoff sufficiently small for all $j\le J+1$ at once. This proves
+Theorem~\ref{thm:count}.
+
+\begin{corollary}[The canonical-sector error]\label{cor:sector}
+Fix sufficiently narrow critical cones, a macro amplitude interval
+containing $\alpha$ in its interior, and a sufficiently small cutoff $d$.
+Let $G_N$ require exactly $K$ large neurons, one per pair, balanced
+orientations, and the prescribed cones and amplitude interval. Then
+\[
+                         \Pi_N(G_N^c)=\Theta(N^{-b}).     \tag{15}
+\]
+One may also require $|v_j|/\sqrt N$ and $\|t_j\|/N$ below any fixed
+positive constants without changing this order. In particular
+$\|\Pi_N(\cdot\mid G_N)-\Pi_N\|_{\rm TV}=\Theta(N^{-b})$.
+\end{corollary}
+\begin{proof}
+Lemma~\ref{lem:coarse} with an arbitrarily small polynomial remainder
+and (2) give the upper bound. The $K+1$ event gives the lower bound.
+The mark cutoffs fail only with exponentially small weighted mass on
+the macroscopic cones, by (3). The total-variation identity follows by
+comparing a probability measure with its conditioning on an event.
+\end{proof}
+
+\paragraph{The price of an extra independent direction.}
+More locally, suppose a fixed $L$-ray list has a strictly positive
+amplitude vector $a$ with $Aa=(s-m_c)\chi$. Restrict amplitudes to a
+sufficiently small fixed macro neighborhood of $Na$. The argument above,
+using a basis of $\ker A$ for the free $N$-scale directions and
+$R_A$ independent $\sqrt N$-scale directions, gives matching local
+orders in (12). Relative to minimum-count evidence, its exponent is
+\[
+                         (L-K)b+(R_A-K)/2.               \tag{16}
+\]
+Repeated rays preserve rank and attain the smallest price per additional
+neuron. The statement includes its positivity assumption: an arbitrary
+ray list need not admit the required target representation.
+
+\section*{Scope and references}
+The result concerns full-cube source labels, fixed dimension, Gaussian
+prior, and mean-field normalization. It is not an online mistake lower
+bound or an efficient growing-dimension sampling theorem. The proof is
+conventional and uses the critical-ray and Gaussian-component lemmas of
+the preceding collection; it is not fully formalized in Lean.
+
+\begin{thebibliography}{9}
+\bibitem{AL} I. Armend\'ariz and M. Loulakis,
+\emph{Conditional distribution of heavy tailed random variables on large
+deviations of their sum}, Stochastic Processes and their Applications
+121 (2011), 1138--1147. \url{https://arxiv.org/abs/0912.1516}.
+\bibitem{Vogel} Q. Vogel, \emph{Quantitative bounds for large deviations of
+heavy tailed random variables}, ALEA 20 (2023), 1615--1629.
+\url{https://alea.impa.br/articles/v20/20-61.pdf}.
+\bibitem{VogelNN} Q. Vogel, \emph{Large deviations of Gaussian neural
+networks with ReLU activation}, Statistics \& Probability Letters 230
+(2026), 110611. \url{https://arxiv.org/abs/2405.16958}.
+\end{thebibliography}
+\end{document}

@@ -1,0 +1,597 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}
+\newcommand{\one}{\mathbf1}\newcommand{\TV}{\mathrm{TV}}
+\title{Smoothing changes the fluctuations of Bayesian neural condensates}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author.}}
+\date{21 November 2026; working proof draft}
+\hypersetup{hidelinks,pdftitle={Smoothing changes the fluctuations of Bayesian neural condensates},pdfauthor={ChatGPT-6 Astra}}
+\emergencystretch=3em
+\begin{document}\maketitle
+\begin{abstract}
+Replacing ReLU by softplus preserves the minimum number of exceptional
+neurons in the full-label Gaussian parity posterior, but changes its
+quantitative geometry. We compute the stretched-exponential probability
+of additional macroscopic neurons, the Gaussian transverse marks, and
+the polynomial factor multiplying the known second-order evidence cost.
+An exceptional softplus neuron has transverse parameter scale $N^{-1/4}$,
+compared with $N^{-1/2}$ for ReLU. The orientation law still has a finite
+Gaussian determinant formula, now using the softplus critical covariance;
+its amplitude and bulk fluctuations acquire explicit nonzero means.
+A one-neuron crossover calculation locates the smoothing scale at
+$\beta\asymp\sqrt c$, where $c$ is the exceptional amplitude and
+$\beta$ is inverse softplus temperature. All posterior limits fix even
+input dimension and positive $\beta$ before increasing width. The results
+concern posterior geometry and evidence, not efficient learning from a
+small number of labels.
+\end{abstract}
+
+\section{Model and existing condensation input}
+Fix even $r\ge6$, $X=\{-1,1\}^r$, $M=2^r$, $K=M/2$, and
+$\chi(x)=\prod_i x_i$. Write $\bar x=(1,x)$ and
+$\phi_\beta(t)=\beta^{-1}\log(1+e^{\beta t})$ for fixed $\beta>0$.
+A neuron $\theta=(a,U)\in\R^{r+2}$ has a standard Gaussian prior $P_0$
+and output vector $\Phi_x=a\phi_\beta(U\cdot\bar x)$. Set
+$F_N=N^{-1}\sum_{i=1}^N\Phi_i$ and
+\[
+ \rho=\frac{\binom{r-2}{(r-2)/2}}{2^{r-1}\sqrt r},\quad
+ p_0=\frac{\binom r{r/2}}{2^r},\quad
+ Z=\E_x\chi(x)\Phi_x,\quad
+ Q_*=\mathcal M_\beta^{-1}e^{Z/\rho}P_0.
+\]
+The preceding companion \emph{Exponentially many posterior condensates
+for a small parity teacher} proves
+\[
+ \mathcal M_\beta<\infty,\quad m_c=\E_{Q_*}Z<3/8,\quad
+ \E_{Q_*}\Phi=m_c\chi,\quad
+ \E_{Q_*}e^{c\|\theta\|}<\infty\quad\hbox{for some }c>0.
+ \tag{1}
+\]
+The bound $m_c<3/8$ is uniform in the softplus temperature in that
+companion. In this paper $m_c$, $Q_*$, and all unspecified constants
+refer to the fixed temperature being considered.
+
+Initially condition on the hard full-cube event
+$H_N=\{\chi(x)F_N(x)>s\text{ for all }x\}$, where $s>m_c$.
+Put
+\[
+ \alpha=\frac{s-m_c}{K\rho},\quad
+ \kappa=\frac{p_0\log2}{\beta\rho},\quad
+ J_*=K\kappa\sqrt\alpha,
+ \qquad \nu_\beta=\frac{r+2}{4}.
+ \tag{2}
+\]
+The subscript on $\nu_\beta$ distinguishes the smooth corner exponent
+from its ReLU counterpart; its value does not depend on $\beta$.
+Let $\Pi_N=P_0^N(\cdot\mid H_N)$.
+
+We recall the precise finite geometry and large-deviation input used
+below. Let $v_z=(0,z/\sqrt r)$,
+$\sigma_z=(-1)^{r/2+1}\chi(z)$, and
+$f_z(x)=\sigma_z\max\{z\cdot x/\sqrt r,0\}$.
+At speed $\sqrt N$, a nonzero scaled parameter can have finite critical
+cost only at $R(\sigma_z,v_z)$, where its cost is $\kappa R$ and its
+output amplitude is $R^2f_z$. A finite or summable marked collection
+of amplitudes $c_j>0$ consequently has cost
+$\kappa\sum_j\sqrt{c_j}$. Supplying the missing signal forces
+\[
+ \sum_{j:z_j\in\{z,-z\}}c_j=\alpha
+       \quad\hbox{for every antipodal pair}.              \tag{3}
+\]
+Its odd linear part must cancel as well. The minimum cost is $J_*$,
+attained by one amplitude $\alpha$ per pair and a balanced orientation
+set $S$, meaning $\sum_{z\in S}\chi(z)z=0$.
+The same companion establishes the marked-configuration large-deviation
+principle and
+\[
+ -\log P_0^N(H_N)=N(s/\rho-\log\mathcal M_\beta)
+                                      +J_*\sqrt N+o(\sqrt N). \tag{4}
+\]
+These are inputs, not new claims of the present paper. Their proof uses
+critical exponential norm moments to discard smaller summands, finite
+covers for the remaining large parameters, and the exact even Walsh
+block to obtain (3). General few-large-summand and conditional
+stretched-exponential phenomena have an extensive literature; the
+present calculations concern this neural geometry.
+
+\section{The exact smooth corner scale}
+Fix a ray $z$ and write
+\[
+ a=\sigma_z A,\quad U=Rv_z+u,\quad u\perp v_z,\quad
+ c=AR>0,\quad v=A-R.
+\]
+Here $u$ has $r$ transverse coordinates in an orthonormal basis. Use a
+fixed sufficiently narrow cone, so $A/R$ stays bounded away from zero
+and infinity and $\|u\|\le\eta R$.
+Define on that transverse space
+\[
+ Q_z=M^{-1}\sum_{x:z\cdot x=0}\bar x\bar x^\top,
+ \qquad
+ H_\beta(u)=M^{-1}\sum_{x:z\cdot x=0}
+       \beta^{-1}\log\left(2\cosh\frac{\beta u\cdot\bar x}{2}\right).
+ \tag{5}
+\]
+The matrix $Q_z$ is positive definite there. Its eigenvalues are $p_0$
+in the bias direction and $p_0r/(r-1)$ in the other $r-1$ directions.
+Indeed, on the zero layer, the coordinate mean is zero and
+$\E[x_ix_j]=-z_iz_j/(r-1)$ for $i\ne j$.
+
+\begin{theorem}[Conditional corner marks]\label{thm:corner}
+As $c\to\infty$, the critical density in a fixed ray cone, marginalized
+over its other coordinates, is
+\[
+             q_z(c)\sim C_{r,\beta}\,
+                     c^{-\nu_\beta}e^{-\kappa\sqrt c},  \tag{6}
+\]
+with a finite positive constant common to every ray. Conditional on $c$
+and the cone, the variables $(v,c^{1/4}u)$ converge in total variation
+to independent Gaussians
+\[
+ v\sim N(-\kappa/2,1),\qquad
+ t\sim N\left(0,\frac{4\rho}{\beta}Q_z^{-1}\right).     \tag{7}
+\]
+The inverse is on $v_z^\perp$. In particular the transverse parameter
+scale is $c^{-1/4}$, rather than the $c^{-1/2}$ scale of the ReLU corner.
+\end{theorem}
+\begin{proof}
+Write the negative log-density, up to a constant, as
+$D=\|\theta\|^2/2-aG_\beta(U)/\rho$.
+All nonzero central preactivations retain their signs in the cone. The
+critical corner identity from the preceding companion gives
+\[
+ D=\frac{v^2}{2}+\frac{\|u\|^2}{2}
+                 +\frac A\rho H_\beta(u)+O(Ae^{-c_0\beta R}). \tag{8}
+\]
+The error is uniform in a smaller fixed cone. Taylor expansion gives
+\[
+ H_\beta(u)=\frac{p_0\log2}{\beta}
+                  +\frac\beta8 u^\top Q_z u+O(\|u\|^4).
+\]
+Since $A=(\sqrt{v^2+4c}+v)/2$, substitute $u=c^{-1/4}t$ into (8):
+\[
+ D=\kappa\sqrt c+\frac{v^2}{2}+\frac{\kappa v}{2}
+                    +\frac\beta{8\rho}t^\top Q_z t+o(1). \tag{9}
+\]
+The coordinate Jacobian is
+$c^{-r/4}/\sqrt{v^2+4c}\sim\tfrac12c^{-(r+2)/4}$.
+
+For domination, strict convexity at zero and linear growth at infinity
+supply
+$H_\beta(u)-H_\beta(0)\ge c_1\min(\|u\|^2,\|u\|)$.
+Also $A-\sqrt c\ge v/2$. Uniformly in the cone and $c\ge1$, the
+exponent after subtracting $\kappa\sqrt c$ is therefore bounded below by
+\[
+             v^2/4+c_2\min(\|t\|^2,\|t\|)-C.
+\]
+The exponentially small remainder in (8) is bounded. The scaled Jacobian
+is at most $1/2$. Dominated convergence gives convergence of the
+unnormalized mark densities in $L^1$, then normalized total-variation
+convergence. Completing the square in $v$ proves (7), and integration
+proves (6). For clarity, its constant can be written
+\[
+ C_{r,\beta}=
+ \frac{(2\pi)^{-(r+2)/2}}{2\mathcal M_\beta}
+ \frac{\sqrt{2\pi}\,e^{\kappa^2/8}(8\pi\rho/\beta)^{r/2}}
+      {\sqrt{\det(Q_z|_{v_z^\perp})}},                   \tag{10}
+\]
+which is independent of orientation.
+\end{proof}
+
+The relative angular fluctuation is $c^{-3/4}$, because the radial
+incoming norm is of order $\sqrt c$. Thus a macroscopic softplus neuron
+has angular scale $N^{-3/4}$, whereas a ReLU condensate has angular scale
+$N^{-1}$. Both align with the same limiting rays.
+
+\section{An explicit probability for extra neurons}
+For a fixed squared-norm cutoff $dN$, let
+$L_N(d)=\#\{i:\|\theta_i\|^2>dN\}$ and put $\delta=d/2$.
+The factor two comes from the limiting squared norm $2c$ of a critical
+ray of amplitude $c$.
+
+\begin{theorem}[Stretched-exponential count hierarchy]\label{thm:count}
+Fix $J\ge1$ and $0<\delta<\alpha/(J+2)$. For $1\le j\le J$,
+\begin{align}
+ \lim_{N\to\infty}N^{-1/2}\log\Pi_N\{L_N(d)\ge K+j\}
+ &=-\kappa\Delta_j,\notag\\
+ \lim_{N\to\infty}N^{-1/2}\log\Pi_N\{L_N(d)=K+j\}
+ &=-\kappa\Delta_j,\qquad
+ \Delta_j=j\sqrt\delta+\sqrt{\alpha-j\delta}-\sqrt\alpha>0.
+ \tag{11}
+\end{align}
+The count error itself satisfies
+\[
+       \lim_{N\to\infty}N^{-1/2}\log\Pi_N\{L_N(d)\ne K\}
+                                      =-\kappa\Delta_1. \tag{12}
+\]
+For any fixed canonical neighborhood $G_N$ of all minimum configurations,
+with exactly $K$ neurons above the cutoff, its complement has probability
+at most $e^{-c_G\sqrt N}$ for some $c_G>0$. The constant may depend on
+the amplitude and orientation restrictions in that neighborhood.
+\end{theorem}
+\begin{proof}
+Apply the marked-configuration principle recalled above with the count
+constraint. The posterior rate is the configuration cost minus $J_*$.
+Consider first a pair containing $n\ge1$ amplitudes at least $\delta$.
+Merge any remaining pieces into the largest of these. Concavity of the
+square root then makes the least possible pair cost
+\[
+            (n-1)\sqrt\delta+\sqrt{\alpha-(n-1)\delta}.
+ \tag{13}
+\]
+This follows also by moving mass from the smaller of two interior
+pieces to the larger until one reaches its lower bound. A pair with
+no counted piece has cost at least $\sqrt\alpha$.
+
+If the total count is at least $K+j$ and $h$ pairs have no counted
+piece, the occupied pairs have at least $j+h$ excess counted pieces
+beyond their first. The increment
+$\Delta_l=l\sqrt\delta+\sqrt{\alpha-l\delta}-\sqrt\alpha$
+is increasing and concave on its admissible integer range, with
+$\Delta_0=0$. Retain any $j$ of the excess pieces. Concavity gives
+$\Delta_a+\Delta_b\ge\Delta_{a+b}$ whenever the sum is at most $j$.
+Thus the total cost is at least $J_*+\kappa\Delta_j$.
+It is attained as an infimum by taking a balanced minimum pattern,
+splitting one ray into $j$ pieces just above $\delta$ and one remaining
+piece near $\alpha-j\delta$, and leaving all other pairs unchanged.
+The odd cancellation remains exact, because the total on that ray is
+unchanged. The strict cutoff and its closed version have the same
+infimum. This proves the tail limit by the upper and lower bounds of
+the configuration principle. Applying it also to $j+1$, whose increment
+is strictly larger, and subtracting that tail proves the exact-count
+limit.
+
+For (12), if fewer than $K$ pieces exceed the cutoff, at least one pair
+has all its pieces at most $\delta$. Their square-root sum is at least
+$\sqrt\delta+\sqrt{\alpha-\delta}$: the same mass-moving argument first
+fills one largest piece to $\delta$ without increasing the cost, and
+merging the rest gives this lower bound.
+All other pairs cost at least $\sqrt\alpha$. This gives rate at least
+$\kappa\Delta_1$ for undercounting. The extra-count event attains that
+rate, proving (12). Finally the good configuration rate has precisely
+the finite set of balanced equal-amplitude patterns as minimizers.
+The closed complement of any fixed neighborhood of all those minimizers
+has a positive rate gap, proving the last assertion. Its rate need not
+equal $\kappa\Delta_1$: a subthreshold extra piece can already move an
+exceptional amplitude outside a narrower prescribed interval.
+\end{proof}
+
+For ReLU at the same fixed dimension, the count companion gives instead
+$\Pi_N\{L_N(d)\ge K+j\}=\Theta(N^{-j(r-3)/2})$ for sufficiently
+small $d$. Smoothing therefore changes the rarity of additional
+macroscopic features even though the minimum count and limiting ray
+geometry stay the same. Formula (11) keeps $d$ fixed; it does not
+control a cutoff that decreases with width.
+
+\section{A local-limit estimate with a shrinking tilt}
+The next elementary analytic input is useful for identifying the
+polynomial evidence factor. We state its assumptions to distinguish it
+from a positive moment generating function for the untruncated output.
+
+\begin{lemma}[Truncated tilted sums]\label{lem:local}
+Suppose an output vector $V(\theta)\in\R^M$ satisfies
+$\|V(\theta)\|\le C(1+\|\theta\|^2)$,
+$\E e^{c\|\theta\|}<\infty$, and has positive definite covariance
+$\Sigma$. Suppose a fixed convolution block has a nonzero smooth compactly
+supported density component, realized by parameters in a fixed bounded
+set. For any finite collection of vectors $t$, and sufficiently small
+fixed $d>0$, restrict independent parameters to $\|\theta\|^2\le dN$
+and tilt each output by $\exp(t^\top V/\sqrt N)$.
+The centered normalized sums have the Gaussian moment-generating limit,
+and their densities, after discarding exponentially small subprobabilities,
+converge locally uniformly to the corresponding shifted Gaussian densities.
+The normalized untilted sum has, for any prescribed $L<\infty$, a good
+subdensity bounded by $C_L e^{-L\|z\|}$, after choosing $d$ sufficiently
+small. All discarded masses are $O(e^{-c_LN})$ under the tilted laws.
+\end{lemma}
+\begin{proof}
+On the cutoff, $\|V\|/\sqrt N\le C/\sqrt N+C\sqrt d\|\theta\|$.
+Choose $d$ so that each required tilt uses less than half the available
+exponential norm moment. Taylor's formula then gives, uniformly for
+these tilts, the one-summand cumulant expansion through order $N^{-1}$,
+with remainder $O(N^{-3/2})$ and uniformly bounded moments of every
+fixed order. The removed tail is $O(e^{-c\sqrt N})$ and has the same
+bound after multiplication by any fixed polynomial. Multiplying $N$
+normalized transforms proves the Gaussian transform limit, including
+the mean shift $\Sigma t$.
+
+The bounded-parameter density component survives these restrictions and
+tilts with a common positive minorization. Split the sum into independent
+fixed-size blocks. Except for mass $O(e^{-cN})$, at least $cN$ blocks
+come from this smooth component. Its characteristic function has a
+quadratic gap near zero, is strictly below one off zero, and decays
+faster than any inverse power at infinity. After scaling, these three
+bounds give integrable Gaussian domination near zero and exponentially
+small Fourier integrals outside that region. The ordinary triangular-array
+central limit theorem and Fourier inversion yield the stated uniform
+local density convergence and a uniform density bound for the good part.
+Apply that bound under the finitely many tilts $t=\pm C_Le_i$ and undo
+the tilt. Choosing a coordinate of maximal magnitude gives the displayed
+exponential bound. Use a common good block event for this finite list;
+its complement remains exponentially small under each tilted law.
+\end{proof}
+
+For the softplus critical output all assumptions hold. The conditional
+readout is Gaussian, $a\mid U\sim N(G_\beta(U)/\rho,1)$. A finite set
+of affine softplus vectors spans the full output space: scale incoming
+vectors that isolate individual cube points for ReLU and use uniform
+softplus approximation after division by that scale. Incoming vectors
+in small bounded neighborhoods preserve full rank. Bounded readouts
+then give a positive density on a fixed output ball, which minorizes a
+smooth compactly supported density. This also proves $\Sigma\succ0$.
+
+\section{Sharp evidence and the orientation law}
+For a balanced set $S$, let $A_S$ have columns $f_z$, $z\in S$.
+It has rank $K$ and $A_S\one=K\rho\chi$. Put
+\[
+ \Sigma=\operatorname{Cov}_{Q_*}(\Phi),\quad
+ \Sigma\chi=\lambda_\chi\chi,\quad
+ H_S=A_S^\top\Sigma^{-1}A_S,\quad
+ \tau=\frac\kappa{2\sqrt\alpha},\quad
+ h_0=K\rho\kappa\sqrt\alpha.
+ \tag{14}
+\]
+Coordinate-flip symmetry makes $\Sigma$ Walsh diagonal, so the eigenvalue
+$\lambda_\chi>0$ is well defined.
+
+\begin{theorem}[Hard posterior fluctuations and evidence]\label{thm:hard}
+There is $C_H\in(0,\infty)$ such that
+\[
+ P_0^N(H_N)\sim C_H N^{-Kr/4}
+   \exp\{-N(s/\rho-\log\mathcal M_\beta)-J_*\sqrt N\}.  \tag{15}
+\]
+The limiting orientation probability is
+\[
+               \Pr(S)=\frac{\det(H_S)^{-1/2}}
+                         {\sum_T\det(H_T)^{-1/2}},       \tag{16}
+\]
+where the finite sum runs over balanced sets.
+Order the $K$ exceptional neurons by their antipodal pairs and let
+$D_N=(c-N\alpha\one)/\sqrt N$. Conditional on $S$, it converges to
+\[
+ D\sim N\left(\left[\kappa\sqrt\alpha-
+                \frac{\tau\lambda_\chi}{KM\rho^2}\right]\one,
+                                      H_S^{-1}\right).  \tag{17}
+\]
+The ordinary-output fluctuation
+$Z_N=(\sum_{\rm ordinary}\Phi_i-(N-K)m_c\chi)/\sqrt N$
+converges jointly to $Z=h_0\chi-A_SD$. The exceptional marks converge
+independently of $(D,Z)$ to the independent laws in (7).
+\end{theorem}
+\begin{proof}
+The count theorem permits restriction to a fixed canonical sector with
+exponentially small relative posterior error. Choose its ordinary cutoff
+small enough for Lemma~\ref{lem:local}. In that sector write
+$c_j=N\alpha+\sqrt N D_j$ and $u_j=c_j^{-1/4}t_j$.
+The corner density supplies
+\[
+ (N\alpha)^{-K\nu_\beta}e^{-J_*\sqrt N}
+       e^{-\tau\one^\top D}
+\]
+times the common limiting mark density. The amplitude volume is
+$N^{K/2}dD$.
+
+The leading softplus output correction is common to all sectors.
+Indeed, the $\sqrt c\log2/\beta$ contribution occurs exactly at zero
+preactivations, and
+\[
+ \sum_{z\in S}\sigma_z\one_{\{z\cdot x=0\}}=-Kp_0\chi(x).
+ \tag{18}
+\]
+This identity follows by averaging the even function of $z$ over all
+antipodal pairs and using its top zero-layer Fourier coefficient.
+Thus, locally uniformly in bounded $D,v,t$,
+\[
+            \sum_{\rm exceptional}\Phi
+                 =A_Sc-\sqrt N h_0\chi+o(\sqrt N).       \tag{19}
+\]
+The transverse linear correction is only $O(N^{1/4})$.
+
+After critical tilting, integrate the positive hard slacks against
+$\exp[-\sum_xu_x/(M\rho)]du$. Their integral is a fixed constant.
+The local density lemma for the ordinary sum gives a factor
+$N^{-M/2}$ and the Gaussian density at $h_0\chi-A_SD$.
+There are asymptotically $N^K$ label injections of the canonically ordered
+exceptional neurons. The total width power is therefore
+\[
+       -K\nu_\beta+K/2-M/2+K=-Kr/4.                   \tag{20}
+\]
+The limiting density of $D$ in sector $S$ is proportional to
+\[
+ \exp\left[-\tfrac12(A_SD-h_0\chi)^\top\Sigma^{-1}
+                  (A_SD-h_0\chi)-\tau\one^\top D\right]. \tag{21}
+\]
+
+We detail why these local limits can be integrated. On a fixed macro
+amplitude interval, the ratio of radial exponential factors is at most
+$\exp(C\|D\|)$, by the Lipschitz bound for the square root there.
+The good ordinary subdensity has arbitrarily strong exponential decay
+in its normalized argument by Lemma~\ref{lem:local}. Since each $A_S$
+has a fixed positive smallest singular value, choose that decay stronger
+than the radial growth. The difference between the scaled correction in
+(19) and $-h_0\chi$ is bounded on the macro box by
+$C N^{-1/4}\sum\|t_j\|+C N^{-1/2}(\|D\|+\sum|v_j|)$.
+The last $D$ term is absorbed into the chosen stronger decay for large
+$N$. The remaining exponential factors are
+absorbed by the Gaussian imbalance bound and
+$\exp[-c\min(\|t\|^2,N^{1/4}\|t\|)]$ from the corner proof.
+The slack exponential controls the analogous translation by $u/\sqrt N$.
+Thus tails in $D,v,t,u$ are uniformly integrable. The bad ordinary
+subprobabilities have mass $e^{-cN}$; the macro volume is polynomial and
+the largest radial reweighting is $e^{C\sqrt N}$, so they are negligible.
+This justifies the limiting integrals and bounded continuous test
+functions of the displayed fluctuations.
+
+Finally $A_S^\top\chi=M\rho\one$ and
+\[
+ H_S^{-1}\one=\frac{\lambda_\chi}{KM\rho^2}\one.
+\]
+Completing the square in (21) gives (17). Its integrated exponential
+shift is independent of $S$, since $\one^\top H_S^{-1}\one$ is common.
+Only $\det(H_S)^{-1/2}$ remains, proving (16). All limiting integrals
+are finite and positive. Restoring the exact critical-tilt factor gives
+(15). Equation (19) gives the joint bulk limit. The mark factors in (9)
+separate from (21), proving their independence.
+\end{proof}
+
+In particular the bulk has a nonzero Gaussian-scale mean shift,
+\[
+                   \E Z=\frac{\tau\lambda_\chi}{M\rho}\chi. \tag{22}
+\]
+It supplies slightly more source signal than its first-order critical
+mean. The exceptional amplitudes compensate both for this shift and for
+the deterministic smoothing correction in (19).
+
+\section{The analogous soft-loss result}
+For square or logistic loss let
+$g(y)=y/\rho+\lambda\ell(y)$, let $s$ minimize $g$, and assume $s>m_c$.
+Write $\gamma=g''(s)/M$, $Q_0=I+\gamma\Sigma$, and
+\[
+ V_S=\gamma^{-1}(A_S^\top Q_0^{-1}A_S)^{-1}.
+\]
+Use the same $\alpha,\kappa,\tau,h_0,J_*$ as above, with this $s$.
+The likelihood evidence is
+$\mathcal E_N=\E_{P_0^N}\exp[-N\lambda M^{-1}\sum_x\ell(\chi F_N)]$.
+
+\begin{corollary}[Soft evidence and shifted Gaussian fluctuations]
+For a finite positive $C_L$,
+\[
+ \mathcal E_N\sim C_L N^{-K(r-4)/4}
+   \exp\{-N[g(s)-\log\mathcal M_\beta]-J_*\sqrt N\}.    \tag{23}
+\]
+The orientation weights are proportional to
+$\det(A_S^\top Q_0^{-1}A_S)^{-1/2}$. Conditional on $S$, the joint
+Gaussian limit of $(D,Z)$ has density proportional to
+\[
+ e^{-Z^\top\Sigma^{-1}Z/2}
+ e^{-\gamma\|Z+A_SD-h_0\chi\|^2/2-\tau\one^\top D}.    \tag{24}
+\]
+Its means are
+\begin{align*}
+ \E D&=\left[\kappa\sqrt\alpha-
+       \frac{\tau(\lambda_\chi+\gamma^{-1})}{KM\rho^2}\right]\one,\\
+ \E Z&=\frac{\tau\lambda_\chi}{M\rho}\chi,\qquad
+ \E[Z+A_SD-h_0\chi]=-\frac\tau{\gamma M\rho}\chi.
+\end{align*}
+The covariance is the same as that of the centered density obtained
+from (24) by removing the linear tilt and shifting $D$ by
+$h_0\one/(K\rho)$. The marks remain (7).
+\end{corollary}
+\begin{proof}
+The marked-configuration argument is unchanged: at speed $\sqrt N$ the
+strictly convex residual forces the limiting total output to $s\chi$,
+and the minimum exceptional cost is still $J_*$. Its lower bound uses
+a bulk neighborhood of radius $O(\sqrt N)$, whose residual weight is
+bounded below. Thus the count-rate proof also applies to this posterior.
+
+In the local calculation, the soft residual becomes
+$\exp[-\gamma\|Z+A_SD-h_0\chi\|^2/2]$. Integrating over the ordinary
+$\sqrt N$-scale output cancels the factor $N^{-M/2}$ from its density.
+This changes (20) to $-K\nu_\beta+3K/2=-K(r-4)/4$.
+Uniform integration follows from the same tilted density bound and the
+quadratic residual near $s$. Outside a fixed output window, coercivity
+of $g$ gives an exponentially small residual contribution. Completing
+squares in (24) gives the stated means and determinant weights. The
+identity $V_S\one=(\lambda_\chi+\gamma^{-1})\one/(KM\rho^2)$ makes
+the normalization shift independent of orientation.
+\end{proof}
+
+\section{A quantitative ordinary-neuron cutoff}
+The density bounds used above also control a growing cutoff for the
+ordinary parameters. This will be useful for sampling: a small positive
+tilt beyond the critical parameter is integrable after such a cutoff.
+
+\begin{corollary}[The ordinary maximum and fixed transverse cuts]
+For either posterior, choose a sufficiently small fixed canonical
+neighborhood $G_N$ and its ordinary squared-norm cutoff $dN$ as in the
+preceding proofs. There are positive constants $C,c,c'$ such that
+\[
+ \Pi_N\left\{\max_{\rm ordinary}\|\theta_i\|>u\mid G_N\right\}
+                  \le CN e^{-cu}+e^{-c'N},
+       \qquad 1\le u\le\sqrt{dN}.                       \tag{25}
+\]
+Consequently, for each fixed $b>0$, adding the restriction
+$\max_{\rm ordinary}\|\theta_i\|^2\le b\sqrt N$ changes the full
+posterior by at most $CN e^{-c_bN^{1/4}}+e^{-c_G\sqrt N}$ in total
+variation. Requiring every exceptional physical transverse norm
+$\|u_j\|$ to be below any fixed positive constant adds at most
+$e^{-c_u\sqrt N}$ further posterior error.
+\end{corollary}
+\begin{proof}
+Insert the indicator $\|\theta_1\|>u$ for one specified ordinary neuron
+in the evidence integral, and integrate the other $N-K-1$ ordinary
+outputs first. Their normalized density argument is translated by
+$\Phi(\theta_1)/\sqrt N$. The exponential density bound in
+Lemma~\ref{lem:local} pays at most
+$\exp(L\|\Phi(\theta_1)\|/\sqrt N)$ for that translation.
+On the fixed ordinary cutoff, sufficiently small $d$ absorbs this
+factor into half of the available critical exponential norm moment.
+The integral over $\theta_1$ with its indicator is therefore at most
+$Ce^{-cu}$. The remaining amplitude, mark, and slack bounds are exactly
+those in the evidence proof and have its same width power and radial
+exponential factor. These cancel upon normalization. The bad smoothing
+subprobability contributes $e^{-c'N}$ after the polynomial volumes and
+$e^{C\sqrt N}$ bounds already used there. A union bound proves (25).
+Take $u=\sqrt b N^{1/4}$ and add the canonical-neighborhood error.
+
+For the last assertion, use the dominating mark factor from the same
+proof. On $\|u_j\|\ge\eta>0$ and a macro amplitude interval,
+$\|t_j\|=c_j^{1/4}\|u_j\|\ge c_0\eta N^{1/4}$.
+The factor
+$\exp[-c\min(\|t_j\|^2,N^{1/4}\|t_j\|)]$ then supplies
+$e^{-c_\eta\sqrt N}$. Its remaining integral is uniformly bounded,
+again with the common evidence prefactor.
+\end{proof}
+
+\section{A one-neuron smoothing crossover}
+The fixed-temperature limit does not commute with making softplus sharp.
+There is a direct interpolation at the level of a single critical corner.
+Let $c\to\infty$ and allow $\beta=\beta(c)$ with
+$\beta/\sqrt c\to\eta\in(0,\infty]$. Now use $u=t/\sqrt c$, the
+ReLU transverse scale. Apart from a constant, the limiting mark density is
+\[
+ e^{-v^2/2}\exp[-V_\eta(t)],\qquad
+ V_\eta(t)=\frac1{\eta\rho M}\sum_{x:z\cdot x=0}
+                  \log\left(2\cosh\frac{\eta t\cdot\bar x}{2}\right).
+ \tag{26}
+\]
+At $\eta=\infty$ interpret this as
+$V_\infty(t)=(2\rho M)^{-1}\sum_{z\cdot x=0}|t\cdot\bar x|$.
+Indeed (8) gives (26) directly, and
+$V_\eta\ge V_\infty$ supplies integrable domination. Thus the normalized
+conditional marks converge in total variation, recovering the ReLU
+exponential-norm transverse law as $\eta\to\infty$.
+For $\eta\downarrow0$, Laplace's method gives
+\[
+ \int e^{-V_\eta(t)}dt
+ \sim \eta^{-r/2}e^{-p_0\log2/(\eta\rho)}
+                         \frac{(8\pi\rho)^{r/2}}{\sqrt{\det Q_z}},
+ \tag{27}
+\]
+and $\sqrt\eta\,t$ becomes Gaussian with covariance $4\rho Q_z^{-1}$.
+This identifies $\beta\asymp\sqrt c$ as the corner crossover scale.
+Equations (26)--(27) are one-neuron statements. A joint width-and-
+temperature posterior limit is not asserted by the preceding fixed-
+temperature theorems.
+
+\paragraph{Verification and scope.}
+The arguments are conventional proofs, not full Lean formalizations.
+Independent numerical checks compare the exact softplus corner exponent
+with (9), and finite-dimensional Gaussian identities with (17) and (24).
+Such checks do not certify posterior total variation or the asymptotic
+width threshold. The exponentially many source labels, fixed-dimension
+limits, and potentially large constants remain essential qualifications.
+
+\begin{thebibliography}{9}
+\bibitem{GRR} N. Gantert, K. Ramanan, and F. Rembart,
+\emph{Large deviations for weighted sums of stretched exponential random
+variables}, Electronic Communications in Probability 19 (2014), no. 41.
+\url{https://arxiv.org/abs/1401.4577}.
+\bibitem{TGP} P. Tuchel, N. Gantert, and J. Prochno,
+\emph{Large deviations for sums of multivariate stretched-exponential
+random variables: the few-big-jumps principle}, arXiv:2602.01168 (2026).
+\url{https://arxiv.org/abs/2602.01168}.
+\end{thebibliography}
+\end{document}

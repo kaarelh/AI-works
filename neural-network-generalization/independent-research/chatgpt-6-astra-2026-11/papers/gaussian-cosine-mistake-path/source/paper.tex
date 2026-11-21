@@ -1,0 +1,696 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newcommand{\R}{\mathbb R}\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}\newcommand{\one}{\mathbf1}
+\title{Maximal confident mistakes for a Gaussian cosine-network limit}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author.}}
+\date{21 November 2026; working proof draft}
+\hypersetup{hidelinks,pdftitle={Maximal confident mistakes for a Gaussian cosine-network limit},pdfauthor={ChatGPT-6 Astra}}
+\emergencystretch=3em
+\begin{document}\maketitle
+\begin{abstract}
+For every odd input dimension $d$, full parity has a one-neuron cosine
+teacher with bounded coefficients. Nevertheless a shallow cosine learner
+with independent isotropic Gaussian weights can make $2^d-1$ confident
+online mistakes, conditioning only on positive margins at observed inputs.
+Ordinary lexicographic order works, with just one initial labeled input,
+when neural width tends to infinity before the common Gaussian prior
+scale tends to zero. An explicit finite family also gives this conclusion.
+More strongly, at prior variance of order $1/d$ and sufficient finite
+width $\exp(O(d\log(d+1)))$, the final $2^{d-1}$ predictions can all be
+wrong with any prescribed fixed high probability. At that same prior
+scale, width one has an $O(d^2)$ lifetime mistake bound. Exponential
+width is necessary for the exponential failure. At every fixed positive
+scale, sufficiently wide learning has exponentially many confident
+majority mistakes near the end of a mean-selected order, as well as
+exponential expected sampling mistakes over the whole order. The proofs use a positive parity-conjugated precision matrix,
+a product-kernel prefix maximum principle, convex Gaussian concentration,
+and finite-width comparisons that account for rare conditioning events.
+Cosine activation, central-limit normalization, and the stated limit order
+are material; no polynomial-width ReLU or fixed-width strong-prior lower
+bound follows. These are conventional proofs, not independently reviewed.
+\end{abstract}
+
+\section{Model, limit order, and target}
+Let $d\ge1$ be odd, $X=\{-1,1\}^d$, $M=2^d$, and
+$\chi(x)=\prod_i x_i$. Consider
+\[
+ F_{N,\sigma}(x)=N^{-1/2}\sum_{j=1}^N a_j\cos(b_j+w_j\cdot x),
+\]
+where every coordinate of every $a_j,b_j,w_j$ is independent
+$N(0,\sigma^2)$. The raw parameter prior has one common scale;
+the $N^{-1/2}$ factor is part of the architecture. At a history
+$H\subset X$, condition only on
+\[
+             \chi(x)F_{N,\sigma}(x)>a\quad(x\in H),\qquad a=1/2. \tag{1}
+\]
+The posterior is on all parameters. No output constraint is imposed
+on unseen inputs, and the incoming weights are not held fixed.
+
+\begin{theorem}[All but the first prediction can be confidently wrong]
+\label{thm:main}
+For every odd $d\ge1$, take the ordinary lexicographic permutation
+$x_0,\ldots,x_{M-1}$ of the Boolean cube. It is independent of
+$N,\sigma$, and for $1\le t<M$,
+\[
+ \lim_{\sigma\downarrow0}\lim_{N\to\infty}
+ \Pp\{\chi(x_t)F_{N,\sigma}(x_t)\ge0\mid
+       \chi(x_s)F_{N,\sigma}(x_s)>a,\ s<t\}=0.             \tag{2}
+\]
+For every $\eta>0$, choose a sufficiently small positive
+$\sigma$ and then every sufficiently large finite $N$.
+Posterior-label majority and the sign of the posterior mean are wrong
+on all $M-1$ designated rounds,
+and fresh posterior sampling is wrong on all of them with probability
+at least $1-\eta$.
+
+The target has a width-one cosine teacher with readout one, incoming
+weights $\pi/2$, and bias of absolute value at most $\pi/2$.
+It also has a width-one rational-coefficient teacher of constant
+coefficient magnitude, $O(\log(d+1))$ bits per coefficient, and output
+margin greater than $0.9$.
+\end{theorem}
+
+This uses central-limit width normalization. It does not assert a
+fixed-width strong-prior limit, a polynomial width threshold, or a
+ReLU/tanh conclusion. The earlier independent note \cite{sign-only}
+proves an all-but-first \emph{majority} failure for uniform-phase cosine
+under sign-only conditioning. Here the phase is Gaussian with the same
+variance as every other incoming coordinate, the observed margin is
+positive, and the error probability tends to one.
+The positive-margin polynomial guarantee discussed in that note uses
+the different normalization $1/N$ at a fixed positive prior scale.
+
+The teacher identity is
+\[
+ \cos\left(\frac\pi2\sum_i x_i-\frac{d\pi}2\right)
+       =(-1)^{\#\{i:x_i=-1\}}=\chi(x).
+\]
+For odd $d$ its phase reduces modulo $2\pi$ to $\pm\pi/2$.
+Approximate each weight within $1/(16d)$ and the phase within $1/16$
+by dyadic rationals. The total phase error is at most $1/8$, so the
+signed score is at least $\cos(1/8)>0.9$.
+
+\section{An exact signed-precision identity}
+At fixed $\sigma>0$, the finite-dimensional central limit theorem
+gives a centered Gaussian output vector $G_\sigma$.
+Write $\rho=e^{-2\sigma^2}\in(0,1)$ and
+$K_\rho(x,y)=\rho^{h(x,y)}$, where $h$ is Hamming distance.
+Let $P$ be the antipodal permutation and $D=\operatorname{diag}(\chi(x))$.
+The cosine product identity and Gaussian characteristic function give
+\[
+ \Sigma_\sigma=\operatorname{Cov}(G_\sigma)
+       =\frac{\sigma^2}{2}(K_\rho+\rho K_\rho P).          \tag{3}
+\]
+The difference-frequency term is $\rho^{h(x,y)}$; the sum-frequency
+term is $\rho^{d-h(x,y)+1}$, including the bias variance.
+This covariance is positive definite because $K_\rho\succ0$ and
+$I+\rho P\succ0$ commute.
+
+\begin{lemma}[Positive precision after multiplying by parity]
+For odd $d$,
+\[
+ Q_\sigma:=D\Sigma_\sigma^{-1}D
+   =\frac{2}{\sigma^2(1-\rho^2)^{d+1}}
+                          (K_\rho+\rho P K_\rho).        \tag{4}
+\]
+Every entry is strictly positive, and
+\[
+             \frac{\min Q_\sigma}{\max Q_\sigma}\ge\rho^{d+1}.   \tag{5}
+\]
+The minimum and maximum range over all matrix entries.
+\end{lemma}
+\begin{proof}
+In binary order,
+$K_\rho=\bigl(\begin{smallmatrix}1&\rho\\\rho&1\end{smallmatrix}\bigr)^{\otimes d}$.
+The two-by-two inverse gives
+$DK_\rho^{-1}D=(1-\rho^2)^{-d}K_\rho$.
+Since $d$ is odd, $DPD=-P$, while
+$(I+\rho P)^{-1}=(I-\rho P)/(1-\rho^2)$.
+Substitution proves (4). After its common positive factor is removed,
+an entry is $\rho^h+\rho^{d-h+1}$. Each summand lies between
+$\rho^{d+1}$ and one, proving (5).
+\end{proof}
+In even dimension the formula has a minus sign before $\rho P K_\rho$;
+the following positive-entry argument does not apply.
+
+\section{An explicit lexicographic mistake path}
+Order the binary cube lexicographically, identifying $+1$ with zero
+and $-1$ with one. Every initial segment is a prefix in this order.
+We first record a product-kernel interpolation fact.
+
+\begin{lemma}[A prefix maximum principle]\label{lem:prefix}
+For $0<r<1$, $|t|\le r$, and $n\ge0$, set
+\[
+ B_n(t)=K_r^{(n)}(I+tP_n),\qquad
+ K_r^{(n)}(x,y)=r^{h(x,y)},
+\]
+where $P_n$ flips all $n$ bits. If $J$ is a lexicographic prefix,
+the minimum-$B_n(t)^{-1}$-norm interpolation of the constant one on $J$,
+\[
+ h=B_n(t)_{:,J}B_n(t)_{J,J}^{-1}\one_J,
+\]
+satisfies $h=1$ on $J$ and $|h|<1$ outside $J$.
+For the empty prefix take $h=0$.
+The same conclusion holds for a suffix by antipodal reflection.
+\end{lemma}
+\begin{proof}
+All these matrices are positive definite. Induct on $n$, the case
+$n=0$ being immediate. Split by the first bit, and write $K=K_r^{(n-1)}$
+and $P=P_{n-1}$. The diagonal and off-diagonal blocks are
+\[
+ A=K(I+rtP),\qquad C=K(rI+tP).
+\]
+Their regression and Schur complement are
+\begin{align*}
+ CA^{-1}&=uI+vP,
+ &u&=\frac{r(1-t^2)}{1-r^2t^2},
+ &v&=\frac{t(1-r^2)}{1-r^2t^2},\\
+ S=A-CA^{-1}C
+ &=\frac{(1-r^2)(1-t^2)}{1-r^2t^2}K(I-rtP).
+\end{align*}
+Here $u\ge0$ and
+\[
+ u+|v|=\frac{r+|t|}{1+r|t|}<1,\qquad
+ c:=u+v=\frac{r+t}{1+rt}\in[0,1).
+\]
+If the prefix lies in the first half, its interpolation in that half
+uses $A=B_{n-1}(rt)$ and obeys the induction hypothesis. The second
+half is $(uI+vP)$ times that vector and hence has absolute value
+strictly less than one.
+If the prefix contains the whole first half, its first-half vector
+is one. Gaussian elimination gives second-half interpolation
+$c\one+(1-c)h'$, where $h'$ is the constant-one prefix interpolation
+for $S$, equivalently for $B_{n-1}(-rt)$. Since $0\le c<1$, the induction
+hypothesis again gives the strict assertion outside the prefix.
+Both new parameters have absolute value at most $r$. Antipodal
+reflection commutes with $B_n(t)$, proving the suffix assertion.
+\end{proof}
+
+Work in signed coordinates $g=DG_\sigma$.
+For a nonempty proper prefix $H$ let $U=X\setminus H$, and minimize
+\[
+             \tfrac12g^TQ_\sigma g
+                 \quad\text{subject to }g_x\ge a\ (x\in H).      \tag{6}
+\]
+Let $q>0$ be the common row sum of $Q_\sigma$.
+The equality-constrained candidate has $g_H=a\one$ and
+\[
+ g_U=a\one-aq(Q_\sigma)_{U,U}^{-1}\one,
+ \qquad
+ (Q_\sigma g)_H=aq\left[\one-
+       (Q_\sigma)_{H,U}(Q_\sigma)_{U,U}^{-1}\one\right].          \tag{7}
+\]
+By (4), $Q_\sigma$ is a positive scalar times $B_d(\rho)$.
+The suffix assertion of Lemma~\ref{lem:prefix} makes every entry of
+the bracket strictly positive. Thus the candidate satisfies the
+inequality KKT conditions with strictly positive multipliers.
+Strict convexity proves that it is the unique constrained mode:
+\emph{every observed constraint is active at every lexicographic stage}.
+
+\begin{lemma}[Uniformly wrong lexicographic modes]\label{lem:mode}
+At every lexicographic stage after the first, the mode satisfies
+\[
+       g^H_\rho(x_{|H|})
+            \le -a\frac{\rho}{1+\rho+\rho^2}<0.                \tag{8}
+\]
+In particular it is at most $-a/4$ when $\rho\ge1/2$.
+\end{lemma}
+\begin{proof}
+Put $L_n(x,y)=(-\rho)^{h(x,y)}$ and $C_n(t)=L_n(I+tP_n)$.
+For odd $d$, the signed covariance, without its scalar factor,
+is $C_d(-\rho)$. Split $C_n(t)$ by the first bit. Its diagonal block
+is $C_{n-1}(-\rho t)$, its Schur complement is a positive scalar
+times $C_{n-1}(\rho t)$, and the conditional mean of the second half
+given constant one on the whole first half is
+\[
+                         c(t)\one,
+              \qquad c(t)=\frac{t-\rho}{1-\rho t}.
+\]
+Consequently the prediction at the next point of a prefix obeys a
+simple recursion: in the first half use the lower-dimensional
+parameter $-\rho t$; in the second half use
+$c(t)+(1-c(t))m'$, where $m'$ is the corresponding next-point prediction
+with parameter $\rho t$. An empty lower-dimensional prefix has
+prediction zero. This follows by the same block elimination as in
+Lemma~\ref{lem:prefix}, now with $r=-\rho$; it is an algebraic identity,
+not an application of that lemma with a negative kernel parameter.
+
+Starting at $t=-\rho$, every encountered parameter is
+$\pm\rho^p$, $p\ge1$, and a positive one has $p\ge2$.
+Thus always $t\le\rho^2$, and
+\[
+ c(t)\le c(\rho^2)
+       =-\frac{\rho}{1+\rho+\rho^2}<0,
+\]
+since $c$ is increasing. The recursion gives $m'\le0$;
+any nonempty prefix encounters at least one second-half step.
+It follows inductively that the next prediction is bounded by the
+last display. Multiply by $a$, using the already proved activity
+of all observed constraints, to obtain (8).
+\end{proof}
+The input permutation is therefore ordinary lexicographic order,
+independent of both scale and width. The order has a simple description,
+although it contains exponentially many distinct inputs.
+For later use, (4) also implies a weaker assertion for any proper history:
+stationarity at unseen coordinates and positivity of every precision
+entry force at least one unseen mode coordinate to be negative.
+
+\section{Confidence for the actual Gaussian posterior}
+\begin{lemma}[Concentration around a constrained Gaussian mode]
+Let a nondegenerate centered Gaussian on $\R^M$ with covariance
+$\Sigma$ be conditioned on a full-dimensional convex polyhedron $C$.
+Let $g_*$ minimize $V(g)=\frac12g^T\Sigma^{-1}g$ on its closure.
+Then
+\[
+                 \E[\|g-g_*\|_2^2\mid C]
+                                     \le M\lambda_{\max}(\Sigma). \tag{10}
+\]
+\end{lemma}
+\begin{proof}
+Integrate the divergence of $(g-g_*)e^{-V(g)}$ over the polyhedron,
+first intersecting with a large ball. On each polyhedral face its
+outward normal $n$ satisfies $(g-g_*)\cdot n\ge0$, because $g_*$
+belongs to the closed convex region. The spherical truncation term
+vanishes by Gaussian decay. Dividing by the conditioning probability gives
+$\E[(g-g_*)\cdot\nabla V(g)\mid C]\le M$.
+Optimality yields $(g-g_*)\cdot\nabla V(g_*)\ge0$ for feasible $g$.
+Also
+\[
+ (g-g_*)\cdot[\nabla V(g)-\nabla V(g_*)]
+       \ge\lambda_{\max}(\Sigma)^{-1}\|g-g_*\|_2^2.
+\]
+Combine the inequalities. Edges have zero surface measure; alternatively
+use smooth convex approximation.
+\end{proof}
+Every diagonal entry of (3) is at most $\sigma^2$, so its largest
+eigenvalue is at most $M\sigma^2$. Applying (10) to the signed posterior
+and using Lemma~\ref{lem:mode}, for $\rho\ge1/2$, gives
+\[
+ \Pp\{g(x_t)\ge0\mid g(H_t)>a\}
+                   \le16M^2\sigma^2/a^2\longrightarrow0.        \tag{11}
+\]
+This loose bound covers the full truncated Gaussian posterior.
+Its mean differs from its mode by at most $M\sigma$ in Euclidean norm,
+so its sign is wrong as well. A union bound over the $M-1$ stages proves
+simultaneous fresh-sampling mistakes with probability tending to one.
+
+\begin{lemma}[A convexly truncated Gaussian remains sub-Gaussian]
+\label{lem:subgaussian}
+If $G\sim N(0,\Sigma)$ is conditioned on a convex set $C$ of positive
+probability, then for every vector $v$ and real $t$,
+\[
+ \E[e^{t(v^TG-\E[v^TG\mid C])}\mid C]
+                         \le e^{t^2v^T\Sigma v/2}.            \tag{11a}
+\]
+Consequently if an unseen signed coordinate has posterior mean
+$\mu<0$, its correct-label probability is at most
+$\exp\{-\mu^2/(2\Sigma_{ii})\}$.
+\end{lemma}
+\begin{proof}
+Completing the Gaussian square gives
+\[
+ \log\E[e^{tv^TG}\mid C]
+   =\tfrac12t^2v^T\Sigma v+\ell(t)-\ell(0),\qquad
+ \ell(t)=\log\Pp(G+t\Sigma v\in C).
+\]
+Prekopa's theorem \cite{prekopa} makes $\ell$ concave: it is the logarithm
+of the integral of a jointly log-concave translated Gaussian times a
+convex-set indicator. It is differentiable here, and differentiating
+at zero gives $\ell'(0)=\E[v^TG\mid C]$.
+The tangent bound $\ell(t)\le\ell(0)+t\ell'(0)$ proves (11a).
+The final assertion is its optimized exponential Markov bound.
+\end{proof}
+
+\section{A fixed-scale consequence for sampling and posterior means}
+The positive precision also gives a conclusion without a small-scale
+limit. The input order in the next theorem may depend on the chosen
+fixed scale and differs from the order in Theorem~\ref{thm:main}.
+
+\begin{theorem}[Exponential errors at every fixed positive scale]\label{thm:fixed}
+Fix odd $d\ge1$ and $\sigma>0$. There is a fixed input permutation
+on which the Gaussian-process posterior mean predicts the wrong label
+at every input after the first. At each of these rounds its posterior
+sampling mistake probability is at least $1/e$.
+For every sufficiently large finite neural width, the same permutation
+has all $M-1$ posterior-mean errors and posterior sampling mistake
+probability greater than $1/3$ at every designated round.
+The latter conclusion holds at an explicit sufficient width
+$N=\exp(O_\sigma(d))$; no such bound is asserted here for the mean sign.
+\end{theorem}
+\begin{proof}
+Let $\mu=\E[g\mid g(H)>a]$. Integrating the Gaussian derivative in
+an unconstrained coordinate gives $(Q_\sigma\mu)_i=0$ for $i\notin H$.
+Every observed mean exceeds $a$ and every precision entry is positive.
+Thus some unseen coordinate has $\mu_i<0$, by stationarity and the positivity of every coefficient. Select one, reveal its label, and repeat. This gives a deterministic
+permutation for the fixed scale and makes every posterior-mean sign wrong.
+
+The truncated Gaussian has a log-concave density. Marginalization and
+integration over a half-line preserve log-concavity \cite{prekopa}.
+Consequently an unseen coordinate $Y$ has a continuous distribution
+function $F$ with $\log F$ concave. The probability integral transform
+and Jensen's inequality give
+\[
+             \log F(\E Y)\ge\E\log F(Y)
+                             =\int_0^1\log u\,du=-1.
+\]
+For the selected negative mean,
+$\Pp(Y<0)\ge F(\E Y)\ge1/e$.
+Conditional neural convergence below transfers this strict gap above
+$1/3$, and transfers the strictly negative means. The final quantitative
+subsection proves the displayed width order for the probability statement.
+\end{proof}
+In particular fresh sampling has expected mistakes greater than
+$(M-1)/3$ at those finite widths. Since the sequence and true labels
+are fixed, the draws can be independent; Hoeffding's inequality then
+also gives an exponential-in-$M$ probability bound for deviations below
+any smaller fixed fraction of mistakes. The theorem does not infer
+a posterior-label majority error from a negative posterior mean.
+
+\section{Transfer back to finite neural widths}
+At fixed $\sigma>0$, the vectors
+$a_j(\cos(b_j+w_j\cdot x))_{x\in X}$ are iid, with finite second
+moments and nondegenerate covariance (3).
+The central limit theorem gives $F_{N,\sigma}\Rightarrow G_\sigma$.
+Every history region and its intersection with a query sign has Gaussian
+boundary probability zero. Every history region has positive Gaussian
+probability. Their probabilities therefore converge separately, and
+division proves conditional correct-label probability convergence.
+This accounts for posterior reweighting of incoming features;
+unconditional covariance convergence alone would not establish it.
+
+Choose $\sigma$ so that the sum of the Gaussian correct-label
+probabilities is less than $\eta/2$. Then choose $N$ large enough that
+the sum of the finitely many conditional-probability differences is
+less than $\eta/2$. This works for every larger $N$.
+Choosing the total bound also below $1/2$ gives majority errors at every
+designated round. To transfer means as well, condition on the incoming
+features before integrating the Gaussian readouts. Each output is a
+centered Gaussian with variance at most $\sigma^2$, uniformly in $N$.
+Thus the unconditional output tails are uniformly sub-Gaussian.
+The fixed history probability converges to a positive number, so the
+conditional outputs are uniformly integrable. Weak conditional convergence
+therefore implies convergence of their means, preserving every fixed
+strictly negative sign once $N$ is large enough.
+
+\subsection{An explicit width bound for conditional probabilities}
+This bound handles the potentially rare positive-margin conditioning
+event. Write
+\[
+ A=\tfrac12\sigma^2(1-\rho)^{d+1},\qquad
+ B=\tfrac12\sigma^2(1+\rho)^{d+1}.
+\]
+These are the smallest and largest eigenvalues of (3), by its tensor
+spectrum and odd $d$. Every prefix event has probability at least
+\[
+ p_*:=\left(\frac A{2\pi B}\right)^{M/2}
+               \exp\left[-\frac{M(a+\sqrt A)^2}{2A}\right].     \tag{12}
+\]
+Indeed its signed Gaussian density can be integrated on
+$[a,a+\sqrt A]^M$, using determinant at most $B^M$ and inverse
+covariance norm at most $A^{-1}$.
+
+For $0<\delta\le10^{-3}$ set
+\[
+ R=3\left[\tfrac M2\log2+\log\frac1{\delta p_*}\right],
+ \qquad \varepsilon=\frac{\delta}{4(M+R)}.
+\]
+Conditional on incoming features, the neural output is Gaussian with
+empirical covariance $\Sigma_N$. Each covariance entry is an average
+of independent variables in $[-\sigma^2,\sigma^2]$.
+Hoeffding and an entrywise-to-operator bound imply
+\[
+ \Pp\{\|\Sigma_N-\Sigma_\sigma\|_{\rm op}>\varepsilon A\}
+   \le2M^2\exp\left[-\frac{N\varepsilon^2 A^2}{2M^2\sigma^4}\right].
+                                                               \tag{13}
+\]
+Thus the bad-covariance probability is at most $\delta p_*$ if
+\[
+ N\ge \frac{2M^2\sigma^4}{\varepsilon^2 A^2}
+                                  \log\frac{2M^2}{\delta p_*}.  \tag{14}
+\]
+
+On the good event,
+$(1-\varepsilon)\Sigma_\sigma\preceq\Sigma_N
+\preceq(1+\varepsilon)\Sigma_\sigma$.
+On the ellipsoid $V(x)=x^T\Sigma_\sigma^{-1}x/2\le R$, determinant
+and quadratic-form comparison bound the density ratio between
+$e^{-\delta}$ and $e^\delta$.
+Both Gaussian laws have outside probability at most $\delta p_*$:
+the elementary chi-square exponential moment gives the upper bound
+$2^{M/2}e^{-R/3}$, uniformly for relative covariance error at most $1/2$.
+Hence, for every measurable event $E$, its conditional-good-covariance
+probability lies between
+$e^{-\delta}(\Pp_{\rm GP}(E)-\delta p_*)$ and
+$e^\delta\Pp_{\rm GP}(E)+\delta p_*$.
+Mixing over the good and bad incoming-feature draws and dividing by a
+history probability $p_H\ge p_*$ gives
+\[
+ \Pp_N(\text{correct}\mid H)
+ \le\frac{e^\delta\Pp_{\rm GP}(\text{correct}\mid H)+2\delta}
+              {(1-\delta)e^{-\delta}(1-\delta)}.        \tag{15}
+\]
+We used $\delta p_*\le\delta$ in the denominator.
+For $\delta=10^{-3}$ and Gaussian correct probability at most
+$1-1/e$, the right side is less than $2/3$.
+At fixed $\sigma>0$, $A^{-1},B,M$, and $-\log p_*$ are all
+$\exp(O_\sigma(d))$. The same is true of (14), proving the claimed
+width order. The constants may be very large.
+
+\begin{theorem}[A finite-parameter confident-mistake family]
+There is an absolute constant $C$ such that, for every odd $d\ge1$
+and $0<\eta<1/2$, the lexicographic construction works with
+\[
+ \sigma^2=\frac{a^2\eta}{64\,2^{3d}},\qquad
+ N\ge\left\lceil\exp\{C(d+1)[d+\log(1/\eta)]\}\right\rceil.       \tag{15a}
+\]
+At these finite parameters, posterior-label majority is wrong at all
+$2^d-1$ designated rounds, and fresh posterior sampling is wrong at
+all of them with probability at least $1-\eta$.
+No quantitative posterior-mean conclusion is added in this statement.
+\end{theorem}
+\begin{proof}
+The chosen scale has $\rho>1/2$. By (11), every Gaussian correct-label
+probability is at most $\eta/(4M)$. Use the conditional comparison
+(15) with $\delta=\eta/(1024M)<10^{-3}$. Its right side is less than
+$\eta/(2M)$, so a union bound and the majority assertion follow whenever
+(14) holds. To bound that threshold, note that
+$\sigma^2\le1/2$ and $\sigma^2\le1-e^{-2\sigma^2}\le2\sigma^2$.
+Thus
+\[
+ \log(1/A)=O\bigl((d+1)[d+\log(1/\eta)]\bigr),\qquad B\le1.
+\]
+Formula (12) gives
+$\log(1/p_*)\le C_0M[1+A^{-1}+\log(1/A)]$.
+It follows that $\log R$ and $\log(1/\epsilon)$ have the same displayed
+order. Taking logarithms in (14) proves (15a), after increasing an
+absolute constant. This uses the explicit history-probability bound;
+it does not substitute a dimension-dependent scale into a fixed-scale
+big-O statement without controlling its constants.
+\end{proof}
+
+\begin{theorem}[Half the cube at a polynomially small prior scale]
+There is an absolute constant $C$ such that for every odd $d\ge1$ and
+$0<\eta<1/2$, at
+\[
+ \sigma^2=\frac{a^2}{64[d+1+\log(1/\eta)]},\qquad
+ N\ge\left\lceil\exp\left\{C(d+1)\log\frac{d+1}{\eta}\right\}\right\rceil,
+                                                               \tag{15b}
+\]
+there is a deterministic input order with one initial label on which
+posterior-label majority is wrong at the final $2^{d-1}$ rounds, and
+fresh posterior sampling is wrong at all of those rounds with probability
+at least $1-\eta$. The order is the mean-selected order of Theorem~\ref{thm:fixed},
+not asserted to be lexicographic. For fixed $\eta$ the sufficient width
+is $\exp(O(d\log(d+1)))$ and the prior variance is of order $1/d$.
+\end{theorem}
+\begin{proof}
+At every proper history select an unseen coordinate of smallest Gaussian
+posterior mean. As in the proof of the fixed-scale theorem, stationarity
+and positive precision imply
+\[
+ \min_{i\in U}\mu_i\le-a\frac{|H|}{|U|}
+                         \frac{\min Q_\sigma}{\max Q_\sigma}.
+\]
+The selected scale has $\rho^{d+1}>1/2$. At each of the final $M/2$
+rounds, $|H|\ge|U|$, so the chosen mean is at most $-a/2$.
+Since $\Sigma_{ii}\le\sigma^2$, Lemma~\ref{lem:subgaussian} gives
+\[
+ p_{\rm GP}(\mathrm{correct}\mid H)
+       \le e^{-a^2/(8\sigma^2)}
+       =e^{-8[d+1+\log(1/\eta)]}\le\frac\eta{4M}.
+\]
+Use (15) with $\delta=\eta/(1024M)$. It makes each finite-network
+correct-label probability less than $\eta/(2M)$ once (14) holds.
+A union bound proves the sampling assertion, and each probability is
+below one half. The deterministic histories contain the true labels,
+so the chosen order does not depend on the learner's random draws.
+
+For the width, the same estimates used after (15a) now give
+$\log(1/A)=O((d+1)\log[d+1+\log(1/\eta)])$.
+The extra $\log(1/\delta)=O(d+\log(1/\eta))$ terms in (14) are absorbed
+by $O((d+1)\log((d+1)/\eta))$. This proves (15b) directly from the
+finite-width comparison. No interchange of width and scale limits
+is used.
+\end{proof}
+
+
+\begin{theorem}[Exponentially many confident errors at every fixed scale]
+\label{thm:fixed-confident}
+Fix any $\sigma>0$, odd $d\ge1$, and $0<\eta<1/2$. Put
+\[
+ S_{d,\sigma}=\frac{(1+\rho)^{d+1}}{1+\rho^{d+1}},\qquad
+ T_{d,\sigma,\eta}=\left\lfloor
+ \frac{a S_{d,\sigma}}{a+\sigma\sqrt{2\log(4M/\eta)}}
+                         \right\rfloor,
+ \quad \rho=e^{-2\sigma^2},\ M=2^d.                    \tag{15c}
+\]
+At every sufficiently large finite width, the mean-selected order
+has wrong posterior-label majority at all its final $T_{d,\sigma,\eta}$
+rounds, and fresh posterior sampling is wrong on all of them with
+probability at least $1-\eta$. A sufficient width is
+$N\ge\lceil\exp\{C_\sigma[d+\log(1/\eta)]\}\rceil$.
+For each fixed $\sigma,\eta$,
+\[
+ T_{d,\sigma,\eta}
+       =\Theta_{\sigma,\eta}\left(
+               \frac{(1+e^{-2\sigma^2})^d}{\sqrt d}\right)
+               \qquad(d\to\infty\text{ through odd values}).   \tag{15d}
+\]
+Thus exponential confident-majority failure does not require the prior
+scale to shrink with dimension. The number in (15c) may be zero in
+small dimensions; the assertion then has no designated tail rounds.
+\end{theorem}
+\begin{proof}
+Use the exact row sum rather than the smallest precision entry.
+Let $q$ be the common row sum of $Q_\sigma$ and $b$ its largest
+entry. Formula (4) gives $q/b=S_{d,\sigma}$: the row sum of
+$K_\rho+\rho P K_\rho$ is $(1+\rho)^{d+1}$, while its largest
+entry is the diagonal value $1+\rho^{d+1}$.
+For a history $H$, let $u=|U|>0$, $m=\min_{j\in U}\mu_j$,
+and fix any $i\in U$. Stationarity and $\mu_j\ge a$ on $H$ give
+\[
+ 0=\sum_jQ_{ij}\mu_j
+   \ge a\sum_{j\in H}Q_{ij}+m\sum_{j\in U}Q_{ij}.
+\]
+Since $0<\sum_{j\in U}Q_{ij}\le ub$, division yields
+\[
+                   m\le-a\left(\frac{S_{d,\sigma}}u-1\right).
+                                                               \tag{15e}
+\]
+Whenever $u\le T_{d,\sigma,\eta}$, the selected mean is at most
+$-\sigma\sqrt{2\log(4M/\eta)}$. Lemma~\ref{lem:subgaussian}
+therefore bounds its Gaussian correct-label probability by
+$\eta/(4M)$. Apply (15) with $\delta=\eta/(1024M)$ and union bound
+over the at most $M$ designated rounds. The finite-network correct
+probabilities are below $\eta/(2M)$, proving both claims.
+
+At fixed $\sigma$, $\log(1/A)=O_\sigma(d)$,
+$-\log p_*\le\exp(O_\sigma(d))$, and
+$\log(1/\delta)=O(d+\log(1/\eta))$. Taking logarithms in (14)
+gives the stated sufficient width. For fixed $\sigma,\eta$, the
+numerator of (15c) has order $(1+\rho)^d$, its denominator has order
+$\sqrt d$, and its unfloored value tends to infinity. This proves (15d).
+The same finite widths can satisfy the all-round sampling lower bound
+of Theorem~\ref{thm:fixed}; only the final tail is claimed confident here.
+\end{proof}
+
+\section{A necessary exponential width and a narrow-width comparison}
+\begin{theorem}[A finite-width evidence bound]
+For each fixed $\sigma>0$, there is $C_\sigma<\infty$ such that,
+at every neural width $N\ge1$ and on every input order labeled by
+parity, the cumulative expected posterior-sampling mistakes are at most
+\[
+                  C_\sigma[d\log(d+1)+N\log(N+1)].      \tag{16}
+\]
+For $0<\sigma\le1$, an absolute-constant bound is
+\[
+ C\left[\frac{d+N}{\sigma^2}
+             +d\log(d+1)+N\log(N+1)\right].                    \tag{16a}
+\]
+Posterior-label majority mistakes are bounded by twice these quantities,
+and $2/3$ confidence failures by three times them.
+Thus width one has polynomial lifetime mistake bounds.
+Conversely the fixed-scale exponential sampling conclusion above
+requires $N=\Omega_\sigma(2^d/d)$ as $d\to\infty$ through odd values.
+\end{theorem}
+\begin{proof}
+Put the first neuron's incoming weights within $1/(16d)$ of $\pi/2$
+and its bias within $1/16$ of the reduced teacher phase. Its signed
+cosine is at least $\cos(1/8)>0.9$ everywhere.
+Put its readout in $[2\sqrt N,3\sqrt N]$.
+For all other neurons require only $|a_j|\le1/(4\sqrt N)$, leaving
+their incoming parameters unrestricted. Since cosine is bounded by
+one, the total normalized interference is less than $1/4$.
+This parameter event has the correct margin greater than $1/2$ on
+the entire cube. Its Gaussian probability is at least
+\[
+               \exp\{-C_\sigma[d\log(d+1)+N\log(N+1)]\}.
+\]
+The first incoming box costs $O_\sigma(d\log(d+1))$, its amplified
+readout costs $O_\sigma(N)$, and each inactive readout interval costs
+$O_\sigma(1+\log N)$. These estimates hold uniformly for $N\ge1$. For $\sigma\le1$, the incoming
+boxes cost at most $C[d/\sigma^2+d\log(d+1)]$. The first readout costs
+at most $CN/\sigma^2$, and each inactive readout costs at most
+$C[1+\log_+(\sigma\sqrt N)]\le C\log(N+1)$.
+Here $\log_+(u)=\max\{\log u,0\}$; use a subinterval of length
+$\min\{\sigma,1/(4\sqrt N)\}$ in each inactive box.
+This proves the explicit version (16a).
+
+At each round the posterior wrong-sign probability is at most the
+probability that the next margin observation fails. If $p_t$ is the
+conditional probability of satisfying that margin, then
+$q_t\le1-p_t\le-\log p_t$.
+The sum telescopes to minus the log prior probability of the complete
+observed history, which is at least the displayed global teacher-box
+probability. This proves (16), including adaptive orders chosen before
+the fresh prediction randomness. A majority error has $q_t\ge1/2$;
+a $2/3$ confidence failure has $q_t\ge1/3$.
+Finally an expected error count greater than $(2^d-1)/3$ forces
+$d\log(d+1)+N\log(N+1)=\Omega_\sigma(2^d)$, hence
+$N=\Omega_\sigma(2^d/d)$.
+\end{proof}
+In particular Theorem~\ref{thm:fixed-confident} gives an exponential
+confident-majority separation from width one at every fixed positive
+prior scale, as well as the all-round sampling separation.
+Together with (14), this locates the width needed for the exponential
+fixed-scale sampling failure between two exponential scales in dimension.
+Equation (16a) also shows that, for each fixed $\eta$,
+the polynomial-scale family (15b) needs
+$N=\Omega_\eta(2^d/d)$ to have its stated exponential mistake count:
+if $N<2^d$, its bound is $O_\eta(d^2+Nd)$, and if $N\ge2^d$ the
+claim is immediate. In contrast, width one has $O_\eta(d^2)$ lifetime
+expected mistakes at that same scale. The finite-width bound diverges
+as $\sigma\downarrow0$ and does not reverse the limits in
+Theorem~\ref{thm:main}.
+
+\section*{Scope and verification}
+The preceding independent cosine note \cite{sign-only} already gives
+an exact product-kernel calculation for sign-only majority mistakes.
+The refinements here are the Gaussian-bias precision identity,
+positive observed margins, a fixed order across the common small-scale
+limit, and confidence for the truncated Gaussian posterior.
+The Gaussian-process limit itself is classical; see \cite{lee}.
+No blanket novelty claim is made.
+The full theorem is not Lean formalized or independently reviewed.
+Finite exact checks in the accompanying payload verify matrix and KKT
+identities rather than the analytic limit theorem.
+
+\begin{thebibliography}{9}
+\bibitem{prekopa} A. Pr\'ekopa,
+\emph{On logarithmic concave measures and functions},
+Acta Scientiarum Mathematicarum 34 (1973), 335--343.
+\url{https://acta.bibl.u-szeged.hu/14411/1/math_034_335-343.pdf}.
+\bibitem{sign-only} ChatGPT-6 Astra,
+\emph{A one-neuron target that defeats wide sign-only Bayes},
+independent research draft, 18 November 2026.
+\url{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/independent-research/chatgpt-6-astra-2026-11/papers/sign-only-fourier-counterexample}.
+\bibitem{lee} J. Lee, Y. Bahri, R. Novak, S. S. Schoenholz,
+J. Pennington, and J. Sohl-Dickstein,
+\emph{Deep neural networks as Gaussian processes}, ICLR 2018.
+\url{https://arxiv.org/abs/1711.00165}.
+\end{thebibliography}
+\end{document}

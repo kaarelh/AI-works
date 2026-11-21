@@ -1,0 +1,605 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}
+\newcommand{\one}{\mathbf1}\newcommand{\TV}{\mathrm{TV}}
+\title{Arbitrary polynomial accuracy for softplus posterior sampling}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author.}}
+\date{21 November 2026; working proof draft}
+\hypersetup{hidelinks,pdftitle={Arbitrary polynomial accuracy for softplus posterior sampling},pdfauthor={ChatGPT-6 Astra}}
+\emergencystretch=3em
+\begin{document}\maketitle
+\begin{abstract}
+For the full-label Gaussian softplus parity posterior with square or
+logistic likelihood, we construct independent approximate draws to any
+prescribed fixed inverse power of width, with expected arithmetic cost
+linear in width at fixed dimension. A critical-law pilot estimates the
+one-neuron mean. A cutoff at squared parameter norm of order $\sqrt N$
+then makes the slightly supercritical ordinary-neuron tilt exactly
+samplable by a bounded rejection step. Gaussian proposals describe the
+exceptional amplitudes and transverse marks. Their exact importance
+ratio requires no unknown normalizer. Each fixed independence Metropolis
+correction gives another factor $N^{-1/4}$, with a positive limiting
+total-variation constant even after averaging over the random pilot. The omitted sector has probability smaller than every inverse
+power of $N$. The result does not give a practical dimension-dependent
+runtime bound, an arbitrary-start mixing theorem, or efficient learning
+of the source labels.
+\end{abstract}
+
+\section{Posterior and statement}
+Use the fixed-temperature softplus model of \emph{Smoothing changes the
+fluctuations of Bayesian neural condensates}. Thus $r\ge6$ is even,
+$M=2^r$, $K=M/2$, $\chi$ is full parity, and
+\[
+ \Phi_x(a,U)=a\phi_\beta(U\cdot(1,x)),\qquad
+ F_N=N^{-1}\sum_i\Phi_i,\qquad
+ \phi_\beta(t)=\beta^{-1}\log(1+e^{\beta t}).
+\]
+The prior $P_0^N$ is a product of standard Gaussian parameter laws.
+The posterior has density proportional to
+\[
+       \exp\{-N\lambda M^{-1}\sum_x\ell(\chi(x)F_N(x))\},
+ \qquad \ell(y)=(1-y)^2/2\quad\hbox{or}\quad\log(1+e^{-y}).
+ \tag{1}
+\]
+Write $g(y)=y/\rho+\lambda\ell(y)$ and let $s$ minimize $g$.
+We assume $s>m_c$, where the critical law and constants are
+\[
+ Q_*=\mathcal M_\beta^{-1}e^{Z/\rho}P_0,\quad
+ Z=\E_x\chi(x)\Phi_x,\quad
+ \rho=\frac{\binom{r-2}{(r-2)/2}}{2^{r-1}\sqrt r},\quad
+ m_c=\E_{Q_*}Z,
+\]
+\[
+ \alpha=\frac{s-m_c}{K\rho},\quad
+ \kappa=\frac{\binom r{r/2}\log2}{M\beta\rho},\quad
+ \gamma=g''(s)/M,\quad \nu=(r+2)/4.
+ \tag{2}
+\]
+The critical law has an exponential parameter-norm moment and all output
+moments. Its existing rejection construction uses no unknown
+$\mathcal M_\beta$ and has positive fixed-dimensional acceptance.
+
+An implementation needs a known compact positive interval
+$[a_-,a_+]$ containing $\alpha$ in its interior. If $s>3/8$, the bounds
+$0\le m_c<3/8$ give, for example,
+\[
+        a_-=(s-3/8)/(2K\rho),\qquad a_+=2s/(K\rho).      \tag{3}
+\]
+The theorem also allows any $s>m_c$ when such an enclosure is supplied.
+It does not require the value of $m_c$ itself.
+
+\begin{theorem}[Any fixed polynomial accuracy]\label{thm:main}
+For each fixed integer $k\ge0$, the construction below has a choice of
+fixed cutoffs for which its output law $\widehat\Pi_{N,k}$ satisfies
+\[
+           \|\widehat\Pi_{N,k}-\Pi_N\|_{\TV}
+                        =O(N^{-(k+1)/4}).                \tag{4}
+\]
+Its expected arithmetic cost per output is $O(N)$. Constants may depend
+on $r,\beta,\lambda,k$ and the supplied enclosure. Repeating the entire
+pilot and short chain independently gives independent output networks.
+Consequently any prescribed error order $O(N^{-A})$, for fixed $A>0$,
+is attained at linear expected cost by a sufficiently large fixed $k$.
+The construction uses idealized exact real arithmetic and continuous
+random draws; no bit-complexity or useful dimension-uniform constant is
+asserted.
+\end{theorem}
+
+\section{A bounded slightly supercritical draw}
+Let $G_\beta(U)=\E_x\chi(x)\phi_\beta(U\cdot\bar x)$, so $Z=aG_\beta(U)$.
+Under $Q_*$ the incoming marginal has density proportional to
+$e^{G_\beta(U)^2/(2\rho^2)}$ times its Gaussian density, and
+$a\mid U\sim N(G_\beta(U)/\rho,1)$. The sharp atom inequality gives
+$|G_\beta(U)|/\rho\le\|U\|$.
+
+Fix $b>0$. For a bounded positive $\tau$ and
+$\epsilon=\tau/\sqrt N$, define the probability law
+\[
+ Q_{N,\tau}(d\theta)\ \propto\
+ e^{\epsilon Z/\rho}\one_{\{\|\theta\|^2\le b\sqrt N\}}Q_*(d\theta).
+ \tag{5}
+\]
+The untruncated positive tilt is not normalizable. The cutoff in (5)
+is essential, and is part of the target sector used below.
+
+\begin{lemma}[Exact truncated tilted neurons]\label{lem:tilt}
+The following rejection procedure samples (5). Its expected arithmetic
+cost is bounded uniformly in $N$ for all sufficiently large $N$ and
+$\tau$ in any fixed compact positive interval.
+\begin{enumerate}
+\item Draw $U$ from the original critical incoming marginal. Reject if
+$\|U\|^2>b\sqrt N$.
+\item Accept with probability
+\[
+ \exp\left[(\epsilon+\epsilon^2/2)\frac{G_\beta(U)^2}{\rho^2}-B_N\right],
+ \qquad B_N=(\epsilon+\epsilon^2/2)b\sqrt N.              \tag{6}
+\]
+\item Draw $a\sim N((1+\epsilon)G_\beta(U)/\rho,1)$ and reject the
+whole draw unless $a^2+\|U\|^2\le b\sqrt N$.
+\end{enumerate}
+\end{lemma}
+\begin{proof}
+Completing the Gaussian readout square in the additional tilt gives
+exactly the incoming multiplier in (6) and the displayed shifted
+conditional mean. The multiplier is bounded by $e^{B_N}$ on the incoming
+cutoff, so the acceptance is at most one. The last restriction produces
+(5). Since $B_N=b\tau+O(N^{-1/2})$, it remains bounded. The incoming
+multiplier tends to one at every fixed $U$, the cutoff diverges, and
+the conditional readout shift tends to zero. The total acceptance tends
+to $e^{-b\tau}>0$, uniformly over a compact range of $\tau$.
+\end{proof}
+
+\begin{lemma}[Uniform moments of the proposed bulk]\label{lem:moments}
+The laws $Q_{N,\tau}$ have a common exponential parameter-norm moment
+and uniformly bounded output moments of every fixed order. Their mean
+output differs from $m_c\chi$ by $O(N^{-1/2})$. For independent draws,
+\[
+ Z_N^{\rm bulk}=N^{-1/2}\left(\sum_{i=1}^{N-K}\Phi_i-(N-K)m_c\chi\right)
+\]
+has uniformly bounded exponential moments at every fixed linear
+functional, uniformly over the compact range of $\tau$.
+\end{lemma}
+\begin{proof}
+The incoming density multiplier before normalization is bounded by
+$e^{B_N}$, and its normalizer is bounded below. The original critical
+incoming law has an exponential norm moment. A Gaussian readout with
+mean bounded by $(1+\epsilon)\|U\|$ preserves a smaller such moment;
+conditioning on the full cutoff has probability tending to one.
+
+The mean expansion follows by Taylor expanding the additional tilt
+on the full cutoff. There $|\epsilon Z|\le C$, and the critical output
+has all moments; the omitted critical tail is $O(e^{-cN^{1/4}})$ even
+after multiplication by any fixed polynomial. In fact the first mean
+correction is
+$\tau\operatorname{Cov}_{Q_*}(\Phi,Z)/(\rho\sqrt N)$.
+
+For a fixed vector $t$, expand the centered one-neuron transform at
+$t/\sqrt N$. On the full cutoff $\|\Phi\|/\sqrt N\le C_b$, while
+all its fixed moments are uniformly bounded. Taylor's formula therefore
+gives $1+O_t(N^{-1})$ with remainder $O_t(N^{-3/2})$. Multiplying the
+independent transforms proves the assertion. The bounded $O(1)$ shift
+between the chosen centering and the actual bulk mean is harmless.
+\end{proof}
+
+\section{Pilot, proposal, and exact ratio}
+Draw an independent pilot of $N$ neurons from $Q_*$. Let $\widehat m$
+be their average $Z$, and put
+\[
+ \widehat\alpha=\operatorname{clip}_{[a_-,a_+]}
+              \frac{s-\widehat m}{K\rho},\qquad
+ \widehat\tau=\frac\kappa{2\sqrt{\widehat\alpha}},\qquad
+ \mu=-\frac{\widehat\tau}{\gamma KM\rho^2}.              \tag{7}
+\]
+Rosenthal's inequality and clipping give, for every fixed $p\ge1$,
+\[
+                 \E|\widehat\alpha-\alpha|^p=O(N^{-p/2}). \tag{8}
+\]
+Keep this pilot fixed throughout the following short chain.
+
+Let $S$ range over balanced orientation sets, one ray from each antipodal
+pair. Let $A=A_S$ be its critical ReLU output matrix, and define
+$A^+=(A^\top A)^{-1}A^\top$, $P=I-AA^+$,
+$J_S=\det(A^\top A)^{-1/2}$. The even-block certificate supplies a
+known $d_E>0$ with $d_EJ_S\le1$. Recall
+\[
+ A\one=K\rho\chi,\qquad A^\top\chi=M\rho\one,
+              \one^\top A^+=\chi^\top/(M\rho).          \tag{9}
+\]
+A canonical proposal, conditional on the pilot, is as follows.
+\begin{enumerate}
+\item Draw $S$ uniformly and $n=N-K$ ordinary neurons independently from
+$Q_{N,\widehat\tau}$. Put $Y=\sum_{i=1}^n\Phi_i$. Accept with probability
+$d_EJ_S\exp[-\gamma\|PY\|^2/(2N)]$, otherwise restart.
+\item Independently draw
+\[
+ \eta\sim N\left(\mu\one,\gamma^{-1}(A^\top A)^{-1}\right),
+ \qquad
+ c=\frac{Ns}{K\rho}\one-A^+Y+
+                    \sqrt N(\kappa\sqrt{\widehat\alpha}\one+\eta).
+ \tag{10}
+\]
+For each ray, draw independent marks
+\[
+ v_j\sim N(-\kappa/2,1),\qquad
+ t_j\sim N\left(0,\frac{4\rho}{\beta}Q_{z_j}^{-1}\right),
+ \quad Q_z=M^{-1}\sum_{z\cdot x=0}\bar x\bar x^\top\big|_{v_z^\perp}.
+ \tag{11}
+\]
+\item Form the exceptional parameters using
+\[
+ A_j=(\sqrt{v_j^2+4c_j}+v_j)/2,\quad
+ R_j=(\sqrt{v_j^2+4c_j}-v_j)/2,\quad
+ a_j=\sigma_{z_j}A_j,\quad U_j=R_jv_{z_j}+c_j^{-1/4}t_j.
+\]
+Reject unless they and the actual output satisfy the common sector
+restrictions specified next.
+\end{enumerate}
+
+Choose a fixed macro interval $[a_0N,A_0N]$ containing $N\alpha$ in
+its interior, for example $a_0=a_-/2$ and $A_0=2a_+$ from the
+supplied enclosure. Choose fixed sufficiently narrow critical cones, and require
+$c_j$ in that interval and physical transverse norms
+$\|c_j^{-1/4}t_j\|\le\eta_0$. Here $\eta_0>0$ will be small enough
+for the requested moment order. For logistic loss also require
+$\max_x|\chi(x)F_N(x)-s|\le\eta_1$ with a small fixed $\eta_1>0$.
+The ordinary full-norm cutoff is already imposed by (5).
+These define a deterministic sector $G_N$, independent of the pilot.
+For large $N$ the exceptional and ordinary norms are separated, so its
+canonical description is unique. Denote the accepted proposal by
+$Q_N^{\rm pil}$.
+
+Let
+\[
+ \mathcal D_j=\tfrac12(a_j^2+\|U_j\|^2)-a_jG_\beta(U_j)/\rho,
+ \quad
+ R_{\rm prop}=PY+\sqrt N A(\eta-\mu\one),
+\]
+and let $Y_{\rm all}$ be the actual total output including softplus
+exceptional neurons. The residual likelihood after critical tilting is
+\[
+ W_N(y)=\exp\{-NM^{-1}\sum_x[g(\chi(x)y_x/N)-g(s)]\}.
+\]
+Up to a common scalar conditional on the pilot, the exact importance
+ratio for $\Pi_N(\cdot\mid G_N)$ is
+\begin{align}
+ \mathcal R_N={}&\prod_{j=1}^K\left[
+ c_j^{-\nu}\frac{2\sqrt{c_j}}{\sqrt{v_j^2+4c_j}}
+ e^{-\mathcal D_j+v_j^2/2+\kappa v_j/2+
+                         \beta t_j^\top Q_{z_j}t_j/(8\rho)}\right]\notag\\
+ &\quad\times e^{-\widehat\tau\sum_{\rm ordinary}Z_i/(\rho\sqrt N)}
+       \frac{W_N(Y_{\rm all})}
+                    {e^{-\gamma\|R_{\rm prop}\|^2/(2N)}}. \tag{12}
+\end{align}
+The coordinate Jacobian is $c^{-r/4}/\sqrt{v^2+4c}$, giving the power
+in (12). The geometry factor $J_S$ cancels the amplitude Gaussian
+determinant. All orientation mark determinants are equal. The ordinary
+tilt contributes exactly its displayed inverse factor. Thus (12) needs
+neither the critical normalizer, the tilted-neuron normalizer, the
+posterior evidence, nor $m_c$. Common constants cancel between two
+Metropolis states sharing the same pilot.
+
+Start from one $Q_N^{\rm pil}$ proposal and make $k$ independence
+Metropolis updates with fresh proposals and ratios of (12). Inject the
+canonically ordered exceptional neurons uniformly into the $N$ labels.
+This is the claimed output construction.
+
+\section{Why the leading radial tilt cancels}
+We give the cancellation explicitly because a Gaussian proposal without
+it would retain a nonvanishing importance error. For analysis set
+\[
+ D=(c-N\alpha\one)/\sqrt N,\quad
+ Z_0=(Y-nm_c\chi)/\sqrt N,\quad
+ h_0=K\rho\kappa\sqrt\alpha,\quad \tau=\kappa/(2\sqrt\alpha).
+\]
+The radial critical exponent expands as
+\[
+             -\kappa\sum_j\sqrt{c_j}
+                =-K\kappa\sqrt{N\alpha}-\tau\one^\top D
+                            +O(N^{-1/2}\|D\|^2).        \tag{13}
+\]
+The softplus zero-layer output is
+$-\sqrt N h_0\chi+O_P(N^{1/4})$. When
+$\widehat\alpha=\alpha$, the actual normalized leading residual is
+$R=Z_0+AD-h_0\chi$, while the proposal Gaussian residual is
+$R+\tau\chi/(\gamma M\rho)$, up to $O(N^{-1/2})$.
+Consequently its Gaussian likelihood ratio contributes
+\[
+ \frac\tau{M\rho}\chi^\top R+\frac{\tau^2}{2\gamma M\rho^2}.
+\]
+By (9), the first term is
+$\tau\chi^\top Z_0/(M\rho)+\tau\one^\top D-\tau h_0/\rho$.
+Its two nonconstant terms cancel (13) and the ordinary tilt in (12).
+The remaining terms are common scalars. A pilot error leaves only
+terms bounded by
+\[
+ C|\widehat\alpha-\alpha|(1+\|D\|+\|R_{\rm prop}\|/\sqrt N)
+ \tag{14}
+\]
+after removing another common scalar; the maps square root and reciprocal
+square root are Lipschitz on the supplied positive interval.
+
+\section{Centered moments of the exact importance ratio}
+\begin{lemma}[All fixed moment orders]\label{lem:ratio}
+For each fixed $p\ge1$, choose $\eta_0$ and, for logistic loss,
+$\eta_1$ sufficiently small. Writing
+$w_N^{\rm pil}=d\Pi_N(\cdot\mid G_N)/dQ_N^{\rm pil}$,
+\[
+       \E_{\rm pil}\E_{Q_N^{\rm pil}}|w_N^{\rm pil}-1|^p
+                                            =O(N^{-p/4}). \tag{15}
+\]
+\end{lemma}
+\begin{proof}
+All estimates below are uniform over the clipped pilot interval and the
+finite set of balanced orientations. The first-stage acceptance has a
+positive uniform limiting normalizer: Lemma~\ref{lem:moments} gives the
+bulk central limit theorem, its mean is along $\chi$, and $P\chi=0$.
+The final restrictions have proposal probability tending to one uniformly.
+Indeed $c/N\to\alpha\one$, the marks are tight, their physical transverse
+norms vanish, and the actual signed output tends to $s$. Thus conditioning
+on those restrictions does not destroy uniform moment bounds.
+
+Write $T=\sum_j\|t_j\|$, $V^2=\sum_jv_j^2$, and
+$R_0=R_{\rm prop}/\sqrt N$. The bulk lemma and the independent amplitude
+Gaussian give every fixed moment of $D$ and every fixed exponential
+moment of $\|D\|$. The proposal density contains Gaussian decay in both
+$PY/\sqrt N$ and $A(\eta-\mu\one)$, which are orthogonal; hence it
+supplies Gaussian damping in $R_0$. The marks in (11) have Gaussian decay.
+
+Multiply (12), for analysis only, by a common conditional-pilot scalar
+that removes the radial constant and the scalar terms in the preceding
+cancellation, and call the result $R_N$. This does not change any
+Metropolis acceptance ratio. The corner expansion gives, uniformly on
+the macro interval,
+\[
+ \mathcal D_j=\kappa\sqrt{c_j}+v_j^2/2+\kappa v_j/2
+                 +\beta t_j^\top Q_{z_j}t_j/(8\rho)+E_j,
+\]
+\[
+ |E_j|\le C N^{-1/2}(1+v_j^2+\|t_j\|^4+|v_j|\|t_j\|^2).
+ \tag{16}
+\]
+This follows from the Taylor expansion of $\log\cosh$ on the fixed
+physical transverse ball, the formula for $A_j$, and the exponentially
+small nonzero-preactivation correction. Amplitude powers and Jacobians
+contribute at most $CN^{-1/2}(1+\|D\|+V^2)$ to the log ratio.
+The radial remainder is the one in (13).
+
+The actual exceptional output, after subtracting its critical ReLU part
+and the deterministic $-\sqrt N h_0\chi$, has norm at most
+\[
+                     C N^{1/4}T+C(\|D\|+V+T^2).         \tag{17}
+\]
+On the zero layer use the linear and quadratic softplus expansion;
+on nonzero layers the correction is linear in the physical transverse
+parameter plus an exponentially small term. The difference between
+$\sqrt{c_j}$ and $\sqrt{N\alpha}$ is $O(|D_j|)$ on the macro interval.
+This proves (17).
+
+For square loss, comparison with the proposal quadratic and the exact
+cancellation above bounds $u_N=\log R_N$ by a sum whose leading terms are
+\[
+ C N^{-1/4}(1+\|R_0\|)T
+ +C N^{-1/2}\mathcal P(D,V,T,R_0)
+ +C|\widehat\alpha-\alpha|(1+\|D\|+\|R_0\|),          \tag{18}
+\]
+where the polynomial terms are precisely radial curvature $\|D\|^2$,
+the quantities in (16), the amplitude terms just stated, and the products
+from the quadratic comparison using (17). For logistic loss there is
+also the usual cubic Taylor remainder of the residual likelihood.
+
+We justify exponential integrability, not only polynomial moments of
+(18). On the macro interval $\|D\|\le C\sqrt N$, so
+$\|D\|^2/\sqrt N\le C\|D\|$, controlled by the bulk exponential
+moments. On the physical transverse cutoff,
+$T^4/\sqrt N\le C\eta_0^2T^2$; choose $\eta_0$ sufficiently small
+for absorption into the Gaussian marks at the requested order $p$.
+Young's inequality absorbs $N^{-1/4}\|R_0\|T$ into a small Gaussian
+$R_0$ term and $CT^2/\sqrt N$. The remaining mixed terms use, for example,
+\[
+ \frac{\|R_0\|\|D\|}{\sqrt N}
+       \le\varepsilon\|R_0\|^2+C_\varepsilon\|D\|^2/N,
+ \qquad
+ \frac{(\|R_0\|+V)T^2}{\sqrt N}
+       \le\varepsilon(\|R_0\|^2+V^2)+C_\varepsilon T^4/N.
+\]
+Their last terms are controlled as above. Pilot errors range over a
+compact interval and their linear exponential factors have uniform
+integrability. For logistic loss the fixed small actual-output window
+bounds the cubic remainder by a small quadratic multiple of the
+normalized residual. Taking $\eta_1$ small absorbs that multiple into
+the same Gaussian factors, with (17) controlling its transverse terms.
+
+The inequality $|e^u-1|^p\le |u|^p(1+e^{pu_+})$ now reduces the
+estimate to polynomial moments under these still-decaying densities.
+Every term of (18) contributes at most $CN^{-p/4}$; the pilot part uses
+(8) and in fact costs $O(N^{-p/2})$. The exponential factors involving
+$D$ are controlled at any fixed strength by Lemma~\ref{lem:moments},
+including after reducing the proposal Gaussian decay constants.
+We obtain
+\[
+                  \E_{\rm pil}\E_{Q_N^{\rm pil}}|R_N-1|^p
+                                              \le CN^{-p/4}. \tag{19}
+\]
+
+For normalization put $z_N^{\rm pil}=\E_{Q_N^{\rm pil}}R_N$.
+These numbers are bounded below by a positive constant uniformly in
+the clipped pilot: a fixed bounded region of $D,R_0,v,t$ has uniformly
+positive proposal probability by the uniform central limit theorem,
+and the gauged ratio is bounded below there. The same exponential
+estimates bound them above. Jensen's inequality in (19) bounds
+$\E_{\rm pil}|z_N^{\rm pil}-1|^p$. Finally
+$w_N^{\rm pil}=R_N/z_N^{\rm pil}$ proves (15).
+\end{proof}
+
+\section{Completion, cost, and qualifications}
+The softplus asymptotic companion proves that the canonical minimum
+configuration has exponentially small complement at speed $\sqrt N$.
+It also proves the inserted-neuron bound
+\[
+ \Pi_N\{\max_{\rm ordinary}\|\theta_i\|>u\mid G_N^{\rm coarse}\}
+                                      \le CN e^{-cu}+e^{-c'N}.
+\]
+Set $u=\sqrt b N^{1/4}$, and use its fixed physical-transverse cutoff
+bound. Including the logistic output window, the sector used here has
+\[
+                  \Pi_N(G_N^c)\le CN e^{-cN^{1/4}}.       \tag{20}
+\]
+The constants depend on the chosen cuts. We do not identify this error
+with the sharper extra-count rate, which concerns a different event.
+
+Conditional on the pilot, independence Metropolis with exact ratio (12)
+leaves $\Pi_N(\cdot\mid G_N)$ invariant. The centered-moment coupling
+lemma from \emph{Finite Metropolis corrections for a condensed ReLU
+posterior} gives, for $k\ge1$,
+\[
+ \|(Q_N^{\rm pil})(\mathcal K_N^{\rm pil})^k-
+                       \Pi_N(\cdot\mid G_N)\|_{\TV}
+ \le 2^k\E_{Q_N^{\rm pil}}|w_N^{\rm pil}-1|^{k+1}.
+\]
+For $k=0$, total variation is half the first absolute moment.
+Average over the pilot, use convexity of total variation and (15), and
+add (20). Uniform label injection cannot increase total variation.
+This proves (4).
+
+The pilot costs expected $O(N)$. Lemma~\ref{lem:tilt} gives the same
+cost for a proposed ordinary bank. All matrix sizes and orientation
+choices depend only on fixed dimension. The first-stage acceptance and
+final restriction have normalizers uniformly bounded below, so each
+accepted proposal costs expected $O(N)$. The $k+1$ proposals and exact
+ratios therefore cost $O(N)$ for fixed $k$.
+
+\section{Sharp rates despite averaging over the pilot}\label{sec:sharp}
+The preceding upper bounds have matching constants. Establishing this
+requires more than convexity of total variation: different conditional
+errors could in principle cancel when the pilot is averaged out. Here
+they have a common leading signed density that is an observable of the
+network itself.
+
+For a canonical network in $G_N$, extract its ordinary output $Y$, ray
+set $S$, amplitudes $c_j$, and transverse marks $t_j=c_j^{1/4}u_j$.
+Define vectors on the input cube by
+\begin{align}
+ B_N(x)&=\sum_j(c_j/N)^{1/4}\sigma_{z_j}
+       \left(\one_{\{z_j\cdot x>0\}}+
+                  \tfrac12\one_{\{z_j\cdot x=0\}}\right)(t_j\cdot\bar x),
+       \notag\\
+ R_N^{\rm obs}&=(Y+A_Sc-Ns\chi)/\sqrt N,\qquad
+            L_N=-\gamma (R_N^{\rm obs})^\top B_N.       \tag{21}
+\end{align}
+These observables do not use the pilot. For every transverse mark,
+\[
+ \E_x\chi(x)\sigma_z
+  \left(\one_{\{z\cdot x>0\}}+\tfrac12\one_{\{z\cdot x=0\}}\right)
+                                    (t\cdot\bar x)=0.  \tag{22}
+\]
+Indeed the zero-layer symmetric derivative of the critical parity
+coefficient has gradient parallel to $v_z$, while $t\perp v_z$;
+equivalently (22) follows by pairing $x,-x$ and coordinate symmetry.
+Thus $\chi^\top B_N=0$. In particular adding any multiple of $\chi$
+to $R_N^{\rm obs}$ leaves $L_N$ unchanged.
+
+The limiting random variable can be specified explicitly. Choose $S$
+with weights proportional to
+$\det(A_S^\top(I+\gamma\Sigma)^{-1}A_S)^{-1/2}$, where
+$\Sigma=\operatorname{Cov}_{Q_*}\Phi$. Draw $(D,Z)$ from the shifted
+Gaussian density in the softplus asymptotic companion,
+\[
+ \exp\{-Z^\top\Sigma^{-1}Z/2
+       -\gamma\|Z+A_SD-h_0\chi\|^2/2-\tau\one^\top D\}.
+ \tag{23}
+\]
+Independently draw the Gaussian $t_j$ from (11), and set
+\[
+ R=Z+A_SD-h_0\chi,\qquad
+ B(x)=\alpha^{1/4}\sum_j\sigma_{z_j}
+       \left(\one_{\{z_j\cdot x>0\}}+
+                   \tfrac12\one_{\{z_j\cdot x=0\}}\right)(t_j\cdot\bar x),
+ \qquad L=-\gamma R^\top B.                            \tag{24}
+\]
+Conditional on $S$, $B$ is a nonzero centered Gaussian vector independent
+of $R$. The latter has positive definite covariance and mean parallel
+to $\chi$. By (22) that mean contributes zero. Hence $L$ is symmetric,
+nondegenerate, has mean zero, and has moments of every order.
+
+Let $L'$ be an independent copy of $L$ and define
+\[
+ F_0(l)=l,\quad a(l)=\E(l-L')_+,\quad
+ F_{j+1}(l)=a(l)F_j(l)-\E[F_j(L')(L'-l)_+].             \tag{25}
+\]
+\begin{theorem}[A sharp quarter-power per correction]\label{thm:sharp}
+For each fixed $k\ge0$, with sufficiently small fixed cutoffs,
+\[
+ \|\widehat\Pi_{N,k}-\Pi_N\|_{\TV}
+             \sim C_kN^{-(k+1)/4},\qquad
+                   C_k=\tfrac12\E|F_k(L)|>0.           \tag{26}
+\]
+This statement includes averaging over the random pilot. In particular,
+$C_0=\tfrac12\E|L|$ and
+$C_1=\tfrac12\E|\E[(L-L')_+^2\mid L]-\E L^2|$.
+\end{theorem}
+\begin{proof}
+Write $\varepsilon=N^{-1/4}$ and $P_N=\Pi_N(\cdot\mid G_N)$.
+Restrict first to pilots satisfying
+$|\widehat\alpha-\alpha|\le N^{-3/8}$. By (8) their complement has
+probability $O(N^{-A})$ for every fixed prescribed $A$: apply Markov's
+inequality at moment order $p>8A$.
+
+Uniformly over these pilots, the truncated-bulk central limit theorem,
+the Gaussian amplitude proposal, and the quadratic profile weight give
+(23) as the joint limit of the amplitude and ordinary-output
+fluctuations. The limiting orientation determinant comes from integrating
+that profile. The independent Gaussian marks remain (11). The final
+sector restrictions have probability tending to one, and the moment
+estimates already proved give uniform integrability at every fixed
+order. Consequently $L_N$ converges uniformly over these pilots in every
+fixed Wasserstein distance to the law of $L$ in (24).
+
+More precisely, retain the leading linear transverse term in (17).
+It is exactly $N^{1/4}B_N$. Its product with the Gaussian-scale
+likelihood residual is $\varepsilon L_N$. The parity components of
+the deterministic smoothing shift and of the shifted Gaussian proposal
+vanish in this product by (22). The remaining logarithmic terms from
+(16)--(18) are $O_{L^p}(N^{-1/2})$ plus
+$O_{L^p}(|\widehat\alpha-\alpha|)$, uniformly on the indicated pilots.
+Dividing by $\varepsilon$ makes these remainders tend to zero.
+The same exponential estimates justify replacing the logarithm by its
+exponential and normalizing. The normalization subtracts the conditional
+mean of $L_N$, which tends uniformly to $\E L=0$. Thus, for every
+fixed $p$,
+\[
+ \sup_{\rm good\ pil}\E_{Q_N^{\rm pil}}
+ \left|\frac{w_N^{\rm pil}-1}{\varepsilon}-L_N\right|^p
+                         \longrightarrow0.             \tag{27}
+\]
+All higher moments required below are uniformly bounded by the same
+argument; choose the fixed cuts for those orders.
+
+The exact perturbation recursion in the Metropolis companion states
+that the signed error $P_N-Q_N^{\rm pil}(\mathcal K_N^{\rm pil})^k$,
+relative to $Q_N^{\rm pil}$, is
+$\varepsilon^{k+1}F_{N,k}^{\rm pil}((w_N^{\rm pil}-1)/\varepsilon)$.
+Its kernel bounds give polynomial growth of degree $k+1$ and convergence
+to (25) under Wasserstein convergence of the input law. Using (27),
+truncating to compact intervals, and then using the uniform higher
+moments, gives
+\[
+ \sup_{\rm good\ pil}\E_{Q_N^{\rm pil}}
+ \left|F_{N,k}^{\rm pil}((w_N^{\rm pil}-1)/\varepsilon)
+                                      -F_k(L_N)\right|\to0. \tag{28}
+\]
+To compare pilots, transfer this error density to the common reference
+measure $P_N$. The additional difference is
+$(w_N^{\rm pil}-1)F_k(L_N)$ in the integral under $Q_N^{\rm pil}$;
+it tends to zero by H\"older's inequality and the higher moments.
+Therefore the signed density, divided by $\varepsilon^{k+1}$, converges
+in $L^1(P_N)$, uniformly on good pilots, to the \emph{same observable}
+$F_k(L_N)$.
+
+Averaging the pilots now preserves this leading signed density. Bad
+pilots contribute at most their probability to total variation, which
+is $o(\varepsilon^{k+1})$. The law of $L_N$ under $P_N$ also converges
+to $L$ with all required moments, since $w_N^{\rm pil}\to1$ in every
+fixed $L^p$ on any good pilot sequence. Taking the absolute integral
+therefore gives $\tfrac12\E|F_k(L)|$ as the limit. Its strict positivity
+is the nondegeneracy conclusion of the perturbation hierarchy theorem.
+The canonical configuration is recoverable from a labeled network on
+$G_N$, so the final uniform label injection preserves this TV limit.
+Finally (20) is smaller than every fixed power and allows replacement
+of $P_N$ by the full posterior. This proves (26).
+\end{proof}
+
+\paragraph{Scope.}
+The quarter-power comes from the linear transverse output in (17),
+interacting with a Gaussian-scale residual. The common-observable
+argument in Section~\ref{sec:sharp} is needed for the sharp constant
+after pilot mixing. Finite-dimensional checks of that expansion and
+conditional-pilot importance experiments are separate from the proof
+and are not finite-width error certificates.
+The sufficient analytic cutoffs may be more conservative than those in
+the experiments. The full probability and asymptotic arguments have not
+been formalized in Lean; selected deterministic identities in the
+research collection support only their explicitly stated algebraic scope.
+\end{document}

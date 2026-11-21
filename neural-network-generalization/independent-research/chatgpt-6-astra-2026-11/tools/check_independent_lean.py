@@ -11,7 +11,7 @@ ap=argparse.ArgumentParser()
 ap.add_argument('--lean-project',type=Path,default=os.environ.get('LEAN_PROJECT'))
 ap.add_argument('--lean',default=os.environ.get('LEAN') or shutil.which('lean'))
 args=ap.parse_args()
-project=args.lean_project or ROOT.parents[1]/'lean'
+project=(args.lean_project or ROOT.parents[1]/'lean').resolve()
 if not (project/'.lake/packages').is_dir():
     raise SystemExit('Pass --lean-project pointing to the built repository Lean project.')
 if not args.lean:raise SystemExit('Install Lean from the repository toolchain or pass --lean.')
@@ -23,7 +23,7 @@ with tempfile.TemporaryDirectory(prefix='independent-lean-') as temporary:
     env=os.environ.copy();env['LEAN_PATH']=':'.join(map(str,[Path(temporary),*paths]))
     sources=sorted((ROOT/'lean').glob('Independent*.lean'))
     for source in sources:
-        cmd=[args.lean,'-o',str(Path(temporary)/(source.stem+'.olean')),str(source)]
+        cmd=[args.lean,'--root='+str(source.parent),'-o',str(Path(temporary)/(source.stem+'.olean')),str(source)]
         p=subprocess.run(cmd,env=env,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
         logs.append(p.stdout);print(p.stdout,end='',flush=True)
         records.append(dict(file=source.name,sha256=hashlib.sha256(source.read_bytes()).hexdigest(),returncode=p.returncode))
@@ -34,7 +34,7 @@ with tempfile.TemporaryDirectory(prefix='independent-lean-') as temporary:
     audit=Path(temporary)/'AxiomAudit.lean'
     audit.write_text('\n'.join('import '+s.stem for s in sources)+'\n'+
                      '\n'.join('#print axioms IndependentResearch.'+name for name in names)+'\n')
-    p=subprocess.run([args.lean,str(audit)],env=env,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+    p=subprocess.run([args.lean,'--root='+str(audit.parent),str(audit)],env=env,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
     logs.append(p.stdout);print(p.stdout,end='',flush=True)
     if p.returncode:raise SystemExit(p.returncode)
     admitted=bool(re.search(r'\b(sorryAx|admit)\b',p.stdout))

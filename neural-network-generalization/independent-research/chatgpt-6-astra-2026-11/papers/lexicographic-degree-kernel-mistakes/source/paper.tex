@@ -1,0 +1,686 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{lemma}[theorem]{Lemma}
+\newcommand{\R}{\mathbb R}\newcommand{\E}{\mathbb E}
+\newcommand{\one}{\mathbf1}
+\newcommand{\Pp}{\mathbb P}
+\title{Maximal lexicographic parity mistakes for degree-ordered kernels}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author.}}
+\date{21 November 2026; working proof draft}
+\hypersetup{hidelinks,pdftitle={Maximal lexicographic parity mistakes for degree-ordered kernels},pdfauthor={ChatGPT-6 Astra}}
+\emergencystretch=3em
+\begin{document}\maketitle
+\begin{abstract}
+A positive definite Boolean-cube kernel whose Walsh eigenvalues decrease
+with degree predicts full parity incorrectly at every lexicographic input
+after the first, provided the last spectral drop is strict. Here learning
+means exact minimum-kernel-norm interpolation of previously observed
+outputs. The proof is an elementary block recursion: conditioning on a
+whole half-cube replaces the spectrum by adjacent harmonic means, while
+restricting to a half-cube replaces it by adjacent arithmetic means.
+Both preserve degree order. Gaussian-initialized ReLU and softplus
+random-feature and initialization tangent kernels satisfy the hypotheses
+in odd dimensions (at least three for a pure incoming-gradient kernel); tanh
+satisfies them in even dimensions. Thus shallow ReLU networks with fixed
+Gaussian hidden features and minimum-norm readout fitting can make
+$2^d-1$ mistakes on a target with a polynomial-size ReLU teacher.
+For each fixed activation temperature, finite width
+$N\ge e^{Cd}\log(2/\zeta)$ suffices with probability at least
+$1-\zeta$, with an activation-dependent constant $C$. A positive-power-series criterion also covers explicitly normalized
+ReLU Gaussian-process and tangent kernels of every depth at least two,
+in every dimension at least two. The result also describes noiseless
+Gaussian-process posterior means and fixed-kernel gradient flow run to
+interpolation. It does not replace equality observations by positive-margin
+conditioning or train the hidden features. Those are materially different
+problems. No blanket novelty claim is made; these are conventional proofs,
+not independently reviewed or fully formalized.
+\end{abstract}
+
+Earlier work already establishes substantial limitations of kernel
+learning. Khardon, Roth, and Servedio \cite{khardon} give exponential
+online mistakes for kernel Perceptron on simple Boolean targets.
+Bengio, Delalleau, and Le Roux \cite{bengio} prove exponential Gaussian
+kernel representation requirements for cube parity. Dimension arguments
+also give kernel sample lower bounds over classes of parities
+\cite{hsu}. Yang and Salman \cite{yang} establish the Boolean Fourier
+spectral description and degree ordering within each parity class for
+wide neural kernels. The equal-coordinate input-bias normalization below
+also orders consecutive degrees. The statement here concerns a specified full-parity target,
+a fixed lexicographic sequence, and the exact minimum-norm interpolant:
+it identifies the sign at every step from degree order. These differences
+specify what is proved, rather than asserting priority for kernel
+lower bounds in general.
+
+\section{The kernel statement}
+Let $X_d=\{0,1\}^d$, with ordinary lexicographic order, equivalently
+increasing binary integer order. Its Walsh characters are
+$\chi_S(x)=(-1)^{\sum_{i\in S}x_i}$, and the target is
+$\chi=\chi_{[d]}$. Let a positive definite kernel matrix $K$ be
+translation invariant, with its Walsh eigenvalue depending only on
+degree. Write those matrix eigenvalues as $\lambda_0,\ldots,\lambda_d$;
+using normalized counting measure changes all of them by the same factor.
+After observing exact target values on a prefix $H$, predict with
+\[
+                 f^H=K_{:,H}K_{H,H}^{-1}\chi_H.               \tag{1}
+\]
+This is the unique minimum-RKHS-norm interpolant. Matrix positive
+definiteness makes all the inverses well defined.
+
+\begin{theorem}[All but the first prediction are wrong]
+\label{thm:main}
+Suppose
+\[
+          \lambda_0\ge\lambda_1\ge\cdots\ge\lambda_d>0.
+                                                               \tag{2}
+\]
+For every nonempty proper lexicographic prefix $H$, the signed next
+prediction satisfies
+\[
+                       \chi(x_{|H|})f^H(x_{|H|})\le0.         \tag{3}
+\]
+If in addition $\lambda_{d-1}>\lambda_d$, every inequality in (3)
+is strict. The predictor then makes exactly $2^d-1$ wrong-sign
+predictions after one initial labeled input.
+\end{theorem}
+The claim includes zero predictions in the weak case but does not
+classify them as mistakes independently of a tie convention.
+Strictness is not asserted merely from some earlier spectral drop.
+
+\section{Arithmetic and harmonic means under cube elimination}
+We prove a signed version. For a positive sequence
+$\mu=(\mu_0,\ldots,\mu_n)$, let $C_n(\mu)$ be the radial kernel
+matrix with those Walsh matrix eigenvalues. For a prefix of size $h<2^n$,
+write $m_n(h;\mu)$ for its constant-one interpolation at the next input;
+the empty-prefix value is zero.
+
+Split the cube by its first bit. The diagonal and off-diagonal blocks
+are $A,C$, with Walsh eigenvalues on the remaining $n-1$ bits
+\[
+             a_p=\frac{\mu_p+\mu_{p+1}}2,\qquad
+             c_p=\frac{\mu_p-\mu_{p+1}}2.
+\]
+They commute. The regression $R=CA^{-1}$ has eigenvalues
+$r_p=(\mu_p-\mu_{p+1})/(\mu_p+\mu_{p+1})$, and the Schur complement
+$S=A-CA^{-1}C$ has eigenvalues
+\[
+                  s_p=\frac{2\mu_p\mu_{p+1}}
+                                      {\mu_p+\mu_{p+1}}.       \tag{4}
+\]
+In particular $R\one=r_0\one$. Block elimination therefore gives
+\[
+ m_n(h;\mu)=
+ \begin{cases}
+ m_{n-1}(h;a),&0\le h<2^{n-1},\\
+ r_0+(1-r_0)m_{n-1}(h-2^{n-1};s),&2^{n-1}\le h<2^n.
+ \end{cases}                                                  \tag{5}
+\]
+For the second case, the whole first half is observed to equal one.
+Its conditional mean in the second half is $r_0\one$.
+The additional second-half observations hence require the constant
+residual $1-r_0$, giving (5). This calculation uses equality observations.
+
+\begin{lemma}[A monotone-spectrum recursion]
+If $0<\mu_0\le\cdots\le\mu_n$, then $m_n(h;\mu)\le0$
+for every $h$. If $\mu_0<\mu_1$ and $h>0$, then $m_n(h;\mu)<0$.
+\end{lemma}
+\begin{proof}
+Both adjacent arithmetic means and adjacent harmonic means preserve
+nondecreasing positive sequences. If $\mu_0<\mu_1$, their first
+inequality is strict whenever the transformed sequence has at least
+two entries: the arithmetic difference is
+$(\mu_2-\mu_0)/2>0$, and the harmonic mean increases strictly in
+each argument. Also $-1<r_0\le0$, with strict negativity when
+$\mu_0<\mu_1$.
+Induct using (5), with the empty-prefix value zero.
+In a second-half step, $1-r_0>0$ and the lower-dimensional prediction
+is nonpositive, so the result is at most $r_0$.
+A nonempty proper prefix eventually encounters a second-half step;
+strictness of the first spectral inequality survives all earlier
+arithmetic or harmonic transformations. This proves the strict claim.
+The one-dimensional case follows directly from (5).
+\end{proof}
+
+The recursion also gives a useful uniform margin. Put
+$r=(\mu_1-\mu_0)/(\mu_1+\mu_0)>0$. If $a_p=(\mu_p+\mu_{p+1})/2$,
+monotonicity of $\mu$ gives
+\[
+ \frac{a_1-a_0}{a_1+a_0}
+ =\frac{\mu_2-\mu_0}{\mu_0+2\mu_1+\mu_2}
+ \ge\frac{\mu_1-\mu_0}{\mu_0+3\mu_1}\ge\frac r3.
+\]
+Before the first second-half step in (5), there are at most $d-1$
+arithmetic-mean transformations. That step has value at most its
+negative first spectral ratio, irrespective of the remaining recursion.
+Thus every nonempty proper prefix satisfies
+\[
+                         m_d(h;\mu)\le-\frac r{3^{d-1}}.
+                                                               \tag{Q1}
+\]
+This quantitative statement uses no bound on the condition number.
+
+To prove Theorem~\ref{thm:main}, put
+$D=\operatorname{diag}(\chi(x))$ and $C=DKD$.
+Multiplication by full parity complements every Walsh index, so
+$C$ has eigenvalues $\mu_p=\lambda_{d-p}$.
+These increase with $p$ under (2), and the last drop in $\lambda$
+is the first strict rise in $\mu$. The signed interpolant is exactly
+\[
+                  Df^H=C_{:,H}C_{H,H}^{-1}\one_H.
+\]
+Apply the lemma. The input order is fixed in advance; it does not
+adapt to the observed predictions.
+
+\section{Gaussian ReLU, softplus, and tanh kernels}
+For the neural examples use inputs $x\in\{-1,1\}^d$, identifying
+$+1$ with binary zero. Let $U=(b,w)$ have independent standard Gaussian
+coordinates. The random-feature kernel is
+$K_\phi(x,y)=\E\phi(U\cdot(1,x))\phi(U\cdot(1,y))$.
+The Gaussian ReLU kernel itself is classical \cite{cho}.
+Here we use its degree ordering rather than claim the kernel formula
+as a new result.
+
+\begin{theorem}[Shallow activation examples]\label{thm:activations}
+The strict conclusion of Theorem~\ref{thm:main} holds for:
+\begin{enumerate}
+\item ReLU and every positive-temperature softplus in every odd
+      dimension $d\ge1$;
+\item $\tanh(\beta t)$, for every $\beta>0$, in every even dimension
+      $d\ge2$.
+\end{enumerate}
+All these kernel matrices are positive definite. Common positive kernel
+amplitude changes do not alter the predictions.
+\end{theorem}
+\begin{proof}
+We summarize the positive Fourier formulas, proved explicitly in the
+smoothing and smooth-width companions \cite{smoothing,smooth}.
+For softplus, let
+$\psi_\beta(t)=(\pi t/\beta)/\sinh(\pi t/\beta)$;
+for ReLU put $\psi_\infty=1$.
+With $q=d+1$, normalized eigenvalues satisfy
+\[
+ \lambda_1=1/4+L_1,\qquad
+ \lambda_p=L_{\lceil p/2\rceil}\quad(p\ge2),
+\]
+where
+\[
+ L_j=\frac1{\pi^2}\int_{(0,\infty)^2}
+ \frac{\psi_\beta(t)\psi_\beta(s)}{t^2s^2}
+ e^{-q(t^2+s^2)/2}\sinh(ts)^{2j}\cosh(ts)^{q-2j}\,dt\,ds>0.
+                                                               \tag{6}
+\]
+Consecutive integrands have ratio $\tanh(ts)^2<1$, hence
+$L_{j+1}<L_j$. Also $\lambda_0>\lambda_1$: each feature is
+nonnegative, so its constant Fourier coefficient dominates the absolute
+value of every other coefficient pointwise. The inequality is strict
+on a positive-Gaussian-measure set of incoming vectors. Squaring and
+averaging proves the strict eigenvalue inequality.
+This gives (2); the last drop is strict in odd dimension, including
+dimension one by the constant-versus-linear comparison.
+At the ReLU endpoint, the finite Gaussian feature variance and monotone
+convergence justify the same integral formula and strict ordering.
+
+For tanh, the normalized eigenvalues are
+$\lambda_p=J_{\lfloor p/2\rfloor}$, including $p=0$, with
+\[
+ J_j=\frac4{\pi^2}\int_{(0,\infty)^2}
+ \frac{\psi_{2\beta}(t)\psi_{2\beta}(s)}{ts}
+ e^{-q(t^2+s^2)/2}\sinh(ts)^{2j+1}
+                         \cosh(ts)^{q-2j-1}\,dt\,ds>0.        \tag{7}
+\]
+Again $J_{j+1}<J_j$ by the same pointwise ratio. Thus the eigenvalues
+are nonincreasing, with the last drop strict in even dimension.
+Positivity of all the displayed eigenvalues proves matrix positive
+definiteness. Every statement is unchanged by a common positive
+normalization of the eigenvalues.
+\end{proof}
+
+\begin{theorem}[Both-layer initialization tangent kernels]
+\label{thm:tangent}
+Let $d\ge3$ be odd and let $\phi$ be ReLU or positive-temperature
+softplus. For fixed $c_0,c_1\ge0$, not both zero, the kernel
+\[
+ \Theta(x,y)=c_0\E\phi(U\cdot\bar x)\phi(U\cdot\bar y)
+       +c_1(\bar x\cdot\bar y)
+              \E\phi'(U\cdot\bar x)\phi'(U\cdot\bar y)
+                                                               \tag{8}
+\]
+satisfies the strict conclusion of Theorem~\ref{thm:main}.
+In particular, the usual both-layer initialization tangent kernel
+($c_0=c_1=1$, with independent unit-variance readouts) makes all
+$2^d-1$ designated wrong-sign predictions under exact minimum-norm
+interpolation.
+\end{theorem}
+\begin{proof}
+The differentiated positive integral from \cite{smoothing} replaces
+$H_j(u)=\sinh(u)^{2j}\cosh(u)^{q-2j}$ in (6) by
+$F_j(u)=c_0H_j(u)+c_1uH_j'(u)$. For degrees $p\ge2$ the eigenvalue
+is the resulting integral at $j=\lceil p/2\rceil$; degree one has
+in addition $(c_0+c_1)/4$. Put $t=\tanh u\in(0,1)$.
+For $2\le j\le q/2$, direct differentiation gives
+\[
+ F_{j-1}(u)-F_j(u)
+ =(1-t^2)H_{j-1}(u)
+ \left[c_0+c_1u\left(\frac{2j-2}{t}+(q-2j)t\right)\right]>0.
+                                                               \tag{9}
+\]
+Thus all consecutive nonlinear levels decrease strictly. The positive
+integrals also give positive eigenvalues and the final strict drop
+in odd dimension.
+
+It remains to compare degrees zero and one; input-centered spectral
+ordering alone would not supply this step. For the readout-feature
+part the preceding proof gives $\lambda_0>\lambda_1$. Let $\nu_p$
+be the degree-$p$ eigenvalues of the derivative feature $\phi'$.
+Multiplication by an input coordinate shifts a Walsh index, so the
+incoming-gradient part has degree-$p$ eigenvalue
+\[
+           \nu_p+p\nu_{p-1}+(d-p)\nu_{p+1}.
+\]
+Its degree-zero minus degree-one difference is exactly
+$(d-1)(\nu_1-\nu_2)>0$. Indeed for softplus,
+$\phi'_\beta(t)=\tfrac12+\tfrac12\tanh(\beta t/2)$,
+so (7) gives $\nu_1=J_0/4>J_1/4=\nu_2$.
+For ReLU the same strict inequality follows from the sign-feature
+limit, by bounded convergence and its positive integral. Every
+nonzero nonnegative combination in (8) therefore has
+$\lambda_0>\lambda_1$ as well. Apply Theorem~\ref{thm:main}.
+\end{proof}
+
+For ReLU, parity has a particularly small teacher. With
+$s=\sum_i x_i$,
+\[
+ P(s)=(-1)^d\left[1-(s+d)_+
+                  -2\sum_{j=1}^{d-1}(-1)^j(s+d-2j)_+\right]
+                                                               \tag{10}
+\]
+equals parity on every cube vertex. There are $d$ hinges and one
+constant ReLU neuron, with integer parameters bounded by $O(d)$.
+Thus the exponential mistake count is not explained by a large
+teacher description. The smooth-width companion gives rational
+softplus and integer tanh teachers of width $d+1$, polynomial parameter
+size, and margin greater than $0.9$ for the corresponding dimensions.
+
+\section{A positive-power criterion and deeper ReLU kernels}
+\label{sec:deep}
+The preceding spectral order has a more general elementary explanation.
+It is useful to state the input-bias normalization explicitly: throughout
+this section the kernel argument is $(1+x\cdot y)/(d+1)$.
+An arbitrary bias variance cannot silently be substituted here.
+
+\begin{theorem}[Positive power series]
+\label{thm:powers}
+Let $d\ge2$, $q=d+1$, and
+$F(t)=\sum_{m\ge0}\alpha_m t^m$, where $\alpha_m\ge0$ and
+$\sum_m\alpha_m<\infty$. The cube kernel
+\[
+                    K_F(x,y)=F((1+x\cdot y)/q)                \tag{P1}
+\]
+has nonnegative degree eigenvalues in nonincreasing consecutive order.
+It is positive definite if some $\alpha_m>0$ has $m\ge d$.
+Its final drop is strict if some $\alpha_m>0$ has
+$m\ge d-1$ and $m\equiv d-1\pmod2$.
+If both conditions hold, it makes all $2^d-1$ strict lexicographic
+parity mistakes under exact minimum-norm interpolation.
+\end{theorem}
+\begin{proof}
+Let $v_m(r)$ be the number of length-$m$ coordinate-flip walks on
+$\{0,1\}^q$ from zero to a specified vertex of weight $r$.
+It is zero unless $m\ge r$ and $m\equiv r\pmod2$, and otherwise
+positive. The recurrence is
+\[
+ v_{m+1}(r)=r v_m(r-1)+(q-r)v_m(r+1).
+\]
+For $0\le r\le q-2$, put $D_m(r)=v_m(r)-v_m(r+2)$.
+Subtracting adjacent recurrences gives
+\[
+ D_{m+1}(r)=rD_m(r-1)+(q-r-2)D_m(r+1),                        \tag{P2}
+\]
+where the missing boundary term is multiplied by zero. All coefficients
+are nonnegative. Starting from $D_0(0)=1$ and the other initial values
+zero proves $D_m(r)\ge0$. For $q\ge3$ it also proves
+$D_m(r)>0$ whenever $m\ge r$ and $m\equiv r\pmod2$:
+if $r>0$, use the first term and induction; if $r=0$ and $m>0$,
+use the second term with its positive coefficient $q-2$.
+The initial case $r=m=0$ starts this strict induction.
+
+Expanding $(1+\sum_i x_i)^m$ as coordinate choices, the bias coordinate
+can have either parity. The normalized degree-$p$ eigenvalue of the
+monomial kernel is therefore
+$q^{-m}[v_m(p)+v_m(p+1)]$. Its degree-$p$ minus degree-$(p+1)$
+difference is $q^{-m}D_m(p)\ge0$.
+For $m\ge d$, the last eigenvalue is positive: one of $d,d+1$ has
+the required parity and is at most $m$. The stated strict final-drop
+condition follows from the strict part of (P2) with $r=d-1=q-2$.
+The power series is absolutely summable at every cube kernel argument,
+so the finite Walsh transform commutes with its sum. Summing the
+nonnegative eigenvalues and differences proves the theorem.
+\end{proof}
+
+For a Gaussian random feature, the second-moment kernel has precisely
+such a nonnegative series: expand its square-integrable activation in
+orthonormal Hermite polynomials, with coefficients $b_m$. For two
+standard Gaussians of correlation $t$, orthogonality gives covariance
+$\sum_m b_m^2t^m$. Parseval makes the coefficients summable. This is
+the usual neural-kernel spectral construction \cite{yang}; the theorem
+also applies directly to kernels specified by their power series.
+
+Here is an explicit deeper example. Define
+\[
+ \kappa(t)=\frac{\sqrt{1-t^2}+t(\pi-\arccos t)}\pi,\qquad
+ S_0(t)=t,\quad S_{l+1}(t)=\kappa(S_l(t)),                     \tag{P3}
+\]
+and
+\[
+ T_0(t)=t,\qquad
+ T_{l+1}(t)=S_{l+1}(t)+T_l(t)\kappa'(S_l(t)).                 \tag{P4}
+\]
+These are the variance-normalized ReLU Gaussian-process and tangent
+recursions, with the input covariance in (P1) and no added hidden-layer
+bias. We use them as fixed kernels, as in the spectral framework of
+\cite{yang}.
+
+\begin{theorem}[Every fixed ReLU kernel depth at least two]
+For every $d\ge2$ and integer $l\ge2$, both
+$S_l((1+x\cdot y)/(d+1))$ and
+$T_l((1+x\cdot y)/(d+1))$ are positive definite and make all
+$2^d-1$ lexicographic parity predictions strictly wrong under exact
+minimum-norm interpolation.
+\end{theorem}
+\begin{proof}
+The series of $\kappa$ has positive constant and linear coefficients,
+positive coefficients at every positive even degree, and zero coefficients
+at odd degrees above one. This follows from
+$\kappa(0)=1/\pi$, $\kappa'(0)=1/2$, and
+$\kappa''(t)=1/(\pi\sqrt{1-t^2})$.
+The composition $S_2$ has a positive coefficient at every degree:
+the outer linear term preserves the inner even coefficients, while
+for odd $m\ge3$ the outer quadratic term includes the positive product
+of the inner degree-one and degree-$(m-1)$ coefficients. Constant and
+linear terms are positive as well. The outer positive linear term then
+preserves all this positivity at every greater depth.
+The derivative $\kappa'$ also has nonnegative series coefficients.
+Consequently (P4) has nonnegative coefficients, and its $S_l$ summand
+makes every coefficient positive for $l\ge2$.
+All sums converge absolutely on $[-1,1]$: $S_l(1)=1$,
+$\kappa'(1)=1$, and $T_l(1)=l+1$. Apply
+Theorem~\ref{thm:powers}.
+\end{proof}
+This is a statement about these fixed deep kernels. The shallow finite-bank
+width bound below is not asserted for finite deep networks, and no
+conclusion about evolving hidden features or an arbitrary initial output
+is inferred. Consecutive degree ordering also does not prove monotonicity
+of normalized spectral tails as activation temperature changes with depth.
+
+\section{Finite random features and non-Bayesian fitting}
+Draw independent incoming vectors $U_1,\ldots,U_N$ once and keep them
+fixed. Define
+\[
+ \Phi_N(x)=N^{-1/2}(\phi(U_j\cdot\bar x))_{j=1}^N,
+                  \qquad K_N(x,y)=\Phi_N(x)\cdot\Phi_N(y).
+\]
+At each stage fit the observed exact outputs with the minimum Euclidean
+norm readout, predicting
+$K_{N,:,H}K_{N,H,H}^{-1}\chi_H$ whenever the Gram matrix is nonsingular.
+
+\begin{theorem}[Finite random-feature mistakes]
+Fix any dimension and activation covered by Theorem~\ref{thm:activations}.
+Along one infinite iid incoming-feature sequence, almost surely there
+is a finite random $N_0$ such that every $N\ge N_0$ has positive definite
+full-cube Gram matrix and makes all $2^d-1$ designated lexicographic
+wrong-sign predictions. Consequently the probability of this event
+tends to one as $N\to\infty$.
+\end{theorem}
+\begin{proof}
+All pairwise feature products have finite expectation. The strong law,
+applied to the finitely many input pairs, gives $K_N\to K$ entrywise
+and in operator norm almost surely. Positive definiteness is an open
+condition, and every prefix inverse and next prediction is continuous
+at $K$. There are finitely many prefixes, all with strictly negative
+limiting signed prediction. Their signs are therefore eventually
+simultaneously negative. This proves the pathwise assertion and hence
+the probability limit.
+\end{proof}
+A positive definite full-cube readout Gram matrix requires $N\ge2^d$,
+so exponential feature width is part of this example. The next theorem
+shows that an exponential width also suffices. Neither statement describes
+hidden-feature learning.
+
+\begin{theorem}[A sufficient finite exponential width]
+\label{thm:width}
+For each fixed activation and temperature in Theorem~\ref{thm:activations}, there is a constant $C_\phi$ such that, for every covered
+$d$ and $0<\zeta<1/2$,
+\[
+                  N\ge\exp(C_\phi d)\log(2/\zeta)             \tag{Q2}
+\]
+makes the finite random-feature Gram matrix positive definite and all
+$2^d-1$ designated interpolation signs wrong with probability at least
+$1-\zeta$. The same bound applies to the finite Jacobian construction
+below for ReLU or fixed-temperature softplus, uniformly in nonnegative
+layer weights normalized by $c_0+c_1=1$, in odd dimension $d\ge3$.
+\end{theorem}
+\begin{proof}
+Write $q=d+1$. In the positive integral for the highest nonlinear level,
+restrict both variables to $[1,1+1/q]$. Its area is $q^{-2}$; its
+Gaussian factor is at least $e^{-q-3}$; $\sinh(ts)>1$; the denominators
+are bounded above by absolute constants. For each fixed temperature
+the logistic Fourier multipliers have a strictly positive uniform lower
+bound on this interval. The difference between the previous and last
+level has an additional factor $\coth(ts)^2-1$, bounded below by a
+positive absolute constant there. Consequently, for both softplus/ReLU
+in odd dimension and tanh in even dimension,
+\[
+ \lambda_d\ge c_\phi e^{-q}q^{-2},\qquad
+ \lambda_{d-1}-\lambda_d\ge c_\phi e^{-q}q^{-2}.               \tag{Q3}
+\]
+These are normalized counting-measure eigenvalues. For tangent kernels,
+use (9) and $F_j=c_0H_j+c_1uH_j'$ on the same rectangle.
+There $u\ge1$, $2j-2\ge2$ at the final comparison, and $c_0+c_1=1$,
+so the same lower bounds hold uniformly in the layer weights.
+The exceptional one-dimensional random-feature case has fixed positive
+eigenvalues and a fixed positive gap and is absorbed into the constants.
+
+The kernel diagonal is at most $C_\phi q$, by Gaussian second moments
+and bounded activation derivatives. Hence the full matrix eigenvalues
+lie between $a_d\ge e^{-C_\phi d}$ and $b_d\le e^{C_\phi d}$.
+The initial reversed-spectrum ratio $r$ in (Q1) is at least
+$e^{-C_\phi d}$. After increasing the constant, (Q1) gives a uniform
+signed next prediction at most $-\delta_d$, with
+$\delta_d\ge e^{-C_\phi d}$.
+
+For a perturbation $E$ of the full Gram matrix with
+$\|E\|_{\rm op}\le a_d/2$, every prefix inverse has norm at most
+$2/a_d$. The inverse-difference identity and Cauchy--Schwarz bound each
+next-prediction change by
+\[
+          4\|E\|_{\rm op} b_d\sqrt M/a_d^2.                  \tag{Q4}
+\]
+Here the observed target vector has norm at most $\sqrt M$, and the
+kernel row restricted to the history has norm at most $b_d$.
+Thus an operator perturbation at most
+$\min\{a_d/2,\delta_da_d^2/(8b_d\sqrt M)\}$ preserves all strict signs;
+this allowed tolerance is at least $e^{-C_\phi d}$.
+
+Each centered random-feature kernel summand has moments at most
+$k!(C_\phi q)^k$ for integers $k\ge2$. For ReLU and softplus this
+follows from $|\phi(s)\phi(t)|\le C_\phi(1+s^2+t^2)$ and Gaussian
+square moments; tanh is bounded. A tangent summand adds at most
+$q a_j^2$ in absolute value, since its derivative is bounded by one,
+and has the same moment bound. The elementary exponential-moment
+argument and an entrywise union bound therefore give
+\[
+ \Pp\{\|K_N-K\|_{\rm op}>\varepsilon\}
+ \le2M^2\exp\{-c_\phi N\varepsilon^2/(M^2q^2)\}
+                                                               \tag{Q5}
+\]
+for $0<\varepsilon\le1$. Insert the preceding tolerance, decrease it
+if necessary to be at most one, and absorb powers of $q$ and $M=2^d$
+into the exponential constant. This proves (Q2). The common scale of
+$c_0,c_1$ does not affect interpolation; normalizing their sum is harmless.
+\end{proof}
+
+For fixed features, squared-loss gradient flow on all accumulated exact
+outputs, initialized at zero and run to interpolation after every new
+label, gives the same predictions. Indeed its final readout lies in
+the span of the observed feature rows; within that span the interpolation
+solution is unique and is the minimum-norm one. Warm-starting each round
+at the previous interpolant gives the same result, since that readout
+already lies in the larger current row span.
+
+The tangent-kernel statement has a corresponding finite-Jacobian
+version. At iid Gaussian initialization, freeze the feature blocks
+\[
+ \Psi_j(x)=\big(\sqrt{c_0}\phi(U_j\cdot\bar x),\,
+       \sqrt{c_1}a_j\phi'(U_j\cdot\bar x)\bar x\big),
+       \qquad a_j\sim N(0,1)
+\]
+with independent incoming and readout parameters. Their empirical
+Gram matrix $N^{-1}\sum_j\Psi_j(x)\cdot\Psi_j(y)$ converges to
+(8) by the same strong-law argument. Thus, at each fixed covered
+dimension, almost surely all sufficiently wide frozen Jacobian banks
+have all the strict wrong signs when fitting exact outputs by minimum
+parameter-displacement norm. This is the zero-output linearized model
+$N^{-1/2}\sum_j v_j\cdot\Psi_j(x)$, initialized at $v=0$.
+Fixed-feature gradient flow run to interpolation gives that solution.
+Its full-cube Gram rank requires $N(d+2)\ge2^d$, so this extension
+also uses exponentially many scalar tangent features. An uncentered
+random initial output or evolving nonlinear features is not part of this
+assertion.
+
+Equivalently, a centered isotropic Gaussian prior on these readouts,
+conditioned on the exact observed outputs with incoming features fixed,
+has this posterior mean. Its next conditional output is Gaussian, so
+strictly negative signed mean also means wrong posterior-label majority.
+Sending the readout prior variance to zero leaves that mean unchanged
+and makes the conditional variance vanish; at fixed successful feature
+bank, all designated fresh-sampling errors then become simultaneously
+confident. This is a last-layer Bayesian statement. It is not a full
+parameter posterior in which the incoming features are updated.
+
+\section{The unresolved positive-margin bridge}
+The proof does not establish the analogous claim under inequality
+observations $\chi(x)f(x)>a$. Under those observations, the Gaussian
+posterior is truncated and the minimum-energy observed values need not
+all equal $a$. Substituting equality values without proving activity
+of the margin constraints would be a gap.
+
+A useful precise conjecture is that, for every increasing positive radial
+spectrum $\mu_0\le\cdots\le\mu_d$ and every nonempty prefix $H$,
+\[
+                        C_d(\mu)_{H,H}^{-1}\one_H>0
+                          \quad\text{entrywise}.             \tag{11}
+\]
+If true, it would make all observed margins active and transfer the
+lexicographic interpolation signs to constrained Gaussian modes.
+Together with cold truncated-Gaussian concentration, it would give a
+short-calibration width-first ReLU margin theorem. The positive-precision
+argument in the smooth-width companion proves a different mean-selected
+margin result; it does not prove (11). Numerical tests of (11) are
+exploratory, not a proof, and it is not a theorem of this note.
+
+The following infinite families of prefixes do satisfy the conjecture.
+They leave the general binary-prefix case open.
+\begin{theorem}[Dyadic and two-block margin activity]
+Let $C_d(\mu)$ have positive nondecreasing degree eigenvalues.
+Then (11) holds whenever the prefix size is $2^s$, $2^s-2^t$,
+or $2^s+2^t$, provided the size lies between $1$ and $2^d$ and
+$0\le t<s$. The first two families require only positivity of the
+spectrum, without degree order.
+\end{theorem}
+\begin{proof}
+Restricting to an initial subcube replaces the spectrum by repeated
+adjacent arithmetic means. This preserves positivity and degree order.
+If the prefix is a union of complete subcubes in the last $t$ coordinates,
+its unique multiplier vector is invariant under translations in those
+coordinates. The problem therefore reduces to the quotient cube, with
+the zero-frequency block in those coordinates. Its spectrum is the
+initial segment of the restricted spectrum, so it retains the hypotheses.
+It suffices to treat a full cube, a cube missing one vertex, and a full
+half-cube followed by one vertex.
+
+The full-cube multipliers are $\one/\mu_0$.
+For a cube missing vertex $j$, write $Q=C^{-1}$. Block elimination and
+$Q\one=\one/\mu_0$ give the observed multipliers
+\[
+             \lambda_i=\frac{Q_{jj}-Q_{ij}}{\mu_0Q_{jj}}>0.
+                                                               \tag{P5}
+\]
+Indeed $Q_{jj}-Q_{ij}$ is the sum of the positive reciprocal Walsh
+eigenvalues whose characters differ at $i,j$, multiplied by $2/2^d$.
+At least one such character exists when $i\ne j$.
+
+For the remaining case let $n\ge2$ be the cube dimension and
+$B=2^{n-1}$ its half size. Use the block matrices and spectra from (4),
+writing $R$ for the cross regression. The additional vertex can be
+taken at zero in the second half. Put $s_* = S_{00}$ and
+$z=(1-r_0)/s_*>0$. Block elimination gives its multiplier $z$ and
+the first-half multipliers
+\[
+             \lambda_i=\frac1{a_0}-zR_{i0}
+                     =\frac1{a_0}\left(1-
+                                      \frac{\mu_1R_{i0}}{s_*}\right),
+                                                               \tag{P6}
+\]
+since $a_0(1-r_0)=\mu_1$.
+Every eigenvalue $r_p$ of $R$ lies in $(-1,0]$.
+Thus $R_{00}\le0$, while for $i\ne0$ the balanced Walsh signs give
+$R_{i0}<1/2$. Also $s_p\ge\mu_p\ge\mu_1$ for $p\ge1$, and
+$s_0>0$, so
+\[
+                    s_* > (1-B^{-1})\mu_1\ge\mu_1/2.
+\]
+Equation (P6) is strictly positive for every $i$.
+This proves the last family and the theorem.
+\end{proof}
+
+The prefix qualification cannot be dropped. In dimension three, take
+$\mu=(1,2,16,17)$ and the non-prefix set $H=\{0,1,3,6\}$ in binary
+integer notation. Then
+\[
+ C_{H,H}=\begin{pmatrix}
+ 9&-15/4&0&0\\-15/4&9&-15/4&13/4\\
+ 0&-15/4&9&0\\0&13/4&0&9
+ \end{pmatrix},\qquad
+ C_{H,H}^{-1}\one=\frac1{6093}(1472,1908,1472,-12)^T.
+\]
+The last multiplier is negative. For unit lower margins the actual
+constrained minimum has values $(1,1,1,143/141)$ on $H$: its dual
+multipliers are $(34,44,34,0)/141$, which are nonnegative, and direct
+multiplication by $C_{H,H}$ verifies both feasibility and complementary
+slackness. Thus even a strictly increasing positive degree spectrum does
+not make all margin constraints active for an arbitrary observed set.
+This exact counterexample concerns the broader assertion, not the
+lexicographic conjecture (11).
+
+The finite checker compares the recursion with exact rational matrix
+solves and separately evaluates the activation examples at high precision.
+These checks do not replace the all-dimensional proof or establish
+independent review. The matrix recursion and neural limit have not been
+fully Lean formalized.
+
+\begin{thebibliography}{9}
+\bibitem{khardon} R. Khardon, D. Roth, and R. A. Servedio,
+\emph{Efficiency versus Convergence of Boolean Kernels for On-Line
+Learning Algorithms}, JAIR 24 (2005), 341--356.
+\url{https://arxiv.org/abs/1109.2141}.
+\bibitem{bengio} Y. Bengio, O. Delalleau, and N. Le Roux,
+\emph{The Curse of Highly Variable Functions for Local Kernel Machines},
+NeurIPS 2005.
+\url{https://proceedings.neurips.cc/paper_files/paper/2005/file/663772ea088360f95bac3dc7ffb841be-Paper.pdf}.
+\bibitem{hsu} D. Hsu, \emph{Dimension lower bounds for linear approaches
+to function approximation}, research note.
+\url{https://www.cs.columbia.edu/~djhsu/papers/dimension-argument.pdf}.
+\bibitem{yang} G. Yang and H. Salman, \emph{A Fine-Grained Spectral
+Perspective on Neural Networks}, 2019; revised 2020.
+\url{https://arxiv.org/abs/1907.10599}.
+\bibitem{cho} Y. Cho and L. K. Saul, \emph{Kernel methods for deep learning},
+NeurIPS 2009.
+\url{https://papers.nips.cc/paper_files/paper/2009/file/5751ec3e9a4feab575962e78e006250d-Paper.pdf}.
+\bibitem{smoothing} ChatGPT-6 Astra, \emph{A logarithmic separation between
+local smoothing and rare neural features}, independent research draft,
+21 November 2026, this collection.
+\bibitem{smooth} ChatGPT-6 Astra, \emph{Exponential online mistakes from
+widening Gaussian softplus and tanh learners}, independent research draft,
+21 November 2026, this collection.
+\end{thebibliography}
+\end{document}

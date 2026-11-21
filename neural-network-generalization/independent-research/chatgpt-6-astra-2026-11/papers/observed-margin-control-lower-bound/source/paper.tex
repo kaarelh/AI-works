@@ -1,0 +1,1070 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newcommand{\R}{\mathbb R}\newcommand{\F}{\mathbb F}\newcommand{\E}{\mathbb E}
+\newcommand{\one}{\mathbf1}\newcommand{\relu}{\operatorname{ReLU}}
+\title{Superpolynomial strong-prior ReLU mistakes\protect\\with margins only on observed inputs}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author. The rail atom theorem, path-cost construction, and conditional Fourier argument used below are credited to the preceding jointly authored paper.}}
+\date{21 November 2026; working proof draft}
+\hypersetup{hidelinks,pdftitle={Superpolynomial strong-prior ReLU mistakes with margins only on observed inputs},pdfauthor={ChatGPT-6 Astra}}
+\emergencystretch=3em
+\begin{document}\maketitle
+\begin{abstract}
+We construct a Boolean target of polynomial one-hidden-layer ReLU
+complexity and a fixed order of distinct Boolean inputs on which an
+isotropic Gaussian ReLU learner makes superpolynomially many confident
+mistakes in the strong-prior limit. Training conditions only on positive
+margins at observed inputs; there is no initial restriction on unobserved
+outputs. For a parameter $k$, the physical input dimension is $O(k)$,
+the target has a Boolean circuit of size $O(k)$ and a shallow ReLU teacher
+of width $O(k^2)$ with polynomially bounded coefficients, and
+$2^{k-1}$ designated predictions are wrong with posterior probability
+tending to one. The result holds at every sufficiently large fixed
+learner width. The calibration prefix and sufficient learner width are
+large. We also obtain a separate fixed-positive-temperature width-first
+ReLU consequence and a standard-softplus strong-prior extension. The proof adds a control rail to the existing unequal-rail parity
+construction. An explicit dual certificate has the correct sign on
+observed examples and vanishes on all unobserved examples. A conditional
+Fourier argument excludes every off-code competitor and identifies a
+unique wrong minimum-energy completion. This replaces the earlier
+full-cube absolute-margin hypothesis. The proof is conventional and has
+not received independent mathematical review.
+\end{abstract}
+
+\section{The learner and the quantitative conclusion}
+On $X=\{-1,1\}^d$, let $\bar x=(1,x)$ and
+\[
+ F_\theta(x)=\sum_{j=1}^N a_j\relu(U_j\cdot\bar x),\qquad
+ \relu(t)=\max(t,0).
+\]
+Independently, the coordinates of $U_j$ have law
+$N(0,\alpha\sigma^2)$ and the readouts have law
+$N(0,\beta\sigma^2)$, where $\alpha,\beta>0$. At each fixed $d,N$
+these constants may depend on $d,N$ but not on $\sigma$.
+After a history $H$ of labeled inputs, condition the Gaussian prior on
+\[
+                   f(x)F_\theta(x)>1/2\qquad(x\in H).       \tag{1}
+\]
+There are no other output constraints. The strong-prior limit is
+$\sigma\downarrow0$ at fixed $d,N$.
+
+\begin{theorem}[Observed-margin-only mistakes]\label{thm:main}
+For every integer $k\ge2$, put
+\[
+ m=6k+4,\quad \ell=8k+4,\quad R=64,\quad
+ d=\ell(2R+4)+2R+2=1056k+658,
+\]
+\[
+ n_{\max}=544k+338,\quad N_0=2^{m+n_{\max}}=2^{550k+342},
+ \qquad C_k=3(m+2)(d+1),\quad T_k=2^{k-1}.
+\]
+There is a Boolean function $f_k:X\to\{-1,1\}$ and a fixed permutation
+of $X$ with $T_k$ designated rounds such that, for every finite
+$N\ge N_0$, the correct-label posterior probability at every designated
+round tends to zero under (1).
+
+The target has a bounded-fan-in Boolean circuit of size $O(d)$ and a
+one-hidden-layer ReLU teacher of width at most $C_k$, output margin one,
+and coefficients bounded in absolute value by $C_k$. Thus the number
+of designated errors is exponential in the input dimension and in the
+displayed circuit-size bound, and is
+$\exp(\Omega(\sqrt{C_k}))$ in the displayed teacher width.
+
+For every $\eta>0$, at all sufficiently small positive $\sigma$,
+posterior-label majority and the sign of the posterior mean score are
+wrong at all designated rounds, and fresh
+posterior sampling makes a mistake at all of them with probability at
+least $1-\eta$. The same input order works for every eligible learner
+width and every pair of positive layer-variance constants.
+\end{theorem}
+
+The sequence is deliberately unrepresentative. The theorem is not an
+iid lower bound. The calibration prefix is exponential in dimension,
+and $N_0$ is a very large sufficient width. The result is not asserted
+at every width just above the teacher width.
+
+\section{The inherited rail and path ingredients}
+We use results from the preceding jointly authored paper \cite{shared}.
+Their hypotheses and the parts needed here are stated explicitly.
+The new argument starts with the observed-label control dual in
+Section~\ref{sec:control}; the atom and path constructions are not new here.
+
+For positive even $n$ define
+\[
+ \kappa_n=\frac{\binom{n-2}{(n-2)/2}}{2^{n-1}},\qquad
+ a(n)=\frac{\sqrt n}{\kappa_n}.
+\]
+Partition the physical coordinates into disjoint rail pairs
+$(B_j^0,B_j^1)$, each rail having even size in $[R,R+\Delta]$, with
+$R\ge6\Delta$. A full transversal selects one whole rail from every
+pair. If $A_t$ is such a transversal, the exact rail atom inequality is
+\[
+ \sum_t a(|A_t|)|\widehat{\relu(U\cdot\bar x)}(A_t)|
+                                                    \le\|U\|_2. \tag{2}
+\]
+Equality for a nonzero atom holds precisely on the balanced,
+zero-bias rays supported on one full transversal: all nonzero incoming
+coordinates have equal absolute value. Such an atom has Fourier support
+only on subsets of its transversal. Therefore the ReLU variation norm
+\[
+ V(F)=\inf\left\{\sum_j|c_j|\|u_j\|_2:
+                    F=\sum_jc_j\relu(u_j\cdot\bar x)\right\}
+\]
+satisfies
+\[
+ V\left(\sum_t c_t\chi_{A_t}\right)
+                          =\sum_t a(|A_t|)|c_t|.          \tag{3}
+\]
+Signed coordinate-flip averaging on its active coordinates attains
+the cost of each parity with at most $2^{|A_t|}$ balanced rays.
+The elementary bounds
+\[
+ n\le a(n)\le3n,\qquad a(n+2)-a(n)\ge2                  \tag{4}
+\]
+follow from the central-binomial formula; for the second use
+$a(n+2)/a(n)=\sqrt{n(n+2)}/(n-1)\ge(n+2)/n$.
+
+In $G=\F_2^m$, take $P=4k+3$ prefix coordinates and a path on
+$2k+1$ further coordinates. There is one singleton column $a_j$ for
+every coordinate and one column for each adjacent path pair, giving
+$\ell=8k+4$ old columns. Every singleton has increment four.
+Successive edges have increments $6,2,6,2,\ldots,6,2$.
+Every short rail has size $R$ and its long rail has size $R+\delta_j$.
+
+Add one new rail pair of sizes $R$ and $R+2$, with independent syndrome
+sign $\tau$. For the old pairs put
+$(-1)^{\xi_j}=\chi_{B_j^0\cup B_j^1}(x)$ and
+$z=\sum_j a_j\xi_j\in G$. Let $b(x)$ be the parity of all short rails,
+including the new one. The retained full-transversal characters are
+\[
+ b(x)\chi_s(z),\qquad b(x)\tau\chi_s(z),\qquad s\in G,
+ \quad \chi_s(z)=(-1)^{s\cdot z}.
+\]
+Their sizes and weights are
+\[
+ n_s=n_0+\sum_j\delta_j(a_j\cdot s),\quad n_0=(\ell+1)R,
+ \qquad w_s=a(n_s),\quad w'_s=a(n_s+2),\quad w_c=w'_0.     \tag{5}
+\]
+All rails satisfy (2) with $\Delta=6$. The variables $z,\tau,b$ are
+independent uniform syndromes: the old singleton columns span $G$,
+and the two nonempty rail parities within each pair are independent.
+
+Write $M=2^m$ and
+$\widehat w(u)=M^{-1}\sum_s\chi_s(u)w_s$.
+The path construction supplies $U=v_0+H\subseteq G$ with
+\[
+ |U|=K=2^{k-1},\quad 0\notin U,\quad
+ (U\cup\{0\})\cap((U\cup\{0\})+a_j)=\varnothing
+                          \quad\hbox{for every old column }a_j. \tag{6}
+\]
+Concretely, fix all prefix bits to one, all even-position path bits to
+one, the terminal path bit to zero, and the parity of the other $k$
+odd-position path bits to zero. The $k-1$ free bits give $H$.
+No old column has more than two nonzero entries, so none belongs to
+$U$; the path independence then gives (6). The costs satisfy
+\[
+ \widehat w(u)<0\ (u\ne0),\qquad
+ \widehat w\hbox{ is strictly ordered on }U,\qquad
+ W:=\max_{u\in U}|\widehat w(u)|
+ \le\frac{8\sqrt{2\pi}}{n_0-1}
+                         \left(\frac2{R-1}\right)^P.     \tag{7}
+\]
+The extra short rail only multiplies the old Laplace integrand by
+$e^{-Rt}$, preserving positivity, strict order, and this bound.
+The inherited proof uses
+$a(n)=\sqrt{2\pi}(n-3/4)-\int_0^\infty e^{-nt}\rho(t)dt$,
+where $0<\rho(t)\le8\sqrt{2\pi}e^t$. The path's triangular transfer
+matrices give a signed-digit expansion with ratio in $(0,1/3)$ at
+every $t>0$. Integration preserves the strict order; it is not inferred
+from numerical cancellation. The order can be specified without real
+comparisons. If $\eta_1,\ldots,\eta_k$ are the free odd-position bits
+with their prescribed total parity, put
+$\epsilon_i=(-1)^{\eta_i+1}$ and
+$d_j=\prod_{i=k-j+1}^k\epsilon_i$ for $1\le j<k$.
+Increasing cost is lexicographic order of $(d_1,\ldots,d_{k-1})$
+with $+1$ before $-1$, because the cost is the negative integral of
+the path's positive-factor signed-digit expansion.
+
+We also use the conditional Fourier observation from \cite{shared}.
+Let $\mathcal D$ be the downward span of retained transversals and
+$\mathcal C=b\{g(z,\tau)\}$ their complete code span.
+For $A\in\mathcal D\cap\mathcal C^\perp$, assign each physical character
+to its first defective rail pair, where its support is neither of the
+two complete rails. Write $A=\sum_j A_j$, with old pairs before the new
+pair. Conditional on $(z,\tau)$ the pieces are orthogonal, and
+\[
+ \ell_j(z,\tau):=\E[A_j^2\mid z,\tau]
+ \quad\hbox{is invariant under translation by that pair's column}. \tag{8}
+\]
+For an old pair this sends $(z,\tau)$ to $(z+a_j,\tau)$; for the new
+pair it flips $\tau$. Indeed two physical characters have nonzero
+conditional covariance only if their symmetric difference is a union
+of full rail pairs representing a code frequency. At a defective pair,
+complementation inside the whole pair cannot remain a subset of one
+rail. Their restrictions must agree there. This proves first-defect
+orthogonality and the translation invariance.
+
+\section{A target and calibration using ordinary labels}
+Define
+\[
+ t(z,\tau)=
+ \begin{cases}+1&\tau=+1\text{ or }z=0,\\
+              -1&\tau=-1\text{ and }z\ne0,\end{cases}
+ \qquad f(x)=b(x)t(z(x),\tau(x)).                         \tag{9}
+\]
+First reveal every input with $\tau=+1$, and every input with
+$\tau=-1$ and $z\notin U$. Then reveal whole minus fibers of $U$ in
+increasing order of $\widehat w(u)$. At a designated stage let
+$L\subseteq U$ be the nonempty remaining suffix and $v$ its unique
+cheapest element. Consider
+\[
+ F_v(x)=b(x)[g_v(z(x))+\tau(x)/2],\qquad
+                         g_v=\one_{\{0\}}+\one_{\{v\}}.   \tag{10}
+\]
+It has correct margin at least $1/2$ on every observed input.
+On the unobserved fiber $(v,-1)$ it is $b/2$, while the target is $-b$.
+Its exact variation cost is
+\[
+                   C_v=\widehat w(0)+\widehat w(v)+w_c/2, \tag{11}
+\]
+because $\widehat g_v(s)=(1+\chi_s(v))/M\ge0$ and (3) applies.
+
+\section{An observed-label dual certificate}\label{sec:control}
+Let
+\[
+ E=H^\perp\setminus(H+\operatorname{span}(v_0))^\perp.
+\]
+Then $E$ is nonempty, $0\notin E$, $|E|=M/(2K)$, and every character
+in $E$ equals $-1$ on $U$. Put
+\[
+ c_E=-M\widehat w(v)>0,\quad p_E=c_E/|E|,\qquad
+                         \widehat q(s)=w_s-p_E\one_E(s).
+\]
+Fourier inversion gives
+\[
+ q(z)=M\widehat w(z)-c_E\one_H(z)+c_E\one_U(z).           \tag{12}
+\]
+Thus $q(0)>0$, $q<0$ outside $U\cup\{0\}$, and
+\[
+                  q(u)=M[\widehat w(u)-\widehat w(v)]
+                                     \quad(u\in U).     \tag{13}
+\]
+In particular $q(v)=0$, $q>0$ on $L\setminus\{v\}$, and $q<0$
+on the removed prefix. With $\delta=(K+1)/M$, define
+\[
+ \gamma=\frac{w_c+w_0-2\E_z[q(z)\one_L(z)]}{1-\delta},
+\]
+\[
+ h(z)=-q(z)+2q(z)\one_L(z)
+                  +\gamma[1-\one_{\{0\}}(z)-\one_U(z)]. \tag{14}
+\]
+Expectations here are uniform on $G$.
+
+\begin{lemma}[Admissible dual coefficients]\label{lem:coefficients}
+For every $k\ge2$, $\gamma>0$, $0<p_E<2\min_s w_s$, and
+\[
+ \widehat h(0)=w_c,\qquad |\widehat h(s)|<w'_s\quad(s\ne0). \tag{15}
+\]
+Also $|\widehat q(s)|\le w_s$, with equality precisely when $s\notin E$.
+\end{lemma}
+\begin{proof}
+By (7), $0\le\E(q\one_L)\le KW$ and $p_E\le2KW$.
+Since $\sqrt{2\pi}<3$ and $2/63<1/16$, the loose bound
+\[
+                     2KW<24\,2^k16^{-(4k+3)}<1/8        \tag{16}
+\]
+holds for $k\ge2$. Thus $\gamma>0$ and
+$\gamma\le(w_c+w_0)/(1-\delta)\le6(n_0+2)/(1-\delta)$.
+Since $\delta\le3\,2^{-5k-6}<1/2$,
+\[
+             \gamma\delta\le36(512k+322)2^{-5k-6}<3/4.  \tag{17}
+\]
+At $k=2$ the last expression is $48456/65536<3/4$; it decreases
+thereafter because its numerator grows by less than two while its
+denominator grows by 32. Equations (4) and (16) prove the assertions
+for $q$. Averaging (14) gives $\widehat h(0)=w_c$.
+For $s\ne0$, use $|\widehat{\one_U}(s)|\le K/M$ to obtain
+\[
+ |\widehat h(s)|\le|\widehat q(s)|+2KW+\gamma\delta
+                                      <w_s+1<w'_s.
+\]
+Finally $q(0)=M[\widehat w(0)+\widehat w(v)]>0$ since
+$\widehat w(0)\ge n_0$ and $W<1$.
+\end{proof}
+
+Define the physical dual
+\[
+                    \Lambda(x)=b(x)[q(z(x))+\tau(x)h(z(x))]. \tag{18}
+\]
+Its coefficients are $\widehat q(s)$ on main transversals,
+$\widehat h(s)$ on mixed transversals, and zero on all other full
+transversals. Lemma~\ref{lem:coefficients} and (2) give
+\[
+                            |\E_x\Lambda F|\le V(F).     \tag{19}
+\]
+This is a dual for the unrestricted physical ReLU network.
+
+\begin{lemma}[Support, signs, and complementarity]\label{lem:signs}
+The dual vanishes on every unobserved input and has the target sign on
+every observed input where it is nonzero. Also $F_v=f/2$ wherever
+$\Lambda\ne0$, and $\E\Lambda F_v=V(F_v)=C_v$.
+\end{lemma}
+\begin{proof}
+The logical values are
+\[
+\begin{array}{c|cc}
+ z&q+h&q-h\\\hline
+ z\notin U\cup\{0\}&\gamma>0&2q-\gamma<0\\
+ 0&0&2q(0)>0\\
+ u\in L&2q(u)\ge0&0\\
+ u\in U\setminus L&0&2q(u)<0 .
+\end{array}                                                   \tag{20}
+\]
+These signs agree with (9). Only the minus faces of $L$ are unobserved;
+at $v$ both entries vanish. Formula (10) gives the exact margins.
+Its main coefficients are nonnegative and vanish on $E$, saturating
+$q$; its control coefficient $1/2$ saturates $\widehat h(0)=w_c$.
+\end{proof}
+
+Thus $C_v$ is the global minimum cost for the closed observed margins.
+We must still exclude another physical minimizer with a different sign
+at the query. This step uses no unobserved margin.
+
+\section{Rigidity against every physical ReLU competitor}
+\begin{proposition}[The unique minimum-cost output]\label{prop:unique}
+Among all finite ReLU representations satisfying the closed observed
+margins, the only output with representation cost at most $C_v$ is $F_v$.
+\end{proposition}
+\begin{proof}
+For such a representation of cost $B$,
+\[
+ B\ge\E\Lambda F\ge\tfrac12\E|\Lambda|
+                              =\E\Lambda F_v=C_v.
+\]
+All inequalities are equalities. Hence $F=f/2$ wherever $\Lambda\ne0$.
+Every nonzero neuron saturates the rail atom and coefficient bounds.
+The strict mixed inequalities exclude all mixed transversals except
+control $(0,1)$; the strict main coefficients exclude $E$; zero dual
+coefficients exclude every omitted full transversal. The equality
+characterization in (2) puts $F$ in the downward span
+$\mathcal D_{\rm ret}$ of
+\[
+ \{\text{main transversals }s\notin E\}
+                         \ \cup\ \{\text{control transversal}\}. \tag{21}
+\]
+The same is true of $F_v$.
+
+Put $D=F-F_v$. Its possible nonzero logical fibers lie in
+\[
+ S=\{(0,+1)\}\cup(L\times\{-1\})
+       \cup((U\setminus L)\times\{+1\})\cup\{(v,+1)\}.    \tag{22}
+\]
+Project onto the full code:
+$P_{\mathcal C}D=b\E[bD\mid z,\tau]$.
+Both the projection and the residual $A=D-P_{\mathcal C}D$ vanish
+outside $S$. The residual has the first-defect decomposition in (8).
+Conditional orthogonality implies that each $\ell_j$ vanishes outside $S$.
+
+For any old pair, $S$ contains at most one endpoint of its column
+translation, by (6). Translation invariance forces $\ell_j=0$
+everywhere. For the tag pair, $\ell_{\rm tag}$ is invariant under
+flipping $\tau$. The only $z$ with both tag faces in $S$ is $v$.
+Therefore $A_{\rm tag}$ is supported on $z=v$.
+
+A character assigned to the tag defect is complete on every old pair.
+Under (21), its old index is $s\notin E$; the control's old index is
+$0\notin E$ too. Fix the physical coordinates of the tag pair.
+Then $A_{\rm tag}$, as a function of the old coordinates, is $b_{\rm old}$
+times a function of $z$ whose Walsh support excludes $E$.
+This function is supported only at $v$. A nonzero function supported
+at one point has every Walsh coefficient nonzero. Since $E$ is
+nonempty, it must vanish. Thus $A_{\rm tag}=0$ and $F\in\mathcal C$.
+
+No omitted complete transversal is contained in a retained one.
+Consequently (21) restricts the code projection to
+\[
+                   F=b[g(z)+a\tau],\qquad
+                           \widehat g(s)=0\quad(s\in E). \tag{23}
+\]
+At any $z\notin U\cup\{0\}$ both tag faces have active weights:
+$g(z)+a=1/2$ and $g(z)-a=-1/2$. Thus $a=1/2$, and $g=0$ at every
+such $z$. The active minus face at zero gives $g(0)=1$.
+For a remaining $u\ne v$ the active plus face gives $g(u)=0$;
+for a removed $u$ the active minus face does the same.
+Hence $g=\one_{\{0\}}+t\one_{\{v\}}$.
+Any $s\in E$ gives $0=(1-t)/M$, so $t=1$ and $F=F_v$.
+\end{proof}
+
+The control face supplies the missing nonnegativity in the reduced
+completion problem. Strict mixed coefficients exclude interaction
+features in a saturating physical network. The last single-fiber
+argument is necessary because column independence fails at the
+current query's two tag faces.
+
+\section{Widths, Gaussian conditioning, and teacher size}
+Each $F_v$ has exactly $M/2$ nonzero main parity coefficients and one
+control coefficient. Every full transversal has at most
+$n_{\max}=n_0+4\ell+2=544k+338$ coordinates.
+By (3), a minimum-cost representation uses at most
+$(M/2+1)2^{n_{\max}}\le M2^{n_{\max}}=N_0$ neurons.
+Zero-padding covers every $N\ge N_0$. Balancing gives
+\[
+ \frac12\sum_j\left(\frac{a_j^2}{\beta}
+                          +\frac{\|U_j\|^2}{\alpha}\right)
+                   \ge\frac{V(F)}{\sqrt{\alpha\beta}},    \tag{24}
+\]
+with equality for the balanced minimum-cost representation.
+More directly, the left side dominates the cost of its own
+representation divided by $\sqrt{\alpha\beta}$, so Proposition
+\ref{prop:unique} identifies the output of every energy minimizer.
+
+The exponential width is not solely an artifact of this representation
+bound. Every exact minimum-cost network has at least $M/2+1$ nonzero
+neurons. Indeed each nonzero neuron must be a balanced ray on a single
+retained transversal. Its Fourier support contains no other complete
+transversal, whereas $F_v$ has $M/2+1$ distinct nonzero full-transversal
+coefficients. Each requires at least one such neuron. Thus this
+particular minimum-norm mechanism genuinely uses an exponentially
+wider representation than the polynomial-width teacher.
+
+\begin{proposition}[Calibration is also intrinsically large for these completions]
+If an observed-margin history has $F_v$ as its unique minimum-variation-
+cost output, then it contains at least $M/2+1$ distinct observed inputs.
+\end{proposition}
+\begin{proof}
+More generally, whenever a finite minimum-cost representation exists
+for a history of $h$ inputs, some minimum-cost representation has at
+most $h$ nonzero neurons. Normalize each nonzero neuron's incoming
+vector to length one and absorb its readout sign into its atom.
+Its positive coefficient is then its contribution to variation cost.
+If there are more than $h$ such atoms, their restrictions to the
+observed inputs are linearly dependent: there is a nonzero vector $z$
+whose weighted atom sum vanishes on the whole history.
+Both sufficiently small coefficient perturbations $c\pm\epsilon z$
+remain nonnegative and preserve every observed output. Minimum cost
+forces $\sum_jz_j=0$, since otherwise one sign would reduce the cost.
+Increase one perturbation until its first coefficient reaches zero.
+Cost and all observed outputs are unchanged. Repeating gives at most
+$h$ nonzero neurons. If the minimum-cost output is unique, it must still
+be $F_v$. The preceding active-width lower bound then yields
+$h\ge M/2+1$.
+\end{proof}
+Thus neither exponential resource is merely a loose upper bound of
+this proof: its particular unique completions require exponential
+active width and exponentially many earlier observations. This does
+not rule out a different superpolynomial-mistake mechanism with a
+shorter calibration or smaller learner width.
+
+Designate the first input of each successive minus fiber in increasing
+cost order, completing that fiber before proceeding. Calibration and
+these fibers give a permutation of the cube. At each designated query
+the target is $-b$ and the unique minimizing output is $b/2$.
+The closed correct-sign event $f(x)F(x)\ge0$ therefore excludes every
+energy minimizer. Coercivity and continuity give a strictly larger
+energy infimum on that event, unless it is empty.
+Multiplying the readouts of $F_v$ by $1+\epsilon$ makes all observed
+margins strict, at arbitrarily small extra energy. An open parameter
+ball about this witness lower-bounds the posterior denominator.
+Here are the details of the probability comparison. Write $I$ for the
+quadratic energy in (24), let $E_0$ be its constrained minimum, and let
+$E_1>E_0$ be the correct-sign infimum. Choose $a\in(E_0,E_1)$ and a
+strictly feasible open ball $\mathcal B$ with $I<a$.
+Choose $\varepsilon\in(0,1)$ with $(1-\varepsilon)E_1>a$.
+In parameter dimension $D_N=N(d+2)$, the unnormalized numerator is at most
+\[
+ e^{-(1-\varepsilon)E_1/\sigma^2}
+        \int e^{-\varepsilon I/\sigma^2}\,d\theta
+       =c_\varepsilon\sigma^{D_N}
+                          e^{-(1-\varepsilon)E_1/\sigma^2},
+\]
+whereas the denominator is at least
+$\operatorname{vol}(\mathcal B)e^{-a/\sigma^2}$.
+Their ratio tends to zero. This integrates all parameterizations and
+makes no optimizer tie-breaking assumption.
+
+The same argument applies outside any fixed neighborhood of the unique
+minimizing output table. Moreover $|F_\theta(x)|\le C_{d,\alpha,\beta}I(\theta)$.
+Inserting this polynomial energy factor into the Gaussian tail integral
+still gives exponential decay beyond a sufficiently large fixed energy
+level. Compact-output concentration and this tail bound imply
+$\E[F_\theta(x)\mid H]\to F_v(x)$ as well. Hence the posterior mean
+score has the same wrong limiting sign. There are finitely many
+designated rounds at fixed $k,N$; a union bound gives the simultaneous
+sampling and majority assertions.
+
+Finally a shallow teacher score for (9) is
+\[
+ F_{\rm teacher}(x)
+       =b(x)\left[\sum_{i=1}^m\chi_{e_i}(z(x))+m\tau(x)+1\right]. \tag{25}
+\]
+For $\tau=+1$ its bracket is at least one. For $\tau=-1$ it is one
+at $z=0$ and at most minus one elsewhere.
+It is a sum of $m+2$ physical parities. Parity on at most $d$ bits is
+represented by the three-hinge hats on its attainable coordinate sums,
+using at most $3(d+1)$ neurons, incoming weights zero or one, biases
+bounded by $d+1$, and readouts bounded by two.
+The logical coefficients in (25) give width $C_k$ and coefficient
+bound $C_k$. Computing rail parities, bounded-degree old syndromes,
+the control parity, and the final Boolean test uses $O(d)$ Boolean
+gates. This completes Theorem~\ref{thm:main}.
+
+\begin{proposition}[A polynomial mistake bound from a finite teacher prior]
+There is a finite prior on one-hidden-layer integer-weight ReLU networks
+of width $C_k$, independent of the target's particular labels, whose
+observed-margin posterior-label majority makes at most
+\[
+                 C_k(d+2)\log_2(2C_k+1)=O(k^3\log(k+1))
+                                                               \tag{25a}
+\]
+mistakes on every input sequence labeled by $f_k$.
+It may be padded to the same learner width as in Theorem~\ref{thm:main}.
+No polynomial computation-time bound is claimed for this alternative.
+\end{proposition}
+\begin{proof}
+The three-hinge parity hats above use integer incoming weights, biases,
+and readouts. The logical teacher coefficients are integers too.
+Thus the unit-margin teacher belongs to the class of width-$C_k$
+networks with all $C_k(d+2)$ parameters in
+$\{-C_k,\ldots,C_k\}$, padding with zero readouts when necessary.
+Give every such parameter table equal prior mass.
+There are at most $(2C_k+1)^{C_k(d+2)}$ tables.
+The teacher survives every observed margin event (1).
+Whenever posterior-label majority makes a mistake, at least half
+the surviving mass predicts the wrong sign and is removed by the next
+margin observation. Hence after $L$ mistakes the surviving prior mass
+is at most $2^{-L}$ and at least the original teacher mass.
+Taking logarithms proves (25a).
+\end{proof}
+This elementary counting argument isolates the role of the prior:
+the labels have a small integer-weight teacher, while the Gaussian
+minimum-energy rule prefers the much wider low-norm completions.
+It does not identify an efficient way to discover the teacher.
+
+\section{Quantitative stability and the size of the energy gap}
+The preceding rigidity argument has an explicit norm version.
+All norms below use the uniform physical or logical cube, as appropriate.
+Let $O=\{(z,\tau):q(z)+\tau h(z)\ne0\}$ be the active observed fibers.
+
+\begin{lemma}[Quantitative observability of the retained space]
+For every $R_0\in\mathcal D_{\rm ret}$,
+\[
+                  \|R_0\|_2^2\le18K\,\E[\one_O R_0^2]. \tag{Q1}
+\]
+\end{lemma}
+\begin{proof}
+First, a logical function $g$ with Fourier support excluding $E$ obeys
+\[
+             \|g\|_2^2\le\frac M{|E|}
+                              \E[\one_{\{z\ne v\}}g(z)^2]
+                       =2K\,\E[\one_{\{z\ne v\}}g(z)^2]. \tag{Q2}
+\]
+Indeed Cauchy--Schwarz in its Fourier expansion gives
+$|g(v)|^2\le(M-|E|)\|g\|_2^2$; remove the single point's
+$M^{-1}|g(v)|^2$ contribution.
+
+Decompose $R_0=G+A$, where $G=b[g(z)+a\tau]$ is its full code
+projection, and split $A$ by first defective pairs. These components
+are orthogonal even after restriction to the logical set $O$.
+For an old defect, column invariance and (6) give
+$\|A_j\|_2^2\le2\E[\one_O A_j^2]$.
+For the tag defect, apply (Q2) after fixing the physical tag variables:
+its old Fourier support excludes $E$. Tag invariance and the fact that
+every $z\ne v$ has at least one face in $O$ then give
+\[
+ \|A_{\rm tag}\|_2^2
+       \le2K\,\E[\one_{\{z\ne v\}}A_{\rm tag}^2]
+       \le4K\,\E[\one_O A_{\rm tag}^2].
+\]
+
+For the code component, both faces are in $O$ outside $U\cup\{0\}$.
+Thus $(1-\delta)a^2\le\E[\one_O G^2]$, and $a^2\le2\E[\one_O G^2]$.
+Choose one observed active face $\tau_z$ at each $z\ne v$.
+Using $g(z)^2\le2[g(z)+a\tau_z]^2+2a^2$ and the normalization
+$1/(2M)$ on the two-face cube gives
+\[
+ \E[\one_{\{z\ne v\}}g^2]\le4\E[\one_O G^2]+2a^2
+                                      \le8\E[\one_O G^2].
+\]
+Equation (Q2) yields
+$\|G\|_2^2=\|g\|_2^2+a^2\le18K\,\E[\one_O G^2]$.
+Sum the conditionally orthogonal components to prove (Q1).
+\end{proof}
+
+For the fixed stage let $\vartheta<1$ be the largest absolute
+dual-coefficient/weight ratio among excluded full transversals.
+Let $K_{\rm ret}$ be a retained-ray stability constant from
+\cite{shared}; one may take
+\[
+                    K_{\rm ret}=2^{16}(\ell+1)^2R^4.    \tag{Q3}
+\]
+The full ray stability estimate restricts to any subset by charging
+a closest omitted ray's coefficient to the omitted Fourier mass.
+All full-transversal weights are at most $6(\ell+1)R$, so the same
+elementary restriction bound in \cite{shared} gives (Q3).
+
+For a finite ReLU representation of cost $B$, its dual deficit
+$D=B-\langle\Lambda,F\rangle$ controls the off-space error:
+\[
+       \|F-P_{\mathcal D_{\rm ret}}F\|_2^2
+               \le\frac{K_{\rm ret}}{1-\vartheta}\,BD.   \tag{Q4}
+\]
+To check the coefficient factor, write $Q_{\rm ret}$ for the retained
+absolute coefficient sum. Every atom satisfies
+\[
+ |\langle\Lambda,h\rangle|
+ \le Q_{\rm ret}(h)+\vartheta[Q_{\rm full}(h)-Q_{\rm ret}(h)]
+ \le\vartheta\|U\|+(1-\vartheta)Q_{\rm ret}(h).
+\]
+Combine retained-ray stability with weighted Cauchy--Schwarz.
+This also proves (Q4) for a norm-attaining representation.
+
+\begin{proposition}[An explicit correct-sign cost gap]\label{prop:quantgap}
+Set
+\[
+ B_{\rm cap}=C_v+1,\quad
+ H_{\rm cap}=\sqrt{d+1}\,B_{\rm cap}+3/2,\quad
+ \mu=\min_O|q(z)+\tau h(z)|>0,
+\]
+\[
+ A_0=\frac{K_{\rm ret}B_{\rm cap}}{1-\vartheta},\qquad
+ A_1=\frac{36K H_{\rm cap}}\mu+(36K+1)A_0.
+\]
+Every score satisfying the closed observed margins and having
+representation cost $B\le B_{\rm cap}$ obeys
+\[
+                        \|F-F_v\|_2^2\le A_1(B-C_v).     \tag{Q5}
+\]
+Consequently every correct-sign completion has variation cost at least
+\[
+                 C_v+\min\{1,\ 2^{-d}/(4A_1)\}.          \tag{Q6}
+\]
+\end{proposition}
+\begin{proof}
+Put $S=\langle\Lambda,F\rangle-C_v\ge0$, so $D+S=B-C_v$.
+On $O$, $F_v=f/2$ and the observed margin implies
+$|F-F_v|=f(F-F_v)$. Thus
+$\E[\one_O|F-F_v|]\le S/\mu$ and
+$\E[\one_O(F-F_v)^2]\le H_{\rm cap}S/\mu$.
+Write $R_0=P_{\mathcal D_{\rm ret}}(F-F_v)$ and
+$E_0=F-P_{\mathcal D_{\rm ret}}F$. Equation (Q4) bounds
+$\|E_0\|_2^2$ by $A_0D$.
+On $O$, $(R_0)^2\le2(F-F_v)^2+2E_0^2$.
+Apply (Q1) and then use the global orthogonality of $R_0,E_0$:
+\[
+ \|F-F_v\|_2^2
+ \le36K H_{\rm cap}S/\mu+(36K+1)A_0D
+ \le A_1(D+S).
+\]
+At a correct-sign physical query, $|F-F_v|\ge1/2$ at that point,
+so the uniform-cube squared norm is at least $2^{-d}/4$.
+This proves (Q6) below the cap, while costs above the cap are separated
+by one. Norm attainment on the finite cube extends it to $V(F)$.
+\end{proof}
+
+The constants do not conceal a doubly exponential cost separation.
+There is an absolute $A>0$ such that, uniformly over the stages,
+\[
+ b_k:=\min\left\{\min_{u\in U}|\widehat w(u)|,\
+                 \min_{\substack{u,v\in U\\u\ne v}}
+                     |\widehat w(u)-\widehat w(v)|\right\}
+                       \ge e^{-A k\log(k+1)}.           \tag{Q7}
+\]
+Here is a direct justification from the inherited positive integrals.
+Their density $\rho(t)$ extends continuously to zero with
+$\rho(0)=7\sqrt{2\pi}/32>0$. This follows from the formulas in
+\cite{shared}: $k''(0)=1/48$, $B'(0)=1/8$, and $B''(0)=1/128$.
+For two distinct path words, the pointwise gap is at least
+$e^{-c k}t^k$ on a fixed small interval. The prefix factor is at least
+$(ct)^P$, and all remaining positive path factors are at least
+$e^{-ck}$ there. Integrate over $[1/n_0,2/n_0]$ for sufficiently
+large $k$ to obtain
+$e^{-ck}n_0^{-(P+k+1)}$. For an individual absolute coefficient,
+the positive path term selecting no edges is at least
+$(ct)^{2k}$, giving
+$e^{-ck}n_0^{-(P+2k+1)}$ instead.
+Both imply (Q7), since $n_0=O(k)$ and $P=O(k)$.
+The finitely many smaller $k$ are absorbed by increasing $A$.
+
+In particular $p_E\ge2Kb_k$, while every nonretained mixed coefficient
+has weight gap greater than one. Therefore
+\[
+ 1-\vartheta\ge\frac{2Kb_k}{\max_t a(|A_t|)},\qquad
+ \mu\ge\min\{1,2Mb_k\}.
+\]
+The first inequality uses $p_E<1$ and also covers omitted transversals.
+All other quantities in (Q3)--(Q6) grow at most exponentially in $k$
+or polynomially in $k$ and $b_k^{-1}$. Thus, for another absolute $A$,
+\[
+             \inf_{\rm correct}V-C_v\ge e^{-A k\log(k+1)}. \tag{Q8}
+\]
+This is a quantitative lower bound on the cost gap; the construction
+still has a large calibration prefix and exponential sufficient width.
+
+\begin{proposition}[A deterministic minimum-norm consequence]
+At each designated stage, every observed-margin-interpolating ReLU
+score with variation cost less than the correct-sign threshold in
+(Q6) predicts the wrong label. In particular every global minimizer
+of the two-layer squared Euclidean parameter cost does so, at every
+width $N\ge N_0$, with any positive relative weighting of the two
+layers. The same assertion holds for approximate minimizers whose
+objective excess is below the corresponding rescaled gap.
+\end{proposition}
+\begin{proof}
+The first assertion is the contrapositive of (Q6). The balancing
+identity (24) identifies the globally minimum parameter energy as
+$C_v/\sqrt{\alpha\beta}$. A parameter energy less than
+$(C_v+g)/\sqrt{\alpha\beta}$ gives representation cost less than
+$C_v+g$, where $g$ is the gap in (Q6), and therefore the wrong sign.
+\end{proof}
+This is a statement about global or sufficiently accurate constrained
+norm minimization. It does not assert that gradient descent reaches
+these minimizers or that an arbitrary regularized training loss has
+the same solutions.
+
+\begin{theorem}[A sufficient finite prior scale]\label{thm:finite-scale}
+For the canonical ReLU layer variances
+$\alpha=N/d$, $\beta=1/N$, there is an absolute constant $A>0$
+such that, for every $k\ge2$, $N\ge N_0$, and $0<\eta<1/2$, the choice
+\[
+ 0<\sigma\le
+ \frac{\exp[-A k\log(k+1)]}
+      {\sqrt{\,N(1+\log N)+\log(1/\eta)\,}}              \tag{Q9}
+\]
+makes the sum of the correct-label posterior probabilities under (1)
+over all designated rounds at most $\eta$. Thus posterior-label majority is
+wrong at every designated round, and fresh posterior sampling is wrong
+at all of them with probability at least $1-\eta$.
+The absolute constant is not numerically optimized.
+\end{theorem}
+\begin{proof}
+Whiten the canonical parameters as
+$U_j=\sqrt{N/d}\,u_j$, $a_j=v_j/\sqrt N$.
+Then the energy is $I=\frac12\sum_j(\|u_j\|^2+v_j^2)$ and the
+ReLU output is $d^{-1/2}\sum_jv_j\relu(u_j\cdot\bar x)$, independently
+of width apart from the number of summands.
+At each stage its minimum is $E_0=\sqrt d\,C_v=O(k^{3/2})$.
+By (Q8) the correct-sign energy gap is at least
+$G=e^{-A_0k\log(k+1)}$, after increasing an absolute $A_0$.
+
+A minimum-cost star has whitened parameter norm polynomial in $k$.
+Increase its readouts by $1+t$, where
+$t=e^{-A_2k\log(k+1)}$ is small enough that the energy increase is
+less than $G/8$. The observed margins then exceed $1/2$ by at least
+$t/2$. On a bounded energy ball, the uniform-cube output map is
+Lipschitz in the whitened parameters with a constant polynomial in $k$,
+independent of the number of summands; this is the Cauchy--Schwarz bound
+on the two layer differences. There is consequently a strictly feasible
+parameter ball of radius $r\ge e^{-A_3k\log(k+1)}$ with energy at most
+$E_0+G/4$.
+
+In dimension $D_N=N(d+2)$ this ball has volume at least
+$(2r/\sqrt{D_N})^{D_N}$, using its inscribed cube.
+Let $E_1$ be the correct-sign infimum, so $E_1\ge E_0+G$.
+Choose $\varepsilon=G/[4(E_0+G)]$ and bound the Gaussian numerator
+by its tail at $E_0+G$ rather than at the possibly larger $E_1$.
+The probability ratio is at most
+\[
+ \exp\left\{A_4D_N[k\log(k+1)+\log D_N]
+                                  -\frac{G}{2\sigma^2}\right\}
+                                                               \tag{Q10}
+\]
+for $\sigma\le1$. Here the denominator uses the ball, and
+$\varepsilon^{-1}$ and $r^{-1}$ are at most
+$e^{A_5k\log(k+1)}$.
+Since $D_N=O(Nk)$, $N\ge N_0$, and $T_k\le2^k$, increasing the
+absolute constant $A$ in (Q9) makes (Q10) at most $\eta/T_k$
+uniformly over all stages. Sum these bounds.
+\end{proof}
+
+\section{A finite hinge penalty and a Gaussian-prior Gibbs law}
+There is nevertheless one ordinary training penalty for which the
+same conclusion follows exactly. For the actual observed set $H$, let
+\[
+ \mathcal L_H(F)=\frac1{|H|}\sum_{x\in H}
+                        (1/2-f(x)F(x))_+,
+ \qquad n_{\max}=n_0+4\ell+2.
+\]
+The loss is averaged over the distinct observed examples, including
+the calibration prefix; it is not reweighted by the dual certificate.
+
+\begin{theorem}[Finite hinge regularization]\label{thm:hinge}
+Fix $k\ge2$, $N\ge N_0$, and positive layer constants
+$\alpha,\beta$. Write $I$ for the Gaussian energy in (24).
+Choose the finite penalty coefficient
+\[
+                  \lambda>\frac{12M n_{\max}}{\sqrt{\alpha\beta}}.
+                                                               \tag{H1}
+\]
+At every designated round, every global minimizer of
+$I(\theta)+\lambda\mathcal L_H(F_\theta)$ has output $F_v$ and
+predicts the wrong label. The Gaussian-prior Gibbs law with density
+proportional to
+\[
+       \exp\{-[I(\theta)+\lambda\mathcal L_H(F_\theta)]/\sigma^2\}
+                                                               \tag{H2}
+\]
+therefore has correct-label probability tending to zero as
+$\sigma\downarrow0$ at every designated round.
+The coefficient in (H1) may be exponential in $k$. Law (H2) is a
+hinge-loss Gibbs law; it is not claimed to equal a normalized logistic
+or other specified binary observation model.
+\end{theorem}
+\begin{proof}
+Let $a_*=(\alpha\beta)^{-1/2}$ and define nonnegative empirical
+coefficients
+\[
+ c_x=a_*\frac{|H|}{2^d}|\Lambda(x)|\qquad(x\in H).
+\]
+The dual sign table and $\frac12\E|\Lambda|=C_v$ give
+\begin{align*}
+ I+\lambda\mathcal L_H-a_*C_v
+ &\ge \frac1{|H|}\sum_{x\in H}
+ \bigl[(\lambda-c_x)(1/2-fF)_+
+                         +c_x(fF-1/2)_+\bigr].
+\end{align*}
+Every coefficient $\widehat q(s)$ is positive and at most $w_s$,
+so $\|q\|_\infty\le3M n_{\max}$.
+By (14), $\|h\|_\infty\le\|q\|_\infty+\gamma$;
+the proof of Lemma~\ref{lem:coefficients} gives
+$\gamma\le12n_{\max}$.
+Since $M\ge2$, this implies
+$\|\Lambda\|_\infty\le12M n_{\max}$.
+Condition (H1) makes $\lambda-c_x>0$ for every observed example.
+The balanced star attains objective $a_*C_v$ with zero hinge loss.
+Any minimizer must therefore have zero hinge loss and minimum
+parameter energy, so Proposition~\ref{prop:unique} forces $F_v$.
+
+The objective is continuous and coercive, since it dominates $I$.
+Its closed correct-sign set has a strictly higher minimum.
+A small open parameter ball around a minimizing star has energy-plus-loss
+below that minimum. The same finite-dimensional Gaussian integral
+comparison as above applies, using the objective's lower bound by $I$
+for the tail integral. This proves the Gibbs assertion.
+\end{proof}
+In particular the finite penalty is a sufficient condition for a
+specific global training objective, not a claim about convergence of
+an optimization algorithm. For the canonical layer variances its
+required order is at most $e^{O(k)}$.
+
+\section{A separate fixed-temperature, width-first ReLU consequence}
+The strict variation-cost gaps also have a different asymptotic
+consequence. This statement uses mean-field normalization and fixes a
+small positive prior scale before taking the width limit.
+
+\begin{theorem}[A fixed positive scale for each constructed target]
+For each fixed $k\ge2$, there is $\tau_k>0$ such that the same target,
+input permutation, and $T_k$ designated rounds have the following
+property. In the model
+\[
+ F_N=N^{-1}\sum_{j=1}^N a_j\relu(U_j\cdot\bar x),
+ \qquad a_j,(U_j)_i\ \text{independent }N(0,\tau^2),
+\]
+fix any $0<\tau<\tau_k$ and use only the observed margins (1).
+The correct-label posterior probability at every designated round
+then tends to zero exponentially as $N\to\infty$.
+Moreover there is an absolute $A>0$ for which every
+$0<\tau\le e^{-A k\log(k+1)}$ satisfies the conclusion.
+The sufficient scale can still be extremely small.
+\end{theorem}
+\begin{proof}
+On a finite cube the normalized signed ReLU atoms form a compact
+spanning set. They span all output tables because a ReLU can isolate
+each cube vertex. Their symmetric convex hull is the compact unit ball
+of $V$, and Caratheodory's theorem gives attainment of $V$ by finitely
+many atoms. Thus Proposition~\ref{prop:unique} applies to every
+variation-norm minimizer, not only to an already chosen representation.
+At each stage the closed correct-sign constraint has minimum variation
+cost $L_v>C_v$: its intersection with a bounded norm sublevel is compact
+and excludes the unique minimizer.
+
+Let $I_\tau$ be the Cramer rate of the one-neuron output vector.
+Its cumulant is finite near zero. Gaussian readout integration and
+homogeneity show that the closure of its finite domain is
+$\{\xi:V^*(\xi)\le\tau^{-2}\}$: inside, use
+$|\xi\cdot\Phi|\le V^*(\xi)|a|\|U\|$; outside, an open incoming cone
+with larger correlation makes the Gaussian integral diverge.
+Readout symmetry makes the cumulant nonnegative. Hence
+\[
+ I_\tau(z)\le V(z)/\tau^2.
+\]
+Conversely choose a supporting dual for $V(z)$ and shrink it by
+$1-\varepsilon$. In $d+2$ Gaussian coordinates,
+$2|a|\|U\|\le a^2+\|U\|^2$ bounds the cumulant by
+$\frac{d+2}{2}\log(1/\varepsilon)$. Therefore
+\[
+ I_\tau(z)\ge (1-\varepsilon)V(z)/\tau^2
+                         -\frac{d+2}{2}\log(1/\varepsilon). \tag{26}
+\]
+Choose $\varepsilon>0$ with $(1-\varepsilon)L_v>C_v$.
+For sufficiently small $\tau$, the lower rate bound on the closed
+correct-sign event exceeds $C_v/\tau^2$.
+The strict history is open and contains arbitrarily slightly amplified
+$F_v$, whose rate is at most its variation cost divided by $\tau^2$.
+Cramer's upper and lower bounds give a strict conditional exponential
+rate gap. There are finitely many stages, so one $\tau_k>0$ works for
+all of them. Smaller positive $\tau$ preserve the strict inequalities.
+For the stated quantitative choice, use the uniform gap (Q8),
+$C_v=O(k)$, and choose
+$\varepsilon$ of order $e^{-A_0k\log(k+1)}/(C_v+1)$.
+The penalty in (26) is $O(k^2\log(k+1))$.
+A sufficiently large absolute exponent in the displayed $\tau$ bound
+makes the positive rate gap dominate that penalty at every stage.
+\end{proof}
+
+\section{Standard softplus with observed margins}
+A further extension uses the canonical width-dependent Gaussian layers.
+It is separate from the arbitrary fixed layer scales allowed for ReLU.
+
+\begin{theorem}[The same mistake path for standard softplus]
+Replace ReLU by $\phi(t)=\log(1+e^t)$ and use
+\[
+ (U_j)_i\sim N(0,N\sigma^2/d),\qquad
+ a_j\sim N(0,\sigma^2/N)
+\]
+independently. For each fixed $k\ge2$, there is a finite threshold
+$N_\phi(k)$ such that, at every fixed $N\ge N_\phi(k)$, the correct-label
+posterior probabilities at the same $T_k$ designated rounds tend to
+zero as $\sigma\downarrow0$, with only the observed-margin likelihood (1).
+The target has a one-hidden-layer standard-softplus teacher of width
+at most $C_k$, margin greater than one, and coefficients bounded by
+$8C_k^3$. For an absolute $A>0$ one can take
+$N_\phi(k)\le\lceil e^{A k\log(k+1)}\rceil$.
+This bound is not numerically optimized, and the explicit ReLU threshold
+$N_0$ is not asserted to suffice.
+\end{theorem}
+\begin{proof}
+We first state precisely the additional inherited analytic input.
+For any fixed subset $\mathcal T$ of full rail transversals, write
+$Q_{\mathcal T}$ for its weighted absolute Fourier sum and
+$\mathcal D_{\mathcal T}$ for its downward span.
+The bias-independent integral estimate and stability argument in the
+softplus section of \cite{shared} give a finite constant $K_{\mathcal T}$
+such that
+\[
+ Q_{\rm full}(\phi(b_0+w\cdot x))\le\|w\|_2,\qquad
+ \|\phi(b_0+w\cdot x)-P_{\mathcal D_{\mathcal T}}
+                     \phi(b_0+w\cdot x)\|_2^2
+ \le K_{\mathcal T}\|w\|_2
+            [\|w\|_2-Q_{\mathcal T}(\phi(b_0+w\cdot x))]. \tag{27}
+\]
+These statements hold for arbitrary bias $b_0$.
+The proof first bounds the weighted absolute coefficient integral by
+$\|w\|_2$, uniformly in bias. Averaging ReLU against a centered logistic
+bias gives softplus. The full rail stability estimate restricts to any
+subset by charging a closest omitted ray's coefficient to the omitted
+mass; this restriction does not require the subset to be a linear code.
+Finally the activation is 1-Lipschitz, and a function of a retained
+ray belongs to its downward span, giving (27).
+
+At the current stage let $\mathcal T$ be exactly (21), and keep the
+dual $\Lambda$ from (18). Its coefficients equal their positive
+weight on $\mathcal T$, and have absolute ratio at most some
+$\vartheta<1$ on the other full transversals. Finiteness and the strict
+inequalities in Lemma~\ref{lem:coefficients} give this $\vartheta$.
+For every softplus atom $h$,
+\[
+ |\langle\Lambda,h\rangle|
+       \le Q_{\mathcal T}(h)+\vartheta
+                            [Q_{\rm full}(h)-Q_{\mathcal T}(h)]
+       \le\vartheta\|w\|+(1-\vartheta)Q_{\mathcal T}(h).
+\]
+Put
+\[
+ K_N(\theta)=\frac dN\sum_j\|U_j\|^2+N\sum_j a_j^2,\quad
+ B=\frac{K_N}{2\sqrt d},\quad D=B-\langle\Lambda,F\rangle.
+\]
+The arithmetic--geometric mean bound and weighted Cauchy--Schwarz
+in (27) imply
+\[
+ D\ge0,\qquad
+ \|F-P_{\mathcal D_{\rm ret}}F\|_2^2
+                   \le\frac{K_{\mathcal T}}{1-\vartheta}\,BD. \tag{28}
+\]
+Indeed $B\ge\sum_j|a_j|\|U_j\|\ge\sum_j|a_j|\|w_j\|$, and the
+sum of the signed atom deficits is bounded by $D$.
+The activation bound $\phi(t)\le|t|+\log2$ also gives
+\[
+ \|F\|_\infty\le\sqrt{d+1}\,B
+                       +(\log2)\sqrt{2\sqrt d\,B}.       \tag{29}
+\]
+
+Consider arbitrary finite output tables paired with $0\le B\le C_v+1$,
+satisfying the closed observed margins, (28), and the bound (29).
+This is a compact set, independent of width.
+The dual sign table gives $B\ge\langle\Lambda,F\rangle\ge C_v$.
+At equality, (28) puts $F$ in $\mathcal D_{\rm ret}$ and the active
+observed margins are exact. The residual and missing-frequency argument
+in Proposition~\ref{prop:unique} applies verbatim to such a table;
+it used only these properties after (21). Hence equality forces $F=F_v$.
+The correct-sign subset consequently has $B\ge C_v+g_v$ for some
+$g_v>0$, if nonempty. Energies above the cap are separated already.
+This is a correct-sign energy gap uniform in learner width.
+
+To approach the star energy, take a finite minimum-cost ReLU
+representation and balance it so that
+$d\sum_j\|u_j\|^2+\sum_j c_j^2=2\sqrt d\,C_v$.
+At large width use softplus incoming vectors $\sqrt N u_j$,
+readouts $c_j/\sqrt N$, and zero readouts on the other neurons.
+The energy stays $2\sqrt d\,C_v$ and the outputs tend uniformly to
+$F_v$, since $0\le\phi(t)-\relu(t)\le\log2$.
+If $\delta_N>0$ bounds the error and tends to zero, multiplying
+readouts by $1+4\delta_N$ makes all observed margins strict for large
+$N$, because $(1+4\delta_N)(1/2-\delta_N)>1/2$ when
+$0<\delta_N<1/4$. The energy still tends to the star energy.
+Thus for every sufficiently large fixed width a strictly feasible
+open ball lies below the correct-sign energy gap.
+The same Gaussian integral comparison proves the posterior conclusion.
+Taking a maximum over finitely many stages gives $N_\phi(k)$.
+For its quantitative order, (27)--(29) and the proof of (Q5)--(Q6)
+give the same uniform lower gap $e^{-A_0k\log(k+1)}$, with the
+additional square-root term from (29) absorbed into $H_{\rm cap}$.
+The star uses at most $N_0=e^{O(k)}$ nonzero readouts and has balanced
+energy polynomial in $k$. Cauchy--Schwarz therefore bounds its
+approximation error by $e^{O(k)}/\sqrt N$.
+At $N\ge e^{A k\log(k+1)}$ this error and the energy increase from
+margin correction are below the uniform correct-sign gap.
+Increasing $A$ covers every $k\ge2$.
+
+For the teacher, take the ReLU construction (25), with at most $C_k$
+neurons and each coefficient bounded by $C_k$. Replace each ReLU by
+$T^{-1}\phi(T\,\cdot)$ with $T=4C_k^2$.
+The total uniform error is at most
+$C_k^2\log2/T<1/4$. Multiply readouts by two.
+The resulting standard-softplus score has margin greater than one,
+the same width, and coefficients bounded by $8C_k^3$.
+\end{proof}
+
+\section*{Verification and dependency scope}
+The finite checkers enclose actual rail costs with integer square roots.
+The first checks all 65,536 logical Walsh coefficients at $k=2$.
+A second uses exact prefix-permutation symmetry and integer Krawtchouk
+transforms to cover every logical coefficient through $k=7$; it checks
+all 126 designated stages for $k=2,\ldots,7$, including the 64-stage
+instance. They check the control dual, its support and signs,
+complementarity, strict mixed coefficient bounds, and exceptional-fiber
+combinatorics in exact rational arithmetic for enclosed dyadic costs,
+as well as the enclosing inequalities for the actual radical costs.
+They do not enumerate physical neural activation chambers.
+Fifteen selected Lean lemmas check control algebra, support rigidity,
+the missing-character argument, exceptional-set combinatorics, and
+teacher margins. Three further lemmas prove the finite exact-penalty
+argument. Two exposed-face sparsification lemmas preserve an observed
+output and coefficient cost with at most the observation-space dimension
+in atoms; the neural atom and dual identifications remain hypotheses.
+The analytic atom theorem and path ordering are
+inherited inputs. The full new theorem is not claimed to have a Lean
+formalization or independent review.
+
+\begin{thebibliography}{9}
+\bibitem{shared} ChatGPT-6 Astra, K. H\"anni, and D. Vaintrob,
+\emph{Superpolynomial online mistakes for isotropic Bayesian ReLU and
+softplus networks}, November 2026. The earlier theorem imposes a
+full-cube absolute-margin restriction before observing labels.
+The exact rail norm theorem, path ordering, conditional Fourier
+orthogonality, and parity-spline teacher used here are from that paper.
+\par\smallskip\noindent
+\url{https://github.com/kaarelh/AI-works/tree/main/neural-network-generalization/works-in-progress/online-mistakes/isotropic-relu-allwidth}.
+\end{thebibliography}
+\end{document}

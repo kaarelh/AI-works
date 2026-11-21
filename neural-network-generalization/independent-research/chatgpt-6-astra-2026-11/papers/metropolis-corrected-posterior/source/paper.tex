@@ -1,0 +1,567 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\E}{\mathbb E}\newcommand{\R}{\mathbb R}
+\newcommand{\one}{\mathbf1}\newcommand{\TV}{\mathrm{TV}}
+\title{Finite Metropolis corrections for a condensed ReLU posterior}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author.}}
+\date{21 November 2026; working proof draft}
+\hypersetup{hidelinks,pdftitle={Finite Metropolis corrections for a condensed ReLU posterior},pdfauthor={ChatGPT-6 Astra}}
+\emergencystretch=3em
+\begin{document}\maketitle
+\begin{abstract}
+An independent large-width construction for the full-label Gaussian ReLU
+parity posterior can be corrected by a fixed number of independence
+Metropolis updates. At fixed even dimension $r\ge6$, the total-variation
+error after $r-4$ updates is of order $N^{-(r-3)/2}$. This order is sharp
+for a construction supported on the canonical minimum-count sector,
+because the omitted extra-neuron sectors have exactly that posterior
+mass. For example, two updates suffice for order $N^{-3/2}$ in dimension
+six. The proof bounds centered moments of the exact importance ratio;
+we also identify strictly positive leading constants at every correction
+order strictly before this floor, including the uncorrected $N^{-1/2}$
+error and the once-corrected $N^{-1}$ error.
+The argument does not assume mixing of a local sampler. The proposal uses the
+critical one-neuron law and a collective Gaussian residual weight, and
+the Metropolis ratio uses no unknown normalizer. Expected arithmetic
+cost is linear in width at fixed dimension. The theorem covers square
+and logistic full-label likelihoods in the condensed phase, in idealized
+real arithmetic, with potentially large dimension-dependent constants.
+\end{abstract}
+
+\section{A useful consequence of independence coupling}
+Let $P\ll Q$ be probability measures and $w=dP/dQ$. Let $\mathcal K$
+be the independence Metropolis kernel with proposal $Q$ and acceptance
+$\min\{1,w(y)/w(x)\}$, with acceptance one from a zero-weight state.
+This kernel leaves $P$ invariant. Independence coupling and rejection
+probabilities have a substantial literature, including Liu (1996) and
+Deligiannidis, Jacob, Khribch, and Wang (2025). We use the following
+centered-moment consequence of that coupling, with a proof for the
+particular initialization required here; the coupling mechanism is not
+claimed as new.
+
+\begin{lemma}[A fixed number of corrections]\label{lem:imh}
+Starting from $Q$, for every integer $k\ge0$,
+\[
+ \|Q\mathcal K^k-P\|_{\TV}
+ \le \E_Q[(w-1)_+\lambda(w)^k],\qquad
+ \lambda(t)=\E_Q(1-w/t)_+,\quad t>1.                    \tag{1}
+\]
+For $k\ge1$ this is at most $2^k\E_Q|w-1|^{k+1}$; for $k=0$ it is
+$\E_Q(w-1)_+=\|P-Q\|_{\TV}$.
+\end{lemma}
+\begin{proof}
+Maximally couple $X_0\sim Q$ and $Y_0\sim P$ using the common part
+$\min\{1,w\}Q$. On disagreement, $w(X_0)<1<w(Y_0)$. Run the two
+chains with identical independent proposals and acceptance uniforms.
+Until they meet, the higher-weight chain remains at $Y_0$: whenever it
+accepts, the lower-weight chain accepts too. If the higher chain rejects,
+the proposed weight is less than $w(Y_0)$, so any update of the lower
+chain preserves the ordering. Given $w(Y_0)=t$, failure to meet in $k$
+steps thus has probability $\lambda(t)^k$. The disagreement part of
+the initial $P$ marginal is $(w-1)_+Q$, proving (1).
+
+Let $d=\E_Q(w-1)_+$. Since $\E_Qw=1$,
+$\lambda(t)=[t-1+\E_Q(w-t)_+]/t\le t-1+d$ for $t>1$.
+Writing $x=(w-1)_+$, use
+$x(x+d)^k\le2^{k-1}(x^{k+1}+xd^k)$ and
+$d^{k+1}\le\E x^{k+1}$. This gives the stated moment bound.
+The proof works with atoms as well as continuous laws.
+\end{proof}
+
+\section{The ReLU posterior and its canonical sector}
+Use the full-label parity model of \emph{Polynomial probabilities of
+extra exceptional neurons}. In particular $r\ge6$ is even,
+$M=2^r$, $K=M/2$, $\nu=(r+1)/2$, $b=\nu-2=(r-3)/2$, and
+\[
+ Q_*=M_*^{-1}e^{Z/\rho}P_0,\quad \E_{Q_*}\Phi=m_c\chi,\quad
+ g(y)=y/\rho+\lambda\ell(y),\quad g'(s)=0,\quad s>m_c.
+\]
+Here $\ell$ is square or logistic loss, $P_0$ is a standard Gaussian
+one-neuron prior, and $F_N=N^{-1}\sum_i\Phi_i$. The original posterior
+is proportional to $\exp\{-N\lambda M^{-1}\sum_x\ell(\chi F_N)\}P_0^N$.
+After critical tilting its residual weight is
+\[
+ W_N(y)=\exp\{-N M^{-1}\sum_x[g(\chi(x)y_x/N)-g(s)]\}.
+ \tag{2}
+\]
+Let $\gamma=g''(s)/M>0$ and
+$\alpha=(s-m_c)/(K\rho)>0$.
+
+We specify a common good set $G_N$. Exactly $K$ neurons have squared
+norm greater than $dN$, and they occupy one critical ray per antipodal
+pair, with balanced orientation set $S$. In their corner coordinates,
+\[
+ a_j=\sigma_{z_j}A_j,\quad U_j=R_jv_{z_j}+t_j/\sqrt{c_j},\quad
+ c_j=A_jR_j,\quad v_j=A_j-R_j,
+\]
+require $a_0N\le c_j\le A_0N$, where $0<a_0<\alpha<A_0$.
+Require fixed sufficiently narrow critical cones, so that
+$q_j=A_j/\sqrt{c_j}$ is bounded between positive constants and
+$\|t_j\|\le\eta N$, for a small constant $\eta>0$ chosen below.
+All other parameters have squared norm at most $dN$.
+For logistic loss also require
+$\max_x|\chi(x)F_N(x)-s|\le\eta_0$, with a small fixed $\eta_0>0$.
+The constants are fixed in the order indicated by the moment proof.
+The quantitative count companion gives
+\[
+                  \Pi_N(G_N^c)=\Theta(N^{-b}).           \tag{3}
+\]
+The extra output restriction costs exponentially small residual mass.
+The fixed cone and mark restrictions have arbitrarily small polynomial
+cost on the minimum-count event, by its quantitative localization lemma.
+
+Constants can be selected using $s>3/8$ when no certified value of $m_c$
+is available. For example $a_0=(s-3/8)/(2K\rho)$ and $A_0=2s/\rho$
+then enclose $\alpha$. The mathematical theorem allows every $s>m_c$;
+implementing a cutoff interval requires bounds enclosing $\alpha$.
+
+\section{The independent proposal and computable ratio}
+For a balanced orientation set $S$, let $A_S$ have columns $f_z$,
+$A_S^+=(A_S^\top A_S)^{-1}A_S^\top$, and $P_S=I-A_SA_S^+$.
+Then $A_S\mathbf1=K\rho\chi$ and $P_S\chi=0$.
+Let $J_S=\det(A_S^\top A_S)^{-1/2}$ and choose the known positive
+constant $d_E$ from the even block so that $d_EJ_S\le1$.
+The proposal before its final restriction is the preceding independent
+construction:
+\begin{enumerate}
+\item Draw $S$ uniformly among balanced patterns, and $n=N-K$ independent
+ordinary neurons from $Q_*$. Set $Y=\sum_{i=1}^n\Phi_i$.
+Accept with probability $d_EJ_S\exp[-\gamma\|P_SY\|^2/(2N)]$;
+otherwise restart.
+\item Draw $\eta_c\sim N(0,\gamma^{-1}(A_S^\top A_S)^{-1})$ and put
+$c=Ns(K\rho)^{-1}\mathbf1-A_S^+Y+\sqrt N\eta_c$.
+Independently draw $v_j\sim N(0,1)$ and transverse marks with density
+$H_r^{-1}\exp[-h_{z_j}(t_j)/\rho]$, where
+$h_z(t)=2^{-r-1}\sum_{x:z\cdot x=0}|t\cdot(1,x)|$ is a norm.
+\item Form the exact exceptional parameters using
+$A_j=(\sqrt{v_j^2+4c_j}+v_j)/2$ and
+$R_j=(\sqrt{v_j^2+4c_j}-v_j)/2$. Restart unless the canonical
+configuration belongs to $G_N$.
+\end{enumerate}
+Let $Q_N$ denote the accepted canonical law. The critical-neuron and
+mark draws have rejection constructions with positive fixed-dimension
+acceptance. The first acceptance above tends to a positive constant;
+the last restriction has probability tending to one. These statements
+follow from finite second output moments, the central limit theorem,
+and $c_j/N\to\alpha$. Thus a proposal costs expected $O_{r,\lambda}(N)$.
+
+Write the actual exceptional output as $A_Sc+e$, where
+$e=\sum_jq_j\psi_{z_j}(t_j)$ and
+$\|\psi_z(t)\|\le C_r\|t\|$. Put
+$R_0=Y+A_Sc-Ns\chi$. The unnormalized importance ratio is
+\[
+ \mathcal R_N=
+ \prod_{j=1}^K\left[
+ c_j^{-\nu}\frac{2\sqrt{c_j}}{\sqrt{v_j^2+4c_j}}
+ e^{-\|t_j\|^2/(2c_j)-(q_j-1)h_{z_j}(t_j)/\rho}\right]
+ \frac{W_N(Y+A_Sc+e)}{e^{-\gamma\|R_0\|^2/(2N)}}.       \tag{4}
+\]
+All factors in (4) are computable from the proposal. Constants $M_*$,
+$H_r$, the posterior evidence, and the unknown $m_c$ cancel between
+two values of (4). The formula is exact on $G_N$: the corner Jacobian
+is $c^{-r/2}/\sqrt{v^2+4c}$, and the exact critical exponent is
+$v^2/2+\|t\|^2/(2c)+qh_z(t)/\rho$.
+
+Starting from an independent $Q_N$ proposal, take $k$ independence
+Metropolis steps using new $Q_N$ proposals and ratios of (4). Finally
+inject the ordered exceptional neurons uniformly into the $N$ labels.
+The resulting law is denoted $\widehat\Pi_{N,k}$.
+
+\begin{theorem}[A fixed-step total-variation rate]\label{thm:rate}
+With sufficiently small fixed cutoffs as above, for every integer
+$0\le k\le r-4$,
+\[
+ \|\widehat\Pi_{N,k}-\Pi_N\|_{\TV}
+                         =O_{r,\lambda,k}(N^{-(k+1)/2}). \tag{5}
+\]
+For every fixed $k\ge r-4$, the order is exactly
+\[
+ \|\widehat\Pi_{N,k}-\Pi_N\|_{\TV}
+                              =\Theta_{r,\lambda,k}(N^{-b}). \tag{6}
+\]
+Every fixed number of steps costs expected $O_{r,\lambda,k}(N)$
+arithmetic operations. Independent restarts produce independent output
+networks. These claims are asymptotic in width at fixed dimension and
+use exact real-arithmetic proposals; they supply neither a practical
+width threshold nor a bit-complexity bound.
+\end{theorem}
+
+\section{Truncated moments at the critical exponent}
+Set $p_*=r-3=2b\ge3$ and $a=\nu-1=b+1$. The critical tail bound is
+$Q_*\{\|\theta\|^2>u\}\le Cu^{-a}$, with $a>2$.
+For $V_N=\Phi\one_{\{\|\theta\|^2\le dN\}}$ it gives
+\[
+ \|\E V_N-m_c\chi\|\le CN^{1-a},\quad
+ \E\|V_N\|^2\le C,\quad
+ \E\|V_N\|^{p_*}\le CN^{p_*-a}.                        \tag{7}
+\]
+Applying the usual Rosenthal inequality coordinatewise to independent
+centered summands gives
+\[
+ \E\left\|\sum_{i=1}^n(V_{N,i}-\E V_N)\right\|^{p_*}
+ \le C\{N^{1+p_*-a}+N^{p_*/2}\}=CN^{p_*/2}.            \tag{8}
+\]
+The equality of powers uses $p_*=2a-2$. This is why no untruncated
+$p_*$-th output moment is needed. The accumulated bias in (7), divided
+by $N$, is $O(N^{1-a})$, smaller than $N^{-1/2}$.
+
+On the ordinary-parameter cutoff, $Y=\sum_i V_{N,i}$. Consequently
+under the unrestricted product law, with that cutoff inserted,
+\[
+ \E\big[\|Y/N-m_c\chi\|^{p_*};\max_i\|\theta_i\|^2\le dN\big]
+                                                  \le CN^{-p_*/2}. \tag{9}
+\]
+The proposal changes this density by a bounded weight, with normalizer
+bounded below, and adds an independent fixed-dimensional Gaussian to
+the amplitudes. Conditioning on $G_N$, whose proposal probability tends
+to one, preserves the bound. Thus
+\[
+                    \E_{Q_N}\|c/N-\alpha\mathbf1\|^{p_*}
+                                                  \le CN^{-p_*/2}. \tag{10}
+\]
+
+\section{Moment bounds for the density ratio}
+For analysis only, multiply (4) by $(N\alpha)^{K\nu}$ and call the
+result $R_N$. Its amplitude factor
+$D_N=\prod_j(N\alpha/c_j)^\nu$ is bounded above on the macro interval,
+and is Lipschitz as a function of $c/N$ there. Hence
+\[
+                         \E_{Q_N}|D_N-1|^{p_*}\le CN^{-p_*/2}. \tag{11}
+\]
+It remains to bound the other factor $B_N=R_N/D_N$. We give details
+of the exponential integrability, since pointwise convergence of (4)
+would not imply the asserted rate.
+
+In the corner interval, $q_j-1=O(|v_j|/\sqrt N)$ and
+$|\log(2\sqrt{c_j}/\sqrt{v_j^2+4c_j})|\le Cv_j^2/N$.
+Let $V^2=\sum_jv_j^2$ and $T=\sum_j\|t_j\|$. All constants below
+are uniform over the finitely many balanced $S$ and the macro interval.
+For square loss the logarithm $u_N=\log B_N$ obeys
+\[
+ |u_N|\le C\left\{\frac{V^2+T^2}{N}
+              +\frac{VT}{\sqrt N}+\frac{\|R_0\|T}{N}\right\}. \tag{12}
+\]
+The last term follows by comparing
+$-\gamma\|R_0+e\|^2/(2N)$ with $-\gamma\|R_0\|^2/(2N)$.
+For logistic loss Taylor's theorem adds
+$C(\|R_0\|+T)^3/N^2$. On the output restriction and $T\le K\eta N$,
+$\|R_0\|\le C(\eta_0+\eta)N$. This cubic term can therefore be
+absorbed into an arbitrarily small multiple of
+$(\|R_0\|^2+T^2)/N$ by choosing $\eta_0,\eta$ small.
+
+The unconditioned proposal density, apart from a normalizer bounded
+below, has the factors
+\[
+ Q_*^n(d\theta)\,
+ e^{-\gamma\|P_SY\|^2/(2N)}\,
+ e^{-\gamma\|A_S\eta_c\|^2/2}d\eta_c\,
+ e^{-V^2/2}\prod_j e^{-h_{z_j}(t_j)/\rho}dt_jdv_j.       \tag{13}
+\]
+Moreover $R_0=P_SY+\sqrt N A_S\eta_c$, an orthogonal decomposition.
+Fix $p=p_*$. For any sufficiently small $\epsilon>0$, Young's inequality
+gives
+\[
+ pC\frac{VT}{\sqrt N}\le\epsilon V^2+C_{p,\epsilon}T^2/N,
+ \qquad
+ pC\frac{\|R_0\|T}{N}\le\epsilon\|R_0\|^2/N
+                                      +C_{p,\epsilon}T^2/N.
+\]
+Because each $\|t_j\|\le\eta N$, $T^2/N\le K\eta T$.
+Norm equivalence gives $\sum_jh_{z_j}(t_j)/\rho\ge cT$.
+Choosing $\eta$ small, then $N$ large for the $V^2/N$ term, absorbs
+all positive exponential factors $e^{p(u_N)_+}$ into, for example,
+half of each Gaussian and mark exponent in (13). For logistic loss
+first choose $\eta_0$ small enough for the additional quadratic
+absorption just described. These choices depend on $p$, not on $N$.
+
+The inequality $|e^u-1|^p\le |u|^p(1+e^{pu_+})$ now reduces the
+bound to polynomial moments under (13) with smaller but positive decay
+constants. The marks have all polynomial moments. The amplitude Gaussian
+does too. For any $q\ge0$ the factor
+$(\|P_SY\|/\sqrt N)^q e^{-c\|P_SY\|^2/N}$ has a finite constant
+supremum, so no higher moment of the untruncated bulk is needed.
+Every term in (12) then contributes at most $CN^{-p/2}$; the cubic
+Taylor term contributes $N^{3p/2}/N^{2p}=N^{-p/2}$. Restricting to
+$G_N$ only decreases these integrals, and its normalizer is bounded
+below. We conclude
+\[
+                         \E_{Q_N}|B_N-1|^{p_*}\le CN^{-p_*/2}. \tag{14}
+\]
+Since $D_N$ is bounded, $R_N-1=D_N(B_N-1)+(D_N-1)$ combines
+(11) and (14) without invoking higher bulk moments:
+\[
+                         \E_{Q_N}|R_N-1|^{p_*}\le CN^{-p_*/2}. \tag{15}
+\]
+Let $z_N=\E_{Q_N}R_N$. The exact density identity gives
+$w_N=d\Pi_N(\cdot\mid G_N)/dQ_N=R_N/z_N$ on canonical coordinates.
+Equation (15) implies $|z_N-1|\le CN^{-1/2}$, so for large $N$
+\[
+ \E_{Q_N}|w_N-1|^{p_*}\le CN^{-p_*/2},\qquad
+ \E_{Q_N}|w_N-1|^p\le C_pN^{-p/2}\quad(1\le p\le p_*). \tag{16}
+\]
+The second bound follows by Lyapunov's inequality.
+
+\section{The first two orders are exact}
+There is also a distributional description of the leading error.
+Let $\Sigma=\operatorname{Cov}_{Q_*}(\Phi)$, which is positive definite,
+and $Q_0=I+\gamma\Sigma$. Draw a balanced orientation set with probability
+proportional to
+\[
+             \det(A_S^\top Q_0^{-1}A_S)^{-1/2}.          \tag{17}
+\]
+Conditional on $S$, independently draw
+\[
+ D\sim N\left(0,\gamma^{-1}(A_S^\top Q_0^{-1}A_S)^{-1}\right),
+ \qquad \xi\sim N(0,\Sigma Q_0^{-1}),
+ \qquad R=Q_0^{-1}A_SD+\xi,
+\]
+and the original independent marks $(v_j,t_j)$. Put
+$e_t=\sum_j\psi_{z_j}(t_j)$ and define the real variable
+\[
+ \mathcal L=-\frac\nu\alpha\mathbf1^\top D
+ -\frac{\sum_jv_jh_{z_j}(t_j)}{2\rho\sqrt\alpha}
+ -\gamma R^\top e_t
+ -\frac{g'''(s)}{6M}\sum_x(\chi(x)R_x)^3.               \tag{18}
+\]
+The last term is zero for square loss. Conditional on the transverse
+marks, every term has mean zero by centered Gaussian symmetry. Thus
+$\E\mathcal L=0$. The independent $v_j$ term has conditional variance
+$\sum_jh_{z_j}(t_j)^2/(4\rho^2\alpha)>0$ almost surely, so
+$\mathcal L$ is nondegenerate. It has all moments.
+
+\begin{theorem}[Positive first-order constants]\label{thm:constants}
+For the proposal and posterior in Theorem~\ref{thm:rate},
+\[
+ \|\widehat\Pi_{N,0}-\Pi_N\|_{\TV}\sim C_0N^{-1/2},
+ \qquad
+ \|\widehat\Pi_{N,1}-\Pi_N\|_{\TV}\sim C_1N^{-1},       \tag{19}
+\]
+where, with $\mathcal L'$ an independent copy,
+\[
+ C_0=\tfrac12\E|\mathcal L|>0,\qquad
+ C_1=\tfrac12\E\left|\E[(\mathcal L-\mathcal L')_+^2
+                                   \mid\mathcal L]-\E\mathcal L^2\right|>0.
+ \tag{20}
+\]
+These constants describe fixed-dimensional limits; they are not uniform
+finite-width bounds.
+\end{theorem}
+
+\begin{lemma}[One-step perturbation formula]\label{lem:one-step}
+Suppose $P_\epsilon\ll Q_\epsilon$ has strictly positive density
+$w_\epsilon=1+\epsilon L_\epsilon$ and $\E_{Q_\epsilon}L_\epsilon=0$.
+Suppose the laws of $L_\epsilon$ converge in Wasserstein distance of
+order two to a nondegenerate mean-zero variable $L$. If $\mathcal K_\epsilon$
+is independence Metropolis with proposal $Q_\epsilon$, then
+\[
+ \epsilon^{-2}\|Q_\epsilon\mathcal K_\epsilon-P_\epsilon\|_{\TV}
+ \longrightarrow \tfrac12\E|G(L)|,
+ \quad G(l)=\E(l-L')_+^2-\E L^2.                        \tag{21}
+\]
+\end{lemma}
+\begin{proof}
+The density after one step is a function only of $w_\epsilon$. Write
+$\mu_\epsilon$ for the law of $L_\epsilon$ and
+$a_\epsilon(l)=\int(l-u)_+\mu_\epsilon(du)$. The exact residual density,
+divided by $\epsilon^2$, is
+\[
+ r_\epsilon(l)=\frac{l a_\epsilon(l)}{1+\epsilon l}
+       -\int\frac{u(u-l)_+}{1+\epsilon u}\mu_\epsilon(du). \tag{22}
+\]
+Indeed subtract the one-step density from $w$ and use detailed balance
+to obtain $\lambda(w)(w-1)-\E[(W-1)(W-w)_+/W]$.
+Removing the denominators in (22) gives exactly
+$G_\epsilon(l)=\int(l-u)_+^2\mu_\epsilon(du)-\int u^2\mu_\epsilon(du)$,
+since $\int u\mu_\epsilon(du)=0$. The integrated absolute difference is
+at most $2I_\epsilon$, where
+\[
+ I_\epsilon=\epsilon\int
+             \frac{l^2a_\epsilon(l)}{1+\epsilon l}\mu_\epsilon(dl).
+\]
+For $l<0$, $\epsilon a_\epsilon(l)/(1+\epsilon l)\le1$, since the
+weights are nonnegative. For $l\ge0$ it is at most
+$1+\epsilon\E(L_\epsilon)_-$. The integrand is therefore bounded by
+a fixed constant times $l^2$, and tends uniformly to zero on every
+compact interval. Wasserstein-two convergence supplies uniform
+integrability of $L_\epsilon^2$, so $I_\epsilon\to0$.
+An $L^2$ coupling and
+$|a_+^2-b_+^2|\le(|a|+|b|)|a-b|$ also show
+$G_\epsilon(L_\epsilon)\to G(L)$ in $L^1$. This proves (21).
+
+Finally $\E G(L)=0$, because $L-L'$ is symmetric and
+$\E(L-L')^2=2\E L^2$. The function $G$ is increasing, with derivative
+$2\E(l-L')_+$, and is strictly increasing above the essential infimum
+of a nondegenerate $L$. Thus $G(L)$ is not almost surely zero, which
+proves positivity of the constant.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:constants}]
+Under the first-stage proposal, the bulk central limit theorem and its
+bounded continuous quadratic weight give a Gaussian limit with density
+proportional to
+\[
+ e^{-\frac12 Z^\top\Sigma^{-1}Z}
+ e^{-\frac\gamma2\|Z+A_SD\|^2}\,dZ\,dD.
+\]
+Integrating first in $Z$, and then completing its square, gives precisely
+(17) and the construction of $(D,R)$ above, with $R=Z+A_SD$.
+The final $G_N$ restriction has proposal probability tending to one.
+The ordinary mean correction from $N-K$ instead of $N$ is $O(1)$ and
+disappears on the $\sqrt N$ scale. In particular
+$(c-N\alpha\mathbf1)/\sqrt N\Rightarrow D$ and
+$R_0/\sqrt N\Rightarrow R$, jointly with the unchanged marks.
+
+Expanding the logarithm of $R_N$ from (4) at these tight variables gives
+$\sqrt N\log R_N\Rightarrow\mathcal L$. The amplitude logarithm gives
+the first term of (18); $q_j-1=v_j/(2\sqrt{N\alpha})+o_P(N^{-1/2})$
+gives the second; the residual shift by $e_t$ gives the third. Taylor's
+third derivative gives the last term. All balance-Jacobian and
+$\|t_j\|^2/(2c_j)$ terms have smaller order.
+Thus $\sqrt N(R_N-1)\Rightarrow\mathcal L$. The $p_*>2$ bound (15)
+makes its squares uniformly integrable. It also implies
+$\sqrt N(z_N-1)\to\E\mathcal L=0$, so
+$\sqrt N(w_N-1)$ converges to $\mathcal L$ in Wasserstein-two distance.
+The uncorrected total variation is half its absolute first moment,
+divided by $\sqrt N$. Lemma~\ref{lem:one-step} gives the once-corrected
+constant. Canonical coordinates and label injection preserve total
+variation here: the canonical configuration is recoverable from the
+labeled array on $G_N$, so they are inverse statistical descriptions.
+Finally $\Pi_N(G_N^c)=O(N^{-b})=o(N^{-1})$ for $r\ge6$; replacing the
+conditional target by the full posterior does not change either limit.
+\end{proof}
+
+\section{Leading constants after further corrections}
+The one-step formula extends to every fixed number of updates under the
+corresponding Wasserstein moment assumption. This also explains why the
+moment estimate gives one additional factor $N^{-1/2}$ per update.
+
+\begin{theorem}[A perturbation hierarchy]\label{thm:hierarchy}
+Let $w_\epsilon=1+\epsilon L_\epsilon>0$ be a probability density
+relative to $Q_\epsilon$, and suppose $L_\epsilon$ converges in
+Wasserstein distance of order $k+1$ to a nondegenerate mean-zero $L$.
+For $k=0$ this means Wasserstein distance of order one. Define
+\[
+ F_0(l)=l,\qquad a(l)=\E(l-L)_+,\qquad
+ F_{j+1}(l)=a(l)F_j(l)-\E[F_j(L)(L-l)_+].               \tag{23}
+\]
+Then the independence Metropolis kernel satisfies
+\[
+ \|Q_\epsilon\mathcal K_\epsilon^k-P_\epsilon\|_{\TV}
+       \sim C_k\epsilon^{k+1},\qquad
+ C_k=\tfrac12\E|F_k(L)|>0.                             \tag{24}
+\]
+In particular $F_1(l)=\E(l-L)_+^2-\E L^2$, agreeing with (21).
+\end{theorem}
+\begin{proof}
+Write $\mu_\epsilon$ for the law of $L_\epsilon$. The residual signed
+density $P_\epsilon-Q_\epsilon\mathcal K_\epsilon^j$, relative to
+$Q_\epsilon$, is exactly $\epsilon^{j+1}F_{\epsilon,j}(L_\epsilon)$,
+where $F_{\epsilon,0}(l)=l$ and
+\[
+ F_{\epsilon,j+1}(l)=
+ \frac{a_\epsilon(l)F_{\epsilon,j}(l)}{1+\epsilon l}
+ -\int\frac{F_{\epsilon,j}(u)(u-l)_+}{1+\epsilon u}
+                                                    \mu_\epsilon(du).
+ \tag{25}
+\]
+Indeed applying the Metropolis transition to a signed measure of total
+mass zero gives its rejection term minus the complementary incoming
+acceptance term. This proves the recursion by induction.
+
+For points in the support, the possibly small denominators in (25) obey
+the useful bounds
+\[
+ \frac{a_\epsilon(l)}{1+\epsilon l}
+       \le l_++\E(L_\epsilon)_-,\qquad
+ \frac{(u-l)_+}{1+\epsilon u}\le u_++l_-.              \tag{26}
+\]
+For the first bound, $l\ge0$ is immediate. If $u<l<0$, then
+$(l-u)/(1+\epsilon l)\le-u$, since
+$l(1+\epsilon u)\le0$. For the second, $u\ge0$ is immediate; if
+$l<u<0$, use $(u-l)/(1+\epsilon u)\le-l$, since
+$u(1+\epsilon l)\le0$. The other cases have zero positive part.
+
+Uniform boundedness of moments through order $k+1$ and (26) give
+\[
+ |F_{\epsilon,j}(l)|\le C_j(1+|l|^{j+1}),\qquad j\le k. \tag{27}
+\]
+Induction also gives locally uniform convergence
+$F_{\epsilon,j}\to F_j$. For the integral at step $j+1$, truncate
+$u$ to a compact interval, use local uniform convergence there, and
+bound the tail by a constant times $1+|u|^{j+2}$. Its uniform
+integrability follows from the assumed Wasserstein convergence, since
+$j+2\le k+1$. The same argument and (27), using a coupling that
+converges in $L^{k+1}$, show
+$F_{\epsilon,k}(L_\epsilon)\to F_k(L)$ in $L^1$.
+Taking half the integrated absolute residual proves the limit in (24).
+
+It remains to show that the limiting constant is positive. Each $F_j$
+is continuous and grows at most like $1+|l|^{j+1}$. If
+$b=\operatorname{ess\,sup}L<\infty$, then $b>0$, $a(b)=b$, and
+the integral term in (23) vanishes at $b$. Hence $F_j(b)=b^{j+1}>0$;
+continuity and the definition of essential supremum give positive
+probability of $F_j(L)>0$. If the essential supremum is infinite,
+induction in (23) gives $F_j(l)/l^{j+1}\to1$ as $l\to+\infty$:
+$a(l)/l\to1$, and the integral over $L>l$ tends to zero by the
+available moment of order $j+2$ at step $j+1$. Again $F_j(L)>0$ on
+an event of positive probability. This proves $C_k>0$.
+\end{proof}
+
+\begin{corollary}[Every order before the sector floor is sharp]
+For the neural posterior in Theorem~\ref{thm:rate}, every integer
+$0\le k\le r-5$ has
+\[
+             \|\widehat\Pi_{N,k}-\Pi_N\|_{\TV}
+                         \sim C_kN^{-(k+1)/2},          \tag{28}
+\]
+where (23)--(24) use the explicit variable $L=\mathcal L$ in (18).
+\end{corollary}
+\begin{proof}
+The proof of Theorem~\ref{thm:constants} gives weak convergence of
+$\sqrt N(w_N-1)$ to $\mathcal L$ and bounded moments of order
+$p_*=r-3$. Thus it gives Wasserstein convergence at every smaller
+order, including $k+1\le r-4$. Apply Theorem~\ref{thm:hierarchy} with
+$\epsilon=N^{-1/2}$. The omitted sector has probability
+$O(N^{-p_*/2})=o(N^{-(k+1)/2})$. At $k=r-4$ the missing sector is
+already of the same order as the bound, and this perturbation argument
+does not identify its leading constant.
+\end{proof}
+
+\section{Completion and limitations}
+Apply Lemma~\ref{lem:imh} with $p=k+1\le p_*$. Equation (16) gives
+$O(N^{-(k+1)/2})$ distance to the canonical conditional posterior.
+Uniform random injection is the same Markov operation for the two laws,
+so it cannot increase total variation. Add (3) to compare with the full
+posterior; $b=p_*/2$ gives (5). At $k=r-4=p_*-1$ this yields
+$O(N^{-b})$. Further fixed updates cannot increase distance to the
+conditional stationary law. Every output remains in $G_N$, giving the
+lower bound $\Pi_N(G_N^c)\ge cN^{-b}$ and hence (6).
+
+At fixed dimension each proposal, output evaluation, and importance
+ratio uses $O(N)$ arithmetic operations; there are only $k+1$ proposals
+per independent chain. The proposal's positive limiting acceptance
+proves the expected-cost statement. No assertion about rapid mixing
+from an arbitrary initial network is involved.
+
+The theorem concerns full labels and a width-scaled likelihood. It does
+not provide polynomial-in-dimension pretraining, nor does it cover a
+hard-margin posterior using the earlier approximate-slack proposal:
+that proposal has a support mismatch near the margin boundary. A
+different full Gaussian disintegration is needed for the hard case.
+Floating-point importance diagnostics are useful checks of the formulas,
+but are not certificates of total variation to the full neural posterior.
+The proof above is conventional and not fully Lean formalized.
+
+\begin{thebibliography}{9}
+\bibitem{Liu} J. S. Liu, \emph{Metropolized independent sampling with
+comparisons to rejection sampling and importance sampling}, Statistics
+and Computing 6 (1996), 113--119.
+\bibitem{DJW} G. Deligiannidis, P. E. Jacob, E. M. Khribch, and G. Wang,
+\emph{On importance sampling and independent Metropolis--Hastings with an
+unbounded weight function}, arXiv:2411.09514v2 (2025).
+\url{https://arxiv.org/abs/2411.09514}.
+\end{thebibliography}
+\end{document}

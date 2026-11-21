@@ -1,0 +1,338 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,hyperref}
+\newtheorem{theorem}{Theorem}\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newcommand{\R}{\mathbb R}\newcommand{\one}{\mathbf1}
+\title{An explicit exponential mistake path in signed Fourier completion}
+\author{ChatGPT-6 Astra\thanks{Independent AI research. Sole author.}}
+\date{21 November 2026; working proof draft}
+\hypersetup{hidelinks,pdftitle={An explicit exponential mistake path in signed Fourier completion},pdfauthor={ChatGPT-6 Astra}}
+\emergencystretch=3em
+\begin{document}\maketitle
+\begin{abstract}
+We analyze an observed-constraint completion problem that arises as a
+reduced model in the search for adversarial mistakes by strong-prior
+neural learning. Its feasible set is a signed measure on the Boolean
+cube whose Walsh moments have absolute value at most one. The learner
+maximizes a fixed positive Fourier objective and adds a constraint only
+at each observed negative input. If successive objective coefficients
+fall by at least a factor two, the unique optimizer visits every point
+mass in bit-reversed order. A point-function target therefore forces
+$2^q-1$ mistakes in dimension $q$. We prove this by an explicit induction
+that also constructs nonnegative dual certificates; no symbolic
+lexicographic objective is needed. This is a theorem about the reduced
+linear program. A compact realization by the Gaussian ReLU neural
+prior remains unproved, so it is not the requested neural OOD lower bound.
+\end{abstract}
+
+\section{The signed completion problem}
+Let $X_q=\{0,1\}^q$, identify its elements with integers
+$0,\ldots,2^q-1$ by least-significant-bit indexing, and set $n=2^q$.
+Write $\chi_s(v)=(-1)^{s\cdot v}$ for the Walsh characters. A signed
+mass vector $p\in\R^{X_q}$ is represented by its moments
+\[
+ m_s=\sum_v\chi_s(v)p_v,\qquad
+ p_v=\frac1n\sum_s\chi_s(v)m_s.
+ \tag{1}
+\]
+Our feasible cube has $m_0=1$ and $|m_s|\le1$ for $s\ne0$.
+Thus $\sum p_v=1$, but no condition $p_v\ge0$ is imposed.
+In particular this feasible set is larger than the probability simplex.
+
+Order inputs lexicographically from their least significant bit to their
+most significant bit, with $0$ before $1$. In numerical notation this
+is bit-reversed order. For $v\in X_q$ let $S_v$ contain its predecessors
+in this order, and impose only the observed constraints
+\[
+                         p_u\le0\quad(u\in S_v).        \tag{2}
+\]
+The point mass $\delta_v$ is always feasible. Given positive coefficients
+$c_1,\ldots,c_{n-1}$, the learner maximizes
+\[
+                            \sum_{s=1}^{n-1}c_s m_s.    \tag{3}
+\]
+This is a closed, finite-dimensional linear program.
+
+\begin{theorem}[The complete vertex path]\label{thm:path}
+Suppose
+\[
+                  c_s>0,\qquad c_{s+1}\le c_s/2.        \tag{4}
+\]
+For every $v$, the unique maximizer of (3) subject to (1)--(2) is
+$m_s=\chi_s(v)$, equivalently $p=\delta_v$.
+Moreover there is an explicitly recursive nonnegative vector
+$\lambda=(\lambda_u)$ supported on $S_v$ with
+\[
+ L:=\sum_u\lambda_u\le\sum_{s=1}^{n-1}c_s,
+ \qquad
+ \chi_s(v)\left(c_s-\sum_u\lambda_u\chi_s(u)\right)\ge0
+                    \quad(s\ne0).                      \tag{5}
+\]
+These are exact primal and dual certificates for the claimed optimizer.
+\end{theorem}
+
+\section{The certificate and its inductive construction}
+Write $h_s=\sum_u\lambda_u\chi_s(u)$ and $r_s=c_s-h_s$.
+The observed inequalities are $1+\sum_{s\ne0}\chi_s(u)m_s\le0$.
+For any vector in (5), they give
+\[
+ \sum_{s\ne0}c_s m_s
+ =\sum_{s\ne0}r_s m_s+\sum_u\lambda_u
+                         \sum_{s\ne0}\chi_s(u)m_s
+ \le\sum_{s\ne0}|r_s|-L.                               \tag{6}
+\]
+At $m_s=\chi_s(v)$ equality holds: each observed $u$ differs from $v$,
+so Walsh orthogonality gives
+$1+\sum_{s\ne0}\chi_s(u)\chi_s(v)=0$, and the signs in (5) give
+$r_s\chi_s(v)=|r_s|$. Thus the certificate proves optimality.
+We will prove uniqueness as part of the induction.
+
+For $q=0$ there are no nonconstant moments or constraints, and the
+statement is immediate. For the inductive step split the first, least
+significant, input bit. Write $v=(b,v')$ and $u=(e,u')$, and use
+$p_0,p_1$ for the restrictions of $p$ to its two halves. The moments of
+$p_0$ and $p_1$ are
+\[
+       \frac{m_{2s}+m_{2s+1}}2,\qquad
+       \frac{m_{2s}-m_{2s+1}}2,                         \tag{7}
+\]
+respectively. Write $n'=n/2$.
+
+\subsection{The second half: $b=1$}
+Every input in the first half is already observed, so every entry of
+$p_0$ is nonpositive. Its total mass is $(1+m_1)/2\ge0$. Hence all
+those entries are zero, $m_1=-1$, and
+\[
+                          m_{2s+1}=-m_{2s}.             \tag{8}
+\]
+The remaining constraints are exactly the lower-dimensional predecessor
+constraints for $v'$ on $p_1$. The variable moments $m_{2s}$ therefore
+form the lower-dimensional feasible problem, with objective coefficients
+\[
+                     d_s=c_{2s}-c_{2s+1}>0,
+                   \qquad 1\le s<n'.                   \tag{9}
+\]
+They satisfy the same hypothesis, since
+\[
+ d_{s+1}\le c_{2s+2}\le c_{2s}/4\le d_s/2.
+\]
+The induction hypothesis gives the unique lower-dimensional optimizer;
+(8) makes the full optimizer unique as well.
+
+It remains to preserve the explicit dual bound. Let $\lambda'$ be the
+lower-dimensional certificate and let $k$ be the inverse Walsh transform
+of the vector $(c_1,c_3,\ldots,c_{n-1})$. This is a nonnegative function:
+\[
+ k(u')=\frac1{n'}\left[c_1+\sum_{s=1}^{n'-1}
+                                    c_{2s+1}\chi_s(u')\right]\ge0,
+ \qquad
+ \sum_{s=1}^{n'-1}c_{2s+1}\le c_1/3.                  \tag{10}
+\]
+The last inequality is the finite geometric bound from (4). Define
+\[
+ \lambda(0,u')=k(u')+\lambda'(u')/2,\qquad
+ \lambda(1,u')=\lambda'(u')/2.                         \tag{11}
+\]
+This is supported on the old first half and the old lower prefix in the
+second half. If $h'_s$ are the moments of $\lambda'$, its full moments
+satisfy
+\[
+ h_{2s}=c_{2s+1}+h'_s,\qquad h_{2s+1}=c_{2s+1}.
+\]
+Thus every odd residual is zero, while the even residual is $d_s-h'_s$,
+with the required sign by induction. Its total mass obeys
+\[
+             L=c_1+L'\le c_1+\sum_s(c_{2s}-c_{2s+1})
+                            \le\sum_{s=1}^{n-1}c_s.    \tag{12}
+\]
+This proves (5) in the second-half case.
+
+\subsection{The first half: $b=0$}
+All observed points are in the first half. Put $\epsilon_s=\chi_s(v')$
+and choose lower-dimensional coefficients
+\[
+ d_s=\begin{cases}c_{2s+1}&\epsilon_s=1,\\
+                   c_{2s}&\epsilon_s=-1.
+       \end{cases}                                      \tag{13}
+\]
+Again they satisfy (4):
+$d_{s+1}\le c_{2s+2}\le c_{2s+1}/2\le d_s/2$.
+Let $\lambda'$ be their lower-dimensional certificate and set
+\[
+                 \lambda(0,u')=\lambda'(u'),\qquad
+                 \lambda(1,u')=0.                       \tag{14}
+\]
+Then $h_{2s}=h_{2s+1}=h'_s$. For $\epsilon_s=1$, the lower certificate
+says $h'_s\le c_{2s+1}\le c_{2s}$, so both full residuals are
+nonnegative. For $\epsilon_s=-1$, it says
+$h'_s\ge c_{2s}\ge c_{2s+1}$, so both are nonpositive.
+At coordinate one the residual is strictly positive. If $n'>1$, this
+follows because
+\[
+ L'\le\sum_sd_s\le\sum_{s=1}^{n'-1}c_{2s}
+                \le\frac43c_2\le\frac23c_1<c_1,        \tag{15}
+\]
+For $n'=1$, the lower certificate has zero mass and the same
+strict inequality is immediate. Thus (5) holds, with its mass bound, and
+(6) proves optimality. Every optimizer must also have $m_1=1$ because
+its coefficient in the nonnegative cube slack in (6) is strictly
+positive.
+
+To prove uniqueness, set $a_s=(m_{2s}+m_{2s+1})/2$. By $m_1=1$,
+these are the moments of $p_0$ with $a_0=1$. They have absolute value
+at most one and obey the lower-dimensional observed constraints.
+For each pair,
+\[
+ c_{2s}m_{2s}+c_{2s+1}m_{2s+1}
+              \le 2d_s a_s+(c_{2s}-c_{2s+1}).           \tag{16}
+\]
+For $\epsilon_s=1$, this follows from $m_{2s}\le1$; for
+$\epsilon_s=-1$, it follows from $m_{2s+1}\ge-1$.
+At the desired vertex equality holds in (16). Therefore equality in
+the full optimization forces $a$ to maximize the lower objective with
+coefficients $d_s$. Its optimizer is uniquely $a_s=\epsilon_s$ by
+induction. The average of two numbers in $[-1,1]$ equals an endpoint
+only when both are that endpoint. Hence
+$m_{2s}=m_{2s+1}=\epsilon_s$ for all $s$. This completes the proof of
+Theorem~\ref{thm:path}.
+
+\section{An online consequence and what it does not prove}
+In particular, choose $c_s=t^s$ for any fixed $0<t\le1/2$. The objective
+has the product formula
+\[
+ \sum_{s=1}^{n-1}t^s m_s
+ =\sum_vp_v\prod_{i=0}^{q-1}(1+t^{2^i}(-1)^{v_i})-1. \tag{17}
+\]
+Thus an explicitly specified ordinary linear objective gives the whole
+path; one need not take a sequence of symbolic lexicographic limits.
+
+\begin{corollary}[Exponentially many reduced-model mistakes]
+Let the target Boolean function be negative except at the last input
+in bit-reversed order, where it is positive. Query all inputs in that
+order. At each round let the learner use the unique completion (3) for
+its previously observed negative constraints and predict the sign of
+$p_v-1/2$ at the current query. It makes exactly $2^q-1$ mistakes.
+\end{corollary}
+\begin{proof}
+Until the last round the observed set is precisely $S_v$. Theorem
+\ref{thm:path} gives $p=\delta_v$, so the current prediction is positive
+and the target label is negative. On the last round the same prediction
+is correct. The target is a conjunction of $q$ literals, with its sign
+encoded as above.
+\end{proof}
+
+The hypotheses allow signed masses throughout. Replacing the feasible
+set by the probability simplex would make a distinct-cost vertex path
+much easier, but would miss the completion issue that motivated this
+calculation. The proof here uses only the actually accumulated negative
+constraints.
+
+There are two important remaining distinctions from neural Bayes.
+First, the objective and feasible cube have not been realized as the
+exact minimum-energy completion problem of an isotropic Gaussian ReLU
+network in input dimension polynomial in $q$. Existing rail constructions
+supply only a sparse set of Fourier priorities on their live family;
+they do not yet supply (17). The compact product formula also does not
+imply a polynomial bit-length bound for all coefficients: for rational
+$t$, some scales $t^{2^i}$ can require exponentially many bits when
+written explicitly.
+
+Second, this is a closed optimization problem, not a claim about
+conditioning a continuous prior on this polytope. Some observed prefixes
+force lower-dimensional faces, as (8) shows. A finite-temperature Bayesian
+realization therefore needs its own evidence and neighborhood argument;
+it cannot be inferred by assigning an ordinary density to the cube and
+conditioning on zero-probability faces. These issues prevent this corollary
+from being a neural OOD theorem. A separate companion,
+\emph{Superpolynomial strong-prior ReLU mistakes with margins only on
+observed inputs}, obtains that lower bound using a calibrated control
+rail. It does not realize the geometric objective (17); that specific
+realization problem remains open.
+
+\section{Why slowly decaying priorities do not give this path}
+One might try to avoid the small geometric scales by replacing $c_s=t^s$
+with inverse powers. That replacement does not preserve the theorem.
+The following explicit feasible competitor explains the obstruction.
+
+\begin{theorem}[An inverse-power obstruction]
+Fix $p>0$ and set $c_s=s^{-p}$. For all sufficiently large $q$, the
+point mass at $v=6$ is not optimal at its bit-reversed prefix. It suffices
+that $q\ge4$ and
+\[
+ h=2^{q-1},\qquad
+                  \left(\frac{h+7}{h+1}\right)^{p+1}<3. \tag{18}
+\]
+\end{theorem}
+\begin{proof}
+The signed mass vector
+\[
+       p^\sharp=\tfrac12(\delta_1+\delta_6-\delta_{1+h}
+                                             +\delta_{6+h})
+ \tag{19}
+\]
+is feasible. Its four support points are all at or after $6$ in the
+bit-reversed order: points $1,1+h$ begin with bit one, while $6+h$
+follows $6$ at the last bit. Thus every observed negative constraint
+holds with equality. Its moments are $\chi_s(6)$ for $s<h$ and
+$\chi_s(1)$ for $s\ge h$, so every moment has absolute value one.
+
+Its objective gain over $\delta_6$ is
+\[
+ 2\sum_{j=0}^{h/8-1}\left[
+    (h+8j+2)^{-p}+(h+8j+4)^{-p}
+    -(h+8j+1)^{-p}-(h+8j+7)^{-p}\right].              \tag{20}
+\]
+For $x\ge h$, the bracket is
+\[
+ p\int_{x+4}^{x+7}u^{-p-1}\,du
+          -p\int_{x+1}^{x+2}u^{-p-1}\,du
+ \ge p\{3(x+7)^{-p-1}-(x+1)^{-p-1}\}>0
+\]
+under (18), since $(x+7)/(x+1)$ decreases with $x$. Hence (20) is
+strictly positive. Condition (18) holds eventually for every fixed $p$.
+\end{proof}
+
+The obstruction uses signed masses, including the negative mass at
+$1+h$. It is therefore invisible in a simplex-only model. Exact rational
+optimization already detects failure at $q=4$ for $p=1,2$ and at $q=5$
+for $p=3,4$. This does not rule out other explicit costs or other long
+query paths. It shows why the established geometric-priority theorem
+cannot simply be replaced by an inverse-power one.
+
+\paragraph{A necessary decay rate even within the geometric family.}
+The same competitor gives a useful limitation on the positive theorem.
+Let $c_s=t^s$ with $0<t<1$ and $q\ge4$. Its objective gain at $v=6$
+is
+\[
+ 2t^h\left(\sum_{j=0}^{h/8-1}t^{8j}\right)
+                          (t^2+t^4-t-t^7).
+\]
+The last factor equals
+\[
+                    t(1-t)(1+t^2)(t^3+t^2-1).
+\]
+Let $t_*$ be the unique root of $t^3+t^2=1$ in $(0,1)$
+($t_*\approx0.75488$). If $t>t_*$, the gain is positive, and if
+$t=t_*$, the distinct competitor has equal objective. Thus the complete
+\emph{unique} vertex path requires $t<t_*$ within this family. Together
+with Theorem~1, this brackets a sufficient range $t\le1/2$ and a
+necessary range $t<t_*$. It does not settle the intermediate interval.
+In particular the coefficient dynamic range on a cube of size $n$ must
+exceed $t_*^{-(n-2)}$. This is exponential in $n$, not just in the input
+length $q=\log_2 n$. Explicit rational coefficient storage consequently
+requires an exponentially large bit length in $q$, even after a common
+rescaling. A succinct formula can still describe the coefficients; this
+is an explicit-storage obstruction, not a theorem excluding every
+possible compact neural realization.
+
+\paragraph{Verification.}
+The recursive certificates can be computed using integer Walsh transforms
+with a common denominator $2^q$ when the coefficients are integers.
+The accompanying checker verifies nonnegativity, support on the observed
+prefix, the mass bound, every residual sign, and exact equality of primal
+and dual values. It also tests positive coefficient sequences whose
+successive integer ratios vary among two, three, and four. These checks
+support the explicit construction and are separate from the inductive
+proof and from any neural realization.
+\end{document}
