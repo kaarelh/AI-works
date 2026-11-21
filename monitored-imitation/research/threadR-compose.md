@@ -2,8 +2,8 @@
 
 *Research note by Claude (Anthropic), thread R of the follow-up to [`../slack-imitation.md`](../slack-imitation.md), version 2. Draft; not refereed.*
 * *Code:* [`threadR_compose.py`](threadR_compose.py), experiment R1, exact posteriors. It imports E6's, G1's and F1's classes unchanged from [`../code/slack_imitation.py`](../code/slack_imitation.py), [`threadG_byproducts_sim.py`](threadG_byproducts_sim.py) and [`threadF_certified.py`](threadF_certified.py). Only the hedge class is new.
-* *Outputs:* [`threadR_compose.out`](threadR_compose.out) (all tables, the reproduction checks and the interference ratios) and [`threadR_compose.json`](threadR_compose.json) (every cell, with standard errors).
-* *Runtime:* 44 minutes on 4 cores, 2.9 CPU hours. Run with `python3 -B threadR_compose.py`.
+* *Outputs:* [`threadR_compose.out`](threadR_compose.out) and [`threadR_compose.json`](threadR_compose.json) (every cell, with standard errors). The `.out` file holds all the tables, the reproduction checks, the interference ratios and three structural checks.
+* *Runtime:* 44 minutes on 4 cores from scratch, 2.9 CPU hours. Run with `python3 -B threadR_compose.py`.
 
 Setting and notation are those of slack-imitation.md §§1–3, with thread Q's VSP (threadQ-alternatives.md §3), thread G's reviews and labelled decisions (threadG-byproducts.md §§4–5), and thread F's certified notebook (threadF-certified.md §§2, 4, 5).
 
@@ -34,12 +34,12 @@ Setting and notation are those of slack-imitation.md §§1–3, with thread Q's 
 3. **The full VSI stays bounded and roughly flat on every mechanism except M3 and M5.** Over a 16-fold increase in n₀ its cost changes by a factor of 0.9–1.3 on M1, M2, M4, M6, M7 and M8. On M3 and M5 it grows by 14.7. Each M3 or M5 rejection costs about 0.8n₀ queries, against Theorem Q4's worst case of 3n₀. That is the factor theory says cannot be avoided (Theorems 3 of note.md and G3).
 4. **Without a verifier the full scheme (SI-ABC+D) is bounded on M1, M2, M4, M6 and M7.** It grows in proportion to n₀ on M3 and M5, as theory says it must, and also on M8. M8 is the case of Theorem F3: a true obstruction record that a trusting human never revisits. No component without a verifier touches it.
 5. **Interference is small among VSI's components, and large only for asking.**
-   * *VSI's extra streams* cost the bounded-setback humans of M1 a factor of 1.2–1.4. That is well within Lemma Q2's factor 3, and they cut the cost 1.8–100 times on every other mechanism.
+   * *VSI's extra streams* cost the bounded-setback humans of M1 a factor of 1.2–1.4. That is well within Lemma Q2's factor 3, and they cut the cost by 1.8 to almost 300 times on every other mechanism.
    * *The L-first step* never fires except on M7, and it costs nothing elsewhere.
    * *The last-review query* costs doing-only humans (M5) a factor of 1.7–2.1, because half of the queries are spent on a step that is never a mistake. The review scaffold itself lengthens their horizon, adding another 1.25.
    * *Asking on top of VSI* costs 5–35 times as much on M1, M2, M7 and M8, and 1.5 on M4 and M6. It never helps there, because in these classes almost all of K is problem-specific (slack-imitation.md §6).
 6. **Reproduction.** All 120 published numbers the code can regenerate reproduce exactly. These are E6's CI, SI, SI-V and SI-V-ABC cells, EQ's U and USH, referee 5's online test, G1's oracle and online tables, and F1's n₀ = 32 column (§4).
-7. **The caveat.** The pointer list is perfect in M2, M6 and M8. Each run has one verdict, one decision, or one obstruction record, and on a failed run it is a mistake. That is checked: on 4,958 failed M6 runs and 5,684 failed M8 runs, the first list entry is always a mistake. A real post-mortem list is weaker. On TRUST-like notebooks with many obstruction records (Theorem F3), the list would cost in proportion to their number.
+7. **The caveat.** The pointer list is perfect in M2, M6 and M8. Each run has one verdict, one decision, or one obstruction record, and on a failed run it is a mistake. That is checked in the output: on 4,958 failed M6 runs and 8,603 failed M8 runs, the first list entry is always a mistake. A real post-mortem list is weaker. On TRUST-like notebooks with many obstruction records (Theorem F3), the list would cost in proportion to their number.
 
 ## 1. Setup
 
@@ -113,7 +113,10 @@ E6's value entries are verdicts, not labelled decisions. So no design element ap
 
 *Oracle stopping is reported as well.* For the protocols that never ask (CI, SI, SI+D), the same run also records E6's and G1's oracle-stopping cost: task queries until at most 2% of problems fail. Where that takes more than R rounds, the run continues past R (Table 3 in the output). These columns reproduce E6 and G1 exactly.
 
-*Convergence.* By the end of R, learning has converged everywhere except on the slow mechanisms (output, Table 4). Failures in the last quarter of the rounds are 0 for M1, M4, and M6–M7 under their handling component. They are 400–3,000 for M3, M5 and M5′ at the largest horizon, and 52–118 for M7/M8 under SI or SI-ABC. Those counts are lower bounds on the totals. Their growth with n₀ is visible all the same.
+*Convergence.* By the end of R, learning has converged everywhere except on the slow mechanisms (output, Table 4).
+* *Converged.* Failures in the last quarter of the rounds are 0 for M1 and M4 under every slack protocol, and for M6 and M7 under their handling component.
+* *Not converged.* At the largest horizon they are 424–2,969 for M3, M5 and M5′ under the slack protocols (CI, which needs half the queries there, has converged). They are 52–118 for M7/M8 under SI or SI-ABC, and 16 for M6 under SI.
+* *So* those counts are lower bounds on the totals. Their growth with n₀ is visible all the same.
 
 **With a verifier:** total task queries (asks plus searches plus L-flagged queries) until every one of the 100 problems has an accepted run.
 
@@ -219,12 +222,12 @@ Total task queries for all 100 problems, mean ± standard error, with asks, reje
   * The residue is heavy-tailed, as slack-imitation.md §5 predicts for confident commissions. At n₀ = 128, 34 of 40 humans have no failure and 3 have 320–475: single-mistake runs, found at rate 1/n.
 * **M3 (silent): nothing makes it flat.**
   * Slack doubles the cost under uniform queries (CI 705 → 12,619 against SI 1,428 → 25,629; Remark 2).
-  * Asking does not fire once n₀ ≥ 32.
+  * Asking barely fires (0.6 → 0.2 → 0.0 asks per problem) and barely helps.
   * VSI's scan stream cuts the verifier's cost 2.4–2.7×, to about 0.8n₀ per insight (Lemma Q3).
 * **M4 (readable by-product, reviews): the last-review query.**
   * SI+D stays at 80–89 failed runs, against SI's 227–331 (Theorem G4). Its oracle cost is 473–554, G1's MIX-REV.
   * Asking alone halves SI's failures at N ≥ 32, and the review query removes most of the rest: 36 at N = 128, G1's result.
-  * With a verifier, the list's last-review entry gives 122–137, about 2.5 queries per rejection.
+  * With a verifier, the list's last-review entry gives 122–137, about 2.5 queries per rejection. On all 5,284 failed runs checked, the last review step was a mistake, as Theorem G4's ripeness says.
 * **M5 (doing-only by-product): nothing.**
   * Every protocol costs in proportion to n₀, as Theorem G3 requires. Asking never fires (Proposition G6(a)).
   * VSI's scan is the only help, 2.4–2.6×.
@@ -249,7 +252,7 @@ Yes, on every mechanism except M3 and M5.
 
 ### 3.3 Interference
 
-* **VSI's extra streams on bounded-setback humans: ×1.2–1.4 (M1).** This is within Lemma Q2's factor 3. Part of the cost is extra rejections (10.4 → 12.9), because a hit at a verdict step teaches less than a hit later in the run (EQ). On every other mechanism the streams cut the cost: ×0.4 on M3, M4, M5 and M5′; ×0.02–0.3 on M2, M6, M7 and M8.
+* **VSI's extra streams on bounded-setback humans: ×1.2–1.4 (M1).** This is within Lemma Q2's factor 3. Part of the cost is extra rejections (10.4 → 12.9), because a hit at a verdict step teaches less than a hit later in the run (EQ). On every other mechanism the streams cut the cost: ×0.4–0.55 on M3, M4, M5 and M5′; ×0.003–0.3 on M2, M6, M7 and M8.
 * **L-first: no cost.** It never fires outside M7, since nothing else is checkable.
 * **The list's last-review entry on doing-only humans: at most one query per search.** A stream with nothing left is skipped, so VSI on M5 pays nothing measurable for it (424 against M5′'s 337 is the scaffold, below).
 * **The last-review query without a verifier on doing-only humans (M5): ×1.7–1.8 failed runs, ×1.9–2.1 oracle cost.** Half of the queries go to a review step that is never a mistake for them. Theorem G4 charges other failures at half the uniform rate for this reason. This is the one design element that costs a mechanism it does not help, and the cost is bounded by about 2.
@@ -263,7 +266,7 @@ Yes, on every mechanism except M3 and M5.
 
 ### 3.4 What the classes flatter
 
-* **The pointer.** M2, M6 and M8 each have one verdict, decision or obstruction record per run, and it is always a mistake on a failed run. In 5,684 failed M7/M8 runs at n₀ = 8 and 32, the first list entry was a mistake every time. A real post-mortem list will be weaker. On TRUST-like notebooks with many obstruction records per run (Theorem F3's class), the list stream would cost in proportion to their number, and M8's VSI cost would grow like n₀.
+* **The pointer.** M2, M6 and M8 each have one verdict, decision or obstruction record per run, and it is always a mistake on a failed run. In 8,603 failed M8 runs at n₀ = 8 and 32, the first list entry was a mistake every time. A real post-mortem list will be weaker. On TRUST-like notebooks with many obstruction records per run (Theorem F3's class), the list stream would cost in proportion to their number, and M8's VSI cost would grow like n₀.
 * **Asking on M2.** E6's prior flatters it (referee 5).
 * **Scale.** K is small and almost entirely problem-specific in every class, so asks never amortize. In a real human much of K is shared, which favours asking more than here.
 * **The verifier.** It is perfect: (A3) and (A4) of Theorem Q4 hold exactly.
@@ -277,7 +280,7 @@ All 120 published numbers that the code can regenerate agree exactly, to the las
   * CI on the same humans, SI, SI-V and SI-V-ABC (α = 0.3) for noticing, fooled and silent humans at n₀ = 8, 32 and 128.
   * Here they are columns CI and SI of the oracle table (M1–M3), and SI-V and SI-V-ABC.
 * **EQ** (threadQ-alternatives.md §8), 18 numbers: U and USH for the same kinds and horizons. VSI on M1–M3 *is* EQ's U+S+H, since nothing there is checkable and there are no reviews or decisions.
-* **Referee 5's online test** (`verification/referee5_si_abc_online.out`), 20 numbers: failed runs and asks in the first 3,000 rounds of SI and SI-ABC, compared with its first 20 humans at n₀ = 32.
+* **Referee 5's online test** (`verification/referee5_si_abc_online.out`), 20 numbers: failed runs and asks in the first 3,000 rounds of SI and SI-ABC. At n₀ = 32 referee 5 used 20 humans, so the comparison there is with the first 20 of the 40 here.
 * **G1's oracle table** (threadG-byproducts.md §7), 12 numbers: DO0 and DO (M5′'s CI and SI), REVIEW with uniform and MIX-REV queries (M4's SI and SI+D).
 * **G1's online table**, 18 numbers: from a separate run with G1's online seeds (104729N + s, 20 humans, 3,000 rounds), since G1's two tables used different humans.
 * **F1's n₀ = 32 column** (threadF-certified.md §8), 16 numbers: SI, SI-ABC, CSI (= SI+D) and CSI-ABC (= SI-ABC+D), failed runs and asks, for C and W with trusting humans.

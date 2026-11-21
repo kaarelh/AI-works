@@ -3,7 +3,7 @@
 A research note on a question from Kaarel Hänni about **principled human imitation** (section 3.2 of his talk *Simpler versions of the alignment problem we still can't solve*, MISO, 16 November 2026).
 
 * **The question.** The talk's best protocol, *chained imitation*, does Solomonoff function induction on a human's input–output pairs, chains the learned map as in task decomposition, and queries the human on the distribution this induces ("train on test"). Find a protocol more likely to work, for a human that is a fixed deterministic program, under assumptions likely to be true of humans. Ideally, show that O(K(human)) reasonable queries suffice.
-* **The fifth note, the answer to the latest question:** [`verified-slack.md`](verified-slack.md). It recommends *verified slack imitation*: slack imitation, plus a verifier of finished results, plus a search on rejected runs weighted towards scanning. Correctness rests only on the verifier's soundness, and the cost is at most 2n₀K task queries in the worst case. It was revised after referee 6 and a second red team ([`verification/referee-report-verified-slack.md`](verification/referee-report-verified-slack.md), [`research/threadS-redteam2.md`](research/threadS-redteam2.md), [`verification/response-verified-slack.md`](verification/response-verified-slack.md)). It synthesizes eleven research threads (A–H, J, L, N, Q, R) in [`research/`](research/), with lower bounds showing what no scheme can do.
+* **The fifth note, the answer to the latest question:** [`verified-slack.md`](verified-slack.md). It recommends *verified slack imitation*: slack imitation, plus a verifier of finished results, plus a search on rejected runs weighted towards scanning. Correctness rests only on the verifier's soundness, and the cost is at most 2n₀K task queries in the worst case. It was revised after referee 6 and a second red team ([`verification/referee-report-verified-slack.md`](verification/referee-report-verified-slack.md), [`research/threadS-redteam2.md`](research/threadS-redteam2.md), [`verification/response-verified-slack.md`](verification/response-verified-slack.md)). It synthesizes the research threads in [`research/`](research/) (A–H, J, L, N, Q, R, S, T), with lower bounds showing what no scheme can do.
 * **The fourth note:** [`slack-imitation.md`](slack-imitation.md), version 2: slack imitation and its theorems, used by the fifth note. It gives the scheme I am most sure would work with a deterministic human, a proof that it works if the human has *bounded setback*, the case that humans have it, and experiment E6. It synthesizes the earlier notes and five research threads in [`research/`](research/) (working branch only).
 * **The fourth note's referee and red team** ([`verification/referee-report-slack-imitation.md`](verification/referee-report-slack-imitation.md), [`research/threadE-redteam.md`](research/threadE-redteam.md), [`verification/response-slack-imitation.md`](verification/response-slack-imitation.md)). Both found the main theorems correct, and the referee reproduced E6 exactly. The referee found:
   * three errors in secondary claims: the read-out premise, "omissions are uncertain", and a factor 1/(1−ρ) in the fallback;
@@ -60,14 +60,15 @@ A research note on a question from Kaarel Hänni about **principled human imitat
    * insights triggered only by doing cost every task-only protocol about n per insight;
    * so do trusted true records of failed attempts, and confident commissions accepted by a fooled human.
 4. **How sure I am, after a second red team.** The probabilities that VSI works on a real careful researcher:
-   * with a proof assistant on a formally stated goal: **70%**, the scheme I am most sure of;
+   * with a proof assistant on a formally stated goal, with an independent statement review and hardened checking: **70%**, the scheme I am most sure of. Thread T puts it at about 60% without them;
    * with tests: 45%;
    * with a referee's check of the solution's cone: 45%;
    * with the human's own verification: 40%;
    * without a verifier: 30%.
 
    These are for theory and software; for empirical work, 10% in every row with a human or no verifier.
-5. **The main caveat.** VSI is exactly as sure as its verifier is on the imitator's own most plausible wrong answers. Rerunning until accepted turns every miss into a wrong output.
+5. **The main caveat.** VSI is exactly as sure as its verifier is on the imitator's own most plausible wrong answers. Rerunning until accepted turns every miss into a wrong output. Misformalized goal statements are common: about 25% unreviewed, about 4% with review (thread T).
+6. **E7 (thread R).** Eight failure mechanisms against the protocols. With a verifier, the full scheme stays roughly flat in n₀ on every mechanism except those the lower bounds say must grow (silent humans, insights triggered only by doing).
 
 ## Answers in brief: the fourth note
 
@@ -214,7 +215,8 @@ A research note on a question from Kaarel Hänni about **principled human imitat
 * N: trees;
 * Q: alternatives;
 * R: the composition experiment;
-* S: the red team of the fifth note.
+* S: the red team of the fifth note;
+* T: the calibration of the machine verifier.
 
 The fifth note gives the proofs of its main results itself, and cites the threads for the full proofs of its lower bounds. Remove `research/` when publishing, or publish it as supporting records if the user prefers.
 

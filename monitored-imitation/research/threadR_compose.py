@@ -64,7 +64,14 @@ Seeds, so that the existing experiments are reproduced exactly:
   F classes:  humans 5000 n + s (20; F1), queries seed + 7e8 (F1);
   HEDGE:      humans 4243 n + s (40), queries seed + 1e8.
 
+The output also compares every number the code can regenerate with the published one (E6, EQ,
+referee 5's online test, G1's two tables, F1's n0 = 32 column), and checks three structural facts
+on every failed run of SI's learning (HEDGE's mistakes are t_A..d; REVIEW's last review is a
+mistake; the first entry of VSI's list is a mistake in F1's type W).
+
 Usage: python3 -B threadR_compose.py [--quick] [--outdir DIR] [--cache FILE] [--only M1,M2]
+  (--cache keeps finished tasks in FILE, so an interrupted run resumes; about 45 minutes on
+  4 cores from scratch)
 """
 
 import json
@@ -873,6 +880,51 @@ def reproduction(S, raw, G1on, refs):
     return L
 
 
+def structural(args):
+    """Structural facts the reading relies on, checked on every failed run of SI's online
+    learning (one human, 4 M n rounds):
+      M6: the mistakes are exactly the steps t_A..d (Proposition G7(a));
+      M4: the last review step is a mistake (Theorem G4's ripeness);
+      M8: the first entry of VSI's list (the obstruction record) is a mistake."""
+    mech, size, s = args
+    As, nr, n0, n_slack, sd = humans(mech, size, s)
+    rng = np.random.default_rng(sd + OFFSETS[MECHS[mech]["cls"]][0])
+    nfail = bad = 0
+    for _ in range(4 * M * n_slack):
+        A = As[int(rng.integers(M))]
+        A.build(None)
+        if A.failed():
+            nfail += 1
+            mis = {j for j in range(nr) if A.human(j) != A.code(j)}
+            if mech == "M6":
+                bad += mis != set(range(A.tA, A.d + 1))
+            elif mech == "M4":
+                bad += A.rev[-1] not in mis
+            else:
+                L = A.pointer_list()
+                bad += not (L and L[0] in mis)
+        j = int(rng.integers(nr))
+        A.add(j, A.human(j))
+    return mech, size, nfail, bad
+
+
+def structural_checks(pool, quick):
+    jobs = [(m, size, s) for m, sizes in [("M6", [16, 64]), ("M4", [8, 32]), ("M8", [16, 64])]
+            for size in sizes for s in range(2 if quick else 10)]
+    out = {}
+    for mech, size, nf, bad in pool.imap_unordered(structural, jobs):
+        a, b = out.get((mech, size), (0, 0))
+        out[(mech, size)] = (a + nf, b + bad)
+    what = {"M6": "mistakes are exactly steps t_A..d", "M4": "last review step is a mistake",
+            "M8": "first entry of VSI's list is a mistake"}
+    L = ["\n## Structural checks (SI's online learning, 10 humans per row; every failed run)\n",
+         "| mechanism | horizon | property | failed runs checked | violations |", "|---|---|---|---|---|"]
+    for (mech, size), (nf, bad) in sorted(out.items()):
+        L.append(f"| {mech} | {n0_label(mech, size)} | {what[mech]} | {nf:,} | {bad} |")
+    return "\n".join(L) + "\n", {f"{m}|{n0_label(m, s)}": dict(failed_runs=a, violations=b)
+                                 for (m, s), (a, b) in out.items()}
+
+
 def g1_online_check(pool):
     """G1's online table: 20 humans with G1's online seeds, 3000 rounds."""
     out = {}
@@ -942,6 +994,7 @@ def main():
                     with open(cache, "wb") as f:
                         pickle.dump(done, f)
         G1on = {} if quick or (only and "M4" not in only) else g1_online_check(pool)
+        stext, sjson = structural_checks(pool, quick)
     raw = {}
     for (mech, proto, size, s), r in done.items():
         if mech in mechs:
@@ -967,19 +1020,21 @@ def main():
             r2 = f"{c['queries_mean'] / a['queries_mean']:.2f}" if a and c else "–"
             r3 = f"{d['failed_mean'] / e['failed_mean']:.2f}" if d and e and e["failed_mean"] else "–"
             L.append(f"| {mech} | {n0_label(mech, size)} | {r1} | {r2} | {r3} |")
-    text += "\n".join(L) + "\n"
+    text += "\n".join(L) + "\n" + stext
     wall = time.time() - t0
     cpu = sum(r["secs"] for r in done.values())
     head = (f"# threadR_compose.py: experiment R1 ({'quick' if quick else 'full'}). M = {M} problems "
             f"per human; alpha = {ALPHA}; slack sigma = n/2 except CI.\n# Humans per cell: E6, G and "
-            f"HEDGE classes {4 if quick else 40}, F classes {4 if quick else 20}. Wall time {wall:.0f}s "
-            f"(this invocation), CPU time of all tasks {cpu:.0f}s.\n\n")
+            f"HEDGE classes {4 if quick else 40}, F classes {4 if quick else 20}.\n# CPU time of all "
+            f"{len(done)} tasks {cpu:.0f}s; this invocation ran {len(todo)} of them (the rest from "
+            f"the cache) in {wall:.0f}s wall time.\n\n")
     print(head + text)
     suffix = "_quick" if quick else ""
     with open(os.path.join(outdir, f"threadR_compose{suffix}.out"), "w") as f:
         f.write(head + text)
     js = {f"{m}|{p}|{n0_label(m, s)}": v for (m, p, s), v in sorted(S.items(), key=lambda kv: str(kv[0]))}
     js["_G1_online_check"] = {f"{v}|{p}|N={N}": dict(failed=a, asks=b) for (v, p, N), (a, b) in G1on.items()}
+    js["_structural_checks"] = sjson
     js["_settings"] = dict(M=M, EPS=EPS, ALPHA=ALPHA, ETA_H=ETA_H, W_H=W_H, quick=quick,
                            cpu_seconds=cpu, wall_seconds_last_invocation=wall)
     with open(os.path.join(outdir, f"threadR_compose{suffix}.json"), "w") as f:
