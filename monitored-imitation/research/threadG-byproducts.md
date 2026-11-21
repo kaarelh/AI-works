@@ -14,7 +14,7 @@
 4. **Randomized re-derivation gives no bounded setback (Proposition G2).**
    * *A conservation law.* Averaged over the trigger unit, a run that loses the insight has E|M| = w·(unit-touches)/N ≤ wCn/N mistakes, whatever the redo rule. So a uniform query lands on a mistake with probability at most wC/N.
    * *Recovery.* An omitted insight is recovered only at a later touch of its unit. With redo rate p it stays lost with probability ≈ (u/N)^{p/(1−p)} (1 − p on average), and its setback is then infinite.
-   * *What re-derivation can do* is remove slack's factor-2 penalty on silent humans. A systematic recheck, once the routine is done, does this without seeds and without raising n₀. It never beats chained imitation without slack. G1 at N = 128: slack alone 79,100 task queries; with the recheck 38,300; with seeded redo 38,500 (to be filled from the full run); chained imitation without slack 38,500.
+   * *What re-derivation can do* is remove slack's factor-2 penalty on silent humans. A systematic recheck, once the routine is done, does this without seeds and without raising n₀. It never beats chained imitation without slack. G1 at N = 128: slack alone 79,100 task queries; with the recheck 38,300; with seeded redo 38,700; chained imitation without slack 38,500.
 5. **The slack lemma with random τ (Lemma S-rand, Theorem G1).** With seeds in the input of both chains, Pr[fail] ≤ Pr[τ₀ > n₀] + ((D+1)/(σ+1))·E|M|. Here D + 1 bounds the *truncated mean cost* E[min(c⁺, σ+1)] of a mistake, and an average over all mistakes suffices. A mistake that is never recovered counts σ+1.
    * *Corollary.* If a share β of the mistakes is never recovered, the guaranteed gain over chained imitation is (1−ρ)/(β + (D+1)/(σ+1)). This is thread E's heuristic cap, now a theorem.
 6. **Raw records (§4)** help exactly the *readable* triggers (condition (Rec)), and only if some step rereads them. With an attention window of a records the cost is Θ(n/a) (Corollary G5).
@@ -22,9 +22,9 @@
 8. **Ask-before-committing (Proposition G6).**
    * *Routine steps.* There the posterior mass of a by-product insight is at most 2ηC/N, so asking never fires. It does nothing for doing-only insights.
    * *Reviews and decision points.* There the mass aggregates over every unit covered, so asking fires for every kind of insight whose prior rate exceeds α.
-   * *In G1* asking never fires on doing-only humans. On review humans at N = 32, failed runs fall from 224 to 101 with asking, and to 31 with asking plus last-review queries.
+   * *In G1* asking never fires on doing-only humans. On review humans at N = 128, failed runs in 3,000 online rounds fall from 331 to 150 with asking (3 asks per problem), and to 35 with asking plus last-review queries.
 9. **Hedges (Proposition G7).** For a majority decoder, a hedge that pre-empts A must be a *default*: it is due where A is absent. The step that adopts it is a mistake that tests every earlier trigger time of A at once. If decisions are labelled entries, querying that step gives at most 2K hedge failures, and asking fires there.
-10. **Believability (§7).** By-product insights are, I estimate, about 30% of decisive insights in mathematics, 35% in software and 50% in empirical work.
+10. **Believability (§8).** By-product insights are, I estimate, about 30% of decisive insights in mathematics, 35% in software and 50% in empirical work.
     * *Unrecoverable residue,* as a share of run-sinking confident omissions: 14% / 14% / 29% without these designs; 7% / 6% / 21% with raw records and reviews.
     * *(B-omit) on version 2's graded reading* (at most about 5% of all confident omissions fail it): 55% for theory and 30% for empirical work without reviews; 65% and 40% with them. Version 2 has 70% and 50%.
     * *Re-derivation* moves these by under 2 points.
@@ -157,7 +157,7 @@ Chained imitation's bound is n₀K, so the guaranteed gain is (1−ρ)/(β + (D+
 **Corollary G5 (attention windows).** In BP-raw with w = 1, consider a human that reads the raw records of its last a units, with no review.
 * *Upper bound.* The mistakes of a run that loses the insight include the steps t_p, …, t_p + a. So slack imitation charges such a failure at most n/(a+1).
 * *Lower bound.* Theorem G3 with κ = C + a gives κQ ≥ Nm/4 for every protocol.
-* *So* the recoverability window sets the cost, Θ(n/a), not the mere presence of raw records. In G1 (a = 4) this is 5–7 times cheaper than doing-only humans with slack.
+* *So* the recoverability window sets the cost, Θ(n/a), not the mere presence of raw records. In G1 (a = 4) this is 5–6 times cheaper than doing-only humans with slack.
 
 *The cost of raw records.* n₀ grows by the time spent recording, which is small when the scaffold appends machine output. K grows by the human's recording format; machine output appended by the scaffold costs the learner nothing, and hand-computed data cost about the procedure's description. Longer labels give more room for wording differences, which need faithful paraphrase, (B-commit) with D = 0.
 
@@ -240,13 +240,37 @@ Chained imitation's bound is n₀K, so the guaranteed gain is (1−ρ)/(β + (D+
 
 **Results** (from `threadG_byproducts_sim.out`; n in brackets):
 
-RESULTS_TABLE
+*Cost:* task queries until at most 2% of the 100 problems fail (mean ± standard error; run length n in brackets).
+
+| variant | query | N = 8 | N = 32 | N = 128 |
+|---|---|---|---|---|
+| DO0: chained imitation, no slack | uniform | 2,486 ± 94 [8] | 9,685 ± 297 [32] | 38,515 ± 1,289 [128] |
+| DO: slack, silent | uniform | 4,754 ± 136 [16] | 20,009 ± 651 [64] | 79,110 ± 3,124 [256] |
+| RECHECK | uniform | 2,390 ± 71 [16] | 9,559 ± 270 [64] | 38,280 ± 1,259 [256] |
+| REDO, seeded, p = ½ | uniform | 2,601 ± 79 [32] | 10,058 ± 279 [128] | 38,734 ± 1,527 [512] |
+| WINDOW, a = 4 | uniform | 754 ± 30 [16] | 3,648 ± 135 [64] | 15,075 ± 488 [256] |
+| REVIEW, L = 4 | uniform | 1,391 ± 45 [20] | 1,833 ± 38 [80] | 2,018 ± 70 [320] |
+| REVIEW | last review | 310 ± 9 | 305 ± 10 | 285 ± 8 |
+| REVIEW | MIX-REV | 473 ± 13 | 515 ± 15 | 554 ± 17 |
+
+*Online:* failed runs in 3,000 rounds, with asks in parentheses (20 humans, α = 0.3).
+
+| variant | N | uniform | MIX-REV | asking, uniform | asking, MIX-REV |
+|---|---|---|---|---|---|
+| DO | 8 / 32 / 128 | 677 / 1,141 / 1,433 | – | the same (0 asks) | – |
+| REVIEW | 8 | 220 | 83 | 0 (207) | 0 (204) |
+| REVIEW | 32 | 297 | 83 | 133 (239) | 33 (234) |
+| REVIEW | 128 | 331 | 85 | 150 (317) | 35 (320) |
+
+In REDO at N = 8, 2 of 2,000 runs leave some unit untouched; the oracle ignores this.
 
 **Reading.**
 * *Conservation (Proposition G2).* Slack doubles the cost for silent humans, as slack-imitation.md's Remark 2 says. A recheck or seeded redo restores chained imitation's cost without slack, within the standard errors, and no variant does better.
-* *Windows (Corollary G5).* WINDOW still grows in proportion to n, about 5–7 times below DO.
-* *Reviews (Theorem G4).* Costs are flat in n: about 300 with last-review queries and 450–550 with MIX-REV. Uniform queries alone are also flat (1,500–2,100), because each lost insight leaves a mistake at every later review.
-* *Asking (Proposition G6).* No asks ever fire on DO humans. On REVIEW humans, asking fires at the first review whose aggregate doubt exceeds α.
+* *Windows (Corollary G5).* WINDOW still grows in proportion to n, 5.2–6.3 times below DO, close to the a + 1 = 5 mistakes per lost insight that the count predicts.
+* *Reviews (Theorem G4).* Costs are flat in n: about 300 with last-review queries and 470–550 with MIX-REV. Uniform queries alone are also flat (1,400–2,000), because each lost insight leaves a mistake at every later review.
+* *Asking (Proposition G6).* No asks ever fire on DO humans, and their failed runs are unchanged.
+  * On REVIEW humans, asking fires at the first review whose aggregate doubt exceeds α: 2–3 asks per problem.
+  * At N = 8 that review covers every unit, so no run fails. At larger N the late triggers stay confident: asking halves the failed runs, and last-review queries remove most of the rest (331 → 150 → 35 at N = 128).
 * *What G1 does not test:* whether real insights are readable, which is §8's question.
 
 ## 8. How common are by-product insights, and do the designs fix them?

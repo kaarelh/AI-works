@@ -168,9 +168,11 @@ class Prob:
             st = advance(st, best)
             states.append(st)
         self.states, self.codes, self.asked = states, codes, asked
-        if asks:
-            self.version += 1
-        self.built = self.version
+        if asks:                                  # the data changed during the run, so
+            self.version += 1                     # the next round must rebuild it
+            self.built = -1
+        else:
+            self.built = self.version
         return asks
 
     def success(self):
