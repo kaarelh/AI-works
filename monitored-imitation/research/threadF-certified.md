@@ -10,14 +10,15 @@ Setting and notation are those of slack-imitation.md §§1–3: a deterministic 
 2. **Invalid entries cost at most ⌊K⌋ runs, with no bisection** (Lemma F1, Theorem F2). If the human's own entries pass L (*self-validity*), then *every* invalid entry on a run, not only the first, sits at a mistake. So slack imitation with the check (CSI) has E[#runs with an invalid entry] + ((σ+1)/((D+1)n))·E[#failed runs with none] ≤ ⌊K⌋, and K/log₂(1/α) with ask-before-committing. Checking each step *before* committing it (CSI-CBC) repairs invalid steps during the run, with at most ⌊K⌋ asks in all. Failures of self-validity cost task queries, never correctness.
 3. **What is still needed: bounded setback at valid entries, (B^V_D)** (§3). If L is sound, every claim in a notebook that passes it is true (Lemma F0), so (B^V_D) says *true content may redirect the human but not derail it for long*. The check takes out of the assumption: fabricated values, verdicts, fabricated citations, wrong retractions, paraphrases that overclaim, premature "proof complete", laundered "✓ verified". What remains are effects of attention and priority: an obstruction record on the approach that would have worked, a weaker true result, a suggestion, a misleading true lemma. (B-omit) is unchanged. With a human referee as L, the invalid entries it misses stay under the old (B-commit).
 4. **The remaining assumption cannot be dropped** (Theorem F3). Some humans are self-valid, sound and disciplined, recover from every omission at once and from every invalid entry within one step, and have one flaw: they never retry an approach that has a recorded obstruction. On them, every protocol that uses task queries and local checks needs Ω(n₀K/(ε log(n₀/ε))) of them. This is the hidden-insight bound, reached through a *true* record.
-5. **The negative-result problem** (§4). Under Δ, "tried A; it fails" is either invalid (caught) or an obstruction record. If the imitator really got stuck on A for lack of the insight, and the human trusts the record, that *is* still a fooled case, as bad as a silent human in the worst case. Three things blunt it:
+5. **The negative-result problem** (§4). Under Δ, "tried A; it fails" is either invalid (caught) or an obstruction record. If the imitator really got stuck on A for lack of the insight, and the human trusts the record, that *is* still a fooled case, as bad as a silent human in the worst case. Three design features blunt it, and one human property removes it:
    * *Exposure by consequence.* A false negative is usually followed by a confident claim that some other route works. If that claim is false, it is invalid and caught. In F1 this cuts failures from 155 → 325 → 644 (n = 32 → 64 → 128) to about 10.
    * *Specific records are less confident than verdicts.* A record must say where the attempt stopped, so the posterior splits over gap locations, and ask-before-committing fires on more of them.
    * *A retry rule* (Theorem F4). If an approach may be set aside only after r obstruction records written at different steps, every derailment costs r mistakes. What remains is (A-pers): a recorded failure does not stop the human's own later attempt from succeeding. In F1, r = 2 and r = 3 divide the trusting human's failures by 3 and 4.
+   * *Gap-triggered recovery* (G): a human who re-attacks a stated gap within d steps has bounded setback there, and slack absorbs it. In F1 such humans cost 13–15 failed runs at every n.
 6. **With a certified result** (Proposition F5), checking the claimed solution's dependency cone is a verifier run by a referee, and a wrong claim in the cone is located with one task query instead of a search. Correctness then rests on L's soundness alone.
 7. **Costs** (§6).
    * *Bisection is not needed.* Locality makes the check prefix-closed for free, and every invalid entry is its own locator.
-   * *But checking costs N entries per round, not log n looks.* For a long project that is roughly 1–5 task steps of refereeing per round, unless certificates are machine-checked. The verifier version needs only the cone per output, plus a full check per rejection (at most ⌊K⌋ of them).
+   * *But checking costs N entries per round, not log n looks.* For a long project that is typically about 2 task steps of refereeing per round (range 0.3–15), unless certificates are machine-checked. The verifier version needs only the cone per output, plus a full check per rejection (at most ⌊K⌋ of them).
    * *n₀ grows* by about 1.2–1.6× in mathematics and software, and 1.3–2× in empirical work.
    * *K is unchanged* as a program, since the discipline is part of the problem statement.
 8. **The design law holds** (§7). Every type tag and certificate is written by the human and imitated, but nothing is certified by being written: L checks it, and L's verdict never enters the notebook. Machine records are made by the scaffold in both chains. Step-level rules are checked by the protocol, which sees step boundaries; the human does not.
@@ -25,9 +26,10 @@ Setting and notation are those of slack-imitation.md §§1–3: a deterministic 
    * *Checkable claims:* SI and SI-ABC (α = 0.3) grow in proportion to n, about 260 → 700 → 1,200 failed runs. CSI stays at 9–11, and CSI-CBC at 0.
    * *A false negative followed by a valid weaker result:* every protocol grows in proportion to n, unless α is below the base rate (α = 0.05: no failures, 7–15 asks per problem). Humans who revisit gaps cost 13–15 at every n.
 10. **Believability** (§9). Bounded setback at valid entries with D ≤ 2, with asking:
-    * 60% for mathematics with machine-checked certificates (55% with human refereeing);
+    * 60% for mathematics with machine-checked certificates (55% with a human referee);
     * 65% for software;
-    * 30% for empirical work.
+    * 30% for empirical work;
+    * about 5 points more with the retry rule, except in empirical work.
 
     slack-imitation.md §4 has 55/60/30% for (B-commit), and thread L 50/55/25%. So the gain in believability is modest. The large gain is the verifier version for mathematics and software, whose correctness no longer depends on any setback assumption and whose verifier can now be a referee.
 
@@ -127,20 +129,20 @@ So (B^V_D) says that true content may redirect the human but does not derail it 
 * *The human P_θ* at notebook y. Let c be the last C or X entry of y.
   1. If c = C_{j,k} is invalid, append X_{j,k}. If it is valid, append nothing.
   2. Otherwise let J be the least j such that y contains no O_j. Append C_{t_p,k_p} if J = t_p, and O_J if J ≠ t_p.
-* *Success:* S = "y contains C_{t_p,k_p}", or t_p = ∞. It is preserved by appending. τ(x₀) = t_p + 1 ≤ n₀.
+* *Success:* S = "y contains C_{t_p,k_p}", or t_p = ∞. It is preserved by appending, and τ(x₀) ≤ t_p + 1 ≤ n₀ when t_p < ∞.
 
 **Theorem F3 (an assumption on valid content is necessary).**
 * *(a) The humans of TRUST are good at everything else.* Every P_θ is deterministic and a function of the notebook (hidden clock). It satisfies (L0)–(L2) with an exact L, and Δ (no verdicts). It never builds on an invalid entry. And at every notebook y:
   * τ(y ∪ ∅) = τ(y);
   * τ(y ∪ e) ≤ τ(y) + 1 for every invalid entry e;
-  * τ(y ∪ e) ≤ τ(y) for every valid entry e except O_{t_p}, after which τ = ∞.
+  * τ(y ∪ e) ≤ τ(y) for every valid entry e except O_{t_p}, after which τ = ∞ unless S already holds.
 * *(b) Yet every protocol pays the hidden-insight price.* Let n ≥ n₀ and q ≥ 4n/n₀. Take any protocol that makes Q task queries and C single-entry checks, at any notebooks, adaptively and possibly at random, and outputs an imitator that appends at most one entry per step. Then its run on a fresh problem fails with probability at least (η/2)(1 − 6(Q+C)/(n₀m)).
   * So for ε ≤ 1/16, with η = 8ε, reaching failure probability ε needs Q + C ≥ n₀m/8, which is Ω(n₀·E[K]/(ε log(n₀/ε))) for fixed ρ.
   * The same holds with O_j replaced by a weaker true result W_j that pre-empts C_{j,·}, or by a suggestion "set A_j aside" that the human follows.
 
 *Proof.*
 * *(a).* Read it off the definition.
-  * An invalid C is retracted in one step, after which rule 2 acts as before. An invalid X (or one of a claim not present) is ignored by rule 1 and does not affect S.
+  * An invalid C is retracted in one step, after which rule 2 acts as before. After an X entry, valid or not, rule 2 applies, and an X never affects S.
   * A valid O_j with j ≠ t_p only saves the human an attempt.
   * O_{t_p} makes J skip t_p for ever.
 * *(b), point queries.* Every answer about p depends on θ_p only through whether θ_p lies in a set A of at most q points sharing one approach j:
@@ -157,7 +159,7 @@ So (B^V_D) says that true content may redirect the human but does not derail it 
   * The consequence uses E[K] = m(h(η) + η log₂(n₀q)) ≤ 8εm·log₂(e·n₀q/(8ε)).
   * The variants change only the text of the trap entry. ∎
 
-*How the trap arises.* On TRUST, the class-prior decoder writes O_j at every step, each at mass at least 1 − 2η/n₀. Its trap O_{t_p} is a confident valid commission, so ask-before-committing does not fire unless α < 2η/n₀. That is about one ask per approach, as in thread E §4.
+*How the trap arises.* On TRUST, the class-prior decoder writes O_j at every step, each at mass at least 1 − 2η/n₀. Its trap O_{t_p} is a confident valid commission, so ask-before-committing does not fire unless α < 2η/n₀. Then it asks at every attempt, n₀ times per problem: thread E §4's trade, which is not cheap here.
 
 ## 4. Negative results
 
@@ -221,7 +223,7 @@ Compared with Proposition 4, the verifier is a referee reading one proof, not an
 ## 6. Costs
 
 * **Checks per round.** Every committed entry, once. Verdicts are cached, asked steps need no check, and a rerun shares its prefix up to the first changed step.
-  * *Size.* Suppose a careful mathematician's three-month step has 5–20 entries, and refereeing one locally takes half an hour to a day. Then a run of n ≈ 50 steps costs about 1–5 task steps of refereeing. That can exceed the round's one task query.
+  * *Size.* Suppose a careful mathematician's three-month step (about 60 working days) has 5–20 entries, and refereeing one locally takes half an hour to a day. Then a run of n ≈ 50 steps costs 0.3–15 task steps of refereeing, about 2 for 10 entries at two hours each. That usually exceeds the round's one task query.
   * *When it pays.* The full check pays only if invalid confident commissions are a sizeable share of the slow failures.
   * *Cheaper options:*
     * machine certificates (free);
