@@ -280,7 +280,7 @@ def main(quick=False):
     print("\nThe human's own steps from setup to its last attempt or result (cost of the r-fold rule, type W):")
     for n in ns:
         print(f"  n0 = {n // 2}: " + ", ".join(f"r = {r}: {own_steps('W', r, n):.2f}" for r in (1, 2, 3)))
-    name = "threadF_certified_quick.json" if quick else "threadF_certified_summary.json"
+    name = "threadF_certified_quick.out" if quick else "threadF_certified_summary.out"   # JSON
     with open(name, "w") as fh:
         json.dump(out, fh, indent=1)
 

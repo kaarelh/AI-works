@@ -1,13 +1,13 @@
 # Thread F: the certified notebook
 
-*Research note by Claude (Anthropic), thread F of the follow-up to [`../slack-imitation.md`](../slack-imitation.md), version 2. Draft; not refereed. Code: [`threadF_certified.py`](threadF_certified.py) and [`threadF_cbc.py`](threadF_cbc.py) (experiment F1, exact posteriors). Outputs: `threadF_certified.out`, `threadF_certified_summary.json`, `threadF_cbc.out`, about 25 minutes on 4 cores.*
+*Research note by Claude (Anthropic), thread F of the follow-up to [`../slack-imitation.md`](../slack-imitation.md), version 2. Draft; not refereed. Code: [`threadF_certified.py`](threadF_certified.py) and [`threadF_cbc.py`](threadF_cbc.py) (experiment F1, exact posteriors). Outputs: `threadF_certified.out`, `threadF_certified_summary.out` (JSON) and `threadF_cbc.out`, about 12 minutes on 4 cores.*
 
 Setting and notation are those of slack-imitation.md §§1–3: a deterministic human P on append-only notebooks, a hidden clock, runs of n = n₀ + σ steps (σ = ρn), the majority decoder G, K = K(P), Lemma 1 of note.md, Theorem 1 of without-a-check.md, τ(y) the human's remaining time, (T1), (T2) and Lemma S. Nothing below asks the human whether a run has gone off track.
 
 ## Answers in brief
 
 1. **The model** (§1). Notebook entries are typed and cite earlier entries: *certified claims* (with a proof, or code plus its machine record), *obstruction records* ("attempt at A: partial work; stopped at gap Z"), *suggestions* (plans, judgments), and *machine records* made by the scaffold. A *reliance discipline* Δ in the task instruction says what may be relied on and how negatives are recorded. The *local check* L(e) asks only: is e well-formed under Δ, and does its certificate establish its claim from exactly the entries it cites? Its verdict on e never changes as the notebook grows. It is not an on-track judgment.
-2. **Invalid entries cost at most ⌊K⌋ runs, with no bisection** (Lemma F1, Theorem F2). If the human's own entries pass L (*self-validity*), then *every* invalid entry on a run, not only the first, sits at a mistake. So slack imitation with the check (CSI) has E[#runs with an invalid entry] + ((σ+1)/((D+1)n))·E[#failed runs with none] ≤ ⌊K⌋, and K/log₂(1/α) with ask-before-committing. Checking each step *before* committing it (CSI-CBC) repairs invalid steps during the run, with at most ⌊K⌋ asks in all. Failures of self-validity cost task queries, never correctness.
+2. **Invalid entries cost at most ⌊K⌋ runs, with no bisection** (Lemma F1, Theorem F2). If the human's own entries pass L (*self-validity*), then *every* invalid entry on a run, not only the first, sits at a mistake. So slack imitation with the check (CSI) has E[#runs with an invalid entry] + ((σ+1)/((D+1)n))·E[#failed runs with none] ≤ ⌊K⌋, and K/log₂(1/α) with ask-before-committing. Checking each step *before* committing it (CSI-CBC) repairs invalid steps during the run, with at most ⌊K⌋ asks in all. Failures of self-validity cost task queries but never teach anything false.
 3. **What is still needed: bounded setback at valid entries, (B^V_D)** (§3). If L is sound, every claim in a notebook that passes it is true (Lemma F0), so (B^V_D) says *true content may redirect the human but not derail it for long*. The check takes out of the assumption: fabricated values, verdicts, fabricated citations, wrong retractions, paraphrases that overclaim, premature "proof complete", laundered "✓ verified". What remains are effects of attention and priority: an obstruction record on the approach that would have worked, a weaker true result, a suggestion, a misleading true lemma. (B-omit) is unchanged. With a human referee as L, the invalid entries it misses stay under the old (B-commit).
 4. **The remaining assumption cannot be dropped** (Theorem F3). Some humans are self-valid, sound and disciplined, recover from every omission at once and from every invalid entry within one step, and have one flaw: they never retry an approach that has a recorded obstruction. On them, every protocol that uses task queries and local checks needs Ω(n₀K/(ε log(n₀/ε))) of them. This is the hidden-insight bound, reached through a *true* record.
 5. **The negative-result problem** (§4). Under Δ, "tried A; it fails" is either invalid (caught) or an obstruction record. If the imitator really got stuck on A for lack of the insight, and the human trusts the record, that *is* still a fooled case, as bad as a silent human in the worst case. Three design features blunt it, and one human property removes it:
@@ -24,7 +24,7 @@ Setting and notation are those of slack-imitation.md §§1–3: a deterministic 
 8. **The design law holds** (§7). Every type tag and certificate is written by the human and imitated, but nothing is certified by being written: L checks it, and L's verdict never enters the notebook. Machine records are made by the scaffold in both chains. Step-level rules are checked by the protocol, which sees step boundaries; the human does not.
 9. **Experiment F1** (§8; exact Bayes, commissions made at posterior 0.9, 20 humans per cell, trusting humans).
    * *Checkable claims:* SI and SI-ABC (α = 0.3) grow in proportion to n, about 260 → 700 → 1,200 failed runs. CSI stays at 9–11, and CSI-CBC at 0.
-   * *A false negative followed by a valid weaker result:* every protocol grows in proportion to n, unless α is below the base rate (α = 0.05: no failures, 7–15 asks per problem). Humans who revisit gaps cost 13–15 at every n.
+   * *A false negative followed by a valid weaker result:* every protocol grows in proportion to n, unless α is below the base rate (α = 0.05: no failures, 7–16 asks per problem). Humans who revisit gaps cost 13–15 at every n.
 10. **Believability** (§9). Bounded setback at valid entries with D ≤ 2, with asking:
     * 60% for mathematics with machine-checked certificates (55% with a human referee);
     * 65% for software;
@@ -118,7 +118,9 @@ So (M1) and (M-prefix) of slack-imitation.md hold automatically. Unlike a state 
 * *Weaker true results* become O entries if Δ requires a result to state its gap to the target ("W proved; T∖W open"). Einstellung still threatens them: thread L reports that it is robust in experts for valid but weaker options, and that a warning freed only about half of Luchins's subjects.
 * *Suggestions* are bounded if the human re-plans from certified content each step and treats suggestions as one input. Sunk cost is weaker for a lone researcher than thread E assumed (thread L §3).
 
-So (B^V_D) says that true content may redirect the human but does not derail it for long. Every remaining failure is one of attention or priority, not of false belief. The next theorem shows that no local check can remove these.
+So (B^V_D) says that true content may redirect the human but does not derail it for long. Every remaining failure is one of attention or priority, not of false belief. Theorem F2 needs exactly τ(x₀) ≤ n₀, (L0), (L1) and (B^V_D); soundness (L2) only says what (B^V_D) is about.
+* *Is (B^V_D) much more believable than (B_D)?* Only where the removed kinds dominated. §9 puts the gain at about 5 points in mathematics and software, and none in empirical work, because the commonest unbounded setback, a trusted record of a failed attempt, survives as a valid entry.
+* *Can it be dropped?* The next theorem shows that no local check can remove these failures.
 
 **The class TRUST(m, n₀, q, η).** Problems p ∈ [m], each with approaches A₀, …, A_{n₀−1}. θ = (t_p, k_p)_p: t_p = ∞ with probability 1 − η, otherwise uniform on {0, …, n₀−1}, and k_p uniform on [q]. These are Theorem 3's insights, attached to approaches.
 * *Entries:*
@@ -192,7 +194,7 @@ Four things blunt it.
 
 *Cost.* The human's own dead approaches now get r attempts. If a fraction f of its time goes into attempts that end in O entries, and a repeat attempt costs a fraction c_r of the first, n₀ grows by the factor 1 + (r−1)·c_r·f.
 * *For example,* f = 0.3, c_r = 0.3 and r = 3 add 18% to n₀, and charge derailments n/3 instead of n.
-* *In F1* the rule costs the human r − 1 extra steps on 90% of problems, and divides the trusting human's failures by 2.9–3.0 (r = 2) and 3.8–3.9 (r = 3). The decoder's derailing runs there have r + 1 mistakes.
+* *In F1* the rule costs the human r − 1 extra steps on 90% of problems, and divides the trusting human's failures by 2.9–3.1 (r = 2) and 3.8–4.3 (r = 3). The decoder's derailing runs there have r + 1 mistakes.
 
 *What remains is (A-pers),* a property of ability, not of decision: once forced to retry, the human succeeds despite the record. Einstellung is its main threat, since the retry may follow the recorded partial work into the same gap. A fresh-start variant helps here: Δ can require the retry to begin without reading the previous attempt's partial work. Its cost is part of c_r.
 
@@ -275,27 +277,27 @@ Thread E §4: a correct imitator step must produce exactly P(y).
 | type and human | protocol | n = 32 | n = 64 | n = 128 |
 |---|---|---|---|---|
 | C, trusting | SI | 295 ± 26 | 693 ± 72 | 1,224 ± 109 |
-| | SI-ABC, α = 0.3 | TBD | TBD | TBD |
+| | SI-ABC, α = 0.3 | 257 ± 24 | 710 ± 62 | 1,165 ± 136 |
 | | CSI (and CSI-ABC) | 9.4 ± 0.8 | 10.8 ± 0.7 | 9.7 ± 0.5 |
-| | CSI-CBC | TBD | TBD | TBD |
+| | CSI-CBC | 0 (9.4 asks) | 0 (10.8 asks) | 0 (9.7 asks) |
 | N, trusting | SI | 155 ± 16 | 325 ± 36 | 644 ± 52 |
-| | SI-ABC, α = 0.3 | TBD | TBD | TBD |
+| | SI-ABC, α = 0.3 | 137 ± 15 | 366 ± 46 | 611 ± 56 |
 | | CSI (and CSI-ABC) | 9.4 ± 0.8 | 10.8 ± 0.7 | 9.7 ± 0.5 |
-| | CSI-CBC | TBD | TBD | TBD |
+| | CSI-CBC | 9.4 ± 0.8 | 10.8 ± 0.7 | 9.7 ± 0.5 |
 | W, trusting | SI = CSI | 295 ± 26 | 693 ± 72 | 1,224 ± 109 |
-| | SI-ABC = CSI-ABC, α = 0.3 | TBD | TBD | TBD |
-| | SI-ABC, α = 0.05 | TBD | TBD | TBD |
+| | SI-ABC = CSI-ABC, α = 0.3 | 257 ± 24 | 710 ± 62 | 1,165 ± 136 |
+| | SI-ABC, α = 0.05 | 0 (6.9 asks per problem) | 0 (11.6) | 0 (15.7) |
 | | SI = CSI, retry rule r = 2 | 100 ± 11 | 226 ± 25 | 418 ± 35 |
 | | SI = CSI, retry rule r = 3 | 77 ± 8 | 161 ± 15 | 315 ± 26 |
 | W, revisit | SI = CSI | 12.5 ± 1.0 | 13.8 ± 1.1 | 12.9 ± 0.8 |
 | W, noticing | SI = CSI | 12.2 ± 1.0 | 13.5 ± 1.0 | 12.9 ± 0.8 |
 
 **Reading.**
-* *Checkable claims (C).* On trusting humans, SI's failures grow in proportion to n (one mistake per failed run). Ask-before-committing at α = 0.3 does not help, because the wrong value is committed at mass 0.9 TBD. CSI stays at about the number of k_p = 2 problems (about 10) at every n, and CSI-CBC removes those failures too, at one ask each.
-* *Exposure by consequence (N).* The valid false negative is followed by an invalid fallback claim, and CSI catches every such run. CSI-CBC repairs the fallback step but leaves the false negative in that run, so each k_p = 2 problem still fails a few times (TBD).
-* *The residual (W).* The false negative followed by a valid weaker result grows in proportion to n under every protocol with α = 0.3, check or no check, exactly as Theorem F3 predicts. Only α below the base rate removes it (α = 0.05: no failures, TBD asks), as in thread E §4.
-* *The retry rule.* It divides W's failures by 2.9–3.0 (r = 2) and 3.8–3.9 (r = 3), as Theorem F4 predicts: the derailing run has r + 1 mistakes. The human's own runs take r − 1 more steps on k_p = 1 problems.
-* *Humans who revisit gaps* (bounded setback at O entries) cost 12–15 failed runs at every n, the same as noticing humans: slack absorbs the setback.
+* *Checkable claims (C).* On trusting humans, SI's failures grow in proportion to n (one mistake per failed run). Ask-before-committing at α = 0.3 does not help, because the wrong value is committed at mass 0.9 > 1 − α. Its 3.5–6 asks per problem go to the setup step, whose timing is uncertain. CSI stays at about the number of k_p = 2 problems (about 10) at every n, and CSI-CBC removes those failures too, at one ask each.
+* *Exposure by consequence (N).* The valid false negative is followed by an invalid fallback claim, and CSI catches every such run. CSI-CBC repairs the fallback step but leaves the false negative in that run, so each k_p = 2 problem fails exactly once, as under CSI.
+* *The residual (W).* The false negative followed by a valid weaker result grows in proportion to n under every protocol with α = 0.3, check or no check, exactly as Theorem F3 predicts. Only α below the base rate removes it (α = 0.05: no failures, at 7–16 asks per problem against 3.5–6 at α = 0.3), as in thread E §4.
+* *The retry rule.* It divides W's failures by 2.9–3.1 (r = 2) and 3.8–4.3 (r = 3), as Theorem F4 predicts: the derailing run has r + 1 mistakes. The human's own runs take r − 1 more steps on k_p = 1 problems (1.9 → 2.8 → 3.7 steps from setup to the last attempt, on average).
+* *Humans who revisit gaps* (bounded setback at O entries) cost 12.5–15 failed runs at every n, the same as noticing humans: slack absorbs the setback.
 * *The cost of the check.* About 0.8n entry checks per round (27, 51 and 99), of which 1–4 are claims or records.
 * *Identical rows.* SI and CSI coincide on type W, and C and W coincide under SI, because the check never fires there and the classes have the same structure with the same seeds. Common random numbers.
 
