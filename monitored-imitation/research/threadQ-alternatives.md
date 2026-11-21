@@ -1,6 +1,6 @@
 # Thread Q: alternatives to slack imitation
 
-*Research note by Claude (Anthropic) on [`../slack-imitation.md`](../slack-imitation.md), version 2. Draft; not refereed. Code: [`threadQ_hints.py`](threadQ_hints.py), which imports E6's class from [`../code/slack_imitation.py`](../code/slack_imitation.py) unchanged. Output: [`threadQ_hints.out`](threadQ_hints.out) and [`threadQ_hints.json`](threadQ_hints.json), about 10 minutes on 4 cores.*
+*Research note by Claude (Anthropic) on [`../slack-imitation.md`](../slack-imitation.md), version 2. Draft; not refereed. Code: [`threadQ_hints.py`](threadQ_hints.py), which imports E6's class from [`../code/slack_imitation.py`](../code/slack_imitation.py) unchanged. Output: [`threadQ_hints.out`](threadQ_hints.out) and [`threadQ_hints.json`](threadQ_hints.json), about 11 minutes on 4 cores.*
 
 Setting and notation are those of slack-imitation.md §1: a deterministic human P on append-only notebooks, the Bayes majority decoder G, K = K(P), the potential Φ, Lemma 1 of note.md (at most ⌊K⌋ task queries land on mistakes), success S preserved by appending, τ(x₀) ≤ n₀, runs of n = n₀ + σ steps, and (B_D) bounded setback. No assumption below is an "on track" judgment.
 
@@ -41,8 +41,8 @@ Setting and notation are those of slack-imitation.md §1: a deterministic human 
     * Rare insights at frequent stages remain the irreducible case.
 11. **The human's own runs** cost n₀ each and find the current imitator's first divergence with certainty. Their best use is calibration: the search's feature weights (thread D's Scheme D, moved inside the search), and measurements of setback, verifier soundness and post-mortem accuracy.
 12. **Experiment EQ** (E6's humans and seeds; total task queries for 100 problems at n = 16 → 64 → 256). E6's uniform search (SI-V) is reproduced exactly.
-    * *Hinted search for fooled humans:* 181 → 750 → 2,636 become 28 → 37 → TBD with a structural hint, against 236 → 318 → 360 for SI-V with asking.
-    * *Scan for silent humans:* 1,610 → 6,450 → 26,091 become 663 → 2,497 → TBD.
+    * *Hinted search for fooled humans:* 181 → 750 → 2,636 become 28 → 37 → 36 with a structural hint, against 236 → 318 → 360 for SI-V with asking.
+    * *Scan for silent humans:* 1,610 → 6,450 → 26,091 become 663 → 2,497 → 9,734.
     * *Bounded-setback humans* pay at most 1.5× for the extra streams.
     * *An adversarial pointer* costs at most 1.6×, within Lemma Q2's factor 2.
 13. **Ranking** (Section 9, P(works) for theory and software / for empirical work):
@@ -50,7 +50,8 @@ Setting and notation are those of slack-imitation.md §1: a deterministic human 
     * VSP with a human verifier: 70% / 30%;
     * SI-V with a human verifier and uniform search: 65% / 25%;
     * SI-ABC, the current recommendation: 50% / 25%;
-    * every alternative without a verifier: 25% or less.
+    * plain SI: 40% / 15%;
+    * every other candidate: 30% or less.
 14. **Verdict.** Nothing dominates slack imitation as the engine of *location*: Theorem Q1, Proposition Q6 and thread A's Theorem C rule out verification, ensembles and short reviews as replacements. What dominates SI-ABC *in sureness* is an addition, a final verification by the human with hints in the search. Where finished results cannot be verified soundly, as in much empirical and judgment work, I found nothing that dominates SI-ABC.
 
 ## 1. Detection and location
@@ -136,7 +137,7 @@ This scan removes slack's doubling of the cost of silent humans (slack-imitation
 * **Threshold or group structure without an on-track judgment** comes from four places:
   * verification: a group query, which only detects;
   * the post-mortem list: a group hint;
-  * first divergence: a threshold the protocol gets free (Lemma Q3);
+  * first divergence: a free bound, since the first mistake lies before n₀ (Lemma Q3);
   * triggers (Proposition Q8).
 
   None of them locates a silent by-product insight that the human cannot point to in hindsight.
@@ -286,17 +287,23 @@ So verification turns "K/ε human projects" into "K human projects" in the worst
   * S: a scan from step 0;
   * H: a structural hint, the steps at which the decoder wrote a value (its "verdict" entries), read off the run without the human, standing in for a post-mortem pointer at load-bearing claims;
   * A: an adversarial list of non-mistakes, which uses the truth on purpose.
-* *Measurement.* 40 humans per cell. Entries are the mean total task queries for 100 problems, with queries per rejection in parentheses.
+* *Measurement.* 40 humans per cell. Entries are the mean total task queries for all 100 problems at n = 16 → 64 → 256 (n₀ = n/2); standard errors and queries per rejection are in the output files.
 
-TABLE
+| search | noticing | misled-2 | misled-8 | fooled | silent |
+|---|---|---|---|---|---|
+| U (E6's SI-V) | 13 → 14 → 14 | 14 → 14 → 14 | 38 → 16 → 14 | 181 → 750 → 2,636 | 1,610 → 6,450 → 26,091 |
+| U + S | 15 → 18 → 18 | 17 → 18 → 18 | 49 → 21 → 19 | 105 → 490 → 1,562 | 663 → 2,497 → 9,734 |
+| U + H | 13 → 16 → 16 | 15 → 17 → 16 | 23 → 18 → 16 | 28 → 37 → 36 | 1,610 → 6,450 → 26,091 |
+| U + S + H | 15 → 20 → 20 | 18 → 20 → 20 | 32 → 23 → 20 | 40 → 55 → 54 | 663 → 2,497 → 9,734 |
+| U + A (adversarial) | 15 → 18 → 18 | 17 → 18 → 18 | 63 → 21 → 19 | 268 → 1,170 → 3,999 | 2,323 → 9,567 → 38,855 |
 
 **Reading.**
 * *Reproduction.* U reproduces E6's SI-V column exactly (slack-imitation.md §6).
 * *Fooled humans.* H finds the culprit at the first or second query, because every fooled failure here has a wrong value written at a verdict step. That is the best case for a post-mortem pointer; a real one will be weaker.
-* *Silent humans.* There is nothing to point at, and H changes nothing. The scan stream cuts the cost by about 2.5×, because the single mistake sits at t_p < n₀ (Lemma Q3), while uniform search pays n = 2n₀.
+* *Silent humans.* There is nothing to point at, and H changes nothing. The scan stream cuts the cost 2.4–2.7×, because the single mistake sits at t_p < n₀ (Lemma Q3), while uniform search pays n = 2n₀.
 * *Bounded-setback humans.* They pay up to 1.5× for the extra streams. With H the number of rejections also rises a little (10.5 → 13), because a hit at a verdict step can teach less than a hit later in the run.
-* *The adversarial list* costs at most 1.6× U, within Lemma Q2's factor 2.
-* *Compared with asking.* SI-V-ABC (α = 0.3) needs 236 → 318 → 360 for fooled humans and 223 → 285 → 319 for bounded-setback ones. USH needs about 40–60 and 15–30. With a verifier, hints beat asking in this class.
+* *The adversarial list* costs 1.2–1.6× U, within Lemma Q2's factor 2.
+* *Compared with asking.* SI-V-ABC (α = 0.3) needs 236 → 318 → 360 for fooled humans and 223 → 285 → 319 for bounded-setback ones. U + S + H needs 40–55 and 15–32. With a verifier, hints beat asking in this class, though the class flatters them (one decision per problem).
 
 ## 9. Ranking, recommendation, verdict
 
@@ -320,7 +327,7 @@ TABLE
 | – | finer granularity | an add-on (Proposition Q7) | – | – | – |
 | – | chained imitation | nothing | n₀K/ε | baseline | baseline |
 
-**Why the top rows are close.** At ε = 5%, chained imitation pays 20n₀K, while every verified scheme pays at most about n₀K task queries, so verification alone nearly meets the bar.
+**Why the top rows are close.** At ε = 5%, chained imitation pays 20n₀K, while every verified scheme pays at most about 2n₀K–3n₀K task queries, so verification alone nearly meets the bar.
 * Rows 2–4 differ mainly in how close they come to O(K). I give that, task queries O(K) with neither n₀ nor 1/ε, 45% for VSP, 35% for SI-V and 10% for check-and-scan in theory. SI-ABC cannot have it, because its i.i.d. bound carries 1/ε.
 * Rows 2 and 5 differ in what correctness rests on: soundness of a check of a finished product (85% for theory), against bounded setback at confident commissions (55%).
 
@@ -341,5 +348,5 @@ TABLE
 **Verdict.**
 * *Nothing replaces slack imitation as the source of location.* Location without a state judgment comes only from recovery, hindsight, structure or doubt. Theorem Q1 and Proposition Q6 rule out verification and ensembles as substitutes, and thread A's Theorem C rules out short reviews.
 * *SI-ABC is dominated in sureness by an addition to it.* VSP's correctness rests on a check of finished products, not on bounded setback, and its guarantee is never worse than SI-ABC's.
-* *The irreducible case remains* in every scheme: a silent, by-product insight, rare at its stage, that the human cannot point to even in hindsight. It costs n₀ queries per insight in VSP and is out of reach of everything else short of an on-track judgment.
+* *The irreducible case remains* in every scheme: a silent, by-product insight, rare at its stage, that the human cannot point to even in hindsight. It costs at most 3n₀ task queries per insight in VSP, and every scheme without a state judgment pays order n₀ for it (Theorems 3 and Q1).
 * *Where results cannot be verified soundly,* I found nothing that dominates SI-ABC.
