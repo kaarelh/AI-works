@@ -1,0 +1,91 @@
+A. Repeated verification (n0 = 30, n = 60, post-mortem list s = 5, 20000 problems per row)
+   P(wrong output | first run wrong) for f per look and share rho of f fixed by the claim
+   search                     u    h |  E[J]   E[Q] | f=0.05:rho=1/0.5/0 f=0.10:rho=1/0.5/0 f=0.30:rho=1/0.5/0
+   U only (SI-V)              0  0.0 |  1.00   60.0 |  0.05/0.05/0.05       0.10/0.10/0.10       0.30/0.30/0.30     
+   U only (SI-V)              5  0.0 |  3.51   60.0 |  0.05/0.11/0.16       0.10/0.21/0.30       0.30/0.55/0.66     
+   U only (SI-V)             20  0.0 | 10.93   59.1 |  0.05/0.26/0.40       0.10/0.45/0.62       0.30/0.81/0.89     
+   S only (check-and-scan)    0  0.0 |  1.00   15.5 |  0.05/0.05/0.05       0.10/0.10/0.10       0.30/0.30/0.30     
+   S only (check-and-scan)    5  0.0 |  2.23   28.2 |  0.05/0.08/0.11       0.10/0.16/0.20       0.30/0.44/0.51     
+   S only (check-and-scan)   20  0.0 |  5.93   66.4 |  0.05/0.16/0.25       0.10/0.30/0.43       0.30/0.68/0.79     
+   U,S,H equal (VSI)          0  0.0 |  1.00   30.7 |  0.05/0.05/0.05       0.10/0.10/0.10       0.30/0.30/0.30     
+   U,S,H equal (VSI)          0  0.6 |  1.00   17.3 |  0.05/0.05/0.05       0.10/0.10/0.10       0.30/0.30/0.30     
+   U,S,H equal (VSI)          5  0.0 |  3.12   55.2 |  0.05/0.10/0.15       0.10/0.19/0.27       0.30/0.52/0.62     
+   U,S,H equal (VSI)          5  0.6 |  2.24   29.2 |  0.05/0.08/0.11       0.10/0.16/0.20       0.30/0.43/0.50     
+   U,S,H equal (VSI)         20  0.0 | 10.51   89.9 |  0.05/0.25/0.39       0.10/0.44/0.61       0.30/0.81/0.88     
+   U,S,H equal (VSI)         20  0.6 |  7.07   48.8 |  0.05/0.18/0.28       0.10/0.33/0.46       0.30/0.68/0.78     
+   S-heavy 8:1:1              0  0.0 |  1.00   18.0 |  0.05/0.05/0.05       0.10/0.10/0.10       0.30/0.30/0.30     
+   S-heavy 8:1:1              0  0.6 |  1.00   16.4 |  0.05/0.05/0.05       0.10/0.10/0.10       0.30/0.30/0.30     
+   S-heavy 8:1:1              5  0.0 |  2.40   34.2 |  0.05/0.08/0.11       0.10/0.16/0.22       0.30/0.45/0.53     
+   S-heavy 8:1:1              5  0.6 |  2.25   29.5 |  0.05/0.08/0.11       0.10/0.16/0.20       0.30/0.44/0.51     
+   S-heavy 8:1:1             20  0.0 |  7.15   85.3 |  0.05/0.19/0.29       0.10/0.34/0.48       0.30/0.71/0.81     
+   S-heavy 8:1:1             20  0.6 |  6.54   73.4 |  0.05/0.17/0.27       0.10/0.32/0.45       0.30/0.69/0.79     
+
+B. Steady-state output failure per problem = p_f0 * w * f_eff (problem-specific insights: does not decay)
+   p_f0 = first-run failure rate on a new problem, w = share of failed runs with a claimed solution, f_eff = verifier pass rate after reruns
+    p_f0    w | f=0.02  f=0.10  f=0.20  f=0.35  f=0.50 
+     0.1  0.2 |    0.0%    0.2%    0.4%    0.7%    1.0%
+     0.1  0.5 |    0.1%    0.5%    1.0%    1.8%    2.5%
+     0.1  0.8 |    0.2%    0.8%    1.6%    2.8%    4.0%
+     0.3  0.2 |    0.1%    0.6%    1.2%    2.1%    3.0%
+     0.3  0.5 |    0.3%    1.5%    3.0%    5.2%    7.5%
+     0.3  0.8 |    0.5%    2.4%    4.8%    8.4%   12.0%
+     0.5  0.2 |    0.2%    1.0%    2.0%    3.5%    5.0%
+     0.5  0.5 |    0.5%    2.5%    5.0%    8.8%   12.5%
+     0.5  0.8 |    0.8%    4.0%    8.0%   14.0%   20.0%
+   'Works' needs <= 5%.
+
+C. Enrichment: share of verifier-targeting (malign) deviations among accepted wrong outputs
+   prior odds r = malign : honest among deviations reaching the output; f_m = 0.9 (targets V's blind spots)
+          r | f_h=0.3   f_h=0.1   f_h=0.01  f_h=0.001
+        0.1 |       23%       47%       90%       99%
+       0.01 |        3%        8%       47%       90%
+      0.001 |        0%        1%        8%       47%
+   bits of enrichment log2(f_m/f_h): f_h=0.3: 1.6, f_h=0.1: 3.2, f_h=0.01: 6.5, f_h=0.001: 9.8
+   A better honest verifier makes the accepted errors *more* adversarial, unless f_m falls with f_h.
+
+D. Bits of selection
+   Deterministic decoder, reruns only after a rejection: per problem <= log2(1+R_p);
+   lifetime max over sum R_p <= K (b_alpha = 1) is T*log2(1+K/T) <= K*log2(e)
+   K=100: T=10: 35 bits (3.46 per problem); T=100: 100 bits (1.00 per problem); T=1000: 138 bits (0.14 per problem)
+   K=1000: T=100: 346 bits (3.46 per problem); T=1000: 1000 bits (1.00 per problem); T=10000: 1375 bits (0.14 per problem)
+   Resampling decoder (best-of-k, no update between attempts): KL(output || policy) = ln k - (k-1)/k
+   k=2: 0.28 bits, k=4: 0.92 bits, k=16: 2.65 bits, k=64: 4.58 bits, k=256: 6.56 bits, k=1024: 8.56 bits
+
+E. Heavy tails: phi = Pr[tau(x0) > n] with n = 2 n0 and n0 at quantile q
+   q=0.50 | lognormal s=0.75: 17.8%, lognormal s=1.00: 24.4%, lognormal s=1.25: 29.0% | Pareto a=1.2: 21.8%, Pareto a=1.5: 17.7%, Pareto a=2.0: 12.5%
+   q=0.75 | lognormal s=0.75:  5.5%, lognormal s=1.00:  8.6%, lognormal s=1.25: 11.0% | Pareto a=1.2: 10.9%, Pareto a=1.5:  8.8%, Pareto a=2.0:  6.2%
+   q=0.90 | lognormal s=0.75:  1.4%, lognormal s=1.00:  2.4%, lognormal s=1.25:  3.3% | Pareto a=1.2:  4.4%, Pareto a=1.5:  3.5%, Pareto a=2.0:  2.5%
+
+   Effort budget: VSI <= CI/5 = 4 n0 K at eps = 5%. VSI effort / (n0 K) =
+     a*iota (search, a = 3 worst case) + 2*iota*phi*(T/K) (futile full search of n on
+     each problem the human's own chain cannot finish) + beta*(T/K)/n0 (audits)
+     + c_V*(T/K + 1)/n0 (verifications, c_V task steps each).  n0 = 30, beta = 1.
+   Largest T/K for which VSI still meets the budget ('-' = never):
+     a  iota   c_V | phi=0.00  phi=0.05  phi=0.10  phi=0.20 
+     1   1.0   0.1 |      81.7      21.9      12.7       6.9
+     1   1.0   0.5 |      59.7      19.9      11.9       6.6
+     1   1.3   0.1 |      73.5      16.2       9.1       4.8
+     1   1.3   0.5 |      53.7      14.9       8.7       4.7
+     1   1.6   0.1 |      65.4      12.2       6.7       3.5
+     1   1.6   0.5 |      47.7      11.3       6.4       3.5
+     2   1.0   0.1 |      54.5      14.6       8.4       4.6
+     2   1.0   0.5 |      39.7      13.2       7.9       4.4
+     2   1.3   0.1 |      38.1       8.4       4.7       2.5
+     2   1.3   0.5 |      27.7       7.7       4.5       2.4
+     2   1.6   0.1 |      21.7       4.1       2.2       1.2
+     2   1.6   0.5 |      15.7       3.7       2.1       1.1
+     3   1.0   0.1 |      27.2       7.3       4.2       2.3
+     3   1.0   0.5 |      19.7       6.6       3.9       2.2
+     3   1.3   0.1 |       2.6       0.6       0.3       0.2
+     3   1.3   0.5 |       1.7       0.5       0.3       0.1
+     3   1.6   0.1 |         -         -         -         -
+     3   1.6   0.5 |         -         -         -         -
+   With a = 3 the worst case alone fits only if iota < 4/3.
+
+   Against the human doing every problem itself (about n0 per problem): on each problem
+   its own chain cannot finish within n, VSI ends with the human answering every step of
+   a full run (>= n = 2*iota*n0 task queries) and no output, so the saving is at most
+   about 1/(2*iota*phi), before any other cost:
+     iota=1.0: phi=0.05: 10.0x, phi=0.10: 5.0x, phi=0.20: 2.5x
+     iota=1.3: phi=0.05: 7.7x, phi=0.10: 3.8x, phi=0.20: 1.9x
+     iota=1.6: phi=0.05: 6.2x, phi=0.10: 3.1x, phi=0.20: 1.6x
