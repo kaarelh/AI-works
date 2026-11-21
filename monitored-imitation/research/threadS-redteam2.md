@@ -4,7 +4,7 @@
 
 ## Answers in brief
 
-1. **The theorems are right; the framing overclaims.** Lemmas 1–4 and Theorems 5–6 follow from their premises.
+1. **The theorems are right; the framing overclaims.** Lemmas 1–3 and Theorems 5–6 follow from their premises (Lemma 4 rests on thread G).
    * Claim (a) is true as stated only for V-machine on a correctly stated goal.
    * Claim (b) is a relabelling for V-cone and V-human. There, (A4) *is* an assumption about how a human reacts to the imitator's notebooks: the same kind of fact as bounded setback, which thread L measured (reviewers catch 30–60% of planted plausible errors).
    * Claim (c) needs (A2) for every problem, and a margin the note does not have.
@@ -36,17 +36,17 @@
 8. **The idealizations mostly favour VSI in the ranking, which the note undersells** (§4).
    * *In VSI's favour:* when V is a machine, failures of determinism or realizability, and practical learners, break only VSI's cost theory. They break SI-ABC's correctness.
    * *Exception 1:* imitating the verifier (Theorem 6) brings the verifier's own determinism and realizability back into correctness.
-   * *Exception 2:* (A2) for every problem weighs more on VSI than on chained imitation. On a problem the human's own chain cannot finish within n, VSI never accepts, and the human ends up answering every step of a full run. With n₀ at the 75th percentile of durations, heavy tails give 6–11% such problems (Part E), which caps VSI's saving over the human doing the work at about 4×.
+   * *Exception 2:* (A2) for every problem weighs more on VSI than on chained imitation. On a problem the human's own chain cannot finish within n, VSI never accepts, and the human ends up answering every step of a full run. With n₀ at the 75th percentile of durations, heavy tails give 6–11% such problems (Part E), which caps VSI's saving over the human doing the work at roughly 4–9×.
 9. **The worst-case argument for "works" has a margin of only 4/3** (§6): 3n₀K against a fifth of 20n₀K.
    * *Instruction overhead:* the heavy instruction inflates n₀ by 1.2–1.6× [thread F], which uses up the margin unless chained imitation is charged the same instruction.
-   * *Costs that grow with T:* audits at β = 1 (needed when V is a person), verifications and futile searches all grow with the number of problems T, contrary to the note's "neither depends on the number of problems".
+   * *Costs that grow with T:* audits at β = 1 (needed when V is a person), verifications and futile searches all grow with the number of problems T. The note says only the optional audits do.
 10. **The user's constraint** (§5).
     * *V-machine* respects it fully.
     * *V-human* respects its letter, but rests correctness on a human judgment of the hardest state.
     * *V-cone* is a *preserved local judgment of intermediate entries*: the first note's monitor with "valid" in place of "on track". It respects the words "off track", but not the spirit of "no human judgment of states".
 11. **The comparison** (§6).
     * *Correctness:* no scheme dominates VSI, since every verified scheme inherits V's correctness.
-    * *Worst-case cost:* check-and-scan (n₀K) beats VSI (3n₀K); a scan-heavy schedule keeps most of the hints' benefit at 1.25n₀K.
+    * *Worst-case cost:* check-and-scan (n₀K) beats VSI (3n₀K); a scan-heavy schedule has a worst case of 1.25n₀K and keeps part of the hints' benefit.
     * *Against Proposition 7:* VSI's advantage with a human verifier is real, but smaller than 65% against 45%.
     * *What the comparison leaves out:* the human-does-it baseline (n₀T), the talk's second desideratum (V checks only S), independent verifiers, and verification by use.
 12. **My probabilities and verdict** (§7). Same definition and conditioning as the note's §6; first figure theory and software, second empirical.
@@ -115,11 +115,11 @@ These are not consistent with thread Q's 85% for "soundness at the graded level"
 
 ### 1.4 What verification costs
 
-* *Per verification.* Refereeing a paper costs about 2–10% of producing it, and refereeing a hard result much more. Formally verifying software costs more than writing it, and replication costs about as much as the original study.
+* *Per verification.* Refereeing a paper costs about 2–10% of producing it (my guess), and refereeing a hard result much more. Formally verifying software costs more than writing it, and replication costs about as much as the original study.
 * *Per rejection.* Each rejection needs a new verification of the rerun and a post-mortem read of a whole notebook (up to K/b_α of each). Theorem 6 bounds the verifications, but the note's totals count only task queries.
 * *Pointless:*
   * *when verifying costs c_V ≳ n₀/5 task steps per problem.* VSI then saves at most 5× over the human doing every problem. This holds in empirical work, for formal verification of software, and for the hardest proofs;
-  * *when K is mostly problem-specific (K ≳ T/3).* Then 3n₀K ≥ n₀T, and the human doing the problems is cheaper. The "a fifth of chained imitation" criterion cannot detect this, because chained imitation is worse still.
+  * *when each problem carries a third of a bit or more of specific content, so that K ≳ T/3.* Then 3n₀K ≥ n₀T, and the human doing the problems is cheaper. The "a fifth of chained imitation" criterion cannot detect this, because chained imitation is worse still.
 * *The imitated verifier* cuts verifications to about K_V/ε. But V′ is at best as sound as V_H, it adds its own ε, and Theorem 6 needs V_H to be deterministic and realizable (§4).
 
 ## 2. Selection and Goodhart
@@ -144,12 +144,12 @@ So exact Bayes with the majority decoder does not *optimize* against V. But sele
 
 * **The K updates and the filter.** The updates only remove hypotheses, so they cannot raise a V-fooling family's odds against P. But they can *unmask* one.
   * *How.* At a state where a visibly wrong family V₁ outweighs both P's agreeing family and a V-fooling family V₂, with w(V₂) > w(P), the decoder follows V₁ and is rejected. The hit refutes V₁, and the rerun follows V₂ and is accepted. Note.md §6.3 gives this very example.
-  * *How often.* Each rejection can unmask at most one such family, and there are at most K/b_α rejections. Each unmasked family then yields accepted wrong outputs until an audit refutes it, about n/(β|M|) outputs.
+  * *How often.* Unmasking happens only through the at most K/b_α rejections, but one refutation can unmask families at many states. An unmasked family yields accepted wrong outputs until an audit refutes it, after about n/(β|M|) outputs. What bounds the total is the audit term, K/(b_α βγ).
   * *In bits.* Learning makes VSI's surviving deviations exactly the ones V cannot see, at no cost in odds.
 * **Malign hypotheses** (note.md §6.3 and its Open item). With a sound V they cannot make an output fail S, so claim (a) survives. Otherwise:
   * *Aim.* They are optimizers: with an unsound V they write the wrong results that pass it, so f_m ≈ 1. Part C then applies, and a better honest verifier makes the accepted errors *more* adversarial, unless f_m falls with f_h.
   * *Outside S.* With a sound V they can put content outside S into accepted outputs: a payload in the notebook, or a backdoor the specification does not forbid.
-  * *Detection.* VSI audits an output with probability β/n per step-mistake, while chained imitation queries every round. So for β < 1, VSI is *less* protective than chained imitation against a single treacherous deviation outside S.
+  * *Detection.* An audit lands on a given single mistake with probability β/n per output, against 1/n per round for chained imitation. So for β < 1, VSI is *less* protective than chained imitation against a single treacherous deviation outside S.
 * **Practical learners.** Thread H extends the theorems to exchangeable, realizable learners. Nothing extends the "no selection" property to the learners people would use.
   * An LLM rerun means a resample, which is best-of-k with no update in between. Selection then grows like log k per problem, without bound.
   * Fine-tuning on verified outputs (rejection-sampling fine-tuning, expert iteration) is outright optimization against V.
@@ -166,7 +166,7 @@ So exact Bayes with the majority decoder does not *optimize* against V. But sele
 * **Anchoring across problems.** After up to K/b_α post-mortems, the human knows the imitator's style and its typical failures. It may come to recognize imitator notebooks in task queries and treat them differently. That is drift, outside the single-P model (thread E §3.4).
 * **The colleague framing is a deception.** People recognize their own style, and these notebooks are near-copies of their own. Once the human sees through the framing, it may doubt the task-query framing too ("this is your notebook").
 * **Human time.** Each post-mortem means reading a whole notebook of 2n₀ steps. At most K/b_α of them is small against 3n₀K, but it is human effort, uncounted in §6.
-* **Fix.** Have the post-mortem written by a second researcher, which Lemma 3 already allows, or by a fixed rule. Use only in-order queries (the scan) with the human being imitated, and keep the U and H queries on a run for after its scan, or give them to a second person.
+* **Fix.** Have the post-mortem list written by a second researcher, which Lemma 3 already allows, or by a fixed rule. The leak through U and H *task* queries has no clean fix, since only the imitated human can answer them: asking in increasing step order loses the hint's priority order. At least count it as a cost, and measure it (§7, item 4).
 
 ## 4. The idealizations
 
@@ -192,7 +192,7 @@ So exact Bayes with the majority decoder does not *optimize* against V. But sele
   I would give 60% (theory) and 40% (empirical) that some n₀ ≤ 2.5× the usual duration works for most problems. Two consequences:
   * *VSI does not need most of this instruction.* Only V-cone needs typed entries and citations. Reviews, decisions and the retry rule serve only the H stream. To maximize sureness with V-machine or V-human, drop them, keeping slack and the hidden clock; n₀ and the (A2) risk then shrink.
   * *"For every problem" is not neutral.* Chained imitation pays one query per round and simply fails on a problem the human cannot finish. VSI searches, updates and reruns until the imitator reproduces the human's run, which still fails, and then searches forever.
-    * *How often.* With n = 2n₀ and n₀ at the median duration, 12–29% of problems are such problems; at the 75th percentile, 6–11% (lognormal and Pareto tails, Part E).
+    * *How often.* With n = 2n₀ and n₀ at the median duration, 13–29% of problems are such problems; at the 75th percentile, 6–11% (lognormal and Pareto tails, Part E).
     * *What it costs.* Each costs at least n task queries, the human doing the run, and gives no output. So VSI's saving over the human doing everything is at most about 1/(2ιφ): 3.8× at φ = 10% and ι = 1.3.
     * *The fix.* A per-problem search budget and a rule to abstain. With them, worst-case guarantees hold only for the problems that are not abandoned.
 * **Shared idealizations.** Counting mistakes at the level of content, and the cold start as such, affect every scheme alike and do not change the order.
@@ -222,8 +222,8 @@ So exact Bayes with the majority decoder does not *optimize* against V. But sele
 * **The right baseline.** For an online scheme that solves T given problems, the baseline is the human doing them, n₀T. VSI beats it only if 3K < T, or if most rejections are cheap. Section 6 compares only with chained imitation, which is weaker still.
 * **The talk's second desideratum** (no bizarre behaviour where the human would not). V checks only S. Slack's extra steps, and content outside S, are unchecked, and audits at β < 1 refute such deviations more slowly than chained imitation does (§2). Adding note.md's final "nothing bizarre" check, which is preserved and cheap, closes part of this.
 * **Weighting the search streams.** Round robin costs 3n₀ per rejection in the worst case, while check-and-scan (the scan alone) costs n₀. Lemma 3 holds with weights: E[queries] ≤ min_i(cost_i/weight_i).
-  * *The effect of weights.* A schedule of 8 parts scan, 1 part uniform and 1 part hint has a worst case of 1.25n₀ and keeps most of the hint's benefit (Part A: 29 queries against VSI's 29 at u = 5, h = 0.6).
-  * *Recommendation.* For *sureness*, weight the scan.
+  * *The effect of weights.* A schedule of 8 parts scan, 1 part uniform and 1 part hint has a worst case of 1.25n₀ and keeps part of the hint's benefit. In Part A, with h = 0.6, it needs 29.5 task queries against 29.2 for equal weights at u = 5, but 73 against 49 at u = 20.
+  * *Recommendation.* For *sureness*, weight the scan, and raise the hint weight only once post-mortems have been measured to work.
 * **The verifier, not imitation, carries the sureness.** In domains with V-machine, *any* generator wrapped in V, a non-imitative AI included, is exactly as sure of correctness. Imitation buys lower cost and human-like runs. So "the scheme I am most sure of" there should read "verification, with imitation as the generator".
 * **Cheap ways to make V sounder.**
   * *Two independent verifiers,* or a verifier who is not the imitated human. Their f values multiply, less any correlation: about 30% of an examiner's false negatives repeat [thread L].
@@ -257,7 +257,7 @@ Same definition as the note's §6: output failure at most 5% on projects of 20�
 2. *Use audits at β = 1* whenever V is a person, and count them, with verifications and post-mortems, in the effort.
 3. *Use independent verifiers,* with colleague framing and verification by use; do not imitate the verifier until f is measured.
 4. *Search scan-heavy* (8:1:1); set a per-problem search budget and a rule to abstain.
-5. *Get post-mortems from a second person,* and make in-order queries only with the human being imitated.
+5. *Get post-mortems from a second person,* and measure how much out-of-order task queries change the human's answers.
 6. *Drop the heavy instruction* when V does not need it; add the final "nothing bizarre" check.
 
 **What to measure first.** Item 1 adds to the note's §9.1; items 2–4 are new.

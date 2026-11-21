@@ -3,7 +3,7 @@
 A research note on a question from Kaarel Hänni about **principled human imitation** (section 3.2 of his talk *Simpler versions of the alignment problem we still can't solve*, MISO, 16 November 2026).
 
 * **The question.** The talk's best protocol, *chained imitation*, does Solomonoff function induction on a human's input–output pairs, chains the learned map as in task decomposition, and queries the human on the distribution this induces ("train on test"). Find a protocol more likely to work, for a human that is a fixed deterministic program, under assumptions likely to be true of humans. Ideally, show that O(K(human)) reasonable queries suffice.
-* **The fifth note, the answer to the latest question:** [`verified-slack.md`](verified-slack.md). It recommends *verified slack imitation*: slack imitation, plus a verifier of finished results, plus a multi-stream search on rejected runs. Correctness rests only on the verifier's soundness, and the cost is at most 3n₀K task queries in the worst case. It synthesizes eleven research threads (A–H, J, L, N, Q, R) in [`research/`](research/), with lower bounds showing what no scheme can do.
+* **The fifth note, the answer to the latest question:** [`verified-slack.md`](verified-slack.md). It recommends *verified slack imitation*: slack imitation, plus a verifier of finished results, plus a search on rejected runs weighted towards scanning. Correctness rests only on the verifier's soundness, and the cost is at most 2n₀K task queries in the worst case. It was revised after referee 6 and a second red team ([`verification/referee-report-verified-slack.md`](verification/referee-report-verified-slack.md), [`research/threadS-redteam2.md`](research/threadS-redteam2.md), [`verification/response-verified-slack.md`](verification/response-verified-slack.md)). It synthesizes eleven research threads (A–H, J, L, N, Q, R) in [`research/`](research/), with lower bounds showing what no scheme can do.
 * **The fourth note:** [`slack-imitation.md`](slack-imitation.md), version 2: slack imitation and its theorems, used by the fifth note. It gives the scheme I am most sure would work with a deterministic human, a proof that it works if the human has *bounded setback*, the case that humans have it, and experiment E6. It synthesizes the earlier notes and five research threads in [`research/`](research/) (working branch only).
 * **The fourth note's referee and red team** ([`verification/referee-report-slack-imitation.md`](verification/referee-report-slack-imitation.md), [`research/threadE-redteam.md`](research/threadE-redteam.md), [`verification/response-slack-imitation.md`](verification/response-slack-imitation.md)). Both found the main theorems correct, and the referee reproduced E6 exactly. The referee found:
   * three errors in secondary claims: the read-out premise, "omissions are uncertain", and a factor 1/(1−ρ) in the fallback;
@@ -47,30 +47,27 @@ A research note on a question from Kaarel Hänni about **principled human imitat
 
 ## Answers in brief: the fifth note
 
-1. **The scheme: verified slack imitation (VSI).** Slack imitation, with these additions:
-   * *A verifier of finished results:* a machine check, a referee's check of the claimed solution's dependency cone, or the human's verification, imitated.
-   * *Reruns.* Each problem is rerun until its result is verified.
-   * *A search on rejected runs:* an invalid entry, if the local check finds one; otherwise uniform steps, a scan from step 0, and a list made of the last review, the labelled decisions and the human's post-mortem pointers.
-   * *The notebook instruction,* also part of the reference chain: typed, certified entries; obstruction records instead of verdicts; raw records; content-triggered reviews; labelled decisions.
+1. **The scheme: verified slack imitation (VSI).** Slack imitation plus a verifier of the finished result.
+   * *The loop.* Each problem is rerun until the verifier accepts. A rejected run is searched for a mistake, mostly by scanning it from step 0.
+   * *Abstaining.* If the scan finds no mistake, the human cannot solve the problem within n, and VSI says so.
+   * *The output* is the verified artifact, after a "nothing bizarre" check.
 2. **The theorem.**
-   * *Correctness:* if the verifier never passes a wrong result, no failed run is ever output, whatever the human's setbacks.
-   * *Rejections:* at most K.
-   * *Cost per rejection:* at most 3n₀ task queries whatever the human. It is 1 when the cone check finds an invalid entry, and a constant for ripe by-product failures and hedges. Under bounded setback it is at most 3(D+1)n/(σ+1).
-   * *No factor 1/ε,* and no dependence on the number of problems.
+   * *Correctness.* Every output satisfies the verifier's criterion. Correctness therefore rests only on the verifier never passing a wrong result of the imitator: not on determinism, nor on the human's setbacks.
+   * *Cost.* At most K rejections, each found with at most 2n₀ task queries, so at most 2n₀K in all, with no factor 1/ε. Under bounded setback it is far less, and a single query when a local check finds an invalid entry.
 3. **Lower bounds** (threads G, J, Q, F):
    * slack imitation is optimal for bounded-setback humans up to logarithms, and slack is necessary;
    * verification removes the 1/ε but not the n;
-   * insights triggered only by doing cost every protocol about n per insight;
+   * insights triggered only by doing cost every task-only protocol about n per insight;
    * so do trusted true records of failed attempts, and confident commissions accepted by a fooled human.
+4. **How sure I am, after a second red team.** The probabilities that VSI works on a real careful researcher:
+   * with a proof assistant on a formally stated goal: **70%**, the scheme I am most sure of;
+   * with tests: 45%;
+   * with a referee's check of the solution's cone: 45%;
+   * with the human's own verification: 40%;
+   * without a verifier: 30%.
 
-   In VSI these cost queries, never correctness.
-4. **How sure I am.** Probabilities that the scheme works on a real careful researcher:
-   * VSI with a machine verifier: 85% for theory and software;
-   * VSI with a referee's cone check: 70%;
-   * VSI with a human verifier: 65% for theory and software, 30% for empirical work;
-   * without a verifier: 45% and 20%.
-
-   The evidence (thread L) is that setbacks are bimodal, which is why the verifier version is the one I am sure of.
+   These are for theory and software; for empirical work, 10% in every row with a human or no verifier.
+5. **The main caveat.** VSI is exactly as sure as its verifier is on the imitator's own most plausible wrong answers. Rerunning until accepted turns every miss into a wrong output.
 
 ## Answers in brief: the fourth note
 
@@ -188,6 +185,8 @@ A research note on a question from Kaarel Hänni about **principled human imitat
 | `verification/referee-report-slack-imitation.md`, `verification/response-slack-imitation.md` | Referee 4's report on the fourth note, and the response to it and to the red team. |
 | `verification/referee4_*.py`, `verification/referee4_*.out`, `verification/referee4_rerun/` | Referee 4's re-run of E6, its run-level setback check, and its same-humans comparison. |
 | `verification/referee-report-slack-imitation-v2.md` | Referee 5's report on the fourth note's version 2. |
+| `verification/referee-report-verified-slack.md`, `verification/response-verified-slack.md` | Referee 6's report on the fifth note, and the response to it and to the second red team. |
+| `verification/referee6_*.py`, `verification/referee6_*.out` | Referee 6's checks of the fifth note's numbers and theory. |
 | `verification/referee5_*.py`, `verification/referee5_*.out` | Referee 5's re-run of the new E6 cells, its run-level check of Proposition 5, the mechanism behind the fooled humans' costs under asking, and its online test of ask-before-committing without a verifier. |
 | `results/hidden_insights_summary.json`, `results/hidden_insights_curves.json`, `results/hidden_insights.png` | E1 outputs. |
 | `results/property_rules.out`, `results/property_rules_summary.json`, `results/property_rules_curves.json`, `results/property_rules.png`, `results/property_rules.time` | E2 outputs. |
