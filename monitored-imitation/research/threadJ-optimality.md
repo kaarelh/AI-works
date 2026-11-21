@@ -6,7 +6,7 @@
 
 1. **Slack imitation is optimal for bounded-setback humans, up to logarithms** (Theorem J1) **[proved]**. For all n, ρ = σ/n, D ≤ n₀/2 and ε there is a class 𝒲 of humans with bounded setback D on *every* notebook and *every* entry. On 𝒲, every task-only protocol needs Ω((1−ρ)·Λ·K/(ε log(n/ε))) task queries, with Λ = min{n, (D+1)n/(σ+1)}. Online, one query per round gives Ω((1−ρ)ΛK/log n) failed runs.
    * Theorem 2 of slack-imitation gives at most ΛK failed runs, and Corollary 3 gives O(ΛK log(K/δ)/ε) queries. So the gap is only logs and a factor 1/(1−ρ).
-   * Counted per insight there is no log at all: on 𝒲, slack imitation is within a factor 32/(1−ρ) of every protocol that makes one query per round.
+   * Counted per insight there is no log at all: slack imitation is within a factor 32/(1−ρ) of every protocol that makes one query per round. This is proved for the revealing variant of 𝒲 and measured for 𝒲 itself.
    * The lower bound covers every protocol: BIS, MIX, LAST, end-weighting, uncertainty sampling, synthetic states and asks. On 𝒲, LAST never learns, and MIX costs about twice slack imitation (Part B).
 2. **Slack is necessary** (Corollary J2) **[proved]**. With σ = 0, the class 𝒲 has setback D = 0 everywhere and still forces Ω(nK/(ε log(n/ε))). That is note.md's Theorem 3 bound, now on humans who lose only the step itself. For D = 0 the optimal cost per insight is Θ̃(n/(σ+1)), so each unit of slack buys a proportional saving.
 3. **"BIS generalized" is the location protocol** (Theorem J3) **[proved]**. Let L, the *location number* of a round, be the fractional transversal number of the mistake sets of the failing hypotheses on the decoder's run. Query step k with probability z_k/L, where z is an optimal transversal. Then E Σ_t 1[fail_t]/L_t ≤ K.
@@ -22,7 +22,7 @@
    * The "iff" therefore uses L, not mass. The version stated with mass is **false**: CHAIN has single-mistake failures and L = 1. Outside hiding classes, no converse holds even for L (example: a "confession" state, off the runs, that reveals the human's secret).
 6. **Human time** (§5).
    * In human time the minimax cost for bounded-setback humans is Θ̃((D_t + h)·K/(ρε)), where h is the step length and D_t the setback measured in time. For chained imitation on silent humans it is Θ̃(T·K/ε), with T the project length.
-   * Finer steps help only down to the setback duration D_t. They raise the *number* of failed runs as D_t/h. They never lower K, since K(P_fine) ≥ K(P_coarse) − O(1).
+   * Finer steps help only down to the setback duration D_t. They raise the *number* of failed runs as D_t/h. They never lower K, since K(P_fine) ≥ K(P_coarse) − O(log r) when a coarse step is r fine ones.
 
 ## 0. Setting and the point-query lemma
 
@@ -85,7 +85,9 @@ So Theorem 2, Corollary 3 and Proposition 5 of slack-imitation apply to 𝒲 wit
   * E[K] = m(h(η) + η log₂(2sN)) ≤ ηm·log₂(2esN/η) ≤ 8εm·L_ε, using h(η) ≤ η log₂(e/η) and sN ≤ n². ∎
 
 **Remarks.**
-* *Tightness.* The upper bounds are Theorem 2 (ΛK failed runs online) and Corollary 3 (O((D+1)K·log(K/δ)/(ρε)) ≥ ΛK·log/ε queries). Per insight, slack imitation pays about n/s failed runs: Part B measures 0.98–1.04 × E[#special]·n/s for D = 0, …, 15. Part (b) demands N/(16s). The ratio is 16n/N ≤ 32/(1−ρ), with no log.
+* *Tightness.* The upper bounds are Theorem 2 (ΛK failed runs online) and Corollary 3 (O((D+1)K·log(K/δ)/(ρε)) ≥ ΛK·log/ε queries). Per insight, slack imitation pays about n/s failed runs, and part (b) demands N/(16s); the ratio is 16n/N ≤ 32/(1−ρ), with no log.
+  * *In the revealing variant of §4 this is a theorem.* An unhit special problem's run has s mistakes, so the uniform query hits with probability s/n per visit, and the first hit settles the problem: E[#failed] ≤ E[#special]·n/s.
+  * *For 𝒲 itself,* Part B measures 0.98–1.04 × E[#special]·n/s for D = 0, …, 15.
 * *Strongest assumption, weakest protocol.* (B_D) holds here in its learner-free form, on all notebooks and all entries, so no strengthening of (B_D) avoids the bound. Slack imitation needs (B_D) only on its own runs.
 * *Fixed humans.* As in note.md's remark on Theorem 3, −log₂ prior(θ) concentrates. So for every protocol there is a fixed human of complexity at most 2E[K] on which it fails with probability at least 2ε (for m large).
 * *Why nothing beats it.* The humans of 𝒲 are silent: a miss changes no later output, only the success predicate. Every query is a point query on length, hitting at most s offsets out of N. Uncertainty sampling sees doubt at most 2ηs/N at every window-capable step: it fires nowhere, or at about n steps per visit. LAST never hits for D ≥ 1, since n − 1 lies in no window, and stalls (Part B).
@@ -119,7 +121,7 @@ For data D, a problem x₀ and the decoder G_D, let F(D, x₀) be the family of 
 **Proposition J3′ (CHAIN)** **[proved]**. Take thread C's CHAIN class, with the class-prior decoder that never writes an unconfirmed insight value (Lemma 5 of without-a-check). At every reachable state, L = 1, and the following protocol has at most ⌊K⌋ failed runs **on every path**, for every σ ≥ 0, σ = 0 included. If the decoder's run writes k_p at step w, query step w − 1; otherwise query step n − 1.
 
 *Proof.*
-* *k_p unconfirmed.* The decoder writes nothing. Under every failing hypothesis (t_p ≤ n−1), the human at the decoder's state at step n−1 writes k_p, so n−1 ∈ M.
+* *k_p unconfirmed.* The decoder writes nothing. Under every failing hypothesis (t_p < n − σ), the human at the decoder's state at step n−1 writes k_p, so n−1 ∈ M.
 * *k_p confirmed, written at w.* Under t_p ≥ w the run's chain is at least the human's, so the run succeeds. Under t_p < w − σ it fails, with M = [t_p, w): there the human writes k_p, while elsewhere it writes what the decoder writes (nothing before t_p, the next chain unit after w). So w−1 lies in every failing M.
 * *Conclusion.* The query is a point mass on a common step, so every failed run's query lands on a mistake. Lemma 1 of note.md bounds these by ⌊K⌋ on every path. ∎
 
@@ -135,7 +137,8 @@ BIS finds t_p within one round, and so fails once per insight. LOC finds it acro
 
 **The general statement.**
 * BIS and LOC remove the factor n exactly when the failing hypotheses' mistake sets have a small fractional transversal on the decoder's run.
-* Persistence gives this for ripe failures, by thread C's Theorem A (the last step lies in every ripe M). CHAIN also gives it for lateness, because a late item's mistakes end where the decoder chose to write it.
+* Persistence gives L = 1 at every state where all failing hypotheses fail ripely, by thread C's Theorem A: the last step lies in every ripe M.
+* CHAIN also gives it for lateness, because a late item's mistakes end where the decoder chose to write it.
 
 ### 2.3 Persistence alone does not suffice without slack **[sketch]**
 
@@ -161,12 +164,12 @@ If this is carried through, Lemma J0 with ℓ = n gives the factor n, so persist
 * The ratio is 64L_ε/((1−ρ)·log₂(N/(16εs))). It is O(1/((1−ρ)c)) whenever s ≤ n^{1−c} and ε ≤ n^{−c}, since then log₂(N/(16εs)) ≥ c′·L_ε.
 * Theorem J1(c) adds that asks help only at about N/(4s) asks per round.
 
-So once α is below the decoder's doubt at its mistakes, Proposition 5(b) is tight up to a constant. Asking cannot do better, because the mistakes it would need to ask about are confident.
+So when the decoder's mistakes are confident at level α (doubt at most α), Proposition 5(b) is tight up to a constant. Asking does not fire on those mistakes, and no other task-only protocol finds them faster.
 
 **Theorem J6 (fooled commissions)** **[proved]**. Let 𝒟(m, n, η, q) have a decision slot at every step that the human always fills (π = 1). Problem p's human writes the default d₀ at every step, except that with probability η it writes d_{k_p} at one uniform step t_p. On any notebook it builds on the decision it finds and never revisits it (fooled). Success means the final notebook carries the human's decisions. Then:
 * (i) Every mistake of the class-prior decoder is a confident commission, with doubt at most 2η/n. At it, setback is ∞ and (B-omit) is vacuous, so slack changes nothing.
 * (ii) With η = 8ε and q = 2, every task-only protocol needs Q ≥ nm/4 ≥ n·E[K]/(32ε·log₂(en/(4ε))) for failure ≤ 2ε.
-* (iii) Online, asks included: E[#failed in rounds ≤ T] ≥ (η/2)·Σ_t(1 − 2E[Q_{<t}]/(nm) − 2E[A_t]/n). Each ask on the current problem buys at most 2η/n of failure probability.
+* (iii) Online, asks included: E[#failed in rounds ≤ T] ≥ (1 − 1/q)·η·Σ_t(1 − 2E[Q_{<t}]/(nm) − 2E[A_t]/n). Each ask on the current problem buys at most 2η/n of failure probability.
   * SI-ABC with α ≥ 2η/n never asks, and uniform queries find each deviation at rate 1/n.
   * With α < η/n it asks at all n steps of every unresolved problem.
 
@@ -179,7 +182,7 @@ So once α is below the decoder's doubt at its mistakes, Proposition 5(b) is tig
 ## 4. A characterization in the mistake-mass frame
 
 **The quantifiers of the upper bounds.** Each is proved by Theorem 1 of without-a-check, or by Theorem J3.
-* **(Q1) learner-relative, one human.** Suppose that for every data set D labelled by P and every problem x₀, whenever G_D's run fails under P, |M_P| ≥ cn. Then chained imitation has E[#failed] ≤ K/c for that P and every problem sequence. This is the form Lemma S gives slack imitation: c = (σ+1)/((D+1)n).
+* **(Q1) learner-relative, one human.** Suppose that for every data set D labelled by P and every problem x₀, whenever G_D's run fails under P, |M_P| ≥ cn. Then chained imitation has E[#failed] ≤ K/c for that P and every problem sequence. This is the form Lemma S gives slack imitation, with c = max{1, (σ+1)/(D+1)}/n = 1/Λ.
 * **(Q2) class, mass.** Suppose that for every reachable D, every x₀ and every P′ ∈ H_D under which G_D's run fails, |M_{P′}| ≥ cn. Then L* ≤ 1/c.
 * **(Q3) class, location.** If τ*(F(D, x₀)) ≤ L at every reachable (D, x₀), then LOC has at most L·K failed runs for every P ∈ H.
 
@@ -189,15 +192,15 @@ So once α is below the decoder's doubt at its mistakes, Proposition 5(b) is tig
 
 **Definition 4 (faithful hiding classes).** A hiding product class (Definition 0) with η ≤ 1/8 and γ ≤ ½ is *faithful* if:
 * **(F1) revealing:** under θ_p = (i, k), the answer at any x ∈ Δ_{p,i} determines (i, k);
-* **(F2) on-run:** P₀'s run R_p from x₀ᵖ fails under every θ_p ≠ 0, with mistake set tr_p(i) = {k : the k-th state of R_p lies in Δ_{p,i}};
+* **(F2) on-run:** P₀'s run R_p from x₀ᵖ fails under every θ_p ≠ 0, with mistake set tr_p(i) = {j : the j-th state of R_p lies in Δ_{p,i}};
 * **(F3) homogeneous:** λ_p is an optimal fractional packing of 𝒯_p = {tr_p(i)}_i, normalized, the maximum load over all states is attained on R_p, and L = τ*(𝒯_p) is the same for every p.
 
-𝒲 and 𝒟 become faithful once the insight unit also records the offset (unit (k_p, t_p) instead of k_p). The lower bounds of §§1 and 3 are unchanged, and K grows by nothing, since the offset was already paid for.
+𝒟 is faithful. 𝒲 becomes faithful once two things change: the insight unit also records the offset (unit (k_p, t_p) instead of k_p), and λ is an optimal packing of the windows, so that L = τ*({W_t}) ∈ [N/s, n/s]. Unguessability is unchanged, and K does not grow, since the offset was already paid for.
 
 **Theorem J4** **[proved]**. Let ℋ be faithful, and let L be its location number.
 * (a) For every P_θ ∈ ℋ and every problem sequence, LOC with the class prior has E[#failed] ≤ L·⌊K⌋. On i.i.d. problems, random stopping after N rounds gives expected failure at most L·K/N.
 * (b) Every task-only protocol making Q queries outputs a decoder with failure at least (1−γ)η(1 − 2Q/(Lm)).
-  * Online, with one query per round, it has at least ηLm/16 ≥ L·E[K]/(16·log₂(e|I|q/η)) failed runs in expectation.
+  * Online, with one query per round made after the run, it has at least ηLm/16 ≥ L·E[K]/(16·log₂(e|I|q/η)) failed runs in expectation.
   * Asks help only at about L/4 per round.
 * (c) Hence, over ℋ, the optimal number of failed runs for one-query-per-round protocols is between L·E[K]/(16 log₂(e|I|q/η)) and L·E[K].
   * *The iff:* for faithful classes ℋ_n with log(|I_n|q_n/η) = O(log n), task-only learning is n-free up to logarithms (failed runs at most polylog(n)·K) iff L_n ≤ polylog(n).
@@ -211,7 +214,7 @@ So once α is below the decoder's doubt at its mistakes, Proposition 5(b) is tig
 * (b) An optimal packing y* of 𝒯_p has total ν* = τ* = L, and every step has y*-load at most 1. So λ_p = y*/L has load at most 1/L, and ℓ ≥ L. Apply Lemma J0: rounds up to Lm/4 fail with probability at least (1−γ)η/2 ≥ η/4. Finally E[K] ≤ ηm·log₂(e|I|q/η).
 * (c) Combine (a) and (b). ∎
 
-**Outside hiding classes there is no converse, even for L.** Add to 𝒲 a state z_p, off every run, with P_θ(z_p) = θ_p: a "confession", or thread B's *located probe*. Then L = Λ is unchanged, but one query at z_p per problem gives O(m) = O(K) queries in all. So L is the price of *on-run* information. That L is optimal among protocols that query only states of the decoders' runs is a **[conjecture]**; thresholds learned on one run's earlier states are the obstacle to a proof.
+**Outside hiding classes there is no converse, even for L.** Add to 𝒲 a state z_p, off every run, with P_θ(z_p) = θ_p: a "confession", or thread B's *located probe*. Then L is unchanged, but one query at z_p per problem gives m queries in all, with no factor L. So L is the price of *on-run* information. That L is optimal among protocols that query only states of the decoders' runs is a **[conjecture]**; thresholds learned on one run's earlier states are the obstacle to a proof.
 
 **A Bayes-average variant** **[sketch]**. LOC hedges against every consistent failing hypothesis, however improbable. Choosing q_t instead to maximize E_post[q(M)]/Pr_post[fail] gives, averaged over the prior, E[#failed] ≤ E[K]·sup_t Pr_post[fail_t]/E_post[q_t(M)]. Thread D's √π weighting is a multi-round relative of this, and LOC is its worst case.
 
@@ -232,7 +235,7 @@ So once α is below the decoder's doubt at its mistakes, Proposition 5(b) is tig
 * *The setback time is a floor.* In human time the minimax cost for bounded-setback humans is Θ̃((D_t + h)K_h/(ρε)), for slack imitation and for every task-only protocol. Shortening the step from h to h′ multiplies the cost by at most (D_t + h′)/(D_t + h). That is a gain of at most 1 + h/D_t: at most 2 if setbacks last at least a step.
 * *When D_t ≪ h,* cost falls linearly with h. This is the case of omissions under (B-omit), which lose only their own step, and of errors caught within the next step. The proviso is that (B_D) survives at the finer grain.
 * *Failed runs get worse.* Their number, (D+1)K/ρ = (D_t/h + 1)K/ρ, rises as h falls. Where a failed run is costly in itself (wasted compute, an action taken), finer steps hurt.
-* *K never falls.* If a coarse step is r fine steps, P_coarse = P_fine^r, so K(P_coarse) ≤ K(P_fine) + O(1). The finer human also has its within-step process to learn.
+* *K never falls.* If a coarse step is r fine steps, P_coarse = P_fine^r, so K(P_coarse) ≤ K(P_fine) + O(log r). The finer human also has its within-step process to learn.
 * *Setbacks may shrink with the step.* If D_t = T_notice + h (damage lasts until noticed, plus one step to redo), then cost ≈ (T_notice + 2h)·K_h/(ρε).
   * The advantage over chained imitation in human time is then ≈ ρT/(T_notice + 2h).
   * The effective horizon is the project length measured in noticing lags, not in steps.
