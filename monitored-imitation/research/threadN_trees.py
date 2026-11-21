@@ -9,7 +9,7 @@ numpy only.  Four parts; each prints its own section.
        sum over label mistakes rho of omega(rho) >= 1,
    omega(rho) = prod over calls w on the path root..call(rho) of 1/c_w,
    so the depth-weighted query q = omega/Phi hits with probability >= 1/Phi.
-   Also checks the fooled-parent variant (Proposition T3'): weights 1/c_u, no (B-sub).
+   Also checks the fooled-parent variant (Theorem T3'): weights 1/c_u, no (B-sub).
 
 2. Game value.  For one query per run, drawn from q over rounds without knowing where the
    mistakes are, against an adversary choosing a minimal failure certificate.  Computed by

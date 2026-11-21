@@ -12,7 +12,7 @@
    * **Lemma T1** [P]: a failed call has at least c = ⌈(s+1)/(D+1)⌉ bad rounds. This is Lemma S, call by call.
    * **Lemma T2** [P, N]: a failed root carries *weighted* mistake mass at least 1, where a round at depth i weighs c^−(i+1).
    * **Theorem T3** [P]: query one round with probability proportional to that weight. Then E[#failed runs] ≤ Φ·K, with Φ = Σ_rounds c^−(depth+1).
-   * *Size of Φ.* For a balanced tree with b subquestions per round and depth d, Φ < 2·((D+1)/ρ)^(d+1)·b^d. This is independent of the rounds per call, just as the chain's charge (D+1)/ρ is independent of n. Each level of depth costs a factor b(D+1)/ρ.
+   * *Size of Φ.* For a balanced tree with b subquestions per round and depth d, Φ < 2·((D+1)/ρ)^(d+1)·b^d (when b(D+1) ≥ 2ρ). This is independent of the rounds per call, just as the chain's charge (D+1)/ρ is independent of n. Each level of depth costs a factor b(D+1)/ρ.
 3. **A uniformly random round or call is the wrong query** [P]. It guarantees only N_r/c, where N_r is the number of rounds in the tree, because c mistakes may sit in the root alone.
    * *Depth weighting* is the optimum among query laws that see only the tree's shape [P, N on balanced trees].
    * *A uniformly random depth, then a uniform round there,* is within a factor d+1 of Φ and needs no parameters [P].
@@ -23,12 +23,12 @@
    * *Isolation* helps the assumption and the bound, and hurts recovery (§3.3).
    * *Running the tree depth-first in one notebook* does transfer the chain theorems, but with setback counted in global steps, so a redone subanswer counts as a whole subtree. The charge is then about N_r/c, and the depth discount is lost [S].
 5. **Asking and verifiers** (§4).
-   * *Proposition 5 carries over* [P]: at most 0.69K/α asks, and Φ·K/log₂(1/α) failed runs.
+   * *Proposition 5 carries over* [P]: at most 0.69K/α asks, and Φ·K/max{1, log₂(1/α)} failed runs.
      * But asking does not remove (B-sub): a confident wrong answer made deep down still reaches its parent.
      * It does remove guessed answers. A call's answer is the certainly-due slot par excellence.
    * *Proposition 4 carries over with a root verifier* [P]: Φ·K search queries.
    * *With a verifier at every node* [P]: at most K rejections, each found with at most 1 + min{r, (D+1)r/(s+1)} task queries, with no (B-sub) and no dependence on N. This is the strongest result here.
-   * *Rejections* [S, N]: suppose the parent's next round names exactly the subanswers it rejects (**(B-notice)**). Then a walk that follows these rejections has charge at most 5·2^d·(D+1)/ρ, with no b^d. The b^d is the price of a parent whose reaction does not say *which* subanswer failed.
+   * *Rejections* [S, N]: suppose the parent's next round names exactly the subanswers it rejects (**(B-notice)**). Then a walk that follows these rejections has charge at most about 6·2^d·(D+1)/ρ, with no b^d. The b^d is the price of a parent whose reaction does not say *which* subanswer failed.
 6. **Believability** (§5).
    * *(B-sub) is more natural than the chain's (B-commit) in one respect.* A subanswer really is a delegate's report, in the human's own tree too, so skepticism toward it does not break the design law.
    * *It is less natural in another.* The parent sees only the answer, not the work, and re-asking a deterministic imitator returns the same answer.
@@ -41,7 +41,7 @@
 * **Rounds.** In round j the label is g = (e, Q′): entries e and a list Q′ of subquestions.
   * The scaffold runs a fresh call on each q′ ∈ Q′. The call sees only q′ (isolation).
   * Then y_j = y_{j−1} ∪ e ∪ Q′ ∪ A, where A is the list of their answers.
-  * A call runs exactly r_h rounds, with a hidden clock within the call. It then returns ans(y_{r_h}), read out by a fixed scaffold rule. Under a hidden clock, an unfinished call therefore returns the empty answer ⊥.
+  * A call runs exactly r_h rounds, with a hidden clock within the call. It then returns ans(y_{r_h}), read out by a fixed scaffold rule. With a rule such as "the answer section", which the human writes only when done, an unfinished call returns the empty answer ⊥.
 * **Learning.** The human is one deterministic P, the same at every call, with P(y) a label. Data are pairs (y, P(y)), so slack-imitation §1 applies unchanged: the potential Φ(D), Lemma 1 of note.md, and Theorem 1 of without-a-check.md. A *task query* at round (u, j) shows the human call u's transcript y_{j−1} and records P(y_{j−1}): one round of one isolated call.
 * **Runs.** The imitator's run on a root question is the whole tree, with the majority decoder G in place of P at every round. A *mistake* is a round ρ = (u, j) with G(y) ≠ P(y).
 * **Success.** Each question q has a set Good(q) of answers. S_q(y) means ans(y) ∈ Good(q), and S_q is assumed preserved by appending. A call *fails* if its answer is not good; the run fails iff the root does.
@@ -49,6 +49,7 @@
   * **(T1′)** if τ(y) ≥ 1 and the round is *correct* (its label is P(y) and every subanswer is good), then τ(y′) ≤ τ(y) − 1, since this continuation is among those maximized over;
   * **(T2′)** if τ(y) = 0 then τ(y′) = 0.
 * **Bad rounds.** A round is *bad* if its label is a mistake or some subanswer is not good.
+* **Read-out.** If the answer is read out by a human step instead of a scaffold rule, each call needs assumption (R) of slack-imitation Remark 3.
 
 **Assumptions.**
 * **(Budget)** τ_q((q)) ≤ r₀(h) for the root, and for every question posed in a round whose label is the human's (a correct round, or an ask).
@@ -73,7 +74,7 @@
 * *Otherwise its label is the human's.* Then its subquestions satisfy (Budget), and some child k fails. By induction the child's subtree has Σ ω_k ≥ 1, and there ω_u = ω_k/c_u.
 * Distinct bad rounds use disjoint rounds and subtrees, so the total is at least c_u·(1/c_u) = 1. ∎
 
-Part 1 of the code checks this on 8,000 random trees, including children of mislabelled rounds with arbitrary τ (possibly ∞). The minimum mass found is exactly 1.
+Part 1 of the code checks this on 7,500 random trees, including children of mislabelled rounds with arbitrary τ (possibly ∞). The minimum mass found is exactly 1.
 
 **Protocol TSI.** For each root question:
 1. run the imitator's tree;
@@ -105,7 +106,7 @@ Part 1 of the code checks this on 8,000 random trees, including children of misl
    * *On unbalanced trees* Φ is only an upper bound on the optimal charge. In one example of part 2, putting all mass on two childless rounds gives 1/2, against 1/Φ = 0.074.
 4. **Graceful degradation** [P].
    * *If (B-sub) fails but within-call (B_D) holds,* every failed run has c label mistakes in a single call. TSI hits them with probability at least c^−d/Φ, so its charge is at most c^d·Φ ≈ N_r/c, which is optimal there (Theorem T3′).
-   * *With no setback bound at all,* the charge is at most c^(d+1)·Φ ≤ N_r/(1 − c/(rb)): chained imitation on the slack tree.
+   * *With no setback bound at all,* the charge is at most c^(d+1)·Φ, which for balanced trees with rb > c is at most N_r/(1 − c/(rb)): chained imitation on the slack tree.
    * So TSI is within a constant of the best guarantee known in each regime.
 5. **Mixed parents** [P, same proof]. If only some calls absorb wrong subanswers, divide by c_w only at the ancestors w that absorb, and Lemma T2 holds. A wrong answer noticed one level up instead of at the parent loses one level of discount, not the guarantee.
 6. **i.i.d. questions** [P]. The epochs of Corollary 3, with γ = 1/Φ_max, give O(Φ_max·K·log(K/δ)/ε) task queries.
@@ -121,7 +122,7 @@ Part 1 of the code checks this on 8,000 random trees, including children of misl
 
 ### 3.1 Lower bounds (analogues of note.md's Theorem 3)
 
-**Theorem T4** [P, by the proof of Theorem 3 with "positions" redefined]. Fix a tree shape: r₀ rounds per call, b subquestions per round, depth d.
+**Theorem T4** [P, by reduction to the proof of Theorem 3, with "positions" redefined; written out only in outline]. Fix a tree shape: r₀ rounds per call, b subquestions per round, depth d.
 * **(a) Silent trees.** There is a class with unbounded setback on which every protocol that asks only task queries needs Q ≥ N_r⁰·E[K]/(32·ε·log₂(e·N_r⁰/(4ε))). Here N_r⁰ is the number of rounds in the human's own tree.
   * *The class.* Problem p has, with probability η, one insight k_p at a uniformly random round of a uniformly random call. A silent human writes it only at that round. Every answer is the set of insights in the call's subtree, so parents copy without judging.
   * *Why it is hard.* A task query is informative only at that call and round, on a transcript that lacks the insight. Steps 1–6 of Theorem 3 go through with n := N_r⁰.
@@ -130,7 +131,7 @@ Part 1 of the code checks this on 8,000 random trees, including children of misl
   * *The class.* With probability η, problem p has a hidden path of subquestions, uniform among the b^d paths, whose leaf needs insight k_p.
   * *The humans' behaviour.* Every internal call poses the same b subquestions in every round. Its answer collects the leaf values its children have returned. It succeeds once all b answers are good, so each round is a fresh attempt and the setback is 0. The hard leaf writes k_p, or corrects a wrong value, in its next round.
   * *Why it is hard.* Labels of internal calls do not depend on θ. Only a task query at the hard leaf is informative, so Theorem 3's proof works with n := b^d.
-  * *Upper bound for this class.* Here c = s+1 = r, so Φ = Σ_{i≤d} b^i < 2b^d, and Theorem T3 is tight up to the logarithm and ε.
+  * *Upper bound for this class.* Here c = s+1 = r, so Φ = Σ_{i≤d} b^i < 2b^d (b ≥ 2), and Theorem T3 is tight up to the logarithm and ε.
 * **(c) Open.** I do not know whether the factor ((D+1)/ρ)^d is necessary.
   * A class that forced it would have to hide which c of a call's r rounds pose the subquestions that will be answered wrongly, while the imitator poses them correctly.
   * Hiding that costs about c^d·log₂ C(r, c) bits per problem, which inflates K by about the factor to be shown. My guess is that it is partly an artifact of query laws that ignore the run's content.
@@ -181,7 +182,7 @@ Part 1 of the code checks this on 8,000 random trees, including children of misl
 * no rejected run is output;
 * at most ⌊K⌋ runs are rejected;
 * under (Budget) and (B^T_D) for all entries, the expected number of search queries is at most Φ_max·⌊K⌋ (each search is geometric with success probability at least 1/Φ; Wald);
-* without (B^T_D), it is at most N_r·K/(1 − c/(rb)).
+* without (B^T_D), it is at most c^(d+1)·Φ_max·K, which is N_r·K/(1 − c/(rb)) for balanced trees.
 
 **Proposition T6 (a verifier at every node)** [P].
 * *The verifiers.* For subquestions V_q is sound: V_q(a) = 1 ⇒ a ∈ Good(q). V_root decides Good at the root.
@@ -194,7 +195,7 @@ Part 1 of the code checks this on 8,000 random trees, including children of misl
   * at most ⌊K⌋ rejections;
   * per rejection, at most 1 + min{r, (D+1)r/(s+1)} task queries in expectation, and at most d·B_max verifier calls, where B_max is the most children a call has (d(1 + ⌈log₂ B_max⌉) with batch verification);
   * (B-sub) is never used.
-* *Its ancestors.* This is note.md's Corollary 12, with machine verifiers in place of the human's check and Lemma S at the end. Where subanswers are verifiable (proofs, tests), trees are *easier* than chains: the cost does not depend on N, depth or b.
+* *Its ancestors.* This is note.md's Corollary 12, with machine verifiers in place of the human's check and Lemma S at the end. Where subanswers are verifiable (proofs, tests), trees are *easier* than chains: the task-query cost does not depend on N, depth or b.
 
 **Proposition T7 (ask before committing)** [P].
 * *The protocol.* At every round, in execution order (say depth-first), ask the human instead of committing whenever the top label's mass is below 1 − α.
@@ -211,19 +212,19 @@ Part 1 of the code checks this on 8,000 random trees, including children of misl
 * *The walk.* At call u:
   * with probability λ_h, query a uniform round of u;
   * otherwise pick a rejection in u's transcript uniformly. Query its round (¼), the round that posed the rejected question (¼), or move to the rejected child and repeat (½).
-  * Here h is u's height. With no rejection, query a uniform round.
+  * Here h = d − depth(u). With no rejection, query a uniform round.
 * *The claim.* If the root fails and c ≥ 2, the walk hits a mistake with probability at least f_d, where
   * f₀ = c/r, A = (c−1)/(4r), B_h = min{¼, f_{h−1}/2};
   * f_h = A·B_h/(A + B_h), with λ_h = B_h/(A + B_h).
-  * So 1/f_d ≤ 2^d·5r/(c−1) ≈ 5·2^d·(D+1)/ρ.
-* *Sketch.* Let a failed call u have a label mistakes, and let F count the rejections that appear in correct rounds of failed children posed in correct rounds.
+  * So 1/f_d ≤ 6·2^d·r/(c−1) ≈ 6·2^d·(D+1)/ρ.
+* *Sketch.* Let a failed call u have a label mistakes, and let F count the rejections, made in correct rounds, of failed children that were posed in correct rounds.
   * Excluding the last round, its c−1 bad rounds give c − 1 ≤ 2a + F. A missed rejection is a mistake in the next round, so a label mistake can cover at most two bad rounds.
   * If a ≥ (c−1)/4, the label branch hits with probability at least λ(c−1)/(4r).
   * Otherwise F ≥ 1, and every rejection is worth at least B_h:
     * a spurious rejection sits in a mistaken round;
     * a rejection of a child posed in a mistaken round points to that round;
     * a rejection of a failed child under (Budget) leads to a child worth f_{h−1}, by induction.
-* *The check.* Part 3 computes the exact hit probability on 6,000 random trees, where imitated rejections are exact in correct rounds and arbitrary in mistaken ones. The bound held with margin 3–16×.
+* *The check.* Part 3 computes the exact hit probability on the 3,517 failed roots among 6,000 random trees, where imitated rejections are exact in correct rounds and arbitrary in mistaken ones. The bound held with margin 3–16×.
 * *What (B-notice) is.* It is a check of subanswers delivered as task output.
   * It needs no separate check queries.
   * An imitated judgment's errors are label mistakes at known positions: the round with the rejection, or the round right after the subanswer.
@@ -277,7 +278,7 @@ Charges per unit of K (expected failed runs ≤ charge × K) for balanced trees 
 | 30 | 1 | 2 | 3 | 16 | 518,481 | 20,739,240 | 84,210 | 1,296,202 | 390 | 1,250 | 95 |
 
 **Reading.**
-* *Depth weighting* gains 70–200× over chained imitation of the human's own tree at d = 3. Uniform queries on the slack tree *lose* to it.
+* *Depth weighting* gains 20–26× over chained imitation of the human's own tree at d = 2, and 15–220× at d = 3 (15× for D = 2). Uniform queries on the slack tree *lose* to chained imitation.
 * *D matters at every level.* D = 2 instead of 1 multiplies Φ by about 5 at d = 3.
 * *Rejections* make the charge nearly independent of b, and grow only as 2^d.
 

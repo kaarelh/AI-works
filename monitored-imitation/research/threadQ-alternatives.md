@@ -95,7 +95,7 @@ Thread D's point/threshold/group frame applies to location. Detection is a group
 5. *The count.* The expected number of hit problems with an insight is at most 4Q/n + 4V/q.
 6. *The fresh problem.* p is uniform, so Pr[p has an insight and is not hit] ≥ η − 4Q/(nm) − 4V/(qm). On that event k_p is uniform on at least q/2 values given the transcript, and Ĝ ends at k_p with probability at most 2/q. ∎
 
-*Reading.* Detection tells the learner *which* problems hide something, the "presence" location of thread B's E5, worth a constant. It does not tell *where in the run*. Guessing content by verification is generate-and-test (Section 7), which needs the posterior to put real mass on the right idea. Free probes with recall φ multiply Q's term by 1/(1 − φ), as in thread B's Theorem 4.
+*Reading.* Detection tells the learner *which* problems hide something, the "presence" location of thread B's E5, worth a constant. It does not tell *where in the run*. Guessing content by verification is generate-and-test (Section 7), which needs the posterior to put real mass on the right idea. With free probes of recall φ, the required Q shrinks only by the factor 1 − φ, as in thread B's Theorem 4.
 
 ### 2.2 Hints: post-mortems, a colleague's notebook, scans
 
@@ -158,13 +158,13 @@ This scan removes slack's doubling of the cost of silent humans (slack-imitation
 **Theorem Q4.** Assume (A1)–(A4), and write b_α = max{1, log₂(1/α)}, with b = 1 when nothing is asked. For every sequence of problems:
 * (a) every output satisfies S;
 * (b) on every path there are at most K/log₂(1/(1−α)) asks, and at most K/b_α rejections and audit hits together;
-* (c) E[search queries] ≤ 3·E Σ_r min{n/|M_r|, n₀, j_r} ≤ (3K/b_α)·min{n₀, (D+1)n/(σ+1), s}. The second term needs (B_D) at committed mistakes, the third needs every post-mortem list to contain a mistake, and the sum over r runs over rejections;
+* (c) E[search queries] ≤ 3·E Σ_r min{n/|M_r|, n₀, j_r} ≤ (3K/b_α)·min{n₀, (D+1)n/(σ+1), s}. The second term needs (B_D) at committed mistakes, for all entries as in Proposition 4(c), since VSP has no bizarreness check; the third needs every post-mortem list to contain a mistake, and the sum over r runs over rejections;
 * (d) without (A4), the failed outputs are exactly the failed runs that V accepts, and under (B_D) at their committed mistakes E[#failed outputs] ≤ K/(b_α·β·γ), with γ = max{1, (σ+1)/(D+1)}/n. For β = 1 this is slack-imitation.md's Proposition 5(b) bound for SI-ABC;
 * (e) the human's effort is one verification per run (Theorem Q5 replaces most of them), at most K/b_α post-mortem reads, and task queries for asks, searches and about β·T audits.
 
 *Proof.*
 * (a) holds by construction and (A4).
-* (b) *Asks:* Proposition 5(a). *Rejections:* by (A3) and (A2), a run with no committed mistake is the human's own and is accepted, so a rejected run has one, and the search ends almost surely with a hit at a committed step k. List the asks before k, then the hit, then everything else: the hit lowers Φ by at least b_α (Proposition 5's proof, with Lemma 1 for α ≥ ½). Audit hits are counted in the same way, and Φ ≤ K.
+* (b) *Asks:* Proposition 5(a). *Rejections:* by (A3) and (A2), a run with no committed mistake is the human's own and is accepted, so a rejected run has one, and the search ends almost surely with a hit at a committed step k. List the asks before k, then the hit, then everything else: the hit lowers Φ by at least b_α (Proposition 5's proof for log₂(1/α); Lemma 1 gives at least 1 in any case). Audit hits are counted in the same way, and Φ ≤ K.
 * (c) Lemma Q2 with r = 3, Lemma Q3, and Lemma S for |M_r| ≥ (σ+1)/(D+1). Wald's identity applies, since the number of searches is bounded on every path.
 * (d) As in Proposition 5(b): the run and V's verdict are fixed before the audit's coin.
 * (e) Bookkeeping. ∎
@@ -204,7 +204,7 @@ For every sequence of T notebooks, chosen adaptively (by VSP, for instance):
 * *How failures end.* A failed run either has no claimed solution, a partial result, or a dead end, which any verifier rejects; or it has a confident *wrong* claimed solution. Thread E's weak links (V2, V3, V5, hedges) mostly produce the first kind. Its V1, V6, V9 and V13 can produce the second.
 * *The rate of bad outputs.* It is about p_f·w·f, where p_f is the imitator's failure rate before verification, w the share of failures with a wrong claimed result, and f the verifier's miss rate on those. Learning drives p_f down, asking removes unconfident wrong claims, and audits bound the rest (Theorem Q4(d)).
 * *No selection for fooling.* Rerun-until-accepted is a yes/no filter on posteriors built only from the human's answers. As in note.md §6.3, it does not raise the ratio of accepted wrong runs to correct ones.
-* *Machine checks help verification more than they help notebooks.* In mathematics, a written proof checked line by line by a careful referee is fairly sound, and a proof assistant makes it sound. In software, tests and review do the same.
+* *Mathematics and software.* A written proof checked line by line by a careful referee is fairly sound, and a proof assistant makes it sound; in software, tests and review do the same. Machine checks of the *final* product are easier to arrange than machine checks of every notebook entry.
 * *Empirical work.* Verification is replication, unless the scaffold reruns the key experiments. Here (A4) is weak, and VSP falls back to SI-ABC's guarantee through audits.
 * *What S must be.* VSP needs a crisp yes/no S. A graded "good progress" judgment would turn the filter into selection on a score, which note.md §6.3 warns against.
 
@@ -233,7 +233,7 @@ So verification turns "K/ε human projects" into "K human projects" in the worst
 * (c) *Run level, on the hidden-insight class.* Let U_p be the unprobed steps of an unhit problem p. A posterior sample writes its insight, if it has one, at a step t̃ drawn from the posterior of t_p, which is uniform on U_p and independent of t_p given the transcript. So querying where the samples disagree hits with probability exactly 1/|U_p|, the same as a uniform probe of U_p.
 * (d) *Varied scaffolds.* An omission caused by missing knowledge appears under every scaffold for which the posterior lacks the insight, so the runs agree on it. Errors that vary across framings are unconfident.
 
-*Proof.* (a) As in Theorem 3, the only informative queries are probes, and the rule only decides where they go. (b) The probability that all k samples agree with the top label is μ^k, and 1 − μ^k ≤ k(1 − μ). (c) In Theorem 3's step 2, given the history, t_p is uniform on the unprobed steps. A sample's insight time has that law and is drawn independently of θ, so the hit probability is Σ_j π(j)·Pr[t_p = j] = 1/|U_p|. (d) The posterior given the data is the same whatever scaffold is run. ∎
+*Proof.* (a) As in Theorem 3, the only informative queries are probes, and the rule only decides where they go. (b) The probability that all k samples agree with the top label is μ^k, and 1 − μ^k ≤ k(1 − μ). (c) In Theorem 3's step 2, given the history, t_p is uniform on the unprobed steps. A sample that has an insight places it with that law, drawn independently of θ given the transcript, so the hit probability is Σ_j π(j)·Pr[t_p = j] = 1/|U_p|. (d) The posterior given the data is the same whatever scaffold is run. ∎
 
 *Why confident silent omissions are invisible to ensembles.* Ensembles measure how spread the posterior is. At a confident silent omission the posterior is concentrated on "no insight here", with mass at least 1 − 2η/n. Its remaining doubt is spread evenly over every unprobed step of the run, because the data say nothing about which step it is.
 
@@ -265,13 +265,13 @@ So verification turns "K/ε human projects" into "K human projects" in the worst
 
 **Proposition Q9.**
 * (a) Under (A4) for every candidate, no failed run is output.
-* (b) *Selection is bounded.* For any property Ψ of runs, Pr[the output has Ψ] ≤ Σ_i Pr[candidate i has Ψ]: at most log₂ k bits of selection. With per-run posterior samples, a malign hypothesis is drawn with its posterior mass, multiplied by k. The majority decoder lets it act only where it holds the majority.
+* (b) *Selection is bounded.* For any property Ψ of runs, Pr[the output has Ψ] ≤ Σ_i Pr[candidate i has Ψ]: at most log₂ k bits of selection. With per-run posterior samples, a malign hypothesis is drawn with probability up to k times its posterior mass, while the majority decoder lets it act only at states where it holds the majority.
 * (c) *No worst-case gain.* On Theorem Q1's class this is guessing by verification.
 * (d) It succeeds without task queries with probability 1 − (1 − p_s)^k, where p_s is the per-candidate probability of success.
 
 *Proof.* (a) is (A4). (b) is a union bound over the candidates. (c) Each candidate's final value is a guess at k_p, tested by one verification. ∎
 
-*Use.* A cheap pre-filter, preferably with majority-decoder runs under scaffold variations, which select without raising the exposure to malign hypotheses. It never hurts correctness under (A4), and it is the practical engine of current research agents. It goes beyond imitation: it outputs a human-like run that passes the verifier, not necessarily this human's.
+*Use.* A cheap pre-filter, preferably with majority-decoder runs under scaffold variations, which keep the majority decoder's protection against minority hypotheses at every state they reach. It never hurts correctness under (A4), and it is the practical engine of current research agents. It goes beyond imitation: it outputs a human-like run that passes the verifier, not necessarily this human's.
 
 **Recovery triggers for dead ends.** Add to the reference chain: "when three approaches in a row have failed, re-examine the recorded dead ends before trying new ones."
 * *Validity.* The trigger is content, so the clock stays hidden and (T1) holds.
