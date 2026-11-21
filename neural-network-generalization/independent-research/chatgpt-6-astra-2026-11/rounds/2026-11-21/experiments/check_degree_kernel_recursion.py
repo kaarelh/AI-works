@@ -169,9 +169,27 @@ def two_block_margin_cases():
             records.append(dict(dimension=d,prefix=h,spectrum=values,minimum_multiplier=str(min(lam))))
     return dict(cases=records,scope='Exact rational verification of the half-cube-plus-one multiplier formula and bounds. The proof reduces dyadic and two-block prefixes to this case or a full/one-missing cube.')
 
+def downset_counterexample():
+    d=7;radius=5;mu=list(map(F,[1,1,1,1,256,256,256,256]));rad=radial(d,mu)
+    def cb(n,k):return math.comb(n,k) if 0<=k<=n else 0
+    A=sp.Matrix([[sum(sp.Rational(rad[i+j-2*a].numerator,rad[i+j-2*a].denominator)*cb(i,a)*cb(d-i,j-a)
+        for a in range(j+1) if 0<=i+j-2*a<=d) for j in range(radius+1)] for i in range(radius+1)])
+    equality=sp.Matrix([-607406,4805734,6756484,6252604,4301854,1911994])/5529169
+    dual=sp.Matrix([0,1835014951,2470147276,2255272546,1542695956,684722701])/2006421616
+    observed=sp.Matrix([sp.Rational(164275335,125401351),1,1,1,1,1])
+    assert A*equality==sp.ones(6,1) and equality[0]<0
+    assert A*dual==observed and all(v>=0 for v in dual) and all(v>=1 for v in observed)
+    assert sum(math.comb(d,j)*dual[j]*(observed[j]-1) for j in range(6))==0
+    H=[x for x in range(2**d) if x.bit_count()<=radius]
+    assert all(y in H for x in H for y in range(2**d) if x&y==y)
+    return dict(dimension=d,radius=radius,observed_size=len(H),spectrum=list(map(int,mu)),
+        orbit_matrix=[[str(v) for v in row] for row in A.tolist()],equality_by_weight=[str(v) for v in equality],
+        margin_dual_by_weight=[str(v) for v in dual],margin_values_by_weight=[str(v) for v in observed],
+        scope='Exact rational Hamming-ball counterexample to activity for all coordinatewise downsets; not a counterexample to lexicographic-prefix activity.')
+
 def main():
     start=time.monotonic();exact=exact_cases();relu=relu_cases();tangent=tangent_cases();powers=positive_power_cases();deep=deep_relu_cases()
-    report=dict(status='PASS',scope=__doc__.strip(),exact_cases=exact,relu_cases=relu,tangent_cases=tangent,positive_power_cases=powers,deep_relu_cases=deep,nonprefix_counterexample=nonprefix_counterexample(),two_block_margin_cases=two_block_margin_cases(),seconds=time.monotonic()-start)
+    report=dict(status='PASS',scope=__doc__.strip(),exact_cases=exact,relu_cases=relu,tangent_cases=tangent,positive_power_cases=powers,deep_relu_cases=deep,nonprefix_counterexample=nonprefix_counterexample(),two_block_margin_cases=two_block_margin_cases(),downset_counterexample=downset_counterexample(),seconds=time.monotonic()-start)
     (ROOT/'results/degree_kernel_recursion_checks.json').write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps(dict(status='PASS',exact_recursive_predictions=sum(r['exact_wrong_predictions'] for r in exact),
         exact_matrix_comparisons=sum(r['exact_matrix_comparisons'] for r in exact),

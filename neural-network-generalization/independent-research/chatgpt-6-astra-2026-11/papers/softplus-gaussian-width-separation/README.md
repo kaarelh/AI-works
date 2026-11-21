@@ -8,7 +8,7 @@ Conventional proof draft; not independently reviewed. Selected deterministic com
 
 ## Result and scope
 
-A standard-softplus or tanh shallow learner makes 2^(d-1) confident observed-margin-only mistakes at prior variance of order d^-3 and sufficient finite width exp(O(d log(d+1))), at fixed confidence. The parity target has a rational width-(d+1) teacher with polynomial coefficients; that narrow learner has an O(d^8) lifetime mistake bound under the same Gaussian scale.
+A standard-softplus or tanh shallow learner makes 2^(d-1) confident observed-margin-only mistakes at prior variance of order d^-3 and sufficient finite width exp(O(d log(d+1))), at fixed confidence. The parity target has a rational width-(d+1) teacher with polynomial coefficients; that narrow learner has an O(d^8) lifetime mistake bound under the same Gaussian scale. Narrow and wide priors have exactly the same output covariance kernel at this scale.
 
 Odd dimension at least three for softplus; even dimension at least two for tanh; central-limit normalization; deterministic Gaussian-mean-selected input order with one initial label. The inverse-parity spectrum dominates by an explicit positive-integral moment bound. This is a finite-parameter, exponential-width result, not a polynomial-width ReLU or fixed-width strong-prior theorem. Conventional proof with selected finite precision inequalities in Lean, not full formalization or independent review. At that prior scale, widths at least d+1 need N = Omega(2^d/d^3) for softplus or Omega(2^d/d^4) for tanh for an exponential majority mistake count.
 
