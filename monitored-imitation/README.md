@@ -3,7 +3,8 @@
 A research note on a question from Kaarel Hänni about **principled human imitation** (section 3.2 of his talk *Simpler versions of the alignment problem we still can't solve*, MISO, 16 November 2026).
 
 * **The question.** The talk's best protocol, *chained imitation*, does Solomonoff function induction on a human's input–output pairs, chains the learned map as in task decomposition, and queries the human on the distribution this induces ("train on test"). Find a protocol more likely to work, for a human that is a fixed deterministic program, under assumptions likely to be true of humans. Ideally, show that O(K(human)) reasonable queries suffice.
-* **The fourth note, the answer to the latest question:** [`slack-imitation.md`](slack-imitation.md), version 2. It gives the scheme I am most sure would work with a deterministic human, a proof that it works if the human has *bounded setback*, the case that humans have it, and experiment E6. It synthesizes the earlier notes and five research threads in [`research/`](research/) (working branch only).
+* **The fifth note, the answer to the latest question:** [`verified-slack.md`](verified-slack.md). It recommends *verified slack imitation*: slack imitation, plus a verifier of finished results, plus a multi-stream search on rejected runs. Correctness rests only on the verifier's soundness, and the cost is at most 3n₀K task queries in the worst case. It synthesizes eleven research threads (A–H, J, L, N, Q, R) in [`research/`](research/), with lower bounds showing what no scheme can do.
+* **The fourth note:** [`slack-imitation.md`](slack-imitation.md), version 2: slack imitation and its theorems, used by the fifth note. It gives the scheme I am most sure would work with a deterministic human, a proof that it works if the human has *bounded setback*, the case that humans have it, and experiment E6. It synthesizes the earlier notes and five research threads in [`research/`](research/) (working branch only).
 * **The fourth note's referee and red team** ([`verification/referee-report-slack-imitation.md`](verification/referee-report-slack-imitation.md), [`research/threadE-redteam.md`](research/threadE-redteam.md), [`verification/response-slack-imitation.md`](verification/response-slack-imitation.md)). Both found the main theorems correct, and the referee reproduced E6 exactly. The referee found:
   * three errors in secondary claims: the read-out premise, "omissions are uncertain", and a factor 1/(1−ρ) in the fallback;
   * two factual errors about E6;
@@ -43,6 +44,33 @@ A research note on a question from Kaarel Hänni about **principled human imitat
   * a seed artefact in E4.
 
   All have been corrected.
+
+## Answers in brief: the fifth note
+
+1. **The scheme: verified slack imitation (VSI).** Slack imitation, with these additions:
+   * *A verifier of finished results:* a machine check, a referee's check of the claimed solution's dependency cone, or the human's verification, imitated.
+   * *Reruns.* Each problem is rerun until its result is verified.
+   * *A search on rejected runs:* an invalid entry, if the local check finds one; otherwise uniform steps, a scan from step 0, and a list made of the last review, the labelled decisions and the human's post-mortem pointers.
+   * *The notebook instruction,* also part of the reference chain: typed, certified entries; obstruction records instead of verdicts; raw records; content-triggered reviews; labelled decisions.
+2. **The theorem.**
+   * *Correctness:* if the verifier never passes a wrong result, no failed run is ever output, whatever the human's setbacks.
+   * *Rejections:* at most K.
+   * *Cost per rejection:* at most 3n₀ task queries whatever the human. It is 1 when the cone check finds an invalid entry, and a constant for ripe by-product failures and hedges. Under bounded setback it is at most 3(D+1)n/(σ+1).
+   * *No factor 1/ε,* and no dependence on the number of problems.
+3. **Lower bounds** (threads G, J, Q, F):
+   * slack imitation is optimal for bounded-setback humans up to logarithms, and slack is necessary;
+   * verification removes the 1/ε but not the n;
+   * insights triggered only by doing cost every protocol about n per insight;
+   * so do trusted true records of failed attempts, and confident commissions accepted by a fooled human.
+
+   In VSI these cost queries, never correctness.
+4. **How sure I am.** Probabilities that the scheme works on a real careful researcher:
+   * VSI with a machine verifier: 85% for theory and software;
+   * VSI with a referee's cone check: 70%;
+   * VSI with a human verifier: 65% for theory and software, 30% for empirical work;
+   * without a verifier: 45% and 20%.
+
+   The evidence (thread L) is that setbacks are bimodal, which is why the verifier version is the one I am sure of.
 
 ## Answers in brief: the fourth note
 
@@ -148,7 +176,8 @@ A research note on a question from Kaarel Hänni about **principled human imitat
 | `code/end_weighted.py` | E3: silent and catch-up versions of the hidden-insight class; protocols CI, EW (end-weighted), LAST, BIS. |
 | `code/robust_runs.py` | E4: chained imitation on E2's human, judged by fragile and robust properties. |
 | `code/make_figures.py` | Tables and figures from the saved outputs, and the novelty-firing curve. |
-| `slack-imitation.md` | The fourth note: slack imitation, the scheme I am most sure of. |
+| `verified-slack.md` | The fifth note: verified slack imitation, the scheme I am most sure of (version 3). |
+| `slack-imitation.md` | The fourth note: slack imitation and its theorems (version 2 of the answer). |
 | `code/slack_imitation.py` | E6: slack imitation on noticing, misled, fooled and silent humans, exact posteriors; protocols CI with and without slack, LAST, MIX, SI-V and SI-V-ABC. |
 | `code/setback_check.py` | An arithmetic sanity check of the bookkeeping in the fourth note's Lemma S, on random append-only humans. It cannot test bounded setback. |
 | `results/slack_imitation.out`, `results/slack_imitation_summary.json`, `results/slack_imitation_mix.out`, `results/slack_imitation_mix.json`, `results/slack_imitation_table.md`, `results/slack_imitation.time` | E6 outputs, and the table quoted in the fourth note. |
@@ -172,7 +201,23 @@ A research note on a question from Kaarel Hänni about **principled human imitat
 | `verification/referee2_*.py`, `verification/referee2_*.out`, `verification/referee2_rerun/` | The second referee's checks, its counterexample computations, and its re-run of E3 from the reviewed draft. |
 | `verification/referee_*.py`, `verification/referee_*.out`, `verification/referee_rerun/` | The referee's own checks and outputs, and its re-run of both experiments from the first draft's code. |
 
-**Working branch only:** `research/` stays on the working branch `claude/compassionate-edison-1o8ihs`. It holds the four research threads behind the fourth note (A: checks, B: knowledge elicitation, C: persistence, D: literature, and E: a red-team of the fourth note's assumption), with their scripts and outputs. Remove it when publishing.
+**Working branch only:** `research/` stays on the working branch `claude/compassionate-edison-1o8ihs`. It holds the research threads behind the fourth and fifth notes, with their scripts and outputs:
+* A: checks;
+* B: knowledge elicitation;
+* C: persistence;
+* D: literature;
+* E: the red team of the fourth note;
+* F: the certified notebook;
+* G: by-product insights;
+* H: deployment and other learners;
+* J: optimality;
+* L: evidence on researchers;
+* N: trees;
+* Q: alternatives;
+* R: the composition experiment;
+* S: the red team of the fifth note.
+
+The fifth note gives the proofs of its main results itself, and cites the threads for the full proofs of its lower bounds. Remove `research/` when publishing, or publish it as supporting records if the user prefers.
 
 ## Reproducing
 

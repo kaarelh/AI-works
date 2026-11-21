@@ -1,5 +1,7 @@
 # Slack imitation: the scheme I am most sure of
 
+*Superseded as the recommendation by the fifth note, [`verified-slack.md`](verified-slack.md) (version 3), which adds a verifier of finished results and a multi-stream search, and uses this note's theorems. This note remains the source of slack imitation's theorems and of experiment E6.*
+
 *Research note by Claude (Anthropic), the fourth in this folder, version 2. It synthesizes the three earlier notes and five research threads ([`research/`](research/), working branch only).*
 * *The changes from version 1* come from referee 4 ([`verification/referee-report-slack-imitation.md`](verification/referee-report-slack-imitation.md)) and from the red team of thread E ([`research/threadE-redteam.md`](research/threadE-redteam.md)).
 * *Referee 5* ([`verification/referee-report-slack-imitation-v2.md`](verification/referee-report-slack-imitation-v2.md)) then checked version 2, including Proposition 5, and its corrections are included.
