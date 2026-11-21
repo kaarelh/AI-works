@@ -7,7 +7,7 @@
   * after a second red team ([`research/threadS-redteam2.md`](research/threadS-redteam2.md));
   * after referee 7's check of the revision ([`verification/referee-report-verified-slack-v2.md`](verification/referee-report-verified-slack-v2.md)).
 
-  The responses are in [`verification/response-verified-slack.md`](verification/response-verified-slack.md).
+  Experiment E7 (thread R) and thread T's calibration of the machine verifier were then added, and referee 8 checked the result ([`verification/referee-report-verified-slack-v3.md`](verification/referee-report-verified-slack-v3.md)). The responses are in [`verification/response-verified-slack.md`](verification/response-verified-slack.md).
 * *What is proved where.* Proofs of the main results are given here. The lower bounds are stated with sketches, and the thread reports have their proofs, some written out only in outline, as marked.
 
 ## The question
@@ -25,17 +25,18 @@ The request: *keep trying threads, and report the scheme you are most sure would
      * Determinism, realizability and the human's setbacks are not used for correctness, only for cost.
      * This holds when the verifier is consulted on every output. An imitated human verifier adds its own error rate ε (Theorem 6).
    * *Rejections.* At most K of them (K = K(human)).
-   * *Cost per rejection.* At most 2n₀ task queries, whatever the human, with the recommended search weights. Under bounded setback it is about 4(D+1)/ρ, and it is one query when a local check finds an invalid entry.
+   * *Cost per rejection.* At most 2n₀ task queries, whatever the human, with the search schedule S, U, S, H. Under bounded setback it is about 4(D+1)/ρ, and it is one query when a local check finds an invalid entry.
    * *Totals.* Search task queries are at most 2n₀K in the worst case, with no factor 1/ε, plus β per problem for audits (β = 1 is recommended with a human verifier). That is within a logarithm of the lower bound that holds even with a perfect verifier (Theorem Q1).
 3. **How sure I am.** "Works" means output failure at most 5% on projects of 20–40 three-month steps, at under a fifth of chained imitation's human effort. My probabilities that VSI works on a real careful researcher:
-   * *VSI with a proof assistant on a formally stated goal,* with an independent statement review and hardened checking: **70%** (about 60% without them, and 75% if an AI formalizer sits inside the verifier);
+   * *VSI with a proof assistant on a formally stated goal,* with an independent statement review and hardened checking: **70%**. Thread T puts it at about 60% without them, and 77% with an AI formalizer inside the verifier, the human formalizing as a fallback, and thread T's halt rules;
    * *with a test suite as the verifier:* 45%;
    * *with a human referee checking the claimed solution entry by entry:* 45% for theory, 10% for empirical work;
-   * *with the human's own verification:* 40% and 10%;
+   * *with a human verifier's check of the finished result:* 40% and 10%. This is thread S's figure for an imitated verifier, and the verifier should be someone other than the imitated human;
+   * *with thread U's combined human verifier:* 50% for informal theory, 60% for software without a full specification, 15% for empirical work and 20% for judgment work. The combination is a careful expert reader, verification by use, machine checks of every computation and citation, and AI critics whose located objections an expert judges;
    * *without any verifier* (slack imitation with asking and the design elements): 30% and 10%.
 
-   That VSI's task queries are truly O(K), with neither n₀ nor 1/ε: 25%.
-4. **So the scheme I am most sure of** is VSI with a machine verifier on a formally stated, independently reviewed goal. Its domain is narrow: about a quarter of recent Annals theorems can even be stated in Lean today (thread T). There the verifier deserves most of the credit: any generator wrapped in it would be as correct. Imitation adds a low query cost, at most 2n₀K, and runs that are the human's own process with some steps replaced. Elsewhere VSI is the best scheme I have found, but not one to be sure of.
+   That VSI's task queries are truly O(K), with neither n₀ nor 1/ε, I put at 25%, thread S's figure (thread S §7).
+4. **So the scheme I am most sure of** is VSI with a machine verifier on a formally stated, independently reviewed goal. Its domain is narrow: in ten months, working easiest first, experts stated about a quarter of recent Annals main theorems in Lean (thread T). There the verifier deserves most of the credit: any generator wrapped in it would be as correct. Imitation adds a low query cost, at most 2n₀K, and runs that are the human's own process with some steps replaced. Elsewhere VSI is the best scheme I have found, but not one to be sure of.
 5. **The most important caveat** (red team, thread S). VSI is exactly as sure as its verifier is sound on the imitator's *own most plausible wrong answers*.
    * *Rerunning until accepted* turns every miss of the verifier into a wrong output, at a rate of about p·w·f_eff per problem:
      * p, the first-run failure rate on a new problem;
@@ -54,7 +55,9 @@ The request: *keep trying threads, and report the scheme you are most sure would
    * the verifier's miss rate f on imitator-style wrong results;
    * the share p·w of failed runs that end with a confident claimed solution;
    * the duration tail of the human's own chain;
-   * how much a post-mortem changes the human's later answers.
+   * how much reading a run (a post-mortem, a verification, a check) changes the human's later answers on it;
+   * planted-culprit tests of post-mortems and of setbacks;
+   * for formal verifiers, planted statement defects, the formalizer's false-rejection rate, and the cost of formal proof.
 
 ## 1. Setting
 
@@ -81,14 +84,23 @@ The core is what VSI needs for its guarantees. Anything in the instruction is pa
   * S\* is the goal.
 * **The verifier V**, one of:
   * **(V-machine)** a machine check: a proof assistant on a formal statement, a test suite, a program checking a constructed object. For a proof assistant, thread T ([`research/threadT-formal.md`](research/threadT-formal.md)) makes two things mandatory:
-    * *a statement protocol:* a second, independent formalizer, at least two AI audits, test lemmas for new definitions, and automated attempts to prove and to disprove the statement;
+    * *a statement protocol:* a second, independent formalizer, with a machine-checked equivalence of the two formalizations; at least two AI audits from different model families; test lemmas for new definitions; non-vacuity witnesses; automated attempts to prove and to disprove the statement; and human sign-off on the elaborated statement;
     * *hardened checking:* a pinned, patched kernel; a checker such as Comparator or SafeVerify; an axiom whitelist; no `native_decide`; and at least two kernels.
 
     Either the human's own chain ends with the formal proof, or (better) **the formalizer sits inside V**. Then the chain ends with a blueprint-quality informal proof, and V means: "an AI formalization agent, within budget B, produces a proof of the fixed formal statement that the hardened kernel accepts".
-    * *What this changes.* Correctness still rests only on the statement and the kernel. A formalizer failure becomes an abstention, not an error, and the n₀ inflation shrinks to the cost of the blueprint.
-    * *Statement defects.* If an accepted proof reveals a defect in the statement, for example it proves the goal vacuously, halt the problem; do not rerun.
+    * *What this changes.* Correctness still rests only on the statement and the checking pipeline. The output is the formalizer's formal proof, not the blueprint. The n₀ inflation shrinks to the cost of the blueprint.
+    * *What (A2) and (A3′) then require of the formalizer F:*
+      * F is deterministic: a fixed seed, a pinned model and a pinned toolchain;
+      * F reads only the claim and what precedes it, so S_V stays preserved by appending;
+      * F succeeds within B on the human's own blueprint.
+
+      Thread T puts F's false-rejection rate on correct human blueprints at 5–30% by field. Each false rejection is an (A2) failure. VSI then abstains after a full scan, at about n task queries, unless it falls back to the human formalizing, as thread T's 77% assumes.
+    * *F is an optimizer.* It makes the statement protocol and hardened checking mandatory (§5).
+    * *Statement defects* (thread T §5.3), two rules that belong to the protocol (§2.3):
+      * a STATEMENT-DEFECT entry, which the instruction lets the human write, halts the problem for review when it appears in any run;
+      * an anomaly trigger: a proof much shorter or faster than expected, or one that bypasses the blueprint's milestones, sends the statement to review before output.
   * **(V-cone)** a check of the claimed solution's *dependency cone*, the claim and everything it cites recursively, by a local check L: does each entry follow from what it cites? (Thread F, Proposition F5.) L may be a proof checker or a human referee other than the imitated human. This needs thread F's typed entries and citations.
-  * **(V-human)** the human's verification of the finished result, on every output or imitated (Theorem 6).
+  * **(V-human)** a human verifier's check of the finished result, on every output or imitated (Theorem 6). The verifier should be someone other than the imitated human. The imitated human may verify only under §2.2's assumption that reading a run leaves its later answers unchanged.
 * **The final "nothing bizarre" check** of the notebook (slack-imitation.md §2), optional.
   * *Its role.* It serves the talk's second desideratum, since V checks only S_V, and the cost. It is a human judgment of the final notebook, but correctness does not rest on it.
   * *Who does it.* Someone other than the imitated human, for the reason given for post-mortems below.
@@ -123,8 +135,9 @@ For each problem, repeat:
 
      Stop at the first query that lands on a mistake. Add its answer first and the others after it, then rerun.
    * *(iii) Abstain.* If the scan reaches the end of the run without a mistake, the run is the human's own chain. Report "the human's own chain does not reach a verifiable solution within n steps", and stop.
+4. **Halt for statement review** (machine verifiers with a formal statement). Halt the problem if any run contains a STATEMENT-DEFECT entry, or if an accepted proof triggers the anomaly rule of §2.1.
 
-*The schedule.* S, U, S, H gives the scan half the queries; that is what keeps the worst case at 2n₀. Raise H's share only once post-mortems have been measured to work. With a random schedule of the same frequencies, the bounds below hold in expectation only.
+*The schedule.* S, U, S, H gives the scan half the queries, in an order that keeps the worst case at 2n₀. The order matters: U, H, S, S has the same frequencies but gives 2n₀ + 1. Raise H's share only once post-mortems have been measured to work. With a random schedule of the same frequencies, the bounds below hold in expectation only.
 
 ## 3. Theorems
 
@@ -132,10 +145,13 @@ For each problem, repeat:
 * **(A1)** P is deterministic, and the learner is Bayes over a class containing P.
 * **(A2)** S_V is preserved by appending, and τ_V(x₀) ≤ n₀. Here τ_V is the human's own remaining time to S_V, and τ\* its remaining time to S\*.
 * **(A3′) Completeness on the human's runs.** V accepts every extension of the human's own notebook at step n₀.
-* **(A4′) Soundness.** On the final notebooks of the imitator's runs, S_V implies S\*.
+* **(A4′) Soundness, per claim.** Every claimed solution that V passes, in the final notebooks of the imitator's runs, satisfies the goal. S\*(x) denotes "the first claim in x that V passes satisfies the goal".
+  * S\* is preserved by appending when V's verdict on a claim depends only on the claim and what precedes it.
+  * For V-human, (A4′) asks the verifier to reject even claims that the human itself would later retract.
 * **(M1), (M2), (M-prefix)**, only when the "nothing bizarre" check is used (slack-imitation.md §2; (M-prefix): every prefix of a passing notebook passes):
   * (M1): the start notebook passes;
   * (M2): the human never makes a passing notebook fail.
+  If a second person does the check, (M2) is a condition on that person's verdicts about P's steps.
 * **(L0), (L1)**, only when L is used:
   * (L0): L is a fixed function, whose verdict on an entry never changes once the entry is written;
   * (L1), self-validity: every entry the human appends passes L.
@@ -153,14 +169,18 @@ For each problem, repeat:
 *Proof.* By (L1), every entry of the human's step passes L, and by (L0) the verdict on the entry is fixed. So the imitator's step differs from the human's. ∎
 
 **Lemma 3 (weighted hints are free of risk; thread Q, Lemma Q2, with weights).**
-* *The setting.* Fix a rejected run of a fixed decoder, with committed mistake set M ≠ ∅. Search it with streams served by a fixed periodic schedule in which stream i has frequency w_i. Each stream is either uniform over committed steps, drawn with replacement, or a list fixed when the search starts and written by anyone, an adversary included.
-* *The claim.* Every answer added is the human's own step. A list stream's first mistake, at position j_i, is reached by query about (j_i + 1)/w_i, and
+* *The setting.* Fix a rejected run of a fixed decoder, with committed mistake set M ≠ ∅. Search it with streams served by a fixed schedule in which stream i is served at least ⌊w_i·t⌋ times among the first t queries, for every t. Each stream is either uniform over committed steps, drawn with replacement, or a list fixed when the search starts and written by anyone, an adversary included.
+* *The claim.* Every answer added is the human's own step. A list stream's first mistake, at position j_i (counting from 0), is reached by query ⌈(j_i + 1)/w_i⌉, and
 
   E[queries] ≤ min{ (n/|M|)/w_U, (j_S + 1)/w_S, (j_H + 1)/w_H }.
 
 * *The default.* For the schedule S, U, S, H the constants are exact: the scan's j-th step is query 2j − 1, list H's i-th entry is query 4i, and the uniform stream's k-th draw is query 4k − 2.
 
-*Proof.* A periodic schedule with frequencies w_i serves stream i for the j-th time by position (j+1)/w_i, since its discrepancy is bounded. The uniform stream's draws succeed independently with probability at least |M|/n. The search stops at the first hit of any stream. ∎
+*Proof.*
+* By the schedule's property, stream i has been served k times by query ⌈k/w_i⌉.
+* The uniform stream's draws succeed independently with probability at least |M|/n.
+* The search stops at the first hit of any stream.
+* Not every periodic schedule with these frequencies has the property: H, U, S, S does not. For a general schedule of period p, add p to each term. ∎
 
 **Lemma 4 (ripe failures; thread G, Theorem G4 and Proposition G7).**
 * *Ripe failures.* Call a failed run *by-product-ripe* if two things hold:
@@ -177,9 +197,10 @@ For each problem, repeat:
 * **(a) Correctness.** Every output satisfies S_V, and under (A4′) it satisfies S\*.
   * This uses no property of the human's task steps, and none of (A1)–(A3′).
   * But for V-human, and for V-cone with a human referee, (A4′) is itself an assumption about a human judgment.
-* **(b) Counts.** Final-answer asks number at most K/log₂(1/(1−α)) on every path. Almost surely, rejections ending in a hit, failed "nothing bizarre" checks and audit hits together number at most K/b.
+* **(b) Counts.** Asks number at most K/log₂(1/(1−α)) on every path. Almost surely, rejections ending in a hit, failed "nothing bizarre" checks and audit hits together number at most K/b.
 * **(c) Termination.** Every problem ends, with an output or an abstention.
-  * Termination needs only (A1), and (M2) if the check is used.
+  * Termination needs only (A1), and (M1) and (M2) if the check is used.
+  * With a formal statement, a problem may also end with a halt for statement review (step 4).
   * Under (A2) and (A3′), the abstain rule never fires.
   * Without them, the number of rejections is at most K/b plus the number of abstentions.
 * **(d) The cost of one rejection.**
@@ -190,15 +211,20 @@ For each problem, repeat:
     * 4, for a by-product-ripe failure under (R-rev);
     * 4(1 + d), for a hedge failure, where d is the run's number of labelled decisions;
     * 4(1 + d + i), if the i-th post-mortem entry is a mistake.
-  * *On a problem that violates (A2),* Lemma 1 fails, and a search may cost up to 2n. An abstaining search costs at most 2n queries, or n distinct steps if answers are cached.
+  * *On a problem that violates (A2) or (A3′),* Lemma 1 fails, and a search may cost up to 2n. Heavy tails and a formalizer's false rejections are two sources of such problems. An abstaining search costs at most 2n queries, or n distinct steps if answers are cached.
 * **(e) Totals.**
   * *Task queries:* E[task queries] ≤ asks + (K/b)·min{2n₀, 4Λ} + β·T over T problems, plus up to 2n per rejection and per abstention on problems that violate (A2).
   * *Other human effort:*
-    * one verification per run with a human verifier, or Theorem 6's count;
+    * one verification per claim checked, with a human verifier, or Theorem 6's count;
+    * with a formal statement, writing and reviewing it, once per problem;
     * at most K/b post-mortems, read by the second researcher;
     * one "nothing bizarre" check per accepted run, plus ⌈log₂ n⌉ per failed check;
     * the local checks.
-* **(f) If (A4′) fails.** The failed outputs are exactly the accepted runs that fail S\*. Assume also that S\* is preserved by appending, that τ\*(x₀) ≤ n₀, and (B_D) in τ\* at the committed mistakes of accepted runs. Then
+* **(f) If (A4′) fails.** The failed outputs are exactly the accepted runs that fail S\*.
+  * *Assume also* that S\* is preserved by appending, that τ\*(x₀) ≤ n₀, and (B_D) in τ\* at the committed mistakes of accepted runs, bizarre entries included if the check is not used.
+  * *τ\*(x₀) ≤ n₀ says,* in particular, that the human's own chain writes no claim that V passes but is wrong before its correct one.
+
+  Then
 
   E[#failed outputs] ≤ K/(b·β·γ*), where γ* = max{1, (σ+1)/(D+1)}/n.
 
@@ -221,7 +247,7 @@ For each problem, repeat:
 * *(e)* sums (b) and (d) by Wald's identity, since the number of searches is bounded.
 * *(f).* An output passed the check, so with (M-prefix) none of its notebooks is bizarre, and Lemma S applies in τ\*. Without the check, assume (B_D) in τ\* for bizarre entries too. The run and V's verdict are fixed before the audit's coin, so an audit hits with probability at least γ\*. Every hit is counted in (b). ∎
 
-**Theorem 6 (imitating the verifier; thread Q, Theorem Q5).** Let V_H be the human's verification, a one-step deterministic function, and K_V its code length or its residual after the task data.
+**Theorem 6 (imitating the verifier; thread Q, Theorem Q5).** Let V_H be a human verifier's verdict, a one-step deterministic function, and K_V its code length or its residual after the task data.
 * *Protocol.* Keep a Bayes posterior over V_H, and let V′ be its majority decoder. On each claimed solution y:
   * if V′ rejects, ask V_H(y);
   * if V′ accepts, ask V_H(y) with probability β_V.
@@ -302,6 +328,11 @@ Located probes, which need foresight (thread B), and a "confession" state off th
   * *Mitigation:* cache verdicts on a canonical form of the claim, so the same claim is never verified twice.
 * **Enrichment.** Accepted wrong results are enriched toward deviations aimed at V's blind spots, by log₂(f_aimed/f_honest) bits: 3.2 bits at f_honest = 0.1, with f_aimed = 0.9. The filter itself adds at most log₂(1 + R_p) bits per problem, where R_p is the problem's number of rejections.
 * **Allocation.** Rejections teach the learner only about errors V catches. Errors V misses are found only by audits, hence the β in Theorem 5(f).
+* **The formalizer inside V** (thread T §5.3). With a formalizer F inside V, a search for *any* accepted proof runs inside V, against the statement and the checker, which is exactly where soundness lives.
+  * *Loopholes are hunted.* A weaker statement's loophole is hunted actively, not merely selected: thread T raises its exploitation rate from 0.3–0.5 for the imitator to 0.5–0.9.
+  * *Checker exploits* become reachable.
+  * *Each re-verification under a new seed is a fresh search.* Fixed seeds and cached verdicts close this.
+  * *The bound log₂(1 + R_p)* does not cover F's internal search, whose size is set by its budget B.
 * **Practical learners.** A learner that resamples is best-of-k, adding at most log₂ k bits per problem. Training on accepted outputs is outright optimization against V. The no-optimization argument holds only for the exact-Bayes, deterministic-decoder idealization.
 
 *What follows.*
@@ -312,19 +343,35 @@ Located probes, which need foresight (thread B), and a "confession" state off th
 
 **What correctness needs: (A4′).**
 * *V-machine.* The formal statement or specification captures the goal.
-  * *Proof assistants:* the residual risk is misformalization, and thread T finds it far commoner than my earlier guess of 2%.
-    * *The evidence.* After an in-depth manual review of expert-written Lean statements of 50 Annals theorems, AI audits still found mistakes in 22% of them. Benchmarks run 5–60% unfaithful.
+  * *Proof assistants:* the residual risk is misformalization. Thread T finds it far commoner than the 2% assumed in this note's first draft, unless statements are independently reviewed; after review, 2% is about right as an effective rate.
+    * *The evidence.* After an in-depth manual review of expert-written Lean statements of 50 Annals theorems, AI audits still found mistakes in 22% of them, of unreported severity. Benchmarks run 5–60% unfaithful; the upper end rests on search summaries only.
     * *Thread T's estimates for a research goal written by an expert:*
-      * about 25% of statements are unfaithful without independent review, and about 10% have an exploitable weaker form;
+      * for goals that need new definitions, about 25% of statements are unfaithful without independent review, and about 10% have an exploitable weaker form; in vetted Mathlib vocabulary, 8% and 3%;
       * with the statement protocol, about 4% and 1.5%.
-    * *Contribution to output failure:* about 0.5–1% with review, and up to 5% without. Rerunning until accepted hunts for the weaker statement's loophole: in one AI run on Erdős problems, 50 of 63 "correct" solutions were vacuous misreadings.
-    * *About half of misformalizations fail safe:* a false statement cannot be proved, so VSI abstains.
-    * *Kernels* are sound against honest proofs. Adversarial AI testing found several Lean and Rocq soundness bugs in 2026, hence the hardened checking, which thread T puts at about 99.5% sound.
+    * *Contribution to output failure:* about 0.5–1% with review and up to 5% without, with the human formalizing; 0.7–1.3% and 5–9% with the formalizer inside V.
+    * *Optimizers exploit misreadings.* In DeepMind's Aletheia run on informal statements of Erdős problems, 50 of 63 "technically correct" solutions were vacuous misreadings (search summaries only). That is an optimizing prover, not an imitator's reruns, but a formalizer inside V is an optimizer.
+    * *About half of misformalizations fail safe* (search summaries only): a false statement cannot be proved, so VSI abstains, at about n task queries.
+    * *Kernels* are sound against honest proofs. Adversarial AI testing found several Lean and Rocq soundness bugs in 2026 (search summaries only), hence the hardened checking, which thread T puts at about 99.5% sound.
   * *Test suites:* not sound for correctness; thread S puts their miss rate at 0.1–0.4.
 * *V-cone.* Three things: L is sound, (L2); the claimed solution's statement is the goal; and machine records and retrieved sources are correct (thread F, Lemma F0). With a proof checker, the first holds. A human referee misses a share of plausible local errors: thread L cites 25–55% detection for desk checks of code and 60–96% for formal inspection. Thread S puts f at 0.1–0.35 on imitator-style wrong steps.
 * *V-human.* The human, checking a finished result, does not accept a plausible wrong one. Thread S estimates f at 0.2–0.5 for a careful human in mathematics on imitator-style wrong results, and above 0.5 for empirical claims judged by reading.
   * *Why imitator-style errors are hard:* the majority decoder maximizes plausibility, which is the human verifier's evidence; errors in one's own style are caught less often; and familiar patterns are checked less (thread L).
   * *Why they might be easier:* verification is a critical reading of a finished object; unconfident guesses often contradict nearby entries; and results can be tested by use, the strongest error-catcher in thread L.
+
+**Verifiers without a machine** (thread U, [`research/threadU-nonformal.md`](research/threadU-nonformal.md)). Output failure is about (p·w·r̄)·f_V, where r̄ is the number of distinct wrong claims verified per failing problem. At central values, the 5% bar needs f_V ≤ 0.29 in theory, 0.23 in software, 0.17 in empirical work and 0.16 in judgment work. One careful reader gives about 0.43, 0.45, 0.70 and 0.64. What helps:
+* *Different methods, not more readers.* Readers' misses correlate (fitted r ≈ 0.45–0.75), so a second reader leaves 0.24, not the 0.16 that independence would predict.
+* *Verification by use* (examples, consequences, independent tests) catches different errors from reading. Reading plus use cuts misses by about 38%; in software, independent tests and fuzzing take f from 0.45 to 0.13.
+* *Machine checks* of every computation and citation remove about 20% of misses.
+* *AI critics* from several model families, with an expert other than the imitated human judging *located* objections. They are the largest single gain, 0.43 to 0.18 when added to a reader. They go beyond imitation, but a critic can only add rejections, so it cannot make a wrong result pass. False objections cost abstentions, so they need adjudication.
+* *Located objections* are pointers for the search. A rejection that does not say where costs a full scan, about 1.5n₀; requiring located objections halves V-human's cost per problem.
+* *Delayed checks by consequence* are the only remedy for empirical claims that are false in the world, at the price of provisional outputs.
+* *Thread U's estimates for VSI with the best combination* (its model's figures, then its own):
+  * informal theory: 62% and 50%;
+  * software without a full specification: 73% and 60%;
+  * empirical work: 23% and 15%, or 25% with the goal narrowed to "the claim follows from the data";
+  * judgment work: 28% and 20%.
+
+  Its inputs are mostly judgments, not measurements on an imitator's wrong results.
 
 **What only the cost needs.**
 * **(A2)** for every problem. The human's own chain must finish within n₀ under the instruction.
@@ -336,7 +383,7 @@ Located probes, which need foresight (thread B), and a "confession" state off th
 * **(L1).** A careful researcher's own entries follow from what they cite. A flagged step that is the human's own costs one query and teaches nothing false.
 
 **The user's constraint.**
-* *V-machine* rests correctness on no human judgment. The optional "nothing bizarre" check is a human judgment of the final notebook, but it serves only the talk's second desideratum and the cost, and can be dropped.
+* *V-machine* rests correctness on no judgment of the runs. It rests on the fidelity of a statement fixed before any run, which experts and AI audits review. The optional "nothing bizarre" check is a human judgment of the final notebook, but it serves only the talk's second desideratum and the cost, and can be dropped.
 * *V-human* assumes a check of the final state, which is a distinct, weaker assumption than an on-track check (note.md §5.4), but an assumption on which correctness rests.
 * *V-cone with a human referee* uses a local, relative judgment of intermediate entries. It is not an on-track judgment, but its locating power comes from the human's own entries passing it, which is the first note's mechanism with "valid" in place of "fine" (thread S §5).
 
@@ -348,11 +395,12 @@ So the version that keeps both the letter and the spirit of the constraint is V-
 
 | scheme | correctness rests on | guarantee on task queries | draft | thread S | **final** |
 |---|---|---|---|---|---|
-| VSI, proof assistant on a formally stated goal, with the statement protocol and hardened checking | the reviewed statement and the kernel | 2n₀K worst case | 85% | 70% | **70%** (thread T: about 60% without the protocol and hardening; 75–78% with the formalizer inside V) |
+| VSI, proof assistant on a formally stated goal, with the statement protocol and hardened checking | the reviewed statement and the checking pipeline | 2n₀K worst case | 85% | 70% | **70%** (thread T: about 60% without the protocol and hardening; 77% with the formalizer inside V, the human formalizing as a fallback, and the halt rules) |
 | VSI, test suite | the tests | 2n₀K worst case | (85%) | 45% | **45%** |
-| VSI, referee cone check (V-cone) | L's soundness | 2n₀K, 1 per invalid cone entry | 70% / 30% | 45% / 10% | **45% / 10%** |
+| VSI, referee cone check (V-cone) | L's soundness, the statement being the goal, correct records | 2n₀K, 1 per invalid cone entry | 70% / 30% | 45% / 10% | **45% / 10%** |
 | VSI, human verifier (V-human) | the human's soundness, plus ε if imitated | 2n₀K, plus about one verification per problem | 65% / 30% | 40% / 10% | **40% / 10%** |
-| Proposition 7, no verifier | (B_D) at valid confident entries, (R-rev), (A-pers), (L2) | about max{d_max, n/c_r}·K/b_α failed runs online; with a retry rule of small r, that is about n per bit | 45% / 20% | 30% / 10% | **30% / 10%** |
+| VSI, thread U's combined verifier (reader, use, machine checks, AI critics with located objections) | the combination's soundness; critics can only add rejections | 2n₀K, plus about 3 task steps of verification per problem in theory | – | – | **50%** informal theory; **60%** software without a full spec; **15% / 20%** empirical / judgment |
+| Proposition 7, no verifier | (B_D) at valid confident entries, (R-rev), (A-pers), (L2) | 3·max{d_max, n/c_r}·K/b_α failed runs online; with a retry rule of small r, that is about n per bit | 45% / 20% | 30% / 10% | **30% / 10%** |
 | slack imitation with asking (fourth note) | (B_D) at confident steps | the same | 40% / 20% | 25% / 10% | **25% / 10%** |
 | chained imitation (the talk) | nothing | n₀K/ε | baseline | baseline | baseline |
 
@@ -366,13 +414,17 @@ So the version that keeps both the letter and the spirit of the constraint is V-
   My draft compared bounds, not efforts, and left out verification and audit costs.
 * *Worst-case effort.*
   * *Search queries.* With V-machine and no audits, VSI's guarantee is 2n₀K, against chained imitation's 20n₀K at ε = 5%: a factor 2 below the one-fifth bar.
-  * *n₀ inflation.* The core's own inflation is modest. For the 70% row, ending the chain with a formal proof has become cheap with AI formalization agents in 2025–26.
+  * *n₀ inflation.* The core's own inflation is modest. For the 70% row, thread T estimates that ending the chain with a formal proof has become much cheaper with AI formalization agents in 2025–26, for goals already statable.
+    * *The factor-2 margin* is used up at a formal-proof multiplier ι = 2.
     * *Examples:* Fermat's Last Theorem was formalized in 11 days and sphere packing in about two weeks (thread T, from sources partly checked only through search summaries).
-    * *Thread T's estimates:* P(the formal proof costs at most 1.5×, 2× or 3× the informal duration) ≈ 65%, 80% and 90%, varying by field.
+    * *Thread T's estimates* for mathematics, weighted by where goals are statable: P(the formal proof costs at most 1.5×, 2× or 3× the informal duration) ≈ 65%, 80% and 90%, varying by field.
+    * *Counter-signals and selection.* The landmark cases are self-reported successes by well-resourced teams, formalizing decades-polished proofs, sometimes completing human projects. Only about 42% of some 720 AI-written manuscripts had Lean checks, and the best score on proving fresh research theorems was 17%.
+  * *Per-problem statement writing* is another cost, from days with AI drafting to months (about 1.4 person-months each in the Annals effort). At the slower pace it caps T well below the search's bound.
     * *With the formalizer inside V,* most of this cost leaves the human's chain.
   * *With a human verifier,* audits at β = 1 and verifications add effort that grows with the number of problems T. VSI then meets the bar only for T up to about 40–55K (referee 7, Part 6), and for fewer with heavy tails.
 * *The V-human row* uses thread S's figure for an *imitated* human verifier. A human verifying every output should be at least as sure, at about one verification per problem.
 * *The human-does-it baseline.* For T distinct problems the human alone spends n₀T. VSI's worst case beats it only if 2K < T, that is, if the problems share most of what must be learned. That is the regime of the original question, "performance on lots and lots of problems".
+* *Abstentions and heavy tails.* "Works" counts an abstention as effort, about n task queries, not as a failure. The conditioning on the human's chain succeeding within n₀ means the informal goal, so heavy tails and a formalizer's false rejections are counted as abstentions. The formalizer-inside-V figure assumes thread T's fallback to the human formalizing. Heavy tails lower the unconditioned figures.
 * *Without the idealizations,* every row falls. VSI with a machine verifier falls least, because its correctness survives non-determinism and non-realizability. Only its cost theory breaks.
 
 ## 8. Experiments
@@ -400,7 +452,11 @@ All are exact-Bayes, on small classes, with 20–40 humans per cell. They test h
   * *SI* and *SI-ABC+D:* failed runs over 4·M·n online rounds;
   * *SI-V* and *VSI:* total task queries to solve all 100 problems, with every output correct.
 
-  VSI here searches with equal weights over its three streams (thread Q's EQ), not with the default schedule.
+  *How E7 differs from §2.3:*
+  * VSI searches with equal weights over its three streams (thread Q's EQ), not with the default schedule;
+  * its list holds verdict and claim entries, which stand in for a *perfect* second-researcher post-mortem;
+  * SI-ABC+D asks at every unconfident step (α = 0.3) and queries the flagged entry, else the review or decision step with probability ½;
+  * each class has M = 100 problems.
 
   | mechanism | SI: failed runs | SI-ABC+D: failed runs | SI-V: task queries | VSI: task queries |
   |---|---|---|---|---|
@@ -415,23 +471,30 @@ All are exact-Bayes, on small classes, with 20–40 humans per cell. They test h
 
   * *Each mechanism has its component.*
     * M1: slack;
-    * M2: the verifier with the verdict-step pointer, or asking without a verifier;
+    * M2: the verifier with the verdict-step pointer, or asking without a verifier, which E6's prior flatters;
     * M4: the last-review query;
     * M6: the decision-step query;
     * M7: the local check;
     * M8: only the verifier's pointer. Without a verifier nothing helps, as Theorem F3 says.
   * *M3 and M5 grow with n₀ under every protocol,* as the lower bounds say (Theorems 3 of note.md and G3). VSI cuts them by the scan, at about 0.8n₀ per rejection.
   * *Interference.*
-    * VSI's extra streams cost M1 humans 1.2–1.4×.
-    * The last-review query costs doing-only humans (M5) 1.7–2.1×, because there a review is never the mistake.
+    * VSI's extra streams cost M1 humans 1.2–1.4× at equal weights, and 2.0–2.3× with the default schedule.
+    * Without a verifier (SI+D), the last-review query costs doing-only humans (M5) 1.7–2.1×, because there a review is never the mistake. Inside VSI it costs at most one query per search.
     * Asking on top of VSI costs 5–35× on M1, M2, M7 and M8, which is why asking is optional with a verifier.
   * *What is reproduced.* All 120 regenerable published numbers (E6, EQ, referee 5's online test, G1 and F1) match exactly.
-  * *The caveat.* M2, M6 and M8 flatter the pointer: there its first list entry is always a mistake. A real post-mortem list will be weaker.
+  * *The caveat: the pointer.* M6's decision step is in §2.3's list, so M6 is genuinely covered. M2's and M8's pointers exist only through post-mortems.
+  * *Without post-mortems.* Referee 8 re-ran VSI with the default schedule and §2.3's list without post-mortems ([`verification/referee8_e7_default.out`](verification/referee8_e7_default.out)):
+    * M2 costs 89 → 427 → 1,442 and M8 51 → 452 → 2,350, growing roughly with n₀, though within the sure 2n₀ per rejection and still below SI-V;
+    * the other mechanisms cost 1.3–1.6× E7's figures, except M3 and M5 (0.84×) and M7;
+    * the scan cuts M3 and M5 at 0.64–0.70n₀ per rejection.
+
+    So "M8: only the verifier's pointer" means a perfect post-mortem, which is the hindsight that Theorem F3 says is needed.
+  * *Status.* E7, thread T and thread U are unrefereed drafts. Referee 8 checked every E7 number, and checked thread T as quoted here.
 
 ## 9. Trees
 
 Thread N extends slack to decomposition trees: extra rounds per call, with setback measured in the parent's rounds.
-* *Depth-weighted queries* give at most Φ·K failed runs, with Φ < 2((D+1)/ρ)^(d+1)·b^d for depth d and b subquestions per round, when b(D+1) ≥ 2ρ [proved].
+* *Depth-weighted queries* give at most Ψ·K failed runs, with Ψ < 2((D+1)/ρ)^(d+1)·b^d for depth d and b subquestions per round, when b(D+1) ≥ 2ρ [proved].
 * *The factor b^d* is necessary without more structure, since nothing in the run says which subanswer is wrong [proved by reduction, written out in outline].
 * *Parents that name the subanswers they reject* remove it [sketch, checked numerically].
 * *A verifier at every node* that is sound and complete gives at most K rejections, each found with at most 1 + min{r, (D+1)r/(s+1)} task queries in expectation; the second term needs bounded setback within a call. Here r is a call's number of rounds and s its slack. This needs no assumption about parents and does not depend on the tree's size [proved].
@@ -449,12 +512,16 @@ None of these needs a learner.
 3. **The duration tail** of the human's own cold-start chain under the instruction.
 4. **Contamination.** Task answers given right after a post-mortem, a verification or a check of the same run, against fresh answers, and answers to out-of-order queries.
 5. **Post-mortem accuracy, by the second researcher, and setbacks** (slack-imitation.md §4): planted culprits, especially recorded dead ends.
+6. **For formal verifiers** (thread T §5.4):
+   * planted statement defects, run through the statement protocol;
+   * the formalizer's false-rejection rate on correct human blueprints;
+   * the formal-proof multiplier ι in the field at hand.
 
 ## 11. Limits
 
 * *Idealizations.* Determinism, exact Bayes over a class containing the human, and cold-start chains. Thread L finds experts noisy, with about 90% repeatability on categorical decisions and far less on open-ended work. VSI's correctness survives these with a machine verifier, but its cost theory does not.
 * *The domain.* VSI needs a crisp success criterion S_V, fixed in advance and preserved by appending. Multi-year research often has no such goal: its value is a new question or definition found along the way. VSI imitates the well-posed part of research.
-  * *How narrow, for mathematics.* After 10 months of expert work, only 24% of recent Annals main theorems could even be *stated* in Lean (thread T).
+  * *How narrow, for mathematics.* In 10 months, working easiest first, experts stated 24% of recent Annals main theorems in Lean (thread T). Some areas were judged essentially impossible to state today.
   * *Overall.* Thread T guesses that 5–15% of multi-year mathematics projects are in the domain of the 70% row today, and a few percent of all valuable research.
   * *Software specifications misformalize too:* 80 of 161 reference specifications in one verified-code benchmark were arguably wrong.
 * *Verification cost.* If verifying costs nearly as much as doing, VSI saves little over the human doing every problem.
@@ -481,6 +548,7 @@ None of these needs a learner.
 | composition experiment | thread R ([`research/threadR-compose.md`](research/threadR-compose.md)) |
 | second red team: selection, post-mortem contamination, verifier soundness, scan-heavy search | thread S ([`research/threadS-redteam2.md`](research/threadS-redteam2.md)) |
 | calibration of the machine verifier: misformalization, formalization cost, kernel soundness, domain | thread T ([`research/threadT-formal.md`](research/threadT-formal.md)) |
+| verifiers without a machine: combined protocols, correlated misses, AI critics | thread U ([`research/threadU-nonformal.md`](research/threadU-nonformal.md)) |
 | checks, literature, elicitation, persistence | threads A, D, B, C |
 
 ## 13. Open

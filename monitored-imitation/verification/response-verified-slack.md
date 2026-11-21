@@ -180,3 +180,56 @@ The report is [`referee-report-verified-slack-v2.md`](referee-report-verified-sl
 * **D16.** Accepted (Theorem 5(c)).
 * **D17.** Accepted: located probes and the confession state are listed.
 * **D18.** Accepted: §11 mentions heavy tails.
+
+## Referee 8 (final pass), and the additions after referee 7
+
+The report is [`referee-report-verified-slack-v3.md`](referee-report-verified-slack-v3.md). It found referee 7's fixes present, and the headline intact. What changed, item by item:
+
+### A. Errors
+
+* **A1 ((A4′) on notebooks).** Accepted. (A4′) is now stated per claim. S\* is "the first claim that V passes satisfies the goal", preserved by appending when V's verdict depends only on the claim and what precedes it. Theorem 5(f) notes what τ\*(x₀) ≤ n₀ then means, and (A4′)'s statement says what it asks of V-human.
+* **A2 (Lemma 3).** Accepted. Lemma 3 is stated for schedules that serve stream i at least ⌊w_i·t⌋ times among the first t queries. The proof says so, with the counterexample H, U, S, S, and §2.3 says that the order matters.
+
+### B. Overclaims
+
+* **B1 (the formalizer inside V).** Accepted.
+  * §2.1 states the three requirements: determinism, reading only the prefix up to the claim, and success on the human's blueprint.
+  * It gives thread T's 5–30% false-rejection rate as an (A2) failure, with the abstention cost of about n, and notes that thread T's 77% assumes the human formalizing as a fallback.
+  * Theorem 5(d) lists formalizer false rejections next to heavy tails.
+* **B2 (the formalizer is an optimizer).** Accepted. §5 has a bullet on the formalizer inside V. §6 gives thread T's formalizer-in-V figures. §2.1 says "the checking pipeline", and that the output is the formal proof.
+* **B3 (the halt rules).** Accepted. Step 4 of §2.3 halts for statement review on a STATEMENT-DEFECT entry or on an anomaly at acceptance. Theorem 5(c) lists the halt.
+* **B4 (E7's list).** Accepted. §8 states how E7 differs from §2.3, and adds referee 8's default-schedule re-run without post-mortems: M2 89 → 427 → 1,442, M8 51 → 452 → 2,350. "M8: only the verifier's pointer" now means a perfect post-mortem.
+* **B5 (thread T's sourcing).** Accepted.
+  * Search-summary facts are marked: Aletheia, the kernel bugs, fail-safe misformalizations, and the upper end of the benchmark range.
+  * Aletheia is recast as evidence about optimizing provers.
+  * "Has become cheap" is now thread T's estimate for goals already statable, with the counter-signals.
+  * Threads R, T and U are marked as unrefereed drafts.
+* **B6 (V-human).** Accepted. V-human is a human verifier other than the imitated human. Answer 3, §2.1 and Theorem 6 are reworded.
+* **B7 (conditioning and abstentions).** Accepted. §7 says that "works" counts an abstention as effort (about n), that the conditioning means the informal goal, and that heavy tails lower the unconditioned figures.
+* **B8 (per-problem effort).** Accepted. Theorem 5(e) and §7 add statement writing. §7 adds the ι = 2 condition, and verifications are counted per claim.
+* **B9.** Accepted: "no judgment of the runs".
+* **B10.** Accepted: the full statement protocol is listed.
+
+### C. Numbers
+
+* **C1–C3.** Accepted: "without a verifier (SI+D)"; equal weights, with the default figures; the qualifier on asking for M2.
+* **C4–C7.** Accepted: the definitions qualifier and the 8% / 3%; severity unreported; "experts stated 24%, easiest first"; the conditions on 65/80/90%.
+* **C8.** Accepted: one figure, 77%, tied to the fallback and the halt rules.
+* **C9.** Accepted: "far commoner unless independently reviewed".
+* **C10.** Accepted: the factor 3 in Proposition 7's row.
+
+### D. Minor
+
+* **D1–D4.** Accepted.
+* **D5.** Accepted: Answer 8 and §10 carry the wider contamination item and thread T's measurements.
+* **D6.** Accepted: V-cone's three conditions in the §7 table.
+* **D7.** Accepted: the 25% is cited to thread S.
+* **D8.** Accepted: E7's terms are defined.
+* **D9.** Accepted: the status line.
+* **D10.** Accepted.
+* **D11.** Accepted: the trees bound uses Ψ.
+* **D12.** Accepted: the formalizer reads the prefix up to the claim.
+
+### Thread U
+
+Added after referee 8. §6 has a paragraph "Verifiers without a machine", and §7 a row for VSI with thread U's combined verifier: 50% for informal theory, 60% for software without a full specification, 15% / 20% for empirical / judgment work. Both are marked as thread U's unrefereed estimates.
