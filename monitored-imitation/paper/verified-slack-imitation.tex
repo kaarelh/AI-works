@@ -419,6 +419,22 @@ For research without a machine-checkable goal, output failure is about $p\,w\,\b
 \end{itemize}
 With the best combination, the estimated probability that VSI works is about 50\% for informal theory, 60\% for software without a full specification, 15\% for empirical work (25\% if the goal is narrowed to ``the claim follows from the data''), and 20\% for judgment work. These inputs are mostly judgments, not measurements on an imitator's wrong results.
 
+\section{From the idealization to practice}\label{sec:practice}
+
+\paragraph{What survives with a real learner.} The analysis assumes exact Bayes over a class containing the human. With a practical learner (a language model fine-tuned on the human's steps, decoding greedily), three things change and two do not.
+\begin{itemize}[nosep]
+\item \emph{Unchanged:} correctness, which is the verifier's (Theorem~\ref{thm:main}(a)); and, with cache-first decoding, the cap of $2n_0$ task queries per problem (Proposition~\ref{prop:any-learner}), so VSI never costs much more than the human doing the problem itself.
+\item \emph{Changed:} the bound of $\K$ rejections becomes the learner's number of mistakes on queried notebooks, which has no guarantee; asks need a calibrated confidence, for which token entropy or agreement among samples are proxies; and the absence of optimization against $V$ holds only if the learner neither resamples until accepted nor trains on accepted outputs (Section~\ref{sec:selection}).
+\end{itemize}
+
+\paragraph{Orders of magnitude.} A task query is three months of the human's time, so the costs are in human-quarters.
+\begin{itemize}[nosep]
+\item In the worst case VSI spends $2n_0$ human-quarters per bit of $\K$, which is $48$ for a six-year project ($n_0=24$). Under bounded setback with $D=1$ and $\rho=\frac12$, it is about $4\Lambda\approx16$; and when post-mortem pointers or local checks locate mistakes, a few.
+\item Chained imitation at $\varepsilon=5\%$ spends $20n_0=480$ per bit.
+\item So the scheme is practical only if $\K$, the human's description length given what the learner already knows (for example a large corpus), is small, and if its cost is amortized over many problems. For $T$ problems the human alone spends $n_0T$; VSI's worst case is below that once $T>2\K$.
+\end{itemize}
+This is the regime the original question points to: performance on very many problems, with a learner for which the human is simple.
+
 \section{Limitations, open problems, and what to measure}\label{sec:limits}
 
 \paragraph{Idealizations.} Determinism, exact Bayes over a class containing the human, and cold-start chains (a human who rereads its notebook every three months and keeps nothing unrecorded). Experts are noisy (about 90\% repeatability on categorical decisions, less on open-ended work). With a machine verifier VSI's correctness survives these; its cost theory does not. A stochastic version is open.
