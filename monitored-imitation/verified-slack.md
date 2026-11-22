@@ -36,7 +36,7 @@ The request: *keep trying threads, and report the scheme you are most sure would
    * *as VSI-R* (thread Q2, corrected by the paper's red team): about **50%** for informal theory and **60%** for software, 15% for empirical and 20% for judgment work. VSI-R assigns that combination's members at random per claim, verifies only each run's first claim, sends located objections at the human's own steps to a second judge, caches verdicts, and monitors with Theorem 6′. Thread Q2 had put it at 58% and 66% by using Theorem 6′ without its +1; with the +1 the gain over the fixed combination is within the noise. Theorem 6′ supplies monitoring, not sureness;
    * *without any verifier* (slack imitation with asking and the design elements): 30% and 10%.
 
-   That VSI's task queries are truly O(K), with neither n₀ nor 1/ε, I put at 25%, thread S's figure (thread S §7). So the answer to the O(K) question is no in the worst case: up to 2n₀K task queries of three months each.
+   That VSI's task queries are truly O(K), with neither n₀ nor 1/ε, I put at 25%, thread S's figure (thread S §7). So the answer to the O(K) question is no in the worst case on chains: up to 2n₀K task queries of three months each. On a formal blueprint, though (thread Y, Section 9), the search costs at most (p·d + r₀)K/b task queries, independent of the size of the work, assuming only that the human's own blueprint succeeds; I put at about 45% that a real mathematician meets this within a factor 3.
 
    All these figures are conditional on determinism, realizability and a chain that finishes; without that conditioning the 70% row is about 40% (thread S).
 4. **So the scheme I am most sure of** is VSI with a machine verifier on a formally stated, independently reviewed goal. Its domain is narrow: in ten months, working easiest first, experts stated about a quarter of recent Annals main theorems in Lean (thread T). There the verifier deserves most of the credit: any generator wrapped in it would be as correct. Imitation adds a low query cost, at most 2n₀K, and runs that are the human's own process with some steps replaced. Elsewhere VSI is the best scheme I have found, but not one to be sure of.
@@ -531,7 +531,16 @@ Thread N extends slack to decomposition trees: extra rounds per call, with setba
 * *Depth-weighted queries* give at most Ψ·K failed runs, with Ψ < 2((D+1)/ρ)^(d+1)·b^d for depth d and b subquestions per round, when b(D+1) ≥ 2ρ [proved].
 * *The factor b^d* is necessary without more structure, since nothing in the run says which subanswer is wrong [proved by reduction, written out in outline].
 * *Parents that name the subanswers they reject* remove it [sketch, checked numerically].
-* *A verifier at every node* that is sound and complete gives at most K rejections, each found with at most 1 + min{r, (D+1)r/(s+1)} task queries in expectation; the second term needs bounded setback within a call. Here r is a call's number of rounds and s its slack. This needs no assumption about parents and does not depend on the tree's size [proved].
+* *A verifier at every node* that is sound and complete gives at most K rejections, each found with at most 1 + min{r, (D+1)r/(s+1)} task queries in expectation; the second term needs bounded setback within a call. Here r is a call's number of rounds and s its slack. This does not depend on the tree's size [proved], but thread Y found that it needs thread N's (Budget) on corrupted transcripts.
+
+**Formal blueprints (thread Y, [`research/threadY-formal-trees.md`](research/threadY-formal-trees.md)).** When the human works as a blueprint (isolated calls whose questions are Lean statements, with proof irrelevance: the parent sees only each lemma's record, proved, disproved or open), the kernel supplies a sound and complete verifier at every node.
+* *Assumption* (A2-tree), about the human's own tree only: every call of it proves its statement within r₀ rounds.
+* *Search:* at a failing call, scan its rounds from the start; after a round that posed a lemma not proved, descend into the first such lemma. A mistake-free prefix certifies that the lemma is the human's own.
+* *Theorem Y1 [proved].* At most K/b rejections, each costing surely at most Σ_ℓ π_ℓ + t* ≤ p·d + r₀ task queries, where π_ℓ is the round in which the human poses the path's next lemma, p the latest such round, and d the depth. For a human who plans first, d + r₀. This does not depend on slack, tree size or the number of problems. Correctness rests on the root statement, the kernel and a final check of the assembled development; misformalized intermediate lemmas cannot cause wrong outputs.
+* *Necessity [sketch].* Ω((p·d + r₀)K/log) task queries are needed on a class satisfying all these assumptions, even with zero setback inside calls.
+* *Abandoned lemmas [proved].* With abandonment only by Lean disproof, the theorem holds verbatim with "decided" for "proved". With too-hard abandonment, add A, the human's own abandoned work off the search path; this needs that the run never proves a lemma the human abandons, and without that, interleaving with a depth-first scan caps the cost at twice the chain scan.
+* *Numbers.* In a toy with exact Bayes, 6.7–17 task queries per rejection, against 120–351 for the chain scan. With a round of a working day, thread Y estimates p·d + r₀ ≈ 7–45 days per rejection for blueprints like Carleson's (179 lemmas, 28 contributors, statements formalized first, lemmas proved from local statements).
+* *Probability* (thread Y): about 45% that a careful mathematician following the blueprint instruction gets output failure ≤ 5% and at most 3(p·d + r₀)K task queries, conditional on the idealizations; 55% for formalization-style work, 35% for new research.
 
 ## 10. What to measure first
 
@@ -584,6 +593,7 @@ None of these needs a learner.
 | no optimization pressure, bits of selection, malign coalitions, formalizer isolation | thread V ([`research/threadV-humanlike.md`](research/threadV-humanlike.md)) |
 | no total blind spot (Theorem 6′), falsification by use, VSI-R, corrected estimates for human verifiers | thread Q2 ([`research/threadQ2-freshlook.md`](research/threadQ2-freshlook.md)) |
 | how often failed runs end with a confident claim (w) | thread W ([`research/threadW-confident-failures.md`](research/threadW-confident-failures.md)) |
+| formal blueprint trees: own-tree search, (p·d + r₀)K/b | thread Y ([`research/threadY-formal-trees.md`](research/threadY-formal-trees.md)) |
 | calibration of the machine verifier: misformalization, formalization cost, kernel soundness, domain | thread T ([`research/threadT-formal.md`](research/threadT-formal.md)) |
 | verifiers without a machine: combined protocols, correlated misses, AI critics | thread U ([`research/threadU-nonformal.md`](research/threadU-nonformal.md)) |
 | checks, literature, elicitation, persistence | threads A, D, B, C |
