@@ -172,7 +172,7 @@ def part_b():
 
 
 # ---------------------------------------------------------------- Part C
-def p_works_variants(dom, fm, ft, cost, fr, located, iota, feas, n=200000, seed=3):
+def p_works_variants(dom, fm, ft, cost, fr, located, iota, feas, n=200000, seed=3, beta=1.0):
     """Same draws, in the same order, as threadU_verify.p_works (h = 0), then F three ways:
     orig : thread U's F = p w rbar f (p independent of T/K)
     cap  : p capped by the rejection budget, p <= 1/(TK (1 - w f)), f = the mixed f_V
@@ -194,6 +194,7 @@ def p_works_variants(dom, fm, ft, cost, fr, located, iota, feas, n=200000, seed=
     per_rej = U.COST_LOCATED if located else U.N_OVER_N0 * n0
     c_p = 1.0 + cost * n0 + fr * per_rej
     ok_eff = TK * c_p <= (4 - (1 + iota) * s) * n0
+    ok_eff_lowbeta = TK * (c_p - 1.0 + beta) <= (4 - (1 + iota) * s) * n0
     ok_other = rng.random(n) < D["p_rest_other"] * feas
     p0 = np.where(transfer, 0.0, p)
     # per-kind accounting (Theorem Q2.1(b)): each kind of type tau contributes at most
@@ -209,6 +210,7 @@ def p_works_variants(dom, fm, ft, cost, fr, located, iota, feas, n=200000, seed=
     F["kinds"] = np.minimum(F["orig"], rbar * cbar / TK)
     F["worst"] = np.minimum(p0, 1.0 / (TK * (1 - w * fw))) * w * rbar * fw
     res = {k: float(np.mean((v <= 0.05) & ok_eff & ok_other)) for k, v in F.items()}
+    res["kinds_lowbeta"] = float(np.mean((F["kinds"] <= 0.05) & ok_eff_lowbeta & ok_other))
     res["out_orig"] = float(np.mean(F["orig"] <= 0.05))
     res["out_kinds"] = float(np.mean(F["kinds"] <= 0.05))
     res["eff"] = float(np.mean(ok_eff))
@@ -224,6 +226,8 @@ def part_c():
     print("   kinds: F <= rbar * cbar / (T/K), cbar = sum_tau share_tau w f_tau/(1 - w f_tau):")
     print("          Theorem Q2.1(b), each kind of error bounded separately (allocation allowed)")
     print("   worst: as cap, with every error of the protocol's hardest type from the start")
+    print("   kinds, beta=0.1: as kinds, with audits cut from one per output to 0.1 (Theorem Q2.1")
+    print("          bounds wrong outputs without audits when V has no total blind spot)")
     picks = [
         ("math", "V-human: one expert reads (unlocated verdict)"),
         ("math", "read + AI critics (3)"),
@@ -240,12 +244,14 @@ def part_c():
         fm, ft = U.f_protocol(dom, comps[(dom, name)])
         cost, fr, loc, iota, feas = U.protocol_cost(dom, comps[(dom, name)])
         ref = U.p_works(dom, fm, cost, fr, loc, iota, feas)[0]
-        res, fwmed, fmed, cbmed = p_works_variants(dom, fm, ft, cost, fr, loc, iota, feas)
-        print("   %-9s %-52s orig %2.0f%% (threadU %2.0f%%) cap %2.0f%% kinds %2.0f%% worst %2.0f%%"
-              " | output ok %2.0f%%->%2.0f%%, effort ok %2.0f%% | f %.2f, worst f %.2f, cbar %.2f" % (
-                  dom[:9], name[:52], 100 * res["orig"], 100 * ref, 100 * res["cap"],
-                  100 * res["kinds"], 100 * res["worst"], 100 * res["out_orig"],
-                  100 * res["out_kinds"], 100 * res["eff"], fmed, fwmed, cbmed))
+        res, fwmed, fmed, cbmed = p_works_variants(dom, fm, ft, cost, fr, loc, iota, feas, beta=0.1)
+        lab = {"empirical-analysis": "emp-narrow"}.get(dom, dom)
+        print("   %-10s %-50s orig %2.0f%% (threadU %2.0f%%) cap %2.0f%% kinds %2.0f%% worst %2.0f%%"
+              " kinds,beta=0.1 %2.0f%% | output ok %2.0f%%->%2.0f%%, effort ok %2.0f%% | f %.2f,"
+              " worst f %.2f, cbar %.2f" % (
+                  lab, name[:50], 100 * res["orig"], 100 * ref, 100 * res["cap"],
+                  100 * res["kinds"], 100 * res["worst"], 100 * res["kinds_lowbeta"],
+                  100 * res["out_orig"], 100 * res["out_kinds"], 100 * res["eff"], fmed, fwmed, cbmed))
     # how many of thread U's no-transfer draws violate the rejection budget (b = 1)
     rng = np.random.default_rng(11)
     p = rng.uniform(0.1, 0.5, 200000)
