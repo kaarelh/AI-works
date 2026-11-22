@@ -562,6 +562,16 @@ None of these needs a learner.
    * the formalizer's false-rejection rate on correct human blueprints;
    * the formal-proof multiplier ι in the field at hand.
 
+## 10b. Beyond the idealizations (paper §10)
+
+* *Beyond realizability* (the paper's Proposition 10.1, my own, unrefereed except by the final read-through). With a weighted-majority learner (penalty β) in place of exact Bayes, and a deterministic human not necessarily in the class: if some hypothesis h mislabels at most a fraction ε_h of the notebooks VSI queries, the rejections number at most (K_h + ε_h·c₂·A)/(c₁ − 2n₀ε_h·c₂), with c₁ = log₂(2/(1+β)), c₂ = log₂(1/β) and A the audits. At β = ½ with no audits, R ≤ K_h/(0.41 − 2n₀ε_h), which needs ε_h < 0.2/n₀. Lemma 1 needs only determinism and (A3′), so each search still costs at most 2n₀.
+* *Beyond determinism* (thread Z, [`research/threadZ-stochastic-human.md`](research/threadZ-stochastic-human.md)). Correctness is unchanged.
+  * Stochastic style that canonicalization removes: everything transfers to the content map.
+  * Occasional deviations at rate δ < ½: a disagreeing query is worth 1 − h(δ) bits in expectation; mode decoding with one ask at each of the run's first n₀ notebooks per rejection gives E[rejections] ≤ K/(1 − h(δ)). It needs memoryless re-asks and a dominant choice at each query.
+  * No dominant choice: decoder-based protocols need Ω(T) queries or abstentions, and verified outputs carry Ω(T) bits of selection against the unconditioned human.
+  * VSI-D: posterior-sample a whole hypothesis, run it up to m times, and on failure have the human work the problem (a demonstration). E[demonstrations] ≤ (ln 2/2)K/((1−θ)²s²) + Σ_t(1 − θs)^m, each at most n queries; an output raises any hypothesis's odds against the human's by at most 1/s.
+  * Thread Z's estimate: about 45% unconditional for the formal row (against 40%), about 60% conditional on realizability alone.
+
 ## 11. Limits
 
 * *Idealizations.* Determinism, exact Bayes over a class containing the human, and cold-start chains. Thread L finds experts noisy, with about 90% repeatability on categorical decisions and far less on open-ended work. VSI's correctness survives these with a machine verifier, but its cost theory does not.
@@ -596,6 +606,7 @@ None of these needs a learner.
 | no total blind spot (Theorem 6′), falsification by use, VSI-R, corrected estimates for human verifiers | thread Q2 ([`research/threadQ2-freshlook.md`](research/threadQ2-freshlook.md)) |
 | how often failed runs end with a confident claim (w) | thread W ([`research/threadW-confident-failures.md`](research/threadW-confident-failures.md)) |
 | formal blueprint trees: own-tree search, (p·d + r₀)K/b | thread Y ([`research/threadY-formal-trees.md`](research/threadY-formal-trees.md)) |
+| a non-deterministic human: canonical style, deviations, VSI-D | thread Z ([`research/threadZ-stochastic-human.md`](research/threadZ-stochastic-human.md)) |
 | informal blueprints, fallible node verifiers, repair first | thread Y2 ([`research/threadY2-informal-blueprints.md`](research/threadY2-informal-blueprints.md)) |
 | calibration of the machine verifier: misformalization, formalization cost, kernel soundness, domain | thread T ([`research/threadT-formal.md`](research/threadT-formal.md)) |
 | verifiers without a machine: combined protocols, correlated misses, AI critics | thread U ([`research/threadU-nonformal.md`](research/threadU-nonformal.md)) |
