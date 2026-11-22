@@ -334,7 +334,33 @@ Correctness needs only (A4$'$). What that means depends on the verifier.
 \end{itemize}
 
 \subsection{Selection and human-likeness}\label{sec:selection}
-\emph{[Pending: results of the human-likeness thread.]}
+The point of imitation, for alignment, is that the system does what the human would have done, without optimization pressure. Rerunning until accepted is a filter, so one must ask how far it moves VSI's outputs away from the human's process. The following results are proved in \cite{threadV}, for exact Bayes under (A1) and any filter that satisfies (A3$'$). Write $\K'=\lfloor\K/b\rfloor$.
+
+\begin{theorem}[no optimization pressure \cite{threadV}]\label{thm:nopressure}
+Every datum VSI collects is a pair $(x,P(x))$; verdicts and pointers are never data. Every output notebook is the final notebook of the run under a set $D$ of the human's answers, by a map fixed before the verifier is chosen. Every step of an output is one of three things:
+\begin{itemize}[nosep]
+\item the human's answer (an ask);
+\item the human's own step at that notebook;
+\item the plurality label of the prior restricted to the hypotheses consistent with all the human's data. This label is backed by at least the mass of the human's own program, and by at least $1-\alpha$ of the posterior when asks are made at every unconfident step.
+\end{itemize}
+The verifier changes a run only by rejecting it, and every rejection costs a hit, at least $b$ bits of learning about the human.
+\end{theorem}
+
+\begin{theorem}[bits of selection \cite{threadV}]\label{thm:selection}\
+\begin{enumerate}[label=(\alph*),nosep]
+\item \emph{Per problem.} Given the history, the output on a problem is a point on a path of runs that does not depend on the verifier. The path runs from the verifier-free run to the human's own chain, and the verifier only chooses where to stop. So it adds at most $\log_2(1+R_p)$ bits on a problem with $R_p$ rejections, and none when $R_p=0$.
+\item \emph{Lifetime.} For every event $E$ on the first $T$ problems, $\Pr[\text{VSI}\in E]\le 2^{B_T}\Pr[\text{VSI with content-blind verdicts}\in E]$, with $B_T\le \log_2\binom{T+\K'}{\K'}\le \K'\log_2 e+\K'\log_2(1+T/\K')$. No smaller bound holds for every verifier.
+\item \emph{With audits.} Against a filter that knows whether a run deviates from the human but not how, the expected log-likelihood ratio is at most $\K'\log_2(e(1+n/\beta))$, for every $T$; and the expected number of non-human steps in all outputs ever made is at most $n\K'/\beta$.
+\end{enumerate}
+\end{theorem}
+
+\paragraph{What this means.} The decoder never sees the verifier: it is a fixed function of the human's answers. The verifier only decides which answers are collected and when, and each change it causes is paid for with true information about the human. Its influence grows logarithmically with the number of problems, against $T\log_2k$ bits for best-of-$k$ resampling, and without bound for training on accepted outputs (which in exact Bayes refutes the human outright).
+
+\paragraph{Malign hypotheses.} In a Solomonoff prior some hypotheses may be optimizers. The filter never raises any hypothesis's posterior odds against the human's. A coalition of hypotheses can write a payload into an output only where it outweighs everything that writes the human's label, the human included; with asks at every unconfident step, it must outweigh it by $(1-\alpha)/\alpha$. Payloads in outputs are mistakes, so audits catch them at rate $\beta/n$ per output: the same metering as chained imitation at $\beta=1$. Whether such coalitions exist is the open malign-prior question; VSI neither creates nor removes them.
+
+\paragraph{The formalizer inside $V$.} The formalizer is an optimizer, and its formal proof is optimized. The notebook is not, for any formalizer, malicious or broken included, provided nothing the formalizer produces enters a notebook or the data, or is seen by the imitated human (\emph{isolation}). With a fixed statement, a pinned and seeded formalizer, and the proof archived and checked by the kernel in a sandbox rather than read, the only optimized information that reaches the world is the verdict, which the bounds above already count.
+
+\paragraph{Several claims in one notebook.} When $V$ passes the first of several claims, it chooses among an accepted notebook's claims without a hit, at up to $\log_2 c_p$ more bits on a problem with $c_p$ claims. Verifying only the notebook's \emph{first} claim, and treating its failure as a rejection, removes this choice while keeping the verified predicate preserved by appending. It then needs (A3$'$) for the first claim of the human's own chain.
 
 \subsection{The constraint}
 A machine verifier rests correctness on no judgment of the runs: only on the fidelity of a statement fixed before any run. A human verifier judges only the finished product, which is a distinct and weaker assumption than an on-track judgment, but correctness rests on it. A local check of the cone judges intermediate entries locally (does this follow from what it cites?), which is not an on-track judgment, though its power to locate mistakes comes from the human's own entries passing it. The version that keeps both the letter and the spirit of the constraint is the machine verifier, which is also the version we are most sure of.
@@ -472,7 +498,7 @@ All files are in the repository folder \texttt{monitored-imitation/} on the work
 \item \texttt{robust-runs.md}: robustness of properties under the imitator's replacements.
 \item \texttt{slack-imitation.md}: slack imitation, bounded setback, asking before committing, experiment E6.
 \item \texttt{verified-slack.md}: verified slack imitation, the full version of this paper's main results, with three referee reports and responses.
-\item Research threads (\texttt{research/}): \cite{threadE} red team of slack imitation; \cite{threadF} certified notebook; \cite{threadG} by-product insights; \cite{threadH} deployment, other learners; \cite{threadJ} optimality; \cite{threadL} evidence on researchers; \cite{threadN} trees; \cite{threadQ} alternatives, verification, pointers; \cite{threadR} composition experiment E7; \cite{threadS} red team of VSI; \cite{threadT} machine-verifier calibration; \cite{threadU} verifiers without a machine; and earlier threads A--D on checks, elicitation, persistence and literature.
+\item Research threads (\texttt{research/}): \cite{threadE} red team of slack imitation; \cite{threadF} certified notebook; \cite{threadG} by-product insights; \cite{threadH} deployment, other learners; \cite{threadJ} optimality; \cite{threadL} evidence on researchers; \cite{threadN} trees; \cite{threadQ} alternatives, verification, pointers; \cite{threadR} composition experiment E7; \cite{threadS} red team of VSI; \cite{threadT} machine-verifier calibration; \cite{threadU} verifiers without a machine; \cite{threadV} human-likeness and bits of selection; and earlier threads A--D on checks, elicitation, persistence and literature.
 \end{itemize}
 
 \begin{thebibliography}{99}
@@ -490,6 +516,7 @@ All files are in the repository folder \texttt{monitored-imitation/} on the work
 \bibitem{threadS} Claude. Thread S: second red team of verified slack imitation (research/threadS-redteam2.md), 2026.
 \bibitem{threadT} Claude. Thread T: calibrating the machine verifier (research/threadT-formal.md), 2026.
 \bibitem{threadU} Claude. Thread U: verification without a machine verifier (research/threadU-nonformal.md), 2026.
+\bibitem{threadV} Claude. Thread V: how close VSI's outputs stay to the human's own process (research/threadV-humanlike.md), 2026.
 \bibitem{ross} S. Ross, G. Gordon, J. A. Bagnell. A reduction of imitation learning and structured prediction to no-regret online learning (DAgger). AISTATS 2011.
 \end{thebibliography}
 

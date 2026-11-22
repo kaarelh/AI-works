@@ -350,6 +350,14 @@ Located probes, which need foresight (thread B), and a "confession" state off th
   * *The bound log₂(1 + R_p)* does not cover F's internal search, whose size is set by its budget B.
 * **Practical learners.** A learner that resamples is best-of-k, adding at most log₂ k bits per problem. Training on accepted outputs is outright optimization against V. The no-optimization argument holds only for the exact-Bayes, deterministic-decoder idealization.
 
+*How much, exactly* (thread V, [`research/threadV-humanlike.md`](research/threadV-humanlike.md), proved for exact Bayes and any filter satisfying (A3′); K′ = ⌊K/b⌋):
+* *No optimization pressure.* Every output notebook is the majority decoder's run under a set of the human's answers, by a map fixed before V is chosen. V changes runs only by rejecting them, and each rejection costs a hit.
+* *Per problem.* V picks a stopping point on a path of runs that does not depend on V, from the verifier-free run to the human's own chain: log₂(1 + R_p) bits, and none without a rejection.
+* *Lifetime.* At most log₂ C(T+K′, K′) ≤ K′·log₂ e + K′·log₂(1 + T/K′) bits against content-blind verdicts, and this is tight. Thread S's "K·log₂ e" is only the first term.
+* *With audits.* At most K′·log₂(e(1 + n/β)) bits against a deviation-blind filter, for every T. The expected number of non-human steps in all outputs is at most nK′/β.
+* *Several claims.* Choosing among an accepted notebook's claims adds up to log₂ c_p bits per problem. Verifying only the first claim removes this choice.
+* *Isolation of a formalizer inside V.* The notebook is not optimized, for any formalizer, provided nothing it produces enters a notebook, the data, or the imitated human's view.
+
 *What follows.*
 * With V-machine on a formally stated goal, none of this matters for correctness.
 * With a human verifier, it is why f on the imitator's outputs may exceed f on planted errors, and why I recommend β = 1, cached verdicts, verification by use (testing the result on cases) and two independent verifiers.
@@ -562,6 +570,7 @@ None of these needs a learner.
 | evidence on researchers | thread L ([`research/threadL-evidence.md`](research/threadL-evidence.md)) |
 | composition experiment | thread R ([`research/threadR-compose.md`](research/threadR-compose.md)) |
 | second red team: selection, post-mortem contamination, verifier soundness, scan-heavy search | thread S ([`research/threadS-redteam2.md`](research/threadS-redteam2.md)) |
+| no optimization pressure, bits of selection, malign coalitions, formalizer isolation | thread V ([`research/threadV-humanlike.md`](research/threadV-humanlike.md)) |
 | calibration of the machine verifier: misformalization, formalization cost, kernel soundness, domain | thread T ([`research/threadT-formal.md`](research/threadT-formal.md)) |
 | verifiers without a machine: combined protocols, correlated misses, AI critics | thread U ([`research/threadU-nonformal.md`](research/threadU-nonformal.md)) |
 | checks, literature, elicitation, persistence | threads A, D, B, C |
