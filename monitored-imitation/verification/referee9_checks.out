@@ -1,0 +1,69 @@
+
+==============================================================================
+A. Schedule constants (Lemma 4.4, Theorem 4.7(d), 'Why the order S, U, S, H')
+==============================================================================
+S,U,S,H: scan's j-th step is query 2j-1: True; U's k-th draw is 4k-2: True; H's i-th entry is 4i: True
+S,U,S,H: in every prefix, non-scan queries <= scan queries: True
+SUSH: query index of the scan's n0-th step (worst case, nonempty list): n0=8: 15 (2n0-1=15), n0=9: 17 (2n0-1=17), n0=32: 63 (2n0-1=63), n0=33: 65 (2n0-1=65)
+UHSS: query index of the scan's n0-th step (worst case, nonempty list): n0=8: 16 (2n0-1=15), n0=9: 19 (2n0-1=17), n0=32: 64 (2n0-1=63), n0=33: 67 (2n0-1=65)
+HUSS: query index of the scan's n0-th step (worst case, nonempty list): n0=8: 16 (2n0-1=15), n0=9: 19 (2n0-1=17), n0=32: 64 (2n0-1=63), n0=33: 67 (2n0-1=65)
+SUSH with an empty list: scan's 8th step at query 11
+UHSS with an empty list: scan's 8th step at query 11
+
+==============================================================================
+B. Lemma 4.4: E[queries] <= min{4n/|M|, 2 j_S + 1, 4(j_H + 1)} (simulation)
+==============================================================================
+400 random rejected runs, 300 searches each: largest mean/bound = 1.000; searches above the sure bound min(2j_S+1, 4(j_H+1)): 0
+
+==============================================================================
+C. Proposition 4.10 (safety net for any learner): per-problem task queries, cache-first decoding
+==============================================================================
+n0=  4: search only (no L, no bizarre check, beta=0), 600 problems, 4 adversarial learners: max task queries per problem = 7 (2n0 = 8); outcomes {'output': 600}
+n0=  8: search only (no L, no bizarre check, beta=0), 600 problems, 4 adversarial learners: max task queries per problem = 15 (2n0 = 16); outcomes {'output': 600}
+n0= 16: search only (no L, no bizarre check, beta=0), 600 problems, 4 adversarial learners: max task queries per problem = 27 (2n0 = 32); outcomes {'output': 600}
+n0=  4: with audits at beta=1: max task queries per problem = 8 (2n0 = 8). Searches alone never exceed 2n0-1 (a search ending in a scan hit has one fewer non-scan query, and c_{n0-1} can be scanned only as a mistake), so one audit still fits within 2n0.
+n0=  8: with audits at beta=1: max task queries per problem = 15 (2n0 = 16). Searches alone never exceed 2n0-1 (a search ending in a scan hit has one fewer non-scan query, and c_{n0-1} can be scanned only as a mistake), so one audit still fits within 2n0.
+perfect learner (M = 0), beta = 1, 50 problems: 0 rejections, 50 task queries (all audits); (c)'s 'at most 2 n0 M task queries in all' omits the audits.
+n0= 16: if a cached scan step uses up the S turn (no query, but the turn passes to U), max task queries per problem = 204 (2n0 = 32): the proof needs the scan to skip cached notebooks within its turn.
+n0=  8: with route (i) (L flags 'BAD'; (L0)-(L1) hold), a learner that writes a fresh wrong valid entry at c_0 and 'BAD' at step 1: 200 task queries, 200 rejections in 200 reruns, outcome 'cap' (2n0 = 16). c_0 is never queried, so it is never cached.
+n0=  8: with the 'nothing bizarre' check ((M1)-(M2) hold), a learner that writes a fresh wrong entry at c_0, 'WEIRD' at step 1 and SOL at step 2: 200 task queries, 200 failed checks in 200 reruns, outcome 'cap'.
+So (b) holds for route (ii) searches, with or without audits, when the scan skips cached notebooks within
+its turn; with route (i) or the bizarre check it fails for an arbitrary learner.
+(c)'s count of rejections still holds in all cases (each rejection or failed check ends at a told notebook
+where the learner was wrong); its total of task queries needs the audits added.
+
+==============================================================================
+D. Theorem 6.2(b): B_T against log2 C(T+K', K')
+==============================================================================
+thread V Theorem 2(b): against VSI[coin_q], q = K'/(K'+T), the exponent is B_coin = T log2(1+K'/T) + K' log2(1+T/K');
+against the uniform mixture of content-blind verdict scripts it is exactly log2 C(T+K', K').
+  K_      T     log2 C     B_coin    Klog2e+Klog2(1+T/K)  B_coin <= log2 C ?
+   1      4       2.32       3.61                   3.76  False
+   4      6       7.71       9.71                  11.06  False
+  10     10      17.50      20.00                  24.43  False
+  10    100      45.41      48.34                  49.02  False
+  20   1000     138.54     142.02                 142.30  False
+  50  10000     450.36     454.51                 454.69  False
+So 'B_T <= log2 C(T+K',K')' (paper) is true only for the script-mixture reference; for the coin reference B_T exceeds log2 C. Both are below K' log2 e + K' log2(1+T/K').
+
+==============================================================================
+E. Numbers
+==============================================================================
+E6 chained imitation (noticing, same humans): [2915, 12724, 51365]  paper: 2,915 -> 12,724 -> 51,365
+E6 slack imitation (noticing): [160, 204, 204]  paper: 160 -> 204 -> 204
+Fig. 2(a) 'slack doubles the cost of silent ones': SI/CI on silent humans = [1.99, 2.02, 1.97] ; silent SI / the plotted CI line (noticing) = [1.53, 1.73, 1.81]
+Table 2 (E7): cells that do not match (rounded) = none
+Table 2 caption '40-55 and 31-34 with a post-mortem': equal weights (USL): M2 [40.3, 54.8, 53.7] M8 [34.0, 33.4, 31.2]
+   the table's own default schedule with the same post-mortem (SUSL): M2 [52.7, 73.4, 72.0] M8 [45.3, 46.1, 41.5]
+Fig. 2(b) 'about 30' (M1, S,U,S,H): [25.9, 31.7, 32.1] ; 'about threefold' (silent SI-V / VSI): [2.88, 3.07, 3.17]
+Remark 4.9 'asking multiplied VSI's cost 5-35-fold' (VSI+ABC / VSI, thread R, equal weights): [('M1', 8, 14.4), ('M1', 32, 14.4), ('M1', 128, 16.1), ('M2', 8, 5.6), ('M2', 32, 5.2), ('M2', 128, 5.9), ('M7', 8, 18.5), ('M7', 32, 28.2), ('M7', 128, 35.0), ('M8', 8, 5.5), ('M8', 32, 9.7), ('M8', 128, 12.1)]
+Section 9 thresholds f* = 0.05/(p w rbar), p = 0.3, rbar = 1.3:
+   theory   : with thread U's w = 0.450: f* = 0.285;  with thread W's w = 0.60 (the paper's): f* = 0.214;  output failure p w rbar f_V = 3.5%
+   software : with thread U's w = 0.550: f* = 0.233;  with thread W's w = 0.60 (the paper's): f* = 0.214;  output failure p w rbar f_V = 1.6%
+   empirical: with thread U's w = 0.750: f* = 0.171;  with thread W's w = 0.85 (the paper's): f* = 0.151;  output failure p w rbar f_V = 9.0%
+   judgment : with thread U's w = 0.825: f* = 0.155;  with thread W's w = 0.90 (the paper's): f* = 0.142;  output failure p w rbar f_V = 7.4%
+   paper: thresholds 0.29, 0.23, 0.17, 0.16 (thread U's w); failures 3.5%, 1.6%, 9%, 7% (thread W's w)
+Section 10: 2n0 = 48; 4*Lambda = 15.36 (4(D+1)/rho = 16); 20 n0 = 480
+Corollary 4.13: 2*iota*n0*K < (1/5)*20*n0*K  <=>  iota < 2: True
+Appendix A: K/log2(1/(1-alpha)) <= (ln 2) K/alpha for alpha in (0,1): True
+Theorem 6.2(c): log2(1/q) = log2(1+n/beta): True ; log2(1/(1-q)) <= (beta/n) log2 e: True
