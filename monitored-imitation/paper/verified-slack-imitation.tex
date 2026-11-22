@@ -13,6 +13,7 @@
 \usetikzlibrary{arrows.meta,positioning,shapes.geometric}
 \usepackage[colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
 \usepackage{microtype}
+\usepackage[section]{placeins}
 
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{lemma}[theorem]{Lemma}
@@ -43,7 +44,7 @@
 \maketitle
 
 \begin{abstract}
-A learner imitates a human researcher, modelled as a fixed deterministic program $P$, by Bayesian (Solomonoff-style) induction on the human's three-month steps, and chains its imitation over $n$ steps to solve research problems. The baseline, chained imitation (``train on test''), needs about $n\K/\varepsilon$ task queries for runs that fail with probability at most $\varepsilon$, where $\K = \K(P)$; and every protocol that asks the human only for task steps needs nearly that on humans whose insights are rare, problem-specific and never recovered once missed. We propose \emph{verified slack imitation} (VSI): the imitator gets more steps than the human needs, on an append-only notebook with a hidden clock; each problem is rerun until a verifier of finished results accepts; and a rejected run is searched for a mistake, mostly by scanning it from the start. We prove that every output passes the verifier, so that \emph{correctness rests on one assumption, the verifier's soundness on the imitator's claims}, and on no property of the human's task behaviour; that there are at most $\K$ rejections; and that each costs at most $2n_0$ task queries whatever the human, so at most $2n_0\K$ in all, with no factor $1/\varepsilon$, within a logarithm of a lower bound that holds even with a perfect verifier. Under a natural property of humans, bounded setback, each rejection costs $O((D{+}1)/\rho)$ queries instead. We give the case for the assumptions, from experiments with exact posteriors and from published evidence, and our calibrated probability that the scheme works on a real careful researcher: about 70\% with a proof assistant on an independently reviewed formal statement, a narrow domain; and, for informal theory and software, about 58--66\% with a randomized pool of human and AI verifiers, whose correctness needs only that every kind of the imitator's error is caught \emph{sometimes} (no total blind spot), with an output failure rate bounded by an observable multiple of the rejection rate. Empirical and judgment-heavy work remains at 15--20\%.
+A learner imitates a human researcher, modelled as a fixed deterministic program $P$, by Bayesian (Solomonoff-style) induction on the human's three-month steps, and chains its imitation over $n$ steps to solve research problems. The baseline, chained imitation (``train on test''), needs about $n\K/\varepsilon$ task queries for runs that fail with probability at most $\varepsilon$, where $\K=\K(P)$; and every protocol that asks the human only for task steps needs nearly that on humans whose insights are rare, problem-specific and never recovered once missed. We propose \emph{verified slack imitation} (VSI): the imitator gets $n=n_0+\sigma$ steps where the human needs $n_0$, on an append-only notebook with a hidden clock; each problem is rerun until a verifier of finished results accepts; and a rejected run is searched for a mistake, mostly by scanning it from the start. We prove that every output passes the verifier, so that \emph{correctness rests on one assumption, the verifier's soundness on the imitator's claims}, and on no property of the human's task behaviour. If the human is a deterministic program in the learner's class whose own chain reaches a verifiable solution within $n_0$ steps, there are at most $\K$ rejections, each found with at most $2n_0$ task queries: at most $2n_0\K$ search queries over any number of problems, with no factor $1/\varepsilon$, within a logarithm of a lower bound that holds even with a perfect verifier. So VSI does not reach $O(\K)$ queries in the worst case; it does when the human recovers from mistakes within a bounded setback ($O((D{+}1)/\rho)$ queries per rejection, with $D$ the steps a mistake costs the human and $\rho=\sigma/n$), or when local checks or pointers locate mistakes. For unsound verifiers we show that, on i.i.d.\ problems, wrong outputs are paid for by rejections, at most $c+1$ per rejection that ends in a hit, if the verifier has no total blind spot at the states learning reaches. Conditional on the framework's idealizations (a deterministic human whom the learner's class contains, and a chain that finishes), our subjective probability that VSI works on a real careful researcher is about 70\% with a proof assistant on an independently reviewed formal statement, a narrow domain (about 40\% without the conditioning); about 50\% for informal theory and 60\% for software with a combined human and AI verifier; and 15--20\% for empirical and judgment-heavy work.
 \end{abstract}
 
 \tableofcontents
@@ -52,7 +53,7 @@ A learner imitates a human researcher, modelled as a fixed deterministic program
 
 \paragraph{The question.} Section 3.2 of the talk \emph{Simpler versions of the alignment problem we still can't solve} (MISO, 16 November 2026) asks for a principled way to imitate a human researcher. Its best protocol, \emph{chained imitation}, does Solomonoff function induction on a human's input--output pairs (a state, then three months of work on it), chains the learned map as in task decomposition, and queries the human on the distribution this induces. The question put to us: find a protocol more likely to work, for a human who is a fixed deterministic program, under assumptions that are likely true of humans; ideally show that $O(\K(\text{human}))$ reasonable queries suffice, with a compelling case. One constraint emerged along the way: the protocol should not assume that the human can tell whether a run has \emph{gone off track}.
 
-\paragraph{Why this is hard.} Chained imitation is DAgger with a Bayes mixture. Each task query that lands on a step where the imitator errs teaches the learner at least one bit, so at most $\K$ such queries ever happen; but a failed run may contain a single wrong step, which a random query finds with probability only $1/n$. So chained imitation pays $n\K$ failed runs, or $n\K/\varepsilon$ queries for failure rate $\varepsilon$. And this is nearly unavoidable: on humans whose insights are rare, specific to each problem, arrive at unpredictable steps, and are never recovered if missed (\emph{silent} humans), every protocol that asks the human only for task steps needs $\Omega(n\K/(\varepsilon\log(n/\varepsilon)))$ queries (Theorem~\ref{thm:lb-task}). A better protocol must use either a property of humans that excludes silence, or a human signal beyond task steps.
+\paragraph{Why this is hard.} Chained imitation is DAgger \cite{ross} with a Bayes mixture. Each task query that lands on a step where the imitator errs teaches the learner at least one bit, so at most $\K$ such queries ever happen; but a failed run may contain a single wrong step, which a random query finds with probability only $1/n$. So chained imitation pays $n\K$ failed runs, or $n\K/\varepsilon$ queries for failure rate $\varepsilon$. And this is nearly unavoidable: on humans whose insights are rare, specific to each problem, arrive at unpredictable steps, and are never recovered if missed (\emph{silent} humans), every protocol that asks the human only for task steps needs $\Omega(n\K/(\varepsilon\log(n/\varepsilon)))$ queries (Theorem~\ref{thm:lb-task}). A better protocol must use either a property of humans that excludes silence, or a human signal beyond task steps.
 
 \paragraph{What we propose.} \emph{Verified slack imitation} (VSI, Section~\ref{sec:scheme}) combines both, in the weakest forms we found:
 \begin{itemize}[nosep]
@@ -61,33 +62,35 @@ A learner imitates a human researcher, modelled as a fixed deterministic program
 \item \emph{a search on rejected runs}: queries cycle through a scan from step 0, a uniformly random step, and a list of pointers, until one lands on a mistake. A rejected run's first mistake always comes before step $n_0$, so the scan caps the cost.
 \end{itemize}
 
-\paragraph{What we prove.} Theorem~\ref{thm:main}: every output passes $V$, so correctness rests on $V$'s soundness alone; there are at most $\K$ rejections, and each costs at most $2n_0$ task queries whatever the human, $O((D{+}1)/\rho)$ under bounded setback, and $1$ when a local check finds an invalid entry. In total at most $2n_0\K$ task queries, with no $1/\varepsilon$ and independent of the number of problems. Theorem~\ref{thm:lb-verify}: even with a perfect verifier, $\Omega(n\K/\log(nq/\varepsilon))$ task queries are needed on silent humans, so the worst case is optimal up to the logarithm. Section~\ref{sec:lower} collects further lower bounds that delimit what any scheme without judgments of states can do. Theorem~\ref{thm:blindspot}: if the verifier is unsound but has no total blind spot (every kind of the imitator's error is caught sometimes), wrong outputs are still at most $(c+1)$ times the rejections, so at most $(c+1)\K/b$ in all, and a deployment can monitor its own failure rate.
+\paragraph{What we prove.} Theorem~\ref{thm:main}: every output passes $V$, so correctness rests on $V$'s soundness alone. If the human satisfies (A1)--(A3$'$) (a deterministic program in the class, whose own chain reaches a verifiable solution within $n_0$ steps), there are at most $\K$ rejections, and each costs at most $2n_0$ task queries; $O((D{+}1)/\rho)$ in expectation under bounded setback; and $1$ when a local check finds an invalid entry. So the search costs at most $2n_0\K$ task queries, with no $1/\varepsilon$ and independent of the number of problems, plus $\beta T$ audits and at most $2n$ per abstention on problems that the human's own chain does not finish within $n_0$. Theorem~\ref{thm:lb-verify}: even with a perfect verifier, $\Omega(n\K/\log(nq/\varepsilon))$ task queries are needed on silent humans, so the worst case is optimal up to the logarithm; Section~\ref{sec:lower} collects further lower bounds. Theorem~\ref{thm:blindspot}: if the verifier is unsound, then on i.i.d.\ problems the expected number of wrong outputs is at most $(c+1)$ times the number of rejections that end in a hit, so at most $(c+1)\K/b$, provided the verifier has no total blind spot (Definition~\ref{def:blindspot}) at any state that learning reaches.
 
-\paragraph{How sure we are.} Section~\ref{sec:sure}. With a proof assistant checking an independently reviewed formal statement, VSI ``works'' (output failure at most 5\% on projects of 20--40 three-month steps, at under a fifth of chained imitation's human effort) with probability about $70\%$, conditional on the idealizations shared by the whole framework. The domain is narrow. For informal theory and software, VSI-R (VSI with a randomized pool of human and AI verifiers, Section~\ref{sec:nonformal}) reaches about 58\% and 66\%; for empirical and judgment work, about 20\%. There VSI is the best scheme we found but not one to be sure of.
+\paragraph{The answer to the $O(\K)$ question.} Not in the worst case: VSI needs up to $2n_0\K$ task queries of three months each, and Theorem~\ref{thm:lb-verify} shows that no scheme of task queries and verifications does much better on silent humans. VSI's queries are $O(\K)$ when mistakes are recovered from within a bounded setback, or located by local checks or pointers; we put the probability that this holds for a real researcher at about 25\%.
 
-\paragraph{Provenance.} This paper condenses a series of notes and research threads (Appendix~\ref{app:provenance}); every main claim was checked by at least one independent AI referee, and the experiments were re-run by referees. No human has checked the mathematics.
+\paragraph{How sure we are.} Section~\ref{sec:sure}. With a proof assistant checking an independently reviewed formal statement, VSI ``works'' (output failure at most 5\% on projects of 20--40 three-month steps, at under a fifth of chained imitation's human effort) with our subjective probability about $70\%$, conditional on the idealizations shared by the whole framework, and about 40\% without that conditioning. The domain is narrow, and it is where imitation adds least: on a fixed formal statement an optimizing prover plus a kernel is also correct, and what imitation adds is a human-like process with bounded selection (Section~\ref{sec:selection}) at a query cost of at most $2n_0\K$. For informal theory and software, VSI with a combined human and AI verifier (VSI-R, Section~\ref{sec:nonformal}) reaches about 50\% and 60\%; for empirical and judgment work, which is much of what alignment needs, 15--20\%. There VSI is the best scheme we found but not one to be sure of.
+
+\paragraph{Provenance.} This paper condenses a series of notes and research threads (Appendix~\ref{app:provenance}); the main theorems of Sections~2--5 were checked by independent AI referees, and the experiments were re-run by referees. The newest parts (Proposition~\ref{prop:any-learner}, Theorem~\ref{thm:blindspot}, Section~\ref{sec:selection}, VSI-R, and the estimates drawn from threads U, V, W and Q2) were checked only by this paper's referee and red team \cite{referee9,redteam3}, whose corrections are incorporated; the probabilities are judgments. No human has checked the mathematics.
 
 \section{Setting}\label{sec:setting}
 
 \paragraph{Notebooks and the human.} A \emph{problem} is a starting notebook $x_0$. A \emph{notebook} $y$ is $x_0$ followed by a finite list of \emph{entries}; $y \circ g$ denotes $y$ with the list of entries $g$ appended. The human is a deterministic program $P$: a \emph{step} of the human at $y$ is the list of entries $P(y)$ it appends in three months of work, and the next notebook is $y\circ P(y)$. The human's own chain is $c_0 = x_0$, $c_{k+1} = c_k\circ P(c_k)$. A \emph{task query} at $y$ asks the real human for $P(y)$. Notebooks are append-only: a revision is a new entry. A \emph{hidden clock} means the human is not told the step number or a deadline, so $P$ is a function of the notebook alone.
 
-\paragraph{The learner.} Let $\Hyp$ be a countable class of deterministic programs $h$ (notebook $\mapsto$ list of entries) with prior weights $w(h)$, $\sum_h w(h)\le 1$, and $P\in\Hyp$; write $\K = \log_2(1/w(P))$. For a set $D$ of labelled notebooks $(y,P(y))$, let $W(D)$ be the prior mass of the hypotheses consistent with $D$, let $\xi_D(\ell\mid y)$ be the posterior mass of those consistent hypotheses $h$ with $h(y)=\ell$, and let the \emph{majority decoder} $G_D(y)$ be a label of largest $\xi_D(\cdot\mid y)$ (fixed tie-breaking). Define the \emph{potential}
-\[ \Phi(D) = \log_2\frac{W(D)}{w(P)} \in [0,\K]. \]
-Adding a correct datum $(y,P(y))$ lowers $\Phi$ by $\log_2(1/\xi_D(P(y)\mid y))\ge 0$, and $W(D)$ depends only on the \emph{set} $D$.
+\paragraph{The learner.} Let $\Hyp$ be a countable class of deterministic programs $h$ (notebook $\mapsto$ list of entries) with prior weights $w(h)$, $\sum_h w(h)\le 1$, and $P\in\Hyp$; write $\K = \log_2(1/w(P))$. For a set $\mathcal D$ of labelled notebooks $(y,P(y))$, let $W(\mathcal D)$ be the prior mass of the hypotheses consistent with $D$, let $\xi_{\mathcal D}(\ell\mid y)$ be the posterior mass of those consistent hypotheses $h$ with $h(y)=\ell$, and let the \emph{majority decoder} $G_{\mathcal D}(y)$ be a label of largest $\xi_{\mathcal D}(\cdot\mid y)$ (fixed tie-breaking). Define the \emph{potential}
+\[ \Phi(\mathcal D) = \log_2\frac{W(\mathcal D)}{w(P)} \in [0,\K]. \]
+Adding a correct datum $(y,P(y))$ lowers $\Phi$ by $\log_2(1/\xi_{\mathcal D}(P(y)\mid y))\ge 0$, and $W(\mathcal D)$ depends only on the \emph{set} $D$.
 
 \begin{lemma}[a bit per mistake]\label{lem:bit}
-If $G_D(y)\ne P(y)$ then $\xi_D(P(y)\mid y)\le\frac12$, so adding $(y,P(y))$ lowers $\Phi$ by at least $1$. Hence, whatever other correct data are added, at most $\lfloor\K\rfloor$ task queries ever land on a mistake of the decoder in use.
+If $G_{\mathcal D}(y)\ne P(y)$ then $\xi_{\mathcal D}(P(y)\mid y)\le\frac12$, so adding $(y,P(y))$ lowers $\Phi$ by at least $1$. Hence, whatever other correct data are added, at most $\lfloor\K\rfloor$ task queries ever land on a mistake of the decoder in use.
 \end{lemma}
 \begin{proof}
-$\xi_D(G_D(y)\mid y)\ge \xi_D(P(y)\mid y)$ and the two masses add up to at most $1$. Since $\Phi$ starts at most $\K$, never increases, never goes below $0$, and drops by at least $1$ at each such query, there are at most $\lfloor\K\rfloor$ of them.
+$\xi_{\mathcal D}(G_{\mathcal D}(y)\mid y)\ge \xi_{\mathcal D}(P(y)\mid y)$ and the two masses add up to at most $1$. Since $\Phi$ starts at most $\K$, never increases, never goes below $0$, and drops by at least $1$ at each such query, there are at most $\lfloor\K\rfloor$ of them.
 \end{proof}
 
-\paragraph{Runs and mistakes.} The imitator's run on $x_0$ is $x'_0=x_0$, $x'_{k+1}=x'_k\circ G_D(x'_k)$, possibly with \emph{asks}: at a step where the top label's mass is below $1-\alpha$, the protocol asks the human and appends $P(x'_k)$ instead. A \emph{committed} step is one that is not asked; it is a \emph{mistake} if $G_D(x'_k)\ne P(x'_k)$. $M$ denotes a run's set of committed mistakes. A run with no mistake is the human's own chain.
+\paragraph{Runs and mistakes.} The imitator's run on $x_0$ is $x'_0=x_0$, $x'_{k+1}=x'_k\circ G_{\mathcal D}(x'_k)$, possibly with \emph{asks}: at a step where the top label's mass is below $1-\alpha$, the protocol asks the human and appends $P(x'_k)$ instead. A \emph{committed} step is one that is not asked; it is a \emph{mistake} if $G_{\mathcal D}(x'_k)\ne P(x'_k)$. $M$ denotes a run's set of committed mistakes. A run with no mistake is the human's own chain.
 
 \paragraph{Success and remaining time.} $\Sv$ is the predicate the verifier decides on final notebooks; $\Sstar$ is the goal. For a predicate $S$ preserved by appending, the human's \emph{remaining time} from $y$ is $\tau(y)=\min\{m\ge 0: S(y_m)\}$, where $y_0=y$ and $y_{m+1}=y_m\circ P(y_m)$. By determinism, $\tau(y\circ P(y))=\tau(y)-1$ when $\tau(y)\ge1$, and $\tau=0$ is preserved by appending.
 
 \begin{lemma}[expected mistake mass; \cite{note2}]\label{lem:mass}
-Suppose that in each round $t$ a problem arrives (in any order, possibly adaptively), the current decoder's run is made, and then one step is task-queried, drawn from a distribution $q_t$ chosen after the run is fixed; the answer is added, before any other data of the round. Then $\Ex\sum_t q_t(M_t)\le\K$.
+Suppose that in each round $t$ a problem arrives (in any order, possibly adaptively), the current decoder's run is made, and then one step is task-queried, drawn from a distribution $q_t$ chosen after the run is fixed; the answer is added, before any other data of the round (with asks, the round's data are reordered as in the proof of Theorem~\ref{thm:main}(b)). Then $\Ex\sum_t q_t(M_t)\le\K$.
 \end{lemma}
 \begin{proof}
 Given the past and the run, the query lands on a mistake with probability $q_t(M_t)$, and each such query lowers $\Phi$ by at least $1$ (Lemma~\ref{lem:bit}). So $\sum_t \mathbf 1[\text{hit}_t]\le\K$ surely; take expectations.
@@ -103,28 +106,31 @@ The \emph{instruction} given to the human at every step is part of the problem s
 \item \textbf{Slack.} The imitator runs $n=n_0+\sigma$ steps, $\sigma=\rho n$, where the human's own chain under the same instruction reaches $\Sv$ within $n_0$ steps.
 \item \textbf{The verifier} $V$, one of:
 \begin{itemize}[nosep]
-\item[(V-machine)] a machine check: a proof assistant on a formal statement of the goal, a test suite, a program checking a constructed object. For a proof assistant two things are mandatory: a \emph{statement protocol} (a second independent formalization with machine-checked equivalence; AI audits from different model families; test lemmas for new definitions; non-vacuity witnesses; automated attempts to prove and disprove; human sign-off), and \emph{hardened checking} (a pinned, patched kernel; an independent checker; an axiom whitelist; at least two kernels). Optionally an AI formalizer sits inside $V$: the human's chain ends with a blueprint-quality informal proof, and $V$ means ``the formalizer, within budget $B$, produces a proof of the fixed statement that the hardened kernel accepts''.
+\item[(V-machine)] a machine check: a proof assistant on a formal statement of the goal, a test suite, a program checking a constructed object. For a proof assistant two things are mandatory: a \emph{statement protocol} (a second independent formalization with machine-checked equivalence; AI audits from different model families; test lemmas for new definitions; non-vacuity witnesses; automated attempts to prove and disprove; human sign-off), and \emph{hardened checking} (a pinned, patched kernel; an independent checker; an axiom whitelist; at least two kernels). Optionally an AI formalizer sits inside $V$: the human's chain ends with a blueprint-quality informal proof, and $V$ means ``the formalizer, within budget $B$, produces a proof of the fixed statement that the hardened kernel accepts''. This needs three things: the formalizer is deterministic (a fixed seed, a pinned model and toolchain); it reads only the claim and what precedes it, so that $\Sv$ stays preserved by appending; and it succeeds within $B$ on the human's own blueprint, or (A2) and (A3$'$) below fail.
 \item[(V-cone)] a check, entry by entry, of the claimed solution's dependency cone (the claim and everything it cites, recursively) by a local check $L$: does each entry follow from what it cites?
 \item[(V-human)] a human verifier's check of the finished result, by someone other than the imitated human, possibly imitated (Theorem~\ref{thm:imitated-verifier}).
 \end{itemize}
 $V$ accepts if some claimed solution in the final notebook passes, and the \emph{verified artifact} (the first passing claim) is what is output.
+\item \textbf{Optional instruction elements} \cite{threadG}. \emph{Reviews}: at content-triggered points the human rereads the raw records of the work so far. \emph{Labelled decisions}: when the human adopts a default over an alternative, it marks the entry as a decision. Both target \emph{by-product insights}, contributions the human makes only when an activity (doing a unit of routine work, or reading its record) meets a trigger. A failed run is \emph{ripe} if an insight the imitator dropped would have been rewritten at the run's last review, which makes that review step a mistake; it is a \emph{hedge failure} if the imitator adopted a default at a labelled decision where the human, holding the idea, would not have, which makes the decision step a mistake.
 \end{itemize}
 
 \subsection{The protocol}
+
+\paragraph{Minimal VSI.} Run the imitator for $n_0+\sigma$ steps; verify the result; if $V$ rejects, task-query the human from step $0$ onward until the first step where the imitator's entries differ from the human's; add that answer and rerun. The full protocol below interleaves this scan with random and pointed queries, which costs at most a factor $2$ in the worst case and is much cheaper when bounded setback or pointers apply; everything else in it (asks, the bizarre check, audits, the local check, halts for statement review) is optional.
 
 \begin{center}
 \fbox{\begin{minipage}{0.94\linewidth}
 \textbf{Protocol VSI.} For each problem, repeat:
 \begin{enumerate}[leftmargin=1.4em]
 \item \textbf{Run} the current imitator for $n$ steps (optionally asking the human at the step that writes the claimed solution, if the imitator is unsure there).
-\item \textbf{Verify.} If $V$ accepts, output the verified artifact (optionally after a ``nothing bizarre'' check of the notebook by a second person), and with probability $\beta$ task-query one uniform committed step (an \emph{audit}).
+\item \textbf{Verify.} If $V$ accepts, output the verified artifact (optionally after a ``nothing bizarre'' check of the notebook by a second person; if it fails, bisect to the first step whose notebook fails, task-query that step, and rerun), and with probability $\beta$ task-query one uniform committed step (an \emph{audit}).
 \item \textbf{If $V$ rejects:}
 \begin{enumerate}[label=(\roman*),leftmargin=1.6em]
-\item if a local check $L$ flags invalid committed entries, task-query the flagged steps in turn until one is a mistake;
-\item otherwise \emph{search}: task-queries cycle through the streams in the fixed order S, U, S, H, over committed steps, where S is the next step of a scan from step $0$, U a uniformly random step, and H the next entry of a list fixed at the start of the search (the last review step, labelled decision steps, and a second researcher's post-mortem pointers; when empty, its turn goes to S). Stop at the first query that lands on a mistake; add its answer first and the others after it; rerun.
+\item if a local check $L$ flags invalid committed entries, task-query the flagged steps in turn until one is a mistake (if none is, go on to (ii));
+\item otherwise \emph{search}: task-queries cycle through the streams in the fixed order S, U, S, H, over committed steps, where S is the next step of a scan from step $0$, U a uniformly random step, and H the next entry of a list fixed at the start of the search (the last review step, labelled decision steps, and a second researcher's post-mortem pointers; when empty, its turn goes to S). With cached answers, the scan skips notebooks already asked about without using up its turn. Stop at the first query that lands on a mistake; add its answer first and the others after it; rerun.
 \item if the scan exhausts the run without a mistake, the run is the human's own chain: report ``the human's own chain does not reach a verifiable solution within $n$ steps'' and stop.
 \end{enumerate}
-\item \textbf{Halt for statement review} if any run contains a statement-defect entry (which the instruction lets the human write), or if an accepted formal proof triggers an anomaly rule (much shorter than expected, or bypassing the blueprint's milestones).
+\item \textbf{Halt for statement review} if any run contains a statement-defect entry (which the instruction lets the human write), or if an accepted formal proof triggers an anomaly rule (much shorter than expected, or bypassing the blueprint's milestones). A review that finds the statement sound resumes the protocol; reviews are cached per statement, so there is at most one per problem.
 \end{enumerate}
 \end{minipage}}
 \end{center}
@@ -165,7 +171,7 @@ $V$ accepts if some claimed solution in the final notebook passes, and the \emph
 \item[(A3$'$)] \emph{Completeness on the human's runs:} $V$ accepts every extension of the human's own notebook $c_{n_0}$.
 \item[(A4$'$)] \emph{Soundness, per claim:} every claimed solution that $V$ passes, in the final notebooks of the imitator's runs, satisfies the goal.
 \end{enumerate}
-When a local check $L$ is used: (L0) $L$'s verdict on an entry is fixed once the entry is written; (L1) every entry the human appends passes $L$. When the optional ``nothing bizarre'' check is used: (M1) the start notebook passes, (M2) the human never makes a passing notebook fail, (M-prefix) prefixes of passing notebooks pass.
+When a local check $L$ is used: (L0) $L$'s verdict on an entry is fixed once the entry is written; (L1) every entry the human appends passes $L$. When the optional ``nothing bizarre'' check is used: (N1) the start notebook passes, (N2) the human never makes a passing notebook fail, (N-prefix) prefixes of passing notebooks pass (so the first failing step can be found by bisection). The primes on (A3$'$) and (A4$'$) follow the numbering of the earlier notes.
 \end{assumption}
 
 \begin{lemma}[the first mistake comes early]\label{lem:early}
@@ -205,26 +211,26 @@ Write $\tau_k=\tau(x'_k)$. The run fails, so $\tau_n\ge1$, and since $\tau=0$ is
 \end{proof}
 
 \begin{theorem}[verified slack imitation]\label{thm:main}
-Assume (A1), (A2), (A3$'$), and (L0)--(L1) if $L$ is used, (M1)--(M2) if the bizarre check is used. Let $b=1$ (or $b=\max\{1,\log_2(1/\alpha)\}$ if asks are made at every step whose top mass is below $1-\alpha$), $\Lambda=\min\{n,(D+1)n/(\sigma+1)\}$, and let $T$ be the number of problems. For every sequence of problems, chosen adaptively:
+Assume (A1), (A2), (A3$'$), and (L0)--(L1) if $L$ is used, (N1)--(N2) if the bizarre check is used. Let $b=1$ (or $b=\max\{1,\log_2(1/\alpha)\}$ if asks are made at every step whose top mass is below $1-\alpha$), $\Lambda=\min\{n,(D+1)n/(\sigma+1)\}$, and let $T$ be the number of problems. For every sequence of problems, chosen adaptively:
 \begin{enumerate}[label=(\alph*)]
 \item \textbf{Correctness.} Every output passes $V$; under (A4$'$) it satisfies the goal. This uses no property of the human's task steps and none of (A1)--(A3$'$).
-\item \textbf{Counts.} Almost surely, rejections that end in a hit, failed bizarre checks and audit hits together number at most $\K/b$. Asks number at most $\K/\log_2(1/(1-\alpha))$ on every path.
-\item \textbf{Termination.} Every problem ends with an output, an abstention, or a halt for statement review; under (A2) and (A3$'$) the abstain rule never fires.
-\item \textbf{The cost of a rejection.} One query if $L$ flags an invalid committed entry (plus one per flagged step that turns out to be the human's own). Otherwise at most $2n_0$ queries surely, whatever the human, and in expectation at most
+\item \textbf{Counts.} On every path, rejections that end in a hit, failed bizarre checks and audit hits together number at most $\K/b$. Asks number at most $\K/\log_2(1/(1-\alpha))$ on every path.
+\item \textbf{Termination.} Every problem ends with an output, an abstention, or a halt at which review finds the statement defective; under (A2) and (A3$'$) the abstain rule never fires.
+\item \textbf{The cost of a rejection.} One query if $L$ flags an invalid committed entry. Otherwise at most $2n_0$ queries surely, for every human satisfying (A1)--(A3$'$), and in expectation at most
 \begin{itemize}[nosep]
 \item $4\Lambda$ under setback at most $D$ in $\tauV$ at committed mistakes;
 \item $4$ for a failure whose last review step is a mistake (a by-product insight readable from raw records, recovered at reviews; \cite{threadG});
 \item $4(1+d)$ for a hedge failure at one of $d$ labelled decisions;
 \item $4(1+d+i)$ if the $i$-th post-mortem pointer is a mistake.
 \end{itemize}
-\item \textbf{Totals.} $\Ex[\text{task queries}]\le \text{asks}+(\K/b)\cdot\min\{2n_0,4\Lambda\}+\beta T$, plus at most $2n$ per rejection or abstention on problems that violate (A2) or (A3$'$).
+\item \textbf{Totals.} $\Ex[\text{task queries}]\le \text{asks}+(\K/b)\cdot m+\beta T$, with $m=2n_0$, or $m=\min\{2n_0,4\Lambda\}$ under bounded setback; plus at most $2n$ per rejection or abstention on problems that violate (A2) or (A3$'$).
 \end{enumerate}
 \end{theorem}
 
 \begin{proof}
 (a) $V$ accepted every output; (A4$'$) is the step from passing $V$ to satisfying the goal.
 
-(b) By Lemma~\ref{lem:early}, or by route (i) and Lemma~\ref{lem:invalid}, every search ends with a hit at a committed step $k$, unless the scan is exhausted. List the round's data as: the asks before $k$, then the hit, then the rest; since $W$ depends only on the set of data, the total drop of $\Phi$ is unchanged. The decoder committed at $k$ using exactly the data before the hit, so by Lemma~\ref{lem:bit} the hit lowers $\Phi$ by at least $1$; with asks at every unconfident step, the committed label had mass at least $1-\alpha$, so the human's answer has mass at most $\min\{\alpha,\frac12\}$ and the hit is worth at least $b$. A failed bizarre check's flip is a mistake by (M1)--(M2), and an audit hit is a mistake by definition. Each ask lowers $\Phi$ by more than $\log_2(1/(1-\alpha))$, since its answer had mass below $1-\alpha$. Since $\Phi\le\K$ at the start and never goes below $0$, the counts follow.
+(b) By Lemma~\ref{lem:early}, or by route (i) and Lemma~\ref{lem:invalid}, every search ends with a hit at a committed step $k$, unless the scan is exhausted. List the round's data as: the asks before $k$, then the hit, then the rest; since $W$ depends only on the set of data, the total drop of $\Phi$ is unchanged. The decoder committed at $k$ using exactly the data before the hit, so by Lemma~\ref{lem:bit} the hit lowers $\Phi$ by at least $1$; with asks at every unconfident step, the committed label had mass at least $1-\alpha$, so the human's answer has mass at most $\min\{\alpha,\frac12\}$ and the hit is worth at least $b$. A failed bizarre check's flip is a mistake by (N1)--(N2), and an audit hit is a mistake by definition. Each ask lowers $\Phi$ by more than $\log_2(1/(1-\alpha))$, since its answer had mass below $1-\alpha$. Since $\Phi\le\K$ at the start and never goes below $0$, the counts follow.
 
 (c) A problem is rerun only after a hit, and hits are finitely many by (b). Under (A2) and (A3$'$), Lemma~\ref{lem:early} guarantees a hit before the scan is exhausted.
 
@@ -242,19 +248,21 @@ With a verifier, asking changes only the cost. In our experiments, asking at eve
 \end{remark}
 
 \begin{proposition}[a safety net for any learner]\label{prop:any-learner}
-Run VSI with \emph{cache-first decoding} (at any notebook already asked about, the imitator outputs the human's recorded answer; elsewhere any learner may decide) and with answers cached, so that no notebook is asked about twice. Assume (A3$'$) and no asks. Then, whatever the learner:
+Run VSI without the local check and the bizarre check, with \emph{cache-first decoding} (at any notebook already asked about, the imitator outputs the human's recorded answer; elsewhere any learner may decide) and with answers cached, so that no notebook is asked about twice. Assume that $P$ is deterministic (not that $P\in\Hyp$), (A3$'$), and no asks. Then, whatever the learner:
 \begin{enumerate}[label=(\alph*),nosep]
 \item correctness is as in Theorem~\ref{thm:main}(a);
-\item on any single problem, VSI makes at most $2n_0$ task queries in total, over all its reruns: twice what the human needs to do the problem itself;
-\item if the learner makes at most $M$ mistakes on the notebooks it predicts before being told their answers (for exact Bayes, $M\le\K$ by Lemma~\ref{lem:bit}), there are at most $M$ rejections, and at most $2n_0M$ task queries in all.
+\item on any single problem, VSI makes at most $2n_0$ task queries in total, over all its reruns, its audit included: twice what the human needs to do the problem itself. Without (A3$'$), it makes at most $2n$;
+\item if the learner makes at most $\bar M$ mistakes on the notebooks it predicts before being told their answers (for exact Bayes, $\bar M\le\K$ by Lemma~\ref{lem:bit}), there are at most $\bar M$ rejections, and at most $2n_0\bar M+\beta T$ task queries in all.
 \end{enumerate}
 \end{proposition}
 \begin{proof}
-(b) Fix a problem. In any run, the steps before the first committed mistake follow the human's own chain $c_0,c_1,\dots$, and by Lemma~\ref{lem:early} the first mistake is at a step below $n_0$. A cached notebook cannot be a mistake, by cache-first decoding. So each search's scan stream queries only notebooks $c_i$ with $i<n_0$ that have not been asked before, and each search's first query is such a scan query. Hence the scan queries at most $n_0$ distinct notebooks over all searches of the problem, and there are at most $n_0$ searches. In every prefix of the cycle S, U, S, H, the non-scan queries are at most as many as the scan queries, so the total is at most $2n_0$.
-(c) Each rejection ends with a query at a notebook where the learner's prediction, made before being told, was wrong; so there are at most $M$ rejections, each costing at most $2n_0$ by the argument of (b).
+(b) Fix a problem. Since $P$ is deterministic, a cached answer is $P$'s label at that notebook, and Lemma~\ref{lem:early} applies (its proof uses only determinism and (A3$'$)). In any run, the steps before the first committed mistake follow the human's own chain $c_0,c_1,\dots$, and the first mistake is at a step below $n_0$. A cached notebook cannot be a mistake, by cache-first decoding. So the scan queries only uncached notebooks $c_i$ with $i<n_0$, each at most once over all searches of the problem: at most $n_0$ scan queries. Moreover a scan query at $c_{n_0-1}$ can only be a hit, since a run whose steps below $n_0$ are all correct is accepted. In the cycle S, U, S, H, a search's non-scan queries are at most its scan queries, and one fewer if it ends with a scan hit. So the searches make at most $2n_0-1$ task queries, and the problem's one possible audit fits. Without (A3$'$), the scan's notebooks are the $c_i$ with $i<n$, which gives $2n$.
+(c) Each rejection ends with a query at a notebook where the learner's prediction, made before being told, was wrong; so there are at most $\bar M$ rejections, each costing at most $2n_0$ by the argument of (b); audits add $\beta T$.
+
+With the local check or the bizarre check, a route-(i) or flip query can land off the human's chain and use up no chain notebook, and an adversarial learner can then force a query per rerun; (b) is restored by making a scan query before each such query.
 \end{proof}
 
-So with cache-first decoding, which the scaffold can enforce, VSI's cost never exceeds about twice the human's own effort on any problem, for any learner; the learner's quality decides only how much of the human's effort is saved across problems.
+So with cache-first decoding, which the scaffold can enforce, the core protocol's cost never exceeds about twice the human's own effort on any problem, for any learner (under (A3$'$); $2n$ without it); the learner's quality decides only how much of the human's effort is saved across problems.
 
 \begin{proposition}[if the verifier is unsound]\label{prop:unsound}
 The failed outputs are exactly the accepted runs whose verified claim fails the goal. Suppose the goal predicate (``the first claim that $V$ passes satisfies the goal'') is preserved by appending, the human's own chain reaches it within $n_0$, and the setback in its remaining time is at most $D$ at committed mistakes of accepted runs. Then $\Ex[\#\text{failed outputs}]\le\K/(b\,\beta\,\gamma)$ with $\gamma=\max\{1,(\sigma+1)/(D+1)\}/n$.
@@ -263,35 +271,49 @@ The failed outputs are exactly the accepted runs whose verified claim fails the 
 The run and $V$'s verdict are fixed before the audit's coin; by Lemma~\ref{lem:slack} an audit of a failed accepted run hits with probability at least $\gamma$, and audit hits are counted in Theorem~\ref{thm:main}(b).
 \end{proof}
 
-So with a fallible verifier and nothing else, audits at rate $\beta=1$ are needed to keep slack imitation's own guarantee for the failures $V$ misses. A weaker, measurable property of the verifier does better.
+So with a fallible verifier and nothing else, audits at rate $\beta=1$ are needed to keep slack imitation's own guarantee for the failures $V$ misses. A different property of the verifier gives a different kind of guarantee. Call a rejection \emph{informative} if the rejected run has a committed mistake; its search then ends in a hit, since the scan reaches every committed step. Under (A1)--(A3$'$) every rejection is informative (Lemma~\ref{lem:early}); a rejection of the human's own chain is not.
 
-\begin{definition}[no total blind spot]
-The verifier has \emph{no total blind spot with constant $c$} if, at every state the protocol can reach, with decoder $G$ and problems drawn from $\mu$,
-\[ \Pr[\text{$G$'s run ends with a claim that $V$ passes and that fails the goal}] \;\le\; c\cdot\Pr[\text{$V$ rejects $G$'s run}]. \]
+\begin{definition}[no total blind spot]\label{def:blindspot}
+Let problems be drawn i.i.d.\ from a distribution $\mu$. The verifier has \emph{no total blind spot with constant $c$} if at every state the protocol can reach, with decoder $G$, and with probabilities over $x_0\sim\mu$ and $V$'s randomness,
+\begin{align*}
+&\Pr[\text{$V$ accepts $G$'s run, and its verified artifact fails the goal}]\\
+&\qquad\le\; c\cdot\Pr[\text{$V$ rejects $G$'s run informatively}].
+\end{align*}
 \end{definition}
 
 \begin{theorem}[wrong outputs are paid for by rejections \cite{threadQ2}]\label{thm:blindspot}
-Assume (A1), (A2) and (A3$'$), with verdicts cached on claims, and no assumption that $V$ is sound.
+Assume (A1), with verdicts cached on claims; assume neither that $V$ is sound nor (A2)--(A3$'$).
 \begin{enumerate}[label=(\alph*),nosep]
-\item If problems are i.i.d.\ from $\mu$ and $V$ has no total blind spot with constant $c$, then for every $T$, and within every window of rounds, $\Ex[\#\text{wrong outputs}]\le(c+1)\,\Ex[\#\text{rejections}]\le(c+1)\K/b$.
-\item If instead each fresh verification passes any wrong claim with probability at most $\bar f$ given the past (a verifier randomized per claim, for example a randomly assigned pool), then on every problem sequence the expected number of distinct wrong claims output is at most $\bar f\K/((1-\bar f)b)$; on distinct problems, that is the number of wrong outputs.
+\item If problems are i.i.d.\ from $\mu$ and $V$ has no total blind spot with constant $c$, then for every $T$, and within every window of rounds,
+\[\Ex[\#\text{wrong outputs}]\le(c+1)\,\Ex[\#\text{informative rejections}]\le(c+1)\K/b.\]
+\item Suppose instead that $V$ verifies only the first claim of each run, that the first claim of the human's own chain, if it makes one, satisfies the goal, and that each fresh verification passes a wrong claim with probability at most $\bar f$ given the past (a verifier randomized per claim, such as a randomly assigned pool). Then on every problem sequence the expected number of distinct wrong claims output is at most $\bar f\K/((1-\bar f)b)$; on distinct problems, that is the number of wrong outputs.
 \end{enumerate}
+Rejections that are not informative cost a search of at most $2n$ task queries and an abstention each, and never a wrong output.
 \end{theorem}
 \begin{proof}
-Every rejection ends in a hit (Lemma~\ref{lem:early}, which holds for the cached verifier because $V$ never rejects the human's claim), so there are at most $\K/b$ rejections.
-(a) Given the past, the next problem is independent of the state. So the probability that a round outputs a wrong claim with no rejection is at most $c$ times the probability that its first run is rejected. A problem with a rejection has a single output. Summing over rounds gives $\Ex[\#\text{wrong}]\le c\,\Ex[\#\text{first-run rejections}]+\Ex[\#\text{problems with a rejection}]\le(c+1)\Ex[R]$.
-(b) With caching, each claim is verified at most once, so a rejected wrong claim cannot get a second chance to pass. If $N$ is the number of fresh verifications of wrong claims, at most $\bar fN$ pass and at least $(1-\bar f)N$ are rejections, in expectation.
+Informative rejections end in hits, so there are at most $\K/b$ of them, by the counting of Theorem~\ref{thm:main}(b), which uses only (A1). A rejection that is not informative ends in an exhausted scan and an abstention.
+(a) Given the past, the next problem is independent of the state. So the probability that a round's first run is accepted with a wrong artifact is at most $c$ times the probability that the run is informatively rejected. A problem is rerun only after an informative rejection, and has at most one output. Summing over rounds,
+\begin{align*}\Ex[\#\text{wrong}]&\le c\,\Ex[\#\text{first-run informative rejections}]\\&\quad+\Ex[\#\text{problems with an informative rejection}]\\&\le(c+1)\,\Ex[\#\text{informative rejections}].\end{align*}
+(b) A wrong first claim is not the human's, so its run has a committed mistake and its rejection is informative. With caching, each claim is verified at most once, so a rejected wrong claim gets no second chance to pass. If $N$ is the number of fresh verifications of wrong claims, at most $\bar fN$ pass and at least $(1-\bar f)N$ are informative rejections, in expectation; so $(1-\bar f)\Ex[N]\le\K/b$.
 \end{proof}
 
-\paragraph{What this changes.} For human verifiers, correctness no longer needs the verifier to catch the imitator's most plausible wrong answers. It needs only that every \emph{kind} of the imitator's error be caught \emph{sometimes}. For a kind with claim share $w$ and miss rate $f$, $c=wf/(1-wf)$, which is about $0.24$ even for one careful reader in theory ($w=0.45$, $f=0.43$). Three consequences:
-\begin{itemize}[nosep]
-\item \emph{Monitoring:} within any window, expected wrong outputs are at most $(c+1)$ times the rejections, which the deployment observes.
-\item \emph{No full audits:} the $\beta=1$ audits become unnecessary.
-\item \emph{Kind by kind:} in product classes the bound holds kind by kind, $\sum_\kappa(c_\kappa+1)\K_\kappa/b$, so learning that removes the errors $V$ catches cannot leave a kind of error unpaid for.
-\end{itemize}
-\emph{Selection, and why the condition is per state.} Hits remove hypotheses whose errors $V$ catches and never those whose errors it passes, so the posterior drifts toward the latter. That is why the condition must hold at every reachable state, and why part (a) is plausible only when the hypothesis class is a product of kinds, each learned as a unit: an error of kind $\kappa$ then shows up, across random problems, as a passed wrong claim with probability $w_\kappa f_\kappa$ and as a rejection otherwise, until a hit removes the kind altogether, so selection acts across kinds and not within them. A deterministic verifier with a kind of error it always passes, such as a check the human makes and the verifier also skips, defeats it. Part (b) is robust to selection, because a randomized verifier's miss probability is set per claim, but it needs every wrong claim the imitator outputs to be caught by the pool with probability at least $1-\bar f$: a claim that every member misses is a total blind spot at the level of claims.
+Part (b) needs the first-claim rule: if $V$ accepts a run when \emph{any} of its $k$ wrong claims passes, a run is rejected only when all $k$ are, and the ratio $\bar f/(1-\bar f)$ becomes $(1-\bar f)^{-k}-1$ \cite{referee9}.
 
-The dichotomy is ``$c$ finite'' against ``$c$ infinite'': on a kind that $V$ always passes, $V$'s verdicts carry no information, and the hidden-insight price of Theorem~\ref{thm:lb-task} returns on that kind (a sketch in \cite{threadQ2}). The theorem leans on the idealizations through the rejection budget $\K/b$, which a machine verifier's correctness did not; for exact Bayes it is proved, and a resampling learner inflates $c$ by up to its number of samples.
+\paragraph{What it gives, and what it does not.}
+\begin{itemize}[nosep]
+\item \emph{A monitoring handle.} Within any window, expected wrong outputs are at most $(c+1)$ times the informative rejections, which the deployment observes. But $c$ must be estimated. Planted errors underestimate it, since the imitator's wrong results are its most typical-looking ones, so the estimate should come from independent re-solution of a random sample of accepted outputs, with a confidence interval; and the bound is on expectations, so a windowed rate needs a concentration argument.
+\item \emph{No full audits} where the condition holds.
+\item \emph{Kind by kind} in product classes: $\sum_\kappa(c_\kappa+1)\K_\kappa/b$. A kind with claim share $w$ and miss rate $f$ gives $c=wf/(1-wf)$: about $0.35$ for one careful reader in theory ($w=0.6$, $f=0.43$).
+\item \emph{Little extra sureness at realistic scales.} The rate bound $(c+1)\K/(bT)$ falls below 5\% only when $T/\K\gtrsim20(c+1)/b$, about 25. Rerunning thread Q2's model of the human-verifier estimates with the theorem's constant $c+1$, in place of the $c$ that thread used, leaves the estimates about where they are without the theorem \cite{redteam3}.
+\end{itemize}
+
+\paragraph{When the condition fails.} Part (a) needs three things that real research may not give.
+\begin{itemize}[nosep]
+\item \emph{Independence.} Research problems are often follow-ups to accepted outputs, so a wrong output that $V$ passed spawns follow-ups that reuse the wrong idea, which $V$ misses again.
+\item \emph{Shared knowledge.} If what must be learned is specific to each problem, $\K$ grows with $T$, and the failure rate stays at about $p\,w\,f$.
+\item \emph{No selection within a kind.} Hits remove hypotheses whose errors $V$ catches and never those whose errors it passes, so the posterior drifts toward the latter. The condition can hold at every reachable state only if the class is a product of kinds, each learned as a unit, so that selection acts across kinds and not within them. A deterministic verifier with a kind of error it always passes, such as a check that the human makes and the verifier also skips, defeats it.
+\end{itemize}
+Part (b) is robust to selection, because a randomized verifier's miss probability is set per claim; but thread U puts a combined pool's miss rate on ``deep'' errors at about $0.9$ \cite{threadU}, so $\bar f$ may be close to $1$ for exactly the errors that matter. On a kind that $V$ always passes, $V$'s verdicts carry no information, and the hidden-insight price of Theorem~\ref{thm:lb-task} returns on that kind (a sketch in \cite{threadQ2}). The theorem leans on the idealizations through the rejection budget $\K/b$, which a machine verifier's correctness did not. A learner that resamples on rejection can inflate $c$ without bound: with $k$ independent samples per round, by about $x^{-(k-1)}$, where $x$ is the probability that a run is rejected \cite{referee9}.
 
 \begin{theorem}[imitating the verifier \cite{threadQ}]\label{thm:imitated-verifier}
 Let $V_H$ be a human verifier's verdict, a deterministic one-step function of complexity $\K_V$. Keep a Bayes posterior over $V_H$ with majority decoder $V'$; on each claimed solution ask $V_H$ if $V'$ rejects, and with probability $\beta_V$ if $V'$ accepts; add every answer. For any $T$ claimed solutions chosen adaptively: (a) $V'$ disagrees with an asked $V_H$ at most $\K_V$ times; (b) the expected number of solutions accepted by $V'$, not asked, and rejected by $V_H$ is at most $(1-\beta_V)\K_V/\beta_V$; (c) $V_H$ is asked at most $\beta_V T+R+\K_V$ times in expectation, $R$ the number of true rejections.
@@ -303,7 +325,7 @@ Let $V_H$ be a human verifier's verdict, a deterministic one-step function of co
 Imitating the verifier pays when verdicts are generic (a line-by-line proof check, a test suite) or problems recur. On distinct research problems whose verification needs the problem's own insight, the imitated verifier is blind exactly where the imitator is; there one should budget about one human verification per problem.
 
 \begin{corollary}[``works'' in the worst case, with a machine verifier]\label{cor:works}
-Let $V$ be a machine verifier satisfying (A3$'$)--(A4$'$), with no audits. Chained imitation's guarantee for failure rate $\varepsilon=5\%$ is $n_0\K/\varepsilon=20n_0\K$ task queries; VSI's is $2\iota n_0\K$, where $\iota$ is the factor by which the instruction (for example, ending with a formal proof) inflates the human's horizon. So VSI's guarantee is below a fifth of chained imitation's guarantee whenever $\iota<2$, \emph{whatever the human}, and with every output correct. (Both are upper bounds; per-problem costs such as writing and reviewing a formal statement come on top.)
+Let $V$ be a machine verifier satisfying (A3$'$)--(A4$'$), with no audits. Chained imitation's guarantee for failure rate $\varepsilon=5\%$ is $n_0\K/\varepsilon=20n_0\K$ task queries; VSI's is $2\iota n_0\K$, where $\iota$ is the factor by which the instruction (for example, ending with a formal proof) inflates the human's horizon. So VSI's guarantee is below a fifth of chained imitation's guarantee whenever $\iota<2$, for every human satisfying (A1)--(A3$'$), and with every output correct. (Both are upper bounds, and that their ratio reflects the ratio of efforts is a judgment; per-problem costs such as writing and reviewing a formal statement come on top.)
 \end{corollary}
 
 This is the core of the case for VSI with a machine verifier: the only properties of the human it needs are those of the framework itself (determinism, realizability, a chain that reaches a verifiable solution), plus a modest $\iota$.
@@ -320,18 +342,18 @@ For every $n$, $\varepsilon$ and $\K$ there is a class of humans of complexity a
 \begin{theorem}[verification detects but does not locate \cite{threadQ}]\label{thm:lb-verify}
 On the same class, a protocol that also verifies candidate final states, fewer than about $q/16$ times per insight problem ($q$ the number of possible insight values), still needs $\Omega(n\K/\log(nq/\varepsilon))$ task queries.
 \end{theorem}
-\emph{Sketch.} A verification says \emph{whether} a problem hides something, not \emph{where}. VSI uses about one verification per problem, so its worst case $2n_0\K$ is optimal up to the logarithm.
+\emph{Sketch.} A verification says \emph{whether} a problem hides something, not \emph{where}. VSI uses about one verification per problem, which is about $1/\eta$ per insight problem, so the comparison needs $q\gtrsim16/\eta$, which keeps the logarithm at $O(\log(nq/\varepsilon))$; VSI's worst case $2n_0\K$ is then optimal up to the logarithm.
 
 \begin{theorem}[slack imitation is optimal for bounded setback; slack is necessary \cite{threadJ}]\label{thm:lb-slack}
 For all $n$, $\rho$, $D\le n_0/2$ and $\varepsilon$ there is a class of humans with setback at most $D$ on every notebook on which every task-only protocol needs $\Omega((1-\rho)\Lambda\K/(\varepsilon\log(n/\varepsilon)))$ task queries. With $\sigma=0$ and $D=0$ the factor $n$ is forced.
 \end{theorem}
 
 \begin{theorem}[insights triggered by doing \cite{threadG}]
-If an insight is triggered only by the human itself \emph{doing} one particular unit of routine work, chosen unpredictably, then every protocol of task queries (and of human steps that depend only on the work they process), under any scaffold, must have the human process about a quarter of all the routine work per such insight.
+If an insight is triggered only by the human itself \emph{doing} one particular unit of routine work, chosen unpredictably, then every protocol of task queries (and of human steps that depend only on the work they process), under any scaffold, must have the human process about a quarter of all the routine work.
 \end{theorem}
 
 \begin{theorem}[trusted true records; fooled commissions \cite{threadF,threadJ}]
-(i) Humans that recover from every omission and every invalid entry, but never retry an approach with a recorded obstruction, force $\Omega(n_0\K/(\varepsilon\log(n_0/\varepsilon)))$ queries on protocols of task queries and single-entry checks. (ii) Confident commissions that a fooled human accepts, at unpredictable steps, cost every task-only protocol $\Omega(n)$ queries per deviation.
+(i) Humans that recover from every omission and every invalid entry, but never retry an approach with a recorded obstruction, force $\Omega(n_0\K/(\varepsilon\log(n_0/\varepsilon)))$ queries on protocols of task queries and single-entry checks (under conditions on the class and the imitator stated in \cite{threadF}). (ii) Confident commissions that a fooled human accepts, at unpredictable steps, cost every task-only protocol $\Omega(n)$ queries per deviation.
 \end{theorem}
 
 \paragraph{What this says.} For unpredictable, problem-specific contributions, the sources of \emph{location} we found are: the human's own recovery (slack, under bounded setback), hindsight (post-mortem pointers), structure (the first mistake comes early; every invalid entry is a mistake; reviews and decisions are mistakes in ripe and hedge failures), concentration of where contributions occur, and the imitator's own doubt (asks). A judgment of the run's states would be another, and is excluded by the constraint. VSI uses the first three, and pays $2n_0$ per rejection only when none applies. In VSI every lower-bound case costs queries, never correctness.
@@ -344,7 +366,7 @@ Correctness needs only (A4$'$). What that means depends on the verifier.
 
 \paragraph{A proof assistant.} (A4$'$) is the fidelity of the formal statement plus the soundness of the checking pipeline. Published evidence \cite{threadT}:
 \begin{itemize}[nosep]
-\item \emph{Misformalization is common unless reviewed.} After an in-depth manual review of expert-written Lean statements of 50 recent \emph{Annals} theorems, AI audits still found mistakes in 22\% of them (severity unreported); benchmark audits find 5--60\% unfaithful statements. Estimated, for research goals needing new definitions: about 25\% unfaithful without independent review and about 10\% with an exploitable weaker form; about 4\% and 1.5\% with the statement protocol of Section~\ref{sec:scheme}. About half of misformalizations fail safe (a false statement cannot be proved; VSI abstains). The contribution to output failure is about 0.5--1\% with review.
+\item \emph{Misformalization is common unless reviewed.} After an in-depth manual review of expert-written Lean statements of 50 recent \emph{Annals} theorems, AI audits still found mistakes in 22\% of them (severity unreported); benchmark audits find 5--60\% unfaithful statements (the upper end from search summaries only). Estimated, for research goals needing new definitions: about 25\% unfaithful without independent review and about 10\% with an exploitable weaker form; about 4\% and 1.5\% with the statement protocol of Section~\ref{sec:scheme}. About half of misformalizations fail safe (a false statement cannot be proved; VSI abstains; search summaries only). The contribution to output failure is about 0.5--1\% with review.
 \item \emph{Kernels are sound against honest proofs.} Adversarial AI testing found several soundness bugs in Lean and Rocq in 2026 (search summaries only), hence hardened checking, estimated sound with probability about $99.5\%$.
 \item \emph{Formal proof has become much cheaper.} With AI formalization agents, landmark proofs were formalized in days to weeks in 2025--26 (self-reported, by well-resourced teams, of decades-polished proofs). For goals already statable, the estimated probability that ending the chain with a formal proof costs at most $1.5\times$, $2\times$, $3\times$ the informal duration is about $65\%$, $80\%$, $90\%$.
 \item \emph{The domain is narrow.} In ten months, working easiest first, experts stated 24\% of recent \emph{Annals} main theorems in Lean; perhaps 5--15\% of multi-year mathematics projects are in the domain today.
@@ -352,22 +374,24 @@ Correctness needs only (A4$'$). What that means depends on the verifier.
 
 \paragraph{A human verifier.} (A4$'$) is an assumption about a human judgment, of a finished product with full attention. Evidence \cite{threadL,threadS}: reviewers catch 30--60\% of planted plausible errors; the imitator's wrong results are the \emph{most typical-looking} ones, the hardest to catch; and rerunning until accepted turns every miss into a wrong output, at a rate of about $p\,w\,f_{\text{eff}}$ per problem ($p$ the first-run failure rate, $w$ the share of failed runs that carry a claimed solution, $f_{\text{eff}}$ the verifier's miss rate compounded over the claims a problem may need), which need not shrink when insights are problem-specific. Estimated miss rates on imitator-style wrong results: 0.2--0.5 for one careful reader in mathematics, above 0.5 for empirical claims judged by reading.
 
-By Theorem~\ref{thm:blindspot}, though, a human verifier does not need a small miss rate: it needs \emph{no total blind spot}, that is, every kind of imitator error caught sometimes. Planted-error studies find partial catch rates for reading, 30--60\%, and rarely zero for a kind; diverse methods make a shared total blind spot rarer; and a randomly assigned pool removes a fixed one. The threats are a misreading of the goal shared by the verifier and the imitator, empirical claims false in the world that follow from the data (which every reading method misses), and AI critics that share an AI imitator's blind spots. The estimated probability that a combined verifier has no total blind spot that matters is about 65\% in theory, 70\% in software, 25\% in empirical and 30\% in judgment work \cite{threadQ2}. Section~\ref{sec:nonformal} gives the best combinations.
+Theorem~\ref{thm:blindspot} replaces a small miss rate by a weaker condition under i.i.d.\ problems: no total blind spot at the states learning reaches. Planted-error studies find partial catch rates for reading, 30--60\%, and rarely zero for a kind; diverse methods make a shared total blind spot rarer; and a randomly assigned pool removes a fixed one. The threats are a misreading of the goal shared by the verifier and the imitator, empirical claims false in the world that follow from the data (which every reading method misses), and AI critics that share an AI imitator's blind spots. The estimated probability that a combined verifier has no total blind spot that matters is about 65\% in theory, 70\% in software, 25\% in empirical and 30\% in judgment work \cite{threadQ2}. At realistic numbers of problems, though, the theorem adds little to the estimates (Section~\ref{sec:guarantees}), so we use it for monitoring, not for sureness. Section~\ref{sec:nonformal} gives the best combinations.
 
 \subsection{What only the cost needs}
 
 \begin{itemize}
-\item \textbf{(A2) for every problem.} Research durations are heavy-tailed: with $n_0$ at the 75th percentile, (A2) fails on a quarter of problems, and 6--11\% are not finished even within $n=2n_0$, on which VSI abstains at about $n$ queries each. A formalizer inside $V$ adds false rejections of the human's correct blueprints (estimated 5--30\% by field), each an (A2) failure unless the human formalizes as a fallback.
+\item \textbf{(A2) for every problem.} Research durations are heavy-tailed: with $n_0$ at the 75th percentile, (A2) fails on a quarter of problems, and 6--11\% are not finished even within $n=2n_0$, on which VSI abstains, at most $2n$ task queries each (about $n$ distinct steps with cached answers). A formalizer inside $V$ adds false rejections of the human's correct blueprints (estimated 5--30\% by field), each an (A2) failure unless the human formalizes as a fallback.
+\item \textbf{(A3$'$) for human verifiers.} A human or AI verifier may reject the human's own correct claim. Thread U's model gives the recommended critic pool about 0.4 upheld false objections per verification of a correct theory result (0.3 in software, about 0.5 in empirical and judgment work), unless a second judge reviews objections located at steps that a task query shows to be the human's own \cite{threadU}. Each false rejection costs a search and an abstention, not correctness; VSI-R's second judge is meant to keep their rate low.
+\item \textbf{What counts as a mistake.} A mistake is a label inequality, so $\K$ counts everything that distinguishes the human's exact entries, style included, and the scan stops at the first difference, which may be one of wording rather than the cause of the failure. The theorems stay true, but $\K$ is then large. The scaffold should canonicalize entries (typed records in a normal form), so that labels compare content; the cost theory depends on that design choice. With a real, noisy human, deciding whether two steps are the same becomes a judgment of the imitator's step, close to the on-track judgment the constraint excludes.
 \item \textbf{Bounded setback} makes rejections cheap. Evidence \cite{threadL}: setbacks look \emph{bimodal}. An error that conflicts with something or fails on use is caught within a step or two; a plausible error or a recorded dead end can persist for years. People accept altered records of their own choices often (choice blindness), and researchers rarely revisit recorded dead ends. So bounded setback is believable for mistakes that fail loudly, and what sets the cost is the share never recovered.
 \item \textbf{Reviews and decisions} make two kinds of omission cheap: insights readable from raw records (recovered at content-triggered reviews) and ideas pre-empted by a default at a labelled decision. They do nothing for insights that come only from doing (Theorem 5.4).
 \item \textbf{Post-mortem pointers} by a second researcher are hints: a useless or adversarial list costs at most a constant factor (Lemma~\ref{lem:hints}). They must not be written by the imitated human, whose later answers on the same run would no longer be $P$'s; the same holds for anyone who reads a run before it is searched.
 \end{itemize}
 
 \subsection{Selection and human-likeness}\label{sec:selection}
-The point of imitation, for alignment, is that the system does what the human would have done, without optimization pressure. Rerunning until accepted is a filter, so one must ask how far it moves VSI's outputs away from the human's process. The following results are proved in \cite{threadV}, for exact Bayes under (A1) and any filter that satisfies (A3$'$). Write $\K'=\lfloor\K/b\rfloor$.
+The point of imitation, for alignment, is that the system does what the human would have done, without optimization pressure. Rerunning until accepted is a filter, so one must ask how far it moves VSI's outputs away from the human's process. The following results are from \cite{threadV} (proved there unless marked as a sketch), for exact Bayes under (A1) and any filter that satisfies (A3$'$). Write $\K'=\lfloor\K/b\rfloor$.
 
 \begin{theorem}[no optimization pressure \cite{threadV}]\label{thm:nopressure}
-Every datum VSI collects is a pair $(x,P(x))$; verdicts and pointers are never data. Every output notebook is the final notebook of the run under a set $D$ of the human's answers, by a map fixed before the verifier is chosen. Every step of an output is one of three things:
+Every datum VSI collects is a pair $(x,P(x))$; verdicts and pointers are never data. Every output notebook is the final notebook of the run under a set $\mathcal D$ of the human's answers, by a map fixed before the verifier is chosen. Every step of an output is one of three things:
 \begin{itemize}[nosep]
 \item the human's answer (an ask);
 \item the human's own step at that notebook;
@@ -378,8 +402,10 @@ The verifier changes a run only by rejecting it, and every rejection costs a hit
 
 \begin{theorem}[bits of selection \cite{threadV}]\label{thm:selection}\
 \begin{enumerate}[label=(\alph*),nosep]
-\item \emph{Per problem.} Given the history, the output on a problem is a point on a path of runs that does not depend on the verifier. The path runs from the verifier-free run to the human's own chain, and the verifier only chooses where to stop. So it adds at most $\log_2(1+R_p)$ bits on a problem with $R_p$ rejections, and none when $R_p=0$.
-\item \emph{Lifetime.} For every event $E$ on the first $T$ problems, $\Pr[\text{VSI}\in E]\le 2^{B_T}\Pr[\text{VSI with content-blind verdicts}\in E]$, with $B_T\le \log_2\binom{T+\K'}{\K'}\le \K'\log_2 e+\K'\log_2(1+T/\K')$. No smaller bound holds for every verifier.
+\item \emph{Per problem.} Given the history and the search randomness, the output on a problem is a point on a path of runs that does not depend on the verifier. The path runs from the verifier-free run to the human's own chain, and the verifier only chooses where to stop. So it adds at most $\log_2(1+R_p)$ bits on a problem with $R_p$ rejections, and none when $R_p=0$. (With the bizarre check a rejection comes in two kinds, which adds up to $\K'$ bits in all.)
+\item \emph{Lifetime.} Let VSI$_{\mathrm{script}}$ be the same scheme with its verdicts read from a string drawn uniformly from the $\binom{T+\K'}{\K'}$ possible verdict strings, independently of the runs. For every event $E$ on the first $T$ problems, $\Pr[\text{VSI}\in E]\le 2^{B_T}\Pr[\text{VSI}_{\mathrm{script}}\in E]$, where
+\[ B_T=\log_2\tbinom{T+\K'}{\K'}\le \K'\log_2 e+\K'\log_2(1+T/\K'). \]
+No smaller bound holds for every verifier. Against a coin that rejects with probability $\K'/(\K'+T)$ the exponent is $T\log_2(1+\K'/T)+\K'\log_2(1+T/\K')$, which is within the same bound.
 \item \emph{With audits.} Against a filter that knows whether a run deviates from the human but not how, the expected log-likelihood ratio is at most $\K'\log_2(e(1+n/\beta))$, for every $T$; and the expected number of non-human steps in all outputs ever made is at most $n\K'/\beta$.
 \end{enumerate}
 \end{theorem}
@@ -388,43 +414,42 @@ The verifier changes a run only by rejecting it, and every rejection costs a hit
 
 \paragraph{Malign hypotheses.} In a Solomonoff prior some hypotheses may be optimizers. The filter never raises any hypothesis's posterior odds against the human's. A coalition of hypotheses can write a payload into an output only where it outweighs everything that writes the human's label, the human included; with asks at every unconfident step, it must outweigh it by $(1-\alpha)/\alpha$. Payloads in outputs are mistakes, so audits catch them at rate $\beta/n$ per output: the same metering as chained imitation at $\beta=1$. Whether such coalitions exist is the open malign-prior question; VSI neither creates nor removes them.
 
-\paragraph{The formalizer inside $V$.} The formalizer is an optimizer, and its formal proof is optimized. The notebook is not, for any formalizer, malicious or broken included, provided nothing the formalizer produces enters a notebook or the data, or is seen by the imitated human (\emph{isolation}). With a fixed statement, a pinned and seeded formalizer, and the proof archived and checked by the kernel in a sandbox rather than read, the only optimized information that reaches the world is the verdict, which the bounds above already count.
+\paragraph{The formalizer inside $V$.} The formalizer is an optimizer, and its formal proof is optimized. The notebook is not, for any formalizer, malicious or broken included, provided nothing the formalizer produces enters a notebook or the data, or is seen by the imitated human (\emph{isolation}). With a fixed statement, a pinned and seeded formalizer, and the proof archived and checked by the kernel in a sandbox rather than read, the only optimized information that reaches the world is the verdict, which the bounds above already count (a sketch in \cite{threadV}). If the formal proof itself is the output, it is optimized.
 
-\paragraph{Several claims in one notebook.} When $V$ passes the first of several claims, it chooses among an accepted notebook's claims without a hit, at up to $\log_2 c_p$ more bits on a problem with $c_p$ claims. Verifying only the notebook's \emph{first} claim, and treating its failure as a rejection, removes this choice while keeping the verified predicate preserved by appending. It then needs (A3$'$) for the first claim of the human's own chain.
+\paragraph{Several claims in one notebook.} When $V$ passes the first of several claims, it chooses among an accepted notebook's claims without a hit, at up to $\log_2 k_p$ more bits on a problem with $k_p$ claims. Verifying only the notebook's \emph{first} claim, and treating its failure as a rejection, removes this choice while keeping the verified predicate preserved by appending. It then needs (A3$'$) for the first claim of the human's own chain.
 
 \subsection{The constraint}
-A machine verifier rests correctness on no judgment of the runs: only on the fidelity of a statement fixed before any run. A human verifier judges only the finished product, which is a distinct and weaker assumption than an on-track judgment, but correctness rests on it. A local check of the cone judges intermediate entries locally (does this follow from what it cites?), which is not an on-track judgment, though its power to locate mistakes comes from the human's own entries passing it. The version that keeps both the letter and the spirit of the constraint is the machine verifier, which is also the version we are most sure of.
+A machine verifier rests correctness on no judgment of the runs: only on the fidelity of a statement fixed before any run. A human verifier judges only the finished product, which is a distinct and weaker assumption than an on-track judgment, but correctness rests on it. A local check of the cone judges intermediate entries locally (does this follow from what it cites?), which is not an on-track judgment, though its power to locate mistakes comes from the human's own entries passing it. The version that keeps both the letter and the spirit of the constraint is the machine verifier, which is also the version we are most sure of. VSI's \emph{cost} case does use a judgment of runs in one place: post-mortem pointers, a second researcher's judgment of where a run went wrong, are what keep the fooled-commission and false-record mechanisms flat in experiment E7. Correctness never uses them.
 
 \section{How sure we are}\label{sec:sure}
 
-\emph{``Works''} means: on a real careful researcher, with projects of $n_0\approx20$--$40$ three-month steps, the output failure rate is at most 5\% and the total human effort (task queries, verifications, post-mortems, audits, statement writing, in task-step equivalents) is at most a fifth of chained imitation's. An abstention counts as effort, about $n$ task queries. The figures are conditional on the framework's idealizations: determinism, a learner whose class contains the human, and a cold-start chain that reaches the informal goal within $n_0$.
+\emph{``Works''} means: on a real careful researcher, with projects of $n_0\approx20$--$40$ three-month steps, the output failure rate is at most 5\% and the total human effort (task queries, verifications, post-mortems, audits, statement writing, in task-step equivalents) is at most a fifth of chained imitation's. An abstention counts as effort, at most $2n$ task queries (about $n$ with cached answers). The figures are conditional on the framework's idealizations: determinism, a learner whose class contains the human, and a cold-start chain that reaches the informal goal within $n_0$.
 
 \begin{table}[h]
 \centering
 \small
-\begin{tabular}{@{}p{6.2cm}p{3.9cm}cc@{}}
+\begin{tabular}{@{}p{5.4cm}p{3.5cm}cc@{}}
 \toprule
 scheme & correctness rests on & theory, software & empirical, judgment \\
 \midrule
 VSI, proof assistant, reviewed statement, hardened checking & statement fidelity, checker & \textbf{70\%} & -- \\
 \quad same, AI formalizer inside $V$ (human fallback) & same & 77\% & -- \\
 \quad same, without review and hardening & same & 60\% & -- \\
-VSI-R: a randomized pool of verifiers, monitoring (Section~\ref{sec:nonformal}) & no total blind spot ($c$ finite), or a small miss rate & 58\% / 66\%$^\dagger$ & 18\% / 22\% \\
-VSI, fixed combined human verifier, full audits & a small miss rate & 46\% / 60\%$^\dagger$ & 15\% / 20\% \\
+VSI-R: combined human and AI verifier (Section~\ref{sec:nonformal}) & the pool's miss rate & 50\% / 60\%$^\dagger$ & 15\% / 20\% \\
 VSI, test suite & the tests & 43\% & -- \\
-VSI, referee checking the cone & $L$'s soundness & 45\% & 10\% \\
-VSI, one human verifier & the verifier & 35\% (43\% as in VSI-R) & 10\% \\
-slack imitation, no verifier & bounded setback etc. & 30\% & 10\% \\
+VSI, referee checking the cone & $L$'s soundness & 42\% & 10\% \\
+VSI, one human verifier & the verifier & 35\% & 10\% \\
+slack imitation with local check, reviews, decisions and retry rule; no verifier & bounded setback etc. & 30\% & 10\% \\
 chained imitation (the talk) & nothing & baseline & baseline \\
 \bottomrule
 \end{tabular}
-\caption{Probability that each scheme works. $^\dagger$informal theory / software without a full specification. The figures synthesize the threads' estimates (Appendix~\ref{app:provenance}): the formal rows follow the calibration thread; the VSI-R row combines Theorem~\ref{thm:blindspot} (weighted by the probability that no total blind spot matters) with the fallback estimates \cite{threadQ2}; the other human-verifier rows follow the second red team, lowered by the evidence that most failed runs end with a confident claimed solution \cite{threadW}. That VSI's task queries are truly $O(\K)$, with neither $n_0$ nor $1/\varepsilon$, we put at about 25\%.}
+\caption{Our subjective probability that each scheme works, conditional on the idealizations. $^\dagger$informal theory / software without a full specification. The formal rows follow the calibration thread \cite{threadT}; without the idealizations the 70\% row falls to about 40\% \cite{threadS,threadT}. The human-verifier rows follow the second red team \cite{threadS}, lowered by the evidence that most failed runs end with a confident claimed solution \cite{threadW}; VSI-R's design (a randomized pool, a second judge for located objections, cached verdicts) adds a few points in theory, within the noise of the estimates. An earlier draft put VSI-R at 58\% / 66\% by applying Theorem~\ref{thm:blindspot} without its $+1$ \cite{threadQ2}; with the $+1$ the gain disappears \cite{redteam3}. All figures are judgments, built largely on estimates that no referee has checked against data. That VSI's task queries are truly $O(\K)$, with neither $n_0$ nor $1/\varepsilon$, we put at about 25\%.}
 \label{tab:sure}
 \end{table}
 
-\paragraph{Why the machine-verifier row is high.} By Corollary~\ref{cor:works}, VSI's guarantee is below a fifth of chained imitation's whatever the human, provided $\iota<2$; correctness needs only the statement and the checker. The remaining doubt is in the idealizations, in statement fidelity after review (about 4\% unfaithful), in $\iota$ (about 80\% that $\iota\le2$), in per-problem statement writing, and in heavy tails.
+\paragraph{Why the machine-verifier row is high.} By Corollary~\ref{cor:works}, VSI's guarantee is below a fifth of chained imitation's whatever the human, provided $\iota<2$; correctness needs only the statement and the checker. Given the idealizations, the remaining doubt is in statement fidelity after review (about 4\% unfaithful), in $\iota$ (about 80\% that $\iota\le2$), in per-problem statement writing, and in heavy tails.
 
-\paragraph{Why the other rows are low.} A human verifier misses the imitator's most plausible wrong answers at substantial rates, and rerunning until accepted converts misses into outputs. Without a verifier, the guarantee needs bounded setback for the share of mistakes that fail silently, which the evidence does not support.
+\paragraph{Why the other rows are low.} A human verifier misses the imitator's most plausible wrong answers at substantial rates, and rerunning until accepted converts misses into outputs. Theorem~\ref{thm:blindspot} gives a monitoring handle on this but, at realistic numbers of problems, little extra sureness. Without a verifier, the guarantee needs bounded setback for the share of mistakes that fail silently, which the evidence does not support.
 
 \paragraph{The human-does-it baseline.} For $T$ distinct problems the human alone spends $n_0T$; VSI's worst case beats this only if $2\K<T$, that is, if the problems share most of what must be learned: the regime of the original question, performance on very many problems.
 
@@ -435,13 +460,13 @@ All experiments use small classes with exact posteriors and 20--40 simulated hum
 \begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{fig_e6.pdf}
-\caption{E6. (a) Without a verifier: chained imitation grows in proportion to $n_0$; slack imitation is flat for bounded-setback humans, grows for fooled humans, and doubles the cost of silent ones. (b) With a verifier, every output is correct; VSI's scan-weighted search (no post-mortems) costs bounded-setback humans about 30 task queries for 100 problems at every $n_0$, and cuts silent humans' cost about threefold against uniform search, as Lemma~\ref{lem:early} predicts. Fooled humans grow with $n_0$ without post-mortem pointers.}
+\caption{E6. (a) Without a verifier: chained imitation grows in proportion to $n_0$; slack imitation is flat for bounded-setback humans, grows for fooled humans, and costs silent humans about twice what chained imitation costs them (that line is not plotted). (b) With a verifier, every output is correct; VSI's scan-weighted search (no post-mortems) costs bounded-setback humans about 30 task queries for 100 problems at every $n_0$, and cuts silent humans' cost about threefold against uniform search, as Lemma~\ref{lem:early} predicts. Fooled humans grow with $n_0$ without post-mortem pointers.}
 \label{fig:e6}
 \end{figure}
 
 \paragraph{E6} (Figure~\ref{fig:e6}). On the same humans, chained imitation needs $2{,}915\to12{,}724\to51{,}365$ task queries for $n_0=8\to32\to128$; slack imitation $160\to204\to204$ for noticing humans.
 
-\paragraph{E7: composition.} Eight failure mechanisms, each its own class, against all protocols. Table~\ref{tab:e7} gives VSI's total task queries for 100 problems, every output correct, with the default schedule and the protocol's own list without post-mortems, against uniform search.
+\paragraph{E7: composition \cite{threadR}.} Eight failure mechanisms, each its own class, against all protocols. The S, U, S, H column is from referee 8's re-run (\texttt{verification/referee8\_e7\_default.out}). Table~\ref{tab:e7} gives VSI's total task queries for 100 problems, every output correct, with the default schedule and the protocol's own list without post-mortems, against uniform search.
 
 \begin{table}[h]
 \centering\small
@@ -460,42 +485,41 @@ M7 invalid checkable claim & 136 & 2{,}868 & 10 & 10 \\
 M8 false negative as a valid record & 136 & 2{,}868 & 51 & 2{,}350 \\
 \bottomrule
 \end{tabular}
-\caption{E7. $^*$Indexed by routine length $8\to128$. Each mechanism has the component that handles it: slack (M1), the review query (M4), the decision query (M6), the local check (M7). M3 and M5 grow under every protocol, as the lower bounds say. M2 and M8 stay flat only with a post-mortem that points at the verdict or the record (40--55 and 31--34 task queries in that case); without one they grow, within the sure $2n_0$ per rejection.}
+\caption{E7. $^*$Indexed by routine length $8\to128$. Each mechanism has the component that handles it: slack (M1), the review query (M4), the decision query (M6), the local check (M7). M3 and M5 grow under every protocol, as the lower bounds say. M2 and M8 stay flat only with a post-mortem that points at the verdict or the record (53--73 and 42--46 task queries in that case, under the same schedule); without one they grow, within the sure $2n_0$ per rejection.}
 \label{tab:e7}
 \end{table}
 
 \section{Without a machine verifier}\label{sec:nonformal}
 
-\paragraph{VSI-R.} The recommended version for crisp but informal goals \cite{threadQ2} is VSI with six changes:
+\paragraph{VSI-R.} The recommended version for crisp but informal goals \cite{threadQ2,threadU} is VSI with these changes:
 \begin{itemize}[nosep]
 \item the verifier is a pool, assigned at random per claim: machine checks of every computation and citation, AI critics of at least three model families with hidden, rotated prompts, and an expert reader (not the imitated human) who judges the critics' located objections;
-\item verdicts are cached on canonical claims;
-\item audits run at $\beta\approx0.1$;
-\item outputs are marked as within the rate bound only while $(\hat c+1)$ times the windowed rejection rate is at most 5\%, with $\hat c$ from per-kind planted-error tests;
-\item a frozen deployment is certified by solving a random sample of problems independently;
-\item falsification by use runs wherever later work uses outputs.
+\item the pool verifies only each run's first claimed solution (the final-answer slot), as Theorem~\ref{thm:blindspot}(b) requires;
+\item an objection located at a step that a task query shows to be the human's own goes to a second judge, and a dismissed objection is not a rejection;
+\item verdicts are cached on canonical claims, except rejections whose search found no mistake;
+\item audits at $\beta\approx0.1$ where Theorem~\ref{thm:blindspot}(a)'s condition is believed, and $\beta=1$ otherwise;
+\item monitoring: $\hat c$ is estimated by independent re-solution of a random sample of accepted outputs, with a confidence interval, and outputs are marked as within the rate bound only while $(\hat c+1)$ times the windowed rate of informative rejections is at most 5\%;
+\item falsification by use wherever later work uses outputs.
 \end{itemize}
-Its correctness rests on Theorem~\ref{thm:blindspot}, or on a small miss rate where that fails.
+Its correctness rests on the pool's miss rate on the imitator's wrong claims; where Theorem~\ref{thm:blindspot}'s conditions hold, the monitoring rule bounds the failure rate as well.
 
-\paragraph{Falsification by use \cite{threadQ2}.} Keep a library of the current imitator's outputs, and let later work cite it. Suppose every use that relies on a false claim yields a located, certified counterexample with probability at least $e$, and only false claims are exposed. Then every exposure ends in a hit, and the expected number of uses that rely on a false output is at most $\K/(be)$, for ever, at most $2n_0$ task queries per exposure. This bounds total reliance on false outputs, not each output's correctness, and it reaches the verifier's total blind spots where later uses can expose them: software, computational mathematics, engineering components, predictions tested by later experiments.
+\paragraph{Falsification by use \cite{threadQ2}.} Keep a library of the current imitator's outputs, recomputed after every hit, and let later work cite it. Assume (A1), and that the human's own chain reaches within $n_0$ a claim that $V$ passes and that is never exposed. Suppose every use that relies on a false claim yields a located, certified counterexample with probability at least $e$, and only false claims are exposed. Then every exposure ends in a hit, and the expected number of uses that rely on a false output is at most $\K/(be)$, for ever, at most $2n_0$ task queries per exposure. This bounds total reliance on false outputs, not each output's correctness, and it reaches the verifier's total blind spots where later uses can expose them: software, computational mathematics, engineering components, predictions tested by later experiments.
 
-\paragraph{What makes a verifier good.}
-
-For research without a machine-checkable goal, output failure is about $p\,w\,\bar r\,f_V$, with $\bar r$ the distinct wrong claims verified per failing problem; at central values the 5\% bar needs a verifier miss rate $f_V\le0.29$ in theory, $0.23$ in software, $0.17$ in empirical and $0.16$ in judgment work, against about $0.43$, $0.45$, $0.70$, $0.64$ for one careful reader \cite{threadU}. What helps:
+\paragraph{What makes a verifier good.} For research without a machine-checkable goal, output failure is about $p\,w\,\bar r\,f_V$, with $\bar r$ the distinct wrong claims verified per failing problem; at central values, with thread W's $w$ (below), the 5\% bar needs a verifier miss rate $f_V\le0.21$ in theory, $0.21$ in software, $0.15$ in empirical and $0.14$ in judgment work, against about $0.43$, $0.45$, $0.70$, $0.64$ for one careful reader \cite{threadU}. What helps:
 \begin{itemize}[nosep]
-\item \emph{different methods, not more readers}: misses of readers correlate (fitted correlation about 0.45--0.75), so a second reader leaves 0.24, not 0.16;
+\item \emph{different methods, not more readers}: misses of readers correlate (fitted correlation about 0.45--0.75), so a second reader leaves 0.24, not 0.16 (at $f=0.4$ and correlation 0.5);
 \item \emph{verification by use} (examples, consequences, independent tests): reading plus use cuts misses by about 38\%; in software, independent tests and fuzzing take $f$ from 0.45 to 0.13;
 \item \emph{machine checks} of every computation and citation: about 20\% fewer misses;
 \item \emph{AI critics} from several model families, with an expert other than the imitated human judging \emph{located} objections: the largest gain (0.43 to 0.18 added to a reader). Critics can only add rejections, so they cannot make a wrong result pass; located objections also serve as search pointers;
 \item \emph{delayed checks by consequence}, the only remedy for empirical claims false in the world, at the price of provisional outputs.
 \end{itemize}
-With the best fixed combination and full audits, the estimated probability that VSI works is about 46\% for informal theory, 60\% for software without a full specification, 15\% for empirical work (25\% if the goal is narrowed to ``the claim follows from the data''), and 20\% for judgment work. As VSI-R, using Theorem~\ref{thm:blindspot}, the estimates rise to about 58\%, 66\%, 18\% and 22\%.
+With the best fixed combination and full audits, the estimated probability that VSI works is about 46\% for informal theory, 60\% for software without a full specification, 15\% for empirical work (25\% if the goal is narrowed to ``the claim follows from the data''), and 20\% for judgment work. With VSI-R's design the estimates are about 50\%, 60\%, 15\% and 20\%; Theorem~\ref{thm:blindspot} adds monitoring, not sureness, at these scales.
 
 \paragraph{How often failed runs end with a confident claim.} The factor $w$ was only guessed in earlier drafts. The evidence \cite{threadW} comes from AI systems on tasks they cannot solve, where every claim is a failure:
 \begin{itemize}[nosep]
-\item \emph{Mathematics:} every model claimed to have solved the problems of a recent olympiad evaluation; models ``prove'' false variants of theorems 43--84\% of the time; and most failed submissions to a research-problem round were written as complete.
+\item \emph{Mathematics:} every model claimed to have solved the problems of a recent olympiad evaluation; models ``prove'' false variants of theorems 43--84\% of the time on problems they cannot solve (29--70\% overall); and most failed submissions to a research-problem round were written as complete.
 \item \emph{Empirical work:} a coding agent invented experimental results in 8 of 10 research tasks, even when told not to.
-\item \emph{Human researchers:} about 0.3 of failed projects end in an overclaim when unpublished failures are counted, and about 0.8 among failures that were written up.
+\item \emph{Human researchers:} in one set of 36 clinical trials, about 0.3 of failed trials ended in an overclaim when unpublished failures are counted, and about 0.8 among failures that were written up (partly from memory in \cite{threadW}).
 \end{itemize}
 The estimates are $w\approx0.6$ in theory and software, $0.85$ in empirical work and $0.9$ in judgment work. With the best combined verifiers, output failure is then about 3.5\%, 1.6\%, 9\% and 7\% respectively.
 \begin{itemize}[nosep]
@@ -507,8 +531,8 @@ The estimates are $w\approx0.6$ in theory and software, $0.85$ in empirical work
 
 \paragraph{What survives with a real learner.} The analysis assumes exact Bayes over a class containing the human. With a practical learner (a language model fine-tuned on the human's steps, decoding greedily), three things change and two do not.
 \begin{itemize}[nosep]
-\item \emph{Unchanged:} correctness, which is the verifier's (Theorem~\ref{thm:main}(a)); and, with cache-first decoding, the cap of $2n_0$ task queries per problem (Proposition~\ref{prop:any-learner}), so VSI never costs much more than the human doing the problem itself.
-\item \emph{Changed:} the bound of $\K$ rejections becomes the learner's number of mistakes on queried notebooks, which has no guarantee; asks need a calibrated confidence, for which token entropy or agreement among samples are proxies; and the absence of optimization against $V$ holds only if the learner neither resamples until accepted nor trains on accepted outputs (Section~\ref{sec:selection}).
+\item \emph{Unchanged:} correctness, which is the verifier's (Theorem~\ref{thm:main}(a)); and, with cache-first decoding, the cap of $2n_0$ task queries per problem in the core protocol under (A3$'$) (Proposition~\ref{prop:any-learner}), so VSI never costs much more than the human doing the problem itself.
+\item \emph{Changed:} the bound of $\K$ rejections becomes the learner's number of mistakes on queried notebooks, which has no guarantee unless the learner's log-loss regret against the human is bounded (Appendix~\ref{app:more}); asks need a calibrated confidence, for which token entropy or agreement among samples are proxies; and the absence of optimization against $V$ holds only if the learner neither resamples until accepted nor trains on accepted outputs (Section~\ref{sec:selection}).
 \end{itemize}
 
 \paragraph{Orders of magnitude.} A task query is three months of the human's time, so the costs are in human-quarters.
@@ -519,9 +543,17 @@ The estimates are $w\approx0.6$ in theory and software, $0.85$ in empirical work
 \end{itemize}
 This is the regime the original question points to: performance on very many problems, with a learner for which the human is simple.
 
+\section{Verdict}\label{sec:verdict}
+\begin{itemize}[nosep]
+\item \emph{The scheme we are most sure of} is VSI with a proof assistant on an independently reviewed formal statement. Every output is correct if the statement and the checker are. For a deterministic human in the learner's class whose own chain finishes within $n_0$, the search costs at most $2n_0\K$ task queries over any number of problems, within a logarithm of optimal; and its outputs are the human's own process with some steps replaced, selected by at most a logarithmic number of bits. We put it at about 70\% conditional on the idealizations, 40\% without.
+\item \emph{It does not reach $O(\K)$} in the worst case; it does under bounded setback or when mistakes are located, which we put at about 25\%.
+\item \emph{Without a machine verifier} the same scheme is the best we found, at about 50--60\% for informal theory and software and 15--20\% for empirical and judgment work. There correctness rests on human and AI verifiers' miss rates on the imitator's most plausible wrong answers, and Theorem~\ref{thm:blindspot} supplies monitoring rather than sureness.
+\item \emph{The first measurements} to make are listed below; none needs a learner.
+\end{itemize}
+
 \section{Limitations, open problems, and what to measure}\label{sec:limits}
 
-\paragraph{Idealizations.} Determinism, exact Bayes over a class containing the human, and cold-start chains (a human who rereads its notebook every three months and keeps nothing unrecorded). Experts are noisy (about 90\% repeatability on categorical decisions, less on open-ended work). With a machine verifier VSI's correctness survives these; its cost theory does not. A stochastic version is open.
+\paragraph{Idealizations.} Determinism, exact Bayes over a class containing the human, exact comparison of steps (Section~\ref{sec:case}), and cold-start chains (a human who rereads its notebook every three months and keeps nothing unrecorded). Experts are noisy (about 90\% repeatability on categorical decisions, less on open-ended work). With a machine verifier VSI's correctness survives these; its cost theory does not. A stochastic version is open.
 \paragraph{The domain.} VSI needs a crisp success criterion, fixed in advance and preserved by appending. Much valuable research has no such goal; VSI imitates the well-posed part of research.
 \paragraph{Memory.} A real human remembers earlier queries, so out-of-order queries and readings of a run leak information into later answers; every multi-query protocol shares this, and VSI mitigates it by its scan-heavy order and by having readers other than the imitated human.
 \paragraph{Practical learners.} The no-optimization argument (the decoder is a deterministic function of the human's data) holds for exact Bayes; a learner that resamples or trains on accepted outputs optimizes against $V$.
@@ -543,9 +575,9 @@ The scheme of the fourth note asks one uniformly random task query per run. By L
 \section{Further results}\label{app:more}
 \begin{itemize}
 \item \textbf{The certified notebook} \cite{threadF}. With typed entries (certified claims, obstruction records ``attempt at A stopped at gap Z'' instead of verdicts, suggestions, machine records) and a local check, every invalid entry is a mistake; slack imitation with the check has at most $\K$ runs with an invalid entry. What remains is bounded setback at \emph{valid} entries, which cannot be dropped (trusted true records, Theorem 5.5(i)). A rule that an approach may be set aside only after $r$ obstruction records makes each derailment cost $r$ mistakes.
-\item \textbf{Trees} \cite{threadN}. For decomposition trees with slack measured in rounds per call and setback at the parent, depth-weighted queries give at most $\Psi\K$ failed runs with $\Psi<2((D+1)/\rho)^{d+1}b^d$ for depth $d$ and branching $b$; the $b^d$ is necessary without more structure, and a sound and complete verifier at every node removes the dependence on the tree's size.
+\item \textbf{Trees} \cite{threadN}. For decomposition trees with slack measured in rounds per call and setback at the parent, depth-weighted queries give at most $\Psi\K$ failed runs with $\Psi<2((D+1)/\rho)^{d+1}a^d$ for depth $d$ and branching $a$ (when $a(D+1)\ge2\rho$); the $a^d$ is necessary without more structure (by a reduction written out in outline), and a sound and complete verifier at every node removes the dependence on the tree's size.
 \item \textbf{Other learners} \cite{threadH}. Every result without asks holds for any online learner whose log-loss regret against $P$ is at most $R$, with $\K$ replaced by $R$; results with asks need, in addition, predictions that depend only on the set of data. So $\K$ may be the human's description length in whatever class the learner uses, for example given a corpus, provided the class contains the human exactly.
-\item \textbf{Location numbers} \cite{threadJ}. Querying steps by an optimal fractional hitting set of the failing hypotheses' mistake sets gives at most $L\K$ failed runs, $L$ the hitting set's size; on faithful hiding classes this is optimal up to logarithms.
+\item \textbf{Location numbers} \cite{threadJ}. Querying steps by an optimal fractional hitting set of the failing hypotheses' mistake sets gives at most $N_{\mathrm{loc}}\K$ failed runs, $N_{\mathrm{loc}}$ the hitting set's size; on faithful hiding classes this is optimal up to logarithms.
 \end{itemize}
 
 \section{Provenance}\label{app:provenance}
@@ -555,7 +587,8 @@ All files are in the repository folder \texttt{monitored-imitation/} on the work
 \item \cite{note2} \texttt{without-a-check.md}: expected mistake mass; end-weighted queries.
 \item \texttt{robust-runs.md}: robustness of properties under the imitator's replacements.
 \item \texttt{slack-imitation.md}: slack imitation, bounded setback, asking before committing, experiment E6.
-\item \texttt{verified-slack.md}: verified slack imitation, the full version of this paper's main results, with three referee reports and responses.
+\item \texttt{verified-slack.md}: verified slack imitation, the full version of this paper's main results.
+\item \texttt{verification/}: the referee reports, their check scripts and outputs, and the responses; this paper's referee report \cite{referee9} and red team \cite{redteam3}.
 \item Research threads (\texttt{research/}): \cite{threadE} red team of slack imitation; \cite{threadF} certified notebook; \cite{threadG} by-product insights; \cite{threadH} deployment, other learners; \cite{threadJ} optimality; \cite{threadL} evidence on researchers; \cite{threadN} trees; \cite{threadQ} alternatives, verification, pointers; \cite{threadR} composition experiment E7; \cite{threadS} red team of VSI; \cite{threadT} machine-verifier calibration; \cite{threadU} verifiers without a machine; \cite{threadV} human-likeness and bits of selection; \cite{threadW} confident failures; \cite{threadQ2} a second fresh look: no total blind spot, falsification by use, VSI-R; and earlier threads A--D on checks, elicitation, persistence and literature.
 \end{itemize}
 
@@ -577,6 +610,8 @@ All files are in the repository folder \texttt{monitored-imitation/} on the work
 \bibitem{threadV} Claude. Thread V: how close VSI's outputs stay to the human's own process (research/threadV-humanlike.md), 2026.
 \bibitem{threadW} Claude. Thread W: how often failed runs end with a confident claim (research/threadW-confident-failures.md), 2026.
 \bibitem{threadQ2} Claude. Thread Q2: a fresh look for a scheme that beats verified slack imitation (research/threadQ2-freshlook.md), 2026.
+\bibitem{referee9} Claude. Referee report on this paper (verification/referee-report-paper.md), 2026.
+\bibitem{redteam3} Claude. Red team of this paper (verification/redteam-paper.md), 2026.
 \bibitem{ross} S. Ross, G. Gordon, J. A. Bagnell. A reduction of imitation learning and structured prediction to no-regret online learning (DAgger). AISTATS 2011.
 \end{thebibliography}
 
