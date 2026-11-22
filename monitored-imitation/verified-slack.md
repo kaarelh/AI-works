@@ -542,6 +542,14 @@ Thread N extends slack to decomposition trees: extra rounds per call, with setba
 * *Numbers.* In a toy with exact Bayes, 6.7–17 task queries per rejection, against 120–351 for the chain scan. With a round of a working day, thread Y estimates p·d + r₀ ≈ 7–45 days per rejection for blueprints like Carleson's (179 lemmas, 28 contributors, statements formalized first, lemmas proved from local statements).
 * *Probability* (thread Y): about 45% (55% and 31%, averaged and rounded up) that a careful mathematician following the blueprint instruction gets output failure ≤ 5% and at most 3(p·d + r₀)K task queries, conditional on the idealizations; 55% for formalization-style work, 35% for new research.
 
+**Noisy and research-shaped blueprints (thread AA, [`research/threadAA-noisy-blueprints.md`](research/threadAA-noisy-blueprints.md)).**
+* *Noise* [proved]. With a human that deviates from a deterministic core at rate δ < ½ per round (fresh at each query), a Bayes learner over stochastic round-level hypotheses decoding the posterior mode, and the mode tree as reference (every call of it proves within r₀): the kernel's records, which carry no noise, pick at most p·d + r₀ rounds containing the run's first deviation from the mode tree. Asking once at each on every rejection gives E[task queries] ≤ (p·d + r₀)·K/(1 − h(δ)). A sequential variant needs no parameters and handles abandonment.
+* *Necessary:* fresh-noise re-asks, stochastic hypotheses, and a dominant label per round (benign ties cost kl(1 − δ‖k/(k+1)) bits per mistake instead of 1 − h(δ)).
+* *Late lemmas:* Σπ is necessary for any search of the run's own rounds; a reliance rule ("pose a lemma no later than the round that first cites it") bounds π by the human's own first reliance.
+* *Context:* frozen downward hints are free; anything returned upward beyond records and abandonment reasons breaks the search.
+* *Simulation:* every rejection met the bound; rejections at δ = 0.1 were 1.2–1.3× those at δ = 0.
+* *Probability* without conditioning on determinism (conditional on realizability): about 25% (35% formalization-style, 15% research).
+
 **Informal blueprints (thread Y2, [`research/threadY2-informal-blueprints.md`](research/threadY2-informal-blueprints.md)).** With a fallible node verifier N (for example a VSI-R pool), the blueprint search's cost bound survives if N's verdicts are a fixed function of the claim (cached, seeded by a hash of the claim) and the root verifier V names the claim it objects to. A *repair-first* rule (when V names a claim and a second judge upholds the objection, overwrite N's cached verdict with "fail" and rerun, with no task query) gives at most (p·d + r₀ + D·φ_max)·K/b task queries [proved], where φ counts N's false fails on the human's own claims in a call. In thread Y2's toy, 6.3–6.8 task queries per hit at node error rates of 0–30%, against 115–120 for the chain scan. Probability of meeting output failure ≤ 5% and ≤ 3(p·d + r₀)K in informal theory: about 15%; about 40% under the weaker "works", no better than chain VSI-R.
 
 ## 10. What to measure first
@@ -607,6 +615,7 @@ None of these needs a learner.
 | how often failed runs end with a confident claim (w) | thread W ([`research/threadW-confident-failures.md`](research/threadW-confident-failures.md)) |
 | formal blueprint trees: own-tree search, (p·d + r₀)K/b | thread Y ([`research/threadY-formal-trees.md`](research/threadY-formal-trees.md)) |
 | a non-deterministic human: canonical style, deviations, VSI-D | thread Z ([`research/threadZ-stochastic-human.md`](research/threadZ-stochastic-human.md)) |
+| noisy and research-shaped blueprints | thread AA ([`research/threadAA-noisy-blueprints.md`](research/threadAA-noisy-blueprints.md)) |
 | informal blueprints, fallible node verifiers, repair first | thread Y2 ([`research/threadY2-informal-blueprints.md`](research/threadY2-informal-blueprints.md)) |
 | calibration of the machine verifier: misformalization, formalization cost, kernel soundness, domain | thread T ([`research/threadT-formal.md`](research/threadT-formal.md)) |
 | verifiers without a machine: combined protocols, correlated misses, AI critics | thread U ([`research/threadU-nonformal.md`](research/threadU-nonformal.md)) |
