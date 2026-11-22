@@ -458,9 +458,69 @@ def part_e():
           "; log2(1/(1-q)) <= (beta/n) log2 e:", math.log2(1 / (1 - q)) <= beta / nn * math.log2(math.e))
 
 
+def part_f():
+    hdr("F. Theorem 4.13 (no total blind spot; added in the revision of 07:51) and the VSI-R figures")
+    rng = random.Random(13)
+    fbar, kinds, T = 0.2, 200, 20000
+    print("F1. Theorem 4.13(b) with several claims per notebook (V accepts if SOME claim passes, as in Section 3.1).")
+    print(f"    Model: {kinds} kinds, each learned by one hit; a problem of an unlearned kind ends with k fresh, distinct")
+    print(f"    wrong claims; the randomized V passes each fresh wrong claim with probability fbar = {fbar}.")
+    for k in [1, 2, 3, 5]:
+        wrong, rej = 0, 0
+        learned = [False] * kinds
+        for t in range(T):
+            kk = rng.randrange(kinds)
+            if learned[kk]:
+                continue
+            passed = any(rng.random() < fbar for _ in range(k))
+            if passed:
+                wrong += 1           # an accepted wrong claim: output, no hit
+            else:
+                rej += 1             # every claim rejected: the run is rejected, the search hits, the kind is learned
+                learned[kk] = True
+        exact = (1 - (1 - fbar) ** k) / (1 - fbar) ** k
+        print(f"    k = {k}: wrong outputs {wrong}, rejections {rej}; wrong/rejection = {wrong/max(rej,1):.2f} "
+              f"(exact {exact:.2f}); paper's bound fbar/(1-fbar) = {fbar/(1-fbar):.2f} per rejection")
+    print("    So (b) holds for one verified claim per run (the 'first claim' variant of Section 6.3), not for")
+    print("    'some claim passes'; the proof counts claim-level rejections as run-level rejections (hits).")
+
+    print("F2. 'A resampling learner inflates c by up to its number of samples' (Section 4, after Theorem 4.13).")
+    p, wf = 0.3, 0.2
+    x, a = p * (1 - wf), p * wf
+    c1 = a / x
+    for k in [1, 2, 3, 5]:
+        ck = a * (1 - x ** k) / ((1 - x) * x ** k)
+        print(f"    best-of-{k} (resample on rejection, search only after {k} rejected samples), p = {p}, wf = {wf}: "
+              f"c_k = {ck:.2f} = {ck/c1:.1f} x c_1 (claim: at most {k} x)")
+    print("    Independent resamples inflate c roughly by x^-(k-1), x = P(a run is rejected); 'up to k' needs x near 1.")
+
+    print("F3. The example c = wf/(1-wf):")
+    for w in [0.45, 0.6]:
+        print(f"    w = {w}, f = 0.43: c = {w*0.43/(1-w*0.43):.3f}")
+    print("    The paper uses w = 0.45 (thread U); its own Section 9 adopts w = 0.6 for theory (thread W).")
+
+    print("F4. VSI-R figures (thread Q2 formula: q*(kinds, beta=0.1, less shading) + (1-q)*fallback):")
+    for lab, q, kb, sh, fb in [("theory, fallback thread U's 50%", 0.65, 76, 12, 50),
+                               ("theory, fallback thread W's 46%", 0.65, 76, 12, 46),
+                               ("software", 0.70, 82, 13, 60),
+                               ("one reader, fallback 40% (thread Q2)", 0.5, 55, 6, 40),
+                               ("one reader, fallback 35% (thread W)", 0.5, 55, 6, 35)]:
+        print(f"    {lab}: {q*(kb-sh)+(1-q)*fb:.1f}%")
+    print("    paper: 58% theory, 66% software, '43% as in VSI-R' for one reader; thread Q2: 59%, 66%, 45%.")
+
+    print("F5. VSI-R's monitoring rule '(c_hat+1) x windowed rejection rate <= 5%' against thread U's false objections:")
+    for c in [0.24, 0.35]:
+        for lost in [0.02, 0.10]:
+            print(f"    c = {c}, upheld false objections rejecting the human's own claim on {int(lost*100)}% of problems: "
+                  f"(c+1) x rejection rate >= {100*(c+1)*lost:.1f}%")
+    print("    Thread U models about 10% lost problems for critic-heavy pools, so the rule could never certify")
+    print("    outputs, and these rejections end without a hit, outside Theorem 4.13's budget R <= K/b ((A3') fails).")
+
+
 if __name__ == "__main__":
     part_a()
     part_b()
     part_c()
     part_d()
     part_e()
+    part_f()

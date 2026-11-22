@@ -67,3 +67,40 @@ Section 10: 2n0 = 48; 4*Lambda = 15.36 (4(D+1)/rho = 16); 20 n0 = 480
 Corollary 4.13: 2*iota*n0*K < (1/5)*20*n0*K  <=>  iota < 2: True
 Appendix A: K/log2(1/(1-alpha)) <= (ln 2) K/alpha for alpha in (0,1): True
 Theorem 6.2(c): log2(1/q) = log2(1+n/beta): True ; log2(1/(1-q)) <= (beta/n) log2 e: True
+
+==============================================================================
+F. Theorem 4.13 (no total blind spot; added in the revision of 07:51) and the VSI-R figures
+==============================================================================
+F1. Theorem 4.13(b) with several claims per notebook (V accepts if SOME claim passes, as in Section 3.1).
+    Model: 200 kinds, each learned by one hit; a problem of an unlearned kind ends with k fresh, distinct
+    wrong claims; the randomized V passes each fresh wrong claim with probability fbar = 0.2.
+    k = 1: wrong outputs 51, rejections 200; wrong/rejection = 0.26 (exact 0.25); paper's bound fbar/(1-fbar) = 0.25 per rejection
+    k = 2: wrong outputs 113, rejections 200; wrong/rejection = 0.56 (exact 0.56); paper's bound fbar/(1-fbar) = 0.25 per rejection
+    k = 3: wrong outputs 185, rejections 200; wrong/rejection = 0.93 (exact 0.95); paper's bound fbar/(1-fbar) = 0.25 per rejection
+    k = 5: wrong outputs 382, rejections 200; wrong/rejection = 1.91 (exact 2.05); paper's bound fbar/(1-fbar) = 0.25 per rejection
+    So (b) holds for one verified claim per run (the 'first claim' variant of Section 6.3), not for
+    'some claim passes'; the proof counts claim-level rejections as run-level rejections (hits).
+F2. 'A resampling learner inflates c by up to its number of samples' (Section 4, after Theorem 4.13).
+    best-of-1 (resample on rejection, search only after 1 rejected samples), p = 0.3, wf = 0.2: c_k = 0.25 = 1.0 x c_1 (claim: at most 1 x)
+    best-of-2 (resample on rejection, search only after 2 rejected samples), p = 0.3, wf = 0.2: c_k = 1.29 = 5.2 x c_1 (claim: at most 2 x)
+    best-of-3 (resample on rejection, search only after 3 rejected samples), p = 0.3, wf = 0.2: c_k = 5.63 = 22.5 x c_1 (claim: at most 3 x)
+    best-of-5 (resample on rejection, search only after 5 rejected samples), p = 0.3, wf = 0.2: c_k = 99.07 = 396.3 x c_1 (claim: at most 5 x)
+    Independent resamples inflate c roughly by x^-(k-1), x = P(a run is rejected); 'up to k' needs x near 1.
+F3. The example c = wf/(1-wf):
+    w = 0.45, f = 0.43: c = 0.240
+    w = 0.6, f = 0.43: c = 0.348
+    The paper uses w = 0.45 (thread U); its own Section 9 adopts w = 0.6 for theory (thread W).
+F4. VSI-R figures (thread Q2 formula: q*(kinds, beta=0.1, less shading) + (1-q)*fallback):
+    theory, fallback thread U's 50%: 59.1%
+    theory, fallback thread W's 46%: 57.7%
+    software: 66.3%
+    one reader, fallback 40% (thread Q2): 44.5%
+    one reader, fallback 35% (thread W): 42.0%
+    paper: 58% theory, 66% software, '43% as in VSI-R' for one reader; thread Q2: 59%, 66%, 45%.
+F5. VSI-R's monitoring rule '(c_hat+1) x windowed rejection rate <= 5%' against thread U's false objections:
+    c = 0.24, upheld false objections rejecting the human's own claim on 2% of problems: (c+1) x rejection rate >= 2.5%
+    c = 0.24, upheld false objections rejecting the human's own claim on 10% of problems: (c+1) x rejection rate >= 12.4%
+    c = 0.35, upheld false objections rejecting the human's own claim on 2% of problems: (c+1) x rejection rate >= 2.7%
+    c = 0.35, upheld false objections rejecting the human's own claim on 10% of problems: (c+1) x rejection rate >= 13.5%
+    Thread U models about 10% lost problems for critic-heavy pools, so the rule could never certify
+    outputs, and these rejections end without a hit, outside Theorem 4.13's budget R <= K/b ((A3') fails).
