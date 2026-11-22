@@ -33,10 +33,12 @@ The request: *keep trying threads, and report the scheme you are most sure would
    * *with a human referee checking the claimed solution entry by entry:* 45% for theory, 10% for empirical work;
    * *with a human verifier's check of the finished result:* 35% and 10%. This is thread S's figure for an imitated verifier, and the verifier should be someone other than the imitated human;
    * *with thread U's combined human verifier, fixed, with full audits:* 46% for informal theory, 60% for software without a full specification, 15% for empirical work and 20% for judgment work. The combination is a careful expert reader, verification by use, machine checks of every computation and citation, and AI critics whose located objections an expert judges;
-   * *as VSI-R* (thread Q2): **58%** for informal theory, **66%** for software, 18% for empirical and 22% for judgment work. VSI-R assigns that combination's members at random per claim, caches verdicts, audits at β ≈ 0.1, and monitors. Its correctness needs only that every kind of the imitator's error is caught *sometimes* (Theorem 6′ below), not a small miss rate;
+   * *as VSI-R* (thread Q2, corrected by the paper's red team): about **50%** for informal theory and **60%** for software, 15% for empirical and 20% for judgment work. VSI-R assigns that combination's members at random per claim, verifies only each run's first claim, sends located objections at the human's own steps to a second judge, caches verdicts, and monitors with Theorem 6′. Thread Q2 had put it at 58% and 66% by using Theorem 6′ without its +1; with the +1 the gain over the fixed combination is within the noise. Theorem 6′ supplies monitoring, not sureness;
    * *without any verifier* (slack imitation with asking and the design elements): 30% and 10%.
 
-   That VSI's task queries are truly O(K), with neither n₀ nor 1/ε, I put at 25%, thread S's figure (thread S §7).
+   That VSI's task queries are truly O(K), with neither n₀ nor 1/ε, I put at 25%, thread S's figure (thread S §7). So the answer to the O(K) question is no in the worst case: up to 2n₀K task queries of three months each.
+
+   All these figures are conditional on determinism, realizability and a chain that finishes; without that conditioning the 70% row is about 40% (thread S).
 4. **So the scheme I am most sure of** is VSI with a machine verifier on a formally stated, independently reviewed goal. Its domain is narrow: in ten months, working easiest first, experts stated about a quarter of recent Annals main theorems in Lean (thread T). There the verifier deserves most of the credit: any generator wrapped in it would be as correct. Imitation adds a low query cost, at most 2n₀K, and runs that are the human's own process with some steps replaced. Elsewhere VSI is the best scheme I have found, but not one to be sure of.
 5. **The most important caveat** (red team, thread S). VSI is exactly as sure as its verifier is sound on the imitator's *own most plausible wrong answers*.
    * *Rerunning until accepted* turns every miss of the verifier into a wrong output, at a rate of about p·w·f_eff per problem:
@@ -45,7 +47,7 @@ The request: *keep trying threads, and report the scheme you are most sure would
      * f_eff ≈ 1 − (1−f)^r, the verifier's miss rate f compounded over the r claim-carrying runs a problem may need.
    * *Why it need not shrink:* with problem-specific insights, p does not fall as learning proceeds.
    * *Why f may be high:* the majority decoder writes the *most typical-looking* wrong result, which is the hardest kind for a human verifier to catch. That is why the human-verifier rows are low.
-   * *What softens it* (thread Q2, Theorem 6′). With problems drawn i.i.d., every miss must be paid for by rejections at a fixed exchange rate: if no kind of error is a total blind spot of the verifier (each kind is caught at least sometimes), expected wrong outputs are at most (c+1)·K/b, with c = w·f/(1 − w·f) for the worst kind. So p need not decay: errors V catches teach the learner, and errors V misses are capped by those it catches. And within any window, wrong outputs are at most (c+1) times the observed rejections, which a deployment can monitor.
+   * *What it adds* (thread Q2, Theorem 6′). On i.i.d. problems, wrong outputs are paid for by rejections that end in a hit: at most (c+1)·K/b, if the verifier has no total blind spot at the states learning reaches. That gives a monitoring handle, but at realistic numbers of problems it adds little sureness, and it fails for follow-up problems, problem-specific knowledge, and blind spots within a kind.
 6. **What no scheme can do** (Section 4; proved in the threads). For humans whose contributions are unpredictable and problem-specific, every scheme that asks the human only for task steps pays, in some cases, about n₀ queries per insight, or about the routine work per insight:
    * insights triggered only by *doing* a piece of work;
    * ideas never retried after a trusted record of a failed attempt;
@@ -249,63 +251,45 @@ For each problem, repeat:
 * *(e)* sums (b) and (d) by Wald's identity, since the number of searches is bounded.
 * *(f).* An output passed the check, so with (M-prefix) none of its notebooks is bizarre, and Lemma S applies in τ\*. Without the check, assume (B_D) in τ\* for bizarre entries too. The run and V's verdict are fixed before the audit's coin, so an audit hits with probability at least γ\*. Every hit is counted in (b). ∎
 
-**Proposition 5′ (a safety net for any learner).** Run VSI with *cache-first decoding*, with answers cached so that no notebook is asked twice, and with no asks. Cache-first decoding means that at any notebook already asked about, the imitator outputs the human's recorded answer; elsewhere any learner may decide. Assume (A3′). Then, whatever the learner:
+**Proposition 5′ (a safety net for any learner; corrected after the paper's referee).** Run VSI without the local check and the bizarre check, with *cache-first decoding*, with answers cached so that no notebook is asked twice, and with no asks; the scan skips cached notebooks without using up its turn. Cache-first decoding means that at any notebook already asked about, the imitator outputs the human's recorded answer; elsewhere any learner may decide. Assume that P is deterministic (not realizability) and (A3′). Then, whatever the learner:
 * (a) correctness is as in Theorem 5(a);
-* (b) on any single problem, VSI makes at most 2n₀ task queries in total, over all its reruns;
-* (c) if the learner makes at most M mistakes on the notebooks it predicts before being told their answers, there are at most M rejections, and at most 2n₀M task queries in all. For exact Bayes, M ≤ K.
+* (b) on any single problem, VSI makes at most 2n₀ task queries in total, over all its reruns, its audit included; without (A3′), at most 2n;
+* (c) if the learner makes at most M̄ mistakes on the notebooks it predicts before being told their answers, there are at most M̄ rejections, and at most 2n₀M̄ + βT task queries in all. For exact Bayes, M̄ ≤ K.
 
 *Proof.*
 * *(b).* Fix a problem.
-  * In any run, the steps before the first committed mistake follow the human's own chain, and the first mistake is below n₀ (Lemma 1).
-  * A cached notebook cannot be a mistake. So each search's scan queries only chain notebooks c_i, i < n₀, that were never asked before, and each search's first query is such a scan query.
-  * Hence at most n₀ scan queries over all searches of the problem, and at most n₀ searches.
-  * In every prefix of the cycle S, U, S, H, the non-scan queries number at most the scan queries, so the total is at most 2n₀.
-* *(c).* Each rejection ends with a query at a notebook where the learner's earlier prediction was wrong, so there are at most M rejections, each costing at most 2n₀ by (b). ∎
+  * P is deterministic, so a cached answer is P's label there, and Lemma 1 applies. In any run, the steps before the first committed mistake follow the human's own chain, and the first mistake is below n₀.
+  * A cached notebook cannot be a mistake. So the scan queries only uncached chain notebooks c_i, i < n₀, each at most once over all searches: at most n₀ scan queries. A scan query at c_{n₀−1} can only be a hit.
+  * In the cycle S, U, S, H, a search's non-scan queries are at most its scan queries, and one fewer if it ends with a scan hit. So the searches make at most 2n₀ − 1 queries, and the one audit fits. Without (A3′), the scan's notebooks are the c_i with i < n.
+* *(c).* Each rejection ends with a query at a notebook where the learner's earlier prediction was wrong, so there are at most M̄ rejections, each costing at most 2n₀ by (b); audits add βT. ∎
 
-So with cache-first decoding, which the scaffold can enforce, VSI never costs more than about twice the human's own effort on any problem, for any learner. The learner's quality decides only how much of that effort is saved across problems.
-
-**Theorem 6 (imitating the verifier; thread Q, Theorem Q5).** Let V_H be a human verifier's verdict, a one-step deterministic function, and K_V its code length or its residual after the task data.
-* *Protocol.* Keep a Bayes posterior over V_H, and let V′ be its majority decoder. On each claimed solution y:
-  * if V′ rejects, ask V_H(y);
-  * if V′ accepts, ask V_H(y) with probability β_V.
-
-  Add every answer to the verifier's data.
-
-Then, for any T claimed solutions chosen adaptively:
-* (a) V′ disagrees with an asked V_H at most K_V times;
-* (b) the expected number of solutions that V′ accepted, that were not asked, and that V_H would reject is at most (1−β_V)K_V/β_V;
-* (c) in expectation, V_H is asked at most β_V·T + R + K_V times, where R is the number of true rejections.
-
-So, with an imitated verifier, the expected number of failed outputs is at most (1−β_V)K_V/β_V plus the failures V_H itself passes. With β_V = K_V/(εT), which needs T or a doubling schedule, that is at most εT plus V_H's misses.
-
-*Proof.*
-* (a) is Lemma 1 for a one-step function.
-* (b) On a false acceptance by V′, an audit lands on a mistake of V′, and by (a) there are at most K_V such hits. So β_V·E[#false acceptances] ≤ K_V.
-* (c) A rejection by V′ is a true rejection or a mistake of V′. ∎
+*With the local check or the bizarre check,* a route-(i) or flip query can land off the human's chain and use up no chain notebook; the paper's referee forced 200 queries on one problem this way. (b) is restored by making a scan query before each such query.
 
 *When imitating the verifier pays.* It pays when verdicts are generic, such as a line-by-line proof check or a test suite, or when problems recur. On distinct research problems whose verification needs the problem's own insight, V′ is blind exactly where the imitator is (referee 6, B2). There, budget about one human verification per problem.
 
-**Theorem 6′ (wrong outputs are paid for by rejections; thread Q2, Theorem Q2.1).** Assume (A1), (A2) and (A3′), with verdicts cached on claims, and no assumption that V is sound. Say V has *no total blind spot with constant c* if at every reachable state, with decoder G and problems from μ,
+**Theorem 6′ (wrong outputs are paid for by rejections; thread Q2, Theorem Q2.1, restated after the paper's referee).** Call a rejection *informative* if the rejected run has a committed mistake; its search then ends in a hit. Assume (A1), with verdicts cached on claims; assume neither that V is sound nor (A2)–(A3′). Say V has *no total blind spot with constant c* if at every reachable state, with decoder G, problems from μ, and V's randomness,
 
-  Pr[G's run ends with a claim that V passes and that fails the goal] ≤ c · Pr[V rejects G's run].
+  Pr[V accepts G's run, and its verified artifact fails the goal] ≤ c · Pr[V rejects G's run informatively].
 
-* (a) If problems are i.i.d. from μ and V has no total blind spot with constant c, then for every T, and within every window of rounds, E[#wrong outputs] ≤ (c+1)·E[#rejections] ≤ (c+1)·K/b.
-* (b) If each fresh verification passes any wrong claim with probability at most f̄ given the past (for example a pool assigned at random per claim), then on every problem sequence E[#wrong outputs] ≤ f̄·K/((1−f̄)·b).
+* (a) If problems are i.i.d. from μ and V has no total blind spot with constant c, then for every T, and within every window of rounds, E[#wrong outputs] ≤ (c+1)·E[#informative rejections] ≤ (c+1)·K/b.
+* (b) Suppose instead that V verifies only each run's first claim, that the human's own first claim satisfies the goal, and that each fresh verification passes a wrong claim with probability at most f̄ given the past (for example a pool assigned at random per claim). Then on every problem sequence the expected number of distinct wrong claims output is at most f̄·K/((1−f̄)·b).
+* Rejections that are not informative cost a search of at most 2n and an abstention each, never a wrong output.
 
 *Proof.*
-* Every rejection ends in a hit (Lemma 1; V never rejects the human's claim), so there are at most K/b rejections.
-* (a) The next problem is independent of the state, so the probability that a round outputs a wrong claim with no rejection is at most c times the probability that its first run is rejected. A problem with a rejection has a single output. Summing, E[#wrong] ≤ c·E[#first-run rejections] + E[#problems with a rejection] ≤ (c+1)·E[R].
-* (b) With caching, each claim is verified once. If N wrong claims are verified fresh, at most f̄N pass and at least (1−f̄)N are rejections, in expectation. ∎
+* Informative rejections end in hits, so there are at most K/b of them.
+* (a) The next problem is independent of the state, so the probability that a round's first run is accepted with a wrong artifact is at most c times the probability that it is rejected informatively. A problem is rerun only after an informative rejection and has one output. Summing, E[#wrong] ≤ c·E[#first-run informative rejections] + E[#problems with an informative rejection] ≤ (c+1)·E[#informative rejections].
+* (b) A wrong first claim is not the human's, so its rejection is informative. With caching, each claim is verified once. If N wrong claims are verified fresh, at most f̄N pass and at least (1−f̄)N are informative rejections, in expectation. ∎
 
-*What it changes.*
-* *Correctness for human verifiers* needs no longer a small miss rate on the imitator's most plausible wrong answers, only that every *kind* of error be caught sometimes. For a kind with claim share w and miss rate f, c = wf/(1−wf), about 0.24 for one careful reader in theory (w = 0.45, f = 0.43).
-* *Monitoring:* within any window, wrong outputs are at most (c+1) times the observed rejections.
-* *No full audits:* β = 1 audits become unnecessary.
-* *Kind by kind:* in product classes the bound is Σ_κ(c_κ+1)K_κ/b.
-* *The dichotomy* is c finite against c infinite: on a kind that V always passes, the hidden-insight price (Section 4) returns on that kind (thread Q2, a sketch).
-* *The idealizations matter more here:* the bound uses the rejection budget K/b, which a machine verifier's correctness did not. For exact Bayes it is proved; a resampling learner inflates c by up to its number of samples.
+*Without the first-claim rule,* (b) fails: if V accepts when any of k wrong claims passes, the ratio f̄/(1−f̄) becomes (1−f̄)^(−k) − 1.
 
-*Falsification by use* (thread Q2, Theorem Q2.3). Keep a library of outputs that later work cites. If every use that relies on a false claim yields a located, certified counterexample with probability at least e, and only false claims are exposed, then every exposure ends in a hit, and expected uses that rely on false outputs are at most K/(b·e), for ever. That bounds reliance, not each output; it reaches the verifier's blind spots wherever later use can expose them.
+*What it gives, and what it does not.*
+* *Monitoring:* within any window, wrong outputs are at most (c+1) times the informative rejections. But c must be estimated, and planted errors underestimate it; estimate it by independent re-solution of a sample of accepted outputs.
+* *Kind by kind:* in product classes the bound is Σ_κ(c_κ+1)K_κ/b, and a kind with claim share w and miss rate f gives c = wf/(1−wf), about 0.35 for one careful reader in theory (w = 0.6, f = 0.43).
+* *Little extra sureness:* (c+1)K/(bT) ≤ 5% needs T/K ≳ 25. With the +1, thread Q2's model of the human-verifier estimates gives about what it gives without the theorem (red team, [`verification/redteam-paper.md`](verification/redteam-paper.md)).
+* *When it fails:* follow-up problems are not independent; problem-specific knowledge makes K grow with T; hits select hypotheses whose errors V passes, so the condition needs a product of kinds each learned as a unit. A deterministic verifier with a kind it always passes defeats it, and the hidden-insight price (Section 4) returns on that kind.
+* *Resampling:* a learner that resamples on rejection can inflate c without bound, by about x^(−(k−1)) for k samples, x the rejection probability.
+
+*Falsification by use* (thread Q2, Theorem Q2.3). Keep a library of the current imitator's outputs, recomputed after every hit, that later work cites. Assume (A1), and that the human's own chain reaches within n₀ a claim that V passes and that is never exposed. If every use that relies on a false claim yields a located, certified counterexample with probability at least e, and only false claims are exposed, then every exposure ends in a hit, and expected uses that rely on false outputs are at most K/(b·e), for ever. That bounds reliance, not each output; it reaches the verifier's blind spots wherever later use can expose them.
 
 **Proposition 7 (without a verifier).** Each round runs the imitator, with asks at confidence below 1 − α. Then it queries:
 * a step whose entry L flags as invalid, if there is one;
@@ -419,8 +403,8 @@ Located probes, which need foresight (thread B), and a "confession" state off th
   * judgment work: 28% and 20%.
 
   Its inputs are mostly judgments, not measurements on an imitator's wrong results.
-* *No total blind spot* (thread Q2, [`research/threadQ2-freshlook.md`](research/threadQ2-freshlook.md)). By Theorem 6′, a human verifier needs only that every kind of imitator error be caught sometimes. Planted-error studies find partial catch rates for reading, 30–60%, and rarely zero for a kind. Diverse methods make a shared total blind spot rarer, and a randomly assigned pool removes a fixed one. The threats: a misreading of the goal shared by the verifier and the imitator; empirical claims false in the world that follow from the data, which every reading method misses; and AI critics that share an AI imitator's blind spots. Thread Q2 puts the probability that a combined verifier has no total blind spot that matters at about 65% in theory, 70% in software, 25% in empirical and 30% in judgment work, and its corrected estimates for VSI-R at 58–59%, 66%, 18% and 22%. (Thread Q2 also found that thread U's model let the rejections exceed K; the corrected figures replace its model's.)
-* *VSI-R* (thread Q2). VSI with: a pool assigned at random per claim (machine checks of every computation and citation; AI critics of at least three model families with hidden, rotated prompts; an expert reader, not the imitated human, judging located objections); verdicts cached on canonical claims; audits at β ≈ 0.1; outputs marked within the bound only while (ĉ+1) times the windowed rejection rate is at most 5%, with ĉ from per-kind planted-error tests; certification of a frozen deployment by independent solution of a random sample; and falsification by use wherever later work uses outputs.
+* *No total blind spot* (thread Q2, [`research/threadQ2-freshlook.md`](research/threadQ2-freshlook.md)). Theorem 6′ replaces a small miss rate by a weaker condition under i.i.d. problems, though at realistic scales it supplies monitoring rather than sureness. Planted-error studies find partial catch rates for reading, 30–60%, and rarely zero for a kind. Diverse methods make a shared total blind spot rarer, and a randomly assigned pool removes a fixed one. The threats: a misreading of the goal shared by the verifier and the imitator; empirical claims false in the world that follow from the data, which every reading method misses; and AI critics that share an AI imitator's blind spots. Thread Q2 puts the probability that a combined verifier has no total blind spot that matters at about 65% in theory, 70% in software, 25% in empirical and 30% in judgment work, and its estimates for VSI-R at 58–59%, 66%, 18% and 22%; the paper's red team found that these used Theorem 6′ without its +1, and with it they fall to about 50%, 60%, 15% and 20%. (Thread Q2 also found that thread U's model let the rejections exceed K; the corrected figures replace its model's.)
+* *VSI-R* (thread Q2, as corrected in the paper). VSI with: verification of each run's first claim only; a second judge for objections located at steps that a task query shows to be the human's own (thread U's model gives the pool about 0.4 upheld false objections per correct theory claim without it); no caching of rejections whose search found no mistake; a pool assigned at random per claim (machine checks of every computation and citation; AI critics of at least three model families with hidden, rotated prompts; an expert reader, not the imitated human, judging located objections); verdicts cached on canonical claims; audits at β ≈ 0.1; outputs marked within the bound only while (ĉ+1) times the windowed rejection rate is at most 5%, with ĉ from per-kind planted-error tests; certification of a frozen deployment by independent solution of a random sample; and falsification by use wherever later work uses outputs.
 
 **What only the cost needs.**
 * **(A2)** for every problem. The human's own chain must finish within n₀ under the instruction.
@@ -449,7 +433,7 @@ So the version that keeps both the letter and the spirit of the constraint is V-
 | VSI, referee cone check (V-cone) | L's soundness, the statement being the goal, correct records | 2n₀K, 1 per invalid cone entry | 70% / 30% | 45% / 10% | **45% / 10%** |
 | VSI, human verifier (V-human) | the human's soundness, plus ε if imitated | 2n₀K, plus about one verification per problem | 65% / 30% | 40% / 10% | **35% / 10%** (thread W) |
 | VSI, thread U's combined verifier (reader, use, machine checks, AI critics with located objections) | the combination's soundness; critics can only add rejections | 2n₀K, plus about 3 task steps of verification per problem in theory | – | – | **46%** informal theory (thread W); **60%** software without a full spec; **15% / 20%** empirical / judgment |
-| VSI-R: a randomized pool, cached verdicts, monitoring (thread Q2) | no total blind spot (c finite), or else a small miss rate | 2n₀K, plus about 3 task steps of verification per problem; audits at β ≈ 0.1 | – | – | **58%** informal theory; **66%** software; **18% / 22%** empirical / judgment |
+| VSI-R: a randomized pool, first-claim verification, a second judge, monitoring (thread Q2, corrected) | the pool's miss rate; Theorem 6′ adds monitoring | 2n₀K, plus about 3 task steps of verification per problem | – | – | **50%** informal theory; **60%** software; **15% / 20%** empirical / judgment |
 | Proposition 7, no verifier | (B_D) at valid confident entries, (R-rev), (A-pers), (L2) | 3·max{d_max, n/c_r}·K/b_α failed runs online; with a retry rule of small r, that is about n per bit | 45% / 20% | 30% / 10% | **30% / 10%** |
 | slack imitation with asking (fourth note) | (B_D) at confident steps | the same | 40% / 20% | 25% / 10% | **25% / 10%** |
 | chained imitation (the talk) | nothing | n₀K/ε | baseline | baseline | baseline |
