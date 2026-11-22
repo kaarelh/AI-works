@@ -43,7 +43,7 @@
 \maketitle
 
 \begin{abstract}
-A learner imitates a human researcher, modelled as a fixed deterministic program $P$, by Bayesian (Solomonoff-style) induction on the human's three-month steps, and chains its imitation over $n$ steps to solve research problems. The baseline, chained imitation (``train on test''), needs about $n\K/\varepsilon$ task queries for runs that fail with probability at most $\varepsilon$, where $\K = \K(P)$; and every protocol that asks the human only for task steps needs nearly that on humans whose insights are rare, problem-specific and never recovered once missed. We propose \emph{verified slack imitation} (VSI): the imitator gets more steps than the human needs, on an append-only notebook with a hidden clock; each problem is rerun until a verifier of finished results accepts; and a rejected run is searched for a mistake, mostly by scanning it from the start. We prove that every output passes the verifier, so that \emph{correctness rests on one assumption, the verifier's soundness on the imitator's claims}, and on no property of the human's task behaviour; that there are at most $\K$ rejections; and that each costs at most $2n_0$ task queries whatever the human, so at most $2n_0\K$ in all, with no factor $1/\varepsilon$, within a logarithm of a lower bound that holds even with a perfect verifier. Under a natural property of humans, bounded setback, each rejection costs $O((D{+}1)/\rho)$ queries instead. We give the case for the assumptions, from experiments with exact posteriors and from published evidence, and our calibrated probability that the scheme works on a real careful researcher: about 70\% with a proof assistant on an independently reviewed formal statement, a narrow domain; 46--60\% for informal theory and software with a combined human verifier; and 15--20\% for empirical and judgment-heavy work.
+A learner imitates a human researcher, modelled as a fixed deterministic program $P$, by Bayesian (Solomonoff-style) induction on the human's three-month steps, and chains its imitation over $n$ steps to solve research problems. The baseline, chained imitation (``train on test''), needs about $n\K/\varepsilon$ task queries for runs that fail with probability at most $\varepsilon$, where $\K = \K(P)$; and every protocol that asks the human only for task steps needs nearly that on humans whose insights are rare, problem-specific and never recovered once missed. We propose \emph{verified slack imitation} (VSI): the imitator gets more steps than the human needs, on an append-only notebook with a hidden clock; each problem is rerun until a verifier of finished results accepts; and a rejected run is searched for a mistake, mostly by scanning it from the start. We prove that every output passes the verifier, so that \emph{correctness rests on one assumption, the verifier's soundness on the imitator's claims}, and on no property of the human's task behaviour; that there are at most $\K$ rejections; and that each costs at most $2n_0$ task queries whatever the human, so at most $2n_0\K$ in all, with no factor $1/\varepsilon$, within a logarithm of a lower bound that holds even with a perfect verifier. Under a natural property of humans, bounded setback, each rejection costs $O((D{+}1)/\rho)$ queries instead. We give the case for the assumptions, from experiments with exact posteriors and from published evidence, and our calibrated probability that the scheme works on a real careful researcher: about 70\% with a proof assistant on an independently reviewed formal statement, a narrow domain; and, for informal theory and software, about 58--66\% with a randomized pool of human and AI verifiers, whose correctness needs only that every kind of the imitator's error is caught \emph{sometimes} (no total blind spot), with an output failure rate bounded by an observable multiple of the rejection rate. Empirical and judgment-heavy work remains at 15--20\%.
 \end{abstract}
 
 \tableofcontents
@@ -263,7 +263,33 @@ The failed outputs are exactly the accepted runs whose verified claim fails the 
 The run and $V$'s verdict are fixed before the audit's coin; by Lemma~\ref{lem:slack} an audit of a failed accepted run hits with probability at least $\gamma$, and audit hits are counted in Theorem~\ref{thm:main}(b).
 \end{proof}
 
-So with a fallible verifier, audits at rate $\beta=1$ are needed to keep slack imitation's own guarantee for the failures $V$ misses.
+So with a fallible verifier and nothing else, audits at rate $\beta=1$ are needed to keep slack imitation's own guarantee for the failures $V$ misses. A weaker, measurable property of the verifier does better.
+
+\begin{definition}[no total blind spot]
+The verifier has \emph{no total blind spot with constant $c$} if, at every state the protocol can reach, with decoder $G$ and problems drawn from $\mu$,
+\[ \Pr[\text{$G$'s run ends with a claim that $V$ passes and that fails the goal}] \;\le\; c\cdot\Pr[\text{$V$ rejects $G$'s run}]. \]
+\end{definition}
+
+\begin{theorem}[wrong outputs are paid for by rejections \cite{threadQ2}]\label{thm:blindspot}
+Assume (A1), (A2) and (A3$'$), with verdicts cached on claims, and no assumption that $V$ is sound.
+\begin{enumerate}[label=(\alph*),nosep]
+\item If problems are i.i.d.\ from $\mu$ and $V$ has no total blind spot with constant $c$, then for every $T$, and within every window of rounds, $\Ex[\#\text{wrong outputs}]\le(c+1)\,\Ex[\#\text{rejections}]\le(c+1)\K/b$.
+\item If instead each fresh verification passes any wrong claim with probability at most $\bar f$ given the past (a verifier randomized per claim, for example a randomly assigned pool), then on every problem sequence $\Ex[\#\text{wrong outputs}]\le \bar f\K/((1-\bar f)b)$.
+\end{enumerate}
+\end{theorem}
+\begin{proof}
+Every rejection ends in a hit (Lemma~\ref{lem:early}, which holds for the cached verifier because $V$ never rejects the human's claim), so there are at most $\K/b$ rejections.
+(a) Given the past, the next problem is independent of the state. So the probability that a round outputs a wrong claim with no rejection is at most $c$ times the probability that its first run is rejected. A problem with a rejection has a single output. Summing over rounds gives $\Ex[\#\text{wrong}]\le c\,\Ex[\#\text{first-run rejections}]+\Ex[\#\text{problems with a rejection}]\le(c+1)\Ex[R]$.
+(b) With caching, each claim is verified at most once. If $N$ is the number of fresh verifications of wrong claims, at most $\bar fN$ pass and at least $(1-\bar f)N$ are rejections, in expectation.
+\end{proof}
+
+\paragraph{What this changes.} For human verifiers, correctness no longer needs the verifier to catch the imitator's most plausible wrong answers. It needs only that every \emph{kind} of the imitator's error be caught \emph{sometimes}. For a kind with claim share $w$ and miss rate $f$, $c=wf/(1-wf)$, which is about $0.24$ even for one careful reader in theory ($w=0.45$, $f=0.43$). Three consequences:
+\begin{itemize}[nosep]
+\item \emph{Monitoring:} within any window, expected wrong outputs are at most $(c+1)$ times the rejections, which the deployment observes.
+\item \emph{No full audits:} the $\beta=1$ audits become unnecessary.
+\item \emph{Kind by kind:} in product classes the bound holds kind by kind, $\sum_\kappa(c_\kappa+1)\K_\kappa/b$, so learning that removes the errors $V$ catches cannot leave a kind of error unpaid for.
+\end{itemize}
+The dichotomy is ``$c$ finite'' against ``$c$ infinite'': on a kind that $V$ always passes, $V$'s verdicts carry no information, and the hidden-insight price of Theorem~\ref{thm:lb-task} returns on that kind (a sketch in \cite{threadQ2}). The theorem leans on the idealizations through the rejection budget $\K/b$, which a machine verifier's correctness did not; for exact Bayes it is proved, and a resampling learner inflates $c$ by up to its number of samples.
 
 \begin{theorem}[imitating the verifier \cite{threadQ}]\label{thm:imitated-verifier}
 Let $V_H$ be a human verifier's verdict, a deterministic one-step function of complexity $\K_V$. Keep a Bayes posterior over $V_H$ with majority decoder $V'$; on each claimed solution ask $V_H$ if $V'$ rejects, and with probability $\beta_V$ if $V'$ accepts; add every answer. For any $T$ claimed solutions chosen adaptively: (a) $V'$ disagrees with an asked $V_H$ at most $\K_V$ times; (b) the expected number of solutions accepted by $V'$, not asked, and rejected by $V_H$ is at most $(1-\beta_V)\K_V/\beta_V$; (c) $V_H$ is asked at most $\beta_V T+R+\K_V$ times in expectation, $R$ the number of true rejections.
@@ -322,7 +348,9 @@ Correctness needs only (A4$'$). What that means depends on the verifier.
 \item \emph{The domain is narrow.} In ten months, working easiest first, experts stated 24\% of recent \emph{Annals} main theorems in Lean; perhaps 5--15\% of multi-year mathematics projects are in the domain today.
 \end{itemize}
 
-\paragraph{A human verifier.} (A4$'$) is an assumption about a human judgment, of a finished product with full attention. Evidence \cite{threadL,threadS}: reviewers catch 30--60\% of planted plausible errors; the imitator's wrong results are the \emph{most typical-looking} ones, the hardest to catch; and rerunning until accepted turns every miss into a wrong output, at a rate of about $p\,w\,f_{\text{eff}}$ per problem ($p$ the first-run failure rate, $w$ the share of failed runs that carry a claimed solution, $f_{\text{eff}}$ the verifier's miss rate compounded over the claims a problem may need), which need not shrink when insights are problem-specific. Estimated miss rates on imitator-style wrong results: 0.2--0.5 for one careful reader in mathematics, above 0.5 for empirical claims judged by reading. Section~\ref{sec:nonformal} gives the best combinations.
+\paragraph{A human verifier.} (A4$'$) is an assumption about a human judgment, of a finished product with full attention. Evidence \cite{threadL,threadS}: reviewers catch 30--60\% of planted plausible errors; the imitator's wrong results are the \emph{most typical-looking} ones, the hardest to catch; and rerunning until accepted turns every miss into a wrong output, at a rate of about $p\,w\,f_{\text{eff}}$ per problem ($p$ the first-run failure rate, $w$ the share of failed runs that carry a claimed solution, $f_{\text{eff}}$ the verifier's miss rate compounded over the claims a problem may need), which need not shrink when insights are problem-specific. Estimated miss rates on imitator-style wrong results: 0.2--0.5 for one careful reader in mathematics, above 0.5 for empirical claims judged by reading.
+
+By Theorem~\ref{thm:blindspot}, though, a human verifier does not need a small miss rate: it needs \emph{no total blind spot}, that is, every kind of imitator error caught sometimes. Planted-error studies find partial catch rates for reading, 30--60\%, and rarely zero for a kind; diverse methods make a shared total blind spot rarer; and a randomly assigned pool removes a fixed one. The threats are a misreading of the goal shared by the verifier and the imitator, empirical claims false in the world that follow from the data (which every reading method misses), and AI critics that share an AI imitator's blind spots. The estimated probability that a combined verifier has no total blind spot that matters is about 65\% in theory, 70\% in software, 25\% in empirical and 30\% in judgment work \cite{threadQ2}. Section~\ref{sec:nonformal} gives the best combinations.
 
 \subsection{What only the cost needs}
 
@@ -379,15 +407,16 @@ scheme & correctness rests on & theory, software & empirical, judgment \\
 VSI, proof assistant, reviewed statement, hardened checking & statement fidelity, checker & \textbf{70\%} & -- \\
 \quad same, AI formalizer inside $V$ (human fallback) & same & 77\% & -- \\
 \quad same, without review and hardening & same & 60\% & -- \\
+VSI-R: a randomized pool of verifiers, monitoring (Section~\ref{sec:nonformal}) & no total blind spot ($c$ finite), or a small miss rate & 58\% / 66\%$^\dagger$ & 18\% / 22\% \\
+VSI, fixed combined human verifier, full audits & a small miss rate & 46\% / 60\%$^\dagger$ & 15\% / 20\% \\
 VSI, test suite & the tests & 43\% & -- \\
-VSI, combined human verifier (Section~\ref{sec:nonformal}) & the combination & 46\% / 60\%$^\dagger$ & 15\% / 20\% \\
 VSI, referee checking the cone & $L$'s soundness & 45\% & 10\% \\
-VSI, one human verifier & the verifier & 35\% & 10\% \\
+VSI, one human verifier & the verifier & 35\% (43\% as in VSI-R) & 10\% \\
 slack imitation, no verifier & bounded setback etc. & 30\% & 10\% \\
 chained imitation (the talk) & nothing & baseline & baseline \\
 \bottomrule
 \end{tabular}
-\caption{Probability that each scheme works. $^\dagger$informal theory / software without a full specification. The figures synthesize the threads' estimates (Appendix~\ref{app:provenance}): the human-verifier rows follow the second red team, lowered by the evidence that most failed runs end with a confident claimed solution \cite{threadW}; the formal rows follow the calibration thread. That VSI's task queries are truly $O(\K)$, with neither $n_0$ nor $1/\varepsilon$, we put at about 25\%.}
+\caption{Probability that each scheme works. $^\dagger$informal theory / software without a full specification. The figures synthesize the threads' estimates (Appendix~\ref{app:provenance}): the formal rows follow the calibration thread; the VSI-R row combines Theorem~\ref{thm:blindspot} (weighted by the probability that no total blind spot matters) with the fallback estimates \cite{threadQ2}; the other human-verifier rows follow the second red team, lowered by the evidence that most failed runs end with a confident claimed solution \cite{threadW}. That VSI's task queries are truly $O(\K)$, with neither $n_0$ nor $1/\varepsilon$, we put at about 25\%.}
 \label{tab:sure}
 \end{table}
 
@@ -435,6 +464,21 @@ M8 false negative as a valid record & 136 & 2{,}868 & 51 & 2{,}350 \\
 
 \section{Without a machine verifier}\label{sec:nonformal}
 
+\paragraph{VSI-R.} The recommended version for crisp but informal goals \cite{threadQ2} is VSI with six changes:
+\begin{itemize}[nosep]
+\item the verifier is a pool, assigned at random per claim: machine checks of every computation and citation, AI critics of at least three model families with hidden, rotated prompts, and an expert reader (not the imitated human) who judges the critics' located objections;
+\item verdicts are cached on canonical claims;
+\item audits run at $\beta\approx0.1$;
+\item outputs are marked as within the rate bound only while $(\hat c+1)$ times the windowed rejection rate is at most 5\%, with $\hat c$ from per-kind planted-error tests;
+\item a frozen deployment is certified by solving a random sample of problems independently;
+\item falsification by use runs wherever later work uses outputs.
+\end{itemize}
+Its correctness rests on Theorem~\ref{thm:blindspot}, or on a small miss rate where that fails.
+
+\paragraph{Falsification by use \cite{threadQ2}.} Keep a library of the current imitator's outputs, and let later work cite it. Suppose every use that relies on a false claim yields a located, certified counterexample with probability at least $e$, and only false claims are exposed. Then every exposure ends in a hit, and the expected number of uses that rely on a false output is at most $\K/(be)$, for ever, at most $2n_0$ task queries per exposure. This bounds total reliance on false outputs, not each output's correctness, and it reaches the verifier's total blind spots where later uses can expose them: software, computational mathematics, engineering components, predictions tested by later experiments.
+
+\paragraph{What makes a verifier good.}
+
 For research without a machine-checkable goal, output failure is about $p\,w\,\bar r\,f_V$, with $\bar r$ the distinct wrong claims verified per failing problem; at central values the 5\% bar needs a verifier miss rate $f_V\le0.29$ in theory, $0.23$ in software, $0.17$ in empirical and $0.16$ in judgment work, against about $0.43$, $0.45$, $0.70$, $0.64$ for one careful reader \cite{threadU}. What helps:
 \begin{itemize}[nosep]
 \item \emph{different methods, not more readers}: misses of readers correlate (fitted correlation about 0.45--0.75), so a second reader leaves 0.24, not 0.16;
@@ -443,7 +487,7 @@ For research without a machine-checkable goal, output failure is about $p\,w\,\b
 \item \emph{AI critics} from several model families, with an expert other than the imitated human judging \emph{located} objections: the largest gain (0.43 to 0.18 added to a reader). Critics can only add rejections, so they cannot make a wrong result pass; located objections also serve as search pointers;
 \item \emph{delayed checks by consequence}, the only remedy for empirical claims false in the world, at the price of provisional outputs.
 \end{itemize}
-With the best combination, the estimated probability that VSI works is about 46\% for informal theory, 60\% for software without a full specification, 15\% for empirical work (25\% if the goal is narrowed to ``the claim follows from the data''), and 20\% for judgment work.
+With the best fixed combination and full audits, the estimated probability that VSI works is about 46\% for informal theory, 60\% for software without a full specification, 15\% for empirical work (25\% if the goal is narrowed to ``the claim follows from the data''), and 20\% for judgment work. As VSI-R, using Theorem~\ref{thm:blindspot}, the estimates rise to about 58\%, 66\%, 18\% and 22\%.
 
 \paragraph{How often failed runs end with a confident claim.} The factor $w$ was only guessed in earlier drafts. The evidence \cite{threadW} comes from AI systems on tasks they cannot solve, where every claim is a failure:
 \begin{itemize}[nosep]
@@ -510,7 +554,7 @@ All files are in the repository folder \texttt{monitored-imitation/} on the work
 \item \texttt{robust-runs.md}: robustness of properties under the imitator's replacements.
 \item \texttt{slack-imitation.md}: slack imitation, bounded setback, asking before committing, experiment E6.
 \item \texttt{verified-slack.md}: verified slack imitation, the full version of this paper's main results, with three referee reports and responses.
-\item Research threads (\texttt{research/}): \cite{threadE} red team of slack imitation; \cite{threadF} certified notebook; \cite{threadG} by-product insights; \cite{threadH} deployment, other learners; \cite{threadJ} optimality; \cite{threadL} evidence on researchers; \cite{threadN} trees; \cite{threadQ} alternatives, verification, pointers; \cite{threadR} composition experiment E7; \cite{threadS} red team of VSI; \cite{threadT} machine-verifier calibration; \cite{threadU} verifiers without a machine; \cite{threadV} human-likeness and bits of selection; \cite{threadW} confident failures; and earlier threads A--D on checks, elicitation, persistence and literature.
+\item Research threads (\texttt{research/}): \cite{threadE} red team of slack imitation; \cite{threadF} certified notebook; \cite{threadG} by-product insights; \cite{threadH} deployment, other learners; \cite{threadJ} optimality; \cite{threadL} evidence on researchers; \cite{threadN} trees; \cite{threadQ} alternatives, verification, pointers; \cite{threadR} composition experiment E7; \cite{threadS} red team of VSI; \cite{threadT} machine-verifier calibration; \cite{threadU} verifiers without a machine; \cite{threadV} human-likeness and bits of selection; \cite{threadW} confident failures; \cite{threadQ2} a second fresh look: no total blind spot, falsification by use, VSI-R; and earlier threads A--D on checks, elicitation, persistence and literature.
 \end{itemize}
 
 \begin{thebibliography}{99}
@@ -530,6 +574,7 @@ All files are in the repository folder \texttt{monitored-imitation/} on the work
 \bibitem{threadU} Claude. Thread U: verification without a machine verifier (research/threadU-nonformal.md), 2026.
 \bibitem{threadV} Claude. Thread V: how close VSI's outputs stay to the human's own process (research/threadV-humanlike.md), 2026.
 \bibitem{threadW} Claude. Thread W: how often failed runs end with a confident claim (research/threadW-confident-failures.md), 2026.
+\bibitem{threadQ2} Claude. Thread Q2: a fresh look for a scheme that beats verified slack imitation (research/threadQ2-freshlook.md), 2026.
 \bibitem{ross} S. Ross, G. Gordon, J. A. Bagnell. A reduction of imitation learning and structured prediction to no-regret online learning (DAgger). AISTATS 2011.
 \end{thebibliography}
 
