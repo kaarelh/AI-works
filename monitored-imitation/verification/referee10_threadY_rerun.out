@@ -10,3 +10,30 @@
    | plan-first, d=3, abandonment 20%, disproofs | 344.0 | 40.0 / 40.0 / 40.0 | 220.3 (715) | 27.5 (714), 2% | 7.2 (14) | 0% | 30.8x | yes |
    | p=4, d=3, abandonment 30%, ABANDON (too hard) | 492.4 | 39.2 / 39.0 / 39.0 | 314.2 (1316) | 607.3 (1717), 84% | 20.9 (60) | 47% | 15.0x | yes |
    | p=4, d=3, abandonment 30%, disproofs | 529.2 | 40.0 / 40.0 / 40.0 | 306.8 (1105) | 46.9 (1068), 4% | 12.1 (24) | 0% | 25.3x | yes |
+   | plan-first, d=4, b=3, abandonment 20%, ABANDON | 1,224.1 | 39.4 / 39.4 / 39.2 | 781.7 (2416) | 940.2 (2817), 77% | 13.4 (42) | 38% | 58.3x | yes |
+
+   Reading: 'rejections/seed' is chain / T6 / own (each <= m = 40 by the bit-per-hit argument).
+   'bounds hold': chain cost <= 2 N*_r with first mistake before N*_r; own cost - A <= sum pi_l + t_L, path lemmas
+   are the human's own, and own cost <= p_max d + t_max when A = 0; checked on every rejection.
+   T6's cost includes its fallback to the chain search after a stall (a call with no mistake, because
+   its lemma was corrupted higher up: thread N's (Budget) fails there).
+
+== Lucky proofs (too-hard abandonment; a deviating run proves the abandoned lemma) ==
+   | config | chain: mean (max) | own alone: stall % | own + depth-first, interleaved: mean (max) | 2 N*_r (mean) | interleaved cost <= 2 (first depth-first mistake + 1) |
+   | plan-first, d=3, abandonment 20%, lucky 50% | 220.4 (668) | 29% | 111.8 (733) | 718.7 | yes |
+   | p=4, d=3, abandonment 30%, lucky 100% | 314.1 (1316) | 49% | 227.3 (1350) | 1,044.7 | yes |
+   The own-tree search alone can end without a hit after a lucky proof (it trusts 'proved' records);
+   interleaving it with a depth-first scan keeps the cost below twice the cheaper of the two.
+
+== The bounds for these shapes (per rejection) ==
+   plan-first, d=3, b=3, no abandonment: own-tree worst case p*d + r0 = 13; T6 under (Budget): 1 + r0 = 11; chain: 2 N*_r (about 400)
+   plan-first, d=4, b=3, no abandonment: own-tree worst case p*d + r0 = 14; T6 under (Budget): 1 + r0 = 11; chain: 2 N*_r (about 1212)
+   lemmas posed over 4 rounds (p=4), d=3: own-tree worst case p*d + r0 = 22; T6 under (Budget): 1 + r0 = 11; chain: 2 N*_r (about 466)
+   lemmas posed late (p=9), d=3: own-tree worst case p*d + r0 = 37; T6 under (Budget): 1 + r0 = 11; chain: 2 N*_r (about 564)
+
+== Adversarial placement (one insight, at the last planning round of each level in turn) ==
+   human tree: 240 rounds; p = 4, d = 3, r0 = 10
+   insight at depth 0, round 4: own 4, T6 423 (stalled, then chain), chain 212
+   insight at depth 1, round 4: own 8, T6 681 (stalled, then chain), chain 280
+   insight at depth 2, round 4: own 12, T6 1, chain 295
+   insight at depth 3, round 7: own 19, T6 54, chain 316
