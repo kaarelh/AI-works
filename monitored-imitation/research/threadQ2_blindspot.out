@@ -1,0 +1,66 @@
+A. Theorem Q2.1: wrong outputs stay O(K) when V has no total blind spot
+   m = 400 kinds, Zipf(1.1) frequencies over 70% of problems (30% routine); 20 seeds;
+   'bound' is c * rejections (reruns succeed here, so the +1 term is 0).
+   uniform: w = 0.5, f = 0.4                               c = 0.25; product-class bound sum_k c_k = 100
+      T =   1000: wrong outputs     37.0 (rate 0.0370), rejections   151.6, bound c*R = 38
+      T =  10000: wrong outputs     93.7 (rate 0.0094), rejections   372.1, bound c*R = 93
+      T = 100000: wrong outputs     97.1 (rate 0.0010), rejections   400.0, bound c*R = 100
+      last 10% of T = 1e5 (seed 0): failure rate 0.0000, rejection rate 0.0000, (c+1) x rejection rate 0.0000
+   heterogeneous: w ~ U[.3,.9], f ~ U[.2,.95]              c = 3.77; product-class bound sum_k c_k = 266
+      T =   1000: wrong outputs     76.5 (rate 0.0765), rejections   134.2, bound c*R = 506
+      T =  10000: wrong outputs    218.8 (rate 0.0219), rejections   356.8, bound c*R = 1344
+      T = 100000: wrong outputs    259.6 (rate 0.0026), rejections   399.9, bound c*R = 1507
+      last 10% of T = 1e5 (seed 0): failure rate 0.0000, rejection rate 0.0000, (c+1) x rejection rate 0.0000
+   one pure blind spot (kind 6: w = f = 1)                 c = inf; product-class bound sum_k c_k = inf
+      T =   1000: wrong outputs     54.9 (rate 0.0549), rejections   150.6, bound c*R = inf
+      T =  10000: wrong outputs    287.4 (rate 0.0287), rejections   371.1, bound c*R = inf
+      T = 100000: wrong outputs   2008.0 (rate 0.0201), rejections   399.0, bound c*R = inf
+      last 10% of T = 1e5 (seed 0): failure rate 0.0190, rejection rate 0.0000, (c+1) x rejection rate inf
+   unmasking: hidden 2nd layer w = 1, f = 0.9              c = 9.00; product-class bound sum_k c_k = 3644
+      T =   1000: wrong outputs    217.7 (rate 0.2177), rejections   183.5, bound c*R = 1652
+      T =  10000: wrong outputs   1364.8 (rate 0.1365), rejections   525.7, bound c*R = 4731
+      T = 100000: wrong outputs   3429.7 (rate 0.0343), rejections   781.6, bound c*R = 7034
+      last 10% of T = 1e5 (seed 0): failure rate 0.0045, rejection rate 0.0007, (c+1) x rejection rate 0.0070
+   30% problem-specific (fresh) kinds, w = 0.5, f = 0.4    c = 0.25; product-class bound sum_k c_k = 100
+      T =   1000: wrong outputs     91.5 (rate 0.0915), rejections   360.9, bound c*R = 90
+      T =  10000: wrong outputs    688.4 (rate 0.0688), rejections  2737.5, bound c*R = 684
+      T = 100000: wrong outputs   6110.6 (rate 0.0611), rejections 24422.8, bound c*R = 6106
+      last 10% of T = 1e5 (seed 0): failure rate 0.0589, rejection rate 0.2377, (c+1) x rejection rate 0.2971
+   Reading: with no total blind spot the total stays near c*m whatever T, so the rate
+   falls like K/T; a pure blind spot or problem-specific kinds make it linear in T.
+
+B. Theorem Q2.3: falsification by use bounds reliance on false outputs by K/(b e)
+   m = 200 kinds over all problems (Zipf 1.1); V passes every wrong claim of the first
+   50 kinds (w = f = 1: a pure blind spot) and catches the rest (f = 0); each problem
+   cites u = 3 uniform earlier outputs; a cited false output is exposed w.p. e, which is
+   a hit; the library is recomputed (outputs of a learned kind become correct). 20 seeds.
+   e = 0.05: uses of false outputs  1019.5 (bound K/(b e) with 50 blind kinds:  1000), exposures 50.0, wrong outputs released 383.4
+   e = 0.20: uses of false outputs   263.5 (bound K/(b e) with 50 blind kinds:   250), exposures 50.0, wrong outputs released 138.2
+   e = 0.50: uses of false outputs   102.0 (bound K/(b e) with 50 blind kinds:   100), exposures 50.0, wrong outputs released 83.4
+   Without uses (e = 0) every blind-kind problem is a wrong output for ever: about
+   81% of problems.
+
+C. Thread U's P(works) with the rejection budget of Theorem 5(b) imposed
+   (same draws as threadU_verify.p_works; 'orig' must reproduce its model figures).
+   orig : F = p w rbar f with p ~ U[.1,.5] independent of T/K ~ logU[3,30]
+   cap  : p <= 1/(T/K (1 - w f)), since rejections <= K (b = 1) under (A2), (A3');
+          mixed f, i.e. learning does not shift the error mix (no allocation)
+   kinds: F <= rbar * cbar / (T/K), cbar = sum_tau share_tau w f_tau/(1 - w f_tau):
+          Theorem Q2.1(b), each kind of error bounded separately (allocation allowed)
+   worst: as cap, with every error of the protocol's hardest type from the start
+   math      V-human: one expert reads (unlocated verdict)        orig 35% (threadU 35%) cap 48% kinds 47% worst 30% | output ok 54%->79%, effort ok 74% | f 0.43, worst f 0.92, cbar 0.24
+   math      read + AI critics (3)                                orig 64% (threadU 64%) cap 74% kinds 73% worst 49% | output ok 78%->90%, effort ok 94% | f 0.18, worst f 0.87, cbar 0.10
+   math      LEAN: machine + AI critics (3) + adversarial read    orig 62% (threadU 62%) cap 71% kinds 70% worst 45% | output ok 82%->93%, effort ok 92% | f 0.15, worst f 0.86, cbar 0.09
+   software  fixed acceptance tests only (folder's test-suite row orig 39% (threadU 39%) cap 63% kinds 59% worst 30% | output ok 45%->68%, effort ok 100% | f 0.45, worst f 1.00, cbar 0.38
+   software  LEAN: tests + independent tests + fuzzing + AI criti orig 73% (threadU 73%) cap 79% kinds 78% worst 48% | output ok 88%->94%, effort ok 95% | f 0.07, worst f 0.81, cbar 0.05
+   empirical V-human: one expert reads (unlocated)                orig  9% (threadU  9%) cap 11% kinds 11% worst  9% | output ok 18%->30%, effort ok 69% | f 0.70, worst f 0.95, cbar 1.19
+   empirical FAST: rerun + re-analysis + AI critics (3) + read    orig 23% (threadU 23%) cap 28% kinds 26% worst 15% | output ok 51%->61%, effort ok 76% | f 0.27, worst f 0.85, cbar 0.38
+   empirical FAST: rerun + re-analysis + AI critics (3) + read    orig 28% (threadU 28%) cap 34% kinds 31% worst 15% | output ok 61%->71%, effort ok 76% | f 0.17, worst f 0.85, cbar 0.24
+   judgment  the same + fact checks                               orig 28% (threadU 28%) cap 36% kinds 32% worst 16% | output ok 53%->62%, effort ok 82% | f 0.21, worst f 0.85, cbar 0.38
+   share of no-transfer draws with p (1 - wf) T > K, at wf = 0.19: 82%
+   share of no-transfer draws with p (1 - wf) T > K, at wf = 0.45: 66%
+   Reading: thread U samples p and T/K independently, so most of its no-transfer draws
+   need more rejections than Theorem 5(b) allows. Imposing the budget raises every row
+   whose binding constraint was output failure. Counting errors kind by kind keeps most
+   of the gain; only the extreme 'all errors of the hardest type' reading erases it.
+

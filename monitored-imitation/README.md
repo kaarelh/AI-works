@@ -3,7 +3,7 @@
 A research note on a question from Kaarel Hänni about **principled human imitation** (section 3.2 of his talk *Simpler versions of the alignment problem we still can't solve*, MISO, 16 November 2026).
 
 * **The question.** The talk's best protocol, *chained imitation*, does Solomonoff function induction on a human's input–output pairs, chains the learned map as in task decomposition, and queries the human on the distribution this induces ("train on test"). Find a protocol more likely to work, for a human that is a fixed deterministic program, under assumptions likely to be true of humans. Ideally, show that O(K(human)) reasonable queries suffice.
-* **The fifth note, the answer to the latest question:** [`verified-slack.md`](verified-slack.md). It recommends *verified slack imitation*: slack imitation, plus a verifier of finished results, plus a search on rejected runs weighted towards scanning. Correctness rests only on the verifier's soundness, and the cost is at most 2n₀K task queries in the worst case. It was revised after referees 6, 7 and 8 and a second red team ([`verification/referee-report-verified-slack.md`](verification/referee-report-verified-slack.md), [`verification/referee-report-verified-slack-v2.md`](verification/referee-report-verified-slack-v2.md), [`verification/referee-report-verified-slack-v3.md`](verification/referee-report-verified-slack-v3.md), [`research/threadS-redteam2.md`](research/threadS-redteam2.md), [`verification/response-verified-slack.md`](verification/response-verified-slack.md)). It synthesizes the research threads in [`research/`](research/) (A–H, J, L, N, Q, R, S, T, U), with lower bounds showing what no scheme can do.
+* **The fifth note, the answer to the latest question:** [`verified-slack.md`](verified-slack.md). It recommends *verified slack imitation*: slack imitation, plus a verifier of finished results, plus a search on rejected runs weighted towards scanning. Correctness rests only on the verifier's soundness, and the cost is at most 2n₀K task queries in the worst case. It was revised after referees 6, 7 and 8 and a second red team ([`verification/referee-report-verified-slack.md`](verification/referee-report-verified-slack.md), [`verification/referee-report-verified-slack-v2.md`](verification/referee-report-verified-slack-v2.md), [`verification/referee-report-verified-slack-v3.md`](verification/referee-report-verified-slack-v3.md), [`research/threadS-redteam2.md`](research/threadS-redteam2.md), [`verification/response-verified-slack.md`](verification/response-verified-slack.md)). It synthesizes the research threads in [`research/`](research/) (A–H, J, L, N, Q, Q2, R–W), with lower bounds showing what no scheme can do.
 * **The fourth note:** [`slack-imitation.md`](slack-imitation.md), version 2: slack imitation and its theorems, used by the fifth note. It proves that slack imitation works if the human has *bounded setback*, makes the case that humans have it, and has experiment E6. It was the answer before the fifth note.
 * **The fourth note's referee and red team** ([`verification/referee-report-slack-imitation.md`](verification/referee-report-slack-imitation.md), [`research/threadE-redteam.md`](research/threadE-redteam.md), [`verification/response-slack-imitation.md`](verification/response-slack-imitation.md)). Both found the main theorems correct, and the referee reproduced E6 exactly. The referee found:
   * three errors in secondary claims: the read-out premise, "omissions are uncertain", and a factor 1/(1−ρ) in the fallback;
@@ -61,10 +61,10 @@ A research note on a question from Kaarel Hänni about **principled human imitat
    * so do trusted true records of failed attempts, and confident commissions accepted by a fooled human.
 4. **How sure I am, after a second red team.** The probabilities that VSI works on a real careful researcher:
    * with a proof assistant on a formally stated goal, with an independent statement review and hardened checking: **70%**, the scheme I am most sure of. Thread T puts it at about 60% without them;
-   * with tests: 45%;
+   * with tests: 43%;
    * with a referee's check of the solution's cone: 45%;
-   * with a human verifier's check of the result: 40%;
-   * with thread U's combined human verifier (expert reader, use, machine checks, AI critics with located objections): 50% for informal theory, 60% for software without a full spec;
+   * with a human verifier's check of the result: 35%;
+   * with thread U's combined human verifier (expert reader, use, machine checks, AI critics with located objections): 46% for informal theory, 60% for software without a full spec;
    * without a verifier: 30%.
 
    These are for theory and software; for empirical work, 10% in every row with a human or no verifier.
@@ -176,6 +176,7 @@ A research note on a question from Kaarel Hänni about **principled human imitat
 | `code/robust_runs.py` | E4: chained imitation on E2's human, judged by fragile and robust properties. |
 | `code/make_figures.py` | Tables and figures from the saved outputs, and the novelty-firing curve. |
 | `verified-slack.md` | The fifth note: verified slack imitation, the scheme I am most sure of (version 3). |
+| `paper/verified-slack-imitation.pdf`, `paper/verified-slack-imitation.tex`, `paper/make_paper_figures.py`, `paper/fig_e6.pdf` | The paper: a self-contained write-up of the proposal, with proofs, the case for the assumptions, the experiments and the probabilities. |
 | `slack-imitation.md` | The fourth note: slack imitation and its theorems (version 2 of the answer). |
 | `code/slack_imitation.py` | E6: slack imitation on noticing, misled, fooled and silent humans, exact posteriors; protocols CI with and without slack, LAST, MIX, SI-V and SI-V-ABC. |
 | `code/setback_check.py` | An arithmetic sanity check of the bookkeeping in the fourth note's Lemma S, on random append-only humans. It cannot test bounded setback. |
@@ -220,7 +221,10 @@ A research note on a question from Kaarel Hänni about **principled human imitat
 * R: the composition experiment;
 * S: the red team of the fifth note;
 * T: the calibration of the machine verifier;
-* U: verifiers without a machine.
+* U: verifiers without a machine;
+* V: no optimization pressure, and bits of selection;
+* W: how often failed runs end with a confident claim;
+* Q2: a second fresh look at alternatives.
 
 The fifth note gives the proofs of its main results itself, and cites the threads for the full proofs of its lower bounds. Remove `research/` when publishing, or publish it as supporting records if the user prefers.
 

@@ -29,10 +29,10 @@ The request: *keep trying threads, and report the scheme you are most sure would
    * *Totals.* Search task queries are at most 2n₀K in the worst case, with no factor 1/ε, plus β per problem for audits (β = 1 is recommended with a human verifier). That is within a logarithm of the lower bound that holds even with a perfect verifier (Theorem Q1).
 3. **How sure I am.** "Works" means output failure at most 5% on projects of 20–40 three-month steps, at under a fifth of chained imitation's human effort. My probabilities that VSI works on a real careful researcher:
    * *VSI with a proof assistant on a formally stated goal,* with an independent statement review and hardened checking: **70%**. Thread T puts it at about 60% without them, and 77% with an AI formalizer inside the verifier, the human formalizing as a fallback, and thread T's halt rules;
-   * *with a test suite as the verifier:* 45%;
+   * *with a test suite as the verifier:* 43%;
    * *with a human referee checking the claimed solution entry by entry:* 45% for theory, 10% for empirical work;
-   * *with a human verifier's check of the finished result:* 40% and 10%. This is thread S's figure for an imitated verifier, and the verifier should be someone other than the imitated human;
-   * *with thread U's combined human verifier:* 50% for informal theory, 60% for software without a full specification, 15% for empirical work and 20% for judgment work. The combination is a careful expert reader, verification by use, machine checks of every computation and citation, and AI critics whose located objections an expert judges;
+   * *with a human verifier's check of the finished result:* 35% and 10%. This is thread S's figure for an imitated verifier, and the verifier should be someone other than the imitated human;
+   * *with thread U's combined human verifier:* 46% for informal theory, 60% for software without a full specification, 15% for empirical work and 20% for judgment work. The combination is a careful expert reader, verification by use, machine checks of every computation and citation, and AI critics whose located objections an expert judges;
    * *without any verifier* (slack imitation with asking and the design elements): 30% and 10%.
 
    That VSI's task queries are truly O(K), with neither n₀ nor 1/ε, I put at 25%, thread S's figure (thread S §7).
@@ -419,10 +419,10 @@ So the version that keeps both the letter and the spirit of the constraint is V-
 | scheme | correctness rests on | guarantee on task queries | draft | thread S | **final** |
 |---|---|---|---|---|---|
 | VSI, proof assistant on a formally stated goal, with the statement protocol and hardened checking | the reviewed statement and the checking pipeline | 2n₀K worst case | 85% | 70% | **70%** (thread T: about 60% without the protocol and hardening; 77% with the formalizer inside V, the human formalizing as a fallback, and the halt rules) |
-| VSI, test suite | the tests | 2n₀K worst case | (85%) | 45% | **45%** |
+| VSI, test suite | the tests | 2n₀K worst case | (85%) | 45% | **43%** (thread W) |
 | VSI, referee cone check (V-cone) | L's soundness, the statement being the goal, correct records | 2n₀K, 1 per invalid cone entry | 70% / 30% | 45% / 10% | **45% / 10%** |
-| VSI, human verifier (V-human) | the human's soundness, plus ε if imitated | 2n₀K, plus about one verification per problem | 65% / 30% | 40% / 10% | **40% / 10%** |
-| VSI, thread U's combined verifier (reader, use, machine checks, AI critics with located objections) | the combination's soundness; critics can only add rejections | 2n₀K, plus about 3 task steps of verification per problem in theory | – | – | **50%** informal theory; **60%** software without a full spec; **15% / 20%** empirical / judgment |
+| VSI, human verifier (V-human) | the human's soundness, plus ε if imitated | 2n₀K, plus about one verification per problem | 65% / 30% | 40% / 10% | **35% / 10%** (thread W) |
+| VSI, thread U's combined verifier (reader, use, machine checks, AI critics with located objections) | the combination's soundness; critics can only add rejections | 2n₀K, plus about 3 task steps of verification per problem in theory | – | – | **46%** informal theory (thread W); **60%** software without a full spec; **15% / 20%** empirical / judgment |
 | Proposition 7, no verifier | (B_D) at valid confident entries, (R-rev), (A-pers), (L2) | 3·max{d_max, n/c_r}·K/b_α failed runs online; with a retry rule of small r, that is about n per bit | 45% / 20% | 30% / 10% | **30% / 10%** |
 | slack imitation with asking (fourth note) | (B_D) at confident steps | the same | 40% / 20% | 25% / 10% | **25% / 10%** |
 | chained imitation (the talk) | nothing | n₀K/ε | baseline | baseline | baseline |
@@ -571,6 +571,7 @@ None of these needs a learner.
 | composition experiment | thread R ([`research/threadR-compose.md`](research/threadR-compose.md)) |
 | second red team: selection, post-mortem contamination, verifier soundness, scan-heavy search | thread S ([`research/threadS-redteam2.md`](research/threadS-redteam2.md)) |
 | no optimization pressure, bits of selection, malign coalitions, formalizer isolation | thread V ([`research/threadV-humanlike.md`](research/threadV-humanlike.md)) |
+| how often failed runs end with a confident claim (w) | thread W ([`research/threadW-confident-failures.md`](research/threadW-confident-failures.md)) |
 | calibration of the machine verifier: misformalization, formalization cost, kernel soundness, domain | thread T ([`research/threadT-formal.md`](research/threadT-formal.md)) |
 | verifiers without a machine: combined protocols, correlated misses, AI critics | thread U ([`research/threadU-nonformal.md`](research/threadU-nonformal.md)) |
 | checks, literature, elicitation, persistence | threads A, D, B, C |
