@@ -37,6 +37,10 @@ Searches compared on every rejected run (separate learning trajectories per meth
                claim is the human's own: repair N's cached verdict on it (a second judge upholds V's
                objection), so the human now revises it, and rerun.
 * loc+dfs    : loc interleaved with a depth-first scan (cached answers), stopping at the first hit.
+* repair     : repair first.  When V names a claim, N's cached verdict on it is set to "fail" (a second
+               judge upholds V's objection; V is exact here) and the problem is rerun with the same decoder,
+               at no task query; whose claim it was does not matter.  Only a run whose root is "open" is
+               searched, by thread Y's S_own from the root (Theorem Y2-2).
 * unloc+dfs  : V says only "rejected".  Thread Y's S_own from the root, interleaved with a depth-first
                scan.  A run with no mistake at all (the human's own slip passed by N) cannot be
                repaired without a location: the problem is abstained.
@@ -47,6 +51,8 @@ Also reported, on the loc trajectory's rejections: how often thread Y's S_own fr
 (target = root, no location) stalls, i.e. ends without a hit.
 
 Checks (asserted on every rejection of the cached methods):
+* repair: every search starts at an open root and ends with a hit, at cost <= sum_l pi_l + t*_N(u_L) and
+  <= p_max d + t_max, with path calls the human's own;
 * loc: cost <= sum_l pi_l + t*_N(u_L) (Theorem Y2-1's bound, with the human's rounds in T*_N), every
   path call is the human's own lemma posed after a mistake-free prefix, and cost <= p_max d + t_max;
   a CERT happens only at a named claim that is the human's own slip passed by N;
@@ -176,13 +182,13 @@ def make_problem(rng, P, ver, ctr):
 
 
 class RCall:
-    __slots__ = ("ref", "rounds", "rec", "term", "fvalid", "ontrack", "fidx")
+    __slots__ = ("ref", "rounds", "rec", "term", "fvalid", "ontrack", "fidx", "fkey")
 
 
 def run_call(c, clean, L, ver, P):
     r = P["r0"] + P["s"]
     u = RCall()
-    u.ref, u.rounds, u.rec, u.term, u.fvalid, u.ontrack, u.fidx = c, [], "open", None, None, False, None
+    u.ref, u.rounds, u.rec, u.term, u.fvalid, u.ontrack, u.fidx, u.fkey = c, [], "open", None, None, False, None, None
     W = len(c.work)
     if not clean:  # a corrupted (false) lemma: no mistakes inside; k_dev invalid submissions
         for rd in c.work:
@@ -194,7 +200,7 @@ def run_call(c, clean, L, ver, P):
             if a > 0:
                 u.rounds.append((False, []))
             if ver.run(KC, c.id, a, False):
-                u.rec, u.term, u.fvalid = "proved", t, False
+                u.rec, u.term, u.fvalid, u.fkey = "proved", t, False, (KC, c.id, a)
                 return u
         u.rounds += [(False, [])] * (r - len(u.rounds))
         return u
@@ -216,13 +222,14 @@ def run_call(c, clean, L, ver, P):
     while True:
         if ontrack:
             valid = not (i == 0 and c.slip)
-            ok = ver.run(KH, c.id, i, valid)
+            key = (KH, c.id, i)
         else:
             valid = False
-            ok = ver.run(KD, c.id, 64 * j0 + att, False)
+            key = (KD, c.id, 64 * j0 + att)
             att += 1
-        if ok:
+        if ver.run(*key, valid):
             u.rec, u.term, u.fvalid, u.ontrack, u.fidx = "proved", t, valid, ontrack, (i if ontrack else None)
+            u.fkey = key
             return u
         if (not ontrack and att >= P["kdev"]) or t + 1 >= r:
             break
@@ -385,7 +392,7 @@ def experiment(P, T, seed, meth, f):
     ver = Ver(f, f, mode, seed * 1000003 + int(round(f * 1000)), np.random.default_rng(seed + 31337))
     L, ctr = set(), [0]
     R = dict(hit=[], rep=[], unin=[], abstain=0, ok=True, nstar=[], y1stall=0, y1n=0, rootproved=0,
-             accepted=0, timeouts=0, slips=0, ff=0, calls=0, total=0, cert_bad=0, unin_slip=0)
+             accepted=0, timeouts=0, slips=0, ff=0, calls=0, total=0, cert_bad=0, unin_slip=0, wrong_h=0, wrong_i=0, rep_h=0, rep_i=0, vi=0)
     for _ in range(T):
         root, nstar = make_problem(rng, P, ver, ctr)
         acc = human_stats(root, [0, 0, 0, 0, 0, 0])
@@ -400,6 +407,11 @@ def experiment(P, T, seed, meth, f):
             path = None
             if ru.rec == "proved":
                 path = v_flag(ru, [])
+                if P.get("VeqN") and path is not None:
+                    # design B: V's node verdicts are N's, so V accepts every run whose root is proved;
+                    # record the invalid node it lets through (ground truth), and accept
+                    R["wrong_h" if is_human_slip(path[-1]) else "wrong_i"] += 1
+                    path = None
                 if path is None:
                     R["accepted"] += 1
                     break
@@ -414,13 +426,34 @@ def experiment(P, T, seed, meth, f):
                 R["ok"] = False
             target = path[-1]
             hit = None
-            if meth == "chain":
+            if meth == "repair" and ru.rec == "proved":
+                # repair first: V names a claim (a second judge upholds the objection; V is exact here), so N's
+                # cached verdict on it becomes "fail"; rerun with the same decoder, with no task query
+                ver.override[target.fkey] = False
+                if target.fkey[0] == KH:
+                    finalize(root, ver, P)
+                    R["rep_h"] += 1
+                else:
+                    R["rep_i"] += 1
+                continue
+            if meth == "repair":  # the root is open: thread Y's search from the root
+                seq = []
+                h_, st = s_own(ru, seq, [])
+                cost = len(seq)
+                if h_:
+                    hit = (st[-1][0], st[-1][1] - 1)
+                    if cost > own_bound(st) or not path_ok(st) or cost > pmax * P["d"] + tmax:
+                        R["ok"] = False
+                else:
+                    R["ok"] = False
+            elif meth == "chain":
                 stop = len(dfs) - 1
                 if target is not ru or ru.rec == "proved":
                     stop = next(i for i, x in enumerate(dfs) if x[0] is target and x[1] == target.term)
                 cost, hit = chain_search(dfs, srng, stop)
             elif meth == "loc":
                 seq = []
+                R["vi"] += ru.rec == "proved" and not is_human_slip(target)  # an invalid imitator claim V judged
                 h_, st = s_loc(path, seq)
                 cost = len(seq)
                 if h_:
@@ -482,7 +515,7 @@ def main():
     base = dict(d=3, b=3, p=1, r0=10, r0min=3, s=10, m=40, lam=1.0, eh=0.1, kdev=2)
     shapes = [("plan-first (p=1), d=3", dict()), ("p=4, d=3", dict(p=4))]
     rates = [0.0, 0.05, 0.15, 0.30]
-    methods = ["chain", "loc", "loc+dfs", "unloc+dfs", "fresh"]
+    methods = ["chain", "loc", "loc+dfs", "repair", "unloc+dfs", "fresh"]
     T, seeds = 300, [1, 2, 3, 4, 5]
     ns = len(seeds)
     print("== Thread Y2: task queries per rejection with a fallible node verifier N ==")
@@ -500,8 +533,9 @@ def main():
         if full:
             print("   | f | N*_r | T*_N: slips passed by N per call, false fails per call | chain: hit | chain: rep "
                   "| loc: hit | loc: rep | loc: hits, reps per seed | loc+dfs: hit | loc+dfs: rep "
+                  "| repair: hit; hits, repairs of human / imitator claims per seed "
                   "| unloc+dfs: hit; abstain % | fresh: hit; uninformative per seed (at a human slip %); abstain % "
-                  "| S_own from root stalls % | bounds hold |")
+                  "| S_own from root stalls % | invalid imitator claims named by V per seed: loc / repair | bounds hold |")
         else:
             print("   | f | N*_r | chain: hit | loc: hit | unloc+dfs: hit | rejections with root 'proved' % "
                   "| S_own from root stalls % | bounds hold |")
@@ -516,7 +550,7 @@ def main():
 
             lo = agg["loc"]
             calls = sum(R["calls"] for R in lo)
-            chk = [m for m in ("chain", "loc", "loc+dfs") if m in meths]
+            chk = [m for m in ("chain", "loc", "loc+dfs", "repair") if m in meths]
             ok = all(R["ok"] for m in chk for R in agg[m])
             bad = sum(R["cert_bad"] for m in chk for R in agg[m])
             y1 = 100 * tot("loc", "y1stall") / max(1, tot("loc", "y1n"))
@@ -533,9 +567,11 @@ def main():
                       f"| {fmt(cat('loc', 'hit'))} | {fmt(cat('loc', 'rep'))} "
                       f"| {len(cat('loc', 'hit')) / ns:.1f}, {len(cat('loc', 'rep')) / ns:.1f} "
                       f"| {fmt(cat('loc+dfs', 'hit'))} | {fmt(cat('loc+dfs', 'rep'))} "
+                      f"| {fmt(cat('repair', 'hit'))}; {len(cat('repair', 'hit')) / ns:.1f}, "
+                      f"{tot('repair', 'rep_h') / ns:.0f} / {tot('repair', 'rep_i') / ns:.0f} "
                       f"| {fmt(cat('unloc+dfs', 'hit'))}; {unl_ab:.0f}% "
                       f"| {fmt(cat('fresh', 'hit'))}; {nun / ns:.0f} ({fr_sl:.0f}%); {fr_ab:.0f}% "
-                      f"| {y1:.0f}% | {okstr} |")
+                      f"| {y1:.0f}% | {tot('loc', 'vi') / ns:.0f} / {tot('repair', 'rep_i') / ns:.0f} | {okstr} |")
             else:
                 print(f"   | {f:.2f} | {np.mean(cat('loc', 'nstar')):.0f} | {fmt(cat('chain', 'hit'))} "
                       f"| {fmt(cat('loc', 'hit'))} | {fmt(cat('unloc+dfs', 'hit'))} | {rp:.0f}% | {y1:.0f}% | {okstr} |")
@@ -550,15 +586,34 @@ def main():
     P["eh"] = 0.0
     block(P, shapes[0][0], ["chain", "loc", "unloc+dfs"], False)
 
+    P = dict(base)
+    P["VeqN"] = True
+    print(f"-- design B: V's node verdicts are N's (one verdict per claim); shape {shapes[0][0]}, e_h = {P['eh']} --")
+    print("   | f | loc: hit | loc: hits, reps per seed | loc: total per seed | outputs with an invalid node: "
+          "from the human's own slip %, from the imitator's deviation % | bounds hold |")
+    for f in rates:
+        Rs = [experiment(P, T, sd, "loc", f) for sd in seeds]
+        hits = [x for R in Rs for x in R["hit"]]
+        reps = sum(len(R["rep"]) for R in Rs)
+        out = sum(R["accepted"] for R in Rs)
+        wh, wi = sum(R["wrong_h"] for R in Rs), sum(R["wrong_i"] for R in Rs)
+        ok = all(R["ok"] and R["cert_bad"] == 0 for R in Rs)
+        print(f"   | {f:.2f} | {fmt(hits)} | {len(hits) / ns:.1f}, {reps / ns:.1f} | {sum(R['total'] for R in Rs) / ns:.0f} "
+              f"| {100 * wh / max(1, out):.1f}%, {100 * wi / max(1, out):.1f}% | {'yes' if ok else 'NO'} |")
+    print("   (Correctness is V's: in design B it rests on N's soundness per node, and the human's own slips that N passes")
+    print("   are output; the framework's convention, h = 0, conditions them away.)")
+    print()
+
     print("== Total task queries per seed (all searches, repairs and uninformative rejections included) ==")
-    print("   | shape | e_h | f | chain | loc | loc+dfs | unloc+dfs | fresh | 3 (p d + r0) x 40 |")
+    print("   | shape | e_h | f | chain | loc | loc+dfs | repair | unloc+dfs | fresh | 3 (p d + r0) x 40 |")
     for (sname, eh, f), s in summary.items():
         P = dict(base)
         P.update(dict(shapes)[sname])
         row = " | ".join(f"{s[m]:.0f}" if m in s else "-" for m in methods)
         print(f"   | {sname} | {eh} | {f:.2f} | {row} | {3 * (P['p'] * P['d'] + P['r0']) * 40} |")
     print()
-    print("   Reading.  'bounds hold' checks, on every rejection of chain, loc and loc+dfs: loc's cost <= sum pi_l +")
+    print("   'repair' spends no task query on a named claim: its repairs cost reruns and one verdict each, not human work.")
+    print("   Reading.  'bounds hold' checks, on every rejection of chain, loc, loc+dfs and repair: loc's cost <= sum pi_l +")
     print("   t*_N(u_L), with path calls the human's own and cost <= p_max d + t_max; every CERT is at the human's own")
     print("   slip; the first depth-first mistake is before N*_r; loc+dfs <= 2 min{loc, first + 1}.  unloc+dfs abstains")
     print("   when the run has no mistake (the human's own slip, passed by N, is all V objects to): without a location")
@@ -618,7 +673,7 @@ def counterexamples():
     seq = []
     hit, st = s_loc(path, seq)
     print(f"   CE3 (the human's slip passed by N): V names {'A' if path[-1].ref is A else 'B'} (first in depth-first "
-          f"order); S_loc {'hits' if hit else 'ends in CERT at A, the human own claim'} after {len(seq)} queries; "
+          f"order); S_loc {'hits' if hit else 'ends in CERT at A, the human' + chr(39) + 's own claim'} after {len(seq)} queries; "
           f"without the repair rule this is a stall although B holds a mistake.")
     # CE1: randomized verdicts.  No unlearned insight at all; A's leaf budget is tight (s = 0), and a
     # fresh false fail on the human's own valid claim in A makes A 'open' in this run.

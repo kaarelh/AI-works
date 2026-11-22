@@ -542,6 +542,8 @@ Thread N extends slack to decomposition trees: extra rounds per call, with setba
 * *Numbers.* In a toy with exact Bayes, 6.7–17 task queries per rejection, against 120–351 for the chain scan. With a round of a working day, thread Y estimates p·d + r₀ ≈ 7–45 days per rejection for blueprints like Carleson's (179 lemmas, 28 contributors, statements formalized first, lemmas proved from local statements).
 * *Probability* (thread Y): about 45% (55% and 31%, averaged and rounded up) that a careful mathematician following the blueprint instruction gets output failure ≤ 5% and at most 3(p·d + r₀)K task queries, conditional on the idealizations; 55% for formalization-style work, 35% for new research.
 
+**Informal blueprints (thread Y2, [`research/threadY2-informal-blueprints.md`](research/threadY2-informal-blueprints.md)).** With a fallible node verifier N (for example a VSI-R pool), the blueprint search's cost bound survives if N's verdicts are a fixed function of the claim (cached, seeded by a hash of the claim) and the root verifier V names the claim it objects to. A *repair-first* rule (when V names a claim and a second judge upholds the objection, overwrite N's cached verdict with "fail" and rerun, with no task query) gives at most (p·d + r₀ + D·φ_max)·K/b task queries [proved], where φ counts N's false fails on the human's own claims in a call. In thread Y2's toy, 6.3–6.8 task queries per hit at node error rates of 0–30%, against 115–120 for the chain scan. Probability of meeting output failure ≤ 5% and ≤ 3(p·d + r₀)K in informal theory: about 15%; about 40% under the weaker "works", no better than chain VSI-R.
+
 ## 10. What to measure first
 
 None of these needs a learner.
@@ -594,6 +596,7 @@ None of these needs a learner.
 | no total blind spot (Theorem 6′), falsification by use, VSI-R, corrected estimates for human verifiers | thread Q2 ([`research/threadQ2-freshlook.md`](research/threadQ2-freshlook.md)) |
 | how often failed runs end with a confident claim (w) | thread W ([`research/threadW-confident-failures.md`](research/threadW-confident-failures.md)) |
 | formal blueprint trees: own-tree search, (p·d + r₀)K/b | thread Y ([`research/threadY-formal-trees.md`](research/threadY-formal-trees.md)) |
+| informal blueprints, fallible node verifiers, repair first | thread Y2 ([`research/threadY2-informal-blueprints.md`](research/threadY2-informal-blueprints.md)) |
 | calibration of the machine verifier: misformalization, formalization cost, kernel soundness, domain | thread T ([`research/threadT-formal.md`](research/threadT-formal.md)) |
 | verifiers without a machine: combined protocols, correlated misses, AI critics | thread U ([`research/threadU-nonformal.md`](research/threadU-nonformal.md)) |
 | checks, literature, elicitation, persistence | threads A, D, B, C |
