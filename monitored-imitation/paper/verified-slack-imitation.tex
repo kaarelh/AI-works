@@ -241,6 +241,21 @@ In slack imitation without a verifier, confident wrong content, lost insights an
 With a verifier, asking changes only the cost. In our experiments, asking at every unconfident step multiplied VSI's cost 5--35-fold on several mechanisms, so the default asks at most at the step that writes the claimed solution.
 \end{remark}
 
+\begin{proposition}[a safety net for any learner]\label{prop:any-learner}
+Run VSI with \emph{cache-first decoding} (at any notebook already asked about, the imitator outputs the human's recorded answer; elsewhere any learner may decide) and with answers cached, so that no notebook is asked about twice. Assume (A3$'$) and no asks. Then, whatever the learner:
+\begin{enumerate}[label=(\alph*),nosep]
+\item correctness is as in Theorem~\ref{thm:main}(a);
+\item on any single problem, VSI makes at most $2n_0$ task queries in total, over all its reruns: twice what the human needs to do the problem itself;
+\item if the learner makes at most $M$ mistakes on the notebooks it predicts before being told their answers (for exact Bayes, $M\le\K$ by Lemma~\ref{lem:bit}), there are at most $M$ rejections, and at most $2n_0M$ task queries in all.
+\end{enumerate}
+\end{proposition}
+\begin{proof}
+(b) Fix a problem. In any run, the steps before the first committed mistake follow the human's own chain $c_0,c_1,\dots$, and by Lemma~\ref{lem:early} the first mistake is at a step below $n_0$. A cached notebook cannot be a mistake, by cache-first decoding. So each search's scan stream queries only notebooks $c_i$ with $i<n_0$ that have not been asked before, and each search's first query is such a scan query. Hence the scan queries at most $n_0$ distinct notebooks over all searches of the problem, and there are at most $n_0$ searches. In every prefix of the cycle S, U, S, H, the non-scan queries are at most as many as the scan queries, so the total is at most $2n_0$.
+(c) Each rejection ends with a query at a notebook where the learner's prediction, made before being told, was wrong; so there are at most $M$ rejections, each costing at most $2n_0$ by the argument of (b).
+\end{proof}
+
+So with cache-first decoding, which the scaffold can enforce, VSI's cost never exceeds about twice the human's own effort on any problem, for any learner; the learner's quality decides only how much of the human's effort is saved across problems.
+
 \begin{proposition}[if the verifier is unsound]\label{prop:unsound}
 The failed outputs are exactly the accepted runs whose verified claim fails the goal. Suppose the goal predicate (``the first claim that $V$ passes satisfies the goal'') is preserved by appending, the human's own chain reaches it within $n_0$, and the setback in its remaining time is at most $D$ at committed mistakes of accepted runs. Then $\Ex[\#\text{failed outputs}]\le\K/(b\,\beta\,\gamma)$ with $\gamma=\max\{1,(\sigma+1)/(D+1)\}/n$.
 \end{proposition}

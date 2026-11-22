@@ -247,6 +247,21 @@ For each problem, repeat:
 * *(e)* sums (b) and (d) by Wald's identity, since the number of searches is bounded.
 * *(f).* An output passed the check, so with (M-prefix) none of its notebooks is bizarre, and Lemma S applies in τ\*. Without the check, assume (B_D) in τ\* for bizarre entries too. The run and V's verdict are fixed before the audit's coin, so an audit hits with probability at least γ\*. Every hit is counted in (b). ∎
 
+**Proposition 5′ (a safety net for any learner).** Run VSI with *cache-first decoding*, with answers cached so that no notebook is asked twice, and with no asks. Cache-first decoding means that at any notebook already asked about, the imitator outputs the human's recorded answer; elsewhere any learner may decide. Assume (A3′). Then, whatever the learner:
+* (a) correctness is as in Theorem 5(a);
+* (b) on any single problem, VSI makes at most 2n₀ task queries in total, over all its reruns;
+* (c) if the learner makes at most M mistakes on the notebooks it predicts before being told their answers, there are at most M rejections, and at most 2n₀M task queries in all. For exact Bayes, M ≤ K.
+
+*Proof.*
+* *(b).* Fix a problem.
+  * In any run, the steps before the first committed mistake follow the human's own chain, and the first mistake is below n₀ (Lemma 1).
+  * A cached notebook cannot be a mistake. So each search's scan queries only chain notebooks c_i, i < n₀, that were never asked before, and each search's first query is such a scan query.
+  * Hence at most n₀ scan queries over all searches of the problem, and at most n₀ searches.
+  * In every prefix of the cycle S, U, S, H, the non-scan queries number at most the scan queries, so the total is at most 2n₀.
+* *(c).* Each rejection ends with a query at a notebook where the learner's earlier prediction was wrong, so there are at most M rejections, each costing at most 2n₀ by (b). ∎
+
+So with cache-first decoding, which the scaffold can enforce, VSI never costs more than about twice the human's own effort on any problem, for any learner. The learner's quality decides only how much of that effort is saved across problems.
+
 **Theorem 6 (imitating the verifier; thread Q, Theorem Q5).** Let V_H be a human verifier's verdict, a one-step deterministic function, and K_V its code length or its residual after the task data.
 * *Protocol.* Keep a Bayes posterior over V_H, and let V′ be its majority decoder. On each claimed solution y:
   * if V′ rejects, ask V_H(y);
