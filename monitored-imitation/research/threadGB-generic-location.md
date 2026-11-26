@@ -303,3 +303,13 @@ So the assumption to make about the human is not "generic program". It is this: 
 
   Under the universal-type prior, exercised rules have j = O(1) and ≈ 6 bits each. The single-use rate 0.88/log₂²(nT) then gives ≈ 0.04·n/log₂²(nT) per bit.
 * *Lower bound.* For general protocols, each single-use rule is an instance of the hidden-insight class: a uniform location among about n fresh steps, an unknown value in [q], and no recurrence. The proof of Theorem lb-verify applies to it, per rule. ∎
+
+## Errata after the referee (verification/referee-report-generic.md)
+
+* **GB2 is correct** (stress-tested on 19,290 searches). The valid summed form is K·max{1 + 1/c_γ, n₀/log₂(1/γ)}; at n₀ = 20–40 the best γ gives 6.5–10.5 queries per bit. At γ = log₂n₀/n₀ the first-phase term is about 0.69·n₀/log₂n₀ per bit, not O(1).
+* **GB1(a)**'s "at most n₀" needs a class of valid hypotheses only; with slack and invalid hypotheses, condition λ on "h disagrees with the run below n₀" (which P always satisfies).
+* **Item 7:** replacing the scan by B_γ loses the any-learner cap and the bounded-setback and pointer bounds; alternate B_γ with the scan and keep U and H.
+* **GB3** also needs answers that reveal each called entry separately, and uniform entries with no default value; with a default of probability 1 − δ, M1 becomes a rare-insight class.
+* **GB7 constants:** include each rule's log₂d + log₂q overhead: 0.11 instead of 0.2, 0.64 instead of 1.3, ratio about 9 instead of 18.
+* **"Θ(n) [P per rejection]"** should be "(|U|+1)/2 [P]".
+* **Minor:** GB4(b)'s exclusion factor is (1 − 1/(2^j − 1))^m; GB5's "R₁ passes on rerun" can fail on fresh steps; GB2's corollary needs about 1/η + 1 verifications per insight problem.

@@ -580,6 +580,16 @@ None of these needs a learner.
   * VSI-D: posterior-sample a whole hypothesis, run it up to m times, and on failure have the human work the problem (a demonstration). E[demonstrations] ≤ (ln 2/2)K/((1−θ)²s²) + Σ_t(1 − θs)^m, each at most n queries; an output raises any hypothesis's odds against the human's by at most 1/s.
   * Thread Z's estimate: about 45% unconditional for the formal row (against 40%), about 60% conditional on realizability alone.
 
+## 10c. Generic humans (paper §7; threads GA and GB, refereed once)
+
+The question: if the human is a generic program of its complexity, does the scheme work, with trolled humans rare?
+* *Generic* = a typical draw from the learner's own prior; for one program, small randomness deficiency d relative to the protocol. Prior-average cost bounds transfer to every program at a factor 2^(d + K(B|Π) + O(1)).
+* *Trolling is ruled out beyond honest unknowns* [proved]. By calibration, a committed step with top mass ≥ 1 − α is wrong with probability ≤ α whoever holds the majority; Φ is within d + K(n) + O(1) of the unexercised information r_n, so no consistent impostor is much more than d + r_n bits shorter than the human. The constructed victims are the high-deficiency programs. Runtime bounds remove slow malign simulators, not "the human minus an unexercised branch".
+* *Occam mismatch:* a learner prior that underweights the humans' class S costs at most log₂(1/w(S)) bits of total divergence: about K(K) for a complexity band under a universal prior, but large under cruder simplicity priors (7–25× the learner's own estimate in a toy).
+* *Location is not made cheap by genericity.* Under rare-insight priors a typical human suffers about K/(b + log₂e) confident mistakes; for decision lists with log-uniform rule frequencies a fixed share of exercised rules fire only once (silent), so location stays linear in n.
+* *Exposure makes it cheap* [proved for modular programs]: with visible calls into code tables (uniform entries, no defaults), Bayesian search costs at most K/log₂q task queries in all, for every program. Toy: 813 → 36 queries per modular human, 187 → 63 per decision-list human. Condition: each bit that matters is used at flaggable steps or in more than one problem.
+* *Threshold search* [proved, no genericity]: query steps whose current doubt is ≥ γ first, then the rest below n₀: at most K·max{1 + 1/c_γ, n₀/log₂(1/γ)} search queries, about 6.5–10.5 per bit at n₀ = 20–40 against 2n₀ for S, U, S, H, and O(n₀K/log n₀) asymptotically, matching the verification lower bound up to a constant. Alternate it with the scan to keep the other bounds.
+
 ## 11. Limits
 
 * *Idealizations.* Determinism, exact Bayes over a class containing the human, and cold-start chains. Thread L finds experts noisy, with about 90% repeatability on categorical decisions and far less on open-ended work. VSI's correctness survives these with a machine verifier, but its cost theory does not.
@@ -616,6 +626,8 @@ None of these needs a learner.
 | formal blueprint trees: own-tree search, (p·d + r₀)K/b | thread Y ([`research/threadY-formal-trees.md`](research/threadY-formal-trees.md)) |
 | a non-deterministic human: canonical style, deviations, VSI-D | thread Z ([`research/threadZ-stochastic-human.md`](research/threadZ-stochastic-human.md)) |
 | noisy and research-shaped blueprints | thread AA ([`research/threadAA-noisy-blueprints.md`](research/threadAA-noisy-blueprints.md)) |
+| generic humans: calibration, trolls, transfer, identification | thread GA ([`research/threadGA-generic-trolls.md`](research/threadGA-generic-trolls.md)) |
+| generic humans: Bayesian and threshold search, exposure | thread GB ([`research/threadGB-generic-location.md`](research/threadGB-generic-location.md)) |
 | informal blueprints, fallible node verifiers, repair first | thread Y2 ([`research/threadY2-informal-blueprints.md`](research/threadY2-informal-blueprints.md)) |
 | calibration of the machine verifier: misformalization, formalization cost, kernel soundness, domain | thread T ([`research/threadT-formal.md`](research/threadT-formal.md)) |
 | verifiers without a machine: combined protocols, correlated misses, AI critics | thread U ([`research/threadU-nonformal.md`](research/threadU-nonformal.md)) |

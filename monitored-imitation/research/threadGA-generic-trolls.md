@@ -311,3 +311,13 @@ So, up to d + K(Q_n | f_P) + O(log K):
 * (iv) and (vi) follow by inspection.
 * (vii) is the definition with w_t.
 * (i) and (v) are quoted from `malign-prior-toy` (its sections on time bounds and on the wrapper floor). They are not reproved here.
+
+## Errata after the referee (verification/referee-report-generic.md)
+
+* **GA6(c) is wrong as stated.** The count #{x : K(x) = K} = 2^(K−K(K)+O(1)) fails on some universal machines (pad odd-length programs, and every complexity becomes even). Use a band {K − c < K(f) ≤ K} with c a machine constant: Chaitin's count gives it mass 2^(−K(K)±O(1)), and s ≤ K(K) + O(1).
+* **§7, α = 0.2 row:** 5.0 → 5.15, 7.8 → 8.11, 1.09 → 1.105, 16% → 25%.
+* **Answers in brief, item 1:** "up to d" should read "up to d + K(n)"; once K(n) exceeds b the result says nothing about a single confident mistake.
+* **GA11(c)** needs (A2) on the whole support of the prior; the individual version needs a K(T|Π) term.
+* **GA12(ii):** a diagonalizer only has to compute the decoder's label at its targets, which can be cheap; "must run exact Bayes" is too strong.
+* **GA1(c)** drops a K(B|Π) term.
+* **Minor:** the nested-chain mass is not exactly (α/3)^j (0.983× at j = 16).

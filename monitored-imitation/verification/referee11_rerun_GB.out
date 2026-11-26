@@ -1,0 +1,140 @@
+Thread GB: does genericity make mistakes cheap to locate?  (python3 -B threadGB_location.py)
+
+== E1: location under three random-program classes (exact Bayes; chain-equality verifier, n = n0) ==
+   T = 300 problems per human; 12 humans per row (drawn from the class prior unless marked)
+   Columns: rej = rejections per human; Q = task queries per human; Q/rej = mean search cost per rejection (max);
+   at the same rejections, before the search: G = guessing cost of lambda, 1/maxL, 2^H, Ar = (sum sqrt lambda)^2,
+   supp = |supp lambda|, susp = suspect steps (doubt > 0), f+1 = scan position of the true first mistake,
+   rank = its rank in the lambda order; for CI: wrong = wrong outputs per human (CI makes T queries).
+   thr bound = Theorem GB2: K (1 + 1/c + n/log2(1/gamma)), gamma = log2(n)/n, c = log2(1/(1-gamma)).
+
+-- M1 prior, n = 16 --
+   | protocol | rej | Q | Q/rej (max) | G | 1/maxL | 2^H | Ar | supp | susp | f+1 | rank | wrong (CI) | K | thr bound |
+   |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+   | CI | - | 300 | (15.3 queries per hit) | - | - | - | - | - | - | - | - | 113.2 | 96 | - |
+   | scan | 27.8 | 221.1 | 7.97 (16) | 1.12 | 1.1 | 1.4 | 1.6 | 2.9 | 3.8 | 8.0 | 1.1 | 0 | 96 | - |
+   | bayes | 27.8 | 30.7 | 1.11 (3) | 1.12 | 1.1 | 1.4 | 1.6 | 2.9 | 3.8 | 8.0 | 1.1 | 0 | 96 | - |
+   | thr | 26.3 | 27.8 | 1.06 (3) | 1.11 | 1.1 | 1.4 | 1.6 | 2.8 | 3.8 | 7.6 | 1.1 | 0 | 96 | 1095 (max Q 33; fallbacks 0.0) |
+
+-- M1 adversarial (code never the tie-break), n = 16 --
+   | protocol | rej | Q | Q/rej (max) | G | 1/maxL | 2^H | Ar | supp | susp | f+1 | rank | wrong (CI) | K | thr bound |
+   |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+   | CI | - | 300 | (11.8 queries per hit) | - | - | - | - | - | - | - | - | 131.5 | 96 | - |
+   | scan | 37.8 | 299.1 | 7.92 (16) | 1.10 | 1.1 | 1.3 | 1.5 | 2.6 | 3.4 | 7.9 | 1.0 | 0 | 96 | - |
+   | bayes | 37.8 | 37.8 | 1.00 (1) | 1.10 | 1.1 | 1.3 | 1.5 | 2.6 | 3.4 | 7.9 | 1.0 | 0 | 96 | - |
+   | thr | 34.3 | 34.3 | 1.00 (1) | 1.11 | 1.1 | 1.4 | 1.6 | 2.6 | 3.5 | 7.2 | 1.0 | 0 | 96 | 1095 (max Q 38; fallbacks 0.0) |
+
+-- FV prior, n = 16 --
+   | protocol | rej | Q | Q/rej (max) | G | 1/maxL | 2^H | Ar | supp | susp | f+1 | rank | wrong (CI) | K | thr bound |
+   |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+   | CI | - | 300 | (56.2 queries per hit) | - | - | - | - | - | - | - | - | 44.5 | 65 | - |
+   | scan | 6.2 | 47.3 | 7.57 (16) | 3.20 | 3.2 | 6.5 | 8.5 | 14.1 | 14.1 | 7.6 | 3.4 | 0 | 65 | - |
+   | bayes | 6.2 | 19.9 | 3.19 (13) | 3.42 | 3.4 | 7.1 | 9.1 | 14.7 | 14.7 | 7.5 | 3.4 | 0 | 65 | - |
+   | thr | 6.4 | 20.5 | 3.19 (13) | 3.40 | 3.3 | 7.0 | 9.1 | 14.8 | 14.8 | 7.4 | 3.5 | 0 | 65 | 736 (max Q 27; fallbacks 3.6) |
+
+-- FV rare-only (2^j in [4n, nT/2]), n = 16 --
+   | protocol | rej | Q | Q/rej (max) | G | 1/maxL | 2^H | Ar | supp | susp | f+1 | rank | wrong (CI) | K | thr bound |
+   |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+   | CI | - | 300 | (48.6 queries per hit) | - | - | - | - | - | - | - | - | 67.2 | 70 | - |
+   | scan | 8.8 | 68.8 | 7.87 (16) | 3.70 | 3.8 | 7.7 | 9.4 | 14.6 | 14.6 | 7.9 | 3.2 | 0 | 70 | - |
+   | bayes | 8.7 | 27.1 | 3.12 (16) | 3.82 | 4.0 | 8.0 | 9.6 | 15.0 | 15.0 | 7.9 | 3.1 | 0 | 70 | - |
+   | thr | 8.8 | 27.8 | 3.14 (16) | 3.76 | 3.9 | 7.8 | 9.5 | 14.9 | 14.9 | 7.9 | 3.2 | 0 | 70 | 793 (max Q 42; fallbacks 5.4) |
+
+-- SIL (silent humans), n = 16 --
+   | protocol | rej | Q | Q/rej (max) | G | 1/maxL | 2^H | Ar | supp | susp | f+1 | rank | wrong (CI) | K | thr bound |
+   |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+   | CI | - | 300 | (33.0 queries per hit) | - | - | - | - | - | - | - | - | 147.3 | 1184 | - |
+   | scan | 147.3 | 1274.8 | 8.65 (16) | 8.50 | 16.0 | 16.0 | 16.0 | 16.0 | 16.0 | 8.7 | 8.7 | 0 | 1184 | - |
+   | bayes | 147.3 | 1274.8 | 8.65 (16) | 8.50 | 16.0 | 16.0 | 16.0 | 16.0 | 16.0 | 8.7 | 8.7 | 0 | 1184 | - |
+   | thr | 147.3 | 1274.8 | 8.65 (16) | 8.50 | 16.0 | 16.0 | 16.0 | 16.0 | 16.0 | 8.7 | 8.7 | 0 | 1184 | 13509 (max Q 1394; fallbacks 147.3) |
+
+-- M1 prior, n = 64 --
+   | protocol | rej | Q | Q/rej (max) | G | 1/maxL | 2^H | Ar | supp | susp | f+1 | rank | wrong (CI) | K | thr bound |
+   |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+   | CI | - | 300 | (16.3 queries per hit) | - | - | - | - | - | - | - | - | 210.2 | 96 | - |
+   | scan | 31.4 | 813.4 | 25.89 (64) | 1.14 | 1.2 | 1.5 | 1.8 | 5.6 | 13.7 | 25.9 | 1.1 | 0 | 96 | - |
+   | bayes | 31.4 | 36.0 | 1.15 (5) | 1.14 | 1.2 | 1.5 | 1.8 | 5.6 | 13.7 | 25.9 | 1.1 | 0 | 96 | - |
+   | thr | 28.6 | 30.8 | 1.08 (3) | 1.14 | 1.1 | 1.5 | 1.8 | 5.3 | 13.2 | 24.0 | 1.2 | 0 | 96 | 2571 (max Q 36; fallbacks 0.0) |
+
+-- M1 adversarial (code never the tie-break), n = 64 --
+   | protocol | rej | Q | Q/rej (max) | G | 1/maxL | 2^H | Ar | supp | susp | f+1 | rank | wrong (CI) | K | thr bound |
+   |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+   | CI | - | 300 | (12.2 queries per hit) | - | - | - | - | - | - | - | - | 241.3 | 96 | - |
+   | scan | 42.7 | 1120.8 | 26.27 (64) | 1.14 | 1.1 | 1.5 | 1.8 | 5.0 | 12.2 | 26.3 | 1.0 | 0 | 96 | - |
+   | bayes | 42.7 | 42.7 | 1.00 (1) | 1.14 | 1.1 | 1.5 | 1.8 | 5.0 | 12.2 | 26.3 | 1.0 | 0 | 96 | - |
+   | thr | 37.0 | 37.0 | 1.00 (1) | 1.13 | 1.1 | 1.4 | 1.7 | 4.8 | 11.6 | 23.8 | 1.0 | 0 | 96 | 2571 (max Q 39; fallbacks 0.0) |
+
+-- FV prior, n = 64 --
+   | protocol | rej | Q | Q/rej (max) | G | 1/maxL | 2^H | Ar | supp | susp | f+1 | rank | wrong (CI) | K | thr bound |
+   |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+   | CI | - | 300 | (64.3 queries per hit) | - | - | - | - | - | - | - | - | 88.8 | 65 | - |
+   | scan | 7.3 | 186.8 | 25.48 (64) | 9.09 | 6.4 | 19.5 | 28.5 | 52.3 | 52.4 | 25.5 | 8.3 | 0 | 65 | - |
+   | bayes | 7.2 | 63.2 | 8.72 (53) | 9.84 | 7.1 | 21.4 | 30.8 | 54.7 | 54.8 | 24.2 | 8.8 | 0 | 65 | - |
+   | thr | 7.6 | 62.4 | 8.23 (53) | 9.75 | 6.9 | 21.0 | 30.7 | 55.2 | 55.2 | 23.8 | 8.6 | 0 | 65 | 1729 (max Q 95; fallbacks 3.7) |
+
+-- FV rare-only (2^j in [4n, nT/2]), n = 64 --
+   | protocol | rej | Q | Q/rej (max) | G | 1/maxL | 2^H | Ar | supp | susp | f+1 | rank | wrong (CI) | K | thr bound |
+   |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+   | CI | - | 300 | (144.0 queries per hit) | - | - | - | - | - | - | - | - | 105.8 | 80 | - |
+   | scan | 7.8 | 255.7 | 32.99 (64) | 12.37 | 9.3 | 27.6 | 35.9 | 58.5 | 58.5 | 33.0 | 15.2 | 0 | 80 | - |
+   | bayes | 8.2 | 112.4 | 13.77 (63) | 12.38 | 9.6 | 27.6 | 35.7 | 59.3 | 59.4 | 31.5 | 15.4 | 0 | 80 | - |
+   | thr | 8.2 | 111.8 | 13.56 (63) | 12.35 | 9.5 | 27.4 | 35.6 | 59.4 | 59.4 | 31.5 | 15.3 | 0 | 80 | 2130 (max Q 185; fallbacks 5.0) |
+
+-- SIL (silent humans), n = 64 --
+   | protocol | rej | Q | Q/rej (max) | G | 1/maxL | 2^H | Ar | supp | susp | f+1 | rank | wrong (CI) | K | thr bound |
+   |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+   | CI | - | 300 | (240.0 queries per hit) | - | - | - | - | - | - | - | - | 147.3 | 1479 | - |
+   | scan | 147.3 | 4874.5 | 33.08 (64) | 32.50 | 64.0 | 64.0 | 64.0 | 64.0 | 64.0 | 33.1 | 33.1 | 0 | 1479 | - |
+   | bayes | 147.3 | 4874.5 | 33.08 (64) | 32.50 | 64.0 | 64.0 | 64.0 | 64.0 | 64.0 | 33.1 | 33.1 | 0 | 1479 | - |
+   | thr | 147.3 | 4874.5 | 33.08 (64) | 32.50 | 64.0 | 64.0 | 64.0 | 64.0 | 64.0 | 33.1 | 33.1 | 0 | 1479 | 39602 (max Q 5357; fallbacks 147.3) |
+
+== E2: FV prior, n = 64: search cost per rejection by the kind of the true first mistake ==
+   rare-new = first firing of an undiscovered rule with 2^j > n; new = first firing of a frequent rule; known = a discovered rule
+   | protocol | kind | rejections | Q/rej | G | 1/maxL | f+1 | rank |
+   |---|---|---|---|---|---|---|---|
+   | scan | rare-new | 31 | 30.39 | 15.99 | 13.3 | 30.4 | 17.3 |
+   | scan | new | 25 | 15.28 | 7.32 | 4.1 | 15.3 | 6.4 |
+   | scan | known | 32 | 28.69 | 3.78 | 1.7 | 28.7 | 1.1 |
+   | bayes | rare-new | 31 | 17.61 | 16.67 | 14.4 | 30.4 | 17.6 |
+   | bayes | new | 25 | 7.20 | 8.32 | 4.7 | 14.8 | 7.5 |
+   | bayes | known | 31 | 1.06 | 4.23 | 1.7 | 25.6 | 1.1 |
+   | thr | rare-new | 31 | 17.39 | 16.68 | 14.4 | 30.4 | 17.2 |
+   | thr | new | 27 | 6.56 | 8.40 | 4.6 | 15.1 | 8.0 |
+   | thr | known | 33 | 1.00 | 4.33 | 1.7 | 24.8 | 1.0 |
+
+== E3: one rule of fixed rarity 2^-j (FV1; learner prior uniform on j = 1..14), n = 64, T = 300, 24 humans per j ==
+   fires = problems whose human chain fires the rule; first = cost of the search that discovers the rule;
+   defer: a rejection with 1/max lambda > n/4 waits (<= 5 waiting), conditioned on as "the rule fires in that run".
+   | j | humans | fires (mean) | protocol | Q per human | first discovery cost (mean) | when fires = 1 | when fires >= 2 | deferrals |
+   |---|---|---|---|---|---|---|---|---|
+   | 4 | 24 | 295.0 | immediate | 10.7 | 10.0 (24) | - | 10.0 (24) | 0.0 |
+   | 4 | 24 | 295.0 | defer | 10.7 | 10.0 (24) | - | 10.0 (24) | 0.0 |
+   | 8 | 24 | 66.5 | immediate | 20.0 | 19.2 (24) | - | 19.2 (24) | 0.0 |
+   | 8 | 24 | 66.5 | defer | 11.0 | 10.6 (24) | - | 10.6 (24) | 0.8 |
+   | 10 | 24 | 19.2 | immediate | 20.2 | 19.5 (24) | - | 19.5 (24) | 0.0 |
+   | 10 | 24 | 19.2 | defer | 6.0 | 5.8 (24) | - | 5.8 (24) | 0.8 |
+   | 12 | 24 | 4.1 | immediate | 19.6 | 19.8 (23) | 1.5 (2) | 21.5 (21) | 0.0 |
+   | 12 | 24 | 4.1 | defer | 4.1 | 4.3 (23) | 1.5 (2) | 4.5 (21) | 0.6 |
+   | 14 | 24 | 1.1 | immediate | 18.0 | 26.6 (16) | 19.6 (8) | 33.5 (8) | 0.0 |
+   | 14 | 24 | 1.1 | defer | 10.3 | 15.2 (16) | 19.6 (8) | 10.8 (8) | 0.2 |
+
+== E4: how often a random decision list has rare and single-shot rules (exact binomial counts, no simulation) ==
+   A rule of rarity j fires in a run of n fresh steps w.p. pi_j = 1-(1-2^-j)^n; over T problems it fires in Bin(T, pi_j) of them.
+   Per rule: P(fires in exactly one problem) = single; P(fires, and 2^j > n) = rare-exercised; P(fires at all) = exercised.
+   Priors on j: log-uniform = uniform on 1..d (d = 40); universal-type = P(j) proportional to 1/j^2 on 1..200.
+   | prior | n | T | exercised | rare-exercised | single | single/exercised | 1/ln(nT) |
+   |---|---|---|---|---|---|---|---|
+   | log-uniform | 16 | 300 | 0.314 | 0.214 | 0.0361 | 0.115 | 0.118 |
+   | log-uniform | 16 | 3000 | 0.397 | 0.297 | 0.0361 | 0.091 | 0.093 |
+   | log-uniform | 64 | 300 | 0.364 | 0.214 | 0.0361 | 0.099 | 0.101 |
+   | log-uniform | 64 | 3000 | 0.447 | 0.297 | 0.0361 | 0.081 | 0.082 |
+   | log-uniform | 256 | 300 | 0.414 | 0.214 | 0.0361 | 0.087 | 0.089 |
+   | log-uniform | 256 | 3000 | 0.497 | 0.297 | 0.0361 | 0.073 | 0.074 |
+   | universal-type | 16 | 300 | 0.955 | 0.087 | 0.0054 | 0.006 | 0.118 |
+   | universal-type | 16 | 3000 | 0.965 | 0.097 | 0.0034 | 0.004 | 0.093 |
+   | universal-type | 64 | 300 | 0.962 | 0.053 | 0.0040 | 0.004 | 0.101 |
+   | universal-type | 64 | 3000 | 0.970 | 0.060 | 0.0027 | 0.003 | 0.082 |
+   | universal-type | 256 | 300 | 0.967 | 0.036 | 0.0031 | 0.003 | 0.089 |
+   | universal-type | 256 | 3000 | 0.973 | 0.042 | 0.0022 | 0.002 | 0.074 |
+
+runtime 199 s
