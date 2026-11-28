@@ -1,0 +1,74 @@
+(A) one step: E[max(m - c v, 0)^2] <= max(m - c, 0)^2 + 2 m^2 (1 - E v), E v^2 <= 1
+    200000 random cases: max of lhs - rhs = 0.000e+00 (must be <= 0 up to rounding); largest lhs/rhs = 1.000000
+(B) the three pointwise inequalities of the printed proof (exact rational arithmetic)
+    20000 random rational points: all three inequalities and the three stated differences hold
+(C) random scaffolds (random top-level input, early stops, answerers that see the history)
+    3000 scaffolds, 59061 runs in all, of which 9469 stopped before the horizon
+    identities: max |E Psi - (1 - H2)| = 2.22e-16 ; max |E max(1 - Psi^2, 0) - TV| = 4.44e-16 ; max of E[1_G Psi^2] - Q_B(G) = 6.66e-16
+    one step at every call, max of lhs - rhs = 1.78e-15 ; summed inequality, max of lhs - rhs = 8.88e-16
+    (a) max H2/(4 sigma) = 0.4009 ; (b) max TV/min{1, sigma + sqrt(sigma^2 + 2 sigma)} = 1.0000 (0.9467 where that bound is below 1) ; max of that bound over 2 sqrt(sigma) = 1.0000
+    (c) max of Q_A(G) - 2 Q_B(G) - 4 sigma = 0.00e+00 ; with a general factor kappa > 1: max of Q_A(G) - kappa Q_B(G) - 2 kappa sigma/(kappa - 1) = 0.00e+00 (both <= 0)
+    (c) sets with Q_B(G) = 0 (2129 scaffolds): max Q_A(G)/(2 sigma) = 0.9978
+    converse: max sigma/(2 L H2) = 0.5605
+(D) part (b): the choice of m, and the bound 2 sqrt(sigma)
+    sigma from 1e-6 to 10: max relative error of [(m-1)^2 + 2 m^2 sigma]/(m^2 - 1) = sigma + sqrt(sigma^2 + 2 sigma) at the stated m: 3.75e-14
+    max over eight other values of m of (value at the stated m) - (value at that m) = -7.01e-08 (must be <= 0: the stated m is the best)
+    max of min{1, sigma + sqrt(sigma^2 + 2 sigma)}/(2 sqrt(sigma)) = 0.999639 (equality of the two branches at sigma = 1/4: 1.000000 = 1.000000)
+(E) the converse needs a factor of order L: the example of Proposition 2.5
+    scaffold: one call; after the answer 1, L - 1 further calls; A answers 1 with probability e at the first
+    call and 0 afterwards, B answers 0 at the first call and 1 afterwards
+    L =   2, e = 0.500: H2 = 0.292893, sigma = 0.792893, sigma/H2 =    2.707 (between L - 1 = 1 and 2L = 4)
+    L =   2, e = 0.100: H2 = 0.051317, sigma = 0.151317, sigma/H2 =    2.949 (between L - 1 = 1 and 2L = 4)
+    L =   2, e = 0.001: H2 = 0.000500, sigma = 0.001500, sigma/H2 =    2.999 (between L - 1 = 1 and 2L = 4)
+    L =   5, e = 0.001: H2 = 0.000500, sigma = 0.004500, sigma/H2 =    8.998 (between L - 1 = 4 and 2L = 10)
+    L =  20, e = 0.001: H2 = 0.000500, sigma = 0.019500, sigma/H2 =   38.990 (between L - 1 = 19 and 2L = 40)
+    L = 100, e = 0.001: H2 = 0.000500, sigma = 0.099500, sigma/H2 =  198.950 (between L - 1 = 99 and 2L = 200)
+(F) the proof of R2
+    min{1, u + sqrt(u^2 + 2u)} on a grid from 1e-6 to 30: max of chord - function = 0.00e+00, max decrease = 0.00e+00 (both <= 0)
+    Jensen, 20000 random laws of sigma: max of E phi(sigma) - phi(E sigma) = 4.44e-16 (<= 0)
+    exact: at u = eps^2/(2(1 + eps)), u + sqrt(u^2 + 2u) = eps, for eps = 0.001, ..., 1;
+    so with s = L K ln2/(2n) the first bound of R2(b) is at most eps once n >= (1 + eps) L K ln2/eps^2
+    K = 5, L = 10, N = 400 runs, n = N L: H1 0.06582 ; R2, questions not depending on answers 0.06582 ; R2(b) 0.13164 = 2 x 0.06582
+    K = 30, L = 7, N = 10000 runs, n = N L: H1 0.03224 ; R2, questions not depending on answers 0.03224 ; R2(b) 0.06449 = 2 x 0.03224
+(G) the per-call mixture after recorded runs: enumeration of all records
+    z uniform on 2N values, calls (z,1..L); human f = 0 with weight 1/2; for each value one function
+    of weight 1/(4N) that answers 1 at the L calls of that value
+    columns: N, L | per-call mixture: least divergence over all records and rounds, least divergence of the
+    law averaged over the rounds, its mean | L/(8N), ln2/N | a draw per run (H1): mean divergence of the averaged law
+    N = 1, L =  1 | 0.28768 0.28768 0.28768 | 0.12500 0.69315 | 0.28768
+    N = 1, L =  3 | 0.86305 0.86305 0.86305 | 0.37500 0.69315 | 0.28768
+    N = 1, L =  5 | 1.43841 1.43841 1.43841 | 0.62500 0.69315 | 0.28768
+    N = 1, L =  6 | 1.72609 1.72609 1.72609 | 0.75000 0.69315 | 0.28768
+    N = 1, L = 12 | 3.45218 3.45218 3.45218 | 1.50000 0.69315 | 0.28768
+    N = 2, L =  1 | 0.11561 0.12398 0.12398 | 0.06250 0.34657 | 0.12398
+    N = 2, L =  3 | 0.34684 0.36838 0.36838 | 0.18750 0.34657 | 0.12398
+    N = 2, L =  5 | 0.57807 0.60819 0.60819 | 0.31250 0.34657 | 0.12398
+    N = 2, L =  6 | 0.69368 0.72645 0.72645 | 0.37500 0.34657 | 0.12398
+    N = 2, L = 12 | 1.38736 1.41626 1.41626 | 0.75000 0.34657 | 0.12398
+    N = 3, L =  1 | 0.07024 0.07858 0.07912 | 0.04167 0.23105 | 0.07912
+    N = 3, L =  3 | 0.21072 0.23385 0.23564 | 0.12500 0.23105 | 0.07912
+    N = 3, L =  5 | 0.35120 0.38664 0.38991 | 0.20833 0.23105 | 0.07912
+    N = 3, L =  6 | 0.42144 0.46211 0.46622 | 0.25000 0.23105 | 0.07912
+    N = 3, L = 12 | 0.84288 0.90259 0.91300 | 0.50000 0.23105 | 0.07912
+    N = 4, L =  1 | 0.05003 0.05744 0.05811 | 0.03125 0.17329 | 0.05811
+    N = 4, L =  3 | 0.15008 0.17121 0.17337 | 0.09375 0.17329 | 0.05811
+    N = 4, L =  5 | 0.25013 0.28349 0.28734 | 0.15625 0.17329 | 0.05811
+    N = 4, L =  6 | 0.30016 0.33908 0.34385 | 0.18750 0.17329 | 0.05811
+    N = 4, L = 12 | 0.60032 0.66498 0.67641 | 0.37500 0.17329 | 0.05811
+    least L (among those tried) at which every record gives a divergence above ln2/N: {1: 3, 2: 3, 3: 3, 4: 4}
+    L/(8N) > ln2/N exactly when L > 8 ln 2 = 5.5452, that is for L >= 6
+(H) two inequalities quoted in the ideas of H1 and H2
+    Q^(G) <= -ln(1 - Q^(G)) <= KL(Q* || Q^) for G = {Q* = 0}: max violation 8.88e-16
+    E_P[(q/p)^s] <= (1 - H2(p, q))^(2 min(s, 1-s)): max of lhs - rhs = 2.22e-16
+    Example 4.4, expected divergence after t = 0, ..., 5 recorded runs: 0.00321, 0.01058, 0.02451, 0.03794, 0.04298, 0.03988
+    K = 1, eps = 0.50, delta = 0.10: N = 12 runs, 2^K (1 - eps^2)^N = 0.06335 <= delta
+    K = 10, eps = 0.10, delta = 0.05: N = 993 runs, 2^K (1 - eps^2)^N = 0.04743 <= delta
+    K = 40, eps = 0.03, delta = 0.01: N = 35924 runs, 2^K (1 - eps^2)^N = 0.00985 <= delta
+(J) Example 2.8(ii) in 30-digit arithmetic, from its description in the proof file
+    q0 = 1.151203573004242859682666
+    c* = 2.964147157307678032181676
+    beta = 1.1    levels =    145  H2 = 0.0016448329  sigma = 0.00058243393  ratio = 2.82406784  (from the run laws: 2.82406784; S'-mass - 1 = 0.0)  c* - ratio = 0.1401
+    beta = 1.01   levels =   1389  H2 = 0.00018953376  sigma = 6.426462e-5  ratio = 2.94927077  (from the run laws: 2.94927077; S'-mass - 1 = -9.86e-32)  c* - ratio = 0.01488
+    beta = 1.001  levels =  13823  H2 = 1.9380077e-5  sigma = 6.5414754e-6  ratio = 2.96264616  (from the run laws: 2.96264616; S'-mass - 1 = 1.97e-30)  c* - ratio = 0.001501
+    beta = 1.0001 levels = 138163  H2 = 1.9438578e-6  sigma = 6.5582416e-7  ratio = 2.96399241  (from the run laws: 2.96399241; S'-mass - 1 = 1.58e-30)  c* - ratio = 0.0001548
+all assertions passed

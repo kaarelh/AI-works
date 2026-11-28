@@ -16,9 +16,9 @@ What is checked.
      with delta/2; on the good event P(R(z)) <= T*gamma is checked for the batches tried.
  (B2) the same event by simulation for a class of 16 functions on 200 inputs, where gamma < 1.
  (C) item 4: for batches drawn from P, the frequency of "something is refused".
- (D) Example 7.8(a): the rule that works input by input (refuse an input when some member that disputes
+ (D) Example 7.9(c): the rule that works input by input (refuse an input when some member that disputes
      it has no budget left) is as sound and is led to refuse every later unasked input.
- (E) Example 7.8(b): a batch that is one run with related calls is refused entirely; a batch of many
+ (E) Example 7.9(b): a batch that is one run with related calls is refused entirely; a batch of many
      runs is not.
 
 Run:  python3 shift-abstain_batch_rule.py        (fixed seed; about one minute)
@@ -253,7 +253,7 @@ def part_C():
 
 
 def part_D():
-    print("(D) Example 7.8(a): the rule that works input by input")
+    print("(D) Example 7.9(c): the rule that works input by input")
     N = 1000          # inputs 1..N carry the law P (uniform); input 0 is off the law
     n = 100
     m = 2000
@@ -297,7 +297,7 @@ def part_D():
 
 
 def part_E():
-    print("(E) Example 7.8(b): one run with related calls, and many runs")
+    print("(E) Example 7.9(b): one run with related calls, and many runs")
     N = 500           # blocks; a run makes L calls, all in one uniformly chosen block
     L = 20
     n = 100

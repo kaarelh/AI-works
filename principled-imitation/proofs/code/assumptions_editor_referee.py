@@ -204,6 +204,34 @@ def block3():
           f" <= (1 - gamma/(2L)) times that weight in every case; largest ratio of the two sides {float(worst_round):.4f}")
     print(f"    after n = 1, ..., 12 rounds: expected posterior weight of those members <= 2^K (1 - gamma/(2L))^n in every case;"
           f" largest ratio {worst_thm:.4f}")
+    # (iv) the inequality holds on average over the posterior, not for each member: an example
+    #      inputs a, b, c; call 1 at a; call 2 at b if the first answer was 0, at c if it was 1 (L = 2, no z)
+    a, b, c = 0, 1, 2
+    scaffold = [{(): a, (0,): b, (1,): c}]
+    f = (0, 0, 0)
+    g = (1, 0, 0)            # leaves the human's run at the first call
+    h = (0, 1, 0)            # leaves it at the second call
+    funcs = [f, g, h]
+    e = Fraction(1, 100)
+    w = [e, 1 - 2 * e, e]
+    runs = [runs_of(scaffold, u, 2) for u in funcs]
+    D = [Fraction(int(any(u[x] != f[x] for x in runs[0][0]))) for u in funcs]
+    gamma = min(d for d in D if d > 0)
+    p_h = Fraction(0)        # probability that h is refuted in the first round
+    removed = Fraction(0)    # expected weight removed from the members whose runs differ
+    for i, u in enumerate(funcs):
+        for J in (1, 2):
+            x = runs[i][0][J - 1]
+            pr = w[i] * Fraction(1, 2)
+            gone = [j for j in range(3) if funcs[j][x] != f[x]]
+            if 2 in gone:
+                p_h += pr
+            removed += pr * sum(w[j] for j in gone if D[j] > 0)
+    R = sum(w[j] for j in range(3) if D[j] > 0)
+    print("  an example with three functions (weights 0.01 for the human f, 0.98 for g, 0.01 for h; L = 2; both g and h at run distance 1):")
+    print(f"    the member h is refuted in the first round with probability {float(p_h):.4f}, far below gamma/(2L) = {float(gamma / 4):.4f};")
+    print(f"    the expected weight removed from g and h together is {float(removed):.4f} >= gamma/(2L) times their weight = {float(gamma / 4 * R):.4f}")
+    assert p_h < gamma / 4 and removed >= gamma / 4 * R
 
 
 def block4():

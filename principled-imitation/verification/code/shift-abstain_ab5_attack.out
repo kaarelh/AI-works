@@ -1,0 +1,51 @@
+== A: items 1, 2, 6(a) exhaustively at mask level (4 inputs, |V|<=4, m<=6, all k) ==
+  (V, batch, k) cases: 5317073; violations: {'item1': 0, 'T<1/eps': 0, 'T<=m': 0, 'T<=|V|-1': 0, 'T<=distinct': 0, 'eps*m<1 unanimity': 0, 'c taken twice': 0}
+  largest ratio wrong/floor(eps m) over k>0: 1.0000; cases with equality: 1518335
+== A2: index-level implementation, real classes, exact eps grid, vs mask level ==
+  cases (instance, batch, eps): 943259; violations of items 1, 2, R-description, eps*m<1: 0; disagreements with mask level: 0
+== B: item 3, exact over all samples ==
+  instances x delta: 1040; cases with Pr[not E] >= delta/2: 0; largest Pr[not E]/(delta/2): 0.3434; violations of P(R) <= T*gamma < gamma/eps on E: 0
+== B2: joint count over tuples (h, c_1..c_T), T < 1/eps ==
+  checks: 600; largest Pr[failure]/delta: 0.0162 (must be < 1)
+  price comparison, b = 30, delta = 0.05, eps' = 0.01: n(lead) = (2b ln2 + ln(1/d))/(eps eps'), n(joint) = ((1/eps+1) b ln2 + ln(2/d))/eps'
+    eps=1.0   n(lead)=        4458  n(joint)=        2448  ratio=1.821
+    eps=0.5   n(lead)=        8917  n(joint)=        4528  ratio=1.969
+    eps=0.1   n(lead)=       44585  n(joint)=       21163  ratio=2.107
+    eps=0.01  n(lead)=      445846  n(joint)=      208313  ratio=2.140
+== C: item 4, exact binomial tails at p = eps/e^2 ==
+  largest Pr[N_c > eps m] / exp(-eps m): 0.3606 (must be <= 1)
+  e^2 = 7.3891; the note's 7.4 >= e^2: True
+  multinomial: eps=0.2, b=2.0, delta'=0.3, m=13: Pr[T>0] = 0.01385 < delta' = 0.3: True
+== D: item 6(b), exact over the index draws ==
+  checks: 1800; largest Pr[failure]/delta'' (delta''<1): 0.0830 (must be < 1)
+  after a successful audit, Bat_eps re-run on the new data can still refuse: class=[(1, 0, 0, 0), (1, 1, 1, 0), (0, 0, 0, 1), (1, 1, 0, 0)], f=(1, 1, 0, 0), batch=[3, 1, 2, 2, 2, 1], eps=1/2, audited inputs=[3], answered after re-run=1/6
+== D2: item 6(b) needs indices drawn uniformly from 1..m, not distinct inputs ==
+  m=100, eps=0.1, b=2.0, delta=0.1, q=37: c differs from f at 50 > eps*m indices; Pr[c survives] with index draws 7.28e-12, with draws of distinct inputs 0.481 (> delta)
+== E: refused mass for a fresh input versus refused share of a batch drawn from P ==
+  N=1048575, n=10000, delta=0.1: gamma=0.00300; every pair differs on mass <= 2/N, so E holds surely
+    m=1     eps=0.5   share of batch refused=0.9950  P(R(z)) on average=9.49e-07  bound gamma/eps=0.0060
+    m=10    eps=0.05  share of batch refused=0.9905  P(R(z)) on average=9.45e-06  bound gamma/eps=0.0601
+    m=1000  eps=0.01  share of batch refused=0.0000  P(R(z)) on average=0.00e+00  bound gamma/eps=0.3003
+    m=1     eps=0.5   share of batch refused=1.0000  P(R(z)) on average=9.54e-07  bound gamma/eps=0.0060
+    m=10    eps=0.05  share of batch refused=0.9900  P(R(z)) on average=9.44e-06  bound gamma/eps=0.0601
+    m=1000  eps=0.01  share of batch refused=0.0000  P(R(z)) on average=0.00e+00  bound gamma/eps=0.3003
+== F: Example 7.9 ==
+  (a) N=8: V contains thresholds N/2..N and every batch of copies of z>N/2 is refused (eps<1): True
+  (b) seed 1: blocks without a question 0.816; one-run batches refused 1624/2000; batch of 400 runs refused at all: False (max runs in a block 4)
+  (b) seed 2: blocks without a question 0.818; one-run batches refused 1681/2000; batch of 400 runs refused at all: False (max runs in a block 5)
+  (c) seed 1, 100 zeros: obvious rule refuses 1742/1900 draws; Bat: 1 step(s), refuses 101 indices (100 zeros); better online rule refuses 100 zeros and 0 draws
+  (c) seed 1, 50 zeros: obvious rule refuses 0/1950 draws; Bat: 0 step(s), refuses 0 indices (0 zeros); better online rule refuses 50 zeros and 0 draws
+  (c) seed 2, 100 zeros: obvious rule refuses 1699/1900 draws; Bat: 1 step(s), refuses 105 indices (100 zeros); better online rule refuses 100 zeros and 0 draws
+  (c) seed 2, 50 zeros: obvious rule refuses 0/1950 draws; Bat: 0 step(s), refuses 0 indices (0 zeros); better online rule refuses 50 zeros and 0 draws
+  (c) seed 3, 100 zeros: obvious rule refuses 1717/1900 draws; Bat: 1 step(s), refuses 103 indices (100 zeros); better online rule refuses 100 zeros and 0 draws
+  (c) seed 3, 50 zeros: obvious rule refuses 0/1950 draws; Bat: 0 step(s), refuses 0 indices (0 zeros); better online rule refuses 50 zeros and 0 draws
+  (c) at most one step (N=4, all batches m<=6, eps*m integer, no other input more than eps*m times): violations 0
+== G: Remark 7.10(a), law of the asked call ==
+  P_Pi = {'a': Fraction(2, 9), 'b': Fraction(1, 3), 'c': Fraction(1, 9)}, total mass 2/3
+  asked-call law = {'a': Fraction(2, 9), None: Fraction(1, 3), 'b': Fraction(1, 3), 'c': Fraction(1, 9)}; equal on inputs: True
+  driver that abstains at 'b': asked-call law = {'a': Fraction(2, 9), None: Fraction(4, 9), 'b': Fraction(2, 9), 'c': Fraction(1, 9)}; differs from P_Pi: True
+== H: Remark 7.10(b) stages; per-run count; rock in rate form ==
+  stages: violations of sum_i floor(eps m_i): 0
+  runs of a batch that contain a wrong answer <= eps*L*r: violations 0; largest ratio 1.000
+  patch-closed class: answered batch inputs inside any patch set Q <= 2*floor(eps m): violations 0
+done
