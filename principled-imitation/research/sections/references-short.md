@@ -27,7 +27,9 @@ The file `references.md` records, for each entry, how its bibliographic data wer
 * Foster, D. J., Block, A. and Misra, D. (2024). Is behavior cloning all you need? Understanding horizon in imitation learning. *Advances in Neural Information Processing Systems* (NeurIPS 2024). arXiv:2407.15007.
 * Foster, D. J., Han, Y., Qian, J. and Rakhlin, A. (2024). Online estimation via offline estimation: an information-theoretic framework. *Advances in Neural Information Processing Systems* (NeurIPS 2024). arXiv:2404.10122.
 * Foster, D. J., Kakade, S. M., Qian, J. and Rakhlin, A. (2021). The statistical complexity of interactive decision making. arXiv:2112.13487.
+* Goel, S., Hanneke, S., Moran, S. and Shetty, A. (2023). Adversarial resilience in sequential prediction via abstention. arXiv:2306.13119.
 * Goldreich, O. and Ron, D. (2000). On testing expansion in bounded-degree graphs. Electronic Colloquium on Computational Complexity, Report TR00-020.
+* Goldwasser, S., Kalai, A. T., Kalai, Y. T. and Montasser, O. (2020). Beyond perturbations: learning guarantees with arbitrary adversarial test examples. *Advances in Neural Information Processing Systems* 33 (NeurIPS 2020). arXiv:2007.05145.
 * Grünwald, P. D. and Kotłowski, W. (2011). Bounds on individual risk for log-loss predictors. *Proceedings of the 24th Annual Conference on Learning Theory (COLT)*, PMLR 19:813–816.
 * Gupta, V., Jung, C., Noarov, G., Pai, M. M. and Roth, A. (2022). Online multivalid learning: means, moments, and prediction intervals. *13th Innovations in Theoretical Computer Science Conference (ITCS)*, LIPIcs 215, 82:1–82:24. arXiv:2101.01739.
 * Hanneke, S. and Yang, L. (2015). Minimax analysis of active learning. *Journal of Machine Learning Research* 16(109):3487–3602. arXiv:1410.0996.

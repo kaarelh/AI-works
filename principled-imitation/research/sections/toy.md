@@ -6,15 +6,15 @@ The computations of this section illustrate the theorems on a problem small enou
 
 **Ordinary questions fail; rehearsal does not** (`toy.py`, `results/toy.out`). After 10,000 questions about pairs of numbers below 4, the posterior is where it was after 100: weight 0.59 on the first simpler function, 0.30 on the second, 0.07 on f. The questions cannot separate them. Deployed on the tree, the mixture then has an unfaithful call in 35% of the runs at depth 2, 98% at depth 4 and 100% at depth 6. With rehearsal, the number of unfaithful calls summed over all rehearsal runs stays below the bound L·K ln 2 of Theorem R1 (averages over 60 repetitions):
 
-| depth | L | unfaithful calls, summed over 6400 rounds | bound L·K ln 2 | runs with an unfaithful call, average over 6400 rounds |
+| depth | L | unfaithful calls, summed over 6400 rounds | bound L·K ln 2 | fraction of the 6400 rehearsal runs with an unfaithful call (the failure rate of the deployed imitator) |
 |---|---|---|---|---|
 | 2 | 3 | 2.3 | 7.9 | 0.0004 |
 | 4 | 15 | 21.7 | 39.3 | 0.0025 |
 | 6 | 63 | 91.8 | 165.0 | 0.0043 |
 
-With one posterior draw answering each run, the runs with an unfaithful call number 1.6, 15.4 and 22.3 in total, against the bound (2L²/(L + 1))·K ln 2 of Theorem R4 (11.8, 73.7, 325). When the heaviest function consistent with the answers so far answers the runs, they number 3.3, 21.1 and 27.2, against the bound of Proposition R6(a), L times the number of functions heavier than f (6, 30, 126). Only two functions are heavier than f here, so the driver that R6(a) warns against does little harm in this class.
+With one posterior draw answering each run, the runs with an unfaithful call number 1.6, 15.4 and 22.3 in total, against the bound (2L²/(L + 1))·K ln 2 of Theorem R4 (11.8, 73.7, 325). When the heaviest function consistent with the answers so far answers the runs, they number 3.3, 21.1 and 27.2, against the bound L·(i₀ − 1) of Proposition R6(a), where i₀ − 1 is the number of functions that rank before f by weight (6, 30, 126). Only two functions rank before f here, so this way of answering the rehearsal runs, against which R6(a) warns, does little harm in this class.
 
-**High stakes and low stakes** (`toy_stakes.py`, `results/toy_stakes.out`). Two systems ask L independent additions of uniform pairs. In the first a run is good only if every answer is the human's; in the second, if at most 5% of the answers differ. Both are answered by the same rehearsed mixture. After 6400 questions the first fails in 0.1%, 1.2% and 11.9% of the runs for L = 16, 256 and 4096; the second in 0.11%, 0.03% and 0.03%, below the bound K ln 2/(θn) = 0.82% of Theorem R3, which does not depend on L.
+**High stakes and low stakes** (`toy_stakes.py`, `results/toy_stakes.out`). Two systems ask L independent additions of uniform pairs. In the first a run is good only if every answer is the human's; in the second, if at most 5% of the answers differ. Both are answered by the same rehearsed mixture. After 6400 questions the first fails in 0.11%, 1.2% and 11.9% of the runs for L = 16, 256 and 4096; the second in 0.11%, 0.03% and 0.03%, below the bound K ln 2/(θn) = 0.82% of Theorem R3, which does not depend on L. (For L = 16 the second system tolerates no fault, because 5% of 16 is less than one answer; it is then the first system.)
 
 **The certificate** (same script). The mixture frozen after 400 rehearsal questions (L = 256) was put through validation with 1000 further questions, 160 times over. In 140 of the repetitions no recorded pair disagreed, and Theorem V1(a) then certifies a rate of unfaithful calls of at most ln(20)/1000 = 0.003 per call at confidence 95%. The true rate was 0.00014 on average and never above the certified bound.
 

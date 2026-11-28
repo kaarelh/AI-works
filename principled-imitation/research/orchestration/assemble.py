@@ -8,6 +8,7 @@ subsections of Section 8, and applies a list of exact replacements (the lead's h
 Every replacement must match exactly once, so that a changed section file is noticed.
 """
 import pathlib
+import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -23,6 +24,11 @@ def cut(text, start, end=None, keep_start=True):
     i = text.index(start)
     j = text.index(end, i + len(start)) if end is not None else len(text)
     return text[i if keep_start else i + len(start):j].strip() + "\n"
+
+
+def text_only(block):
+    """A block without the notes for the lead that may follow a line of three hyphens."""
+    return block.split("\n---\n", 1)[0].strip() + "\n"
 
 
 def once(text, old, new):
@@ -46,11 +52,30 @@ asm = read("assumptions.md")
 
 sec1 = cut(rc, "## 1. The model", "## 2. The protocol")
 sec2 = cut(rc, "## 2. The protocol", "## 3. What rehearsal guarantees")
-sec3 = cut(rc, "## 3. What rehearsal guarantees")
+sec3 = text_only(cut(rc, "## 3. What rehearsal guarantees"))
 
-caveats = cut(asm, "<!-- BLOCK A", "<!-- BLOCK B")
-caveats = caveats.split("-->", 1)[1].strip() + "\n"
-sec1 = once(sec1, "[PLACEHOLDER: caveats on A1 to A3, supplied by part `assumptions`.]", caveats.strip())
+# The blocks of assumptions.md are marked by comment lines: BLOCK A0 (one sentence for each assumption,
+# for Section 1), BLOCK A (the assumptions in practice, placed as Section 3.7), BLOCK B (Section 9),
+# BLOCK C (Section 10), END.  Without a block A0 the old layout is used: BLOCK A goes into Section 1.
+marks = [(m.group(1), m.start(), m.end())
+         for m in re.finditer(r"<!-- (BLOCK A0|BLOCK A|BLOCK B|BLOCK C|END)\b.*?-->", asm, flags=re.S)]
+blocks = {}
+for i, (name, _, end) in enumerate(marks):
+    nxt = marks[i + 1][1] if i + 1 < len(marks) else len(asm)
+    if name in blocks:
+        sys.exit(f"marker {name} occurs twice in assumptions.md")
+    blocks[name] = asm[end:nxt].strip() + "\n"
+for name in ("BLOCK A", "BLOCK B", "BLOCK C", "END"):
+    if name not in blocks:
+        sys.exit(f"marker {name} not found in assumptions.md")
+PLACEHOLDER_1 = "[PLACEHOLDER: caveats on A1 to A3, supplied by part `assumptions`.]"
+if "BLOCK A0" in blocks:
+    sec1 = once(sec1, PLACEHOLDER_1, blocks["BLOCK A0"].strip())
+    if not blocks["BLOCK A"].startswith("### 3.7 "):
+        sys.exit("BLOCK A of assumptions.md must begin with the heading of Section 3.7")
+    sec3 = sec3 + "\n" + blocks["BLOCK A"]
+else:
+    sec1 = once(sec1, PLACEHOLDER_1, blocks["BLOCK A"].strip())
 
 whole_runs = cut(hr, "### 3.2 Whole runs", "<!-- ================= BLOCK (ii)")
 old_32 = cut(sec3, "### 3.2 Whole runs", "### 3.3 Coverage")
@@ -63,7 +88,7 @@ block6 = cut(lb, "## For Section 6: lower bounds for inputs from outside", "\n--
 
 # ---- Section 5 -------------------------------------------------------------------------------
 om = read("one-mind.md")
-sec51 = cut(om, "### 5.1 One program or a committee", "\n---\n")
+sec51 = cut(om, "### 5.1 ", "\n---\n")
 sec52 = cut(hr, "### 5.2 Recorded runs of the human system", "<!-- ================= END OF THE TEXT")
 sec5 = "## 5. One program or a committee\n\n" + sec51 + "\n" + sec52
 
@@ -71,7 +96,7 @@ sec5 = "## 5. One program or a committee\n\n" + sec51 + "\n" + sec52
 sa = read("shift-abstain.md")
 sec6 = cut(sa, "## 6. Inputs from outside", "## 7. Failing obviously")
 sec6 = once(sec6, "[Here the block of part lower-bounds: Theorem N3 and what S2 needs.]", block6.strip())
-sec7 = cut(sa, "## 7. Failing obviously")
+sec7 = text_only(cut(sa, "## 7. Failing obviously"))
 
 # ---- Section 8 -------------------------------------------------------------------------------
 pb = read("property-batch.md")
@@ -87,8 +112,8 @@ sec8c = once(sec8c, "### 8.6 What the human's answers can certify", "### 8.7 Wha
 sec8 = sec8a + "\n" + sec8b + "\n" + sec8c
 
 # ---- Sections 9 and 10 -----------------------------------------------------------------------
-sec9 = cut(asm, "## 9. ", "<!-- BLOCK C")
-sec10 = cut(asm, "## 10. ", "<!-- END")
+sec9 = cut(blocks["BLOCK B"], "## 9. ")
+sec10 = cut(blocks["BLOCK C"], "## 10. ")
 
 # ---- Sections 0, 11, 12, 13 ------------------------------------------------------------------
 sec0 = read("intro.md")
