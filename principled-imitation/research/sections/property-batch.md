@@ -4,7 +4,7 @@ The researcher proposed that a good imitator keeps the properties the answers ha
 
 ### 8.1 All properties at once
 
-**Pr1** (a definition). TV(Q_A, Q_P) ≤ ε holds exactly when every event of runs has, with A answering, a probability within ε of its probability in the human system. Keeping every property up to a small error is thus closeness in total variation, not a weaker goal. Under A2 its price is K, times the horizon L under rehearsal: for a deterministic human the deployed run is a run of the human system with probability at least 1 − L·K ln 2/n (R1); in general E TV ≤ 2√(L·K ln 2/n) (R2); from N recorded runs of the human system, E TV ≤ √(K ln 2/(2N)) (H1). For a person, with K of the order of 10⁹ bits under a generic prior, these bounds are empty.
+**Pr1** (a definition). TV(Q_A, Q_P) ≤ ε holds exactly when every event of runs has, with A answering, a probability within ε of its probability in the human system. Keeping every property up to a small error is thus closeness in total variation, not a weaker goal. Under A2 its price is K, times the horizon L under rehearsal: for a deterministic human the deployed run is a run of the human system with probability at least 1 − L·K ln 2/n (R1); in general E TV ≤ √(2·L·K ln 2/n) (R2); from N recorded runs of the human system, E TV ≤ √(K ln 2/(2N)) (H1). For a person, with K of the order of 10⁹ bits under a generic prior, these bounds are empty.
 
 *Not said.* The error is additive: an event of probability below ε in the human system, such as a rare bad one, is not controlled.
 

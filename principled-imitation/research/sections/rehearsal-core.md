@@ -28,6 +28,8 @@
 
 The human answers at most n + m single calls, taken from the imitator's own runs at every depth of a decomposition, and never carries out a run.
 
+**Compute.** If the hypotheses are programs that always halt, for instance programs that carry their own time bound, and the weights are 2^(−length) in a decidable prefix-free code and add up to 1, a posterior draw can be made by rejection: read a program from coin flips, run it with fresh coins on the recorded questions, and keep it if it reproduces the recorded answers. A kept program has exactly the posterior law. The expected number of trials is at most 2^K divided by the probability that the human gives the recorded answers, and one draw is needed at every call of every run; for a human who varies at the questions asked, that probability falls exponentially with the number of recorded answers. This is the "very much compute" of the question. For the class of all programs a trial may not halt; the theorems then concern the mixture as a mathematical object, whose likelihood sums can be approximated from below and whose conditional probabilities can be approximated only in the limit (`proofs/rehearsal-core.md`, Remark 5.9).
+
 None of this is new. Training a learner without regret on the inputs that its own behaviour produces is the reduction of Ross, Gordon and Bagnell (2011, Theorem 4.1); their algorithm returns the best iterate on validation, and they note that the guarantee also holds for one uniformly chosen iterate run for a whole episode. With logarithmic loss, a finite class and a deterministic expert, the protocol is "Stagger" of Li and Zhang (2025). The note adds a prior on a countable class (bounds in K), a human who is not deterministic, and the uses and limits below.
 
 ## 3. What rehearsal guarantees
@@ -106,6 +108,6 @@ Each replacement costs at most 1 + D, and the Azuma–Hoeffding inequality contr
 
 For a deterministic human in the class, validation of M^(T) records no disagreement with probability at least 1 − m·K ln 2/n (Corollary 13.2). The certificate does not contain K: 300 rounds certify an excess failure 0.1 under θ = 0.1 at δ = 0.05. It certifies an imitator; it does not produce one.
 
-### 3.6 The online form
+### 3.6 Asking while the system runs
 
-If every call, as it arrives, is put to the human with probability q and answered by the current mixture otherwise, the expected divergence between human and current mixture, summed over all calls, is at most K ln 2/q, however the questions arise (Theorem 10.1). With q = 1/L in a closed system this is the price of R1, but the human stays in the loop for as long as the system runs.
+If every call, as it arrives, is put to the human with probability q and answered by the current mixture otherwise, the expected divergence between human and current mixture, summed over all calls, is at most K ln 2/q, however the questions arise (S5, Section 6.2). With q = 1/L in a closed system this is the price of R1, but the human stays in the loop for as long as the system runs.

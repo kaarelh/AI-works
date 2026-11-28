@@ -4,12 +4,12 @@
 
 ### 3.2 Whole runs
 
-For a deterministic human Theorem R1 settles whole runs: the run of M^(T) is the human system's run on the same (z, ρ), except with probability L·K ln 2/n. For a human who varies, the laws of the runs are compared.
+For a deterministic human Theorem R1 settles whole runs: the run of M^(T) is the human system's run on the same (z, ρ), except with probability at most L·K ln 2/n (`proofs/rehearsal-core.md`, Theorem 7.1). For a human who varies, the laws of the runs are compared.
 
 **Lemma L4 (from calls to runs).** Let A and B be answerers on a scaffold, let h_j be the squared Hellinger distance between the distributions from which they draw the answer of call j, given the run so far, and σ := E_{Q_A}[Σ_j h_j]. Then
 
 (a) H²(Q_A, Q_B) ≤ 4σ;
-(b) TV(Q_A, Q_B) ≤ σ + √(σ² + 2σ) ≤ 2√σ;
+(b) TV(Q_A, Q_B) ≤ min{1, σ + √(σ² + 2σ)} ≤ 2√σ;
 (c) Q_A(G) ≤ 2·Q_B(G) + 4σ for every set G of runs, and Q_A(G) ≤ 2σ if Q_B(G) = 0.
 
 Proved here; (a) is standard with the constant 7 (Foster, Han, Qian and Rakhlin 2024, Lemma D.2; Foster, Kakade, Qian and Rakhlin 2021, Lemma A.13, have 10²·log n). *Idea.* Along a run of A, a quadratic function of the root likelihood ratio of B to A rises by at most a constant times h_j at call j, in expectation. Proof: `proofs/hellinger-runs.md`, Theorem 2.1 and Lemma 2.10, with Corollaries 2.3 and 2.11 for scaffolds. In (a) the constant can be 2.9642 and cannot be below 2.9639 (Theorem 2.7 and Example 2.8 there). Parts (b) and (c) have the constants of a single call. Close runs do not make single calls close, except with a factor L.
@@ -17,7 +17,7 @@ Proved here; (a) is standard with the constant 7 (Foster, Han, Qian and Rakhlin 
 **Theorem R2 (whole runs; proved here).** Assume A1 to A3 and put s := L·K ln 2/(2n). In expectation over the rehearsal and T:
 
 (a) H²(Q_{M^(T)}, Q_P) ≤ 2·L·K ln 2/n;
-(b) TV(Q_{M^(T)}, Q_P) ≤ s + √(s² + 2s) ≤ √(2·L·K ln 2/n), which is at most ε after (1 + ε)·L·K ln 2/ε² rounds;
+(b) TV(Q_{M^(T)}, Q_P) ≤ min{1, s + √(s² + 2s)} ≤ √(2·L·K ln 2/n); the middle expression is at most ε after (1 + ε)·L·K ln 2/ε² rounds;
 (c) Q_{M^(T)}(G) ≤ 2·Q_P(G) + 2·L·K ln 2/n for each set G of runs fixed in advance, and Q_{M^(T)}(G) ≤ L·K ln 2/n if the human system never produces a run in G.
 
 If neither the questions of the scaffold nor their number depend on the answers, then, in the same expectation, KL(Q_P ‖ Q_{M^(T)}) ≤ L·K ln 2/n and TV(Q_{M^(T)}, Q_P) ≤ √(L·K ln 2/(2n)).

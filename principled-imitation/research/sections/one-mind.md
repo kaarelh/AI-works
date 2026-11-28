@@ -38,7 +38,7 @@ In (a), with the runs that have fewer than L/4 answers 1 as the good ones, the h
 |---|---|---|---|
 | deterministic human: Pr[a run is not the human system's] | L·K ln 2/n (R1) | 2L²·K ln 2/((L+1)n) (R4) | 2L·(K ln 2 + ln(1/δ))/n with probability 1 − 2δ (R6b) |
 | deterministic human, low stakes | K ln 2/(θn) (R3) | no gain in the examples (R5) | the same (R5) |
-| human not deterministic | E TV ≤ 2√(L·K ln 2/n) (R2) | posterior draw: no bound in K alone; with recorded runs, H1 | squared weights: R6c; the weights themselves: no bound in K alone; with recorded runs, H2 |
+| human not deterministic | E TV ≤ √(2·L·K ln 2/n) (R2) | posterior draw: no bound in K alone; with recorded runs, H1 | squared weights: R6c; the weights themselves: no bound in K alone; with recorded runs, H2 |
 
 ---
 
